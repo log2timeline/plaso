@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the .automaticDestinations-ms OLECF file plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import olecf as olecf_formatter
+from plaso.formatters import olecf as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import automatic_destinations
 from plaso.parsers.olecf_plugins import test_lib
 
@@ -42,19 +26,19 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         test_file, self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 44)
+    self.assertEqual(len(event_objects), 44)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
     event_object = event_objects[3]
 
-    self.assertEquals(event_object.offset, 32)
+    self.assertEqual(event_object.offset, 32)
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-04-01 13:52:38.997538')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-04-01 13:52:38.997538')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Entry: 11 '
@@ -77,9 +61,9 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
     # Check a WinLnkLinkEvent.
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2010-11-10 07:51:16.749125')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-11-10 07:51:16.749125')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'File size: 3545 '
@@ -88,7 +72,7 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         u'Drive serial number: 0x24ba718b '
         u'Local path: C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
         u'Libraries\\Documents.library-ms '
-        u'Link target: [Users Libraries, UNKNOWN: 0x00]')
+        u'Link target: <Users Libraries> <UNKNOWN: 0x00>')
 
     expected_msg_short = (
         u'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\Libraries\\'

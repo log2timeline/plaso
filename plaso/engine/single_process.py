@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The single process processing engine."""
 
 import collections
@@ -28,7 +12,7 @@ from plaso.engine import engine
 from plaso.engine import queue
 from plaso.engine import worker
 from plaso.lib import errors
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 class SingleProcessCollector(collector.Collector):
@@ -98,7 +82,7 @@ class SingleProcessEngine(engine.BaseEngine):
         maximum_number_of_queued_items=maximum_number_of_queued_items)
 
     super(SingleProcessEngine, self).__init__(
-      collection_queue, storage_queue, parse_error_queue)
+        collection_queue, storage_queue, parse_error_queue)
 
     self._event_queue_producer = SingleProcessItemQueueProducer(storage_queue)
     self._parse_error_queue_producer = SingleProcessItemQueueProducer(
@@ -157,7 +141,7 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
     """
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
@@ -165,7 +149,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     extraction_worker = SingleProcessEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_context,
+        self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
@@ -190,18 +174,24 @@ class SingleProcessEngine(engine.BaseEngine):
     return extraction_worker
 
   def ProcessSource(
-      self, collector_object, storage_writer, parser_filter_string=None):
+      self, collector_object, storage_writer, parser_filter_string=None,
+      hasher_names_string=None):
     """Processes the source and extracts event objects.
 
     Args:
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
       parser_filter_string: Optional parser filter string. The default is None.
+      hasher_names_string: Optional comma separated string of names of
+                           hashers to enable. The default is None.
     """
     extraction_worker = self.CreateExtractionWorker(0)
 
-    extraction_worker.InitalizeParserObjects(
-         parser_filter_string=parser_filter_string)
+    if hasher_names_string:
+      extraction_worker.SetHashers(hasher_names_string)
+
+    extraction_worker.InitializeParserObjects(
+        parser_filter_string=parser_filter_string)
 
     # Set the extraction worker and storage writer values so that they
     # can be accessed if the QueueFull exception is raised. This is

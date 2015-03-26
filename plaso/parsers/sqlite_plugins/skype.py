@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a basic Skype SQLite parser."""
 
 import logging
@@ -211,17 +195,12 @@ class SkypePlugin(interface.SQLitePlugin):
       'CallMembers', 'Calls'])
 
   def ParseAccountInformation(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses the Accounts database.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     if row['profile_timestamp']:
@@ -229,67 +208,49 @@ class SkypePlugin(interface.SQLitePlugin):
           row['profile_timestamp'], u'Profile Changed', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['authreq_timestamp']:
       event_object = SkypeAccountEvent(
           row['authreq_timestamp'], u'Authenticate Request', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['lastonline_timestamp']:
       event_object = SkypeAccountEvent(
           row['lastonline_timestamp'], u'Last Online', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['mood_timestamp']:
       event_object = SkypeAccountEvent(
           row['mood_timestamp'], u'Mood Event', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['sent_authrequest_time']:
       event_object = SkypeAccountEvent(
           row['sent_authrequest_time'], u'Auth Request Sent', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['lastused_timestamp']:
       event_object = SkypeAccountEvent(
           row['lastused_timestamp'], u'Last Used', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
-  def ParseChat(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+  def ParseChat(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a chat message row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     to_account = ''
@@ -307,43 +268,27 @@ class SkypePlugin(interface.SQLitePlugin):
         to_account = u'Unknown User'
 
     event_object = SkypeChatEvent(row, to_account)
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
-  def ParseSMS(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+  def ParseSMS(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parse SMS.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     dst_number = row['dstnum_sms'].replace(' ', '')
 
     event_object = SkypeSMSEvent(row, dst_number)
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
-  def ParseCall(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+  def ParseCall(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parse the calls taking into accounts some rows.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     try:
@@ -379,17 +324,13 @@ class SkypePlugin(interface.SQLitePlugin):
     event_object = SkypeCallEvent(
         row['try_call'], 'WAITING', user_start_call, source, destination,
         video_conference)
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['accept_call']:
       event_object = SkypeCallEvent(
           row['accept_call'], 'ACCEPTED', user_start_call, source, destination,
           video_conference)
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['call_duration']:
         try:
@@ -397,9 +338,7 @@ class SkypePlugin(interface.SQLitePlugin):
           event_object = SkypeCallEvent(
               timestamp, 'FINISHED', user_start_call, source, destination,
               video_conference)
-          parser_context.ProduceEvent(
-              event_object, query=query, parser_chain=parser_chain,
-              file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object, query=query)
 
         except ValueError:
           logging.debug((
@@ -407,20 +346,16 @@ class SkypePlugin(interface.SQLitePlugin):
               u'finished.').format(self.NAME, row['id']))
 
   def ParseFileTransfer(
-      self, parser_context, row, file_entry=None, parser_chain=None, cache=None,
-      database=None, query=None, **unused_kwargs):
+      self, parser_mediator, row, cache=None, database=None, query=None,
+      **unused_kwargs):
     """Parse the transfer files.
 
      There is no direct relationship between who sends the file and
      who accepts the file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: the row with all information related with the file transfers.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
       cache: a cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -463,30 +398,22 @@ class SkypePlugin(interface.SQLitePlugin):
       if row['starttime']:
         event_object = SkypeTransferFileEvent(
             row, row['starttime'], 'GETSOLICITUDE', source, destination)
-        parser_context.ProduceEvent(
-            event_object, query=query, parser_chain=parser_chain,
-            file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['accepttime']:
         event_object = SkypeTransferFileEvent(
             row, row['accepttime'], 'ACCEPTED', source, destination)
-        parser_context.ProduceEvent(
-            event_object, query=query, parser_chain=parser_chain,
-            file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['finishtime']:
         event_object = SkypeTransferFileEvent(
             row, row['finishtime'], 'FINISHED', source, destination)
-        parser_context.ProduceEvent(
-            event_object, query=query, parser_chain=parser_chain,
-            file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object, query=query)
 
     elif row['status'] == 2 and row['starttime']:
       event_object = SkypeTransferFileEvent(
           row, row['starttime'], 'SENDSOLICITUDE', source, destination)
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(SkypePlugin)

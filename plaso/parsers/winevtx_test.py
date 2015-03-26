@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Windows XML EventLog (EVTX) parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winevtx as winevtx_formatter
+from plaso.formatters import winevtx as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import winevtx
 
@@ -36,7 +20,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['System.evtx'])
+    test_file = self._GetTestFilePath([u'System.evtx'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -46,7 +30,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Number of recovered records : 0
     #   Log type                    : System
 
-    self.assertEquals(len(event_objects), 1601)
+    self.assertEqual(len(event_objects), 1601)
 
     # Event number        : 12049
     # Written time        : Mar 14, 2012 04:17:43.354562700 UTC
@@ -62,27 +46,27 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.record_number, 12049)
+    self.assertEqual(event_object.record_number, 12049)
     expected_computer_name = u'WKS-WIN764BITB.shieldbase.local'
-    self.assertEquals(event_object.computer_name, expected_computer_name)
-    self.assertEquals(event_object.source_name, u'Microsoft-Windows-Eventlog')
-    self.assertEquals(event_object.event_level, 4)
-    self.assertEquals(event_object.event_identifier, 105)
+    self.assertEqual(event_object.computer_name, expected_computer_name)
+    self.assertEqual(event_object.source_name, u'Microsoft-Windows-Eventlog')
+    self.assertEqual(event_object.event_level, 4)
+    self.assertEqual(event_object.event_identifier, 105)
 
-    self.assertEquals(event_object.strings[0], u'System')
+    self.assertEqual(event_object.strings[0], u'System')
 
     expected_string = (
         u'C:\\Windows\\System32\\Winevt\\Logs\\'
         u'Archive-System-2012-03-14-04-17-39-932.evtx')
 
-    self.assertEquals(event_object.strings[1], expected_string)
+    self.assertEqual(event_object.strings[1], expected_string)
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-03-14 04:17:38.276340')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-03-14 04:17:38.276340')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_xml_string = (
@@ -114,7 +98,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'  </EventData>\n'
         u'</Event>\n')
 
-    self.assertEquals(event_object.xml_string, expected_xml_string)
+    self.assertEqual(event_object.xml_string, expected_xml_string)
 
     expected_msg = (
         u'[7036 / 0x1b7c] '
@@ -122,14 +106,16 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'Event Level: 4 '
         u'Source Name: Service Control Manager '
         u'Computer Name: WKS-WIN764BITB.shieldbase.local '
-        u'Strings: [u\'Windows Modules Installer\', '
-        u'u\'stopped\', u\'540072007500730074006500640049006E00'
+        u'Message string: The Windows Modules Installer service entered '
+        u'the stopped state. '
+        u'Strings: [\'Windows Modules Installer\', \'stopped\', '
+        u'\'540072007500730074006500640049006E00'
         u'7300740061006C006C00650072002F0031000000\']')
 
     expected_msg_short = (
         u'[7036 / 0x1b7c] '
-        u'Strings: [u\'Windows Modules Installer\', '
-        u'u\'stopped\', u\'5400720...')
+        u'Strings: [\'Windows Modules Installer\', \'stopped\', '
+        u'\'5400720075...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

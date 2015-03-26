@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains tests for Services Windows Registry plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -56,7 +40,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'ImagePath', 'C:\\Dell\\testdriver.sys'.encode('utf_16_le'), 1, 200))
 
-    timestamp = timelib_test.CopyStringToTimestamp(
+    timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
@@ -64,17 +48,17 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -119,21 +103,21 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
       elif winreg_subkey.name == 'RdpVideoMiniport':
         rdp_video_miniport_event_objects = sub_event_objects
 
-    self.assertEquals(len(event_objects), 416)
+    self.assertEqual(len(event_objects), 416)
 
     # Test the BITS subkey event objects.
-    self.assertEquals(len(bits_event_objects), 1)
+    self.assertEqual(len(bits_event_objects), 1)
 
     event_object = bits_event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-06 20:43:27.639075')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'Type', 0x20)
     self._TestRegvalue(event_object, u'Start', 3)
@@ -141,25 +125,25 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_object, u'ServiceDll', u'%SystemRoot%\\System32\\qmgr.dll')
 
     # Test the McTaskManager subkey event objects.
-    self.assertEquals(len(mc_task_manager_event_objects), 1)
+    self.assertEqual(len(mc_task_manager_event_objects), 1)
 
     event_object = mc_task_manager_event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-09-16 20:49:16.877415')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'DisplayName', u'McAfee Task Manager')
     self._TestRegvalue(event_object, u'Type', 0x10)
 
     # Test the RdpVideoMiniport subkey event objects.
-    self.assertEquals(len(rdp_video_miniport_event_objects), 1)
+    self.assertEqual(len(rdp_video_miniport_event_objects), 1)
 
     event_object = rdp_video_miniport_event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-09-17 13:37:59.347157')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'Start', 3)
     expected_value = u'System32\\drivers\\rdpvideominiport.sys'

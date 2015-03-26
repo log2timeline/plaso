@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """An output module that saves data into a simple JSON format."""
 
 import sys
@@ -31,31 +15,30 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
   NAME = u'json'
   DESCRIPTION = u'Saves the events into a JSON format.'
 
-  def __init__(self, store, filehandle=sys.stdout, config=None,
-               filter_use=None):
-    """Constructor for the output module.
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
+    """Initializes the log output formatter object.
 
     Args:
-      store: A StorageFile object that defines the storage.
-      filehandle: A file-like object that can be written to.
-      config: The configuration object, containing config information.
-      filter_use: A filter_interface.FilterObject object.
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: The formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
     """
     super(JsonOutputFormatter, self).__init__(
-        store, filehandle, config, filter_use)
+        store, formatter_mediator, filehandle=filehandle, config=config,
+        filter_use=filter_use)
     self._event_counter = 0
 
-  def End(self):
-    """Provide a footer."""
-    # Adding a label for "event_foo" due to JSON expecting a label
-    # after a comma. The only way to provide that is to either know
-    # what the last event is going to be (which we don't) or to add
-    # a dummy event in the end that has no data in it.
-    self.filehandle.WriteLine(u'"event_foo": "{}"}')
-    super(JsonOutputFormatter, self).End()
-
-  def EventBody(self, event_object):
-    """Prints out to a filehandle string representation of an EventObject.
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
     Each event object contains both attributes that are considered "reserved"
     and others that aren't. The 'raw' representation of the object makes a
@@ -63,7 +46,7 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
     strings from the object.
 
     Args:
-      event_object: The event object (instance of EventObject).
+      event_object: the event object (instance of EventObject).
     """
     json_string = json_serializer.JsonEventObjectSerializer.WriteSerialized(
         event_object)
@@ -92,8 +75,16 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
 
     self._event_counter += 1
 
-  def Start(self):
-    """Provide a header to the file."""
+  def WriteFooter(self):
+    """Writes the footer to the output."""
+    # Adding a label for "event_foo" due to JSON expecting a label
+    # after a comma. The only way to provide that is to either know
+    # what the last event is going to be (which we don't) or to add
+    # a dummy event in the end that has no data in it.
+    self.filehandle.WriteLine(u'"event_foo": "{}"}')
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
     self.filehandle.WriteLine(u'{')
     self._event_counter = 0
 

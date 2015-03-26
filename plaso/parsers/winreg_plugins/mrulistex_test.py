@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the MRUListEx Windows Registry plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import interface as winreg_interface
@@ -60,18 +44,18 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     # A MRUListEx event object.
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -103,27 +87,27 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 65)
+    self.assertEqual(len(event_objects), 65)
 
     # A MRUListEx event object.
     event_object = event_objects[40]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-08-28 22:48:28.159308')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}\\exe] '
-        u'Index: 1 [MRU Value 1]: Shell item list: [My Computer, P:\\, '
-        u'Application Tools, Firefox 6.0, Firefox Setup 6.0.exe] '
-        u'Index: 2 [MRU Value 0]: Shell item list: [Computers and Devices, '
-        u'UNKNOWN: 0x00, \\\\controller\\WebDavShare, Firefox Setup 3.6.12.exe'
-        u']').format(key_path)
+        u'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
+        u'P:\\Application Tools\\Firefox 6.0\\Firefox Setup 6.0.exe '
+        u'Index: 2 [MRU Value 0]: Shell item path: <Computers and Devices> '
+        u'<UNKNOWN: 0x00>\\\\controller\\WebDavShare\\Firefox Setup 3.6.12.exe'
+        u'').format(key_path)
 
     expected_msg_short = (
         u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
@@ -134,20 +118,22 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # A shell item event object.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-03-08 22:16:02')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: ALLOYR~1 '
         u'Long name: Alloy Research '
         u'NTFS file reference: 44518-33 '
+        u'Shell item path: <Shared Documents Folder (Users Files)> '
+        u'<UNKNOWN: 0x00>\\Alloy Research '
         u'Origin: {0:s}\\*').format(key_path)
 
     expected_msg_short = (
-        u'Name: ALLOYR~1 '
+        u'Name: Alloy Research '
         u'NTFS file reference: 44518-33 '
-        u'Origin: \\Software\\Microsoft\\Wind...')
+        u'Origin: \\Software\\Microsof...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
@@ -169,19 +155,19 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 6)
+    self.assertEqual(len(event_objects), 6)
 
     # A MRUListEx event object.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-01 13:52:39.113741')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -251,46 +237,46 @@ class TestMRUListExStringAndShellItemListPlugin(
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 31)
+    self.assertEqual(len(event_objects), 31)
 
     # A MRUListEx event object.
     event_object = event_objects[30]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-01 13:52:38.966290')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value 1]: Path: chrome.exe, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00, UNKNOWN: 0x00, '
-        u'UNKNOWN: 0x00] '
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        u'<UNKNOWN: 0x00> '
         u'Index: 2 [MRU Value 7]: '
         u'Path: {{48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}}, '
-        u'Shell item list: [Shared Documents Folder (Users Files), '
-        u'UNKNOWN: 0x00, Alloy Research] '
+        u'Shell item path: <Shared Documents Folder (Users Files)> '
+        u'<UNKNOWN: 0x00>\\Alloy Research '
         u'Index: 3 [MRU Value 6]: '
         u'Path: {{427865A0-03AF-4F25-82EE-10B6CB1DED3E}}, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00, UNKNOWN: 0x00] '
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
         u'Index: 4 [MRU Value 5]: '
         u'Path: {{24B5C9BB-48B5-47FF-8343-40481DBA1E2B}}, '
-        u'Shell item list: [My Computer, C:\\, Users, nfury, Documents] '
+        u'Shell item path: <My Computer> C:\\Users\\nfury\\Documents '
         u'Index: 5 [MRU Value 4]: '
         u'Path: {{0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}}, '
-        u'Shell item list: [My Computer, C:\\, Users, nfury, Documents, '
-        u'Alloy Research] '
+        u'Shell item path: <My Computer> C:\\Users\\nfury\\Documents\\'
+        u'Alloy Research '
         u'Index: 6 [MRU Value 3]: '
         u'Path: {{D4F85F66-003D-4127-BCE9-CAD7A57B2857}}, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00, UNKNOWN: 0x00] '
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
         u'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
-        u'Shell item list: [My Computer, P:\\, Application Tools, Firefox 6.0] '
+        u'Shell item path: <My Computer> P:\\Application Tools\\Firefox 6.0 '
         u'Index: 8 [MRU Value 2]: Path: Skype.exe, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00]').format(key_path)
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00>').format(key_path)
 
     expected_msg_short = (
         u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'

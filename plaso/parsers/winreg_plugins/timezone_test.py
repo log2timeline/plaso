@@ -1,25 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the timezone Windows Registry plugin."""
 
 import unittest
 
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import timezone as winreg_timezone
 from plaso.winreg import test_lib as winreg_test_lib
@@ -55,7 +41,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         winreg_test_lib.TestRegValue.REG_SZ))
 
     values.append(winreg_test_lib.TestRegValue(
-        'DaylightStart', '\x00\x00\x03\x00\x05\x00\x02\00'
+        'DaylightStart', '\x00\x00\x03\x00\x05\x00\x02\x00'
         '\x00\x00\x00\x00\x00\x00\x00\x00',
         winreg_test_lib.TestRegValue.REG_BINARY))
 
@@ -72,7 +58,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         winreg_test_lib.TestRegValue.REG_SZ))
 
     values.append(winreg_test_lib.TestRegValue(
-        'StandardStart', '\x00\x00\x0A\x00\x05\x00\x03\00'
+        'StandardStart', '\x00\x00\x0A\x00\x05\x00\x03\x00'
         '\x00\x00\x00\x00\x00\x00\x00\x00',
         winreg_test_lib.TestRegValue.REG_BINARY))
 
@@ -88,11 +74,11 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-01-30 10:47:57.000000')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -125,11 +111,11 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-03-11 07:00:00.000642')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '

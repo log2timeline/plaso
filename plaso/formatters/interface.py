@@ -1,21 +1,15 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""This file contains the event formatters interface classes."""
+"""This file contains the event formatters interface classes.
+
+The l2t_csv and other formats are dependent on a message field,
+referred to as description_long and description_short in l2t_csv.
+
+Plaso no longer stores these field explicitly.
+
+A formatter, with a format string definition, is used to convert
+the event object values into a formatted string that is similar
+to the description_long and description_short field.
+"""
 
 import logging
 import re
@@ -46,18 +40,15 @@ class EventFormatter(object):
   SOURCE_SHORT = u'LOG'
   SOURCE_LONG = u''
 
+  # The format string can be defined as:
+  # {name}, {name:format}, {name!conversion}, {name!conversion:format}
+  _FORMAT_STRING_ATTRIBUTE_NAME_RE = re.compile(
+      u'{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}')
+
   def __init__(self):
-    """Set up the formatter and determine if this is the right formatter."""
+    """Initializes an event formatter object."""
     super(EventFormatter, self).__init__()
-
-    # TODO: currently the output code directly accesses the format string
-    # attribute. Remove this.
-    self.format_string = None
-
-    # Forcing the format string to be Unicode to make sure we don't
-    # try to format it as an ASCII string.
-    self.source_string = unicode(self.SOURCE_LONG)
-    self.source_string_short = unicode(self.SOURCE_SHORT)
+    self._format_string_attribute_names = None
 
   def _FormatMessage(self, format_string, event_values):
     """Determines the formatted message string.
@@ -82,9 +73,9 @@ class EventFormatter(object):
       message_string = format_string.format(**event_values)
 
     except KeyError as exception:
-      logging.warning(
-          u'Unable to format string: {0:s} with error: {1:s}'.format(
-              format_string, exception))
+      logging.warning((
+          u'Unable to format string: "{0:s}" event object is missing required '
+          u'attributes: {1:s}').format(format_string, exception))
 
       attribute_values = []
       for attribute, value in event_values.iteritems():
@@ -95,7 +86,7 @@ class EventFormatter(object):
     # Strip carriage return and linefeed form the message strings.
     # Using replace function here because it is faster than re.sub() or
     # string.strip().
-    return message_string.replace('\r', u'').replace('\n', u'')
+    return message_string.replace(u'\r', u'').replace(u'\n', u'')
 
   def _FormatMessages(self, format_string, short_format_string, event_values):
     """Determines the formatted message strings.
@@ -121,25 +112,27 @@ class EventFormatter(object):
     if len(short_message_string) > 80:
       short_message_string = u'{0:s}...'.format(short_message_string[0:77])
 
-    # TODO: currently the output code directly accesses the format string
-    # attribute. Remove this.
-    self.format_string = format_string
-
     return message_string, short_message_string
 
-  def GetMessages(self, event_object):
-    """Return a list of messages extracted from an event object.
+  def GetFormatStringAttributeNames(self):
+    """Retrieves the attribute names in the format string.
 
-    The l2t_csv and other formats are dependent on a message field,
-    referred to as description_long and description_short in l2t_csv.
+    Returns:
+      A list containing the attribute names.
+    """
+    if self._format_string_attribute_names is None:
+      self._format_string_attribute_names = (
+          self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
+              self.FORMAT_STRING))
 
-    Plaso does not store this field explicitly, it only contains a format
-    string and the appropriate attributes.
+    return self._format_string_attribute_names
 
-    This method takes the format string and converts that back into a
-    formatted string that can be used for display.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
       event_object: the event object (instance of EventObject).
 
     Returns:
@@ -153,17 +146,26 @@ class EventFormatter(object):
           event_object.data_type))
 
     event_values = event_object.GetValues()
-
     return self._FormatMessages(
         self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
 
   def GetSources(self, event_object):
-    """Return a list containing source short and long."""
+    """Determines the the short and long source for an event object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple of the short and long source string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    return self.source_string_short, self.source_string
+    return self.SOURCE_SHORT, self.SOURCE_LONG
 
 
 class ConditionalEventFormatter(EventFormatter):
@@ -198,8 +200,8 @@ class ConditionalEventFormatter(EventFormatter):
 
     # The format string can be defined as:
     # {name}, {name:format}, {name!conversion}, {name!conversion:format}
-    regexp = re.compile('{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
-    regexp_name = re.compile('[a-z][a-zA-Z0-9_]*')
+    regexp = re.compile(u'{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
+    regexp_name = re.compile(u'[a-z][a-zA-Z0-9_]*')
 
     # The format string pieces map is a list containing the attribute name
     # per format string piece. E.g. ["Description: {description}"] would be
@@ -237,45 +239,75 @@ class ConditionalEventFormatter(EventFormatter):
             u'Invalid short format string piece: [{0:s}] contains more '
             u'than 1 attribute name.').format(format_string_piece))
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def _ConditionalFormatMessages(self, event_values):
+    """Determines the conditional formatted message strings.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      event_values: a dictionary object containing the event (object) values.
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
     """
-    if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
-
     # Using getattr here to make sure the attribute is not set to None.
     # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
     for map_index, attribute_name in enumerate(self._format_string_pieces_map):
-      if not attribute_name or hasattr(event_object, attribute_name):
+      if not attribute_name or attribute_name in event_values:
         if attribute_name:
-          attribute = getattr(event_object, attribute_name, None)
+          attribute = event_values.get(attribute_name, None)
           # If an attribute is an int, yet has zero value we want to include
           # that in the format string, since that is still potentially valid
           # information. Otherwise we would like to skip it.
           if type(attribute) not in (bool, int, long, float) and not attribute:
             continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
-    format_string = unicode(
-        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
+    format_string = unicode(self.FORMAT_STRING_SEPARATOR.join(string_pieces))
 
     string_pieces = []
     for map_index, attribute_name in enumerate(
         self._format_string_short_pieces_map):
-      if not attribute_name or getattr(event_object, attribute_name, None):
+      if not attribute_name or event_values.get(attribute_name, None):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
     short_format_string = unicode(
         self.FORMAT_STRING_SEPARATOR.join(string_pieces))
 
-    event_values = event_object.GetValues()
     return self._FormatMessages(
         format_string, short_format_string, event_values)
+
+  def GetFormatStringAttributeNames(self):
+    """Retrieves the attribute names in the format string.
+
+    Returns:
+      A list containing the attribute names.
+    """
+    if self._format_string_attribute_names is None:
+      self._format_string_attribute_names = []
+      for format_string_piece in self.FORMAT_STRING_PIECES:
+        attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
+              format_string_piece)
+
+        if attribute_names:
+          self._format_string_attribute_names.extend(attribute_names)
+
+    return self._format_string_attribute_names
+
+  def GetMessages(self, unused_ormatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    event_values = event_object.GetValues()
+    return self._ConditionalFormatMessages(event_values)

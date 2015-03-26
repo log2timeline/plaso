@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """bencode_interface contains basic interface for bencode plugins within Plaso.
 
 Bencoded files are only one example of a type of object that the Plaso tool is
@@ -128,9 +112,7 @@ class BencodePlugin(plugins.BasePlugin):
               yield keyval
 
   @abc.abstractmethod
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, data=None,
-      match=None, **kwargs):
+  def GetEntries(self, parser_mediator, data=None, match=None, **kwargs):
     """Extracts event object from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
@@ -148,19 +130,13 @@ class BencodePlugin(plugins.BasePlugin):
       desc = Short description.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       data: Bencode data in dictionary form. The default is None.
       match: Optional dictionary containing only the keys selected in the
              BENCODE_KEYS. The default is None.
     """
 
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None,
-      data=None, **kwargs):
+  def Process(self, parser_mediator, data, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current bencode file being processed is a match for
@@ -173,11 +149,7 @@ class BencodePlugin(plugins.BasePlugin):
     the plugin.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       data: Bencode data in dictionary form. The default is None.
 
     Raises:
@@ -191,15 +163,9 @@ class BencodePlugin(plugins.BasePlugin):
       raise errors.WrongBencodePlugin(self.NAME)
 
     # This will raise if unhandled keyword arguments are passed.
-    super(BencodePlugin, self).Process(parser_context, **kwargs)
+    super(BencodePlugin, self).Process(parser_mediator)
 
     logging.debug(u'Bencode Plugin Used: {0:s}'.format(self.NAME))
     match = self._GetKeys(data, self.BENCODE_KEYS, 3)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    self.GetEntries(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        data=data, match=match)
+    self.GetEntries(parser_mediator, data=data, match=match)

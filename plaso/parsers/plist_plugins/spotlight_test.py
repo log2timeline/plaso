@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the spotlight plist plugin."""
 
 import unittest
@@ -36,13 +21,12 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['com.apple.spotlight.plist'])
-    plist_name = 'com.apple.spotlight.plist'
+    plist_name = u'com.apple.spotlight.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, test_file, plist_name)
+        self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 9)
+    self.assertEqual(len(event_objects), 9)
 
     timestamps = []
     for event_object in event_objects:
@@ -59,7 +43,7 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     expected_desc = (u'Spotlight term searched "gr" associate to '
                      u'Grab (/Applications/Utilities/Grab.app)')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/UserShortcuts/gr {}'.format(expected_desc)
+    expected_string = u'/UserShortcuts/gr {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)

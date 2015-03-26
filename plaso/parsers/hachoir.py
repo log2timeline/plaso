@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a parser for extracting metadata."""
 # TODO: Add a unit test for this parser.
 
@@ -60,69 +44,66 @@ class HachoirEvent(time_events.TimestampEvent):
     self.metadata = attributes
 
 
-class HachoirParser(interface.BaseParser):
-  """Parse meta data from files."""
+class HachoirParser(interface.SingleFileBaseParser):
+  """Class to parse meta data from files using Hachoir."""
 
   NAME = 'hachoir'
   DESCRIPTION = u'Parser that wraps Hachoir.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from a file using Hachoir.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object using Hachoir.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_name = parser_mediator.GetDisplayName()
 
     try:
       fstream = hachoir_core.stream.InputIOStream(file_object, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     if not fstream:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, 'Not fstream'))
+              self.NAME, file_name, 'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     if not doc_parser:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, 'Not parser'))
+              self.NAME, file_name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     if not metatext:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
-              self.NAME, file_entry.name))
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+              self.NAME, file_name))
 
     attributes = {}
     extracted_events = []
@@ -137,8 +118,8 @@ class HachoirParser(interface.BaseParser):
 
       key2, _, value2 = value.partition(': ')
       if key2 == 'LastPrinted' and value2 != 'False':
-        date_object = timelib.StringToDatetime(
-            value2, timezone=parser_context.timezone)
+        date_object = timelib.Timestamp.FromTimeString(
+            value2, timezone=parser_mediator.timezone)
         if isinstance(date_object, datetime.datetime):
           extracted_events.append((date_object, key2))
 
@@ -161,12 +142,11 @@ class HachoirParser(interface.BaseParser):
     if not extracted_events:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, 'No events discovered'))
+              self.NAME, file_name, 'No events discovered'))
 
     for date, key in extracted_events:
       event_object = HachoirEvent(date, key, attributes)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(HachoirParser)

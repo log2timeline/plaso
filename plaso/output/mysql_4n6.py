@@ -1,24 +1,9 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Defines the output formatter for the MySQL database used by 4n6time."""
 
+# TODO: Add a unit test for this output module.
+
 import logging
-import re
 import sys
 
 import MySQLdb
@@ -26,9 +11,9 @@ import MySQLdb
 from plaso import formatters
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
@@ -43,10 +28,9 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
   NAME = 'mysql4n6'
   DESCRIPTION = u'MySQL database output for the 4n6time tool.'
 
-  FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
-
-  META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
-                 'color', 'type', 'record_number']
+  META_FIELDS = frozenset([
+      'sourcetype', 'source', 'user', 'host', 'MACB', 'color', 'type',
+      'record_number'])
 
   ARGUMENTS = [
       ('--db_user', {
@@ -103,19 +87,26 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
           'type': unicode,
           'default': '-'})]
 
-  def __init__(self, store, filehandle=sys.stdout, config=None,
-               filter_use=None):
-    """Constructor for the output module.
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
+    """Initializes the log output formatter object.
 
     Args:
-      store: The storage object.
-      filehandle: A file-like object that can be written to.
-      config: The configuration object for the module.
-      filter_use: The filter object used.
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
     """
-    # TODO: Add a unit test for this output module.
     super(Mysql4n6OutputFormatter, self).__init__(
-        store, filehandle, config, filter_use)
+        store, formatter_mediator, filehandle=filehandle, config=config,
+        filter_use=filter_use)
 
     self.set_status = getattr(config, 'set_status', None)
 
@@ -128,8 +119,78 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
     self.fields = getattr(config, 'fields', [
         'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
 
-  def Start(self):
-    """Connect to the database and create the table before inserting."""
+  def _GetDistinctValues(self, field_name):
+    """Query database for unique field types.
+
+    Args:
+      field_name: name of the filed to retrieve.
+    """
+    self.curs.execute(
+        u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
+            field_name))
+    res = {}
+    for row in self.curs.fetchall():
+      if row[0] != '':
+        res[row[0]] = int(row[1])
+    return res
+
+  def _ListTags(self):
+    """Query database for unique tag types."""
+    all_tags = []
+    self.curs.execute(
+        u'SELECT DISTINCT tag FROM log2timeline')
+
+    # This cleans up the messy SQL return.
+    for tag_row in self.curs.fetchall():
+      tag_string = tag_row[0]
+      if tag_string:
+        tags = tag_string.split(',')
+        for tag in tags:
+          if tag not in all_tags:
+            all_tags.append(tag)
+    return all_tags
+
+  def Close(self):
+    """Disconnects from the database.
+
+    This method will create the necessary indices and commit outstanding
+    transactions before disconnecting.
+    """
+    # Build up indices for the fields specified in the args.
+    # It will commit the inserts automatically before creating index.
+    if not self.append:
+      for field_name in self.fields:
+        sql = u'CREATE INDEX {0}_idx ON log2timeline ({0:s})'.format(field_name)
+        self.curs.execute(sql)
+        if self.set_status:
+          self.set_status(u'Created index: {0:s}'.format(field_name))
+
+    # Get meta info and save into their tables.
+    if self.set_status:
+      self.set_status(u'Creating metadata...')
+
+    for field in self.META_FIELDS:
+      vals = self._GetDistinctValues(field)
+      self.curs.execute(u'DELETE FROM l2t_{0:s}s'.format(field))
+      for name, freq in vals.items():
+        self.curs.execute((
+            u'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
+            u'VALUES("{2:s}", {3:d}) ').format(field, field, name, freq))
+
+    self.curs.execute(u'DELETE FROM l2t_tags')
+    for tag in self._ListTags():
+      self.curs.execute(
+          u'INSERT INTO l2t_tags (tag) VALUES ("{0:s}")'.format(tag))
+
+    if self.set_status:
+      self.set_status(u'Database created.')
+
+    self.conn.commit()
+    self.curs.close()
+    self.conn.close()
+
+  def Open(self):
+    """Connects to the database and creates the required tables."""
     if self.dbname == '':
       raise IOError(u'Specify a database name.')
 
@@ -212,73 +273,16 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
 
     self.count = 0
 
-  def End(self):
-    """Create indices and commit the transaction."""
-    # Build up indices for the fields specified in the args.
-    # It will commit the inserts automatically before creating index.
-    if not self.append:
-      for field_name in self.fields:
-        sql = u'CREATE INDEX {0}_idx ON log2timeline ({0:s})'.format(field_name)
-        self.curs.execute(sql)
-        if self.set_status:
-          self.set_status(u'Created index: {0:s}'.format(field_name))
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
-    # Get meta info and save into their tables.
-    if self.set_status:
-      self.set_status(u'Creating metadata...')
-
-    for field in self.META_FIELDS:
-      vals = self._GetDistinctValues(field)
-      self.curs.execute(u'DELETE FROM l2t_{0:s}s'.format(field))
-      for name, freq in vals.items():
-        self.curs.execute((
-            u'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
-            u'VALUES("{2:s}", {3:d}) ').format(field, field, name, freq))
-
-    self.curs.execute(u'DELETE FROM l2t_tags')
-    for tag in self._ListTags():
-      self.curs.execute(
-          u'INSERT INTO l2t_tags (tag) VALUES ("{0:s}")'.format(tag))
-
-    if self.set_status:
-      self.set_status(u'Database created.')
-
-    self.conn.commit()
-    self.curs.close()
-    self.conn.close()
-
-  def _GetDistinctValues(self, field_name):
-    """Query database for unique field types."""
-    self.curs.execute(
-        u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
-            field_name))
-    res = {}
-    for row in self.curs.fetchall():
-      if row[0] != '':
-        res[row[0]] = int(row[1])
-    return res
-
-  def _ListTags(self):
-    """Query database for unique tag types."""
-    all_tags = []
-    self.curs.execute(
-        u'SELECT DISTINCT tag FROM log2timeline')
-
-    # This cleans up the messy SQL return.
-    for tag_row in self.curs.fetchall():
-      tag_string = tag_row[0]
-      if tag_string:
-        tags = tag_string.split(',')
-        for tag in tags:
-          if tag not in all_tags:
-            all_tags.append(tag)
-    return all_tags
-
-  def EventBody(self, event_object):
-    """Formats data as 4n6time database table format and writes to the db.
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      event_object: The event object (EventObject).
+      event_object: the event object (instance of EventObject).
 
     Raises:
       raise errors.NoFormatterFound: If no formatter for this event is found.
@@ -292,6 +296,8 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
       raise errors.NoFormatterFound(
           u'Unable to output event, no event formatter found.')
 
+    # TODO: remove this hack part of the storage/output refactor.
+    # The event formatter class constants should not be changed directly.
     if (isinstance(
         event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
         event_formatter.FORMAT_STRING.find('<|>') == -1):
@@ -302,10 +308,10 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
       event_formatter.FORMAT_STRING_SEPARATOR = u'<|>'
 
     elif isinstance(event_formatter, formatters_interface.EventFormatter):
-      event_formatter.format_string = event_formatter.format_string.replace(
+      event_formatter.FORMAT_STRING = event_formatter.FORMAT_STRING.replace(
           '}', '}<|>')
 
-    msg, _ = event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
@@ -314,10 +320,10 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
       logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
     extra = []
-    format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
-        event_formatter.format_string)
+    format_variables = event_formatter.GetFormatStringAttributeNames()
     for key in event_object.GetAttributes():
-      if key in utils.RESERVED_VARIABLES or key in format_variables:
+      if (key in definitions.RESERVED_VARIABLE_NAMES or
+          key in format_variables):
         continue
       extra.append(u'{0:s}: {1!s} '.format(
           key, getattr(event_object, key, None)))

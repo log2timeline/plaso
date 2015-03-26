@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a formatter for Symantec logs."""
 
 from plaso.formatters import interface
@@ -165,37 +149,50 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Symantec AV Log'
   SOURCE_SHORT = 'LOG'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    if hasattr(event_object, 'event'):
-      event_object.event_map = self.EVENT_NAMES.get(
-          event_object.event, 'Unknown')
-    if hasattr(event_object, 'cat'):
-      event_object.category_map = self.CATEGORY_NAMES.get(
-          event_object.cat, 'Unknown')
-    if hasattr(event_object, 'action1'):
-      event_object.action1_map = self.ACTION_1_2_NAMES.get(
-          event_object.action1, 'Unknown')
-    if hasattr(event_object, 'action2'):
-      event_object.action2_map = self.ACTION_1_2_NAMES.get(
-          event_object.action2, 'Unknown')
-    if hasattr(event_object, 'action0'):
-      event_object.action0_map = self.ACTION_0_NAMES.get(
-          event_object.action0, 'Unknown')
-    return super(SymantecFormatter, self).GetMessages(event_object)
+    event_values = event_object.GetValues()
+
+    event = event_values.get(u'event', None)
+    if event:
+      event_values[u'event_map'] = self.EVENT_NAMES.get(event, u'Unknown')
+
+    category = event_values.get(u'cat', None)
+    if category:
+      event_values[u'category_map'] = self.CATEGORY_NAMES.get(
+          category, u'Unknown')
+
+    action = event_values.get(u'action0', None)
+    if action:
+      event_values[u'action0_map'] = self.ACTION_0_NAMES.get(action, u'Unknown')
+
+    action = event_values.get(u'action1', None)
+    if action:
+      event_values[u'action1_map'] = self.ACTION_1_2_NAMES.get(
+          action, u'Unknown')
+
+    action = event_values.get(u'action2', None)
+    if action:
+      event_values[u'action2_map'] = self.ACTION_1_2_NAMES.get(
+          action, u'Unknown')
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(SymantecFormatter)

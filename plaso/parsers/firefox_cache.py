@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Implements a parser for Firefox cache files."""
 
 import collections
@@ -98,8 +82,9 @@ class FirefoxCacheParser(interface.BaseParser):
       u'GET', 'HEAD', 'POST', 'PUT', 'DELETE',
       u'TRACE', 'OPTIONS', 'CONNECT', 'PATCH']
 
-  def _GetFirefoxConfig(self, file_entry):
+  def _GetFirefoxConfig(self, parser_mediator):
     """Determine cache file block size. Raises exception if not found."""
+    file_entry = parser_mediator.GetFileEntry()
 
     if file_entry.name[0:9] != '_CACHE_00':
       try:
@@ -110,7 +95,7 @@ class FirefoxCacheParser(interface.BaseParser):
       except pyparsing.ParseException:
         raise errors.UnableToParseFile(u'Not a Firefox cache file.')
 
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
 
     # There ought to be a valid record within the first 4MB. We use this
     # limit to prevent reading large invalid files.
@@ -144,6 +129,7 @@ class FirefoxCacheParser(interface.BaseParser):
         logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid record.'.format(
             self.NAME, file_entry.name, offset))
 
+    file_object.close()
     raise errors.UnableToParseFile(
         u'Could not find a valid cache record. '
         u'Not a Firefox cache file.')
@@ -208,36 +194,30 @@ class FirefoxCacheParser(interface.BaseParser):
 
     return FirefoxCacheEvent(candidate, request_method, url, response_code)
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract records from a Firefox cache file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    firefox_config = self._GetFirefoxConfig(file_entry)
+    firefox_config = self._GetFirefoxConfig(parser_mediator)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+    file_entry = parser_mediator.GetFileEntry()
+    file_name = file_entry.name
 
-    file_object = file_entry.GetFileObject()
-
-    file_object.seek(firefox_config.first_record_offset)
+    file_object = parser_mediator.GetFileObject()
+    file_object.seek(firefox_config.first_record_offset, os.SEEK_SET)
 
     while file_object.get_offset() < file_object.get_size():
       try:
         event_object = self.__NextRecord(
-            file_entry.name, file_object, firefox_config.block_size)
+            file_name, file_object, firefox_config.block_size)
 
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       except IOError:
         logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid cache record.'.format(
-            self.NAME, file_entry.name,
+            self.NAME, file_name,
             file_object.get_offset() - self.MIN_BLOCK_SIZE))
 
     file_object.close()

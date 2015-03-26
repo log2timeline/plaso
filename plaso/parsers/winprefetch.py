@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for Windows Prefetch files."""
 
 import logging
@@ -27,6 +11,7 @@ from plaso.events import windows_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -56,137 +41,139 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
 
     self.offset = 0
 
-    self.version = file_header.get('version', None)
+    self.version = file_header.get(u'version', None)
     self.executable = binary.Ut16StreamCopyToString(
-        file_header.get('executable', ''))
-    self.prefetch_hash = file_header.get('prefetch_hash', None)
+        file_header.get(u'executable', u''))
+    self.prefetch_hash = file_header.get(u'prefetch_hash', None)
 
-    self.run_count = file_information.get('run_count', None)
+    self.run_count = file_information.get(u'run_count', None)
     self.mapped_files = mapped_files
     self.path = path
 
-    self.number_of_volumes = file_information.get('number_of_volumes', 0)
+    self.number_of_volumes = file_information.get(u'number_of_volumes', 0)
     self.volume_serial_numbers = volume_serial_numbers
     self.volume_device_paths = volume_device_paths
 
 
-class WinPrefetchParser(interface.BaseParser):
+class WinPrefetchParser(interface.SingleFileBaseParser):
   """A parser for Windows Prefetch files."""
 
-  NAME = 'prefetch'
+  _INITIAL_FILE_OFFSET = None
+
+  NAME = u'prefetch'
   DESCRIPTION = u'Parser for Windows Prefetch files.'
 
-  FILE_SIGNATURE = 'SCCA'
+  FILE_SIGNATURE = b'SCCA'
 
   FILE_HEADER_STRUCT = construct.Struct(
-      'file_header',
-      construct.ULInt32('version'),
-      construct.String('signature', 4),
+      u'file_header',
+      construct.ULInt32(u'version'),
+      construct.String(u'signature', 4),
       construct.Padding(4),
-      construct.ULInt32('file_size'),
-      construct.String('executable', 60),
-      construct.ULInt32('prefetch_hash'),
-      construct.ULInt32('flags'))
+      construct.ULInt32(u'file_size'),
+      construct.String(u'executable', 60),
+      construct.ULInt32(u'prefetch_hash'),
+      construct.ULInt32(u'flags'))
 
   FILE_INFORMATION_V17 = construct.Struct(
-      'file_information_v17',
-      construct.ULInt32('metrics_array_offset'),
-      construct.ULInt32('number_of_metrics_array_entries'),
-      construct.ULInt32('trace_chains_array_offset'),
-      construct.ULInt32('number_of_trace_chains_array_entries'),
-      construct.ULInt32('filename_strings_offset'),
-      construct.ULInt32('filename_strings_size'),
-      construct.ULInt32('volumes_information_offset'),
-      construct.ULInt32('number_of_volumes'),
-      construct.ULInt32('volumes_information_size'),
-      construct.ULInt64('last_run_time'),
+      u'file_information_v17',
+      construct.ULInt32(u'metrics_array_offset'),
+      construct.ULInt32(u'number_of_metrics_array_entries'),
+      construct.ULInt32(u'trace_chains_array_offset'),
+      construct.ULInt32(u'number_of_trace_chains_array_entries'),
+      construct.ULInt32(u'filename_strings_offset'),
+      construct.ULInt32(u'filename_strings_size'),
+      construct.ULInt32(u'volumes_information_offset'),
+      construct.ULInt32(u'number_of_volumes'),
+      construct.ULInt32(u'volumes_information_size'),
+      construct.ULInt64(u'last_run_time'),
       construct.Padding(16),
-      construct.ULInt32('run_count'),
+      construct.ULInt32(u'run_count'),
       construct.Padding(4))
 
   FILE_INFORMATION_V23 = construct.Struct(
-      'file_information_v23',
-      construct.ULInt32('metrics_array_offset'),
-      construct.ULInt32('number_of_metrics_array_entries'),
-      construct.ULInt32('trace_chains_array_offset'),
-      construct.ULInt32('number_of_trace_chains_array_entries'),
-      construct.ULInt32('filename_strings_offset'),
-      construct.ULInt32('filename_strings_size'),
-      construct.ULInt32('volumes_information_offset'),
-      construct.ULInt32('number_of_volumes'),
-      construct.ULInt32('volumes_information_size'),
+      u'file_information_v23',
+      construct.ULInt32(u'metrics_array_offset'),
+      construct.ULInt32(u'number_of_metrics_array_entries'),
+      construct.ULInt32(u'trace_chains_array_offset'),
+      construct.ULInt32(u'number_of_trace_chains_array_entries'),
+      construct.ULInt32(u'filename_strings_offset'),
+      construct.ULInt32(u'filename_strings_size'),
+      construct.ULInt32(u'volumes_information_offset'),
+      construct.ULInt32(u'number_of_volumes'),
+      construct.ULInt32(u'volumes_information_size'),
       construct.Padding(8),
-      construct.ULInt64('last_run_time'),
+      construct.ULInt64(u'last_run_time'),
       construct.Padding(16),
-      construct.ULInt32('run_count'),
+      construct.ULInt32(u'run_count'),
       construct.Padding(84))
 
   FILE_INFORMATION_V26 = construct.Struct(
-      'file_information_v26',
-      construct.ULInt32('metrics_array_offset'),
-      construct.ULInt32('number_of_metrics_array_entries'),
-      construct.ULInt32('trace_chains_array_offset'),
-      construct.ULInt32('number_of_trace_chains_array_entries'),
-      construct.ULInt32('filename_strings_offset'),
-      construct.ULInt32('filename_strings_size'),
-      construct.ULInt32('volumes_information_offset'),
-      construct.ULInt32('number_of_volumes'),
-      construct.ULInt32('volumes_information_size'),
+      u'file_information_v26',
+      construct.ULInt32(u'metrics_array_offset'),
+      construct.ULInt32(u'number_of_metrics_array_entries'),
+      construct.ULInt32(u'trace_chains_array_offset'),
+      construct.ULInt32(u'number_of_trace_chains_array_entries'),
+      construct.ULInt32(u'filename_strings_offset'),
+      construct.ULInt32(u'filename_strings_size'),
+      construct.ULInt32(u'volumes_information_offset'),
+      construct.ULInt32(u'number_of_volumes'),
+      construct.ULInt32(u'volumes_information_size'),
       construct.Padding(8),
-      construct.ULInt64('last_run_time'),
-      construct.ULInt64('last_run_time1'),
-      construct.ULInt64('last_run_time2'),
-      construct.ULInt64('last_run_time3'),
-      construct.ULInt64('last_run_time4'),
-      construct.ULInt64('last_run_time5'),
-      construct.ULInt64('last_run_time6'),
-      construct.ULInt64('last_run_time7'),
+      construct.ULInt64(u'last_run_time'),
+      construct.ULInt64(u'last_run_time1'),
+      construct.ULInt64(u'last_run_time2'),
+      construct.ULInt64(u'last_run_time3'),
+      construct.ULInt64(u'last_run_time4'),
+      construct.ULInt64(u'last_run_time5'),
+      construct.ULInt64(u'last_run_time6'),
+      construct.ULInt64(u'last_run_time7'),
       construct.Padding(16),
-      construct.ULInt32('run_count'),
+      construct.ULInt32(u'run_count'),
       construct.Padding(96))
 
   METRICS_ARRAY_ENTRY_V17 = construct.Struct(
-      'metrics_array_entry_v17',
-      construct.ULInt32('start_time'),
-      construct.ULInt32('duration'),
-      construct.ULInt32('filename_string_offset'),
-      construct.ULInt32('filename_string_number_of_characters'),
+      u'metrics_array_entry_v17',
+      construct.ULInt32(u'start_time'),
+      construct.ULInt32(u'duration'),
+      construct.ULInt32(u'filename_string_offset'),
+      construct.ULInt32(u'filename_string_number_of_characters'),
       construct.Padding(4))
 
   # Note that at the moment for the purpose of this parser
   # the v23 and v26 metrics array entry structures are the same.
   METRICS_ARRAY_ENTRY_V23 = construct.Struct(
-      'metrics_array_entry_v23',
-      construct.ULInt32('start_time'),
-      construct.ULInt32('duration'),
-      construct.ULInt32('average_duration'),
-      construct.ULInt32('filename_string_offset'),
-      construct.ULInt32('filename_string_number_of_characters'),
+      u'metrics_array_entry_v23',
+      construct.ULInt32(u'start_time'),
+      construct.ULInt32(u'duration'),
+      construct.ULInt32(u'average_duration'),
+      construct.ULInt32(u'filename_string_offset'),
+      construct.ULInt32(u'filename_string_number_of_characters'),
       construct.Padding(4),
-      construct.ULInt64('file_reference'))
+      construct.ULInt64(u'file_reference'))
 
   VOLUME_INFORMATION_V17 = construct.Struct(
-      'volume_information_v17',
-      construct.ULInt32('device_path_offset'),
-      construct.ULInt32('device_path_number_of_characters'),
-      construct.ULInt64('creation_time'),
-      construct.ULInt32('serial_number'),
+      u'volume_information_v17',
+      construct.ULInt32(u'device_path_offset'),
+      construct.ULInt32(u'device_path_number_of_characters'),
+      construct.ULInt64(u'creation_time'),
+      construct.ULInt32(u'serial_number'),
       construct.Padding(8),
-      construct.ULInt32('directory_strings_offset'),
-      construct.ULInt32('number_of_directory_strings'),
+      construct.ULInt32(u'directory_strings_offset'),
+      construct.ULInt32(u'number_of_directory_strings'),
       construct.Padding(4))
 
   # Note that at the moment for the purpose of this parser
   # the v23 and v26 volume information structures are the same.
   VOLUME_INFORMATION_V23 = construct.Struct(
-      'volume_information_v23',
-      construct.ULInt32('device_path_offset'),
-      construct.ULInt32('device_path_number_of_characters'),
-      construct.ULInt64('creation_time'),
-      construct.ULInt32('serial_number'),
+      u'volume_information_v23',
+      construct.ULInt32(u'device_path_offset'),
+      construct.ULInt32(u'device_path_number_of_characters'),
+      construct.ULInt64(u'creation_time'),
+      construct.ULInt32(u'serial_number'),
       construct.Padding(8),
-      construct.ULInt32('directory_strings_offset'),
-      construct.ULInt32('number_of_directory_strings'),
+      construct.ULInt32(u'directory_strings_offset'),
+      construct.ULInt32(u'number_of_directory_strings'),
       construct.Padding(68))
 
   def _ParseFileHeader(self, file_object):
@@ -207,7 +194,7 @@ class WinPrefetchParser(interface.BaseParser):
     if not file_header:
       raise errors.UnableToParseFile(u'Unable to read file header')
 
-    if file_header.get('signature', None) != self.FILE_SIGNATURE:
+    if file_header.get(u'signature', None) != self.FILE_SIGNATURE:
       raise errors.UnableToParseFile(u'Unsupported file signature')
 
     return file_header
@@ -254,9 +241,9 @@ class WinPrefetchParser(interface.BaseParser):
     """
     metrics_array = []
 
-    metrics_array_offset = file_information.get('metrics_array_offset', 0)
+    metrics_array_offset = file_information.get(u'metrics_array_offset', 0)
     number_of_metrics_array_entries = file_information.get(
-        'number_of_metrics_array_entries', 0)
+        u'number_of_metrics_array_entries', 0)
 
     if metrics_array_offset > 0 and number_of_metrics_array_entries > 0:
       file_object.seek(metrics_array_offset, os.SEEK_SET)
@@ -295,8 +282,9 @@ class WinPrefetchParser(interface.BaseParser):
     Returns:
       A dict of filename strings with their byte offset as the key.
     """
-    filename_strings_offset = file_information.get('filename_strings_offset', 0)
-    filename_strings_size = file_information.get('filename_strings_size', 0)
+    filename_strings_offset = file_information.get(
+        u'filename_strings_offset', 0)
+    filename_strings_size = file_information.get(u'filename_strings_size', 0)
 
     if filename_strings_offset > 0 and filename_strings_size > 0:
       file_object.seek(filename_strings_offset, os.SEEK_SET)
@@ -322,10 +310,10 @@ class WinPrefetchParser(interface.BaseParser):
       A volume information construct object.
     """
     volumes_information_offset = file_information.get(
-        'volumes_information_offset', 0)
+        u'volumes_information_offset', 0)
 
     if volumes_information_offset > 0:
-      number_of_volumes = file_information.get('number_of_volumes', 0)
+      number_of_volumes = file_information.get(u'number_of_volumes', 0)
       file_object.seek(volumes_information_offset, os.SEEK_SET)
 
       while number_of_volumes > 0:
@@ -357,13 +345,13 @@ class WinPrefetchParser(interface.BaseParser):
       A Unicode string containing the device path or None if not available.
     """
     volumes_information_offset = file_information.get(
-        'volumes_information_offset', 0)
+        u'volumes_information_offset', 0)
 
     device_path = None
     if volumes_information_offset > 0:
-      device_path_offset = volume_information.get('device_path_offset', 0)
+      device_path_offset = volume_information.get(u'device_path_offset', 0)
       device_path_size = 2 * volume_information.get(
-          'device_path_number_of_characters', 0)
+          u'device_path_number_of_characters', 0)
 
       if device_path_offset >= 36 and device_path_size > 0:
         device_path_offset += volumes_information_offset
@@ -377,29 +365,31 @@ class WinPrefetchParser(interface.BaseParser):
 
     return device_path
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extracts events from a Windows Prefetch file.
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(cls.FILE_SIGNATURE, offset=4)
+    return format_specification
+
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Windows Prefetch file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
+
     file_header = self._ParseFileHeader(file_object)
 
-    format_version = file_header.get('version', None)
+    format_version = file_header.get(u'version', None)
     if format_version not in [17, 23, 26]:
       raise errors.UnableToParseFile(
           u'Unsupported format version: {0:d}'.format(format_version))
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     file_information = self._ParseFileInformation(file_object, format_version)
     metrics_array = self._ParseMetricsArray(
@@ -408,12 +398,11 @@ class WinPrefetchParser(interface.BaseParser):
       filename_strings = self._ParseFilenameStrings(
           file_object, file_information)
     except UnicodeDecodeError as exception:
+      file_name = parser_mediator.GetDisplayName()
       logging.warning((
           u'[{0:s}] Unable to parse filename information from file {1:s} '
           u'with error: {2:s}').format(
-              parser_chain,
-              file_entry.path_spec.comparable.replace(u'\n', u';'),
-              exception))
+              parser_mediator.GetParserChain(), file_name, exception))
       filename_strings = {}
 
     if len(metrics_array) != len(filename_strings):
@@ -421,7 +410,7 @@ class WinPrefetchParser(interface.BaseParser):
           u'Mismatch in number of metrics and filename strings array entries.')
 
     executable = binary.Ut16StreamCopyToString(
-        file_header.get('executable', u''))
+        file_header.get(u'executable', u''))
 
     volume_serial_numbers = []
     volume_device_paths = []
@@ -429,20 +418,19 @@ class WinPrefetchParser(interface.BaseParser):
 
     for volume_information in self._ParseVolumesInformationSection(
         file_object, format_version, file_information):
-      volume_serial_number = volume_information.get('serial_number', 0)
+      volume_serial_number = volume_information.get(u'serial_number', 0)
       volume_device_path = self._ParseVolumeDevicePath(
           file_object, file_information, volume_information)
 
       volume_serial_numbers.append(volume_serial_number)
       volume_device_paths.append(volume_device_path)
 
-      timestamp = volume_information.get('creation_time', 0)
+      timestamp = volume_information.get(u'creation_time', 0)
       if timestamp:
         event_object = windows_events.WindowsVolumeCreationEvent(
             timestamp, volume_device_path, volume_serial_number,
-            file_entry.name)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+            parser_mediator.GetFileEntry().name)
+        parser_mediator.ProduceEvent(event_object)
 
       for filename in filename_strings.itervalues():
         if not filename:
@@ -453,9 +441,9 @@ class WinPrefetchParser(interface.BaseParser):
 
     mapped_files = []
     for metrics_array_entry in metrics_array:
-      file_reference = metrics_array_entry.get('file_reference', 0)
+      file_reference = metrics_array_entry.get(u'file_reference', 0)
       filename_string_offset = metrics_array_entry.get(
-          'filename_string_offset', 0)
+          u'filename_string_offset', 0)
 
       filename = filename_strings.get(filename_string_offset, u'')
       if not filename:
@@ -473,19 +461,18 @@ class WinPrefetchParser(interface.BaseParser):
 
       mapped_files.append(mapped_file_string)
 
-    timestamp = file_information.get('last_run_time', 0)
+    timestamp = file_information.get(u'last_run_time', 0)
     if timestamp:
       event_object = WinPrefetchExecutionEvent(
           timestamp, eventdata.EventTimestamp.LAST_RUNTIME, file_header,
           file_information, mapped_files, path, volume_serial_numbers,
           volume_device_paths)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     # Check for the 7 older last run time values available in v26.
     if format_version == 26:
       for last_run_time_index in range(1, 8):
-        last_run_time_identifier = 'last_run_time{0:d}'.format(
+        last_run_time_identifier = u'last_run_time{0:d}'.format(
             last_run_time_index)
 
         timestamp = file_information.get(last_run_time_identifier, 0)
@@ -495,10 +482,7 @@ class WinPrefetchParser(interface.BaseParser):
               u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME),
               file_header, file_information, mapped_files, path,
               volume_serial_numbers, volume_device_paths)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
-
-    file_object.close()
+          parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(WinPrefetchParser)

@@ -1,31 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the JSON output class."""
 
-import StringIO
+import io
+import os
+import sys
 import unittest
 
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.lib import event
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.output import json_out
+from plaso.output import test_lib
 
 
 class JsonTestEvent(event.EventObject):
@@ -35,8 +23,7 @@ class JsonTestEvent(event.EventObject):
   def __init__(self):
     """Initialize event with data."""
     super(JsonTestEvent, self).__init__()
-    self.timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-06-27 18:17:01+00:00')
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'
     self.display_name = u'OS: /var/log/syslog.1'
     self.inode = 12345678
@@ -45,45 +32,75 @@ class JsonTestEvent(event.EventObject):
         u'closed for user root)')
     self.username = u'root'
 
+    os_location = u'{0:s}{1:s}'.format(
+        os.path.sep, os.path.join(u'cases', u'image.dd'))
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=u'/cases/image.dd')
+        definitions.TYPE_INDICATOR_OS, location=os_location)
     self.pathspec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_TSK, inode=15, location=u'/var/log/syslog.1',
         parent=os_path_spec)
 
 
-class JsonOutputTest(unittest.TestCase):
+class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
   """Tests for the JSON outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self.output = StringIO.StringIO()
-    self.formatter = json_out.JsonOutputFormatter(None, self.output)
-    self.event_object = JsonTestEvent()
+    super(JsonOutputTest, self).setUp()
+    self._output = io.BytesIO()
+    self._formatter = json_out.JsonOutputFormatter(
+        None, self._formatter_mediator, filehandle=self._output)
+    self._event_object = JsonTestEvent()
 
-  def testStartAndEnd(self):
-    """Test to ensure start and end functions do not add text."""
-    self.formatter.Start()
-    self.assertEquals(self.output.getvalue(), u'{')
-    self.formatter.End()
-    self.assertEquals(self.output.getvalue(), u'{"event_foo": "{}"}')
+  def testWriteHeaderAndfooter(self):
+    """Tests the WriteHeader and WriteFooter functions."""
+    expected_header = b'{'
+    expected_footer = b'{"event_foo": "{}"}'
 
-  def testEventBody(self):
-    """Test ensures that returned lines returned are formatted as JSON."""
+    self._formatter.WriteHeader()
 
-    expected_string = (
-        '"event_0": {{"username": "root", "display_name": "OS: '
-        '/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
-        '"timestamp": 1340821021000000, "hostname": "ubuntu", "text": '
-        '"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
-        'closed for user root)", "pathspec": {{"inode": 15, '
-        '"type_indicator": "TSK", "location": "/var/log/syslog.1", '
-        '"parent": {{"type_indicator": "OS", '
-        '"location": "/cases/image.dd"}}}}, '
-        '"inode": 12345678}},\n').format(self.event_object.uuid)
+    header = self._output.getvalue()
+    self.assertEqual(header, expected_header)
 
-    self.formatter.EventBody(self.event_object)
-    self.assertEquals(self.output.getvalue(), expected_string)
+    self._formatter.WriteFooter()
+
+    footer = self._output.getvalue()
+    self.assertEqual(footer, expected_footer)
+
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    self._formatter.WriteEventBody(self._event_object)
+
+    expected_uuid = self._event_object.uuid.encode(u'utf-8')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-06-27 18:17:01')
+
+    if sys.platform.startswith('win'):
+      expected_os_location = u'C:\\{0:s}'.format(
+          os.path.join(u'cases', u'image.dd'))
+      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
+      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
+      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
+    else:
+      expected_os_location = u'{0:s}{1:s}'.format(
+          os.path.sep, os.path.join(u'cases', u'image.dd'))
+
+    expected_os_location = expected_os_location.encode(u'utf-8')
+
+    expected_event_body = (
+        b'"event_0": {{"username": "root", "display_name": "OS: '
+        b'/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
+        b'"timestamp": {1:d}, "hostname": "ubuntu", "text": '
+        b'"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
+        b'closed for user root)", "pathspec": {{"inode": 15, '
+        b'"type_indicator": "TSK", "location": "/var/log/syslog.1", '
+        b'"parent": {{"type_indicator": "OS", '
+        b'"location": "{2:s}"}}}}, '
+        b'"inode": 12345678}},\n').format(
+            expected_uuid, expected_timestamp, expected_os_location)
+
+    event_body = self._output.getvalue()
+    self.assertEqual(event_body, expected_event_body)
 
 
 if __name__ == '__main__':

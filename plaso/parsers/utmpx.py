@@ -1,27 +1,12 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for utmpx files."""
 
 # TODO: Add support for other implementations than Mac OS X.
 #       The parser should be checked against IOS UTMPX file.
 
-import construct
 import logging
+
+import construct
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -57,7 +42,7 @@ class UtmpxMacOsXEvent(event.EventObject):
     self.computer_name = computer_name
 
 
-class UtmpxParser(interface.BaseParser):
+class UtmpxParser(interface.SingleFileBaseParser):
   """Parser for UTMPX files."""
 
   NAME = 'utmpx'
@@ -83,18 +68,18 @@ class UtmpxParser(interface.BaseParser):
 
   # 9, 10 and 11 are only for Darwin and IOS.
   MAC_STATUS_TYPE = {
-      0: 'EMPTY',
-      1: 'RUN_LVL',
-      2: 'BOOT_TIME',
-      3: 'OLD_TIME',
-      4: 'NEW_TIME',
-      5: 'INIT_PROCESS',
-      6: 'LOGIN_PROCESS',
-      7: 'USER_PROCESS',
-      8: 'DEAD_PROCESS',
-      9: 'ACCOUNTING',
-      10: 'SIGNATURE',
-      11: 'SHUTDOWN_TIME'}
+      0: u'EMPTY',
+      1: u'RUN_LVL',
+      2: u'BOOT_TIME',
+      3: u'OLD_TIME',
+      4: u'NEW_TIME',
+      5: u'INIT_PROCESS',
+      6: u'LOGIN_PROCESS',
+      7: u'USER_PROCESS',
+      8: u'DEAD_PROCESS',
+      9: u'ACCOUNTING',
+      10: u'SIGNATURE',
+      11: u'SHUTDOWN_TIME'}
 
   def _ReadEntry(self, file_object):
     """Reads an UTMPX entry.
@@ -117,13 +102,13 @@ class UtmpxParser(interface.BaseParser):
               exception))
       return
 
-    user, _, _ = entry.user.partition('\x00')
+    user, _, _ = entry.user.partition(b'\x00')
     if not user:
       user = u'N/A'
-    terminal, _, _ = entry.tty_name.partition('\x00')
+    terminal, _, _ = entry.tty_name.partition(b'\x00')
     if not terminal:
       terminal = u'N/A'
-    computer_name, _, _ = entry.hostname.partition('\x00')
+    computer_name, _, _ = entry.hostname.partition(b'\x00')
     if not computer_name:
       computer_name = u'localhost'
 
@@ -174,34 +159,26 @@ class UtmpxParser(interface.BaseParser):
 
     return True
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from a UTMPX file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an UTMPX file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: The file-like object to extract data from.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
     if not self._VerifyStructure(file_object):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'The file is not an UTMPX file.')
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     event_object = self._ReadEntry(file_object)
     while event_object:
       event_object.offset = file_object.tell()
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
       event_object = self._ReadEntry(file_object)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(UtmpxParser)

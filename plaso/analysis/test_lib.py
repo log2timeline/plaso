@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Analysis plugin related functions and classes for testing."""
 
 import os
@@ -29,7 +13,7 @@ from plaso.artifacts import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.lib import event
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 class TestAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
@@ -117,13 +101,14 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
     parse_error_queue = single_process.SingleProcessQueue()
 
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue, knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    parser_mediator.SetFileEntry(file_entry)
 
-    parser_object.Parse(parser_context, file_entry)
+    parser_object.Parse(parser_mediator)
     event_queue.SignalEndOfInput()
 
     return event_queue

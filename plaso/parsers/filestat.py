@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """File system stat object parser."""
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -55,7 +39,7 @@ class FileStatParser(interface.BaseParser):
   DESCRIPTION = u'Parser for file system stat information.'
 
   _TIME_ATTRIBUTES = frozenset([
-      'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
+      u'atime', u'bkup_time', u'ctime', u'crtime', u'dtime', u'mtime'])
 
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
     """Return a filesystem type string from a file entry object.
@@ -77,30 +61,24 @@ class FileStatParser(interface.BaseParser):
     fs_info = file_system.GetFsInfo()
     if fs_info.info:
       type_string = unicode(fs_info.info.ftype)
-      if type_string.startswith('TSK_FS_TYPE'):
+      if type_string.startswith(u'TSK_FS_TYPE'):
         return type_string[12:]
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extracts event objects from a file system stat entry.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
+    file_entry = parser_mediator.GetFileEntry()
     stat_object = file_entry.GetStat()
     if not stat_object:
       return
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
-    is_allocated = getattr(stat_object, 'allocated', True)
-    file_size = getattr(stat_object, 'size', None),
+    is_allocated = getattr(stat_object, u'allocated', True)
+    file_size = getattr(stat_object, u'size', None),
 
     for time_attribute in self._TIME_ATTRIBUTES:
       timestamp = getattr(stat_object, time_attribute, None)
@@ -113,7 +91,8 @@ class FileStatParser(interface.BaseParser):
       timestamp = timelib.Timestamp.FromPosixTime(timestamp)
       if nano_time_attribute is not None:
         # Note that the _nano values are in intervals of 100th nano seconds.
-        timestamp += nano_time_attribute / 10
+        micro_time_attribute, _ = divmod(nano_time_attribute, 10)
+        timestamp += micro_time_attribute
 
       # TODO: this also ignores any timestamp that equals 0.
       # Is this the desired behavior?
@@ -122,8 +101,7 @@ class FileStatParser(interface.BaseParser):
 
       event_object = FileStatEvent(
           timestamp, time_attribute, is_allocated, file_size, file_system_type)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(FileStatParser)

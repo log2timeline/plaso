@@ -1,28 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the SkyDriveLogErr log parser."""
 
 import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import skydrivelogerr as skydrivelogerr_formatter
-from plaso.lib import timelib_test
-from plaso.parsers import skydrivelogerr as skydrivelogerr_parser
+from plaso.lib import timelib
+from plaso.parsers import skydrivelogerr
 from plaso.parsers import test_lib
 
 
@@ -34,7 +19,7 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._parser = skydrivelogerr_parser.SkyDriveLogErrorParser()
+    self._parser = skydrivelogerr.SkyDriveLogErrorParser()
 
   def testParse(self):
     """Tests the Parse function."""
@@ -42,24 +27,24 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 19)
+    self.assertEqual(len(event_objects), 19)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-07-25 16:03:23.291')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-07-25 16:03:24.649')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-08-01 21:27:44.124')
-    self.assertEquals(event_objects[18].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[18].timestamp, expected_timestamp)
 
     expected_detail = (
         u'StartLocalTime: 2013-07-25-180323.291 PID=0x8f4 TID=0x718 '
         u'ContinuedFrom=')
-    self.assertEquals(event_objects[0].detail, expected_detail)
+    self.assertEqual(event_objects[0].detail, expected_detail)
 
     expected_string = (
         u'Logging started. Version= 17.0.2011.0627 ({0:s})').format(
@@ -90,13 +75,13 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 19)
+    self.assertEqual(len(event_objects), 19)
 
     # TODO: check if this test passes because the encoding on my system
     # is UTF-8.
     expected_text = (
         u'No node found named Passport-Jméno-člena')
-    self.assertEquals(event_objects[3].text, expected_text)
+    self.assertEqual(event_objects[3].text, expected_text)
 
 
 if __name__ == '__main__':

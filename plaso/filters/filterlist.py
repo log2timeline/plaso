@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""This file contains definition for a list of ObjectFilter."""
 import os
 import yaml
 import logging
@@ -23,6 +7,7 @@ from plaso.lib import errors
 from plaso.lib import filter_interface
 from plaso.lib import pfilter
 
+# TODO: This file requires a cleanup to confirm with project style etc..
 
 def IncludeKeyword(loader, node):
   """A constructor for the include keyword in YAML."""
@@ -60,19 +45,20 @@ class ObjectFilterList(filter_interface.FilterObject):
             u'Unable to parse YAML file with error: {0:s}.'.format(exception))
 
     self.filters = []
-    if type(results) is dict:
+    results_type = type(results)
+    if results_type is dict:
       self._ParseEntry(results)
-    elif type(results) is list:
+    elif results_type is list:
       for result in results:
         if type(result) is not dict:
           raise errors.WrongPlugin(
               u'Wrong format of YAML file, entry not a dict ({})'.format(
-                  type(result)))
+                  results_type))
         self._ParseEntry(result)
     else:
       raise errors.WrongPlugin(
           u'Wrong format of YAML file, entry not a dict ({})'.format(
-              type(result)))
+              results_type))
 
   def _ParseEntry(self, entry):
     """Parse a single YAML filter entry."""
@@ -104,6 +90,4 @@ class ObjectFilterList(filter_interface.FilterObject):
                 meta.get('urls', [])))
         return True
 
-    return False
-
-
+    return

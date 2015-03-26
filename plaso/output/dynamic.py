@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Contains a formatter for a dynamic output module for plaso."""
 
 import logging
@@ -211,7 +195,7 @@ class DynamicOutput(interface.FileLogOutputFormatter):
           u'Unable to find no event formatter for: {0:s}.'.format(
               event_object.data_type))
 
-    msg, _ = event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     return msg
 
   def ParseMessageShort(self, event_object):
@@ -231,7 +215,8 @@ class DynamicOutput(interface.FileLogOutputFormatter):
           u'Unable to find no event formatter for: {0:s}.'.format(
               event_object.data_type))
 
-    _, msg_short = event_formatter.GetMessages(event_object)
+    _, msg_short = event_formatter.GetMessages(
+        self._formatter_mediator, event_object)
     return msg_short
 
   def ParseInode(self, event_object):
@@ -248,8 +233,36 @@ class DynamicOutput(interface.FileLogOutputFormatter):
     """Return a legacy MACB representation."""
     return helper.GetLegacy(event_object)
 
-  def Start(self):
-    """Returns a header for the output."""
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+    row = []
+    for field in self.fields:
+      has_call_back = self.SPECIAL_HANDLING.get(field, None)
+      call_back = None
+      if has_call_back:
+        call_back = getattr(self, has_call_back, None)
+
+      if call_back:
+        row.append(call_back(event_object))
+      else:
+        row.append(getattr(event_object, field, u'-'))
+
+    out_write = u'{0:s}\n'.format(
+        self.separator.join(unicode(x).replace(
+            self.separator, u' ') for x in row))
+    self.filehandle.WriteLine(out_write)
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
     # Start by finding out which fields are to be used.
     self.fields = []
 
@@ -276,33 +289,6 @@ class DynamicOutput(interface.FileLogOutputFormatter):
 
     self.filehandle.WriteLine('{0:s}\n'.format(
         self.separator.join(self.fields)))
-
-  def WriteEvent(self, event_object):
-    """Write a single event."""
-    try:
-      self.EventBody(event_object)
-    except errors.NoFormatterFound:
-      logging.error(u'Unable to output line, no formatter found.')
-      logging.error(event_object)
-
-  def EventBody(self, event_object):
-    """Formats data as "dynamic" CSV and writes to the filehandle."""
-    row = []
-    for field in self.fields:
-      has_call_back = self.SPECIAL_HANDLING.get(field, None)
-      call_back = None
-      if has_call_back:
-        call_back = getattr(self, has_call_back, None)
-
-      if call_back:
-        row.append(call_back(event_object))
-      else:
-        row.append(getattr(event_object, field, u'-'))
-
-    out_write = u'{0:s}\n'.format(
-        self.separator.join(unicode(x).replace(
-            self.separator, u' ') for x in row))
-    self.filehandle.WriteLine(out_write)
 
 
 manager.OutputManager.RegisterOutput(DynamicOutput)

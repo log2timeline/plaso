@@ -1,23 +1,9 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Formatters for Windows XML EventLog (EVTX) related events."""
+"""Formatter for Windows XML EventLog (EVTX) files."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class WinEvtxFormatter(interface.ConditionalEventFormatter):
@@ -31,8 +17,8 @@ class WinEvtxFormatter(interface.ConditionalEventFormatter):
       u'Event Level: {event_level}',
       u'Source Name: {source_name}',
       u'Computer Name: {computer_name}',
-      u'Strings: {strings}',
-      u'XML string: {xml_strings}']
+      u'Message string: {message_string}',
+      u'Strings: {strings}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'[{event_identifier} /',
@@ -41,6 +27,43 @@ class WinEvtxFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'WinEVTX'
   SOURCE_SHORT = 'EVT'
+
+  def GetMessages(self, formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    event_values = event_object.GetValues()
+
+    source_name = event_values.get(u'source_name', None)
+    message_identifier = event_values.get(u'message_identifier', None)
+    strings = event_values.get(u'strings', [])
+    if source_name and message_identifier:
+      message_string = formatter_mediator.GetWindowsEventMessage(
+          source_name, message_identifier)
+      if message_string:
+        event_values[u'message_string'] = message_string.format(*strings)
+
+    message_strings = []
+    for string in strings:
+      message_strings.append(u'\'{0:s}\''.format(string))
+    message_string = u', '.join(message_strings)
+    event_values[u'strings'] = u'[{0:s}]'.format(message_string)
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinEvtxFormatter)

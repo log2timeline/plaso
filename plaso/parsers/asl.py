@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The Apple System Log Parser."""
 
 import construct
@@ -80,8 +64,10 @@ class AslEvent(event.EventObject):
     self.extra_information = extra_information
 
 
-class AslParser(interface.BaseParser):
+class AslParser(interface.SingleFileBaseParser):
   """Parser for ASL log files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'asl_log'
   DESCRIPTION = u'Parser for ASL log files.'
@@ -91,7 +77,7 @@ class AslParser(interface.BaseParser):
   # If not right assigned, the value is "-1".
   ASL_NO_RIGHTS = 'ffffffff'
 
-  # Priority level (criticity)
+  # Priority level (criticality)
   ASL_MESSAGE_PRIORITY = {
       0 : 'EMERGENCY',
       1 : 'ALERT',
@@ -184,7 +170,7 @@ class AslParser(interface.BaseParser):
   ASL_POINTER = construct.UBInt64('pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
-  # [2 bytes padding][4 bytes lenght of String][String].
+  # [2 bytes padding][4 bytes length of String][String].
   ASL_RECORD_DYN_VALUE = construct.Struct(
       'asl_record_dyn_value',
       construct.Padding(2),
@@ -192,27 +178,25 @@ class AslParser(interface.BaseParser):
           'value',
           length_field=construct.UBInt32('length')))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract entries from an ASL file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an ALS file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
     if header.magic != self.ASL_MAGIC:
-      file_object.close()
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
 
     # Get the first and the last entry.
@@ -220,26 +204,20 @@ class AslParser(interface.BaseParser):
     old_offset = header.offset
     last_offset_header = header.last_offset
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     # If the ASL file has entries.
     if offset:
       event_object, offset = self.ReadAslEvent(file_object, offset)
       while event_object:
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
-        # TODO: an anomaly object must be emitted once that is implemented.
         # Sanity check, the last read element must be the same as
         # indicated by the header.
         if offset == 0 and old_offset != last_offset_header:
-          logging.warning(u'Parsing ended before the header ends.')
+          parser_mediator.ProduceParseError(
+              u'Unable to parse header. Last element header does not match '
+              u'header offset.')
         old_offset = offset
         event_object, offset = self.ReadAslEvent(file_object, offset)
-
-    file_object.close()
 
   def ReadAslEvent(self, file_object, offset):
     """Returns an AslEvent from a single ASL entry.
@@ -249,7 +227,8 @@ class AslParser(interface.BaseParser):
       offset: offset where the static part of the entry starts.
 
     Returns:
-      An event object constructed from a single ASL record.
+      An event object constructed from a single ASL record, and the offset to
+      the next entry in the file.
     """
     # The heap of the entry is saved to try to avoid seek (performance issue).
     # It has the real start position of the entry.
@@ -285,8 +264,8 @@ class AslParser(interface.BaseParser):
     # After the four first fields, the entry might have extra ASL_Fields.
     # For each extra ASL_field, it has a pair of 8-byte fields where the first
     # 8 bytes contains the name of the extra ASL_field and the second 8 bytes
-    # contains the text of the exta field.
-    # All of this 8-byte field can be saved using one of these three differents
+    # contains the text of the extra field.
+    # All of this 8-byte field can be saved using one of these three different
     # types:
     # - Null value ('0000000000000000'): nothing to do.
     # - String: It is string if first bit = 1 or first nibble = 8 (1000).
@@ -327,7 +306,7 @@ class AslParser(interface.BaseParser):
       if field != 0:
         # The next IF ELSE is only for performance issues, avoiding seek.
         # If the pointer points a lower position than where the actual entry
-        # starts, it means that it points to a previuos entry.
+        # starts, it means that it points to a previous entry.
         pos = field - dynamic_start
         # Bigger or equal 0 means that the data is in the actual entry.
         if pos >= 0:

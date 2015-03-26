@@ -1,24 +1,9 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatter for the shell item events."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
@@ -31,15 +16,42 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
       u'Long name: {long_name}',
       u'Localized name: {localized_name}',
       u'NTFS file reference: {file_reference}',
+      u'Shell item path: {shell_item_path}',
       u'Origin: {origin}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Name: {name}',
+      u'Name: {file_entry_name}',
       u'NTFS file reference: {file_reference}',
       u'Origin: {origin}']
 
   SOURCE_LONG = 'File entry shell item'
   SOURCE_SHORT = 'FILE'
+
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    event_values = event_object.GetValues()
+
+    event_values[u'file_entry_name'] = event_values.get(u'long_name', None)
+    if not event_values[u'file_entry_name']:
+      event_values[u'file_entry_name'] = event_values.get(u'name', None)
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(ShellItemFileEntryEventFormatter)

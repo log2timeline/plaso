@@ -1,27 +1,11 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The core object definitions, e.g. the event object."""
 
 import collections
 import logging
 import uuid
 
-from plaso.formatters import manager as formatters_manager
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.lib import utils
 
@@ -31,10 +15,15 @@ import pytz
 class AnalysisReport(object):
   """Class that defines an analysis report."""
 
-  def __init__(self):
-    """Initializes the analysis report."""
+  def __init__(self, plugin_name):
+    """Initializes the analysis report.
+
+    Args:
+      plugin_name: The name of the plugin that's generating this report.
+    """
     super(AnalysisReport, self).__init__()
     self._anomalies = []
+    self.plugin_name = plugin_name
     self._tags = []
 
   def __unicode__(self):
@@ -270,22 +259,6 @@ class EventObject(object):
     out_write.append(u'+-' * 40)
     out_write.append(u'[Timestamp]:\n  {0:s}'.format(
         timelib.Timestamp.CopyToIsoFormat(self.timestamp)))
-    out_write.append(u'\n[Message Strings]:')
-
-    # TODO: move formatting testing to a formatters (manager) test.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        self.data_type)
-    if not event_formatter:
-      out_write.append(u'None')
-    else:
-      msg, msg_short = event_formatter.GetMessages(self)
-      source_short, source_long = event_formatter.GetSources(self)
-      out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
-          utils.GetUnicodeString(msg_short), utils.GetUnicodeString(msg),
-          'Short', 'Long'))
-      out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
-          utils.GetUnicodeString(source_short),
-          utils.GetUnicodeString(source_long), 'Source Short', 'Source Long'))
 
     if hasattr(self, 'pathspec'):
       pathspec_string = self.pathspec.comparable
@@ -297,7 +270,7 @@ class EventObject(object):
     out_additional.append(u'[Additional attributes]:')
 
     for attr_key, attr_value in sorted(self.GetValues().items()):
-      if attr_key in utils.RESERVED_VARIABLES:
+      if attr_key in definitions.RESERVED_VARIABLE_NAMES:
         if attr_key == 'pathspec':
           continue
         else:

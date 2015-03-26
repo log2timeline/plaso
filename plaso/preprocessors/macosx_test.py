@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Mac OS X preprocess plug-ins."""
 
 import os
@@ -68,7 +53,7 @@ class MacOSXBuildTest(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     build = knowledge_base_object.GetValue('build')
-    self.assertEquals(build, u'10.9.2')
+    self.assertEqual(build, u'10.9.2')
 
 
 class MacOSXHostname(test_lib.PreprocessPluginTest):
@@ -119,7 +104,7 @@ class MacOSXHostname(test_lib.PreprocessPluginTest):
     plugin = macosx.MacOSXHostname()
     plugin.Run(self._searcher, knowledge_base_object)
 
-    self.assertEquals(knowledge_base_object.hostname, u'Plaso\'s Mac mini')
+    self.assertEqual(knowledge_base_object.hostname, u'Plaso\'s Mac mini')
 
 
 class MacOSXKeyboard(test_lib.PreprocessPluginTest):
@@ -148,7 +133,7 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     keyboard_layout = knowledge_base_object.GetValue('keyboard_layout')
-    self.assertEquals(keyboard_layout, u'US')
+    self.assertEqual(keyboard_layout, u'US')
 
 
 class MacOSXTimezone(test_lib.PreprocessPluginTest):
@@ -171,7 +156,7 @@ class MacOSXTimezone(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     time_zone_str = knowledge_base_object.GetValue('time_zone_str')
-    self.assertEquals(time_zone_str, u'Europe/Amsterdam')
+    self.assertEqual(time_zone_str, u'Europe/Amsterdam')
 
 
 class MacOSXUsersTest(test_lib.PreprocessPluginTest):
@@ -200,21 +185,21 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     users = knowledge_base_object.GetValue('users')
-    self.assertEquals(len(users), 1)
+    self.assertEqual(len(users), 1)
 
     # TODO: fix the parsing of the following values to match the behavior on
     # Mac OS X.
 
     # The string -2 is converted into the integer -1.
-    self.assertEquals(users[0].get('uid', None), -1)
+    self.assertEqual(users[0].get('uid', None), -1)
     # 'home' is 0 which represents: /var/empty but we convert it
     # into u'<not set>'.
-    self.assertEquals(users[0].get('path', None), u'<not set>')
+    self.assertEqual(users[0].get('path', None), u'<not set>')
     # 'name' is 0 which represents: nobody but we convert it into u'<not set>'.
-    self.assertEquals(users[0].get('name', None), u'<not set>')
+    self.assertEqual(users[0].get('name', None), u'<not set>')
     # 'realname' is 0 which represents: 'Unprivileged User' but we convert it
     # into u'N/A'.
-    self.assertEquals(users[0].get('realname', None), u'N/A')
+    self.assertEqual(users[0].get('realname', None), u'N/A')
 
 
 if __name__ == '__main__':

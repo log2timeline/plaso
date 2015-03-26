@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The unit tests for the generic collector object."""
 
 import logging
@@ -140,7 +125,7 @@ class CollectorTest(CollectorTestCase):
           test_collection_queue)
       test_collector_queue_consumer.ConsumeItems()
 
-      self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 4)
+      self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 4)
 
   def testFileSystemWithFilterCollection(self):
     """Test collection on the file system with a filter."""
@@ -180,7 +165,7 @@ class CollectorTest(CollectorTestCase):
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
     # and test_data/System.evtx.
-    self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 4)
+    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 4)
 
     paths = test_collector_queue_consumer.GetFilePaths()
 
@@ -241,7 +226,7 @@ class CollectorTest(CollectorTestCase):
         test_collection_queue)
     test_collector_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 3)
+    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 3)
 
   def testImageWithFilterCollection(self):
     """Test collection on a storage media image file with a filter."""
@@ -282,7 +267,7 @@ class CollectorTest(CollectorTestCase):
           u'Unable to remove temporary file: {0:s} with error: {1:s}').format(
               filter_name, exception))
 
-    self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 2)
+    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 2)
 
     paths = test_collector_queue_consumer.GetFilePaths()
 
@@ -291,14 +276,14 @@ class CollectorTest(CollectorTestCase):
     # file_path: '/a_directory/another_file'
     # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
-    self.assertEquals(paths[0], u'/a_directory/another_file')
+    self.assertEqual(paths[0], u'/a_directory/another_file')
 
     # path_specs[1]
     # type: TSK
     # file_path: '/passwords.txt'
     # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
-    self.assertEquals(paths[1], u'/passwords.txt')
+    self.assertEqual(paths[1], u'/passwords.txt')
 
 
 class BuildFindSpecsFromFileTest(unittest.TestCase):
@@ -330,7 +315,7 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
           u'Unable to remove temporary file: {0:s} with error: {1:s}'.format(
               filter_name, exception))
 
-    self.assertEquals(len(find_specs), 4)
+    self.assertEqual(len(find_specs), 4)
 
     dirname = u'.'
     path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -340,14 +325,16 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(find_specs=find_specs)
-    self.assertNotEquals(path_spec_generator, None)
+    self.assertNotEqual(path_spec_generator, None)
 
     path_specs = list(path_spec_generator)
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
-    self.assertEquals(len(path_specs), 4)
+    self.assertEqual(len(path_specs), 4)
 
     with self.assertRaises(IOError):
       _ = engine_utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
+
+    file_system.Close()
 
 
 if __name__ == '__main__':

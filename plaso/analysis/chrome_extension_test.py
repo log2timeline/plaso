@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the chrome extension analysis plugin."""
 
 import os
@@ -122,11 +107,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
-    self.assertEquals(len(analysis_reports), 1)
+    self.assertEqual(len(analysis_reports), 1)
 
     analysis_report = analysis_reports[0]
 
-    self.assertEquals(analysis_plugin._sep, u'/')
+    self.assertEqual(analysis_plugin._sep, u'/')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -139,11 +124,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         u'',
         u''])
 
-    self.assertEquals(analysis_report.text, expected_text)
-    self.assertEquals(analysis_report.plugin_name, 'chrome_extension_test')
+    self.assertEqual(analysis_report.text, expected_text)
+    self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
 
     expected_keys = set([u'frank', u'dude'])
-    self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
+    self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
   def testWinAnalyzePlugin(self):
     """Test the plugin against mock events."""
@@ -167,11 +152,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
-    self.assertEquals(len(analysis_reports), 1)
+    self.assertEqual(len(analysis_reports), 1)
 
     analysis_report = analysis_reports[0]
 
-    self.assertEquals(analysis_plugin._sep, u'\\')
+    self.assertEqual(analysis_plugin._sep, u'\\')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -185,11 +170,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         u'',
         u''])
 
-    self.assertEquals(analysis_report.text, expected_text)
-    self.assertEquals(analysis_report.plugin_name, 'chrome_extension_test')
+    self.assertEqual(analysis_report.text, expected_text)
+    self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
 
     expected_keys = set([u'frank', u'dude'])
-    self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
+    self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 
 if __name__ == '__main__':

@@ -1,24 +1,9 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2015 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """A parser for the Chrome preferences file."""
 
 import json
 import logging
+import os
 
 from plaso.events import time_events
 from plaso.lib import errors
@@ -41,7 +26,7 @@ class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
     self.path = path
 
 
-class ChromePreferencesParser(interface.BaseParser):
+class ChromePreferencesParser(interface.SingleFileBaseParser):
   """Parses Chrome Preferences files."""
 
   NAME = 'chrome_preferences'
@@ -75,73 +60,64 @@ class ChromePreferencesParser(interface.BaseParser):
       path = extension.get(u'path')
       yield install_time, extension_id, extension_name, path
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Attempt to parse a file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Chrome preferences file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    # First pass check for initial character being open brace
-    file_object = file_entry.GetFileObject()
-    if file_object.tell() != 0:
-      file_object.seek(0)
-    if file_object.read(1) != '{':
-      file_object.close()
-      raise errors.UnableToParseFile(
+    # First pass check for initial character being open brace.
+    file_object.seek(0, os.SEEK_SET)
+
+    if file_object.read(1) != b'{':
+      raise errors.UnableToParseFile((
           u'[{0:s}] {1:s} is not a valid Preference file, '
-          u'missing opening brace.'.format(self.NAME, file_entry.name))
-    file_object.seek(0)
+          u'missing opening brace.').format(
+              self.NAME, parser_mediator.GetDisplayName()))
+
+    file_object.seek(0, os.SEEK_SET)
 
     # Second pass to verify it's valid JSON
     try:
       json_dict = json.load(file_object)
     except ValueError as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
            u'[{0:s}] Unable to parse file {1:s} as '
-           u'JSON: {2:s}'.format(self.NAME, file_entry.name, exception))
+           u'JSON: {2:s}'.format(
+              self.NAME, parser_mediator.GetDisplayName(), exception))
     except IOError as exception:
-      file_object.close()
-      raise errors.errors.UnableToParseFile(
+      raise errors.UnableToParseFile(
           u'[{0:s}] Unable to open file {1:s} for parsing as'
-          u'JSON: {2:s}'.format(self.NAME, file_entry.name, exception))
+          u'JSON: {2:s}'.format(
+              self.NAME, parser_mediator.GetDisplayName(), exception))
 
     # Third pass to verify the file has the correct keys in it for Preferences
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
-      file_object.close()
       raise errors.UnableToParseFile(u'File does not contain Preference data.')
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     extensions_setting_dict = json_dict.get(u'extensions')
     if not extensions_setting_dict:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions value.'.format(
-              self.NAME, file_entry.name))
+              self.NAME, parser_mediator.GetDisplayName()))
     extensions_dict = extensions_setting_dict.get(u'settings')
     if not extensions_dict:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions settings value.'.format(
-              self.NAME, file_entry.name))
-    # Callback used due to line length contraints.
+              self.NAME, parser_mediator.GetDisplayName()))
+    # Callback used due to line length constraints.
     callback = self._ExtractExtensionInstallationEvents
     for install_time, extension_id, extension_name, path in callback(
         extensions_dict):
       event_object = ChromeExtensionInstallationEvent(
           install_time, extension_id, extension_name, path)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
-
-    file_object.close()
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(ChromePreferencesParser)

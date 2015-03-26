@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for Java Cache IDX files."""
 
 # TODO:
@@ -22,6 +6,9 @@
 #    deploy_resource_codebase header field may contain the host IP.
 #    This needs to be researched further, as that field may not always
 #    be present. 6.02 files will currently return 'Unknown'.
+
+import os
+
 import construct
 
 from plaso.events import time_events
@@ -54,8 +41,8 @@ class JavaIDXEvent(time_events.TimestampEvent):
     self.ip_address = ip_address
 
 
-class JavaIDXParser(interface.BaseParser):
-  """Parse Java IDX files for download events.
+class JavaIDXParser(interface.SingleFileBaseParser):
+  """Parse Java WebStart Cache IDX files for download events.
 
   There are five structures defined. 6.02 files had one generic section
   that retained all data. From 6.03, the file went to a multi-section
@@ -67,8 +54,10 @@ class JavaIDXParser(interface.BaseParser):
   structures.
   """
 
+  _INITIAL_FILE_OFFSET = None
+
   NAME = 'java_idx'
-  DESCRIPTION = u'Parser for Java IDX files.'
+  DESCRIPTION = u'Parser for Java WebStart Cache IDX files.'
 
   IDX_SHORT_STRUCT = construct.Struct(
       'magic',
@@ -121,21 +110,17 @@ class JavaIDXParser(interface.BaseParser):
       construct.PascalString(
           'string', length_field=construct.UBInt16('length')))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from a Java cache IDX file.
-
-    This is the main parsing engine for the parser. It determines if
-    the selected file is a proper IDX file. It then checks the file
-    version to determine the correct structure to apply to extract
-    data.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Java WebStart Cache IDX file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
     try:
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -153,10 +138,6 @@ class JavaIDXParser(interface.BaseParser):
 
     if not magic.idx_version in [602, 603, 604, 605]:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     # Obtain the relevant values from the file. The last modified date
     # denotes when the file was last modified on the HOST. For example,
@@ -178,7 +159,7 @@ class JavaIDXParser(interface.BaseParser):
       section_one = self.IDX_605_SECTION_ONE_STRUCT.parse_stream(file_object)
       last_modified_date = section_one.last_modified_date
       if file_object.get_size() > 128:
-        file_object.seek(128)  # Static offset for section 2.
+        file_object.seek(128, os.SEEK_SET)  # Static offset for section 2.
         section_two = self.IDX_605_SECTION_TWO_STRUCT.parse_stream(file_object)
         url = section_two.url
         ip_address = section_two.ip_address
@@ -212,8 +193,7 @@ class JavaIDXParser(interface.BaseParser):
     event_object = JavaIDXEvent(
         last_modified_timestamp, 'File Hosted Date', magic.idx_version, url,
         ip_address)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     if section_one:
       expiration_date = section_one.get('expiration_date', None)
@@ -222,15 +202,13 @@ class JavaIDXParser(interface.BaseParser):
         event_object = JavaIDXEvent(
             expiration_timestamp, 'File Expiration Date', magic.idx_version,
             url, ip_address)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
     if download_date:
       event_object = JavaIDXEvent(
           download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
           magic.idx_version, url, ip_address)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)

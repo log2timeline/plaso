@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The storage mechanism.
 
 The storage mechanism can be described as a collection of storage files
@@ -1562,7 +1546,8 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
     if not output_class:
       output_class = output_manager.OutputManager.GetOutputClass('l2tcsv')
     self._output_module = output_class(
-        self, self._output_file, config=self._pre_obj)
+        self, formatter_mediator, filehandle=self._output_file,
+        config=self._pre_obj)
 
     self._output_module.Start()
     self.ConsumeEventObjects()

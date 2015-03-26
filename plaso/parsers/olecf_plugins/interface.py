@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains the necessary interface for OLECF plugins."""
 
 import abc
@@ -72,25 +56,17 @@ class OlecfPlugin(plugins.BasePlugin):
     return creation_time, modification_time
 
   @abc.abstractmethod
-  def ParseItems(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      items=None, **kwargs):
+  def ParseItems(self, parser_mediator, root_item=None, items=None, **kwargs):
     """Parses OLECF items.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
     """
 
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      item_names=None, **kwargs):
+  def Process(self, parser_mediator, root_item, item_names, **kwargs):
     """Determine if this is the right plugin for this OLECF file.
 
     This function takes a list of sub items found in the root of a
@@ -98,11 +74,7 @@ class OlecfPlugin(plugins.BasePlugin):
     in this plugin.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -120,11 +92,7 @@ class OlecfPlugin(plugins.BasePlugin):
           u'Not the correct items for: {0:s}'.format(self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
-    super(OlecfPlugin, self).Process(parser_context, **kwargs)
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+    super(OlecfPlugin, self).Process(parser_mediator)
 
     items = []
     for item_string in self.REQUIRED_ITEMS:
@@ -133,9 +101,7 @@ class OlecfPlugin(plugins.BasePlugin):
       if item:
         items.append(item)
 
-    self.ParseItems(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        root_item=root_item, items=items)
+    self.ParseItems(parser_mediator, root_item=root_item, items=items)
 
 
 class OleDefinitions(object):

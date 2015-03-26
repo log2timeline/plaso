@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parsers for Opera Browser history files."""
 
 import logging
@@ -85,22 +69,24 @@ class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
       self.description = 'Last Visit'
 
 
-class OperaTypedHistoryParser(interface.BaseParser):
+class OperaTypedHistoryParser(interface.SingleFileBaseParser):
   """Parses the Opera typed_history.xml file."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'opera_typed_history'
   DESCRIPTION = u'Parser for Opera typed_history.xml files.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from an Opera typed history file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an Opera typed history file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -110,7 +96,6 @@ class OperaTypedHistoryParser(interface.BaseParser):
     first_line = text_file_object.readline(90)
 
     if not first_line.startswith('<?xml version="1.0'):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
 
@@ -121,7 +106,6 @@ class OperaTypedHistoryParser(interface.BaseParser):
     second_line = text_file_object.readline(50).strip()
 
     if second_line != '<typed_history>':
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 
@@ -131,9 +115,7 @@ class OperaTypedHistoryParser(interface.BaseParser):
 
     xml = ElementTree.parse(file_object)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     for history_item in xml.iterfind('typed_history_item'):
       content = history_item.get('content', '')
@@ -141,13 +123,10 @@ class OperaTypedHistoryParser(interface.BaseParser):
       entry_type = history_item.get('type', '')
 
       event_object = OperaTypedHistoryEvent(last_typed, content, entry_type)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
-
-    file_object.close()
+      parser_mediator.ProduceEvent(event_object)
 
 
-class OperaGlobalHistoryParser(interface.BaseParser):
+class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'
@@ -265,16 +244,16 @@ class OperaGlobalHistoryParser(interface.BaseParser):
 
       yield title, url, timestamp, popularity_index
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from an Opera global history file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an Opera global history file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -283,43 +262,31 @@ class OperaGlobalHistoryParser(interface.BaseParser):
       title, url, timestamp, popularity_index = self._ReadRecord(
           text_file_object, 400)
     except errors.NotAText:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a text file].')
 
     if not title:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [no title present].')
 
     if not self._IsValidUrl(url):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a valid URL].')
 
     if not timestamp:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [timestamp does not exist].')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     event_object = OperaGlobalHistoryEvent(
         timestamp, url, title, popularity_index)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     # Read in the rest of the history file.
     for title, url, timestamp, popularity_index in self._ReadRecords(
         text_file_object):
       event_object = OperaGlobalHistoryEvent(
           timestamp, url, title, popularity_index)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
-
-    file_object.close()
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParsers([

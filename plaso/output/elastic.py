@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """An output module that saves data into an ElasticSearch database."""
 
 import logging
@@ -73,10 +57,25 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
   DESCRIPTION = u'Saves the events into an ElasticSearch database.'
 
   def __init__(
-      self, store, filehandle=sys.stdout, config=None, filter_use=None):
-    """Initializes the Elastic output module."""
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
+    """Initializes the log output formatter object.
+
+    Args:
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
+    """
     super(ElasticSearchOutput, self).__init__(
-        store, filehandle, config, filter_use)
+        store, formatter_mediator, filehandle=filehandle, config=config,
+        filter_use=filter_use)
     self._counter = 0
     self._data = []
 
@@ -105,7 +104,11 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
     self._preprocesses = {}
 
   def _EventToDict(self, event_object):
-    """Returns a dict built from an EventObject."""
+    """Returns a dict built from an event object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
     ret_dict = event_object.GetValues()
 
     # Get rid of few attributes that cause issues (and need correcting).
@@ -133,7 +136,7 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
         timezone=self.zone)
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        event_object)
+        self._formatter_mediator, event_object)
     ret_dict['message'] = msg
 
     source_type, source = formatters_manager.FormattersManager.GetSourceStrings(
@@ -165,16 +168,25 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
 
     return ret_dict
 
-  def EventBody(self, event_object):
-    """Prints out to a filehandle string representation of an EventObject.
+  def Close(self):
+    """Disconnects from the elastic search server."""
+    self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
+    self._data = []
+    sys.stdout.write('. [DONE]\n')
+    sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
+        self._index_name))
+    sys.stdout.flush()
 
-    Each EventObject contains both attributes that are considered "reserved"
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
     and others that aren't. The 'raw' representation of the object makes a
     distinction between these two types as well as extracting the format
     strings from the object.
 
     Args:
-      event_object: The EventObject.
+      event_object: the event object (instance of EventObject).
     """
     self._data.append(self._EventToDict(event_object))
     self._counter += 1
@@ -186,8 +198,8 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
       sys.stdout.write('.')
       sys.stdout.flush()
 
-  def Start(self):
-    """Create the necessary mapping."""
+  def WriteHeader(self):
+    """Writes the header to the output."""
     if self.store:
       self._hostnames = helper.BuildHostDict(self.store)
       for info in self.store.GetStorageInformation():
@@ -227,15 +239,6 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
     self._elastic_db.health(wait_for_status='yellow')
 
     sys.stdout.write('Inserting data')
-    sys.stdout.flush()
-
-  def End(self):
-    """Flush on last time."""
-    self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
-    self._data = []
-    sys.stdout.write('. [DONE]\n')
-    sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
-        self._index_name))
     sys.stdout.flush()
 
 

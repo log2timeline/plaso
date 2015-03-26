@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Plugin to parse .automaticDestinations-ms OLECF files."""
 
 import logging
@@ -114,22 +98,13 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       construct.ULInt16('path_size'),
       construct.String('path', lambda ctx: ctx.path_size * 2))
 
-  def ParseDestList(
-      self, parser_context, file_entry=None, parser_chain=None,
-      olecf_item=None):
+  def ParseDestList(self, parser_mediator, olecf_item):
     """Parses the DestList OLECF item.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-      olecf_item: An optional OLECF item (instance of pyolecf.item).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      olecf_item: An OLECF item (instance of pyolecf.item).
     """
-    if not olecf_item:
-      return
-
     try:
       header = self._DEST_LIST_STREAM_HEADER.parse_stream(olecf_item)
     except (IOError, construct.FieldError) as exception:
@@ -157,22 +132,18 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       event_object = AutomaticDestinationsDestListEntryEvent(
           entry.last_modification_time,
           eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset, entry)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
       entry_offset = olecf_item.get_offset()
 
   def ParseItems(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      **unused_kwargs):
+      self, parser_mediator, file_entry=None, root_item=None, **unused_kwargs):
     """Parses OLECF items.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       root_item: Optional root item of the OLECF file. The default is None.
 
     Raises:
@@ -183,20 +154,17 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
     for item in root_item.sub_items:
       if item.name == u'DestList':
-        self.ParseDestList(
-            parser_context, file_entry=file_entry, parser_chain=parser_chain,
-            olecf_item=item)
+        self.ParseDestList(parser_mediator, item)
 
       elif self._RE_LNK_ITEM_NAME.match(item.name):
         if file_entry:
           display_name = u'{0:s} # {1:s}'.format(
-              parser_context.GetDisplayName(file_entry), item.name)
+              parser_mediator.GetDisplayName(), item.name)
         else:
           display_name = u'# {0:s}'.format(item.name)
 
-        self._WINLNK_PARSER.ParseFileObject(
-            parser_context, item, file_entry=file_entry,
-            parser_chain=parser_chain, display_name=display_name)
+        self._WINLNK_PARSER.UpdateChainAndParseFileObject(
+            parser_mediator, item, display_name=display_name)
 
         # TODO: check for trailing data?
 

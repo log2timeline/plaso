@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the .customDestinations-ms file parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winlnk as winlnk_formatter
+from plaso.formatters import winlnk as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import custom_destinations
 
@@ -47,29 +31,29 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     event_object = event_objects[105]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-13 23:55:56.248103')
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-13 23:55:56.248103')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
     event_object = event_objects[106]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-13 23:55:56.248103')
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-13 23:55:56.248103')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
     event_object = event_objects[107]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-14 01:39:11.388000')
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-14 01:39:11.388000')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[@%systemroot%\\system32\\oobefldr.dll,-1262] '
@@ -82,8 +66,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         u'%systemroot%\\system32\\control.exe /name Microsoft.Display '
         u'env location: %SystemRoot%\\system32\\GettingStarted.exe '
         u'Icon location: %systemroot%\\system32\\display.dll '
-        u'Link target: [My Computer, C:\\, Windows, System32, '
-        u'GettingStarted.exe]')
+        u'Link target: <My Computer> C:\\Windows\\System32\\GettingStarted.exe')
 
     expected_msg_short = (
         u'[@%systemroot%\\system32\\oobefldr.dll,-1262] '
@@ -94,14 +77,15 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # A shell item event object.
     event_object = event_objects[16]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2010-11-10 07:41:04')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-11-10 07:41:04')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: System32 '
         u'Long name: System32 '
         u'NTFS file reference: 2331-1 '
+        u'Shell item path: <My Computer> C:\\Windows\\System32 '
         u'Origin: 5afe4de1b92fc382.customDestinations-ms')
 
     expected_msg_short = (

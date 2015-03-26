@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""This file contains the SAM Users & Names key plugin."""
 
 import construct
 import logging
@@ -47,26 +31,22 @@ class UsersPlugin(interface.KeyPlugin):
   V_VALUE_HEADER_SIZE = 0xCC
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Collect data from Users and Names and produce event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
 
     name_dict = {}
 
     name_key = key.GetSubkey('Names')
     if not name_key:
-      logging.error(u'Unable to locate Names key.')
+      parser_mediator.ProduceParseError(u'Unable to locate Names key.')
       return
     values = [(v.name, v.last_written_timestamp) for v in name_key.GetSubkeys()]
     name_dict = dict(values)
@@ -78,7 +58,8 @@ class UsersPlugin(interface.KeyPlugin):
       text_dict['user_guid'] = subkey.name
       parsed_v_value = self._ParseVValue(subkey)
       if not parsed_v_value:
-        logging.error(u'V Value was not succesfully parsed by ParseVValue.')
+        parser_mediator.ProduceParseError(
+            u'Unable to parse SAM key: {0:s} V value.'.format(subkey))
         return
       username = parsed_v_value[0]
       full_name = parsed_v_value[1]
@@ -107,8 +88,7 @@ class UsersPlugin(interface.KeyPlugin):
             usage=eventdata.EventTimestamp.ACCOUNT_CREATED,
             offset=key.offset, registry_type=registry_type,
             source_append=u'User Account Information')
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if last_login_time > 0:
         event_object = windows_events.WindowsRegistryEvent(
@@ -117,8 +97,7 @@ class UsersPlugin(interface.KeyPlugin):
             offset=key.offset,
             registry_type=registry_type,
             source_append=u'User Account Information')
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if password_reset_time > 0:
         event_object = windows_events.WindowsRegistryEvent(
@@ -126,8 +105,7 @@ class UsersPlugin(interface.KeyPlugin):
             usage=eventdata.EventTimestamp.LAST_PASSWORD_RESET,
             offset=key.offset, registry_type=registry_type,
             source_append=u'User Account Information')
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
   def _ParseVValue(self, key):
     """Parses V value and returns name, fullname, and comments data.

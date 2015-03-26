@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the serializer object implementation using json."""
 
 import re
@@ -22,6 +7,7 @@ import unittest
 
 from plaso.lib import event
 from plaso.serializer import json_serializer
+from plaso.storage import collection
 
 # TODO: add tests for the non implemented serializer objects when implemented.
 
@@ -72,19 +58,19 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
     self.assertTrue(hasattr(event_object, 'zero_integer'))
 
     attribute_value = getattr(event_object, 'integer', 0)
-    self.assertEquals(attribute_value, 34)
+    self.assertEqual(attribute_value, 34)
 
     attribute_value = getattr(event_object, 'my_list', [])
-    self.assertEquals(len(attribute_value), 5)
+    self.assertEqual(len(attribute_value), 5)
 
     attribute_value = getattr(event_object, 'string', '')
-    self.assertEquals(attribute_value, 'Normal string')
+    self.assertEqual(attribute_value, 'Normal string')
 
     attribute_value = getattr(event_object, 'unicode_string', u'')
-    self.assertEquals(attribute_value, u'And I\'m a unicorn.')
+    self.assertEqual(attribute_value, u'And I\'m a unicorn.')
 
     attribute_value = getattr(event_object, 'a_tuple', ())
-    self.assertEquals(len(attribute_value), 4)
+    self.assertEqual(len(attribute_value), 4)
 
   def testWriteSerialized(self):
     """Test the write serialized functionality."""
@@ -110,7 +96,7 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
 
     serializer = json_serializer.JsonEventObjectSerializer
     json_string = serializer.WriteSerialized(event_object)
-    self.assertEquals(sorted(json_string), sorted(self._json_string))
+    self.assertEqual(sorted(json_string), sorted(self._json_string))
 
     event_object = serializer.ReadSerialized(json_string)
 
@@ -120,6 +106,45 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
 
     # A None (or Null) value should not get stored.
     # self.assertFalse(hasattr(event_object, 'null_value'))
+
+
+class JsonCollectionInformationSerializerTest(unittest.TestCase):
+  """Tests serialization of the collection information object."""
+
+  def setUp(self):
+    """Set up the necessary objects."""
+    self._json_string = (
+        u'{"foo": "bar", "__COUNTERS__": {"foobar": {"stuff": 1245}}, '
+        u'"foo2": "randombar"}')
+
+    self._collection_information_object = collection.CollectionInformation()
+    self._collection_information_object.AddCounter(u'foobar')
+    self._collection_information_object.IncrementCounter(
+        u'foobar', u'stuff', value=1245)
+    self._collection_information_object.SetValue(u'foo', u'bar')
+    self._collection_information_object.SetValue(u'foo2', u'randombar')
+    self._serializer = json_serializer.JsonCollectionInformationObjectSerializer
+
+  def testReadSerialized(self):
+    """Test the read serialized functionality."""
+    collection_object = self._serializer.ReadSerialized(self._json_string)
+
+    for key, value in collection_object.GetValueDict().iteritems():
+      self.assertEqual(
+          value, self._collection_information_object.GetValue(key))
+
+    for identifier, counter in collection_object.GetCounters():
+      compare_counter = self._collection_information_object.GetCounter(
+          identifier)
+
+      for key, value in counter.iteritems():
+        self.assertEqual(value, compare_counter[key])
+
+  def testWriteSerialized(self):
+    """Test the write serialized functionality."""
+    json_string = self._serializer.WriteSerialized(
+        self._collection_information_object)
+    self.assertEqual(json_string, self._json_string)
 
 
 if __name__ == '__main__':

@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a parser for the Mozilla Firefox history."""
 
 import sqlite3
@@ -91,16 +75,16 @@ class FirefoxPlacesBookmark(time_events.TimestampEvent):
   }
   _TYPES.setdefault('N/A')
 
-  # pylint: disable=redefined-builtin
-  def __init__(self, timestamp, usage, row_id, type, title, url, places_title,
-               hostname, visit_count):
+  def __init__(
+      self, timestamp, usage, row_id, bookmark_type, title, url, places_title,
+      hostname, visit_count):
     """Initializes the event object.
 
     Args:
       timestamp: The timestamp value.
       usage: Timestamp description string.
       row_id: The identifier of the corresponding row.
-      type: Integer value containing the bookmark type.
+      bookmark_type: Integer value containing the bookmark type.
       title: The title of the bookmark folder.
       url: The bookmarked URL.
       places_title: The places title.
@@ -110,7 +94,7 @@ class FirefoxPlacesBookmark(time_events.TimestampEvent):
     super(FirefoxPlacesBookmark, self).__init__(timestamp, usage)
 
     self.offset = row_id
-    self.type = self._TYPES[type]
+    self.type = self._TYPES[bookmark_type]
     self.title = title
     self.url = url
     self.places_title = places_title
@@ -236,47 +220,33 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       'moz_historyvisits h WHERE p.id = h.place_id')
 
   def ParseBookmarkAnnotationRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a bookmark annotation row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     if row['dateAdded']:
       event_object = FirefoxPlacesBookmarkAnnotation(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
           row['id'], row['title'], row['url'], row['content'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['lastModified']:
       event_object = FirefoxPlacesBookmarkAnnotation(
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], row['title'], row['url'], row['content'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseBookmarkFolderRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a bookmark folder row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     if not row['title']:
@@ -288,30 +258,21 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       event_object = FirefoxPlacesBookmarkFolder(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
           row['id'], title)
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['lastModified']:
       event_object = FirefoxPlacesBookmarkFolder(
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], title)
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseBookmarkRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a bookmark row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     if row['dateAdded']:
@@ -320,9 +281,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           row['id'], row['type'], row['bookmark_title'], row['url'],
           row['places_title'], getattr(row, 'rev_host', 'N/A'),
           row['visit_count'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['lastModified']:
       event_object = FirefoxPlacesBookmark(
@@ -330,22 +289,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           row['id'], row['type'], row['bookmark_title'], row['url'],
           row['places_title'], getattr(row, 'rev_host', 'N/A'),
           row['visit_count'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParsePageVisitedRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      cache=None, database=None, **unused_kwargs):
+      self, parser_mediator, row, query=None, cache=None, database=None,
+      **unused_kwargs):
     """Parses a page visited row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
       cache: A cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -369,9 +322,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           row['visit_date'], row['id'], row['url'], row['title'],
           self._ReverseHostname(row['rev_host']), row['visit_count'],
           row['visit_type'], extras)
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
   def _ReverseHostname(self, hostname):
     """Reverses the hostname and strips the leading dot.
@@ -440,17 +391,12 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
   def ParseDownloadsRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a downloads row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     if row['startTime']:
@@ -458,18 +404,14 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
           row['startTime'], eventdata.EventTimestamp.START_TIME,
           row['id'], row['name'], row['source'], row['referrer'], row['target'],
           row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['endTime']:
       event_object = FirefoxDownload(
           row['endTime'], eventdata.EventTimestamp.END_TIME,
           row['id'], row['name'], row['source'], row['referrer'], row['target'],
           row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugins(

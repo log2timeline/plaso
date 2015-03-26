@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatters for OLE Compound File (OLECF) events."""
 
 from plaso.formatters import interface
@@ -41,7 +25,7 @@ class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'Entry: {entry_number}',
-      u'Pin status: {pin_status_string}',
+      u'Pin status: {pin_status}',
       u'Hostname: {hostname}',
       u'Path: {path}',
       u'Droid volume identifier: {droid_volume_identifier}',
@@ -51,31 +35,36 @@ class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Entry: {entry_number}',
-      u'Pin status: {pin_status_string}',
+      u'Pin status: {pin_status}',
       u'Path: {path}']
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    pin_status = getattr(event_object, 'pin_status', None)
-    if pin_status == 0xffffffff:
-      event_object.pin_status_string = u'Unpinned'
-    else:
-      event_object.pin_status_string = u'Pinned'
+    event_values = event_object.GetValues()
 
-    return super(OleCfDestListEntryFormatter, self).GetMessages(event_object)
+    pin_status = event_values.get(u'pin_status', 0)
+    if pin_status == 0xffffffff:
+      event_values[u'pin_status'] = u'Unpinned'
+    else:
+      event_values[u'pin_status'] = u'Pinned'
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):

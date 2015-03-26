@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser test for Mac Cups IPP Log files."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import cups_ipp as cups_ipp_formatter
+from plaso.formatters import cups_ipp as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import cups_ipp
 from plaso.parsers import test_lib
 
@@ -37,14 +21,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
-    test_file = self._GetTestFilePath(['mac_cups_ipp'])
+    test_file = self._GetTestFilePath([u'mac_cups_ipp'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(events)
 
     self.assertEqual(len(event_objects), 3)
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-03 18:07:21')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -75,7 +59,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-03 18:07:21')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -85,7 +69,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-03 18:07:32')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

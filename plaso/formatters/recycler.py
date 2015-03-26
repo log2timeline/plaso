@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatter for the Windows recycle files."""
 
 from plaso.formatters import interface
@@ -27,7 +11,7 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
 
   DATA_TYPE = 'windows:metadata:deleted_item'
 
-  DRIVE_LETTER = {
+  _DRIVE_LETTER = {
       0x00: 'A',
       0x01: 'B',
       0x02: 'C',
@@ -60,8 +44,8 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'DC{index} ->',
       u'{orig_filename}',
-      u'[{orig_filename_legacy}]',
-      u'(from drive {drive_letter})']
+      u'[{short_filename}]',
+      u'(from drive: {drive_letter})']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Deleted file: {orig_filename}']
@@ -69,17 +53,31 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Recycle Bin'
   SOURCE_SHORT = 'RECBIN'
 
-  def GetMessages(self, event_object):
-    """Return the message strings."""
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    if hasattr(event_object, 'drive_number'):
-      event_object.drive_letter = self.DRIVE_LETTER.get(
-          event_object.drive_number, 'C?')
+    event_values = event_object.GetValues()
 
-    return super(WinRecyclerFormatter, self).GetMessages(event_object)
+    drive_number = event_values.get(u'drive_number', None)
+    event_values[u'drive_letter'] = self._DRIVE_LETTER.get(
+        drive_number, u'UNKNOWN')
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinRecyclerFormatter)

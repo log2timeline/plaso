@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Windows Registry plugin to parse the Application Compatibility Cache key."""
 
 import construct
@@ -540,18 +524,17 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     return cached_entry_object
 
-  def GetEntries(self, parser_context, key=None, file_entry=None,
-                 parser_chain=None, **unused_kwargs):
+  def GetEntries(self, parser_mediator, key=None, registry_type=None,
+                 codepage='cp1252', **unused_kwargs):
     """Extracts event objects from a Application Compatibility Cache key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     value = key.GetValue('AppCompatCache')
     if not value:
@@ -562,10 +545,8 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     format_type = self._CheckSignature(value_data)
     if not format_type:
-      # TODO: Instead of logging emit a parser error object that once that
-      # mechanism is implemented.
-      logging.error(
-          u'AppCompatCache format error: [{0:s}] Unsupported signature'.format(
+      parser_mediator.ProduceParseError(
+          u'Unsupported signature in AppCompatCache key: {0:s}'.format(
               key.path))
       return
 
@@ -581,11 +562,9 @@ class AppCompatCachePlugin(interface.KeyPlugin):
         format_type, value_data, cached_entry_offset)
 
     if not cached_entry_size:
-      # TODO: Instead of logging emit a parser error object that once that
-      # mechanism is implemented.
-      logging.error(
-          u'AppCompatCache format error: [{0:s}] Unsupported cached entry '
-          u'size.'.format(key.path))
+      parser_mediator.ProduceParseError(
+          u'Unsupported cached entry size at offset {0:d} in AppCompatCache '
+          u'key: {1:s}'.format(cached_entry_offset, key.path))
       return
 
     cached_entry_index = 0
@@ -600,8 +579,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
             u'File Last Modification Time', key.path,
             cached_entry_index + 1, cached_entry_object.path,
             cached_entry_offset)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if cached_entry_object.last_update_time is not None:
         # TODO: refactor to process run event.
@@ -610,8 +588,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
             eventdata.EventTimestamp.LAST_RUNTIME, key.path,
             cached_entry_index + 1, cached_entry_object.path,
             cached_entry_offset)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       cached_entry_offset += cached_entry_object.cached_entry_size
       cached_entry_index += 1

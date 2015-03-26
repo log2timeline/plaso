@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Basic Security Module Parser."""
 
 import binascii
@@ -119,8 +103,10 @@ class BsmEvent(event.EventObject):
     self.offset = offset
 
 
-class BsmParser(interface.BaseParser):
+class BsmParser(interface.SingleFileBaseParser):
   """Parser for BSM files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'bsm_log'
   DESCRIPTION = u'Parser for BSM log files.'
@@ -241,7 +227,7 @@ class BsmParser(interface.BaseParser):
       construct.UBInt64('return_value'))
 
   # Identified the number of bytes that was written.
-  # magic: 2 bytes that identifes the TRAILER (BSM_TOKEN_TRAILER_MAGIC).
+  # magic: 2 bytes that identifies the TRAILER (BSM_TOKEN_TRAILER_MAGIC).
   # length: integer that has the number of bytes from the entry size.
   BSM_TOKEN_TRAILER = construct.Struct(
       'bsm_token_trailer',
@@ -555,48 +541,38 @@ class BsmParser(interface.BaseParser):
     self.bsm_type_list_all = self.BSM_TYPE_LIST.copy()
     self.bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract entries from a BSM file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a BSM file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
-      is_bsm = self.VerifyFile(parser_context, file_object)
+      is_bsm = self.VerifyFile(parser_mediator, file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse BSM file with error: {0:s}'.format(exception))
 
     if not is_bsm:
-      file_object.close()
-      raise errors.UnableToParseFile(
-          u'Not a BSM File, unable to parse.')
+      raise errors.UnableToParseFile(u'Not a BSM File, unable to parse.')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    event_object = self.ReadBSMEvent(parser_context, file_object)
+    event_object = self.ReadBSMEvent(parser_mediator, file_object)
     while event_object:
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
-      event_object = self.ReadBSMEvent(parser_context, file_object)
+      event_object = self.ReadBSMEvent(parser_mediator, file_object)
 
-    file_object.close()
-
-  def ReadBSMEvent(self, parser_context, file_object):
+  def ReadBSMEvent(self, parser_mediator, file_object):
     """Returns a BsmEvent from a single BSM entry.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
 
     Returns:
@@ -668,7 +644,7 @@ class BsmParser(interface.BaseParser):
         return
 
     # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
-    if parser_context.platform == 'MacOSX':
+    if parser_mediator.platform == 'MacOSX':
       # In Mac OS X the last two tokens are the return status and the trailer.
       if len(extra_tokens) >= 2:
         return_value = extra_tokens[-2:-1][0]
@@ -703,11 +679,11 @@ class BsmParser(interface.BaseParser):
       return BsmEvent(
           event_type, timestamp, u'. '.join(extra_tokens), trailer, offset)
 
-  def VerifyFile(self, parser_context, file_object):
+  def VerifyFile(self, parser_mediator, file_object):
     """Check if the file is a BSM file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_event: file that we want to check.
 
     Returns:
@@ -746,7 +722,7 @@ class BsmParser(interface.BaseParser):
 
     # If is Mac OS X BSM file, next entry is a  text token indicating
     # if it is a normal start or it is a recovery track.
-    if parser_context.platform == 'MacOSX':
+    if parser_mediator.platform == 'MacOSX':
       bsm_type_list = self.BSM_TYPE_LIST.get(token_id)
       if not bsm_type_list:
         return False

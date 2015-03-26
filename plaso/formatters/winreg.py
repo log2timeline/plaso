@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatter for Windows NT Registry (REGF) files."""
 
 from plaso.formatters import interface
@@ -33,55 +17,66 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Registry Key'
   SOURCE_SHORT = 'REG'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    regvalue = getattr(event_object, 'regvalue', {})
+    event_values = event_object.GetValues()
 
+    regvalue = event_values.get(u'regvalue', {})
     string_parts = []
     for key, value in sorted(regvalue.items()):
       string_parts.append(u'{0:s}: {1!s}'.format(key, value))
-
     text = u' '.join(string_parts)
 
-    event_object.text = text
-    if hasattr(event_object, 'keyname'):
+    event_values[u'text'] = text
+    if u'keyname' in event_values:
       format_string = self.FORMAT_STRING
     else:
       format_string = self.FORMAT_STRING_ALTERNATIVE
 
-    event_values = event_object.GetValues()
     return self._FormatMessages(
         format_string, self.FORMAT_STRING_SHORT, event_values)
 
   def GetSources(self, event_object):
-    """Returns a list of source short and long messages for the event."""
+    """Determines the the short and long source for an event object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple of the short and long source string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    self.source_string = getattr(event_object, 'source_long', None)
+    source_long = getattr(event_object, u'source_long', None)
+    if not source_long:
+      registry_type = getattr(event_object, u'registry_type', u'UNKNOWN')
+      source_long = u'{0:s} key'.format(registry_type)
 
-    if not self.source_string:
-      registry_type = getattr(event_object, 'registry_type', 'UNKNOWN')
-      self.source_string = u'{0:s} key'.format(registry_type)
+    if hasattr(event_object, u'source_append'):
+      source_long += u' {0:s}'.format(event_object.source_append)
 
-    if hasattr(event_object, 'source_append'):
-      self.source_string += u' {0:s}'.format(event_object.source_append)
-
-    return super(WinRegistryGenericFormatter, self).GetSources(event_object)
+    return self.SOURCE_SHORT, source_long
 
 
 manager.FormattersManager.RegisterFormatter(WinRegistryGenericFormatter)

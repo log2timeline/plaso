@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Tests for the DynamicFilter filter."""
 import unittest
 
 from plaso.filters import dynamic_filter
@@ -60,25 +45,25 @@ class DynamicFilterTest(test_helper.FilterTestHelper):
   def testFilterFields(self):
     query = 'SELECT stuff FROM machine WHERE some_stuff is "random"'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['stuff'], self.test_filter.fields)
+    self.assertEqual(['stuff'], self.test_filter.fields)
 
     query = 'SELECT stuff, a, b, date FROM machine WHERE some_stuff is "random"'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['stuff', 'a', 'b', 'date'], self.test_filter.fields)
+    self.assertEqual(['stuff', 'a', 'b', 'date'], self.test_filter.fields)
 
     query = 'SELECT date, message, zone, hostname WHERE some_stuff is "random"'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['date', 'message', 'zone', 'hostname'],
+    self.assertEqual(['date', 'message', 'zone', 'hostname'],
                       self.test_filter.fields)
 
     query = 'SELECT hlutir'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['hlutir'], self.test_filter.fields)
+    self.assertEqual(['hlutir'], self.test_filter.fields)
 
     query = 'SELECT hlutir LIMIT 10'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['hlutir'], self.test_filter.fields)
-    self.assertEquals(10, self.test_filter.limit)
+    self.assertEqual(['hlutir'], self.test_filter.fields)
+    self.assertEqual(10, self.test_filter.limit)
 
 
 if __name__ == '__main__':

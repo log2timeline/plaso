@@ -1,24 +1,9 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specifiSc language governing permissions and
-# limitations under the License.
 """Parser for PL-SQL Developer Recall files."""
 
-import construct
 import os
+
+import construct
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -40,7 +25,7 @@ class PlsRecallEvent(event.EventObject):
       timestamp: The timestamp when the entry was created.
       sequence: Sequence indicates the order of execution.
       username: The username that made the query.
-      database_name: String containing the databe name.
+      database_name: String containing the database name.
       query: String containing the PL-SQL query.
     """
     super(PlsRecallEvent, self).__init__()
@@ -51,7 +36,7 @@ class PlsRecallEvent(event.EventObject):
     self.query = query
 
 
-class PlsRecallParser(interface.BaseParser):
+class PlsRecallParser(interface.SingleFileBaseParser):
   """Parse PL-SQL Recall files.
 
   Parser is based on a:
@@ -67,6 +52,8 @@ class PlsRecallParser(interface.BaseParser):
     floating point without any time zone information
   """
 
+  _INITIAL_FILE_OFFSET = None
+
   NAME = 'pls_recall'
   DESCRIPTION = u'Parser for PL-SQL Recall files.'
 
@@ -78,52 +65,42 @@ class PlsRecallParser(interface.BaseParser):
       construct.String('Database', 81, None, '\x00'),
       construct.String('Query', 4001, None, '\x00'))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract entries from a PLSRecall.dat file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a PLSRecall.dat file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-    """
-    file_object = file_entry.GetFileObject()
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
 
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     try:
       is_pls = self.VerifyFile(file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile((
           u'Not a PLSrecall File, unable to parse.'
           u'with error: {0:s}').format(exception))
 
     if not is_pls:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not a PLSRecall File, unable to parse.')
 
     file_object.seek(0, os.SEEK_SET)
     pls_record = self.PLS_STRUCT.parse_stream(file_object)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     while pls_record:
       event_object = PlsRecallEvent(
           timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
           pls_record.Sequence, pls_record.Username,
           pls_record.Database, pls_record.Query)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
       try:
         pls_record = self.PLS_STRUCT.parse_stream(file_object)
-      except construct.FieldError as exception:
+      except construct.FieldError:
         # The code has reached the end of file (EOF).
         break
-
-    file_object.close()
 
   def VerifyFile(self, file_object):
     """Check if the file is a PLSRecall.dat file.

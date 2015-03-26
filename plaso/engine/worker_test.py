@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2015 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests the worker."""
 
 import unittest
@@ -27,7 +12,7 @@ from plaso.artifacts import knowledge_base
 from plaso.engine import single_process
 from plaso.engine import test_lib
 from plaso.engine import worker
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
@@ -46,7 +31,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue_producer,
         knowledge_base_object)
 
@@ -54,11 +39,11 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
     extraction_worker = worker.BaseEventExtractionWorker(
         0, collection_queue, event_queue_producer, parse_error_queue_producer,
-        parser_context, resolver_context=resolver_context)
+        parser_mediator, resolver_context=resolver_context)
 
-    self.assertNotEquals(extraction_worker, None)
+    self.assertNotEqual(extraction_worker, None)
 
-    extraction_worker.InitalizeParserObjects()
+    extraction_worker.InitializeParserObjects()
 
     # Process a file.
     source_path = self._GetTestFilePath([u'syslog'])
@@ -71,7 +56,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 16)
+    self.assertEqual(test_queue_consumer.number_of_items, 16)
 
     # Process a compressed file.
     source_path = self._GetTestFilePath([u'syslog.gz'])
@@ -84,7 +69,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 16)
+    self.assertEqual(test_queue_consumer.number_of_items, 16)
 
     source_path = self._GetTestFilePath([u'syslog.bz2'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -96,7 +81,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 15)
+    self.assertEqual(test_queue_consumer.number_of_items, 15)
 
     # Process a file in an archive.
     source_path = self._GetTestFilePath([u'syslog.tar'])
@@ -112,7 +97,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 13)
+    self.assertEqual(test_queue_consumer.number_of_items, 13)
 
     # Process an archive file without "process archive files" mode.
     extraction_worker.SetProcessArchiveFiles(False)
@@ -127,7 +112,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 3)
+    self.assertEqual(test_queue_consumer.number_of_items, 3)
 
     # Process an archive file with "process archive files" mode.
     extraction_worker.SetProcessArchiveFiles(True)
@@ -142,7 +127,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 16)
+    self.assertEqual(test_queue_consumer.number_of_items, 16)
 
     # Process a file in a compressed archive.
     source_path = self._GetTestFilePath([u'syslog.tgz'])
@@ -160,7 +145,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 13)
+    self.assertEqual(test_queue_consumer.number_of_items, 13)
 
     # Process an archive file with "process archive files" mode.
     extraction_worker.SetProcessArchiveFiles(True)
@@ -175,7 +160,36 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 17)
+    self.assertEqual(test_queue_consumer.number_of_items, 17)
+
+  def testExtractionWorkerHashing(self):
+    """Test that the worker sets up and runs hashing code correctly."""
+    collection_queue = single_process.SingleProcessQueue()
+    storage_queue = single_process.SingleProcessQueue()
+    parse_error_queue = single_process.SingleProcessQueue()
+    event_queue_producer = single_process.SingleProcessItemQueueProducer(
+        storage_queue)
+    parse_error_queue_producer = single_process.SingleProcessItemQueueProducer(
+        parse_error_queue)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    parser_mediator = parsers_mediator.ParserMediator(
+        event_queue_producer, parse_error_queue_producer,
+        knowledge_base_object)
+
+    resolver_context = context.Context()
+
+    extraction_worker = worker.BaseEventExtractionWorker(
+        0, collection_queue, event_queue_producer, parse_error_queue_producer,
+        parser_mediator, resolver_context=resolver_context)
+
+    # We're going to check that the worker set up its internal state correctly.
+    # pylint: disable=protected-access
+    extraction_worker.SetHashers(hasher_names_string=u'md5')
+    self.assertEqual(1, len(extraction_worker._hasher_names))
+
+    extraction_worker.InitializeParserObjects()
 
 
 if __name__ == '__main__':

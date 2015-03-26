@@ -1,24 +1,7 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for Safari Binary Cookie files."""
 
 import construct
-import logging
 
 from plaso.events import time_events
 
@@ -26,7 +9,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 
 # Need to register cookie plugins.
-from plaso.parsers import cookie_plugins    # pylint: disable=unused-import
+from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -43,7 +26,7 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
 
     Args:
       timestamp: The timestamp in Cocoa format.
-      timestamp_desc: The usage string, describing the timdestamp value.
+      timestamp_desc: The usage string, describing the timestamp value.
       flags: String containing the flags for the cookie.
       url: The URL where this cookie is valid.
       value: The value or data of the cookie.
@@ -58,7 +41,7 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
     self.url = url
 
 
-class BinaryCookieParser(interface.BaseParser):
+class BinaryCookieParser(interface.SingleFileBaseParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
@@ -101,30 +84,27 @@ class BinaryCookieParser(interface.BaseParser):
     super(BinaryCookieParser, self).__init__()
     self._cookie_plugins = cookie_interface.GetPlugins()
 
-  def _ParsePage(
-      self, page_data, file_entry, parser_context, parser_chain=None):
+  def _ParsePage(self, page_data, parser_mediator):
     """Extract events from a page and produce events.
 
     Args:
       page_data: Raw bytes of the page.
       file_entry: The file entry (instance of dfvfs.FileEntry).
-      parser_context: A parser context object (instance of ParserContext).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
     """
     try:
       page = self.PAGE_DATA.parse(page_data)
     except construct.FieldError:
-      logging.error(u'Unable to parse page from: {0:s}'.format(
-          file_entry.comparable.replace(u'\n', u' - ')))
+      parser_mediator.ProduceParseError(u'Unable to parse page')
       return
 
     for page_offset in page.offsets:
       try:
         cookie = self.COOKIE_DATA.parse(page_data[page_offset:])
       except construct.FieldError:
-        logging.error(u'Unable to parse cookie data from offset: {0:d}'.format(
-            page_offset))
+        message = u'Unable to parse cookie data from offset: {0:d}'.format(
+            page_offset)
+        parser_mediator.ProduceParseError(message)
         continue
 
       # The offset is determine by the range between the start of the current
@@ -169,67 +149,56 @@ class BinaryCookieParser(interface.BaseParser):
         event_object = BinaryCookieEvent(
             cookie.creation_date, eventdata.EventTimestamp.CREATION_TIME,
             cookie_flags, url, cookie_value, cookie_name, path)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if cookie.expiration_date:
         event_object = BinaryCookieEvent(
             cookie.expiration_date, eventdata.EventTimestamp.EXPIRATION_TIME,
             cookie_flags, url, cookie_value, cookie_name, path)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       for cookie_plugin in self._cookie_plugins:
         try:
-          cookie_plugin.Process(
-              parser_context, cookie_name=data_dict.get(u'name'),
-              cookie_data=data_dict.get(u'value'), url=data_dict.get(u'url'),
-              parser_chain=parser_chain, file_entry=file_entry)
+          cookie_plugin.UpdateChainAndProcess(
+              parser_mediator, cookie_name=data_dict.get(u'name'),
+              cookie_data=data_dict.get(u'value'), url=data_dict.get(u'url'))
         except errors.WrongPlugin:
           pass
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from a Safari Binary Cookie file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Safari binary cookie file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-    """
-    file_object = file_entry.GetFileObject()
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
 
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     # Start by verifying magic value.
     # We do this here instead of in the header parsing routine due to the
     # fact that we read an integer there and create an array, which is part
     # of the header. For false hits this could end up with reading large chunks
     # of data, which we don't want for false hits.
     magic = file_object.read(4)
-    if magic != 'cook':
-      file_object.close()
+    if magic != b'cook':
       raise errors.UnableToParseFile(
           u'The file is not a Binary Cookie file. Unsupported file signature.')
 
     try:
       header = self.COOKIE_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      file_object.close()
+    except (IOError, construct.ArrayError, construct.FieldError):
       raise errors.UnableToParseFile(
           u'The file is not a Binary Cookie file (bad header).')
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     for page_size in header.page_sizes:
       page = file_object.read(page_size)
       if len(page) != page_size:
-        logging.error(u'Unable to continue parsing Binary Cookie file')
+        parser_mediator.ProduceParseError(
+            u'Unable to continue parsing Binary Cookie file')
         break
 
-      self._ParsePage(page, file_entry, parser_context, parser_chain)
-
-    file_object.close()
+      self._ParsePage(page, parser_mediator)
 
 
 manager.ParsersManager.RegisterParser(BinaryCookieParser)

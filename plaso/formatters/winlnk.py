@@ -1,21 +1,5 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Formatter for Windows Shortcut (LNK) files."""
+"""The Windows Shortcut (LNK) event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -41,7 +25,7 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       u'Relative path: {relative_path}',
       u'Working dir: {working_directory}',
       u'Icon location: {icon_location}',
-      u'Link target: [{link_target}]']
+      u'Link target: {link_target}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'[{description}]',
@@ -64,42 +48,44 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
     if hasattr(event_object, 'local_path'):
       return event_object.local_path
 
-    if hasattr(event_object, 'network_path'):
+    if hasattr(event_object, u'network_path'):
       return event_object.network_path
 
-    if hasattr(event_object, 'relative_path'):
+    if hasattr(event_object, u'relative_path'):
       paths = []
-      if hasattr(event_object, 'working_directory'):
+      if hasattr(event_object, u'working_directory'):
         paths.append(event_object.working_directory)
       paths.append(event_object.relative_path)
 
       return u'\\'.join(paths)
 
-    return 'Unknown'
+    return u'Unknown'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    # Update event object with a description if necessary.
-    if not hasattr(event_object, 'description'):
-      event_object.description = u'Empty description'
+    event_values = event_object.GetValues()
+    if u'description' not in event_values:
+      event_values[u'description'] = u'Empty description'
 
-    # Update event object with the linked path.
-    event_object.linked_path = self._GetLinkedPath(event_object)
+    event_values[u'linked_path'] = self._GetLinkedPath(event_object)
 
-    return super(WinLnkLinkFormatter, self).GetMessages(event_object)
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinLnkLinkFormatter)

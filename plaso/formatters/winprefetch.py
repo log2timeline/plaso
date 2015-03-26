@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatter for the Windows Prefetch events."""
 
 from plaso.formatters import interface
@@ -42,39 +26,51 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'WinPrefetch'
   SOURCE_SHORT = 'LOG'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (instance of EventObject) containing
-                    the event specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
 
     Raises:
-      WrongFormatter: when the data type of the formatter does not match
-                      that of the event object.
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(
           u'Invalid event object - unsupported data type: {0:s}'.format(
               event_object.data_type))
 
+    event_values = event_object.GetValues()
+
+    number_of_volumes = event_values.get(u'number_of_volumes', 0)
+    volume_serial_numbers = event_values.get(u'volume_serial_numbers', None)
+    volume_device_paths = event_values.get(u'volume_device_paths', None)
     volumes_strings = []
-    for volume_index in range(0, event_object.number_of_volumes):
+    for volume_index in range(0, number_of_volumes):
+      if not volume_serial_numbers:
+        volume_serial_number = u'UNKNOWN'
+      else:
+        volume_serial_number = volume_serial_numbers[volume_index]
+
+      if not volume_device_paths:
+        volume_device_path = u'UNKNOWN'
+      else:
+        volume_device_path = volume_device_paths[volume_index]
+
       volumes_strings.append((
           u'volume: {0:d} [serial number: 0x{1:08X}, device path: '
           u'{2:s}]').format(
-              volume_index + 1,
-              event_object.volume_serial_numbers[volume_index],
-              event_object.volume_device_paths[volume_index]))
+              volume_index + 1, volume_serial_number, volume_device_path))
 
     if volumes_strings:
-      event_object.volumes_string = u', '.join(volumes_strings)
+      event_values[u'volumes_string'] = u', '.join(volumes_strings)
 
-    return super(WinPrefetchExecutionFormatter, self).GetMessages(event_object)
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinPrefetchExecutionFormatter)

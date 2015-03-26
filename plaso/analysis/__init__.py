@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Import statements for analysis plugins and common methods."""
 
 from plaso.analysis import interface
@@ -23,13 +7,14 @@ from plaso.lib import errors
 # Import statements of analysis plugins.
 from plaso.analysis import browser_search
 from plaso.analysis import chrome_extension
+from plaso.analysis import file_hashes
 from plaso.analysis import windows_services
 
 
 # TODO: move these functions to a manager class. And add a test for this
 # function.
 def ListAllPluginNames(show_all=True):
-  """Return a list of all available plugin names and it's doc string."""
+  """Return a list of all available plugin names and their docstrings."""
   results = []
   for cls_obj in interface.AnalysisPlugin.classes.itervalues():
     doc_string, _, _ = cls_obj.__doc__.partition('\n')

@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for Linux UTMP files."""
 
 import construct
@@ -70,8 +54,10 @@ class UtmpEvent(event.EventObject):
     self.terminal_id = structure.terminal_id
 
 
-class UtmpParser(interface.BaseParser):
+class UtmpParser(interface.SingleFileBaseParser):
   """Parser for Linux/Unix UTMP files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'utmp'
   DESCRIPTION = u'Parser for Linux/Unix UTMP files.'
@@ -115,41 +101,37 @@ class UtmpParser(interface.BaseParser):
   # it can be a free flowing text field.
   _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from an UTMP file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an UTMP file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: The file-like object to extract data from.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
     try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse UTMP Header with error: {0:s}'.format(exception))
 
     if structure.type not in self.STATUS_TYPE:
-      file_object.close()
       raise errors.UnableToParseFile((
           u'Not an UTMP file, unknown type '
           u'[{0:d}].').format(structure.type))
 
     if not self._VerifyTextField(structure.terminal):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown terminal.')
 
     if not self._VerifyTextField(structure.username):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown username.')
 
     if not self._VerifyTextField(structure.hostname):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown hostname.')
 
@@ -171,23 +153,15 @@ class UtmpParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an UTMP file, no timestamp set in the first record.')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     file_object.seek(0, os.SEEK_SET)
     event_object = self._ReadUtmpEvent(file_object)
     while event_object:
       event_object.offset = file_object.tell()
-      parser_context.ProduceEvent(
-          event_object, file_entry=file_entry, parser_chain=None)
-
+      parser_mediator.ProduceEvent(event_object)
       event_object = self._ReadUtmpEvent(file_object)
 
-    file_object.close()
-
   def _VerifyTextField(self, text):
-    """Check if a bytestream is a null terminated string.
+    """Check if a byte stream is a null terminated string.
 
     Args:
       event_object: text field from the structure.
@@ -195,10 +169,10 @@ class UtmpParser(interface.BaseParser):
     Return:
       True if it is a null terminated string, False otherwise.
     """
-    _, _, null_chars = text.partition('\x00')
+    _, _, null_chars = text.partition(b'\x00')
     if not null_chars:
       return False
-    return len(null_chars) == null_chars.count('\x00')
+    return len(null_chars) == null_chars.count(b'\x00')
 
   def _ReadUtmpEvent(self, file_object):
     """Returns an UtmpEvent from a single UTMP entry.
@@ -219,7 +193,7 @@ class UtmpParser(interface.BaseParser):
     except (IOError, construct.FieldError):
       logging.warning((
           u'UTMP entry at 0x{:x} couldn\'t be parsed.').format(offset))
-      return self.__ReadUtmpEvent(file_object)
+      return self._ReadUtmpEvent(file_object)
 
     user = self._GetTextFromNullTerminatedString(entry.username)
     terminal = self._GetTextFromNullTerminatedString(entry.terminal)

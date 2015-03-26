@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for the Microsoft Internet Explorer WebCache ESE database.
 
 The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE
@@ -150,26 +134,20 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       'RequestHeaders': '_ConvertValueBinaryDataToStringAscii',
       'ResponseHeaders': '_ConvertValueBinaryDataToStringAscii'}
 
-  def _ParseContainerTable(
-      self, parser_context, file_entry=None, parser_chain=None, table=None,
-      container_name=u'Unknown'):
+  def _ParseContainerTable(self, parser_mediator, table, container_name):
     """Parses a Container_# table.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point.
-      table: Optional table object (instance of pyesedb.table).
-      container_name: Optional string that contains the container name.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      table: The table object (instance of pyesedb.table).
+      container_name: String that contains the container name.
                       The container name indicates the table type.
-                      The default is a string containing 'Unknown'.
     """
     if table is None:
       logging.warning(u'[{0:s}] invalid Container_# table'.format(self.NAME))
       return
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       # TODO: add support for:
       # wpnidm, iecompat, iecompatua, DNTException, DOMStore
       if container_name == u'Content':
@@ -180,13 +158,11 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       try:
         record_values = self._GetRecordValues(
             table.name, esedb_record, value_mappings=value_mappings)
-      except UnicodeDecodeError as exception:
-        logging.error((
-            u'[{0:s}] Unable to return record values for {1:s} with error: '
-            u'{2:s}').format(
-                parser_chain,
-                file_entry.path_spec.comparable.replace(u'\n', u';'),
-                exception))
+
+      except UnicodeDecodeError:
+        parser_mediator.ProduceParseError((
+            u'Unable to retrieve record values from record: {0:d} '
+            u'in table: {1:s}').format(record_index, table.name))
         continue
 
       if (container_name in [
@@ -196,57 +172,46 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
         if timestamp:
           event_object = MsieWebCacheContainerEventObject(
               timestamp, u'Synchronization time', record_values)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
         timestamp = record_values.get(u'CreationTime', 0)
         if timestamp:
           event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.CREATION_TIME, record_values)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
         timestamp = record_values.get(u'ExpiryTime', 0)
         if timestamp:
           event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.EXPIRATION_TIME,
               record_values)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
         timestamp = record_values.get(u'ModifiedTime', 0)
         if timestamp:
           event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.MODIFICATION_TIME,
               record_values)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
         timestamp = record_values.get(u'AccessedTime', 0)
         if timestamp:
           event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.ACCESS_TIME, record_values)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
         timestamp = record_values.get(u'PostCheckTime', 0)
         if timestamp:
           event_object = MsieWebCacheContainerEventObject(
               timestamp, u'Post check time', record_values)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
   def ParseContainersTable(
-      self, parser_context, file_entry=None, parser_chain=None, database=None,
-      table=None, **unused_kwargs):
+      self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the Containers table.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
@@ -267,15 +232,13 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       if timestamp:
         event_object = MsieWebCacheContainersEventObject(
             timestamp, u'Last Scavenge Time', record_values)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       timestamp = record_values.get(u'LastAccessTime', 0)
       if timestamp:
         event_object = MsieWebCacheContainersEventObject(
             timestamp, eventdata.EventTimestamp.ACCESS_TIME, record_values)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       container_identifier = record_values.get(u'ContainerId', None)
       container_name = record_values.get(u'Name', None)
@@ -286,25 +249,18 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       table_name = u'Container_{0:d}'.format(container_identifier)
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        logging.warning(
-            u'[{0:s}] missing table: {1:s}'.format(self.NAME, table_name))
+        parser_mediator.ProduceParseError(
+            u'Missing table: {0:s}'.format(table_name))
         continue
 
-      self._ParseContainerTable(
-          parser_context, file_entry=file_entry, parser_chain=parser_chain,
-          table=esedb_table, container_name=container_name)
+      self._ParseContainerTable(parser_mediator, esedb_table, container_name)
 
   def ParseLeakFilesTable(
-      self, parser_context, file_entry=None, parser_chain=None, database=None,
-      table=None, **unused_kwargs):
+      self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the LeakFiles table.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
@@ -325,20 +281,14 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       if timestamp:
         event_object = MsieWebCacheLeakFilesEventObject(
             timestamp, eventdata.EventTimestamp.CREATION_TIME, record_values)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
   def ParsePartitionsTable(
-      self, parser_context, file_entry=None, parser_chain=None, database=None,
-      table=None, **unused_kwargs):
+      self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the Partitions table.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
@@ -359,8 +309,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       if timestamp:
         event_object = MsieWebCachePartitionsEventObject(
             timestamp, u'Last Scavenge Time', record_values)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
 
 esedb.EseDbParser.RegisterPlugin(MsieWebCacheEseDbPlugin)

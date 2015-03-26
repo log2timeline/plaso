@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a unit test for the EventObject.
 
 This is an implementation of an unit test for EventObject storage mechanism for
@@ -31,18 +16,18 @@ import unittest
 from plaso.events import text_events
 from plaso.events import windows_events
 from plaso.lib import event
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 
 
-class TestEvent1(event.EventObject):
+class TestEvent(event.EventObject):
   """A test event object."""
-  DATA_TYPE = 'test:event1'
+  DATA_TYPE = 'test:event'
 
   def __init__(self, timestamp, attributes):
     """Initializes the test event object."""
-    super(TestEvent1, self).__init__()
+    super(TestEvent, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = 'Some time in the future'
+    self.timestamp_desc = u'Some time in the future'
     for attribute, value in attributes.iteritems():
       setattr(self, attribute, value)
 
@@ -54,34 +39,32 @@ class FailEvent(event.EventObject):
 def GetEventObjects():
   """Returns a list of test event objects."""
   event_objects = []
-  hostname = 'MYHOSTNAME'
-  data_type = 'test:event1'
+  hostname = u'MYHOSTNAME'
+  data_type = 'test:event'
 
   event_a = event.EventObject()
-  event_a.username = 'joesmith'
-  event_a.filename = 'c:/Users/joesmith/NTUSER.DAT'
+  event_a.username = u'joesmith'
+  event_a.filename = u'c:/Users/joesmith/NTUSER.DAT'
   event_a.hostname = hostname
   event_a.timestamp = 0
   event_a.data_type = data_type
+  event_a.text = u''
 
-  # TODO: move this to a WindowRegistrysEvent unit test.
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-04-20 22:38:46.929596')
+  # TODO: move this to a WindowsRegistryEvent unit test.
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-20 22:38:46.929596')
   event_b = windows_events.WindowsRegistryEvent(
       timestamp, u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'})
   event_b.hostname = hostname
   event_objects.append(event_b)
 
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-04-20 23:56:46.929596')
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-20 23:56:46.929596')
   event_c = windows_events.WindowsRegistryEvent(
       timestamp, u'//HKCU/Secret/EvilEmpire/Malicious_key',
       {u'Value': u'send all the exes to the other world'})
   event_c.hostname = hostname
   event_objects.append(event_c)
 
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-04-20 16:44:46.000000')
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-20 16:44:46.000000')
   event_d = windows_events.WindowsRegistryEvent(
       timestamp, u'//HKCU/Windows/Normal',
       {u'Value': u'run all the benign stuff'})
@@ -90,42 +73,38 @@ def GetEventObjects():
 
   event_objects.append(event_a)
 
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-04-30 10:29:47.929596')
-  filename = 'c:/Temp/evil.exe'
-  event_e = TestEvent1(timestamp, {
-      'text': 'This log line reads ohh so much.'})
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-30 10:29:47.929596')
+  filename = u'c:/Temp/evil.exe'
+  event_e = TestEvent(timestamp, {
+      u'text': u'This log line reads ohh so much.'})
   event_e.filename = filename
   event_e.hostname = hostname
 
   event_objects.append(event_e)
 
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-04-30 10:29:47.929596')
-  event_f = TestEvent1(timestamp, {
-      'text': 'Nothing of interest here, move on.'})
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-30 10:29:47.929596')
+  event_f = TestEvent(timestamp, {
+      u'text': u'Nothing of interest here, move on.'})
   event_f.filename = filename
   event_f.hostname = hostname
 
   event_objects.append(event_f)
 
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-04-30 13:06:47.939596')
-  event_g = TestEvent1(timestamp, {
-      'text': 'Mr. Evil just logged into the machine and got root.'})
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-30 13:06:47.939596')
+  event_g = TestEvent(timestamp, {
+      u'text': u'Mr. Evil just logged into the machine and got root.'})
   event_g.filename = filename
   event_g.hostname = hostname
 
   event_objects.append(event_g)
 
-  text_dict = {'body': (
+  text_dict = {u'body': (
       u'This is a line by someone not reading the log line properly. And '
       u'since this log line exceeds the accepted 80 chars it will be '
-      u'shortened.'), 'hostname': u'nomachine', 'username': u'johndoe'}
+      u'shortened.'), u'hostname': u'nomachine', 'username': u'johndoe'}
 
   # TODO: move this to a TextEvent unit test.
-  timestamp = timelib_test.CopyStringToTimestamp(
-      '2012-06-05 22:14:19.000000')
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-06-05 22:14:19.000000')
   event_h = text_events.TextEvent(timestamp, 12, text_dict)
   event_h.text = event_h.body
   event_h.hostname = hostname
@@ -164,46 +143,46 @@ class EventObjectTest(unittest.TestCase):
     event_b.timestamp_desc = 'LAST WRITTEN'
     event_b.data_type = 'mock:nothing'
     event_b.inode = 124
-    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
     event_b.metadata = {
-        'author': 'Some Random Dude',
-        'version': 1245L,
-        'last_changed': 'Long time ago'}
+        u'author': u'Some Random Dude',
+        u'version': 1245L,
+        u'last_changed': u'Long time ago'}
     event_b.strings = [
-        'This ', 'is a ', 'long string']
+        u'This ', u'is a ', u'long string']
 
     event_c.timestamp = 123
-    event_c.timestamp_desc = 'LAST UPDATED'
+    event_c.timestamp_desc = u'LAST UPDATED'
     event_c.data_type = 'mock:nothing'
     event_c.inode = 124
-    event_c.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_c.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_c.another_attribute = False
 
     event_d.timestamp = 14523
-    event_d.timestamp_desc = 'LAST WRITTEN'
+    event_d.timestamp_desc = u'LAST WRITTEN'
     event_d.data_type = 'mock:nothing'
     event_d.inode = 124
-    event_d.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_d.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_d.another_attribute = False
 
     event_e.timestamp = 123
-    event_e.timestamp_desc = 'LAST WRITTEN'
+    event_e.timestamp_desc = u'LAST WRITTEN'
     event_e.data_type = 'mock:nothing'
     event_e.inode = 623423
-    event_e.filename = 'c:/afrit/onnurskra.txt'
+    event_e.filename = u'c:/afrit/onnurskra.txt'
     event_e.another_attribute = False
     event_e.metadata = {
-        'author': 'Some Random Dude',
-        'version': 1245,
-        'last_changed': 'Long time ago'}
+        u'author': u'Some Random Dude',
+        u'version': 1245,
+        u'last_changed': u'Long time ago'}
     event_e.strings = [
-        'This ', 'is a ', 'long string']
+        u'This ', u'is a ', u'long string']
 
-    self.assertEquals(event_a, event_b)
-    self.assertNotEquals(event_a, event_c)
-    self.assertEquals(event_a, event_e)
-    self.assertNotEquals(event_c, event_d)
+    self.assertEqual(event_a, event_b)
+    self.assertNotEqual(event_a, event_c)
+    self.assertEqual(event_a, event_e)
+    self.assertNotEqual(event_c, event_d)
 
   def testEqualityString(self):
     """Test the EventObject EqualityString."""
@@ -215,53 +194,53 @@ class EventObjectTest(unittest.TestCase):
     event_f = event.EventObject()
 
     event_a.timestamp = 123
-    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.timestamp_desc = u'LAST WRITTEN'
     event_a.data_type = 'mock:nothing'
     event_a.inode = 124
-    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
-    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.timestamp_desc = u'LAST WRITTEN'
     event_b.data_type = 'mock:nothing'
     event_b.inode = 124
-    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
     event_c.timestamp = 123
-    event_c.timestamp_desc = 'LAST UPDATED'
+    event_c.timestamp_desc = u'LAST UPDATED'
     event_c.data_type = 'mock:nothing'
     event_c.inode = 124
-    event_c.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_c.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_c.another_attribute = False
 
     event_d.timestamp = 14523
-    event_d.timestamp_desc = 'LAST WRITTEN'
+    event_d.timestamp_desc = u'LAST WRITTEN'
     event_d.data_type = 'mock:nothing'
     event_d.inode = 124
-    event_d.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_d.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_d.another_attribute = False
 
     event_e.timestamp = 123
-    event_e.timestamp_desc = 'LAST WRITTEN'
+    event_e.timestamp_desc = u'LAST WRITTEN'
     event_e.data_type = 'mock:nothing'
     event_e.inode = 623423
-    event_e.filename = 'c:/afrit/öñṅûŗ₅ḱŖūα.txt'
+    event_e.filename = u'c:/afrit/öñṅûŗ₅ḱŖūα.txt'
     event_e.another_attribute = False
 
     event_f.timestamp = 14523
-    event_f.timestamp_desc = 'LAST WRITTEN'
+    event_f.timestamp_desc = u'LAST WRITTEN'
     event_f.data_type = 'mock:nothing'
     event_f.inode = 124
-    event_f.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_f.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_f.another_attribute = False
-    event_f.weirdness = 'I am a potato'
+    event_f.weirdness = u'I am a potato'
 
-    self.assertEquals(event_a.EqualityString(), event_b.EqualityString())
-    self.assertNotEquals(event_a.EqualityString(), event_c.EqualityString())
-    self.assertEquals(event_a.EqualityString(), event_e.EqualityString())
-    self.assertNotEquals(event_c.EqualityString(), event_d.EqualityString())
-    self.assertNotEquals(event_d.EqualityString(), event_f.EqualityString())
+    self.assertEqual(event_a.EqualityString(), event_b.EqualityString())
+    self.assertNotEqual(event_a.EqualityString(), event_c.EqualityString())
+    self.assertEqual(event_a.EqualityString(), event_e.EqualityString())
+    self.assertNotEqual(event_c.EqualityString(), event_d.EqualityString())
+    self.assertNotEqual(event_d.EqualityString(), event_f.EqualityString())
 
   def testEqualityFileStatParserMissingInode(self):
     """Test that FileStatParser files with missing inodes are distinct"""
@@ -269,20 +248,20 @@ class EventObjectTest(unittest.TestCase):
     event_b = event.EventObject()
 
     event_a.timestamp = 123
-    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.timestamp_desc = u'LAST WRITTEN'
     event_a.data_type = 'mock:nothing'
-    event_a.parser = 'filestat'
-    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.parser = u'filestat'
+    event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
-    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.timestamp_desc = u'LAST WRITTEN'
     event_b.data_type = 'mock:nothing'
-    event_b.parser = 'filestat'
-    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.parser = u'filestat'
+    event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
-    self.assertNotEquals(event_a, event_b)
+    self.assertNotEqual(event_a, event_b)
 
   def testEqualityStringFileStatParserMissingInode(self):
     """Test that FileStatParser files with missing inodes are distinct"""
@@ -290,34 +269,34 @@ class EventObjectTest(unittest.TestCase):
     event_b = event.EventObject()
 
     event_a.timestamp = 123
-    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.timestamp_desc = u'LAST WRITTEN'
     event_a.data_type = 'mock:nothing'
-    event_a.parser = 'filestat'
-    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.parser = u'filestat'
+    event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
-    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.timestamp_desc = u'LAST WRITTEN'
     event_b.data_type = 'mock:nothing'
-    event_b.parser = 'filestat'
-    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.parser = u'filestat'
+    event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
-    self.assertNotEquals(event_a.EqualityString(), event_b.EqualityString())
+    self.assertNotEqual(event_a.EqualityString(), event_b.EqualityString())
 
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist."""
-    event_object = TestEvent1(0, {})
+    event_object = TestEvent(0, {})
 
     with self.assertRaises(AttributeError):
-      getattr(event_object, 'doesnotexist')
+      getattr(event_object, u'doesnotexist')
 
   def testFailEvent(self):
     """Calls to format_string_short that has not been defined."""
     e = FailEvent()
 
     with self.assertRaises(AttributeError):
-      getattr(e, 'format_string_short')
+      getattr(e, u'format_string_short')
 
 
 if __name__ == '__main__':

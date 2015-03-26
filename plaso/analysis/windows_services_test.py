@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the windows services analysis plugin."""
 
 import argparse
@@ -108,7 +93,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
-    self.assertEquals(len(analysis_reports), 1)
+    self.assertEqual(len(analysis_reports), 1)
 
     analysis_report = analysis_reports[0]
 
@@ -126,8 +111,8 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         u'\t\tC:\\WINDOWS\\system32\\SYSTEM:'
         u'\\ControlSet003\\services\\TestbDriver\n\n')
 
-    self.assertEquals(expected_text, analysis_report.text)
-    self.assertEquals(analysis_report.plugin_name, 'windows_services')
+    self.assertEqual(expected_text, analysis_report.text)
+    self.assertEqual(analysis_report.plugin_name, 'windows_services')
 
   def testRealEvents(self):
     """Test the plugin with text output against real events from the parser."""

@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains the tests for the generic text parser."""
 
 import unittest
@@ -24,9 +9,10 @@ import pyparsing
 from plaso.events import text_events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import lexer
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import text_parser
 
@@ -42,9 +28,6 @@ class TestTextEventFormatter(formatters_interface.EventFormatter):
   FORMAT_STRING = u'{body}'
 
   SOURCE_LONG = 'Test Text Parser'
-
-
-formatters_manager.FormattersManager.RegisterFormatter(TestTextEventFormatter)
 
 
 class TestTextParser(text_parser.SlowLexicalTextParser):
@@ -92,42 +75,50 @@ class TextParserTest(test_lib.ParserTestCase):
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    test_file = self._GetTestFilePath(['text_parser', 'test1.txt'])
+    test_file = self._GetTestFilePath([u'text_parser', u'test1.txt'])
 
     with self.assertRaises(errors.UnableToParseFile):
       _ = self._ParseFile(self._parser, test_file)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    test_file = self._GetTestFilePath(['text_parser', 'test2.txt'])
+    formatters_manager.FormattersManager.RegisterFormatter(
+        TestTextEventFormatter)
+
+    formatter_mediator = formatters_mediator.FormatterMediator()
+
+    test_file = self._GetTestFilePath([u'text_parser', u'test2.txt'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     event_object = event_objects[0]
 
     msg1, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        event_object)
+        formatter_mediator, event_object)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-01-01 05:23:15')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-01-01 05:23:15')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(msg1, 'first line.')
-    self.assertEquals(event_object.hostname, 'myhost')
-    self.assertEquals(event_object.username, 'myuser')
+    self.assertEqual(msg1, 'first line.')
+    self.assertEqual(event_object.hostname, 'myhost')
+    self.assertEqual(event_object.username, 'myuser')
 
     event_object = event_objects[1]
 
     msg2, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        event_object)
+        formatter_mediator, event_object)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '1991-12-24 19:58:06')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'1991-12-24 19:58:06')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(msg2, 'second line.')
-    self.assertEquals(event_object.hostname, 'myhost')
-    self.assertEquals(event_object.username, 'myuser')
+    self.assertEqual(msg2, 'second line.')
+    self.assertEqual(event_object.hostname, 'myhost')
+    self.assertEqual(event_object.username, 'myuser')
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        TestTextEventFormatter)
 
 
 class PyParserTest(test_lib.ParserTestCase):
@@ -176,8 +167,8 @@ class PyParserTest(test_lib.ParserTestCase):
     line = '# This is a comment.'
     parsed_line = text_parser.PyparsingConstants.COMMENT_LINE_HASH.parseString(
         line)
-    self.assertEquals(parsed_line[-1], 'This is a comment.')
-    self.assertEquals(len(parsed_line), 2)
+    self.assertEqual(parsed_line[-1], 'This is a comment.')
+    self.assertEqual(len(parsed_line), 2)
 
 
 if __name__ == '__main__':

@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for the Sleuthkit (TSK) bodyfile or mactime format.
 
 The format specifications can be read here:
@@ -92,11 +76,11 @@ class MactimeParser(text_parser.TextCSVParser):
       'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
   }
 
-  def VerifyRow(self, unused_parser_context, row):
+  def VerifyRow(self, unused_parser_mediator, row):
     """Verify we are dealing with a mactime bodyfile.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: A single row from the CSV file.
 
     Returns:
@@ -118,20 +102,14 @@ class MactimeParser(text_parser.TextCSVParser):
     # TODO: Add additional verification.
     return True
 
-  def ParseRow(
-      self, parser_context, row_offset, row, file_entry=None,
-      parser_chain=None):
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a row and extract event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     for key, value in row.iteritems():
       if isinstance(row[key], basestring):
@@ -146,8 +124,7 @@ class MactimeParser(text_parser.TextCSVParser):
         continue
       event_object = MactimeEvent(
           value, timestamp_description, row_offset, row)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(MactimeParser)

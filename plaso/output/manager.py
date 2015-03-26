@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2015 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains the output manager class."""
 
 
@@ -54,11 +38,12 @@ class OutputManager(object):
       The corresponding output (instance of LogOutputFormatter).
 
     Raises:
+      ValueError: if name is not a string.
       KeyError: if there is no output object found with the
                 supplied name or if the name is not a string.
     """
     if not isinstance(name, basestring):
-      raise KeyError(u'Name attribute is not a string.')
+      raise ValueError(u'Name attribute is not a string.')
 
     name = name.lower()
     if name not in cls._output_classes:
@@ -71,6 +56,21 @@ class OutputManager(object):
     """Generate a list of all available output formatter classes."""
     for output_class in cls._output_classes.itervalues():
       yield output_class.NAME, output_class.DESCRIPTION
+
+  @classmethod
+  def HasOutputClass(cls, name):
+    """Determines if a specific output class is registered with the manager.
+
+    Args:
+      name: The name of the output.
+
+    Returns:
+      A boolean indicating if the output class is registered.
+    """
+    if not isinstance(name, basestring):
+      return False
+
+    return name.lower() in cls._output_classes
 
   @classmethod
   def RegisterOutput(cls, output_class):

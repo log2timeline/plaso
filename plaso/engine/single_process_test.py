@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests the single process processing engine."""
 
 import os
@@ -42,14 +27,14 @@ class SingleProcessQueueTest(unittest.TestCase):
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    self.assertEquals(len(test_queue), len(self._ITEMS))
+    self.assertEqual(len(test_queue), len(self._ITEMS))
 
     test_queue.SignalEndOfInput()
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
 
     expected_number_of_items = len(self._ITEMS)
-    self.assertEquals(
+    self.assertEqual(
         test_queue_consumer.number_of_items, expected_number_of_items)
 
   def testQueueEmpty(self):
@@ -77,7 +62,7 @@ class SingleProcessQueueTest(unittest.TestCase):
     test_queue_consumer.ConsumeItems()
 
     expected_number_of_items = len(self._ITEMS)
-    self.assertEquals(
+    self.assertEqual(
         test_queue_consumer.number_of_items, expected_number_of_items + 1)
 
 
@@ -92,7 +77,7 @@ class SingleProcessEngineTest(unittest.TestCase):
     test_engine = single_process.SingleProcessEngine(
         maximum_number_of_queued_items=25000)
 
-    self.assertNotEquals(test_engine, None)
+    self.assertNotEqual(test_engine, None)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -109,7 +94,7 @@ class SingleProcessEngineTest(unittest.TestCase):
 
     test_searcher = test_engine.GetSourceFileSystemSearcher(
         resolver_context=resolver_context)
-    self.assertNotEquals(test_searcher, None)
+    self.assertNotEqual(test_searcher, None)
     self.assertIsInstance(
         test_searcher, file_system_searcher.FileSystemSearcher)
 
@@ -118,12 +103,12 @@ class SingleProcessEngineTest(unittest.TestCase):
     test_collector = test_engine.CreateCollector(
         False, vss_stores=None, filter_find_specs=None,
         resolver_context=resolver_context)
-    self.assertNotEquals(test_collector, None)
+    self.assertNotEqual(test_collector, None)
     self.assertIsInstance(
         test_collector, single_process.SingleProcessCollector)
 
     test_extraction_worker = test_engine.CreateExtractionWorker(0)
-    self.assertNotEquals(test_extraction_worker, None)
+    self.assertNotEqual(test_extraction_worker, None)
     self.assertIsInstance(
         test_extraction_worker,
         single_process.SingleProcessEventExtractionWorker)

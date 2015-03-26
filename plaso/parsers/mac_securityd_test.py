@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a unit test for ASL securityd log parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import mac_securityd as mac_securityd_formatter
-from plaso.lib import timelib_test
-from plaso.parsers import mac_securityd as mac_securityd_parser
+from plaso.formatters import mac_securityd as _  # pylint: disable=unused-import
+from plaso.lib import timelib
+from plaso.parsers import mac_securityd
 from plaso.parsers import test_lib
 
 
@@ -31,7 +15,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._parser = mac_securityd_parser.MacSecuritydLogParser()
+    self._parser = mac_securityd.MacSecuritydLogParser()
 
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""
@@ -54,7 +38,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
         u'EscrowSecurityAl[3273] DeviceInCircle ...')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-02-26 19:11:56')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -72,7 +56,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-26 19:11:57')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -85,7 +69,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-26 19:11:58')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -98,9 +82,9 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[3]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-26 19:11:59')
-    self.assertEqual(event_object.timestamp, 1388085119000000)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
     self.assertEqual(event_object.sender_pid, 1111)
@@ -111,7 +95,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[4]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-06 19:11:01')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -125,7 +109,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[5]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-06 19:11:02')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -139,13 +123,13 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[6]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-31 23:59:59')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[7]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2014-03-01 00:00:01')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

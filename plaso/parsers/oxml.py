@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a parser for OXML files (i.e. MS Office 2007+)."""
 
 import logging
@@ -54,7 +38,7 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
       setattr(self, key, value)
 
 
-class OpenXMLParser(interface.BaseParser):
+class OpenXMLParser(interface.SingleFileBaseParser):
   """Parse metadata from OXML files."""
 
   NAME = 'openxml'
@@ -84,39 +68,36 @@ class OpenXMLParser(interface.BaseParser):
     fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract data from an OXML file.
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses an OXML file-like object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_name = parser_mediator.GetDisplayName()
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, 'Not a Zip file.'))
+              self.NAME, file_name, 'Not a Zip file.'))
 
     try:
       zip_container = zipfile.ZipFile(file_object, 'r')
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, 'Bad Zip file.'))
+              self.NAME, file_name, 'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, 'OXML element(s) missing.'))
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+              self.NAME, file_name, 'OXML element(s) missing.'))
 
     metadata = {}
     timestamps = {}
@@ -124,9 +105,8 @@ class OpenXMLParser(interface.BaseParser):
     try:
       rels_xml = zip_container.read('_rels/.rels')
     except zipfile.BadZipfile as exception:
-      logging.error(
-          u'Unable to parse file {0:s} with error: {1:s}'.format(
-              file_entry.name, exception))
+      parser_mediator.ProduceParseError(
+          u'Unable to parse file with error: {0:s}'.format(exception))
       return
 
     rels_root = ElementTree.fromstring(rels_xml)
@@ -162,22 +142,19 @@ class OpenXMLParser(interface.BaseParser):
       event_object = OpenXMLParserEvent(
           timestamps.get('created'), eventdata.EventTimestamp.CREATION_TIME,
           metadata)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if timestamps.get('modified', None):
       event_object = OpenXMLParserEvent(
           timestamps.get('modified'),
           eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if timestamps.get('lastPrinted', None):
       event_object = OpenXMLParserEvent(
           timestamps.get('lastPrinted'), eventdata.EventTimestamp.LAST_PRINTED,
           metadata)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(OpenXMLParser)

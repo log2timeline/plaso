@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors..
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the PCAP parser."""
 
 import unittest
@@ -44,7 +29,7 @@ class PcapParserTest(test_lib.ParserTestCase):
     # For each stream 2 event objects are generated one for the start
     # and one for the end time.
 
-    self.assertEquals(len(event_objects), 192)
+    self.assertEqual(len(event_objects), 192)
 
     # Test stream 3 (event object 6).
     #    Protocol:        TCP
@@ -57,15 +42,15 @@ class PcapParserTest(test_lib.ParserTestCase):
     #    Ending Packet:   6
 
     event_object = event_objects[6]
-    self.assertEquals(event_object.packet_count, 3)
-    self.assertEquals(event_object.protocol, u'TCP')
-    self.assertEquals(event_object.source_ip, u'192.168.195.130')
-    self.assertEquals(event_object.dest_ip, u'63.245.217.43')
-    self.assertEquals(event_object.dest_port, 443)
-    self.assertEquals(event_object.source_port, 1038)
-    self.assertEquals(event_object.stream_type, u'SSL')
-    self.assertEquals(event_object.first_packet_id, 4)
-    self.assertEquals(event_object.last_packet_id, 6)
+    self.assertEqual(event_object.packet_count, 3)
+    self.assertEqual(event_object.protocol, u'TCP')
+    self.assertEqual(event_object.source_ip, u'192.168.195.130')
+    self.assertEqual(event_object.dest_ip, u'63.245.217.43')
+    self.assertEqual(event_object.dest_port, 443)
+    self.assertEqual(event_object.source_port, 1038)
+    self.assertEqual(event_object.stream_type, u'SSL')
+    self.assertEqual(event_object.first_packet_id, 4)
+    self.assertEqual(event_object.last_packet_id, 6)
 
     # Test stream 6 (event object 12).
     #    Protocol:        UDP
@@ -79,16 +64,16 @@ class PcapParserTest(test_lib.ParserTestCase):
     #    Protocol Data:   DNS Query for  wpad.localdomain
 
     event_object = event_objects[12]
-    self.assertEquals(event_object.packet_count, 5)
-    self.assertEquals(event_object.protocol, u'UDP')
-    self.assertEquals(event_object.source_ip, u'192.168.195.130')
-    self.assertEquals(event_object.dest_ip, u'192.168.195.2')
-    self.assertEquals(event_object.dest_port, 53)
-    self.assertEquals(event_object.source_port, 55679)
-    self.assertEquals(event_object.stream_type, u'DNS')
-    self.assertEquals(event_object.first_packet_id, 11)
-    self.assertEquals(event_object.last_packet_id, 1307)
-    self.assertEquals(
+    self.assertEqual(event_object.packet_count, 5)
+    self.assertEqual(event_object.protocol, u'UDP')
+    self.assertEqual(event_object.source_ip, u'192.168.195.130')
+    self.assertEqual(event_object.dest_ip, u'192.168.195.2')
+    self.assertEqual(event_object.dest_port, 53)
+    self.assertEqual(event_object.source_port, 55679)
+    self.assertEqual(event_object.stream_type, u'DNS')
+    self.assertEqual(event_object.first_packet_id, 11)
+    self.assertEqual(event_object.last_packet_id, 1307)
+    self.assertEqual(
         event_object.protocol_data, u'DNS Query for  wpad.localdomain')
 
     expected_msg = (

@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Symantec AV Log parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import symantec as symantec_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import symantec as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import symantec
 from plaso.parsers import test_lib
 
@@ -38,17 +22,15 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   def testGetTimestamp(self):
     """Tests the _GetTimestamp function."""
     # pylint: disable=protected-access
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2002-11-19 08:01:34')
     timestamp = self._parser._GetTimestamp('200A13080122', timezone=pytz.UTC)
+    self.assertEqual(timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2002-11-19 08:01:34')
-    self.assertEquals(timestamp, expected_timestamp)
-
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-11-30 10:47:29')
     timestamp = self._parser._GetTimestamp('2A0A1E0A2F1D', timezone=pytz.UTC)
-
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-11-30 10:47:29')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -57,18 +39,18 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The file contains 8 lines which should result in 8 event objects.
-    self.assertEquals(len(event_objects), 8)
+    self.assertEqual(len(event_objects), 8)
 
     # Test the second entry:
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-11-30 10:47:29')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.user, u'davnads')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-11-30 10:47:29')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.user, u'davnads')
     expected_file = (
         u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
-    self.assertEquals(event_object.file, expected_file)
+    self.assertEqual(event_object.file, expected_file)
 
     expected_msg = (
         u'Event Name: GL_EVENT_INFECTION; '

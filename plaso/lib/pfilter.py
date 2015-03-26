@@ -1,26 +1,11 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """An extension of the objectfilter to provide plaso specific options."""
 
 import datetime
 import logging
 
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
@@ -95,17 +80,22 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
 
     Args:
       event_object: the event object (instance od EventObject).
-    """
-    ret = u''
 
+    Returns:
+      A formatted message string.
+    """
+    # TODO: move this somewhere where the mediator can be instantiated once.
+    formatter_mediator = formatters_mediator.FormatterMediator()
+
+    result = u''
     try:
-      ret, _ = formatters_manager.FormattersManager.GetMessageStrings(
-          event_object)
+      result, _ = formatters_manager.FormattersManager.GetMessageStrings(
+          formatter_mediator, event_object)
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))
 
-    return ret
+    return result
 
   def _GetSources(self, event_object):
     """Returns properly formatted source strings.
@@ -113,10 +103,9 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     Args:
       event_object: the event object (instance od EventObject).
     """
-    manager_object = formatters_manager.FormattersManager
     try:
-      source_short, source_long = manager_object.GetSourceStrings(
-          event_object)
+      source_short, source_long = (
+          formatters_manager.FormattersManager.GetSourceStrings(event_object))
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))

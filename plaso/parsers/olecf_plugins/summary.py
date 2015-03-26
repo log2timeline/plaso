@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Plugin to parse the OLECF summary/document summary information items."""
 
 from plaso.events import time_events
@@ -347,16 +331,11 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
   REQUIRED_ITEMS = frozenset([u'\005DocumentSummaryInformation'])
 
   def ParseItems(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      items=None, **unused_kwargs):
+      self, parser_mediator, root_item=None, items=None, **unused_kwargs):
     """Parses a document summary information OLECF item.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -367,15 +346,13 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
       if root_creation_time:
         event_object = OleCfDocumentSummaryInfoEvent(
             root_creation_time, eventdata.EventTimestamp.CREATION_TIME, item)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if root_modification_time:
         event_object = OleCfDocumentSummaryInfoEvent(
             root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             item)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
 
 class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
@@ -388,16 +365,11 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
   REQUIRED_ITEMS = frozenset([u'\005SummaryInformation'])
 
   def ParseItems(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      items=None, **unused_kwargs):
+      self, parser_mediator, root_item=None, items=None, **unused_kwargs):
     """Parses a summary information OLECF item.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -411,23 +383,20 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
         event_object = OleCfSummaryInfoEvent(
             timestamp, timestamp_description,
             summary_information_object.attributes)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if root_creation_time:
         event_object = OleCfSummaryInfoEvent(
             root_creation_time, eventdata.EventTimestamp.CREATION_TIME,
             summary_information_object.attributes)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if root_modification_time:
         event_object = OleCfSummaryInfoEvent(
             root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             summary_information_object.attributes)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
 
 olecf.OleCfParser.RegisterPlugins(
-    [DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])
+  [DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])

@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the timemachine plist plugin."""
 
 import unittest
@@ -36,13 +21,12 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['com.apple.TimeMachine.plist'])
-    plist_name = 'com.apple.timemachine.plist'
+    plist_name = u'com.apple.TimeMachine.plist'
     event_object_generator = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, test_file, plist_name)
+        self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    self.assertEquals(len(event_objects), 13)
+    self.assertEqual(len(event_objects), 13)
 
     timestamps = []
     for event_object in event_objects:
@@ -61,7 +45,7 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
         u'TimeMachine Backup in BackUpFast '
         u'(5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA)')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/Destinations/item/SnapshotDates {}'.format(
+    expected_string = u'/Destinations/item/SnapshotDates {0:s}'.format(
         expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(

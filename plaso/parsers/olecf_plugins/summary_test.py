@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the OLE Compound File summary and document summary plugins."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import olecf as olecf_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import olecf as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.olecf_plugins import test_lib
 
@@ -41,24 +25,24 @@ class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # There is one summary info stream with three event objects.
-    self.assertEquals(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 3)
 
     event_object = event_objects[0]
-    self.assertEquals(event_object.name, u'Summary Information')
+    self.assertEqual(event_object.name, u'Summary Information')
 
-    self.assertEquals(event_object.title, u'Table of Context')
-    self.assertEquals(event_object.author, u'DAVID NIDES')
-    self.assertEquals(event_object.template, u'Normal.dotm')
-    self.assertEquals(event_object.last_saved_by, u'Nides')
-    self.assertEquals(event_object.revision_number, u'4')
-    self.assertEquals(event_object.number_of_characters, 18)
-    self.assertEquals(event_object.application, u'Microsoft Office Word')
-    self.assertEquals(event_object.security, 0)
+    self.assertEqual(event_object.title, u'Table of Context')
+    self.assertEqual(event_object.author, u'DAVID NIDES')
+    self.assertEqual(event_object.template, u'Normal.dotm')
+    self.assertEqual(event_object.last_saved_by, u'Nides')
+    self.assertEqual(event_object.revision_number, u'4')
+    self.assertEqual(event_object.number_of_characters, 18)
+    self.assertEqual(event_object.application, u'Microsoft Office Word')
+    self.assertEqual(event_object.security, 0)
 
-    self.assertEquals(event_object.timestamp_desc, u'Document Creation Time')
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-12-10 18:38:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp_desc, u'Document Creation Time')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-12-10 18:38:00')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Title: Table of Context '
@@ -98,19 +82,19 @@ class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # There should only be one summary info stream with one event.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
-    self.assertEquals(event_object.name, u'Document Summary Information')
+    self.assertEqual(event_object.name, u'Document Summary Information')
 
-    self.assertEquals(event_object.number_of_lines, 1)
-    self.assertEquals(event_object.number_of_paragraphs, 1)
-    self.assertEquals(event_object.company, u'KPMG')
+    self.assertEqual(event_object.number_of_lines, 1)
+    self.assertEqual(event_object.number_of_paragraphs, 1)
+    self.assertEqual(event_object.company, u'KPMG')
     self.assertFalse(event_object.shared_document)
-    self.assertEquals(event_object.application_version, u'14.0')
+    self.assertEqual(event_object.application_version, u'14.0')
 
     # TODO: add support for:
-    # self.assertEquals(event_object.is_shared, False)
+    # self.assertEqual(event_object.is_shared, False)
 
     expected_msg = (
         u'Number of lines: 1 '

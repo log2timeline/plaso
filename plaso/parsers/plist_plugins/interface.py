@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Plist_interface contains basic interface for plist plugins within Plaso.
 
 Plist files are only one example of a type of object that the Plaso tool is
@@ -76,8 +60,7 @@ class PlistPlugin(plugins.BasePlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, top_level=None,
-      match=None, **unused_kwargs):
+      self, parser_mediator, top_level=None, match=None, **unused_kwargs):
     """Extracts event objects from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
@@ -112,19 +95,14 @@ class PlistPlugin(plugins.BasePlugin):
     See plist/bluetooth.py for the implemented example plugin.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       top_level: Optional plist in dictionary form. The default is None.
       match: Optional dictionary containing extracted keys from PLIST_KEYS.
              The default is None.
     """
 
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None, plist_name=None,
-      top_level=None, **kwargs):
+  # pylint: disable=arguments-differ
+  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current plist being processed is a match for a
@@ -137,11 +115,7 @@ class PlistPlugin(plugins.BasePlugin):
     plugin.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
 
@@ -177,20 +151,12 @@ class PlistPlugin(plugins.BasePlugin):
         raise errors.WrongPlistPlugin(self.NAME, plist_name)
 
     # This will raise if unhandled keyword arguments are passed.
-    super(PlistPlugin, self).Process(parser_context, **kwargs)
+    super(PlistPlugin, self).Process(parser_mediator)
 
     logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
         self.NAME, plist_name))
     match = GetKeys(top_level, self.PLIST_KEYS)
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    self.GetEntries(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        top_level=top_level, match=match)
-
+    self.GetEntries(parser_mediator, top_level=top_level, match=match)
 
 def RecurseKey(recur_item, root='', depth=15):
   """Flattens nested dictionaries and lists by yielding it's values.
@@ -249,11 +215,11 @@ def GetKeys(top_level, keys, depth=1):
   """Helper function to return keys nested in a plist dict.
 
   By default this function will return the values for the named keys requested
-  by a plugin in match dictonary objecte. The default setting is to look
+  by a plugin in match dictionary object. The default setting is to look
   a single layer down from the root (same as the check for plugin
   applicability). This level is suitable for most cases.
 
-  For cases where there is varability in the name at the first level
+  For cases where there is variability in the name at the first level
   (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
   override the depth limit and use GetKeys to fetch from a deeper level.
 

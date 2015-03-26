@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains basic interface for plugins within Plaso.
 
 This library serves a basis for all plugins in Plaso, whether that are
@@ -66,22 +50,7 @@ class BasePlugin(object):
     """Return the name of the plugin."""
     return self.NAME
 
-  def _BuildParserChain(self, parser_chain=None):
-    """Return the parser chain with the addition of the current parser.
-
-    Args:
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-
-    Returns:
-      The parser chain, with the addition of the current parser.
-    """
-    if not parser_chain:
-      return self.NAME
-
-    return u'/'.join([parser_chain, self.NAME])
-
-  def Process(self, unused_parser_context, unused_parser_chain=None, **kwargs):
+  def Process(self, unused_parser_mediator, **kwargs):
     """Evaluates if this is the correct plugin and processes data accordingly.
 
     The purpose of the process function is to evaluate if this particular
@@ -91,9 +60,7 @@ class BasePlugin(object):
     that can be used to evaluate if the plugin should be run or not.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.
@@ -104,6 +71,20 @@ class BasePlugin(object):
     if kwargs:
       raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
           kwargs.keys()))
+
+  def UpdateChainAndProcess(self, parser_mediator, **kwargs):
+    """Wrapper for Process() to synchronize the parser chain.
+
+    This convenience method updates the parser chain object held by the
+    mediator, transfers control to the plugin-specific Process() method,
+    and updates the chain again once the processing is complete. It provides a
+    simpler parser API in most cases.
+    """
+    parser_mediator.AppendToParserChain(self)
+    try:
+      self.Process(parser_mediator, **kwargs)
+    finally:
+      parser_mediator.PopFromParserChain()
 
 
 class BasePluginCache(object):

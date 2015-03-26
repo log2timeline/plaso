@@ -1,34 +1,10 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains utility functions."""
 
 import logging
 
 from plaso.lib import errors
 from plaso.lib import lexer
-
-
-RESERVED_VARIABLES = frozenset(
-    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
-     'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
-     'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
-     'tag', 'data_type', 'metadata', 'http_headers', 'query', 'mapped_files',
-     'uuid'])
 
 
 def IsText(bytes_in, encoding=None):
@@ -97,30 +73,6 @@ def IsText(bytes_in, encoding=None):
           u'String encoding not recognized: {0:s}'.format(encoding))
 
   return False
-
-
-def GetBaseName(path):
-  """Returns back a basename for a path (could be Windows or *NIX separated)."""
-  # First check the case where both forward and backward slash are in the path.
-  if '/' and '\\' in path:
-    # Let's count slashes and guess which one is the right one.
-    forward_count = len(path.split('/'))
-    backward_count = len(path.split('\\'))
-
-    if forward_count > backward_count:
-      _, _, base = path.rpartition('/')
-    else:
-      _, _, base = path.rpartition('\\')
-
-    return base
-
-  # Now we are sure there is only one type of separators.
-  if '/' in path:
-    _, _, base = path.rpartition('/')
-  else:
-    _, _, base = path.rpartition('\\')
-
-  return base
 
 
 def GetUnicodeString(string):

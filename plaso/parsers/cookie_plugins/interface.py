@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains an interface for browser cookie plugins."""
 
 import abc
@@ -60,32 +44,20 @@ class CookiePlugin(plugins.BasePlugin):
     self.cookie_data = ''
 
   @abc.abstractmethod
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None,
-      cookie_data=None, url=None, **kwargs):
+  def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       cookie_data: Optional cookie data, as a byte string.
       url: Optional URL or path where the cookie got set.
     """
 
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None,
-      cookie_name=None, cookie_data=None, url=None, **kwargs):
+  def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
     """Determine if this is the right plugin for this cookie.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       cookie_name: The name of the cookie value.
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
@@ -104,12 +76,6 @@ class CookiePlugin(plugins.BasePlugin):
               cookie_name, self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
-    super(CookiePlugin, self).Process(parser_context, **kwargs)
+    super(CookiePlugin, self).Process(parser_mediator)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    self.GetEntries(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        cookie_data=cookie_data, url=url)
+    self.GetEntries(parser_mediator, cookie_data=cookie_data, url=url)

@@ -1,30 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the L2tCsv output class."""
 
-import StringIO
+import io
 import unittest
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib
 from plaso.output import l2t_csv
+from plaso.output import test_lib
 
 
 class L2tTestEvent(event.EventObject):
@@ -34,7 +21,7 @@ class L2tTestEvent(event.EventObject):
   def __init__(self):
     """Initialize event with data."""
     super(L2tTestEvent, self).__init__()
-    self.timestamp = 1340821021000000
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
@@ -55,44 +42,56 @@ class L2tTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(L2tTestEventFormatter)
-
-
-class L2tCsvTest(unittest.TestCase):
+class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
   """Contains tests to validate the L2tCSV outputter."""
+
   def setUp(self):
-    self.output = StringIO.StringIO()
-    self.formatter = l2t_csv.L2tCsvOutputFormatter(None, self.output)
+    """Sets up the objects needed for this test."""
+    super(L2tCsvTest, self).setUp()
+    self.output = io.BytesIO()
+    self.formatter = l2t_csv.L2tCsvOutputFormatter(
+        None, self._formatter_mediator, filehandle=self.output)
     self.event_object = L2tTestEvent()
 
-  def testStart(self):
-    """Test ensures header line is outputted as expected."""
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    expected_header = (
+        b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        b'version,filename,inode,notes,format,extra\n')
 
-    correct_line = (
-        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        u'version,filename,inode,notes,format,extra\n')
+    self.formatter.WriteHeader()
 
-    self.formatter.Start()
-    self.assertEquals(self.output.getvalue(), correct_line)
+    header = self.output.getvalue()
+    self.assertEqual(header, expected_header)
 
-  def testEventBody(self):
-    """Test ensures that returned lines returned are formatted as L2tCSV."""
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2tTestEventFormatter)
 
-    self.formatter.EventBody(self.event_object)
-    correct = (
-        u'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
-        u'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        u'closed for user root),Reporter <CRON> PID: 8442 '
-        u'(pam_unix(cron:session): '
-        u'session closed for user root),2,log/syslog.1,-,-,-,my_number: 123  '
-        u'some_additional_foo: True \n')
-    self.assertEquals(self.output.getvalue(), correct)
+    event_tag = event.EventTag()
+    event_tag.tags = [u'Malware', u'Document Printed']
+    event_tag.uuid = self.event_object.uuid
 
-  def testEventBodyNoExtraCommas(self):
-    """Test ensures that the only commas returned are the 16 delimeters."""
+    self.event_object.tag = event_tag
+    self.formatter.WriteEventBody(self.event_object)
 
-    self.formatter.EventBody(self.event_object)
-    self.assertEquals(self.output.getvalue().count(u','), 16)
+    expected_event_body = (
+        b'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
+        b'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        b'closed for user root),Reporter <CRON> PID: 8442 '
+        b'(pam_unix(cron:session): session closed for user root),'
+        b'2,log/syslog.1,-,Malware Document Printed,'
+        b'-,my_number: 123  some_additional_foo: True \n')
+
+    event_body = self.output.getvalue()
+    self.assertEqual(event_body, expected_event_body)
+
+    # Ensure that the only commas returned are the 16 delimeters.
+    self.assertEqual(event_body.count(b','), 16)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        L2tTestEventFormatter)
 
 
 if __name__ == '__main__':

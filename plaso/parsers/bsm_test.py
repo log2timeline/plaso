@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for Basic Security Module (BSM) file parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import bsm as bsm_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import bsm as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import bsm
 from plaso.parsers import test_lib
 
@@ -59,8 +43,8 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-04 18:36:20.000381')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-04 18:36:20.000381')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.event_type, u'audit crash recovery (45029)')
 
@@ -75,8 +59,8 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[15]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-04 18:36:26.000171')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-04 18:36:26.000171')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.event_type, u'user authentication (45023)')
 
@@ -94,8 +78,8 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[31]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-04 18:36:26.000530')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-04 18:36:26.000530')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.event_type, u'SecSrvr AuthEngine (45025)')
@@ -113,8 +97,8 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[50]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-04 18:37:36.000399')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-04 18:37:36.000399')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.event_type, u'session end (44903)')

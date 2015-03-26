@@ -1,27 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the MacKeeper Cache database plugin."""
 
 import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mackeeper_cache as mackeeper_cache_formatter
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -35,19 +20,19 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a MacKeeper Cache database file."""
-    test_file = self._GetTestFilePath(['mackeeper_cache.db'])
+    test_file = self._GetTestFilePath([u'mackeeper_cache.db'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The cache file contains 198 entries.
-    self.assertEquals(len(event_objects), 198)
+    self.assertEqual(len(event_objects), 198)
 
     event_object = event_objects[41]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-12 19:30:31')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-12 19:30:31')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Chat Outgoing Message : I have received your system scan report and '

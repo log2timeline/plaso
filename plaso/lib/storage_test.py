@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains the tests for the event storage."""
 
 import os
@@ -27,11 +12,12 @@ from plaso.engine import queue
 from plaso.events import text_events
 from plaso.events import windows_events
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
@@ -96,18 +82,20 @@ class StorageFileTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     self._event_objects = []
 
-    # TODO: replace hardcoded timestamps by timelib_test.CopyStringToTimestamp.
     event_1 = windows_events.WindowsRegistryEvent(
-        13349615269295969, u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'})
+        timelib.Timestamp.CopyFromString(u'2012-04-20 22:38:46.929596'),
+        u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'})
     event_1.parser = 'UNKNOWN'
 
     event_2 = windows_events.WindowsRegistryEvent(
-        13359662069295961, u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
+        timelib.Timestamp.CopyFromString(u'2012-05-02 13:43:26.929596'),
+        u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
         {u'Value': u'send all the exes to the other world'})
     event_2.parser = 'UNKNOWN'
 
     event_3 = windows_events.WindowsRegistryEvent(
-        13349402860000000, u'\\HKCU\\Windows\\Normal',
+        timelib.Timestamp.CopyFromString(u'2012-04-20 16:44:46.000000'),
+        u'\\HKCU\\Windows\\Normal',
         {u'Value': u'run all the benign stuff'})
     event_3.parser = 'UNKNOWN'
 
@@ -115,7 +103,9 @@ class StorageFileTest(unittest.TestCase):
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
         'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
-    event_4 = text_events.TextEvent(12389344590000000, 12, text_dict)
+    event_4 = text_events.TextEvent(
+        timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39.000000'),
+        12, text_dict)
     event_4.parser = 'UNKNOWN'
 
     self._event_objects.append(event_1)
@@ -123,9 +113,11 @@ class StorageFileTest(unittest.TestCase):
     self._event_objects.append(event_3)
     self._event_objects.append(event_4)
 
+    self._formatter_mediator = formatters_mediator.FormatterMediator()
+
   def testStorageWriter(self):
     """Test the storage writer."""
-    self.assertEquals(len(self._event_objects), 4)
+    self.assertEqual(len(self._event_objects), 4)
 
     # The storage writer is normally run in a separate thread.
     # For the purpose of this test it has to be run in sequence,
@@ -149,8 +141,8 @@ class StorageFileTest(unittest.TestCase):
           'plaso_timestamps.000001', 'serializer.txt']
 
       z_filename_list = sorted(z_file.namelist())
-      self.assertEquals(len(z_filename_list), 5)
-      self.assertEquals(z_filename_list, expected_z_filename_list)
+      self.assertEqual(len(z_filename_list), 5)
+      self.assertEqual(z_filename_list, expected_z_filename_list)
 
   def testStorage(self):
     """Test the storage object."""
@@ -205,7 +197,7 @@ class StorageFileTest(unittest.TestCase):
 
       group_mock.AddGroup(
           'Malicious', [(1, 1), (1, 2)], desc='Events that are malicious',
-          color='red', first=13349402860000000, last=13349615269295969,
+          color='red', first=1334940286000000, last=1334961526929596,
           cat='Malware')
       store.StoreGrouping(group_mock)
       store.Close()
@@ -219,10 +211,10 @@ class StorageFileTest(unittest.TestCase):
         event_objects.append(event_object)
         timestamps.append(event_object.timestamp)
         if event_object.data_type == 'windows:registry:key_value':
-          self.assertEquals(event_object.timestamp_desc,
+          self.assertEqual(event_object.timestamp_desc,
                             eventdata.EventTimestamp.WRITTEN_TIME)
         else:
-          self.assertEquals(event_object.timestamp_desc,
+          self.assertEqual(event_object.timestamp_desc,
                             eventdata.EventTimestamp.WRITTEN_TIME)
 
       for tag in read_store.GetTagging():
@@ -230,7 +222,7 @@ class StorageFileTest(unittest.TestCase):
         tags.append(event_object)
 
       groups = list(read_store.GetGrouping())
-      self.assertEquals(len(groups), 1)
+      self.assertEqual(len(groups), 1)
       group_events = list(read_store.GetEventsFromGroup(groups[0]))
 
       # Read the same events that were put in the group, just to compare
@@ -243,55 +235,56 @@ class StorageFileTest(unittest.TestCase):
       serialized_event_object = serializer.WriteSerialized(event_object)
       same_events.append(serialized_event_object)
 
-    self.assertEquals(len(event_objects), 4)
-    self.assertEquals(len(tags), 4)
+    self.assertEqual(len(event_objects), 4)
+    self.assertEqual(len(tags), 4)
 
-    self.assertEquals(tags[0].timestamp, 12389344590000000)
-    self.assertEquals(tags[0].store_number, 1)
-    self.assertEquals(tags[0].store_index, 0)
-    self.assertEquals(tags[0].tag.comment, u'My comment')
-    self.assertEquals(tags[0].tag.color, u'blue')
+    self.assertEqual(tags[0].timestamp, 1238934459000000)
+    self.assertEqual(tags[0].store_number, 1)
+    self.assertEqual(tags[0].store_index, 0)
+    self.assertEqual(tags[0].tag.comment, u'My comment')
+    self.assertEqual(tags[0].tag.color, u'blue')
 
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(tags[0])
-    self.assertEquals(msg[0:10], u'This is a ')
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        self._formatter_mediator, tags[0])
+    self.assertEqual(msg[0:10], u'This is a ')
 
-    self.assertEquals(tags[1].tag.tags[0], 'Malware')
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(tags[1])
-    self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
+    self.assertEqual(tags[1].tag.tags[0], 'Malware')
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        self._formatter_mediator, tags[1])
+    self.assertEqual(msg[0:15], u'[\\HKCU\\Windows\\')
 
-    self.assertEquals(tags[2].tag.comment, u'This is interesting')
-    self.assertEquals(tags[2].tag.tags[0], 'Malware')
-    self.assertEquals(tags[2].tag.tags[1], 'Benign')
+    self.assertEqual(tags[2].tag.comment, u'This is interesting')
+    self.assertEqual(tags[2].tag.tags[0], 'Malware')
+    self.assertEqual(tags[2].tag.tags[1], 'Benign')
 
-    self.assertEquals(tags[2].parser, 'UNKNOWN')
+    self.assertEqual(tags[2].parser, 'UNKNOWN')
 
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
-    self.assertEquals(tags[3].tag.tags[0], 'Interesting')
-    self.assertEquals(tags[3].tag.tags[1], 'Malware')
+    self.assertEqual(tags[3].tag.tags[0], 'Interesting')
+    self.assertEqual(tags[3].tag.tags[1], 'Malware')
 
     expected_timestamps = [
-        12389344590000000, 13349402860000000, 13349615269295969,
-        13359662069295961]
-    self.assertEquals(timestamps, expected_timestamps)
+        1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
+    self.assertEqual(timestamps, expected_timestamps)
 
-    self.assertEquals(groups[0].name, u'Malicious')
-    self.assertEquals(groups[0].category, u'Malware')
-    self.assertEquals(groups[0].color, u'red')
-    self.assertEquals(groups[0].description, u'Events that are malicious')
-    self.assertEquals(groups[0].first_timestamp, 13349402860000000)
-    self.assertEquals(groups[0].last_timestamp, 13349615269295969)
+    self.assertEqual(groups[0].name, u'Malicious')
+    self.assertEqual(groups[0].category, u'Malware')
+    self.assertEqual(groups[0].color, u'red')
+    self.assertEqual(groups[0].description, u'Events that are malicious')
+    self.assertEqual(groups[0].first_timestamp, 1334940286000000)
+    self.assertEqual(groups[0].last_timestamp, 1334961526929596)
 
-    self.assertEquals(len(group_events), 2)
-    self.assertEquals(group_events[0].timestamp, 13349402860000000)
-    self.assertEquals(group_events[1].timestamp, 13349615269295969L)
+    self.assertEqual(len(group_events), 2)
+    self.assertEqual(group_events[0].timestamp, 1334940286000000)
+    self.assertEqual(group_events[1].timestamp, 1334961526929596)
 
     proto_group_events = []
     for group_event in group_events:
       serialized_event_object = serializer.WriteSerialized(group_event)
       proto_group_events.append(serialized_event_object)
 
-    self.assertEquals(same_events, proto_group_events)
+    self.assertEqual(same_events, proto_group_events)
 
 
 class StoreStorageTest(unittest.TestCase):
@@ -302,9 +295,9 @@ class StoreStorageTest(unittest.TestCase):
     # TODO: have sample output generated from the test.
     # TODO: Use input data with a defined year.  syslog parser chooses a
     # year based on system clock; forcing updates to test file if regenerated.
-    self.test_file = os.path.join('test_data', 'psort_test.out')
-    self.first = timelib_test.CopyStringToTimestamp('2012-07-20 15:44:14')
-    self.last = timelib_test.CopyStringToTimestamp('2016-11-18 01:15:43')
+    self.test_file = os.path.join(u'test_data', u'psort_test.out')
+    self.first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
+    self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
   def testStorageSort(self):
     """This test ensures that items read and output are in the expected order.
@@ -330,10 +323,9 @@ class StoreStorageTest(unittest.TestCase):
       event_object = store.GetSortedEntry()
 
     expected_timestamps = [
-        1344270407000000L, 1392438730000000L, 1427151678000000L,
-        1451584472000000L]
+        1344270407000000, 1392438730000000, 1427151678000000, 1451584472000000]
 
-    self.assertEquals(read_list, expected_timestamps)
+    self.assertEqual(read_list, expected_timestamps)
 
 
 if __name__ == '__main__':

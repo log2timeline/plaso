@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Windows Registry plugin related functions and classes for testing."""
 
 from dfvfs.lib import definitions
@@ -77,19 +61,32 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       An event object queue consumer object (instance of
       TestEventObjectQueueConsumer).
     """
-    self.assertNotEquals(winreg_key, None)
+    self.assertNotEqual(winreg_key, None)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
 
-    parser_context = self._GetParserContext(
+    parser_mediator = self._GetParserMediator(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
-    plugin_object.Process(
-        parser_context, key=winreg_key, parser_chain=parser_chain,
-        file_entry=file_entry)
+
+    # Most tests aren't explicitly checking for parser chain values,
+    # or setting them, so we'll just append the plugin name if no explicit
+    # parser chain argument is supplied.
+    # pylint: disable=protected-access
+    if parser_chain is None:
+      parser_mediator.AppendToParserChain(plugin_object)
+    else:
+      # In the rare case that a test is checking for a particular chain, we
+      # provide a way set it directly. There's no public API for this,
+      # as access to the parser chain should be very infrequent.
+      parser_mediator._parser_chain_components = parser_chain.split(u'/')
+
+    parser_mediator.SetFileEntry(file_entry)
+
+    plugin_object.Process(parser_mediator, key=winreg_key)
 
     return event_queue_consumer
 
@@ -103,4 +100,4 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     self.assertTrue(hasattr(event_object, 'regvalue'))
     self.assertIn(identifier, event_object.regvalue)
-    self.assertEquals(event_object.regvalue[identifier], expected_value)
+    self.assertEqual(event_object.regvalue[identifier], expected_value)

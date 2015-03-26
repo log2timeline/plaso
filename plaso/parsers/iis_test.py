@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Windows IIS log parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import iis as iis_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import iis as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import iis
 
@@ -38,21 +22,21 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['iis.log'])
+    test_file = self._GetTestFilePath([u'iis.log'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 11)
+    self.assertEqual(len(event_objects), 11)
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-30 00:00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-30 00:00:00')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.source_ip, u'10.10.10.100')
-    self.assertEquals(event_object.dest_ip, u'10.10.10.100')
-    self.assertEquals(event_object.dest_port, 80)
+    self.assertEqual(event_object.source_ip, u'10.10.10.100')
+    self.assertEqual(event_object.dest_ip, u'10.10.10.100')
+    self.assertEqual(event_object.dest_port, 80)
 
     expected_msg = (
         u'GET /some/image/path/something.jpg '
@@ -68,13 +52,13 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[5]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-30 00:00:05')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-30 00:00:05')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.http_method, 'GET')
-    self.assertEquals(event_object.http_status, 200)
-    self.assertEquals(
+    self.assertEqual(event_object.http_method, 'GET')
+    self.assertEqual(event_object.http_status, 200)
+    self.assertEqual(
         event_object.requested_uri_stem, u'/some/image/path/something.jpg')
 
     event_object = event_objects[1]

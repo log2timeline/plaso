@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a bencode plugin for Transmission BitTorrent data."""
 
 from plaso.events import time_events
@@ -52,9 +36,7 @@ class TransmissionPlugin(interface.BencodePlugin):
       'activity-date', 'done-date', 'added-date', 'destination',
       'seeding-time-seconds'])
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, data=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if
@@ -65,11 +47,7 @@ class TransmissionPlugin(interface.BencodePlugin):
     in a folder named resume under the user's application data folder.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       data: Optional bencode data in dictionary form. The default is None.
     """
     # Place the obtained values into the event.
@@ -81,22 +59,19 @@ class TransmissionPlugin(interface.BencodePlugin):
       event_object = TransmissionEvent(
           data.get('added-date'), eventdata.EventTimestamp.ADDED_TIME,
           destination, seeding_time)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if data.get('done-date', 0):
       event_object = TransmissionEvent(
           data.get('done-date'), eventdata.EventTimestamp.FILE_DOWNLOADED,
           destination, seeding_time)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if data.get('activity-date', None):
       event_object = TransmissionEvent(
           data.get('activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
           destination, seeding_time)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 bencode_parser.BencodeParser.RegisterPlugin(TransmissionPlugin)

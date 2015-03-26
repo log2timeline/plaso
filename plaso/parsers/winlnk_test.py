@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Windows Shortcut (LNK) parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winlnk as winlnk_formatter
+from plaso.formatters import winlnk as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import winlnk
 
@@ -36,7 +20,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['example.lnk'])
+    test_file = self._GetTestFilePath([u'example.lnk'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -56,42 +40,42 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
-    self.assertEquals(event_object.description, expected_string)
+    self.assertEqual(event_object.description, expected_string)
 
     expected_string = u'.\\migwiz\\migwiz.exe'
-    self.assertEquals(event_object.relative_path, expected_string)
+    self.assertEqual(event_object.relative_path, expected_string)
 
     expected_string = u'%windir%\\system32\\migwiz'
-    self.assertEquals(event_object.working_directory, expected_string)
+    self.assertEqual(event_object.working_directory, expected_string)
 
     expected_string = u'%windir%\\system32\\migwiz\\migwiz.exe'
-    self.assertEquals(event_object.icon_location, expected_string)
-    self.assertEquals(event_object.env_var_location, expected_string)
+    self.assertEqual(event_object.icon_location, expected_string)
+    self.assertEqual(event_object.env_var_location, expected_string)
 
     # The last accessed timestamp.
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-13 23:29:02.849131')
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-13 23:29:02.849131')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-13 23:29:02.849131')
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-13 23:29:02.849131')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-14 01:39:18.220000')
-    self.assertEquals(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-14 01:39:18.220000')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[@%windir%\\system32\\migwiz\\wet.dll,-590] '
@@ -109,7 +93,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
-    test_file = self._GetTestFilePath(['NeroInfoTool.lnk'])
+    test_file = self._GetTestFilePath([u'NeroInfoTool.lnk'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -136,8 +120,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         u'Working dir: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool '
         u'Icon location: %ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\'
         u'InfoTool.exe '
-        u'Link target: [My Computer, C:\\, Program Files (x86), Nero, Nero 9, '
-        u'Nero InfoTool, InfoTool.exe]')
+        u'Link target: <My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
+        u'Nero InfoTool\\InfoTool.exe')
 
     expected_msg_short = (
         u'[Nero InfoTool provides you with information about the most '
@@ -148,14 +132,16 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # A shell item event object.
     event_object = event_objects[12]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-06-05 20:13:20')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-06-05 20:13:20')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: InfoTool.exe '
         u'Long name: InfoTool.exe '
         u'NTFS file reference: 81349-1 '
+        u'Shell item path: <My Computer> C:\\Program Files (x86)\\Nero\\'
+        u'Nero 9\\Nero InfoTool\\InfoTool.exe '
         u'Origin: NeroInfoTool.lnk')
 
     expected_msg_short = (

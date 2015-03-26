@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a plugin for parsing Google Analytics cookies."""
 
 import urllib
@@ -49,6 +33,8 @@ class GoogleAnalyticsEvent(time_events.PosixTimeEvent):
     self.url = url
     self.cookie_name = cookie_name
 
+    # TODO: refactor, this approach makes it very hard to tell
+    # which values are actually set.
     for key, value in kwargs.iteritems():
       setattr(self, key, value)
 
@@ -66,16 +52,11 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None,
-      cookie_data=None, url=None, **unused_kwargs):
+      self, parser_mediator, cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
     """
@@ -110,8 +91,7 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
         url, 'utmz', self.COOKIE_NAME, domain_hash=domain_hash,
         sessions=int(sessions, 10), sources=int(sources, 10),
         **kwargs)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
 
 class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
@@ -127,16 +107,11 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None,
-      cookie_data=None, url=None, **unused_kwargs):
+      self, parser_mediator, cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
     """
@@ -152,28 +127,27 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
 
     domain_hash, visitor_id, first_visit, previous, last, sessions = fields
 
+    # TODO: catch int() throwing a ValueError.
+
     # TODO: Double check this time is stored in UTC and not local time.
     first_epoch = int(first_visit, 10)
     event_object = GoogleAnalyticsEvent(
         first_epoch, 'Analytics Creation Time', url, 'utma', self.COOKIE_NAME,
         domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     event_object = GoogleAnalyticsEvent(
         int(previous, 10), 'Analytics Previous Time', url, 'utma',
         self.COOKIE_NAME, domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     event_object = GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utma', self.COOKIE_NAME, domain_hash=domain_hash,
         visitor_id=visitor_id, sessions=int(sessions, 10))
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
 
 class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
@@ -189,16 +163,11 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None,
-      cookie_data=None, url=None, **unused_kwargs):
+      self, parser_mediator, cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
     """
@@ -217,5 +186,4 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utmb', self.COOKIE_NAME, domain_hash=domain_hash,
         pages_viewed=int(pages_viewed, 10))
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)

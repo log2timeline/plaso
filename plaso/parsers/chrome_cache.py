@@ -1,23 +1,6 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for Google Chrome and Chromium Cache files."""
 
-import logging
 import os
 
 import construct
@@ -327,16 +310,54 @@ class ChromeCacheParser(interface.BaseParser):
   NAME = 'chrome_cache'
   DESCRIPTION = u'Parser for Chrome Cache files.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
-    """Extract event objects from Chrome Cache files.
+  def _ParseCacheEntries(self, parser_mediator, index_file, data_block_files):
+    """Parses Chrome Cache file entries.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      index_file: A Chrome cache index file object (instance of IndexFile).
+      data_block_files: A dictionary containing the data block files lookup
+                        table which contains data block file objects (instances
+                        of DataBlockFile).
     """
-    file_object = file_entry.GetFileObject()
+    # Parse the cache entries in the data block files.
+    for cache_address in index_file.index_table:
+      cache_address_chain_length = 0
+      while cache_address.value != 0x00000000:
+        if cache_address_chain_length >= 64:
+          parser_mediator.ProduceParseError(
+              u'Maximum allowed cache address chain length reached.')
+          break
+
+        data_file = data_block_files.get(cache_address.filename, None)
+        if not data_file:
+          message = u'Cache address: 0x{0:08x} missing data file.'.format(
+              cache_address.value)
+          parser_mediator.ProduceParseError(message)
+          break
+
+        try:
+          cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
+        except (IOError, UnicodeDecodeError) as exception:
+          parser_mediator.ProduceParseError(
+              u'Unable to parse cache entry with error: {0:s}'.format(
+                  exception))
+          break
+
+        event_object = ChromeCacheEntryEvent(cache_entry)
+        parser_mediator.ProduceEvent(event_object)
+
+        cache_address = cache_entry.next
+        cache_address_chain_length += 1
+
+  def Parse(self, parser_mediator, **kwargs):
+    """Parses Chrome Cache files.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    file_object = parser_mediator.GetFileObject()
+    file_entry = parser_mediator.GetFileEntry()
     index_file = IndexFile()
     try:
       index_file.Open(file_object)
@@ -349,10 +370,6 @@ class ChromeCacheParser(interface.BaseParser):
     # Build a lookup table for the data block files.
     file_system = file_entry.GetFileSystem()
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     data_block_files = {}
     for cache_address in index_file.index_table:
@@ -376,16 +393,16 @@ class ChromeCacheParser(interface.BaseParser):
           data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
               data_block_file_path_spec)
         except RuntimeError as exception:
-          logging.error((
-              u'[{0:s}] Unable to open data block file: {1:s} while parsing '
-              u'{2:s} with error: {3:s}').format(
-                  parser_chain, kwargs['location'],
-                  file_entry.path_spec.comparable, exception))
+          message = (
+              u'Unable to open data block file: {0:s} with error: '
+              u'{1:s}'.format(kwargs['location'], exception))
+          parser_mediator.ProduceParseError(message)
           data_block_file_entry = None
 
         if not data_block_file_entry:
-          logging.error(u'Missing data block file: {0:s}'.format(
-              cache_address.filename))
+          message = u'Missing data block file: {0:s}'.format(
+              cache_address.filename)
+          parser_mediator.ProduceParseError(message)
           data_block_file = None
 
         else:
@@ -395,47 +412,22 @@ class ChromeCacheParser(interface.BaseParser):
           try:
             data_block_file.Open(data_block_file_object)
           except IOError as exception:
-            logging.error((
+            message = (
                 u'Unable to open data block file: {0:s} with error: '
-                u'{1:s}').format(cache_address.filename, exception))
+                u'{1:s}').format(cache_address.filename, exception)
+            parser_mediator.ProduceParseError(message)
             data_block_file = None
 
         data_block_files[cache_address.filename] = data_block_file
 
-    # Parse the cache entries in the data block files.
-    for cache_address in index_file.index_table:
-      cache_address_chain_length = 0
-      while cache_address.value != 0x00000000:
-        if cache_address_chain_length >= 64:
-          logging.error(u'Maximum allowed cache address chain length reached.')
-          break
+    try:
+      self._ParseCacheEntries(parser_mediator, index_file, data_block_files)
+    finally:
+      for data_block_file in data_block_files.itervalues():
+        if data_block_file:
+          data_block_file.Close()
 
-        data_file = data_block_files.get(cache_address.filename, None)
-        if not data_file:
-          logging.debug(u'Cache address: 0x{0:08x} missing data file.'.format(
-              cache_address.value))
-          break
-
-        try:
-          cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
-        except (IOError, UnicodeDecodeError) as exception:
-          logging.error(
-              u'Unable to parse cache entry with error: {0:s}'.format(
-                  exception))
-          break
-
-        event_object = ChromeCacheEntryEvent(cache_entry)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
-
-        cache_address = cache_entry.next
-        cache_address_chain_length += 1
-
-    for data_block_file in data_block_files.itervalues():
-      if data_block_file:
-        data_block_file.Close()
-
-    index_file.Close()
+      index_file.Close()
 
 
 manager.ParsersManager.RegisterParser(ChromeCacheParser)

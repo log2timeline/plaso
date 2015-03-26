@@ -1,27 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for Mac AppFirewall log file parser."""
 
 import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import test_lib
 
@@ -45,7 +30,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-02 04:07:35')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -69,7 +54,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[9]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-03 13:25:15')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -104,12 +89,12 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     # Year changes.
     event_object = event_objects[45]
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-12-31 23:59:23')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[46]
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2014-01-01 01:13:23')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

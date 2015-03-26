@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The event extraction worker."""
 
 import logging
@@ -30,9 +14,12 @@ try:
 except ImportError:
   hpy = None
 
+import pysigscan
+
 from plaso.engine import collector
 from plaso.engine import queue
 from plaso.lib import errors
+from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 
 
@@ -47,9 +34,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   are pushed on a storage queue for further processing.
   """
 
+  DEFAULT_HASH_READ_SIZE = 4096
+
   def __init__(
       self, identifier, process_queue, event_queue_producer,
-      parse_error_queue_producer, parser_context, resolver_context=None):
+      parse_error_queue_producer, parser_mediator, resolver_context=None):
     """Initializes the event extraction worker object.
 
     Args:
@@ -60,18 +49,23 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                             ItemQueueProducer).
       parse_error_queue_producer: The parse error queue producer (instance of
                                   ItemQueueProducer).
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
+    self._hasher_names = None
     self._identifier = identifier
+    self._file_scanner = None
     self._filestat_parser_object = None
-    self._parser_context = parser_context
+    self._non_sigscan_parser_names = None
+    self._open_files = False
+    self._parser_mediator = parser_mediator
     self._parser_objects = None
     self._process_archive_files = False
     self._resolver_context = resolver_context
+    self._specification_store = None
 
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer = parse_error_queue_producer
@@ -101,6 +95,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           path_spec.comparable))
       return
 
+    if self._hasher_names:
+      try:
+        digests = self.HashFileEntry(file_entry)
+        if digests:
+          for hash_name, digest in digests.iteritems():
+            attribute_string = u'{0:s}_hash'.format(hash_name)
+            self._parser_mediator.AddEventAttribute(attribute_string, digest)
+      except IOError as exception:
+        logging.warning(u'Unable to hash file: {0:s} with error: {1:s}'.format(
+           path_spec.comparable, exception))
+
     try:
       self.ParseFileEntry(file_entry)
     except IOError as exception:
@@ -110,6 +115,35 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def _DebugParseFileEntry(self):
     """Callback for debugging file entry parsing failures."""
     return
+
+  def _GetSignatureMatchParserNames(self, file_entry):
+    """Determines if a file matches one of the known signatures.
+
+    Args:
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A list of parser names for which the file entry matches their
+      known signatures.
+    """
+    parser_name_list = []
+    scan_state = pysigscan.scan_state()
+
+    file_object = file_entry.GetFileObject()
+    try:
+      self._file_scanner.scan_file_object(scan_state, file_object)
+    finally:
+      file_object.close()
+
+    for scan_result in scan_state.scan_results:
+      format_specification = (
+          self._specification_store.GetSpecificationBySignature(
+              scan_result.identifier))
+
+      if format_specification.identifier not in parser_name_list:
+        parser_name_list.append(format_specification.identifier)
+
+    return parser_name_list
 
   def _ParseFileEntryWithParser(self, parser_object, file_entry):
     """Parses a file entry with a specific parser.
@@ -121,8 +155,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Raises:
       QueueFull: If a queue is full.
     """
+    # We need to reset the parser mediator before each file, to clear out any
+    # lingering data from the previous file parsed.
+    self._parser_mediator.Reset()
+    self._parser_mediator.SetFileEntry(file_entry)
+
+    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec)
     try:
-      parser_object.Parse(self._parser_context, file_entry)
+      parser_object.UpdateChainAndParse(self._parser_mediator)
 
     except errors.UnableToParseFile as exception:
       logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
@@ -149,9 +190,18 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'The path specification that caused the error: {0:s}'.format(
               file_entry.path_spec.comparable))
       logging.exception(exception)
-
       if self._enable_debug_output:
         self._DebugParseFileEntry()
+
+    finally:
+      self._parser_mediator.SetFileEntry(None)
+
+    if reference_count != self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec):
+      logging.warning((
+          u'[{0:s}] did not explicitly close file-object for path '
+          u'specification: {1:s}.').format(
+              parser_object.NAME, file_entry.path_spec.comparable))
 
   def _ProcessArchiveFile(self, file_entry):
     """Processes an archive file (file that contains file entries).
@@ -190,7 +240,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.debug((
             u'Unsupported archive format type indicator: {0:s} for '
             u'archive file: {1:s}').format(
-                type_indicator, archive_path_spec.comparable))
+                type_indicator, file_entry.path_spec.comparable))
 
         archive_path_spec = None
 
@@ -199,11 +249,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           file_system = path_spec_resolver.Resolver.OpenFileSystem(
               archive_path_spec, resolver_context=self._resolver_context)
 
-          # TODO: change this to pass the archive file path spec to
-          # the collector process and have the collector implement a maximum
-          # path spec "depth" to prevent ZIP bombs and equiv.
-          file_system_collector = collector.FileSystemCollector(self._queue)
-          file_system_collector.Collect(file_system, archive_path_spec)
+          try:
+            # TODO: change this to pass the archive file path spec to
+            # the collector process and have the collector implement a maximum
+            # path spec "depth" to prevent ZIP bombs and equiv.
+            file_system_collector = collector.FileSystemCollector(self._queue)
+            file_system_collector.Collect(file_system, archive_path_spec)
+
+          finally:
+            file_system.Close()
 
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
@@ -248,7 +302,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.debug((
             u'Unsupported compressed stream format type indicators: {0:s} for '
             u'compressed stream file: {1:s}').format(
-                type_indicator, compressed_stream_path_spec.comparable))
+                type_indicator, file_entry.path_spec.comparable))
 
         compressed_stream_path_spec = None
 
@@ -287,12 +341,71 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def GetStatus(self):
     """Returns a status dictionary."""
     return {
-        'is_running': self._is_running,
-        'identifier': u'Worker_{0:d}'.format(self._identifier),
-        'current_file': self._current_working_file,
-        'counter': self._parser_context.number_of_events}
+        u'is_running': self._is_running,
+        u'identifier': u'Worker_{0:d}'.format(self._identifier),
+        u'current_file': self._current_working_file,
+        u'counter': self._parser_mediator.number_of_events}
 
-  def InitalizeParserObjects(self, parser_filter_string=None):
+  def HashFileEntry(self, file_entry):
+    """Produces a dictionary containing hash digests of the file entry content.
+
+    Args:
+      file_entry: The file entry object to be hashed (instance of
+                  dfvfs.FileEntry)
+
+    Returns:
+      A dictionary mapping hasher names to the digest calculated by that hasher,
+      or None if the file_entry is not a file, or no hashers are enabled.
+    """
+    logging.debug(u'[HashFileEntry] Hashing: {0:s}'.format(
+        file_entry.path_spec.comparable))
+    if not file_entry.IsFile() or not self._hasher_names:
+      return
+
+    hasher_objects = hashers_manager.HashersManager.GetHasherObjects(
+        self._hasher_names)
+
+    file_object = file_entry.GetFileObject()
+    try:
+      file_object.seek(0, os.SEEK_SET)
+
+      # We only do one read, then pass it to each of the hashers in turn.
+      data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+      while data:
+        for hasher in hasher_objects:
+          hasher.Update(data)
+        data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+
+      digests = {}
+      # Get the digest values for every active hasher.
+      for hasher in hasher_objects:
+        digests[hasher.NAME] = hasher.GetStringDigest()
+        logging.debug(
+            u'[HashFileEntry] Digest {0:s} calculated for {1:s}.'.format(
+                hasher.GetStringDigest(), file_entry.path_spec.comparable))
+    finally:
+      file_object.close()
+
+    if self._enable_profiling:
+      self._ProfilingUpdate()
+
+    logging.debug(u'[HashFileEntry] Finished hashing: {0:s}'.format(
+        file_entry.path_spec.comparable))
+    return digests
+
+  def SetHashers(self, hasher_names_string):
+    """Initializes the hasher objects.
+
+    Args:
+      hasher_names_string: Comma separated string of names of
+                           hashers to enable.
+    """
+    names = hashers_manager.HashersManager.GetHasherNamesFromString(
+        hasher_names_string)
+    logging.debug('[SetHashers] Enabling hashers: {0:s}.'.format(names))
+    self._hasher_names = names
+
+  def InitializeParserObjects(self, parser_filter_string=None):
     """Initializes the parser objects.
 
     The parser_filter_string is a simple comma separated value string that
@@ -306,25 +419,35 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       parser_filter_string: Optional parser filter string. The default is None.
     """
+    self._specification_store, self._non_sigscan_parser_names = (
+        parsers_manager.ParsersManager.GetSpecificationStore(
+            parser_filter_string=parser_filter_string))
+
+    self._file_scanner = parsers_manager.ParsersManager.GetScanner(
+        self._specification_store)
+
     self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_string=parser_filter_string)
 
-    for parser_object in self._parser_objects:
-      if parser_object.NAME == 'filestat':
-        self._filestat_parser_object = parser_object
-        break
+    self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
 
   def ParseFileEntry(self, file_entry):
     """Parses a file entry.
 
     Args:
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Raises:
+      RuntimeError: if the parser object is missing.
     """
     logging.debug(u'[ParseFileEntry] Parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
     self._current_working_file = getattr(
         file_entry.path_spec, u'location', file_entry.name)
+
+    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec)
 
     is_archive = False
     is_compressed_stream = False
@@ -336,11 +459,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         is_archive = self._ProcessArchiveFile(file_entry)
 
     if is_file and not is_archive and not is_compressed_stream:
-      # TODO: Not go through all parsers, just the ones
-      # that the classifier classifies the file as.
-      for parser_object in self._parser_objects:
+      parser_name_list = self._GetSignatureMatchParserNames(file_entry)
+      if not parser_name_list:
+        parser_name_list = self._non_sigscan_parser_names
+
+      for parser_name in parser_name_list:
+        parser_object = self._parser_objects.get(parser_name, None)
+        if not parser_object:
+          raise RuntimeError(u'No such parser: {0:s}'.format(parser_name))
+
         logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
-            file_entry.name, parser_object.NAME))
+            file_entry.name, parser_name))
 
         self._ParseFileEntryWithParser(parser_object, file_entry)
 
@@ -352,12 +481,20 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
+    if reference_count != self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec):
+      # Clean up after parsers that do not call close explicitly.
+      if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
+        logging.warning((
+            u'File-object not explicitly closed for path specification: '
+            u'{0:s}.').format(file_entry.path_spec.comparable))
+
     if self._enable_profiling:
       self._ProfilingUpdate()
 
   def Run(self):
     """Extracts event objects from file entries."""
-    self._parser_context.ResetCounters()
+    self._parser_mediator.ResetCounters()
 
     if self._enable_profiling:
       self._ProfilingStart()
@@ -416,7 +553,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       filter_object: the filter object (instance of objectfilter.Filter).
     """
-    self._parser_context.SetFilterObject(filter_object)
+    self._parser_mediator.SetFilterObject(filter_object)
 
   def SetMountPath(self, mount_path):
     """Sets the mount path.
@@ -424,7 +561,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       mount_path: string containing the mount path.
     """
-    self._parser_context.SetMountPath(mount_path)
+    self._parser_mediator.SetMountPath(mount_path)
 
   def SetProcessArchiveFiles(self, process_archive_files):
     """Sets the process archive files mode.
@@ -442,12 +579,12 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       text_prepend: string that contains the text to prepend to every
                     event object.
     """
-    self._parser_context.SetTextPrepend(text_prepend)
+    self._parser_mediator.SetTextPrepend(text_prepend)
 
   def SignalAbort(self):
     """Signals the worker to abort."""
     super(BaseEventExtractionWorker, self).SignalAbort()
-    self._parser_context.SignalAbort()
+    self._parser_mediator.SignalAbort()
 
   @classmethod
   def SupportsProfiling(cls):

@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The multi-process processing engine."""
 
 import ctypes
@@ -34,7 +18,7 @@ from plaso.engine import worker
 from plaso.lib import errors
 from plaso.multi_processing import foreman
 from plaso.multi_processing import rpc_proxy
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 def SigKill(pid):
@@ -190,7 +174,7 @@ class MultiProcessEngine(engine.BaseEngine):
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
     """
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
@@ -200,7 +184,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     extraction_worker = worker.BaseEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_context,
+        self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
@@ -226,27 +210,30 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def ProcessSource(
       self, collector_object, storage_writer, parser_filter_string=None,
-      number_of_extraction_workers=0, have_collection_process=True,
-      have_foreman_process=True, show_memory_usage=False):
+      hasher_names_string=None, number_of_extraction_workers=0,
+      have_collection_process=True, have_foreman_process=True,
+      show_memory_usage=False):
     """Processes the source and extracts event objects.
 
     Args:
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
       parser_filter_string: Optional parser filter string. The default is None.
+      hasher_names_string: Optional comma separated string of names of
+                           hashers to enable enable. The default is None.
       number_of_extraction_workers: Optional number of extraction worker
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
-      have_collection_process: Optional boolean value to indidate a separate
+      have_collection_process: Optional boolean value to indicate a separate
                                collection process should be run. The default
-                               is true.
-      have_foreman_process: Optional boolean value to indidate a separate
+                               is True.
+      have_foreman_process: Optional boolean value to indicate a separate
                             foreman process should be run to make sure the
                             workers are extracting event objects. The default
-                            is true.
+                            is True.
       show_memory_usage: Optional boolean value to indicate memory information
-                         should be included in logging. The default is false.
+                         should be included in logging. The default is False.
     """
     if number_of_extraction_workers < 1:
       # One worker for each "available" CPU (minus other processes).
@@ -291,7 +278,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
       # TODO: Test to see if a process pool can be a better choice.
       worker_process = MultiProcessEventExtractionWorkerProcess(
-          extraction_worker, parser_filter_string, name=worker_name)
+          extraction_worker, parser_filter_string, hasher_names_string,
+          name=worker_name)
       worker_process.start()
 
       if self._foreman_object:
@@ -347,9 +335,10 @@ class MultiProcessEngine(engine.BaseEngine):
           if process_obj.is_alive():
             logging.info((
                 u'Process {0:s} [{1:d}] is not monitored by the foreman. Most '
-                u'likely due to a worker having completed it\'s processing '
+                u'likely due to a worker having completed its processing '
                 u'while waiting for another worker to complete.').format(
                     process_name, process_obj.pid))
+
             logging.info(
                 u'Waiting for worker {0:s} to complete.'.format(process_name))
             process_obj.join()
@@ -531,13 +520,16 @@ class MultiProcessCollectionProcess(multiprocessing.Process):
 class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
   """Class that defines a multi-processing event extraction worker process."""
 
-  def __init__(self, extraction_worker, parser_filter_string, **kwargs):
+  def __init__(self, extraction_worker, parser_filter_string,
+               hasher_names_string, **kwargs):
     """Initializes the process object.
 
     Args:
       extraction_worker: The extraction worker object (instance of
                          MultiProcessEventExtractionWorker).
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: The parser filter string.
+      hasher_names_string: Optional comma separated string of names of
+                           hashers to enable enable. The default is None.
     """
     super(MultiProcessEventExtractionWorkerProcess, self).__init__(**kwargs)
     self._extraction_worker = extraction_worker
@@ -545,6 +537,7 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     # TODO: clean this up with the implementation of a task based
     # multi-processing approach.
     self._parser_filter_string = parser_filter_string
+    self._hasher_names_string = hasher_names_string
 
     # Attributes for RPC proxy server thread.
     self._proxy_thread = None
@@ -561,20 +554,29 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     self._rpc_proxy_server = rpc_proxy.StandardRpcProxyServer()
 
     try:
+      # Note the proxy will adjust the port number if pid < 1024 and
+      # pid > 65535.
       self._rpc_proxy_server.SetListeningPort(os.getpid())
       self._rpc_proxy_server.Open()
       self._rpc_proxy_server.RegisterFunction(
           'status', self._extraction_worker.GetStatus)
 
+      logging.debug(
+          u'Worker process: {0!s} monitor RPC server started'.format(
+              self._name))
+
       self._proxy_thread = threading.Thread(
           name='rpc_proxy', target=self._rpc_proxy_server.StartProxy)
       self._proxy_thread.start()
+
+      logging.debug(
+          u'Worker process: {0!s} monitor thread started'.format(self._name))
 
     except errors.ProxyFailedToStart as exception:
       logging.error((
           u'Unable to setup a RPC server for the worker: {0:d} [PID {1:d}] '
           u'with error: {2:s}').format(
-              self._identifier, os.getpid(), exception))
+              self._identity, os.getpid(), exception))
 
   def _StopRPCProxyServerThread(self):
     """Stops the RPC proxy server thread."""
@@ -584,8 +586,15 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     # Close the proxy, free up resources so we can shut down the thread.
     self._rpc_proxy_server.Close()
 
+    logging.debug(
+        u'Worker process: {0!s} monitor RPC server stopped'.format(
+            self._name))
+
     if self._proxy_thread.isAlive():
       self._proxy_thread.join()
+
+    logging.debug(
+        u'Worker process: {0!s} monitor thread stopped'.format(self._name))
 
     self._rpc_proxy_server = None
     self._proxy_thread = None
@@ -595,23 +604,29 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
   def run(self):
     """The main loop."""
     # Prevent the KeyboardInterrupt being raised inside the worker process.
-    # This will prevent a worker process to generate a traceback
+    # This will prevent a worker process generating a traceback
     # when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    # We need to initialize the parser object after the process
+    # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
-    self._extraction_worker.InitalizeParserObjects(
+    self._extraction_worker.InitializeParserObjects(
         parser_filter_string=self._parser_filter_string)
+    if self._hasher_names_string:
+      self._extraction_worker.SetHashers(self._hasher_names_string)
 
     logging.debug(u'Worker process: {0!s} started'.format(self._name))
     self._StartRPCProxyServerThread()
 
+    logging.debug(u'Worker process: {0!s} extraction started'.format(
+        self._name))
     self._extraction_worker.Run()
+    logging.debug(u'Worker process: {0!s} extraction stopped'.format(
+        self._name))
 
-    logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
     self._StopRPCProxyServerThread()
+    logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
 
   def SignalAbort(self):
     """Signals the process to abort."""

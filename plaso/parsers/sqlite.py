@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a SQLite parser."""
 
 import logging
@@ -157,7 +141,7 @@ class SQLiteDatabase(object):
 
     # TODO: Remove this when the classifier gets implemented
     # and used. As of now, there is no check made against the file
-    # to verify it's signature, thus all files are sent here, meaning
+    # to verify its signature, thus all files are sent here, meaning
     # that this method assumes everything is a SQLite file and starts
     # copying the content of the file into memory, which is not good
     # for very large files.
@@ -198,6 +182,7 @@ class SQLiteDatabase(object):
       self._database.row_factory = sqlite3.Row
       self._cursor = self._database.cursor()
     except sqlite3.DatabaseError as exception:
+      file_object.close()
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
               self._file_entry.name, exception))
@@ -209,6 +194,7 @@ class SQLiteDatabase(object):
       sql_results = self._cursor.execute(
           'SELECT name FROM sqlite_master WHERE type="table"')
     except sqlite3.DatabaseError as exception:
+      file_object.close()
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
               self._file_entry.name, exception))
@@ -218,6 +204,7 @@ class SQLiteDatabase(object):
     for row in sql_results:
       self._tables.append(row[0])
 
+    file_object.close()
     self._open = True
 
 
@@ -237,18 +224,16 @@ class SQLiteParser(interface.BasePluginsParser):
     self._plugins = SQLiteParser.GetPluginObjects()
     self.db = None
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parses an SQLite database.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Returns:
       A event object generator (EventObjects) extracted from the database.
     """
+    file_entry = parser_mediator.GetFileEntry()
     with SQLiteDatabase(file_entry) as database:
       try:
         database.Open()
@@ -261,19 +246,16 @@ class SQLiteParser(interface.BasePluginsParser):
             u'Unable to parse SQLite database with error: {0:s}.'.format(
                 repr(exception)))
 
-      parser_chain = self._BuildParserChain(parser_chain)
       # Create a cache in which the resulting tables are cached.
       cache = SQLiteCache()
       for plugin_object in self._plugins:
         try:
-          plugin_object.Process(
-              parser_context, file_entry=file_entry, parser_chain=parser_chain,
-              cache=cache, database=database)
-
+          plugin_object.UpdateChainAndProcess(
+              parser_mediator, cache=cache, database=database)
         except errors.WrongPlugin:
           logging.debug(
               u'Plugin: {0:s} cannot parse database: {1:s}'.format(
-                  plugin_object.NAME, file_entry.name))
+                  plugin_object.NAME, parser_mediator.GetDisplayName()))
 
 
 manager.ParsersManager.RegisterParser(SQLiteParser)

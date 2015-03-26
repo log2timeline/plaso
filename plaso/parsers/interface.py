@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains a class to provide a parsing framework to plaso.
 
 This class contains a base framework class for parsing fileobjects, and
@@ -33,23 +17,17 @@ class BaseParser(object):
   NAME = 'base_parser'
   DESCRIPTION = u''
 
-  def _BuildParserChain(self, parser_chain=None):
-    """Return the parser chain with the addition of the current parser.
-
-    Args:
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
 
     Returns:
-      The parser chain, with the addition of the current parser.
-    """
-    if not parser_chain:
-      return self.NAME
-
-    return u'/'.join([parser_chain, self.NAME])
+      The format specification (instance of FormatSpecification) or
+      None if not available."""
+    return
 
   @abc.abstractmethod
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
@@ -65,10 +43,7 @@ class BaseParser(object):
     the reason why the class does not parse it.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       NotImplementedError when not implemented.
@@ -83,6 +58,20 @@ class BaseParser(object):
       A boolean value indicating whether the parser supports plugins.
     """
     return False
+
+  def UpdateChainAndParse(self, parser_mediator, **kwargs):
+    """Wrapper for Parse() to synchronize the parser chain.
+
+    This convenience method updates the parser chain object held by the
+    mediator, transfers control to the parser-specific Parse() method,
+    and updates the chain again once the parsing is complete. It provides a
+    simpler parser API in most cases.
+    """
+    parser_mediator.AppendToParserChain(self)
+    try:
+      self.Parse(parser_mediator, **kwargs)
+    finally:
+      parser_mediator.PopFromParserChain()
 
 
 class BasePluginsParser(BaseParser):
@@ -182,7 +171,7 @@ class BasePluginsParser(BaseParser):
       yield plugin_name, plugin_class
 
   @abc.abstractmethod
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
@@ -198,10 +187,7 @@ class BasePluginsParser(BaseParser):
     the reason why the class does not parse it.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserMediator).
 
     Raises:
       NotImplementedError when not implemented.
@@ -249,3 +235,69 @@ class BasePluginsParser(BaseParser):
       A boolean value indicating whether the parser supports plugins.
     """
     return True
+
+
+class SingleFileBaseParser(BaseParser):
+  """Class that implements the single file parser base."""
+
+  # The initial file offset set to None if not set.
+  _INITIAL_FILE_OFFSET = 0
+
+  def Parse(self, parser_mediator, **kwargs):
+    """Parses a single file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    # TODO: Merge with UpdateChainAndParse for less overhead.
+    file_object = parser_mediator.GetFileObject(
+        offset=self._INITIAL_FILE_OFFSET)
+    try:
+      self.ParseFileObject(parser_mediator, file_object, **kwargs)
+    finally:
+      file_object.close()
+
+  @abc.abstractmethod
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+
+
+class SingleFileBasePluginsParser(BasePluginsParser):
+  """Class that implements the single file parser with plugins base."""
+
+  # The initial file offset set to None if not set.
+  _INITIAL_FILE_OFFSET = 0
+
+  def Parse(self, parser_mediator, **kwargs):
+    """Parses a single file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    # TODO: Merge with UpdateChainAndParse for less overhead.
+    file_object = parser_mediator.GetFileObject(
+        offset=self._INITIAL_FILE_OFFSET)
+    try:
+      self.ParseFileObject(parser_mediator, file_object, **kwargs)
+    finally:
+      file_object.close()
+
+  @abc.abstractmethod
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """

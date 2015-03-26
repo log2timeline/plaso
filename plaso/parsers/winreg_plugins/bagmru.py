@@ -1,23 +1,5 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains BagMRU Windows Registry plugins (shellbags)."""
-
-import logging
 
 import construct
 
@@ -50,157 +32,169 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   URLS = [u'https://code.google.com/p/winreg-kb/wiki/MRUKeys']
 
-  _MRULISTEX_STRUCT = construct.Range(1, 500, construct.ULInt32('entry_number'))
+  _MRULISTEX_ENTRY = construct.ULInt32(u'entry_number')
 
   def _ParseMRUListExEntryValue(
-      self, parser_context, key, entry_index, entry_number, text_dict,
-      value_strings, parent_value_string, codepage='cp1252', file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key, entry_index, entry_number, text_dict,
+      value_strings, parent_path_segments, codepage='cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
       value_strings: value string dictionary object to append value strings.
-      parent_value_string: string containing the parent value string.
+      parent_path_segments: list containing the parent shell item path segments.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-            The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-              point. The default is None.
+
+    Returns:
+      The path segment of the shell item.
     """
     value = key.GetValue(u'{0:d}'.format(entry_number))
+    path_segment = u'N/A'
     value_string = u''
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.name, entry_number, key.path))
+      parser_mediator.ProduceParseError(
+          u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+              entry_number, key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
-          u'{2:s}.').format(self.name, entry_number, key.path))
+      parser_mediator.ProduceParseError(
+          u'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+              entry_number, key.path))
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      shell_items_parser.Parse(
-          parser_context, value.data, codepage=codepage, file_entry=file_entry,
-          parser_chain=parser_chain)
+      shell_items_parser.UpdateChainAndParse(
+          parser_mediator, value.data, parent_path_segments,
+          codepage=codepage)
 
+      path_segment = shell_items_parser.GetUpperPathSegment()
       value_string = shell_items_parser.CopyToPath()
-      if parent_value_string:
-        value_string = u', '.join([parent_value_string, value_string])
 
       value_strings[entry_number] = value_string
 
-      value_string = u'Shell item list: [{0:s}]'.format(value_string)
+      value_string = u'Shell item path: {0:s}'.format(value_string)
 
     value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
         entry_index + 1, entry_number)
 
     text_dict[value_text] = value_string
 
-  def _ParseMRUListExValue(self, key):
-    """Parsed the MRUListEx value in a given Registry key.
+    return path_segment
+
+  def _ParseMRUListExValue(self, parser_mediator, key):
+    """Parses the MRUListEx value in a given Registry key.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
 
-    Returns:
-      A MRUListEx value generator, which returns the MRU index number
-      and entry value.
+    Yields:
+      A tuple of the MRUListEx index and entry number, where 0 is the first
+      index value.
     """
-    mru_list_value = key.GetValue('MRUListEx')
-    if not mru_list_value:
-      return enumerate([])
+    mru_list_value = key.GetValue(u'MRUListEx')
+    if mru_list_value:
+      mrulistex_data = mru_list_value.data
+      data_size = len(mrulistex_data)
+      _, remainder = divmod(data_size, 4)
 
-    try:
-      mru_list = self._MRULISTEX_STRUCT.parse(mru_list_value.data)
-    except construct.FieldError:
-      logging.warning(u'[{0:s}] Unable to parse the MRU key: {1:s}'.format(
-          self.name, key.path))
-      return enumerate([])
+      if remainder != 0:
+        parser_mediator.ProduceParseError((
+            u'MRUListEx value data size is not a multitude of 4 '
+            u'in MRU key: {0:s}').format(key.path))
+        data_size -= remainder
 
-    return enumerate(mru_list)
+      entry_index = 0
+      data_offset = 0
+      while data_offset < data_size:
+        try:
+          entry_number = self._MRULISTEX_ENTRY.parse(
+              mrulistex_data[data_offset:])
+          yield entry_index, entry_number
+        except construct.FieldError:
+          parser_mediator.ProduceParseError((
+              u'Unable to parse MRUListEx value data at offset: {0:d} '
+              u'in MRU key: {1:s}').format(data_offset, key.path))
+
+        entry_index += 1
+        data_offset += 4
 
   def _ParseSubKey(
-      self, parser_context, key, parent_value_string, registry_type=None,
-      file_entry=None, parser_chain=None, codepage='cp1252'):
+      self, parser_mediator, key, parent_path_segments, registry_type=None,
+      codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of winreg.WinRegKey).
-      parent_value_string: string containing the parent value string.
+      parent_path_segments: list containing the parent shell item path segments.
       registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-            The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-              point. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
+    entry_numbers = {}
     text_dict = {}
     value_strings = {}
-    for index, entry_number in self._ParseMRUListExValue(key):
-      # TODO: detect if list ends prematurely.
-      # MRU lists are terminated with 0xffffffff (-1).
-      if entry_number == 0xffffffff:
-        break
 
-      self._ParseMRUListExEntryValue(
-          parser_context, key, index, entry_number, text_dict, value_strings,
-          parent_value_string, codepage=codepage, file_entry=file_entry,
-          parser_chain=parser_chain)
+    found_terminator = False
+    for index, entry_number in self._ParseMRUListExValue(parser_mediator, key):
+      if entry_number == 0xffffffff:
+        found_terminator = True
+        continue
+
+      if found_terminator:
+        parser_mediator.ProduceParseError((
+            u'Found additional MRUListEx entries after terminator '
+            u'in key: {0:s}.').format(key.path))
+
+        # Only create one parser error per terminator.
+        found_terminator = False
+
+      path_segment = self._ParseMRUListExEntryValue(
+          parser_mediator, key, index, entry_number, text_dict, value_strings,
+          parent_path_segments, codepage=codepage)
+
+      entry_numbers[entry_number] = path_segment
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
         offset=key.offset, registry_type=registry_type, urls=self.URLS,
-        source_append=': BagMRU')
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+        source_append=u': BagMRU')
+    parser_mediator.ProduceEvent(event_object)
 
-    for index, entry_number in self._ParseMRUListExValue(key):
-      # TODO: detect if list ends prematurely.
-      # MRU lists are terminated with 0xffffffff (-1).
-      if entry_number == 0xffffffff:
-        break
-
+    for entry_number, path_segment in entry_numbers.iteritems():
       sub_key = key.GetSubkey(u'{0:d}'.format(entry_number))
       if not sub_key:
-        logging.debug(
-            u'[{0:s}] Missing BagMRU sub key: {1:d} in key: {2:s}.'.format(
-                self.name, key.path, entry_number))
+        parser_mediator.ProduceParseError(
+            u'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(
+                entry_number, key.path))
         continue
 
-      value_string = value_strings.get(entry_number, u'')
+      parent_path_segments.append(path_segment)
       self._ParseSubKey(
-          parser_context, sub_key, value_string, file_entry=file_entry,
-          parser_chain=parser_chain, codepage=codepage)
+          parser_mediator, sub_key, parent_path_segments, codepage=codepage)
+      _ = parent_path_segments.pop()
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, codepage='cp1252',
-      file_entry=None, parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseSubKey(
-        parser_context, key, u'', registry_type=registry_type,
-        codepage=codepage, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator, key, [], registry_type=registry_type,
+        codepage=codepage)
 
 
 winreg.WinRegistryParser.RegisterPlugin(BagMRUPlugin)

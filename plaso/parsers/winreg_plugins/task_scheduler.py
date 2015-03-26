@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains the Task Scheduler Registry keys plugins."""
 
 import logging
@@ -90,19 +74,15 @@ class TaskCachePlugin(interface.KeyPlugin):
         yield value_key, id_value
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Parses a Task Cache Registry key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     tasks_key = key.GetSubkey(u'Tasks')
     tree_key = key.GetSubkey(u'Tree')
@@ -144,8 +124,7 @@ class TaskCachePlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
       if dynamic_info.last_registered_time:
         # Note this is likely either the last registered time or
@@ -153,15 +132,13 @@ class TaskCachePlugin(interface.KeyPlugin):
         event_object = TaskCacheEvent(
             dynamic_info.last_registered_time, u'Last registered time', name,
             sub_key.name)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if dynamic_info.launch_time:
         # Note this is likely the launch time.
         event_object = TaskCacheEvent(
             dynamic_info.launch_time, u'Launch time', name, sub_key.name)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
     # TODO: Add support for the Triggers value.
 

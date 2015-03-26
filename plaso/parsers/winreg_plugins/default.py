@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """The default Windows Registry plugin."""
 
 from plaso.events import windows_events
@@ -44,12 +28,12 @@ class DefaultPlugin(interface.KeyPlugin):
   WEIGHT = 3
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **kwargs):
     """Returns an event object based on a Registry key name and values.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
@@ -92,29 +76,22 @@ class DefaultPlugin(interface.KeyPlugin):
         key.last_written_timestamp, key.path, text_dict,
         offset=key.offset, registry_type=registry_type)
 
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
   # Even though the DefaultPlugin is derived from KeyPlugin it needs to
   # overwrite the Process function to make sure it is called when no other
   # plugin is available.
 
-  def Process(
-      self, parser_context, key=None, registry_type=None,
-      parser_chain=None, **kwargs):
+  def Process(self, parser_mediator, key=None, registry_type=None, **kwargs):
     """Process the key and return a generator to extract event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
-    # Note that we should NOT call the Process function of the KeyPlugin here.
-    parser_chain = self._BuildParserChain(parser_chain)
-    self.GetEntries(
-        parser_context, key=key, registry_type=registry_type,
-        parser_chain=parser_chain, **kwargs)
+    self.GetEntries(parser_mediator, key=key, registry_type=registry_type,)
 
 
 winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

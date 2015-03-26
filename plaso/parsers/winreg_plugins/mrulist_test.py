@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the MRUList Windows Registry plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -52,24 +36,25 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
         'c', 'C:/looks_legit.exe'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1001))
 
-    timestamp = timelib_test.CopyStringToTimestamp('2012-08-28 09:23:49.002031')
+    timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-08-28 09:23:49.002031')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -118,30 +103,31 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'a', data, winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
 
-    timestamp = timelib_test.CopyStringToTimestamp('2012-08-28 09:23:49.002031')
+    timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     # A MRUList event object.
     event_object = event_objects[4]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-08-28 09:23:49.002031')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
-        u'Index: 1 [MRU Value a]: Shell item list: '
-        u'[My Computer, C:\\, Winnt, Profiles, Administrator, Desktop]').format(
+        u'Index: 1 [MRU Value a]: Shell item path: '
+        u'<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
             key_path)
 
     expected_msg_short = u'[{0:s}] Index:...'.format(key_path)
@@ -151,12 +137,13 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # A shell item event object.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-01-14 12:03:52')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-01-14 12:03:52')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: Winnt '
+        u'Shell item path: <My Computer> C:\\Winnt '
         u'Origin: {0:s}').format(key_path)
 
     expected_msg_short = (

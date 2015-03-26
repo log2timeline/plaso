@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for the Google Chrome History files.
 
    The Chrome History is stored in SQLite database files named History
@@ -71,7 +55,7 @@ class ChromeHistoryPageVisitedEvent(time_events.WebKitTimeEvent):
       url: The URL of the visited page.
       title: The title of the visited page.
       hostname: The visited hostname.
-      typed_count: The number of charcters of the URL that were typed.
+      typed_count: The number of characters of the URL that were typed.
       from_visit: The URL where the visit originated from.
       extra: String containing extra event data.
       visit_source: The source of the page visit, if defined.
@@ -236,62 +220,43 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     return self.VISIT_SOURCE.get(results, None)
 
   def ParseFileDownloadedRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     timestamp = timelib.Timestamp.FromPosixTime(row['start_time'])
     event_object = ChromeHistoryFileDownloadedEvent(
         timestamp, row['id'], row['url'], row['full_path'],
         row['received_bytes'], row['total_bytes'])
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseNewFileDownloadedRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     timestamp = timelib.Timestamp.FromWebKitTime(row['start_time'])
     event_object = ChromeHistoryFileDownloadedEvent(
         timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseLastVisitedRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      cache=None, database=None,
+      self, parser_mediator, row, query=None, cache=None, database=None,
       **unused_kwargs):
     """Parses a last visited row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
       cache: Optional cache object (instance of SQLiteCache).
              The default is None.
@@ -329,9 +294,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         self._GetHostname(row['url']), row['typed_count'],
         self._GetUrl(row['from_visit'], cache, database), u' '.join(extras),
         visit_source)
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeHistoryPlugin)

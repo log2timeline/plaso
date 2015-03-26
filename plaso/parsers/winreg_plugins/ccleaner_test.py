@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the CCleaner Windows Registry plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import ccleaner
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -38,25 +22,25 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-CCLEANER.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-CCLEANER.DAT'])
     key_path = u'\\Software\\Piriform\\CCleaner'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 17)
+    self.assertEqual(len(event_objects), 17)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-07-13 10:03:14')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'UpdateKey'
     expected_value = u'07/13/2013 10:03:14 AM'
@@ -68,7 +52,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[2]
 
-    self.assertEquals(event_object.timestamp, 0)
+    self.assertEqual(event_object.timestamp, 0)
 
     regvalue_identifier = u'(App)Delete Index.dat files'
     expected_value = u'True'

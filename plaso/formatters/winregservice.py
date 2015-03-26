@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatter for service entries derived from Windows Registry files."""
 
 from plaso.formatters import manager
@@ -27,21 +11,21 @@ class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
 
   DATA_TYPE = 'windows:registry:service'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from the event object.
-
-    This formatter will make the values of certain service parameters more
-    readable by humans.
+  def GetMessages(self, formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (an instance of EventObject) containing
-      the event specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    regvalue = getattr(event_object, 'regvalue', {})
+    regvalue = getattr(event_object, u'regvalue', {})
     # Loop over all the registry value names in the service key.
     for service_value_name in regvalue.keys():
       # A temporary variable so we can refer to this long name more easily.
@@ -56,7 +40,8 @@ class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
             regvalue[service_value_name])
         regvalue[service_value_name] = human_readable_value
 
-    return super(WinRegistryServiceFormatter, self).GetMessages(event_object)
+    return super(WinRegistryServiceFormatter, self).GetMessages(
+        formatter_mediator, event_object)
 
 
 manager.FormattersManager.RegisterFormatter(WinRegistryServiceFormatter)

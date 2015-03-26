@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Google Drive database plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import gdrive as gdrive_formatter
+from plaso.formatters import gdrive as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import test_lib
@@ -37,13 +21,13 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
-    test_file = self._GetTestFilePath(['snapshot.db'])
+    test_file = self._GetTestFilePath([u'snapshot.db'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache=cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 30)
+    self.assertEqual(len(event_objects), 30)
 
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.
@@ -57,8 +41,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         local_entries.append(event_object)
       else:
         cloud_entries.append(event_object)
-    self.assertEquals(len(local_entries), 10)
-    self.assertEquals(len(cloud_entries), 20)
+    self.assertEqual(len(local_entries), 10)
+    self.assertEqual(len(cloud_entries), 20)
 
     # Test one local and one cloud entry.
     event_object = local_entries[5]
@@ -66,23 +50,23 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     file_path = (
         u'%local_sync_root%/Top Secret/Enn meiri '
         u'leyndarm\xe1l/S\xfdnileiki - \xd6rverpi.gdoc')
-    self.assertEquals(event_object.path, file_path)
+    self.assertEqual(event_object.path, file_path)
 
-    expected_msg = u'File Path: {} Size: 184'.format(file_path)
+    expected_msg = u'File Path: {0:s} Size: 184'.format(file_path)
 
     self._TestGetMessageStrings(event_object, expected_msg, file_path)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-01-28 00:11:25')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-01-28 00:11:25')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = cloud_entries[16]
 
-    self.assertEquals(event_object.document_type, u'DOCUMENT')
-    self.assertEquals(
+    self.assertEqual(event_object.document_type, u'DOCUMENT')
+    self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEquals(event_object.url, (
+    self.assertEqual(event_object.url, (
         u'https://docs.google.com/document/d/'
         u'1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api'))
 
@@ -95,9 +79,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-01-28 00:12:27')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-01-28 00:12:27')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

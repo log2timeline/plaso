@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Plugin for the Zeitgeist SQLite database.
 
    Zeitgeist is a service which logs the user activities and events, anywhere
@@ -62,23 +46,16 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['event', 'actor'])
 
   def ParseZeitgeistEventRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses zeitgeist event row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     event_object = ZeitgeistEvent(row['timestamp'], row['id'], row['subj_uri'])
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ZeitgeistPlugin)

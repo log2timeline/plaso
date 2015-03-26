@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the default plist plugin."""
 
 import datetime
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import plist as plist_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import plist as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib
 
@@ -48,15 +32,15 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         self._plugin, 'single', top_level_dict_single)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-11-02 01:21:38.997672')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.root, u'/DE-00-AD-00-BE-EF')
-    self.assertEquals(event_object.key, u'LastUsed')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-11-02 01:21:38.997672')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.root, u'/DE-00-AD-00-BE-EF')
+    self.assertEqual(event_object.key, u'LastUsed')
 
     expected_string = (
         u'/DE-00-AD-00-BE-EF/LastUsed')
@@ -95,15 +79,15 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         self._plugin, 'nested', top_level_dict_many_keys)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-04-07 17:56:53.524275')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
-    self.assertEquals(event_object.key, u'LastNameUpdate')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-04-07 17:56:53.524275')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
+    self.assertEqual(event_object.key, u'LastNameUpdate')
 
 
 if __name__ == '__main__':

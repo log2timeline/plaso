@@ -1,26 +1,43 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Front-end related functions and classes for testing."""
 
+import io
 import os
 import shutil
 import tempfile
 import unittest
+
+
+class StringIOOutputWriter(object):
+  """Class that implements a StringIO output writer."""
+
+  def __init__(self):
+    """Initialize the string output writer."""
+    super(StringIOOutputWriter, self).__init__()
+    self._string_io = io.StringIO()
+
+    # Make the output writer compatible with a filehandle interface.
+    self.write = self.Write
+
+  def flush(self):
+    """Flush the internal buffer."""
+    self._string_io.flush()
+
+  def GetValue(self):
+    """Returns the write buffer from the output writer."""
+    return self._string_io.getvalue()
+
+  def GetLine(self):
+    """Returns a single line read from the output buffer."""
+    return self._string_io.readline()
+
+  def SeekToBeginning(self):
+    """Seeks the output buffer to the beginning of the buffer."""
+    self._string_io.seek(0)
+
+  def Write(self, string):
+    """Writes a string to the StringIO object."""
+    self._string_io.write(string)
 
 
 class TempDirectory(object):
@@ -44,7 +61,8 @@ class TempDirectory(object):
 class FrontendTestCase(unittest.TestCase):
   """The unit test case for a front-end."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+  _DATA_PATH = os.path.join(os.getcwd(), u'data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.

@@ -1,28 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the TLN output class."""
 
-import StringIO
+import io
 import unittest
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
+from plaso.lib import timelib
+from plaso.output import test_lib
 from plaso.output import tln
 
 
@@ -33,7 +20,7 @@ class TlnTestEvent(event.EventObject):
   def __init__(self):
     """Initialize event with data."""
     super(TlnTestEvent, self).__init__()
-    self.timestamp = 1340821021000000
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'
     self.display_name = u'OS: log/syslog.1'
     self.inode = 12345678
@@ -51,38 +38,44 @@ class L2TTlnTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(L2TTlnTestEventFormatter)
-
-
-class TlnTest(unittest.TestCase):
+class TlnTest(test_lib.LogOutputFormatterTestCase):
   """Tests for the TLN outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self.output = StringIO.StringIO()
-    self.formatter = tln.TlnOutputFormatter(None, self.output)
-    self.event_object = TlnTestEvent()
+    super(TlnTest, self).setUp()
+    self._output = io.BytesIO()
+    self._formatter = tln.TlnOutputFormatter(
+        None, self._formatter_mediator, filehandle=self._output)
+    self._event_object = TlnTestEvent()
 
-  def testStart(self):
-    """Test ensures header line is outputted as expected."""
-    correct_line = u'Time|Source|Host|User|Description\n'
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    expected_header = b'Time|Source|Host|User|Description\n'
 
-    self.formatter.Start()
-    self.assertEquals(self.output.getvalue(), correct_line)
+    self._formatter.WriteHeader()
 
-  def testEventBody(self):
-    """Test ensures that returned lines returned are formatted as TLN."""
+    header = self._output.getvalue()
+    self.assertEqual(header, expected_header)
 
-    self.formatter.EventBody(self.event_object)
-    correct = (u'1340821021|LOG|ubuntu|root|Reporter <CRON> PID:  8442  '
-               u'(pam_unix(cron:session): session closed for user root)\n')
-    self.assertEquals(self.output.getvalue(), correct)
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2TTlnTestEventFormatter)
 
-  def testEventBodyNoStrayPipes(self):
-    """Test ensures that the only pipes are the four field delimiters."""
+    self._formatter.WriteEventBody(self._event_object)
 
-    self.formatter.EventBody(self.event_object)
-    self.assertEquals(self.output.getvalue().count(u'|'), 4)
+    expected_event_body = (
+        b'1340821021|LOG|ubuntu|root|Reporter <CRON> PID:  8442  '
+        b'(pam_unix(cron:session): session closed for user root)\n')
+
+    event_body = self._output.getvalue()
+    self.assertEqual(event_body, expected_event_body)
+
+    self.assertEqual(event_body.count(b'|'), 4)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        L2TTlnTestEventFormatter)
 
 
 if __name__ == '__main__':

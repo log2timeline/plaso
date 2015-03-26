@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the selinux log file parser."""
 
 import unittest
@@ -43,12 +28,12 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     # Test case: normal entry.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp, 1337845201174000)
+    self.assertEqual(event_object.timestamp, 1337845201174000)
 
     expected_msg = (
         u'[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
@@ -62,7 +47,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: short date.
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp, 1337845201000000)
+    self.assertEqual(event_object.timestamp, 1337845201000000)
 
     expected_string = u'[audit_type: SHORTDATE] check rounding'
 
@@ -71,7 +56,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: no msg.
     event_object = event_objects[2]
 
-    self.assertEquals(event_object.timestamp, 1337845222174000)
+    self.assertEqual(event_object.timestamp, 1337845222174000)
 
     expected_string = u'[audit_type: NOMSG]'
 
@@ -80,7 +65,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: under score.
     event_object = event_objects[3]
 
-    self.assertEquals(event_object.timestamp, 1337845666174000)
+    self.assertEqual(event_object.timestamp, 1337845666174000)
 
     expected_msg = (
         u'[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '

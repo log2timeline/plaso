@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This file contains the UserAssist Windows Registry plugin."""
 
 import logging
@@ -87,31 +71,28 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')
 
     if not version_value:
-      logging.error(u'missing version value')
+      parser_mediator.ProduceParseError(u'Missing version value')
     elif not version_value.DataIsInteger():
-      logging.error(u'unsupported version value data type')
+      parser_mediator.ProduceParseError(u'Unsupported version value data type')
     elif version_value.data not in [3, 5]:
-      logging.error(u'unsupported version: {0:d}'.format(version_value.data))
+      parser_mediator.ProduceParseError(
+          u'Unsupported version: {0:d}'.format(version_value.data))
     elif not count_subkey:
-      logging.error(u'missing count subkey')
+      parser_mediator.ProduceParseError(u'Missing count subkey')
     else:
       userassist_entry_index = 0
 
@@ -150,16 +131,18 @@ class UserAssistPlugin(interface.KeyPlugin):
           if '%' in value_name:
             # TODO: deprecate direct use of pre_obj.
             value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-                value_name, parser_context.knowledge_base.pre_obj)
+                value_name, parser_mediator.knowledge_base.pre_obj)
 
         if not value.DataIsBinaryData():
-          logging.error(u'unsupported value data type: {0:s}'.format(
-              value.data_type_string))
+          parser_mediator.ProduceParseError(
+              u'Unsupported value data type: {0:s}'.format(
+                  value.data_type_string))
 
         elif version_value.data == 3:
           if len(value.data) != self.USERASSIST_V3_STRUCT.sizeof():
-            logging.error(u'unsupported value data size: {0:d}'.format(
-                len(value.data)))
+            parser_mediator.ProduceParseError(
+                u'Unsupported value data size: {0:d}'.format(
+                    len(value.data)))
 
           else:
             parsed_data = self.USERASSIST_V3_STRUCT.parse(value.data)
@@ -174,13 +157,13 @@ class UserAssistPlugin(interface.KeyPlugin):
             event_object = windows_events.WindowsRegistryEvent(
                 timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
                 text_dict, offset=value.offset, registry_type=registry_type)
-            parser_context.ProduceEvent(
-                event_object, parser_chain=parser_chain, file_entry=file_entry)
+            parser_mediator.ProduceEvent(event_object)
 
         elif version_value.data == 5:
           if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
-            logging.error(u'unsupported value data size: {0:d}'.format(
-                len(value.data)))
+            parser_mediator.ProduceParseError(
+                u'Unsupported value data size: {0:d}'.format(
+                    len(value.data)))
 
           parsed_data = self.USERASSIST_V5_STRUCT.parse(value.data)
 
@@ -201,8 +184,7 @@ class UserAssistPlugin(interface.KeyPlugin):
               timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
               text_dict, offset=count_subkey.offset,
               registry_type=registry_type)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

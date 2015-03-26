@@ -1,23 +1,6 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""This file contains the plasm front-end to plaso."""
+"""The plasm front-end."""
 
-import argparse
 import hashlib
 import logging
 import operator
@@ -25,10 +8,10 @@ import os
 import pickle
 import sets
 import sys
-import textwrap
 
 from plaso import filters
 
+from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import event
@@ -38,7 +21,7 @@ from plaso.output import manager as output_manager
 from plaso.output import pstorage  # pylint: disable=unused-import
 
 
-class PlasmFrontend(frontend.AnalysisFrontend):
+class PlasmFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
 
   def __init__(self):
@@ -547,12 +530,14 @@ class ClusteringEngine(object):
         # always choose pstorage but whatever storage mechanism that was used
         # to begin with (as in if the storage is SQLite then use SQLite for
         # output).
-        formatter_cls = output_manager.OutputManager.GetOutputClass('pstorage')
+        formatter_cls = output_manager.OutputManager.GetOutputClass(u'pstorage')
         store_dedup = open(nodup_filename, 'wb')
-        formatter = formatter_cls(store, store_dedup)
+        formatter = formatter_cls(
+            store, self._formatter_mediator, filehandle=store_dedup)
+
         with output_interface.EventBuffer(
             formatter, check_dedups=True) as output_buffer:
-          event_object = formatter.FetchEntry()
+          event_object = store.GetSortedEntry()
           counter = 0
           while event_object:
             output_buffer.Append(event_object)
@@ -560,7 +545,7 @@ class ClusteringEngine(object):
             if counter % events_per_dot == 0:
               sys.stdout.write(u'.')
               sys.stdout.flush()
-            event_object = formatter.FetchEntry()
+            event_object = store.GetSortedEntry()
       sys.stdout.write(u'\n')
     return nodup_filename
 
@@ -717,121 +702,3 @@ class ClusteringEngine(object):
     # Next step, clustering the event types
 
     # TODO: implement clustering.
-
-
-def Main():
-  """The main application function."""
-  front_end = PlasmFrontend()
-
-  epilog_tag = ("""
-      Notes:
-
-      When applying tags, a tag input file must be given. Currently,
-      the format of this file is simply the tag name, followed by
-      indented lines indicating conditions for the tag, treating any
-      lines beginning with # as comments. For example, a valid tagging
-      input file might look like this:'
-
-      ------------------------------
-      Obvious Malware
-          # anything with 'malware' in the name or path
-          filename contains 'malware'
-
-          # anything with the malware datatype
-          datatype is 'windows:malware:this_is_not_a_real_datatype'
-
-      File Download
-          timestamp_desc is 'File Downloaded'
-      ------------------------------
-
-      Tag files can be found in the "extra" directory of plaso.
-      """)
-
-  epilog_group = ("""
-      When applying groups, the Plaso storage file *must* contain tags,
-      as only tagged events are grouped. Plasm can be run such that it
-      both applies tags and applies groups, in which case an untagged
-      Plaso storage file may be used, since tags will be applied before
-      the grouping is calculated.
-      """)
-
-  epilog_main = ("""
-      For help with a specific action, use "plasm.py {cluster,group,tag} -h".
-      """)
-
-  description = (
-      u'PLASM (Plaso Langar Ad Safna Minna)- Application to tag and group '
-      u'Plaso storage files.')
-
-  arg_parser = argparse.ArgumentParser(
-      description=textwrap.dedent(description),
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      epilog=textwrap.dedent(epilog_main))
-
-  arg_parser.add_argument(
-      '-q', '--quiet', action='store_true', dest='quiet', default=False,
-      help='Suppress nonessential output.')
-
-  subparsers = arg_parser.add_subparsers(dest='subcommand')
-
-  cluster_subparser = subparsers.add_parser(
-      'cluster', formatter_class=argparse.RawDescriptionHelpFormatter)
-
-  cluster_subparser.add_argument(
-      '--closeness', action='store', type=int, metavar='MSEC',
-      dest='cluster_closeness', default=5000, help=(
-          'Number of miliseconds before we stop considering two '
-          'events to be at all "close" to each other'))
-
-  cluster_subparser.add_argument(
-      '--threshold', action='store', type=int, metavar='NUMBER',
-      dest='cluster_threshold', default=5,
-      help='Support threshold for pruning attributes.')
-
-  front_end.AddStorageFileOptions(cluster_subparser)
-
-  group_subparser = subparsers.add_parser(
-      'group', formatter_class=argparse.RawDescriptionHelpFormatter,
-      epilog=textwrap.dedent(epilog_group))
-
-  front_end.AddStorageFileOptions(group_subparser)
-
-  tag_subparser = subparsers.add_parser(
-      'tag', formatter_class=argparse.RawDescriptionHelpFormatter,
-      epilog=textwrap.dedent(epilog_tag))
-
-  tag_subparser.add_argument(
-      '--tagfile', '--tag_file', '--tag-file', action='store', type=unicode,
-      metavar='FILE', dest='tag_filename', help=(
-          'Name of the file containing a description of tags and rules '
-          'for tagging events.'))
-
-  front_end.AddStorageFileOptions(tag_subparser)
-
-  options = arg_parser.parse_args()
-
-  try:
-    front_end.ParseOptions(options)
-  except errors.BadConfigOption as exception:
-    arg_parser.print_help()
-    print u''
-    logging.error(u'{0:s}'.format(exception))
-    return False
-
-  if front_end.mode == 'cluster':
-    front_end.ClusterEvents()
-
-  elif front_end.mode == 'group':
-    front_end.GroupEvents()
-
-  elif front_end.mode == 'tag':
-    front_end.TagEvents()
-
-  return True
-
-
-if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)

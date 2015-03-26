@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Windows prefetch parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winprefetch as winprefetch_formatter
+from plaso.formatters import winprefetch as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import winprefetch
 
@@ -40,20 +24,20 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 2)
 
     # The prefetch last run event.
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.version, 17)
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    self.assertEqual(event_object.version, 17)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-10 10:11:49.281250')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
-    self.assertEquals(event_object.executable, u'CMD.EXE')
-    self.assertEquals(event_object.prefetch_hash, 0x087b4001)
-    self.assertEquals(event_object.volume_serial_numbers[0], 0x24cb074b)
+    self.assertEqual(event_object.executable, u'CMD.EXE')
+    self.assertEqual(event_object.prefetch_hash, 0x087b4001)
+    self.assertEqual(event_object.volume_serial_numbers[0], 0x24cb074b)
 
     expected_mapped_files = [
         u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',
@@ -95,15 +79,15 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
          u'IERESETICONS.EXE'),
         u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\IE7\\SPUNINST\\IERESETICONS.EXE']
 
-    self.assertEquals(event_object.mapped_files, expected_mapped_files)
+    self.assertEqual(event_object.mapped_files, expected_mapped_files)
 
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-10 10:19:46.234375')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_msg = (
@@ -123,26 +107,26 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 2)
 
     # The prefetch last run event.
     event_object = event_objects[1]
-    self.assertEquals(event_object.version, 23)
+    self.assertEqual(event_object.version, 23)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-06 19:00:55.932955')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
 
-    self.assertEquals(event_object.executable, u'PING.EXE')
-    self.assertEquals(event_object.prefetch_hash, 0xb29f6629)
-    self.assertEquals(
+    self.assertEqual(event_object.executable, u'PING.EXE')
+    self.assertEqual(event_object.prefetch_hash, 0xb29f6629)
+    self.assertEqual(
         event_object.path, u'\\WINDOWS\\SYSTEM32\\PING.EXE')
-    self.assertEquals(event_object.run_count, 14)
-    self.assertEquals(
+    self.assertEqual(event_object.run_count, 14)
+    self.assertEqual(
         event_object.volume_device_paths[0], u'\\DEVICE\\HARDDISKVOLUME1')
-    self.assertEquals(event_object.volume_serial_numbers[0], 0xac036525)
+    self.assertEqual(event_object.volume_serial_numbers[0], 0xac036525)
 
     expected_msg = (
         u'Prefetch [PING.EXE] was executed - run count 14 path: '
@@ -158,10 +142,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 17:37:26.484375')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
   def testParse23MultiVolume(self):
@@ -170,26 +154,26 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 6)
+    self.assertEqual(len(event_objects), 6)
 
     # The prefetch last run event.
     event_object = event_objects[5]
-    self.assertEquals(event_object.version, 23)
+    self.assertEqual(event_object.version, 23)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-15 21:17:39.807996')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
 
-    self.assertEquals(event_object.executable, u'WUAUCLT.EXE')
-    self.assertEquals(event_object.prefetch_hash, 0x830bcc14)
-    self.assertEquals(
+    self.assertEqual(event_object.executable, u'WUAUCLT.EXE')
+    self.assertEqual(event_object.prefetch_hash, 0x830bcc14)
+    self.assertEqual(
         event_object.path, u'\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE')
-    self.assertEquals(event_object.run_count, 25)
-    self.assertEquals(
+    self.assertEqual(event_object.run_count, 25)
+    self.assertEqual(
         event_object.volume_device_paths[0], u'\\DEVICE\\HARDDISKVOLUME1')
-    self.assertEquals(event_object.volume_serial_numbers[0], 0xac036525)
+    self.assertEqual(event_object.volume_serial_numbers[0], 0xac036525)
 
     expected_msg = (
         u'Prefetch [WUAUCLT.EXE] was executed - run count 25 path: '
@@ -213,10 +197,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 17:37:26.484375')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_msg = (
@@ -236,27 +220,27 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     # The prefetch last run event.
     event_object = event_objects[1]
-    self.assertEquals(event_object.version, 26)
+    self.assertEqual(event_object.version, 26)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:40:09.037833')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
-    self.assertEquals(event_object.executable, u'TASKHOST.EXE')
-    self.assertEquals(event_object.prefetch_hash, 0x3ae259fc)
+    self.assertEqual(event_object.executable, u'TASKHOST.EXE')
+    self.assertEqual(event_object.prefetch_hash, 0x3ae259fc)
 
     # The prefetch previous last run event.
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:28:09.010356')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc,
         u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME))
 
@@ -362,15 +346,15 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL '
          u'[MFT entry: 46261, sequence: 1]')]
 
-    self.assertEquals(event_object.mapped_files, expected_mapped_files)
+    self.assertEqual(event_object.mapped_files, expected_mapped_files)
 
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:57:26.146547')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
 

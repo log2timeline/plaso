@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Mac OS X local users plist plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import plist as plist_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import plist as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import macuser
 from plaso.parsers.plist_plugins import test_lib
@@ -38,17 +22,16 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plist_name = u'user.plist'
-    test_file = self._GetTestFilePath([plist_name])
     event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, test_file, plist_name)
+        self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-12-28 04:35:47')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-12-28 04:35:47')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.key, u'passwordLastSetTime')
@@ -64,7 +47,7 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
         u'b536a60ff17a84e985be3aa7ba3a4c16b34e0d1d2066ae178')
     self.assertEqual(event_object.desc, expected_desc)
     expected_string = u'//passwordLastSetTime {}'.format(expected_desc)
-    expected_short = u'{}...'.format(expected_string[:77])
+    expected_short = u'{0:s}...'.format(expected_string[:77])
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)
 

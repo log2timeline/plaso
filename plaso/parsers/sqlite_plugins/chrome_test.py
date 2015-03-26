@@ -1,28 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the Google Chrome History database plugin."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome as chrome_formatter
+from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import test_lib
@@ -37,30 +21,30 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    test_file = self._GetTestFilePath(['History'])
+    test_file = self._GetTestFilePath([u'History'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
-    self.assertEquals(len(event_objects), 71)
+    self.assertEqual(len(event_objects), 71)
 
     # Check the first page visited entry.
     event_object = event_objects[0]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.PAGE_VISITED)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-04-07 12:03:11')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-04-07 12:03:11')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://start.ubuntu.com/10.04/Google/'
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_title = u'Ubuntu Start Page'
-    self.assertEquals(event_object.title, expected_title)
+    self.assertEqual(event_object.title, expected_title)
 
     expected_msg = (
         u'{0:s} ({1:s}) [count: 0] Host: start.ubuntu.com '
@@ -74,25 +58,25 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first file downloaded entry.
     event_object = event_objects[69]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.FILE_DOWNLOADED)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-05-23 08:35:30')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-05-23 08:35:30')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'http://fatloss4idiotsx.com/download/funcats/'
         u'funcats_scr.exe')
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_full_path = u'/home/john/Downloads/funcats_scr.exe'
-    self.assertEquals(event_object.full_path, expected_full_path)
+    self.assertEqual(event_object.full_path, expected_full_path)
 
     expected_msg = (
-        u'{0:s} ({1:s}). Received: 1132155 bytes out of: '
-        u'1132155 bytes.').format(
-            expected_url, expected_full_path)
+        u'{0:s} ({1:s}). '
+        u'Received: 1132155 bytes out of: '
+        u'1132155 bytes.').format(expected_url, expected_full_path)
     expected_short = u'{0:s} downloaded (1132155 bytes)'.format(
         expected_full_path)
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)

@@ -304,7 +304,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('dateutil.parser', '', ''):
     check_result = False
 
-  if not CheckPythonModule('dfvfs', '__version__', '20150129'):
+  if not CheckPythonModule('dfvfs', '__version__', '20150210'):
     check_result = False
 
   if not CheckPythonModule('dpkt', '__version__', '1.8'):
@@ -357,10 +357,10 @@ if __name__ == '__main__':
       ('pyewf', 20131210),
       ('pyfwsi', 20140714),
       ('pylnk', 20141026),
-      ('pymsiecf', 20130317),
+      ('pymsiecf', 20150314),
       ('pyolecf', 20131012),
       ('pyqcow', 20131204),
-      ('pyregf', 20130716),
+      ('pyregf', 20150315),
       ('pysigscan', 20150114),
       ('pysmdev', 20140529),
       ('pysmraw', 20140612),

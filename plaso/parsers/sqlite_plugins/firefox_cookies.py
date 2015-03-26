@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2014 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Parser for the Firefox Cookie database."""
 
 from plaso.events import time_events
@@ -96,18 +80,13 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
     super(FirefoxCookiePlugin, self).__init__()
     self._cookie_plugins = cookie_interface.GetPlugins()
 
-  def ParseCookieRow(
-      self, parser_context, row, file_entry=None, parser_chain=None,
-      query=None, **unused_kwargs):
+  def ParseCookieRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+
       query: Optional query string. The default is None.
     """
     if row['creationTime']:
@@ -115,18 +94,14 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           row['creationTime'], eventdata.EventTimestamp.CREATION_TIME,
           row['id'], row['host'], row['name'], row['value'], row['path'],
           row['isSecure'], row['isHttpOnly'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['lastAccessed']:
       event_object = FirefoxCookieEvent(
           row['lastAccessed'], eventdata.EventTimestamp.ACCESS_TIME, row['id'],
           row['host'], row['name'], row['value'], row['path'], row['isSecure'],
           row['isHttpOnly'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['expiry']:
       # Expiry time (nsCookieService::GetExpiry in
@@ -139,9 +114,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       event_object = FirefoxCookieEvent(
           timestamp, u'Cookie Expires', row['id'], row['host'], row['name'],
           row['value'], row['path'], row['isSecure'], row['isHttpOnly'])
-      parser_context.ProduceEvent(
-          event_object, query=query, parser_chain=parser_chain,
-          file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.
@@ -153,9 +126,9 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
 
     for cookie_plugin in self._cookie_plugins:
       try:
-        cookie_plugin.Process(
-            parser_context, cookie_name=row['name'], cookie_data=row['value'],
-            url=url, file_entry=file_entry, parser_chain=parser_chain)
+        cookie_plugin.UpdateChainAndProcess(
+            parser_mediator, cookie_name=row['name'], cookie_data=row['value'],
+            url=url)
       except errors.WrongPlugin:
         pass
 

@@ -1,27 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the 'License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for Apple System Log file parser."""
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import asl as asl_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import asl as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import asl
 from plaso.parsers import test_lib
 
@@ -43,7 +27,7 @@ class AslParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-25 09:45:35.705481')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

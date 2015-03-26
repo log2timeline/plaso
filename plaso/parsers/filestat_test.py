@@ -1,22 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for filestat parser."""
 
+import os
 import unittest
 
 from dfvfs.lib import definitions
@@ -49,7 +35,13 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The TSK file entry has 3 event objects.
-    self.assertEquals(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 3)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'TSK:/passwords.txt'
+    expected_msg_short = u'/passwords.txt'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testZipFile(self):
     """Test a ZIP file."""
@@ -65,7 +57,13 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The ZIP file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'ZIP:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testGzipFile(self):
     """Test a GZIP file."""
@@ -80,7 +78,14 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The gzip file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.gz')
+    expected_msg = u'GZIP:{0:s}'.format(test_path)
+    expected_msg_short = test_path
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -96,7 +101,13 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The tar file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'TAR:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -114,7 +125,13 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The tar file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'TAR:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     test_file = self._GetTestFilePath([u'syslog.tgz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -127,7 +144,14 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The gzip file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.tgz')
+    expected_msg = u'GZIP:{0:s}'.format(test_path)
+    expected_msg_short = test_path
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -146,7 +170,13 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The ZIP file has 1 event objects.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'ZIP:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

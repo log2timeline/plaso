@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the filters."""
 
 import unittest
@@ -24,7 +9,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import objectfilter
 from plaso.lib import pfilter
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 
 import pytz
 
@@ -74,8 +59,8 @@ class PFilterTest(unittest.TestCase):
     """
     event_object = event.EventObject()
     event_object.data_type = 'Weirdo:Made up Source:Last Written'
-    event_object.timestamp = timelib_test.CopyStringToTimestamp(
-        '2015-11-18 01:15:43')
+    event_object.timestamp = timelib.Timestamp.CopyFromString(
+        u'2015-11-18 01:15:43')
     event_object.timestamp_desc = 'Last Written'
     event_object.text_short = 'This description is different than the long one.'
     event_object.text = (

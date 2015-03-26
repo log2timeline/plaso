@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Tests for the plist plugin interface."""
 
 import unittest
@@ -35,11 +20,11 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
-  def GetEntries(self, parser_context, **unused_kwargs):
+  def GetEntries(self, parser_mediator, **unused_kwargs):
     event_object = plist_event.PlistEvent(
         u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
         1351827808261762)
-    parser_context.ProduceEvent(event_object, parser_chain=self.NAME)
+    parser_mediator.ProduceEvent(event_object)
 
 
 class TestPlistPlugin(test_lib.PlistPluginTestCase):
@@ -60,7 +45,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     """Tests the GetPluginNames function."""
     plugin_names = plist.PlistParser.GetPluginNames()
 
-    self.assertNotEquals(plugin_names, [])
+    self.assertNotEqual(plugin_names, [])
 
     self.assertTrue('plist_default' in plugin_names)
 
@@ -75,7 +60,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
         plugin_object, 'plist_binary', top_level)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     # Correct filename with odd filename cAsinG. Adding an extra useless key.
     top_level = {'DeviceCache': 1, 'PairedDevices': 1, 'R@ndomExtraKey': 1}
@@ -83,7 +68,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
         plugin_object, 'pLiSt_BinAry', top_level)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     # Test wrong filename.
     top_level = {'DeviceCache': 1, 'PairedDevices': 1}
@@ -101,17 +86,17 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     """Tests the RecurseKey function."""
     # Ensure with a depth of 1 we only return the root key.
     result = list(interface.RecurseKey(self._top_level_dict, depth=1))
-    self.assertEquals(len(result), 1)
+    self.assertEqual(len(result), 1)
 
     # Trying again with depth limit of 2 this time.
     result = list(interface.RecurseKey(self._top_level_dict, depth=2))
-    self.assertEquals(len(result), 3)
+    self.assertEqual(len(result), 3)
 
     # A depth of two should gives us root plus the two devices. Let's check.
     my_keys = []
     for unused_root, key, unused_value in result:
       my_keys.append(key)
-    expected = set(['DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'])
+    expected = {'DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'}
     self.assertTrue(expected == set(my_keys))
 
   def testGetKeys(self):
@@ -119,13 +104,13 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     # Match DeviceCache from the root level.
     key = ['DeviceCache']
     result = interface.GetKeys(self._top_level_dict, key)
-    self.assertEquals(len(result), 1)
+    self.assertEqual(len(result), 1)
 
     # Look for a key nested a layer beneath DeviceCache from root level.
     # Note: overriding the default depth to look deeper.
     key = ['44-00-00-00-00-02']
     result = interface.GetKeys(self._top_level_dict, key, depth=2)
-    self.assertEquals(len(result), 1)
+    self.assertEqual(len(result), 1)
 
     # Check the value of the result was extracted as expected.
     self.assertTrue('test-macpro' == result[key[0]]['Name'])

@@ -1,20 +1,4 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2013 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Formatter for Microsoft Internet Explorer (MSIE) Cache Files (CF) events."""
 
 from plaso.formatters import interface
@@ -22,48 +6,99 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
+class MsiecfItemFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIECF URL item."""
+
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    event_values = event_object.GetValues()
+
+    http_headers = event_values.get(u'http_headers', None)
+    if http_headers:
+      event_values[u'http_headers'] = http_headers.replace(u'\r\n', u' - ')
+
+    if event_values.get(u'recovered', None):
+      event_values[u'recovered_string'] = '[Recovered Entry]'
+
+    cached_file_path = event_values.get(u'cached_filename', None)
+    if cached_file_path:
+      cache_directory_name = event_values.get(u'cache_directory_name', None)
+      if cache_directory_name:
+        cached_file_path = u'\\'.join([cache_directory_name, cached_file_path])
+      event_values[u'cached_file_path'] = cached_file_path
+
+    return self._ConditionalFormatMessages(event_values)
+
+
+class MsiecfLeakFormatter(MsiecfItemFormatter):
+  """Formatter for a MSIECF leak item event."""
+
+  DATA_TYPE = 'msiecf:leak'
+
+  FORMAT_STRING_PIECES = [
+      u'Cached file: {cached_file_path}',
+      u'Cached file size: {cached_file_size}',
+      u'{recovered_string}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Cached file: {cached_file_path}']
+
+  SOURCE_LONG = 'MSIE Cache File leak record'
+  SOURCE_SHORT = 'WEBHIST'
+
+
+class MsiecfRedirectedFormatter(MsiecfItemFormatter):
+  """Formatter for a MSIECF leak redirected event."""
+
+  DATA_TYPE = 'msiecf:redirected'
+
+  FORMAT_STRING_PIECES = [
+      u'Location: {url}',
+      u'{recovered_string}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Location: {url}']
+
+  SOURCE_LONG = 'MSIE Cache File redirected record'
+  SOURCE_SHORT = 'WEBHIST'
+
+
+class MsiecfUrlFormatter(MsiecfItemFormatter):
+  """Formatter for a MSIECF URL item event."""
 
   DATA_TYPE = 'msiecf:url'
 
   FORMAT_STRING_PIECES = [
       u'Location: {url}',
       u'Number of hits: {number_of_hits}',
+      u'Cached file: {cached_file_path}',
       u'Cached file size: {cached_file_size}',
-      u'HTTP headers: {http_headers_cleaned}',
+      u'HTTP headers: {http_headers}',
       u'{recovered_string}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Location: {url}']
+      u'Location: {url}',
+      u'Cached file: {cached_file_path}']
 
   SOURCE_LONG = 'MSIE Cache File URL record'
   SOURCE_SHORT = 'WEBHIST'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
 
-    Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
-
-    Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
-    """
-    if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
-
-    if hasattr(event_object, 'http_headers'):
-      event_object.http_headers_cleaned = event_object.http_headers.replace(
-          '\r\n', ' - ')
-    # TODO: Could this be moved upstream since this is done in other parsers
-    # as well?
-    if getattr(event_object, 'recovered', None):
-      event_object.recovered_string = '[Recovered Entry]'
-
-    return super(MsiecfUrlFormatter, self).GetMessages(event_object)
-
-
-manager.FormattersManager.RegisterFormatter(MsiecfUrlFormatter)
+manager.FormattersManager.RegisterFormatters([
+    MsiecfLeakFormatter, MsiecfRedirectedFormatter, MsiecfUrlFormatter])
