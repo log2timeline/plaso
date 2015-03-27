@@ -3,7 +3,6 @@
 
 import abc
 import collections
-import hashlib
 import logging
 import os
 import textwrap
@@ -22,6 +21,7 @@ from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
+from plaso.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.lib import timelib
@@ -29,6 +29,7 @@ from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
 
+# pylint: disable=logging-format-interpolation
 class FileEntryFilter(object):
   """Class that implements the file entry filter interface."""
 
@@ -341,10 +342,10 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     if not self._file_scanner or not file_entry.IsFile():
       return
 
-    file_object = file_entry.GetFileObject()
     scan_state = pysigscan.scan_state()
 
     try:
+      file_object = file_entry.GetFileObject()
       self._file_scanner.scan_file_object(scan_state, file_object)
     finally:
       file_object.close()
@@ -413,16 +414,30 @@ class FileEntryFilterCollection(object):
 
 
 class FileSaver(object):
-  """A simple class that is used to save files."""
+  """Class that is used to save files."""
+
+  _BAD_CHARACTERS = frozenset([
+      u'\x00', u'\x01', u'\x02', u'\x03', u'\x04', u'\x05', u'\x06', u'\x07',
+      u'\x08', u'\x09', u'\x0a', u'\x0b', u'\x0c', u'\x0d', u'\x0e', u'\x0f',
+      u'\x10', u'\x11', u'\x12', u'\x13', u'\x14', u'\x15', u'\x16', u'\x17',
+      u'\x18', u'\x19', u'\x1a', u'\x1b', u'\x1c', u'\x1d', u'\x1e', u'\x1f',
+      os.path.sep, u'!', u'$', u'%', u'&', u'*', u'+', u':', u';', u'<', u'>',
+      u'?', u'@', u'|', u'~', u'\x7f'])
 
   _READ_BUFFER_SIZE = 4096
 
-  md5_dict = {}
-  calc_md5 = False
+  def __init__(self, skip_duplicates=False):
+    """Initializes the file saver object.
 
-  # TODO: combine write and hash in one function.
-  @classmethod
-  def _CalculateHash(cls, file_object):
+    Args:
+      skip_duplicates: boolean value to indicate if duplicate file content
+                       should be skipped. The default is False.
+    """
+    super(FileSaver, self).__init__()
+    self._digest_hashes = {}
+    self._skip_duplicates = skip_duplicates
+
+  def _CalculateHash(self, file_object):
     """Calculates a MD5 hash of the contents of given file object.
 
     Args:
@@ -431,98 +446,102 @@ class FileSaver(object):
     Returns:
       A hexadecimal string of the MD5 hash.
     """
-    md5 = hashlib.md5()
+    hasher_object = hashers_manager.HashersManager.GetHasherObject(u'sha256')
     file_object.seek(0, os.SEEK_SET)
 
-    data = file_object.read(cls._READ_BUFFER_SIZE)
+    data = file_object.read(self._READ_BUFFER_SIZE)
     while data:
-      md5.update(data)
-      data = file_object.read(cls._READ_BUFFER_SIZE)
+      hasher_object.Update(data)
+      data = file_object.read(self._READ_BUFFER_SIZE)
 
-    return md5.hexdigest()
+    return hasher_object.GetStringDigest()
 
-  @classmethod
-  def WriteFile(cls, source_path_spec, destination_path, filename_prefix=''):
+  def WriteFile(self, source_path_spec, destination_path, filename_prefix=u''):
     """Writes the contents of the source to the destination file.
 
     Args:
       source_path_spec: the path specification of the source file.
       destination_path: the path of the destination file.
-      filename_prefix: optional prefix for the filename. The default is an
-                       empty string.
+      filename_prefix: optional filename prefix. The default is an empty string.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
     if not file_entry.IsFile():
       return
 
-    filename = getattr(source_path_spec, u'location', None)
-    if not filename:
-      filename = source_path_spec.file_path
+    file_system = file_entry.GetFileSystem()
+    path = getattr(source_path_spec, u'location', None)
+    path_segments = file_system.SplitPath(path)
 
-    # TODO: this does not hold for Windows fix this.
+    # Sanitize each path segment.
+    for index, path_segment in enumerate(path_segments):
+      path_segments[index] = u''.join([
+          character if character not in self._BAD_CHARACTERS else u'_'
+          for character in path_segment])
 
-    # There will be issues on systems that use a different separator than a
-    # forward slash. However a forward slash is always used in the pathspec.
-    if os.path.sep != u'/':
-      filename = filename.replace(u'/', os.path.sep)
-
-    directory = u''
-    if os.path.sep in filename:
-      directory_string, _, filename = filename.rpartition(os.path.sep)
-      if directory_string:
-        directory = os.path.join(
-            destination_path, *directory_string.split(os.path.sep))
+    target_directory = os.path.join(destination_path, *path_segments[:-1])
 
     if filename_prefix:
-      extracted_filename = u'{0:s}_{1:s}'.format(filename_prefix, filename)
+      target_filename = u'{0:s}_{1:s}'.format(
+          filename_prefix, path_segments[-1])
     else:
-      extracted_filename = filename
+      target_filename = path_segments[-1]
 
-    while extracted_filename.startswith(os.path.sep):
-      extracted_filename = extracted_filename[1:]
+    if not target_directory:
+      target_directory = destination_path
 
-    if directory:
-      if not os.path.isdir(directory):
-        os.makedirs(directory)
-    else:
-      directory = destination_path
+    elif not os.path.isdir(target_directory):
+      os.makedirs(target_directory)
 
-    if cls.calc_md5 and file_entry.IsFile():
+    if self._skip_duplicates and file_entry.IsFile():
+      try:
+        file_object = file_entry.GetFileObject()
+        digest_hash = self._CalculateHash(file_object)
+      except IOError as exception:
+        logging.error((
+            u'[skipping] unable to calculate MD5 of file: {0:s} '
+            u'with error: {1:s}').format(path, exception))
+      finally:
+        file_object.close()
+
       stat = file_entry.GetStat()
       inode = getattr(stat, u'ino', 0)
-      file_object = file_entry.GetFileObject()
-      md5sum = cls._CalculateHash(file_object)
-      if inode in cls.md5_dict:
-        if md5sum in cls.md5_dict[inode]:
+
+      if inode in self._digest_hashes:
+        if digest_hash in self._digest_hashes[inode]:
           return
-        cls.md5_dict[inode].append(md5sum)
+        self._digest_hashes[inode].append(digest_hash)
       else:
-        cls.md5_dict[inode] = [md5sum]
+        self._digest_hashes[inode] = [digest_hash]
 
     try:
       file_object = file_entry.GetFileObject()
       frontend_utils.OutputWriter.WriteFile(
-          file_object, os.path.join(directory, extracted_filename))
+          file_object, os.path.join(target_directory, target_filename))
     except IOError as exception:
       logging.error(
-          u'[skipping] unable to save file: {0:s} with error: {1:s}'.format(
-              filename, exception))
+          u'[skipping] unable to export file: {0:s} with error: {1:s}'.format(
+              path, exception))
+    finally:
+      file_object.close()
 
 
 class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements an image extractor queue consumer."""
 
-  def __init__(self, process_queue, destination_path, filter_collection):
+  def __init__(
+      self, process_queue, file_saver, destination_path, filter_collection):
     """Initializes the image extractor queue consumer.
 
     Args:
       process_queue: the process queue (instance of Queue).
+      file_saver: the file saver object (instance of FileSaver)
       destination_path: the path where the extracted files should be stored.
       filter_collection: the file entry filter collection (instance of
                          FileEntryFilterCollection)
     """
     super(ImageExtractorQueueConsumer, self).__init__(process_queue)
     self._destination_path = destination_path
+    self._file_saver = file_saver
     self._filter_collection = filter_collection
 
   def _ConsumeItem(self, path_spec):
@@ -541,7 +560,7 @@ class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
     else:
       filename_prefix = u''
 
-    FileSaver.WriteFile(
+    self._file_saver.WriteFile(
         path_spec, self._destination_path, filename_prefix=filename_prefix)
 
 
@@ -579,16 +598,16 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     image_collector.Collect()
 
-    FileSaver.calc_md5 = self._remove_duplicates
-
+    file_saver = FileSaver(skip_duplicates=self._remove_duplicates)
     input_queue_consumer = ImageExtractorQueueConsumer(
-        input_queue, destination_path, self._filter_collection)
+        input_queue, file_saver, destination_path, self._filter_collection)
     input_queue_consumer.ConsumeItems()
 
-  def _ExtractFile(self, path_spec, destination_path):
+  def _ExtractFile(self, file_saver, path_spec, destination_path):
     """Extracts a file.
 
     Args:
+      file_saver: the file saver object (instance of FileSaver)
       path_spec: a path specification (instance of dfvfs.PathSpec).
       destination_path: the path where the extracted files should be stored.
     """
@@ -602,7 +621,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     else:
       filename_prefix = u''
 
-    FileSaver.WriteFile(
+    file_saver.WriteFile(
         path_spec, destination_path, filename_prefix=filename_prefix)
 
   # TODO: merge with collector and/or engine.
@@ -633,10 +652,10 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         filter_file_path, pre_obj=self._knowledge_base.pre_obj)
 
     # Save the regular files.
-    FileSaver.calc_md5 = self._remove_duplicates
+    file_saver = FileSaver(skip_duplicates=self._remove_duplicates)
 
     for path_spec in searcher.Find(find_specs=find_specs):
-      self._ExtractFile(path_spec, destination_path)
+      self._ExtractFile(file_saver, path_spec, destination_path)
 
     if self._process_vss and self._vss_stores:
       volume_path_spec = self._source_path_spec.parent
@@ -671,7 +690,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
             file_system, vss_path_spec)
 
         for path_spec in searcher.Find(find_specs=find_specs):
-          self._ExtractFile(path_spec, destination_path)
+          self._ExtractFile(file_saver, path_spec, destination_path)
 
         file_system.Close()
 

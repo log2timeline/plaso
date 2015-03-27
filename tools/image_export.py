@@ -11,6 +11,7 @@ from plaso.frontend import image_export
 from plaso.lib import errors
 
 
+# pylint: disable=logging-format-interpolation
 def Main():
   """The main function, running the show."""
   front_end = image_export.ImageExportFrontend()
@@ -29,8 +30,8 @@ def Main():
 
   arg_parser.add_argument(
       u'-w', u'--write', action=u'store', dest=u'path', type=unicode,
-      metavar=u'PATH', default=u'.', help=(
-          u'The directory in which extracted files should be stored in.'))
+      metavar=u'PATH', default=u'export', help=(
+          u'The directory in which extracted files should be stored.'))
 
   arg_parser.add_argument(
       u'-f', u'--filter', action=u'store', dest=u'filter', type=unicode,
