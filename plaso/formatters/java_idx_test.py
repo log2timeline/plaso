@@ -21,9 +21,9 @@ class JavaIDXFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = java_idx.JavaIDXFormatter()
 
     expected_attribute_names = [
-      u'idx_version',
-      u'ip_address',
-      u'url']
+        u'idx_version',
+        u'ip_address',
+        u'url']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

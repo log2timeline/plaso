@@ -1,21 +1,23 @@
-# Ignore back-up files.
-*~
+# Files to ignore by git
 
-# Ignore compiled Python files.
+# Back-up files
+*~
+*.swp
+
+# Generic auto-generated build files
 *.pyc
 *.pyo
 
-# Don't include build related files.
+# Specific auto-generated build files
+/__pycache__
+/build/
 /dependencies/
 /dist/
-/build/
-
-# And don't care about the 'egg'.
 /plaso.egg-info
 
 # Test files
 .coverage
 tests-coverage.txt
 
-# And don't care about the temporary code review file if it exists.
+# And don't care about the temporary code review file if it exists
 ._code_review_number

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Opera history events."""
+"""The Opera history event formatters."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager

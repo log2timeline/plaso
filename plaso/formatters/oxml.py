@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for OpenXML events."""
+"""The OpenXML event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -9,7 +9,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
-  """Formatter for OXML events."""
+  """Formatter for an OXML event."""
 
   DATA_TYPE = 'metadata:openxml'
 
@@ -23,13 +23,13 @@ class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
       u'Total edit time (secs): {total_edit_time}',
       u'Keywords: {keywords}',
       u'Comments: {comments}',
-      u'Revision Num: {revision_num}',
+      u'Revision number: {revision_number}',
       u'Template: {template}',
-      u'Num pages: {num_pages}',
-      u'Num words: {num_words}',
-      u'Num chars: {num_chars}',
-      u'Num chars with spaces: {num_chars_w_spaces}',
-      u'Num lines: {num_lines}',
+      u'Number of pages: {number_of_pages}',
+      u'Number of words: {number_of_words}',
+      u'Number of characters: {number_of_characters}',
+      u'Number of characters with spaces: {number_of_characters_with_spaces}',
+      u'Number of lines: {number_of_lines}',
       u'Company: {company}',
       u'Manager: {manager}',
       u'Shared: {shared}',
