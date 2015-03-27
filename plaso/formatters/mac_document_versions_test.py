@@ -21,10 +21,10 @@ class MacDocumentVersionsFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mac_document_versions.MacDocumentVersionsFormatter()
 
     expected_attribute_names = [
-      u'name',
-      u'path',
-      u'version_path',
-      u'user_sid']
+        u'name',
+        u'path',
+        u'version_path',
+        u'user_sid']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

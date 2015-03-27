@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the McAfee AV Logs files."""
+"""The McAfee AV Logs file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class McafeeAccessProtectionLogEventFormatter(interface.EventFormatter):
-  """Class that formats the McAfee Access Protection Log events."""
+class McafeeAccessProtectionLogEventFormatter(
+    interface.ConditionalEventFormatter):
+  """Formatter for a McAfee Access Protection Log event."""
 
   DATA_TYPE = 'av:mcafee:accessprotectionlog'
 
-  # The format string.
-  FORMAT_STRING = (u'File Name: {filename} User: {username} {trigger_location} '
-                   u'{status} {rule} {action}')
-  FORMAT_STRING_SHORT = u'{filename} {action}'
+  FORMAT_STRING_PIECES = [
+      u'File Name: {filename}',
+      u'User: {username}',
+      u'{trigger_location}',
+      u'{status}',
+      u'{rule}',
+      u'{action}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{filename}',
+      u'{action}']
 
   SOURCE_LONG = 'McAfee Access Protection Log'
   SOURCE_SHORT = 'LOG'

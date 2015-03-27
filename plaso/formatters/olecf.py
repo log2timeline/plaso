@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatters for OLE Compound File (OLECF) events."""
+"""The OLE Compound File (OLECF) event formatters."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -7,7 +7,7 @@ from plaso.lib import errors
 
 
 class OleCfItemFormatter(interface.EventFormatter):
-  """Formatter for an OLECF item."""
+  """Formatter for an OLECF item event."""
 
   DATA_TYPE = 'olecf:item'
 
@@ -19,7 +19,7 @@ class OleCfItemFormatter(interface.EventFormatter):
 
 
 class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an OLECF DestList stream."""
+  """Formatter for an OLECF DestList stream event."""
 
   DATA_TYPE = 'olecf:dest_list:entry'
 
@@ -68,7 +68,7 @@ class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
 
 
 class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an OLECF Summary Info property set stream."""
+  """Formatter for an OLECF Document Summary Info property set stream event."""
 
   DATA_TYPE = 'olecf:document_summary_info'
 
@@ -100,7 +100,7 @@ class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
 
 
 class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an OLECF Summary Info property set stream."""
+  """Formatter for an OLECF Summary Info property set stream event."""
 
   DATA_TYPE = 'olecf:summary_info'
 
@@ -129,13 +129,46 @@ class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'OLECF Summary Info'
   SOURCE_SHORT = 'OLECF'
 
-  # TODO: add a function to print the security as a descriptive string.
   _SECURITY_VALUES = {
       0x00000001: 'Password protected',
       0x00000002: 'Read-only recommended',
       0x00000004: 'Read-only enforced',
       0x00000008: 'Locked for annotations',
   }
+
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    event_values = event_object.GetValues()
+
+    security = event_values.get(u'security', None)
+    if security:
+      security_flags = []
+      for flag, description in self._SECURITY_VALUES:
+        if security & flag:
+          security_flags.append(description)
+
+      security_string = u'0x{0:08x}: {1:s}'.format(
+          security, u','.join(security_flags))
+
+      event_values[u'security'] = security_string
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatters([

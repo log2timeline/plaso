@@ -21,12 +21,12 @@ class IPodDeviceFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ipod.IPodDeviceFormatter()
 
     expected_attribute_names = [
-      u'device_id',
-      u'device_class',
-      u'family_id',
-      u'use_count',
-      u'serial_number',
-      u'imei']
+        u'device_id',
+        u'device_class',
+        u'family_id',
+        u'use_count',
+        u'serial_number',
+        u'imei']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

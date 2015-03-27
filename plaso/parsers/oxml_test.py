@@ -20,7 +20,7 @@ class OXMLTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['Document.docx'])
+    test_file = self._GetTestFilePath([u'Document.docx'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -36,20 +36,20 @@ class OXMLTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    self.assertEqual(event_object.num_chars, u'13')
+    self.assertEqual(event_object.number_of_characters, u'13')
     self.assertEqual(event_object.total_time, u'1385')
-    self.assertEqual(event_object.characters_with_spaces, u'14')
+    self.assertEqual(event_object.number_of_characters_with_spaces, u'14')
     self.assertEqual(event_object.i4, u'1')
     self.assertEqual(event_object.app_version, u'14.0000')
-    self.assertEqual(event_object.num_lines, u'1')
+    self.assertEqual(event_object.number_of_lines, u'1')
     self.assertEqual(event_object.scale_crop, u'false')
-    self.assertEqual(event_object.num_pages, u'1')
-    self.assertEqual(event_object.num_words, u'2')
+    self.assertEqual(event_object.number_of_pages, u'1')
+    self.assertEqual(event_object.number_of_words, u'2')
     self.assertEqual(event_object.links_up_to_date, u'false')
-    self.assertEqual(event_object.num_paragraphs, u'1')
+    self.assertEqual(event_object.number_of_paragraphs, u'1')
     self.assertEqual(event_object.doc_security, u'0')
     self.assertEqual(event_object.hyperlinks_changed, u'false')
-    self.assertEqual(event_object.revision_num, u'3')
+    self.assertEqual(event_object.revision_number, u'3')
     self.assertEqual(event_object.last_saved_by, u'Nides')
     self.assertEqual(event_object.author, u'Nides')
     self.assertEqual(
@@ -61,12 +61,13 @@ class OXMLTest(test_lib.ParserTestCase):
         u'App version: 14.0000 '
         u'Last saved by: Nides '
         u'Author: Nides '
-        u'Revision Num: 3 '
+        u'Revision number: 3 '
         u'Template: Normal.dotm '
-        u'Num pages: 1 '
-        u'Num words: 2 '
-        u'Num chars: 13 '
-        u'Num lines: 1 '
+        u'Number of pages: 1 '
+        u'Number of words: 2 '
+        u'Number of characters: 13 '
+        u'Number of characters with spaces: 14 '
+        u'Number of lines: 1 '
         u'Hyperlinks changed: false '
         u'Links up to date: false '
         u'Scale crop: false')

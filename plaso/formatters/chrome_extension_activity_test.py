@@ -24,8 +24,14 @@ class ChromeExtensionActivityEventFormatterTest(
         chrome_extension_activity.ChromeExtensionActivityEventFormatter())
 
     expected_attribute_names = [
-      u'extension_id', u'action_type', u'activity_id', u'page_url',
-      u'page_title', u'api_name', u'args', u'other']
+        u'extension_id',
+        u'action_type',
+        u'activity_id',
+        u'page_url',
+        u'page_title',
+        u'api_name',
+        u'args',
+        u'other']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

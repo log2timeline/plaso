@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatters for the MSIE WebCache ESE database events."""
+"""The MSIE WebCache ESE database event formatters."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager

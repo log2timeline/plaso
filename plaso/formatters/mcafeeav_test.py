@@ -1,31 +1,33 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the  Mac OS X ASL securityd log file event formatter."""
+"""Tests for the McAfee AV Logs file event formatter."""
 
 import unittest
 
-from plaso.formatters import mac_securityd
+from plaso.formatters import mcafeeav
 from plaso.formatters import test_lib
 
 
-class MacSecuritydLogFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the ASL securityd log file event formatter."""
+class McafeeAccessProtectionLogEventFormatterTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the McAfee Access Protection Log event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = mac_securityd.MacSecuritydLogFormatter()
+    event_formatter = mcafeeav.McafeeAccessProtectionLogEventFormatter()
     self.assertNotEqual(event_formatter, None)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = mac_securityd.MacSecuritydLogFormatter()
+    event_formatter = mcafeeav.McafeeAccessProtectionLogEventFormatter()
 
     expected_attribute_names = [
-        u'sender',
-        u'sender_pid',
-        u'level',
-        u'facility',
-        u'message']
+        u'filename',
+        u'username',
+        u'trigger_location',
+        u'status',
+        u'rule',
+        u'action']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
