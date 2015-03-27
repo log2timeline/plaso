@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Mac wifi.log file."""
+"""The Mac OS X wifi.log file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class MacWifiLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Mac Wifi file."""
+  """Formatter for a wifi.log file event."""
 
   DATA_TYPE = 'mac:wifilog:line'
 

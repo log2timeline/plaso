@@ -21,12 +21,12 @@ class MacKeeperCacheFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mackeeper_cache.MacKeeperCacheFormatter()
 
     expected_attribute_names = [
-      u'description',
-      u'event_type',
-      u'text',
-      u'url',
-      u'record_id',
-      u'room']
+        u'description',
+        u'event_type',
+        u'text',
+        u'url',
+        u'record_id',
+        u'room']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

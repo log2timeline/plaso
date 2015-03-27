@@ -48,13 +48,13 @@ class OpenXMLParser(interface.SingleFileBaseParser):
       'creator': 'author',
       'lastModifiedBy': 'last_saved_by',
       'Total_Time': 'total_edit_time',
-      'Pages': 'num_pages',
-      'Characters_with_spaces': 'num_chars_w_spaces',
-      'Paragraphs': 'num_paragraphs',
-      'Characters': 'num_chars',
-      'Lines': 'num_lines',
-      'revision': 'revision_num',
-      'Words': 'num_words',
+      'Pages': 'number_of_pages',
+      'CharactersWithSpaces': 'number_of_characters_with_spaces',
+      'Paragraphs': 'number_of_paragraphs',
+      'Characters': 'number_of_characters',
+      'Lines': 'number_of_lines',
+      'revision': 'revision_number',
+      'Words': 'number_of_words',
       'Application': 'creating_app',
       'Shared_Doc': 'shared',
   }
@@ -119,6 +119,7 @@ class OpenXMLParser(interface.SingleFileBaseParser):
         except (
             OverflowError, IndexError, KeyError, ValueError,
             zipfile.BadZipfile) as exception:
+          # pylint: disable=logging-format-interpolation
           logging.warning(
               u'[{0:s}] unable to read property with error: {1:s}.'.format(
                   self.NAME, exception))
