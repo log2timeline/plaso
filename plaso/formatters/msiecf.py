@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Microsoft Internet Explorer (MSIE) Cache Files (CF) events."""
+"""The Microsoft Internet Explorer (MSIE) Cache Files (CF) event formatters."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -7,7 +7,7 @@ from plaso.lib import errors
 
 
 class MsiecfItemFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a MSIECF URL item."""
+  """Formatter for a MSIECF item event."""
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

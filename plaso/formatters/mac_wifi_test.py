@@ -1,31 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the  Mac OS X ASL securityd log file event formatter."""
+"""Tests for the Mac OS X wifi.log file event formatter."""
 
 import unittest
 
-from plaso.formatters import mac_securityd
+from plaso.formatters import mac_wifi
 from plaso.formatters import test_lib
 
 
-class MacSecuritydLogFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the ASL securityd log file event formatter."""
+class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
+  """Tests for the wifi.log file event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = mac_securityd.MacSecuritydLogFormatter()
+    event_formatter = mac_wifi.MacWifiLogFormatter()
     self.assertNotEqual(event_formatter, None)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = mac_securityd.MacSecuritydLogFormatter()
+    event_formatter = mac_wifi.MacWifiLogFormatter()
 
     expected_attribute_names = [
-        u'sender',
-        u'sender_pid',
-        u'level',
-        u'facility',
-        u'message']
+        u'action',
+        u'user',
+        u'function',
+        u'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

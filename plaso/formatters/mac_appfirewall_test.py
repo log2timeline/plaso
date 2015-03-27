@@ -21,11 +21,11 @@ class MacAppFirewallLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mac_appfirewall.MacAppFirewallLogFormatter()
 
     expected_attribute_names = [
-      u'computer_name',
-      u'agent',
-      u'status',
-      u'process_name',
-      u'action']
+        u'computer_name',
+        u'agent',
+        u'status',
+        u'process_name',
+        u'action']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

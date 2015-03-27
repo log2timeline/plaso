@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Basic Security Module binary files."""
+"""The Basic Security Module (BSM) binary files event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
