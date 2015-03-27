@@ -25,10 +25,10 @@ class CLITool(object):
 
     Args:
       input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates to use the stdin
+                    The default is None which indicates the use of the stdin
                     input reader.
       output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates to use the stdout
+                     The default is None which indicates the use of the stdout
                      output writer.
     """
     super(CLITool, self).__init__()
@@ -64,6 +64,17 @@ class CLITool(object):
     argument_group.add_argument(
         u'-v', u'--version', dest=u'version', action=u'version',
         version=version_string, help=u'Show the current version.')
+
+  def ParseOptions(self, unused_options):
+    """Parses tool specific options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    return
 
   def PrintColumnValue(self, name, description, column_width=25):
     """Prints a value with a name and description aligned to the column width.

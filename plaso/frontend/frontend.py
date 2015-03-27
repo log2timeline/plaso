@@ -18,6 +18,7 @@ from plaso.lib import errors
 from plaso.lib import timelib
 
 
+# pylint: disable=logging-format-interpolation
 class FrontendInputReader(object):
   """Class that implements the input reader interface for the engine."""
 
@@ -86,10 +87,10 @@ class Frontend(object):
 
     Args:
       input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates to use the stdin
+                    The default is None which indicates the use of the stdin
                     input reader.
       output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates to use the stdout
+                     The default is None which indicates the use of the stdout
                      output writer.
     """
     super(Frontend, self).__init__()
@@ -172,10 +173,10 @@ class StorageMediaFrontend(Frontend):
 
     Args:
       input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates to use the stdin
+                    The default is None which indicates the use of the stdin
                     input reader.
       output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates to use the stdout
+                     The default is None which indicates the use of the stdout
                      output writer.
     """
     super(StorageMediaFrontend, self).__init__(input_reader, output_writer)
