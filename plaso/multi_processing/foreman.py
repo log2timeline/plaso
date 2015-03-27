@@ -7,16 +7,17 @@ import logging
 from plaso.multi_processing import process_info
 
 
+# pylint: disable=logging-format-interpolation
 class Foreman(object):
   """A foreman class that monitors workers.
 
   The Foreman is responsible for monitoring worker processes
   and give back status information. The status information contains
   among other things:
-    + Number of events extracted from each worker.
-    + Path of the current file the worker is processing.
-    + Indications whether the worker is alive or not.
-    + Memory consumption of the worker.
+  * the number of events extracted by each worker;
+  * the path specification of the current file entry the worker is processing;
+  * an indicator whether the worker is alive or not;
+  * the memory consumption of the worker.
 
   This information is gathered using both RPC calls to the worker
   itself as well as data provided by the psutil library.
@@ -26,7 +27,7 @@ class Foreman(object):
   that are stuck.
   """
 
-  PROCESS_LABEL = collections.namedtuple('process_label', 'label pid process')
+  PROCESS_LABEL = collections.namedtuple(u'process_label', u'label pid process')
 
   def __init__(self, show_memory_usage=False):
     """Initialize the foreman process.
@@ -146,7 +147,7 @@ class Foreman(object):
     index = self._process_labels.index(label)
     del self._process_labels[index]
     logging.info(
-        u'{0:s} [{1:d}] has been removed from foreman monitoring.'.format(
+        u'{0:s} (PID: {1:d}) has been removed from foreman monitoring.'.format(
             label.label, label.pid))
 
   def SignalEndOfProcessing(self):
@@ -235,12 +236,12 @@ class Foreman(object):
 
         else:
           logging.info((
-              u'Process {0:s} [{1:d}] has complete its processing. '
+              u'Process {0:s} (PID: {1:d}) has completed its processing. '
               u'Total of {2:d} events extracted').format(
                   label.label, label.pid, status_dict.get(u'counter', 0)))
 
     else:
-      logging.info(u'Process {0:s} [{1:d}] is not alive.'.format(
+      logging.info(u'Process {0:s} (PID: {1:d}) is not alive.'.format(
           label.label, label.pid))
 
     # Check if this process should be alive.
@@ -254,7 +255,7 @@ class Foreman(object):
     # TODO: Add a function to start a new instance of a worker instead of
     # just removing and killing it.
     logging.error((
-        u'Process {0:s} [{1:d}] is not functioning when it should be. '
+        u'Process {0:s} (PID: {1:d}) is not functioning when it should be. '
         u'Terminating it and removing from list.').format(
             label.label, label.pid))
     self._TerminateProcess(label)
@@ -286,8 +287,8 @@ class Foreman(object):
     if status:
       # TODO: change file to "display name".
       logging.info((
-          u'{0:s} [{1:d}] - events extracted: {2:d} - file: {3:s} - running: '
-          u'{4!s} <{5:s}>').format(
+          u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
+          u'- running: {4!s} <{5:s}>').format(
               label.label, label.pid, status.get(u'counter', -1),
               status.get(u'current_file', u''),
               status.get(u'is_running', False), label.process.status))
@@ -308,12 +309,12 @@ class Foreman(object):
 
     # Double check the process is dead.
     if label.process.IsAlive():
-      logging.warning(u'Process {0:s} [{1:d}] is still alive.'.format(
+      logging.warning(u'Process {0:s} (PID: {1:d}) is still alive.'.format(
           label.label, label.pid))
     elif label.process.status != 'exited':
-      logging.warning(u'Process {0:s} [{1:d}] may still be alive.'.format(
+      logging.warning(u'Process {0:s} (PID: {1:d}) may still be alive.'.format(
           label.label, label.pid))
     else:
-      logging.info(u'Process: {0:s} [{1:d}] has been terminated.'.format(
+      logging.info(u'Process: {0:s} (PID: {1:d}) has been terminated.'.format(
           label.label, label.pid))
       self.StopMonitoringWorker(label=label)
