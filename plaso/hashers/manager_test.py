@@ -26,7 +26,6 @@ class TestHasher(interface.BaseHasher):
     return u'4'
 
 
-
 class HashersManagerTest(unittest.TestCase):
   """Tests for the hashers manager."""
 
@@ -56,6 +55,19 @@ class HashersManagerTest(unittest.TestCase):
     names = manager.HashersManager.GetHasherNamesFromString(test_strings)
     self.assertEqual(2, len(names))
 
+  def testGetHasherObject(self):
+    """Tests the GetHasherObject function."""
+    hasher_object = manager.HashersManager.GetHasherObject(u'md5')
+    self.assertNotEqual(hasher_object, None)
+    self.assertEqual(hasher_object.NAME, u'md5')
+
+    hasher_object = manager.HashersManager.GetHasherObject(u'sha1')
+    self.assertNotEqual(hasher_object, None)
+    self.assertEqual(hasher_object.NAME, u'sha1')
+
+    with self.assertRaises(KeyError):
+      _ = manager.HashersManager.GetHasherObject(u'bogus')
+
   def testGetHasherObjects(self):
     """Tests getting hasher objects by name."""
     hasher_names = manager.HashersManager.GetHasherNames()
@@ -63,6 +75,7 @@ class HashersManagerTest(unittest.TestCase):
     self.assertEqual(len(hasher_names), len(hashers))
     for hasher in hashers:
       self.assertIsInstance(hasher, interface.BaseHasher)
+
 
 if __name__ == '__main__':
   unittest.main()
