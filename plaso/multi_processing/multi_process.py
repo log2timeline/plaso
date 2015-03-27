@@ -8,6 +8,7 @@ import os
 import signal
 import sys
 import threading
+import time
 
 from dfvfs.resolver import context
 
@@ -21,6 +22,7 @@ from plaso.multi_processing import rpc_proxy
 from plaso.parsers import mediator as parsers_mediator
 
 
+# pylint: disable=logging-format-interpolation
 def SigKill(pid):
   """Convenience function to issue a SIGKILL or equivalent.
 
@@ -308,6 +310,79 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._StopProcessing()
 
+  def _CheckWorkerProcess(self, worker_name, worker_process):
+    """Checks the worker process and terminates it if necessary.
+
+    Args:
+      worker_name: the string identifying the worker process.
+      worker_process: the worker process object (instance of
+                      EventExtractionWorkerProcess).
+    """
+    if self._foreman_object:
+      worker_label = self._foreman_object.GetLabel(
+          name=worker_name, pid=worker_process.pid)
+    else:
+      worker_label = None
+
+    # Check the worker process status.
+    if worker_process.is_alive():
+      if self._foreman_object and not worker_label:
+        logging.info((
+            u'Process {0:s} (PID: {1:d}) is not monitored by the foreman. '
+            u'Most likely due to a worker having completed its processing '
+            u'while waiting for another worker to complete.').format(
+                worker_name, worker_process.pid))
+
+        logging.info(
+            u'Waiting for worker {0:s} (PID: {1:d}) to complete.'.format(
+                worker_name, worker_process.pid))
+
+      if worker_label:
+        self._foreman_object.CheckStatus(label=worker_label)
+
+      # The timeout here prevents the main process from blocking on
+      # process it cannot join with.
+      worker_process.join(timeout=5)
+
+    # Check if the worker process is still running.
+    force_termination = False
+    if worker_process.is_alive():
+      if not self._foreman_object or worker_label:
+        return
+      force_termination = True
+
+    # Note that we explicitly must test against exitcode 0 here since
+    # process.exitcode will be None if there is no exitcode.
+    if force_termination or worker_process.exitcode != 0:
+      if worker_process.exitcode:
+        logging.warning((
+            u'Worker process: {0:s} (PID: {1:d}) exited with code: '
+            u'{2:d}.').format(
+                worker_name, worker_process.pid, worker_process.exitcode))
+
+      if worker_label:
+        self._foreman_object.TerminateProcess(label=worker_label)
+
+      logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
+          worker_name, worker_process.pid))
+      worker_process.terminate()
+      time.sleep(0.5)
+
+      if worker_process.is_alive():
+        logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
+            worker_name, worker_process.pid))
+        SigKill(worker_process.pid)
+
+    else:
+      logging.info(u'Worker: {0:s} (PID: {1:d}) has completed.'.format(
+          worker_name, worker_process.pid))
+
+      if worker_label:
+        self._foreman_object.StopMonitoringWorker(label=worker_label)
+
+    # Remove the worker process from the list of active workers.
+    del self._worker_processes[worker_name]
+
   def _StopProcessing(self):
     """Stops the foreman and worker processes."""
     if self._foreman_object:
@@ -324,49 +399,9 @@ class MultiProcessEngine(engine.BaseEngine):
     while self._worker_processes:
       # Note that self._worker_processes is altered in this loop hence we need
       # it to be sorted.
-      for process_name, process_obj in sorted(self._worker_processes.items()):
-        if self._foreman_object:
-          worker_label = self._foreman_object.GetLabel(
-              name=process_name, pid=process_obj.pid)
-        else:
-          worker_label = None
-
-        if not worker_label:
-          if process_obj.is_alive():
-            logging.info((
-                u'Process {0:s} [{1:d}] is not monitored by the foreman. Most '
-                u'likely due to a worker having completed its processing '
-                u'while waiting for another worker to complete.').format(
-                    process_name, process_obj.pid))
-
-            logging.info(
-                u'Waiting for worker {0:s} to complete.'.format(process_name))
-            process_obj.join()
-            logging.info(u'Worker: {0:s} [{1:d}] has completed.'.format(
-                process_name, process_obj.pid))
-
-          del self._worker_processes[process_name]
-          continue
-
-        if process_obj.is_alive():
-          # Check status of worker.
-          self._foreman_object.CheckStatus(label=worker_label)
-          process_obj.join(timeout=5)
-
-        # Note that we explicitly must test against exitcode 0 here since
-        # process.exitcode will be None if there is no exitcode.
-        elif process_obj.exitcode != 0:
-          logging.warning((
-              u'Worker process: {0:s} already exited with code: '
-              u'{1:d}.').format(process_name, process_obj.exitcode))
-          process_obj.terminate()
-          self._foreman_object.TerminateProcess(label=worker_label)
-
-        else:
-          # Process is no longer alive, no need to monitor.
-          self._foreman_object.StopMonitoringWorker(label=worker_label)
-          # Remove it from our list of active workers.
-          del self._worker_processes[process_name]
+      for worker_name, worker_process in sorted(
+          self._worker_processes.items()):
+        self._CheckWorkerProcess(worker_name, worker_process)
 
     if self._foreman_object:
       self._foreman_object = None
