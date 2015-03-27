@@ -17,10 +17,10 @@ class AnalysisFrontend(frontend.Frontend):
 
     Args:
       input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates to use the stdin
+                    The default is None which indicates the use of the stdin
                     input reader.
       output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates to use the stdout
+                     The default is None which indicates the use of the stdout
                      output writer.
     """
     super(AnalysisFrontend, self).__init__(input_reader, output_writer)
@@ -47,11 +47,25 @@ class AnalysisFrontend(frontend.Frontend):
     return formatters_mediator.FormatterMediator(
         data_location=self._data_location)
 
+  # TODO: refactor to pass storage options.
+  def OpenStorage(self, storage_file_path, read_only=True):
+    """Opens the storage.
+
+    Args:
+      storage_file_path: the path of the storage file.
+      read_only: optional boolean value to indicate the storage file should
+                 be opened in read-only mode. The default is True.
+
+    Returns:
+      The storage file object (instance of StorageFile).
+    """
+    return storage.StorageFile(storage_file_path, read_only=read_only)
+
   def OpenStorageFile(self, read_only=True):
     """Opens the storage file.
 
     Args:
-      read_only: Optional boolean value to indicate the storage file should
+      read_only: optional boolean value to indicate the storage file should
                  be opened in read-only mode. The default is True.
 
     Returns:
