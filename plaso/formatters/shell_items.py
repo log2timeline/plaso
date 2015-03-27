@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the shell item events."""
+"""The shell item event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -7,7 +7,7 @@ from plaso.lib import errors
 
 
 class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
-  """Class that formats Windows volume creation events."""
+  """Formatter for a shell item file entry event."""
 
   DATA_TYPE = 'windows:shell_item:file_entry'
 

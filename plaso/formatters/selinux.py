@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a selinux formatter in plaso."""
+"""The selinux event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class SELinuxFormatter(interface.ConditionalEventFormatter):
-  """Formatter for selinux files."""
+  """Formatter for a selinux log file event."""
 
   DATA_TYPE = 'selinux:line'
 

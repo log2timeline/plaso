@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for PL-SQL Developer Recall files."""
+"""Parser for PL/SQL Developer Recall files."""
 
 import os
 
@@ -14,7 +14,7 @@ from plaso.parsers import manager
 
 
 class PlsRecallEvent(event.EventObject):
-  """Convenience class for a PL-SQL Recall file container."""
+  """Convenience class for a PL/SQL Recall file container."""
 
   DATA_TYPE = 'PLSRecall:event'
 
@@ -26,7 +26,7 @@ class PlsRecallEvent(event.EventObject):
       sequence: Sequence indicates the order of execution.
       username: The username that made the query.
       database_name: String containing the database name.
-      query: String containing the PL-SQL query.
+      query: String containing the PL/SQL query.
     """
     super(PlsRecallEvent, self).__init__()
     self.timestamp = timestamp
@@ -37,7 +37,7 @@ class PlsRecallEvent(event.EventObject):
 
 
 class PlsRecallParser(interface.SingleFileBaseParser):
-  """Parse PL-SQL Recall files.
+  """Parse PL/SQL Recall files.
 
   Parser is based on a:
     TRecallRecord = packed record
@@ -55,10 +55,10 @@ class PlsRecallParser(interface.SingleFileBaseParser):
   _INITIAL_FILE_OFFSET = None
 
   NAME = 'pls_recall'
-  DESCRIPTION = u'Parser for PL-SQL Recall files.'
+  DESCRIPTION = u'Parser for PL/SQL Recall files.'
 
   PLS_STRUCT = construct.Struct(
-      'PL-SQL_Recall',
+      'PL/SQL_Recall',
       construct.ULInt32('Sequence'),
       construct.LFloat64('TimeStamp'),
       construct.String('Username', 31, None, '\x00'),
@@ -113,7 +113,7 @@ class PlsRecallParser(interface.SingleFileBaseParser):
     """
     file_object.seek(0, os.SEEK_SET)
 
-    # The file consists of PL-SQL structures that are equal
+    # The file consists of PL/SQL structures that are equal
     # size (4125 bytes) TRecallRecord records. It should be
     # noted that the query value is free form.
     try:

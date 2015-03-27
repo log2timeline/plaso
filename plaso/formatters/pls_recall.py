@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Formatter for PL-Sql Recall events."""
+"""The PL/SQL Recall event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class PlsRecallFormatter(interface.EventFormatter):
-  """Formatter for a for a PL-Sql Recall file container."""
+  """Formatter for a PL/SQL Recall file container event."""
   DATA_TYPE = 'PLSRecall:event'
-  SOURCE_LONG = 'PL-Sql Developer Recall file'
+  SOURCE_LONG = 'PL/SQL Developer Recall file'
   SOURCE_SHORT = 'PLSRecall'
 
   # The format string.

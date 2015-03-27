@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a skydrivelog formatter in plaso."""
+"""The SkyDrive log event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class SkyDriveLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for SkyDrive log files events."""
+  """Formatter for a SkyDrive log file event."""
 
   DATA_TYPE = 'skydrive:log:line'
 
