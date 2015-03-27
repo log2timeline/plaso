@@ -27,6 +27,7 @@ from plaso.parsers import manager as parsers_manager
 import pytz
 
 
+# pylint: disable=logging-format-interpolation
 class ExtractionFrontend(frontend.StorageMediaFrontend):
   """Class that implements an extraction front-end."""
 
@@ -45,10 +46,10 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
 
     Args:
       input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates to use the stdin
+                    The default is None which indicates the use of the stdin
                     input reader.
       output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates to use the stdout
+                     The default is None which indicates the use of the stdout
                      output writer.
     """
     super(ExtractionFrontend, self).__init__(input_reader, output_writer)
