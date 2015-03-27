@@ -65,6 +65,27 @@ class HashersManager(object):
     return cls._hasher_classes.keys()
 
   @classmethod
+  def GetHasherObject(cls, hasher_name):
+    """Retrieves an instance of a specific hasher.
+
+    Args:
+      hasher_name: The name of the hasher to retrieve.
+
+    Returns:
+      A hasher object (instance of BaseHasher).
+
+    Raises:
+      KeyError: if hasher class is not set for the corresponding name.
+    """
+    hasher_name = hasher_name.lower()
+    if hasher_name not in cls._hasher_classes:
+      raise KeyError(
+          u'hasher class not set for name: {0:s}.'.format(hasher_name))
+
+    hasher_class = cls._hasher_classes[hasher_name]
+    return hasher_class()
+
+  @classmethod
   def GetHasherObjects(cls, hasher_names):
     """Retrieves instances for all the specified hashers.
 
