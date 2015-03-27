@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Popularity Contest parser events."""
+"""The Popularity Contest event formatters."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class PopularityContestSessionFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Popularity Contest Session information."""
+  """Formatter for a Popularity Contest Session information event."""
 
   DATA_TYPE = 'popularity_contest:session:event'
 
@@ -25,7 +25,7 @@ class PopularityContestSessionFormatter(interface.ConditionalEventFormatter):
 
 
 class PopularityContestLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Popularity Contest Log events."""
+  """Formatter for a Popularity Contest Log event."""
 
   DATA_TYPE = 'popularity_contest:log:event'
 

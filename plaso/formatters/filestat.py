@@ -57,7 +57,7 @@ class FileStatFormatter(interface.ConditionalEventFormatter):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
     fs_type = getattr(event_object, u'fs_type', u'Unknown FS')
