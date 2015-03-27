@@ -61,6 +61,7 @@ class EventFormatter(object):
       The formatted message string.
     """
     # TODO: this does not work in Python 3.
+    # pylint: disable=logging-format-interpolation
     if not isinstance(format_string, unicode):
       logging.warning(u'Format string: {0:s} is non-Unicode.'.format(
           format_string))
@@ -162,7 +163,7 @@ class EventFormatter(object):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
     return self.SOURCE_SHORT, self.SOURCE_LONG
@@ -258,6 +259,7 @@ class ConditionalEventFormatter(EventFormatter):
           # If an attribute is an int, yet has zero value we want to include
           # that in the format string, since that is still potentially valid
           # information. Otherwise we would like to skip it.
+          # pylint: disable=unidiomatic-typecheck
           if type(attribute) not in (bool, int, long, float) and not attribute:
             continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
@@ -284,7 +286,7 @@ class ConditionalEventFormatter(EventFormatter):
       self._format_string_attribute_names = []
       for format_string_piece in self.FORMAT_STRING_PIECES:
         attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
-              format_string_piece)
+            format_string_piece)
 
         if attribute_names:
           self._format_string_attribute_names.extend(attribute_names)

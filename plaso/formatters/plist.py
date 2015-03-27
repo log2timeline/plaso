@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for Plist Events."""
+"""The plist event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class PlistFormatter(interface.ConditionalEventFormatter):
-  """Event Formatter for plist keys."""
+  """Formatter for a plist key event."""
 
   DATA_TYPE = 'plist:key'
 

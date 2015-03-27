@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Safari Binary cookie."""
+"""The Safari Binary cookie event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class SafaryCookieFormatter(interface.ConditionalEventFormatter):
-  """The event formatter for cookie data in Safari Binary Cookie file."""
+  """Formatter for a Safari Binary Cookie file entry event."""
 
   DATA_TYPE = 'safari:cookie:entry'
 

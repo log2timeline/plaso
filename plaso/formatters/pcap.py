@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for PCAP files."""
+"""The PCAP event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -9,7 +9,7 @@ __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
 
 
 class PCAPFormatter(interface.ConditionalEventFormatter):
-  """Define the formatting PCAP record."""
+  """Formatter for a PCAP event."""
 
   DATA_TYPE = 'metadata:pcap'
 
