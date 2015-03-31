@@ -37,13 +37,22 @@ linter()
 
   PYLINT_VERSION=`pylint --version 2> /dev/null | grep 'pylint' | sed 's/^pylint \(.*\),/\1/'`;
 
+  # Check if pylint version is < 1.1.0
   RESULT=`echo -e "${PYLINT_VERSION}\n1.1.0" | sort -V | head -n1`;
 
   if test "${RESULT}" = "${PYLINT_VERSION}";
   then
     PYLINTRC="utils/pylintrc";
   else
-    PYLINTRC="utils/pylintrc-1.1.0";
+    # Check if pylint version is < 1.4.0
+    RESULT=`echo -e "${PYLINT_VERSION}\n1.4.0" | sort -V | head -n1`;
+
+    if test "${RESULT}" = "${PYLINT_VERSION}";
+    then
+      PYLINTRC="utils/pylintrc-1.1.0";
+    else
+      PYLINTRC="utils/pylintrc-1.4.0";
+    fi
   fi
   LINTER="pylint --rcfile=${PYLINTRC}";
 

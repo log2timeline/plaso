@@ -860,13 +860,13 @@ class StorageFile(object):
   def GetNumberOfEvents(self):
     """Retrieves the number of event objects in a storage file."""
     total_events = 0
-    if hasattr(self, 'GetStorageInformation'):
+    if hasattr(self, u'GetStorageInformation'):
       for store_info in self.GetStorageInformation():
-        if hasattr(store_info, 'stores'):
+        if hasattr(store_info, u'stores'):
           stores = store_info.stores.values()
           for store_file in stores:
-            if type(store_file) is dict and 'count' in store_file:
-              total_events += store_file['count']
+            if isinstance(store_file, dict) and u'count' in store_file:
+              total_events += store_file[u'count']
 
     return total_events
 
@@ -1539,7 +1539,7 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
     # TODO: Re-enable this when storage library has been split up.
-    # pylint: disable-msg=pointless-string-statement
+    # pylint: disable=pointless-string-statement
     """
     output_class = output_manager.OutputManager.GetOutputClass(
         self._output_module_string)
