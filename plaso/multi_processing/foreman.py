@@ -7,7 +7,6 @@ import logging
 from plaso.multi_processing import process_info
 
 
-# pylint: disable=logging-format-interpolation
 class Foreman(object):
   """A foreman class that monitors workers.
 

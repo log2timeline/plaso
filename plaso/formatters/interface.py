@@ -61,7 +61,6 @@ class EventFormatter(object):
       The formatted message string.
     """
     # TODO: this does not work in Python 3.
-    # pylint: disable=logging-format-interpolation
     if not isinstance(format_string, unicode):
       logging.warning(u'Format string: {0:s} is non-Unicode.'.format(
           format_string))

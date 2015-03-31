@@ -25,7 +25,6 @@ elastic_logger = logging.getLogger(u'elasticsearch')
 elastic_logger.propagate = False
 
 
-# pylint: disable=logging-format-interpolation
 class TimesketchOutput(interface.LogOutputFormatter):
   """Output module for Timesketch."""
 
