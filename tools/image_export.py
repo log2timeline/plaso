@@ -11,7 +11,6 @@ from plaso.frontend import image_export
 from plaso.lib import errors
 
 
-# pylint: disable=logging-format-interpolation
 def Main():
   """The main function, running the show."""
   front_end = image_export.ImageExportFrontend()

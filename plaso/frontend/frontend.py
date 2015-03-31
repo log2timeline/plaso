@@ -18,7 +18,6 @@ from plaso.lib import errors
 from plaso.lib import timelib
 
 
-# pylint: disable=logging-format-interpolation
 class FrontendInputReader(object):
   """Class that implements the input reader interface for the engine."""
 

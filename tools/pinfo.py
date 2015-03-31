@@ -16,7 +16,6 @@ from plaso.lib import errors
 from plaso.lib import timelib
 
 
-# pylint: disable=logging-format-interpolation
 class PinfoTool(analysis_tool.AnalysisTool):
   """Class that implements the pinfo CLI tool."""
 

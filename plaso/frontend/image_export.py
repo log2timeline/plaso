@@ -29,7 +29,6 @@ from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
 
-# pylint: disable=logging-format-interpolation
 class FileEntryFilter(object):
   """Class that implements the file entry filter interface."""
 
