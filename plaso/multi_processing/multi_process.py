@@ -22,7 +22,6 @@ from plaso.multi_processing import rpc_proxy
 from plaso.parsers import mediator as parsers_mediator
 
 
-# pylint: disable=logging-format-interpolation
 def SigKill(pid):
   """Convenience function to issue a SIGKILL or equivalent.
 

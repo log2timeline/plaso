@@ -119,7 +119,6 @@ class OpenXMLParser(interface.SingleFileBaseParser):
         except (
             OverflowError, IndexError, KeyError, ValueError,
             zipfile.BadZipfile) as exception:
-          # pylint: disable=logging-format-interpolation
           logging.warning(
               u'[{0:s}] unable to read property with error: {1:s}.'.format(
                   self.NAME, exception))
