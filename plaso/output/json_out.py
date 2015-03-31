@@ -2,6 +2,7 @@
 """An output module that saves data into a simple JSON format."""
 
 import sys
+import json
 
 from plaso.output import interface
 from plaso.output import manager
@@ -47,11 +48,30 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
     Args:
       event_object: the event object (instance of EventObject).
     """
+    json_string = json_serializer.JsonEventObjectSerializer.WriteSerialized(
+        event_object)
+
+    # unflatten dictionary, for more compact and usable JSON output
+    json_dict = json.loads(json_string)
+    if 'pathspec' in json_dict and isinstance(json_dict['pathspec'],
+                                              basestring):
+      # convert JSON string to a dictionary
+      pathspec_dict = json.loads(json_dict['pathspec'])
+      # get a reference to the dictionary
+      cursor = pathspec_dict
+      # iterate through the inner flattened dictionaries
+      while 'parent' in cursor and isinstance(cursor['parent'], basestring):
+        # convert JSON string to a dict
+        cursor['parent'] = json.loads(cursor['parent'])
+        # update the reference to point to the inner dictionary
+        cursor = cursor['parent']
+      # set pathspec member to be the new dictionary
+      json_dict['pathspec'] = pathspec_dict
+
     self.filehandle.WriteLine(
         u'"event_{0:d}": {1:s},\n'.format(
             self._event_counter,
-            json_serializer.JsonEventObjectSerializer.WriteSerialized(
-                event_object)))
+            json.dumps(json_dict)))
 
     self._event_counter += 1
 

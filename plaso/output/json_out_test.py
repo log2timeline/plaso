@@ -92,10 +92,10 @@ class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
         b'/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
         b'"timestamp": {1:d}, "hostname": "ubuntu", "text": '
         b'"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
-        b'closed for user root)", "pathspec": "{{\\"type_indicator\\": '
-        b'\\"TSK\\", \\"inode\\": 15, \\"location\\": \\"/var/log/syslog.1\\", '
-        b'\\"parent\\": \\"{{\\\\\\"type_indicator\\\\\\": \\\\\\"OS\\\\\\", '
-        b'\\\\\\"location\\\\\\": \\\\\\"{2:s}\\\\\\"}}\\"}}", '
+        b'closed for user root)", "pathspec": {{"inode": 15, '
+        b'"type_indicator": "TSK", "location": "/var/log/syslog.1", '
+        b'"parent": {{"type_indicator": "OS", '
+        b'"location": "{2:s}"}}}}, '
         b'"inode": 12345678}},\n').format(
             expected_uuid, expected_timestamp, expected_os_location)
 
