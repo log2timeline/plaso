@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Defines the output formatter for the SQLite database used by 4n6time."""
+"""Defines the output module for the SQLite database used by 4n6time."""
 
 # TODO: Add a unit test for this output module.
 
@@ -23,7 +23,7 @@ from plaso.output import manager
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
+class SQLite4n6OutputFormatter(interface.OutputModule):
   """Saves the data in a SQLite database, used by the tool 4n6Time."""
 
   NAME = u'sql4n6'
@@ -37,12 +37,12 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
   def __init__(
       self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
-    """Initializes the log output formatter object.
+    """Initializes the output module object.
 
     Args:
       store: A storage file object (instance of StorageFile) that defines
              the storage.
-      formatter_mediator: the formatter mediator object (instance of
+      formatter_mediator: The formatter mediator object (instance of
                           FormatterMediator).
       filehandle: Optional file-like object that can be written to.
                   The default is sys.stdout.
@@ -134,14 +134,14 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
 
   def Open(self):
     """Connects to the database and creates the required tables."""
-    if self.filehandle == sys.stdout:
+    if self._file_object == sys.stdout:
       raise IOError(
           u'Unable to connect to stdout as database, please specify a file.')
 
-    if (not self.append) and os.path.isfile(self.filehandle):
+    if (not self.append) and os.path.isfile(self._file_object):
       raise IOError((
           u'Unable to use an already existing file for output '
-          u'[{0:s}]').format(self.filehandle))
+          u'[{0:s}]').format(self._file_object))
 
     self.conn = sqlite3.connect(self.dbname)
     self.conn.text_factory = str
@@ -191,11 +191,6 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
-
     Args:
       event_object: the event object (instance of EventObject).
 
@@ -230,7 +225,7 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
     source_short, source_long = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self.zone)
+        event_object.timestamp, self._timezone)
     if not date_use:
       logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
@@ -259,7 +254,7 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
       if hasattr(event_object.tag, 'tags'):
         tags = event_object.tag.tags
     taglist = ','.join(tags)
-    row = (str(self.zone),
+    row = (str(self._timezone),
            helper.GetLegacy(event_object),
            source_short,
            source_long,

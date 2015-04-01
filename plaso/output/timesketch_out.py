@@ -25,7 +25,7 @@ elastic_logger = logging.getLogger(u'elasticsearch')
 elastic_logger.propagate = False
 
 
-class TimesketchOutput(interface.LogOutputFormatter):
+class TimesketchOutput(interface.OutputModule):
   """Output module for Timesketch."""
 
   NAME = u'timesketch'
@@ -69,7 +69,7 @@ class TimesketchOutput(interface.LogOutputFormatter):
   def __init__(
       self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
-    """Initializes the log output formatter object.
+    """Initializes the output module object.
 
     Args:
       store: A storage file object (instance of StorageFile).
@@ -150,7 +150,7 @@ class TimesketchOutput(interface.LogOutputFormatter):
     # conversion).
     event_values[u'datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
-        timezone=self.zone)
+        timezone=self._timezone)
 
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         self._formatter_mediator, event_object)
@@ -199,11 +199,6 @@ class TimesketchOutput(interface.LogOutputFormatter):
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
-
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
 
     Args:
       event_object: the event object (instance of EventObject).

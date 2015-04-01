@@ -1,33 +1,21 @@
 # -*- coding: utf-8 -*-
-"""This file contains the interface for output parsing of plaso.
-
-The default output or storage mechanism of Plaso is not in a human
-readable format. There needs to be a way to define the output in such
-a way.
-
-After the timeline is collected and stored another tool can read, filter,
-sort and process the output inside the storage, and send each processed
-entry to an output formatter that takes care of parsing the output into
-a human readable format for easy human consumption/analysis.
-"""
+"""This file contains the interface for output modules."""
 
 import abc
 import logging
 import sys
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import utils
 
 import pytz
 
 
-class LogOutputFormatter(object):
-  """A base class for formatting output produced by plaso.
+class OutputModule(object):
+  """Class that implements the output module object interface."""
 
-  This class exists mostly for documentation purposes. Subclasses should
-  override the relevant methods to act on the callbacks.
-  """
-
+  # TODO: refactor this to the cli classes (aka storage helper).
   # Optional arguments to be added to the argument parser.
   # An example would be:
   #   ARGUMENTS = [('--myparameter', {
@@ -47,12 +35,12 @@ class LogOutputFormatter(object):
   def __init__(
       self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
-    """Initializes the log output formatter object.
+    """Initializes the output module object.
 
     Args:
       store: A storage file object (instance of StorageFile) that defines
              the storage.
-      formatter_mediator: the formatter mediator object (instance of
+      formatter_mediator: The formatter mediator object (instance of
                           FormatterMediator).
       filehandle: Optional file-like object that can be written to.
                   The default is sys.stdout.
@@ -61,22 +49,37 @@ class LogOutputFormatter(object):
       filter_use: Optional filter object (instance of FilterObject).
                   The default is None.
     """
-    super(LogOutputFormatter, self).__init__()
+    super(OutputModule, self).__init__()
     self._config = config
     self._filter = filter_use
+    self._file_object = filehandle
     self._formatter_mediator = formatter_mediator
 
-    zone = getattr(config, 'timezone', 'UTC')
+    timezone = getattr(config, u'timezone', u'UTC')
     try:
-      self.zone = pytz.timezone(zone)
+      self._timezone = pytz.timezone(timezone)
     except pytz.UnknownTimeZoneError:
       logging.warning(u'Unkown timezone: {0:s} defaulting to: UTC'.format(
-          zone))
-      self.zone = pytz.utc
+          timezone))
+      self._timezone = pytz.utc
 
-    self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
-    self.filehandle = filehandle
+    self.encoding = getattr(config, u'preferred_encoding', u'utf-8')
     self.store = store
+
+  def _GetEventFormatter(self, event_object):
+    """Retrieves the event formatter for a specific event object type.
+
+    Args:
+      event_object: the event object (instance of EventObject)
+
+    Returns:
+      The event formatter object (instance of EventFormatter) or None.
+    """
+    data_type = getattr(event_object, u'data_type', None)
+    if not data_type:
+      return
+
+    return formatters_manager.FormattersManager.GetFormatterObject(data_type)
 
   def Close(self):
     """Closes the output."""
@@ -88,11 +91,6 @@ class LogOutputFormatter(object):
 
   def WriteEvent(self, event_object):
     """Writes the event object to the output.
-
-    This method takes care of actually outputting each event in
-    question. It does so by first prepending it with potential
-    start of event, then processes the main body before appending
-    a potential end of event.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -112,11 +110,6 @@ class LogOutputFormatter(object):
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
-
     Args:
       event_object: the event object (instance of EventObject).
     """
@@ -124,32 +117,32 @@ class LogOutputFormatter(object):
   def WriteEventEnd(self):
     """Writes the end of an event object to the output.
 
-    This method does all the post-processing or output after
-    an individual event has been written, such as closing XML tags, etc.
+    Can be used for post-processing or output after an individual event object
+    has been written, such as writing closing XML tags, etc.
     """
     pass
 
   def WriteEventStart(self):
     """Writes the start of an event object to the output.
 
-    This method does all preprocessing or output before an individual event
-    is written, for instance to surround XML events with tags, etc.
+    Can be used for pre-processing or output before an individual event object
+    has been written, such as writing opening XML tags, etc.
     """
     pass
 
   def WriteFooter(self):
     """Writes the footer to the output.
 
-    This method does all post-processing or output after the last event
-    is written, for instance to write a file footer.
+    Can be used for post-processing or output after the last event object
+    is written, such as writing a file footer.
     """
     pass
 
   def WriteHeader(self):
     """Writes the header to the output.
 
-    This method does all preprocessing or output before the first event
-    is written, for instance to write a file header.
+    Can be used for pre-processing or output before the first event object
+    is written, such as writing a file header.
     """
     pass
 
@@ -158,18 +151,18 @@ class LogOutputFormatter(object):
 # abstract method WriteEventBody, classes that inherit from one of these
 # classes need to implement that function.
 # pylint: disable=abstract-method
-class FileLogOutputFormatter(LogOutputFormatter):
-  """A simple file based output formatter."""
+class FileOutputModule(OutputModule):
+  """A file-based output module."""
 
   def __init__(
       self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
-    """Initializes the log output formatter object.
+    """Initializes the output module object.
 
     Args:
       store: A storage file object (instance of StorageFile) that defines
              the storage.
-      formatter_mediator: the formatter mediator object (instance of
+      formatter_mediator: The formatter mediator object (instance of
                           FormatterMediator).
       filehandle: Optional file-like object that can be written to.
                   The default is sys.stdout.
@@ -181,7 +174,7 @@ class FileLogOutputFormatter(LogOutputFormatter):
     Raises:
       ValueError: if the filehandle value is not supported.
     """
-    super(FileLogOutputFormatter, self).__init__(
+    super(FileOutputModule, self).__init__(
         store, formatter_mediator, config=config, filter_use=filter_use)
 
     if isinstance(filehandle, basestring):
@@ -194,12 +187,20 @@ class FileLogOutputFormatter(LogOutputFormatter):
     else:
       raise ValueError(u'Unsupported file handle.')
 
-    self.filehandle = OutputFilehandle(self.encoding)
-    self.filehandle.Open(open_file_object)
+    self._file_object = OutputFilehandle(self.encoding)
+    self._file_object.Open(open_file_object)
+
+  def _WriteLine(self, line):
+    """Write a single line to the supplied file-like object.
+
+    Args:
+      line: the line of text to write.
+    """
+    self._file_object.WriteLine(line)
 
   def Close(self):
     """Closes the output."""
-    self.filehandle.Close()
+    self._file_object.Close()
 
 
 class EventBuffer(object):
@@ -302,6 +303,7 @@ class EventBuffer(object):
     return self
 
 
+# TODO: replace by output writer.
 class OutputFilehandle(object):
   """A simple wrapper for filehandles to make character encoding easier.
 
@@ -347,7 +349,11 @@ class OutputFilehandle(object):
       self._standard_out = True
 
   def WriteLine(self, line):
-    """Write a single line to the supplied filehandle."""
+    """Write a single line to the supplied filehandle.
+
+    Args:
+      line: the line of text to write.
+    """
     if not self._file_object:
       return
 

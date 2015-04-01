@@ -42,7 +42,7 @@ class L2tTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
+class L2tCsvTest(test_lib.OutputModuleTestCase):
   """Contains tests to validate the L2tCSV outputter."""
 
   def setUp(self):
