@@ -18,10 +18,11 @@ try:
 except ImportError:
   from distutils.core import find_packages, setup, Command
 
-# Change PYTHONPATH to include plaso so that we can get the version.
+# Change PYTHONPATH to include plaso.
 sys.path.insert(0, u'.')
 
 import plaso
+import plaso.dependencies
 
 
 version_tuple = (sys.version_info[0], sys.version_info[1])
@@ -107,7 +108,5 @@ setup(
         ('share/plaso', glob.glob(os.path.join('data', '*'))),
         ('share/doc/plaso', glob.glob(os.path.join('doc', '*'))),
     ],
-    install_requires=[
-        'dfvfs >= 20150224',
-    ],
+    install_requires=plaso.dependencies.GetInstallRequires(),
 )
