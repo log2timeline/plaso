@@ -2,65 +2,64 @@
 """This file contains a class to get process information."""
 
 import collections
-import os
-import SocketServer
 
 import psutil
 
 from plaso.lib import timelib
-from plaso.multi_processing import rpc_proxy
 
 
 class ProcessInfo(object):
   """Class that provides information about a running process."""
 
   _MEMORY_INFORMATION = collections.namedtuple(
-      'memory_information', 'rss vms shared text lib data dirty percent')
+      u'memory_information', u'rss vms shared text lib data dirty percent')
 
-  def __init__(self, pid=None):
+  STATUS_DEAD = getattr(psutil, u'STATUS_DEAD', u'dead')
+  STATUS_EXITED = u'exited'
+  STATUS_SLEEPING = getattr(psutil, u'STATUS_SLEEPING', u'sleeping')
+  STATUS_DISK_SLEEP = getattr(psutil, u'STATUS_DISK_SLEEP', u'disk-sleep')
+  STATUS_STOPPED = getattr(psutil, u'STATUS_STOPPED', u'stopped')
+  STATUS_IDLE = getattr(psutil, u'STATUS_IDLE', u'idle')
+  STATUS_TRACING_STOP = getattr(psutil, u'STATUS_TRACING_STOP', u'tracing-stop')
+  STATUS_LOCKED = getattr(psutil, u'STATUS_LOCKED', u'locked')
+  STATUS_WAKING = getattr(psutil, u'STATUS_WAKING', u'waking')
+  STATUS_RUNNING = getattr(psutil, u'STATUS_RUNNING', u'running')
+  STATUS_ZOMBIE = getattr(psutil, u'STATUS_ZOMBIE', u'zombie')
+
+  def __init__(self, pid):
     """Initialize the process information object.
 
     Args:
-      pid: Process ID (PID) value of the process to monitor. The default value
-           is None in which case the PID of the calling
-           process will be used.
+      pid: The process ID (PID).
 
     Raises:
-      IOError: If the pid does not exist.
+      IOError: If the process identified by the PID does not exist.
     """
-    if pid is None:
-      self._pid = os.getpid()
-    else:
-      self._pid = pid
+    if not psutil.pid_exists(pid):
+      raise IOError(u'Process with PID: {0:d} does not exist'.format(pid))
 
-    if not psutil.pid_exists(self._pid):
-      raise IOError(u'Unable to read data from pid: {0:d}'.format(self._pid))
-
-    self._command_line = ''
+    self._command_line = u''
     self._parent = None
-    self._process = psutil.Process(self._pid)
-    if getattr(psutil, 'version_info', (0, 0, 0)) < (2, 0, 0):
+    self._pid = pid
+    self._process = psutil.Process(pid)
+    if getattr(psutil, u'version_info', (0, 0, 0)) < (2, 0, 0):
       self._psutil_pre_v2 = True
     else:
       self._psutil_pre_v2 = False
 
-    # TODO: Allow the client proxy object to determined at run time and not
-    # a fixed value as here.
-    self._rpc_client = rpc_proxy.StandardRpcProxyClient(self._pid)
-    self._rpc_client.Open()
-
   @property
-  def pid(self):
-    """Return the process ID (PID)."""
-    return self._pid
-
-  @property
-  def name(self):
-    """Return the name of the process."""
-    if self._psutil_pre_v2:
-      return self._process.name
-
-    return self._process.name()
+  def children(self):
+    """Yield all child processes as a ProcessInfo object."""
+    try:
+      for child in self._process.get_children():
+        yield ProcessInfo(pid=child.pid)
+    except psutil.NoSuchProcess:
+      # We are creating an empty generator here. Yield or return None
+      # individually don't provide that behavior, neither does raising
+      # GeneratorExit or StopIteration.
+      # pylint: disable=unreachable
+      return
+      yield
 
   @property
   def command_line(self):
@@ -81,53 +80,28 @@ class ProcessInfo(object):
     return self._command_line
 
   @property
-  def parent(self):
-    """Return a ProcessInfo object for the parent process."""
-    if self._parent is not None:
-      return self._parent
-
+  def cpu_percent(self):
+    """Return back the percent of CPU processing this process consumes."""
     try:
-      if self._psutil_pre_v2:
-        parent_pid = self._process.parent.pid
-      else:
-        parent = self._process.parent()   # pylint: disable-msg=not-callable
-        parent_pid = parent.pid
-
-      self._parent = ProcessInfo(pid=parent_pid)
-      return self._parent
+      return self._process.get_cpu_percent()
     except psutil.NoSuchProcess:
       return
 
   @property
-  def open_files(self):
-    """Yield a list of open files the process has."""
+  def cpu_times(self):
+    """Return back CPU times for the process."""
     try:
-      for open_file in self._process.get_open_files():
-        yield open_file.path
-    except (psutil.AccessDenied, psutil.NoSuchProcess):
+      return self._process.get_cpu_times()
+    except psutil.NoSuchProcess:
       return
 
   @property
-  def children(self):
-    """Yield all child processes as a ProcessInfo object."""
+  def io_counters(self):
+    """Return back IO Counters for the process."""
     try:
-      for child in self._process.get_children():
-        yield ProcessInfo(pid=child.pid)
+      return self._process.get_io_counters()
     except psutil.NoSuchProcess:
-      # We are creating an empty generator here. Yield or return None
-      # individually don't provide that behavior, neither does raising
-      # GeneratorExit or StopIteration.
-      # pylint: disable=unreachable
       return
-      yield
-
-  @property
-  def number_of_threads(self):
-    """Return back the number of threads this process has."""
-    try:
-      return self._process.get_num_threads()
-    except psutil.NoSuchProcess:
-      return 0
 
   @property
   def memory_map(self):
@@ -144,15 +118,52 @@ class ProcessInfo(object):
       yield
 
   @property
-  def status(self):
-    """Return the process status."""
+  def name(self):
+    """Return the name of the process."""
+    if self._psutil_pre_v2:
+      return self._process.name
+
+    return self._process.name()
+
+  @property
+  def number_of_threads(self):
+    """Return back the number of threads this process has."""
+    try:
+      return self._process.get_num_threads()
+    except psutil.NoSuchProcess:
+      return 0
+
+  @property
+  def open_files(self):
+    """Yield a list of open files the process has."""
+    try:
+      for open_file in self._process.get_open_files():
+        yield open_file.path
+    except (psutil.AccessDenied, psutil.NoSuchProcess):
+      return
+
+  @property
+  def parent(self):
+    """Return a ProcessInfo object for the parent process."""
+    if self._parent is not None:
+      return self._parent
+
     try:
       if self._psutil_pre_v2:
-        return self._process.status
+        parent_pid = self._process.parent.pid
       else:
-        return self._process.status()
+        parent = self._process.parent()   # pylint: disable=not-callable
+        parent_pid = parent.pid
+
+      self._parent = ProcessInfo(pid=parent_pid)
+      return self._parent
     except psutil.NoSuchProcess:
-      return u'exited'
+      return
+
+  @property
+  def pid(self):
+    """Return the process ID (PID)."""
+    return self._pid
 
   @property
   def start_time(self):
@@ -169,28 +180,15 @@ class ProcessInfo(object):
     return timelib.Timestamp.FromPosixTime(int(create_time))
 
   @property
-  def io_counters(self):
-    """Return back IO Counters for the process."""
+  def status(self):
+    """Return the process status."""
     try:
-      return self._process.get_io_counters()
+      if self._psutil_pre_v2:
+        return self._process.status
+      else:
+        return self._process.status()  # pylint: disable=not-callable
     except psutil.NoSuchProcess:
-      return
-
-  @property
-  def cpu_times(self):
-    """Return back CPU times for the process."""
-    try:
-      return self._process.get_cpu_times()
-    except psutil.NoSuchProcess:
-      return
-
-  @property
-  def cpu_percent(self):
-    """Return back the percent of CPU processing this process consumes."""
-    try:
-      return self._process.get_cpu_percent()
-    except psutil.NoSuchProcess:
-      return
+      return self.STATUS_EXITED
 
   def GetMemoryInformation(self):
     """Return back memory information as a memory_information object.
@@ -213,24 +211,13 @@ class ProcessInfo(object):
     # flexible so that the memory information returned reflects the available
     # information in the platform.
     return self._MEMORY_INFORMATION(
-        getattr(external_information, 'rss', 0),
-        getattr(external_information, 'vms', 0),
-        getattr(external_information, 'shared', 0),
-        getattr(external_information, 'text', 0),
-        getattr(external_information, 'lib', 0),
-        getattr(external_information, 'data', 0),
-        getattr(external_information, 'dirty', 0), percent)
-
-  def GetProcessStatus(self):
-    """Attempt to connect to process via RPC to gather status information."""
-    if self._rpc_client is None:
-      return
-    try:
-      status = self._rpc_client.GetData('status')
-      if isinstance(status, dict):
-        return status
-    except SocketServer.socket.error:
-      return
+        getattr(external_information, u'rss', 0),
+        getattr(external_information, u'vms', 0),
+        getattr(external_information, u'shared', 0),
+        getattr(external_information, u'text', 0),
+        getattr(external_information, u'lib', 0),
+        getattr(external_information, u'data', 0),
+        getattr(external_information, u'dirty', 0), percent)
 
   def IsAlive(self):
     """Return a boolean value indicating if the process is alive or not."""
