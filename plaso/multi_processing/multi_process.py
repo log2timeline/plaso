@@ -7,7 +7,6 @@ import multiprocessing
 import os
 import signal
 import sys
-import threading
 import time
 
 from dfvfs.resolver import context
@@ -18,7 +17,8 @@ from plaso.engine import queue
 from plaso.engine import worker
 from plaso.lib import errors
 from plaso.multi_processing import foreman
-from plaso.multi_processing import rpc_proxy
+from plaso.multi_processing import rpc
+from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -46,6 +46,12 @@ def SigKill(pid):
 
 class MultiProcessEngine(engine.BaseEngine):
   """Class that defines the multi-process engine."""
+
+  _FOREMAN_CHECK_SLEEP = 1.0
+
+  _PROCESS_ABORT_TIMEOUT = 2
+  _PROCESS_JOIN_TIMEOUT = 5
+  _PROCESS_TERMINATION_SLEEP = 0.5
 
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
@@ -75,52 +81,41 @@ class MultiProcessEngine(engine.BaseEngine):
     # TODO: turn into a process pool.
     self._worker_processes = {}
 
-    # Attributes for RPC proxy server thread.
-    self._proxy_thread = None
-    self._rpc_proxy_server = None
+    # Attributes for the collection status RPC server.
     self._rpc_port_number = 0
+    self._rpc_server = None
 
-  def _StartRPCProxyServerThread(self, foreman_object):
-    """Starts the RPC proxy server thread.
+  def _StartCollectionStatusRPCServer(self, foreman_object):
+    """Starts the collection status RPC server.
 
     Args:
       foreman_object: a foreman object (instance of Foreman).
     """
-    if self._rpc_proxy_server or self._proxy_thread:
+    if self._rpc_server:
       return
 
-    self._rpc_proxy_server = rpc_proxy.StandardRpcProxyServer(os.getpid())
+    self._rpc_server = xmlrpc.XMLCollectionStatusRPCServer(
+        foreman_object.SignalEndOfProcessing)
 
-    try:
-      self._rpc_proxy_server.Open()
-      self._rpc_proxy_server.RegisterFunction(
-          'signal_end_of_collection', foreman_object.SignalEndOfProcessing)
+    pid = os.getpid()
+    hostname = u'localhost'
+    port = rpc.GetProxyPortNumberFromPID(pid)
 
-      self._proxy_thread = threading.Thread(
-          name='rpc_proxy', target=self._rpc_proxy_server.StartProxy)
-      self._proxy_thread.start()
+    if not self._rpc_server.Start(hostname, port):
+      logging.error(
+          u'Unable to start a RPC server for engine (PID: {0:d})'.format(pid))
 
-      self._rpc_port_number = self._rpc_proxy_server.listening_port
-
-    except errors.ProxyFailedToStart as exception:
-      logging.error((
-          u'Unable to setup a RPC server for the engine with error '
-          u'{0:s}').format(exception))
-
-  def _StopRPCProxyServerThread(self):
-    """Stops the RPC proxy server thread."""
-    if not self._rpc_proxy_server or not self._proxy_thread:
+      self._rpc_server = None
       return
 
-    # Close the proxy, free up resources so we can shut down the thread.
-    self._rpc_proxy_server.Close()
+    self._rpc_port_number = port
 
-    if self._proxy_thread.isAlive():
-      self._proxy_thread.join()
-
-    self._proxy_thread = None
-    self._rpc_proxy_server = None
-    self._rpc_port_number = 0
+  def _StopCollectionStatusRPCServer(self):
+    """Stops the collection status RPC server."""
+    if self._rpc_server:
+      self._rpc_server.Stop()
+      self._rpc_server = None
+      self._rpc_port_number = 0
 
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
@@ -260,7 +255,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if have_foreman_process:
       self._foreman_object = foreman.Foreman(
           show_memory_usage=show_memory_usage)
-      self._StartRPCProxyServerThread(self._foreman_object)
+      self._StartCollectionStatusRPCServer(self._foreman_object)
 
     self._storage_process = MultiProcessStorageProcess(
         storage_writer, name='StorageProcess')
@@ -293,17 +288,14 @@ class MultiProcessEngine(engine.BaseEngine):
     if not self._collection_process:
       collector_object.Collect()
 
+    elif not self._foreman_object:
+      self._collection_process.join()
+
     else:
-      while self._collection_process.is_alive():
-        self._collection_process.join(timeout=10)
+      while not self._foreman_object.CheckStatus():
+        time.sleep(self._FOREMAN_CHECK_SLEEP)
 
-        # Check the worker status regularly while collection is still ongoing.
-        if self._foreman_object:
-          self._foreman_object.CheckStatus()
-
-          # TODO: We get a signal when collection is done, which might happen
-          # before the collection thread joins. Look at the option of speeding
-          # up the process of the collector stopping by potentially killing it.
+      self._collection_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     logging.info(u'Collection stopped.')
 
@@ -317,38 +309,47 @@ class MultiProcessEngine(engine.BaseEngine):
       worker_process: the worker process object (instance of
                       EventExtractionWorkerProcess).
     """
+    force_termination = False
+
     if self._foreman_object:
-      worker_label = self._foreman_object.GetLabel(
-          name=worker_name, pid=worker_process.pid)
+      worker_process_label = self._foreman_object.GetLabelByPid(
+          worker_process.pid)
     else:
-      worker_label = None
+      worker_process_label = None
 
-    # Check the worker process status.
     if worker_process.is_alive():
-      if self._foreman_object and not worker_label:
-        logging.info((
-            u'Process {0:s} (PID: {1:d}) is not monitored by the foreman. '
-            u'Most likely due to a worker having completed its processing '
-            u'while waiting for another worker to complete.').format(
-                worker_name, worker_process.pid))
+      if not worker_process_label:
+        if not self._foreman_object:
+          return
 
+        logging.warning((
+            u'Process {0:s} (PID: {1:d}) is not monitored by the foreman '
+            u'forcing termination.').format(worker_name, worker_process.pid))
+
+        force_termination = True
+
+      elif self._foreman_object.IsMonitored(worker_process_label):
+        self._foreman_object.CheckStatus(process_label=worker_process_label)
+        return
+
+      elif self._foreman_object.HasCompleted(worker_process_label):
         logging.info(
             u'Waiting for worker {0:s} (PID: {1:d}) to complete.'.format(
                 worker_name, worker_process.pid))
 
-      if worker_label:
-        self._foreman_object.CheckStatus(label=worker_label)
+        # The timeout here prevents the main process from blocking on
+        # a process it cannot join with.
+        worker_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+        if worker_process.is_alive():
+          logging.warning((
+              u'Forcing termination of worker process: {0:s} '
+              u'(PID: {1:d})').format(worker_name, worker_process.pid))
+          force_termination = True
 
-      # The timeout here prevents the main process from blocking on
-      # process it cannot join with.
-      worker_process.join(timeout=5)
-
-    # Check if the worker process is still running.
-    force_termination = False
-    if worker_process.is_alive():
-      if not self._foreman_object or worker_label:
-        return
-      force_termination = True
+    # TODO: determine if this gets called at all.
+    if (worker_process_label and
+        self._foreman_object.IsMonitored(worker_process_label)):
+      self._foreman_object.StopMonitoring(worker_process_label)
 
     # Note that we explicitly must test against exitcode 0 here since
     # process.exitcode will be None if there is no exitcode.
@@ -359,25 +360,19 @@ class MultiProcessEngine(engine.BaseEngine):
             u'{2:d}.').format(
                 worker_name, worker_process.pid, worker_process.exitcode))
 
-      if worker_label:
-        self._foreman_object.TerminateProcess(label=worker_label)
-
-      logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
+      logging.warning(u'Terminating worker process: {0:s} (PID: {1:d})'.format(
           worker_name, worker_process.pid))
       worker_process.terminate()
-      time.sleep(0.5)
+      time.sleep(self._PROCESS_TERMINATION_SLEEP)
 
       if worker_process.is_alive():
-        logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
+        logging.warning(u'Killing worker process: {0:s} (PID: {1:d})'.format(
             worker_name, worker_process.pid))
         SigKill(worker_process.pid)
 
     else:
       logging.info(u'Worker: {0:s} (PID: {1:d}) has completed.'.format(
           worker_name, worker_process.pid))
-
-      if worker_label:
-        self._foreman_object.StopMonitoringWorker(label=worker_label)
 
     # Remove the worker process from the list of active workers.
     del self._worker_processes[worker_name]
@@ -386,10 +381,10 @@ class MultiProcessEngine(engine.BaseEngine):
     """Stops the foreman and worker processes."""
     if self._foreman_object:
       self._foreman_object.SignalEndOfProcessing()
-      self._StopRPCProxyServerThread()
+      self._StopCollectionStatusRPCServer()
 
     # Run through the running workers, one by one.
-    # This will go through a list of all active worker processes and check it's
+    # This will go through a list of all active worker processes and check its
     # status. If a worker has completed it will be removed from the list.
     # The process will not wait longer than five seconds for each worker to
     # complete, if longer time passes it will simply check it's status and
@@ -408,6 +403,7 @@ class MultiProcessEngine(engine.BaseEngine):
     logging.info(u'Extraction workers stopped.')
     self._event_queue_producer.SignalEndOfInput()
 
+    logging.info(u'Waiting for storage writer.')
     self._storage_process.join()
     logging.info(u'Storage writer stopped.')
 
@@ -432,22 +428,35 @@ class MultiProcessEngine(engine.BaseEngine):
     self._storage_process.SignalAbort()
 
     if self._collection_process:
-      logging.warning(u'Waiting for collection process: {0:d}.'.format(
+      logging.warning(u'Waiting for collection process (PID: {0:d}).'.format(
           self._collection_process.pid))
       # TODO: it looks like xmlrpclib.ServerProxy is not allowing the
       # collection process to close.
       self._collection_process.join(timeout=timeout)
+      if self._collection_process.is_alive():
+        logging.warning(
+            u'Waiting for collection process (PID: {0:s}) failed'.format(
+                self._collection_process.pid))
 
     if self._worker_processes:
       for worker_name, worker_process in self._worker_processes.iteritems():
-        logging.warning(u'Waiting for worker: {0:s} process: {1:d}'.format(
-            worker_name, worker_process.pid))
+        logging.warning(
+            u'Waiting for worker: {0:s} process (PID: {1:d})'.format(
+                worker_name, worker_process.pid))
         worker_process.join(timeout=timeout)
+        if worker_process.is_alive():
+          logging.warning(
+              u'Waiting for worker: {0:s} process (PID: {1:d}) failed'.format(
+                  worker_name, worker_process.pid))
 
     if self._storage_process:
-      logging.warning(u'Waiting for storage process: {0:d}.'.format(
+      logging.warning(u'Waiting for storage process (PID: {0:d}).'.format(
           self._collection_process.pid))
       self._storage_process.join(timeout=timeout)
+      if self._storage_process.is_alive():
+        logging.warning(
+            u'Waiting for storage process (PID: {0:s}) failed'.format(
+                self._storage_process.pid))
 
   def _AbortTerminate(self):
     """Abort processing by sending SIGTERM or equivalent."""
@@ -492,7 +501,7 @@ class MultiProcessEngine(engine.BaseEngine):
     super(MultiProcessEngine, self).SignalAbort()
 
     try:
-      self._AbortNormal(timeout=2)
+      self._AbortNormal(timeout=self._PROCESS_ABORT_TIMEOUT)
       self._AbortTerminate()
     except KeyboardInterrupt:
       self._AbortKill()
@@ -530,21 +539,18 @@ class MultiProcessCollectionProcess(multiprocessing.Process):
 
     rpc_proxy_client = None
     if self._rpc_port_number:
-      try:
-        rpc_proxy_client = rpc_proxy.StandardRpcProxyClient(
-            self._rpc_port_number)
-        rpc_proxy_client.Open()
+      rpc_proxy_client = xmlrpc.XMLCollectionStatusRPCClient()
+      hostname = u'localhost'
 
-      except errors.ProxyFailedToStart as exception:
-        logging.error((
-            u'Unable to setup a RPC client for the collector process with '
-            u'error {0:s}').format(exception))
+      if not rpc_proxy_client.Open(hostname, self._rpc_port_number):
+        logging.error(
+            u'Unable to setup a RPC client for the collector process')
 
     self._collector_object.Collect()
 
     logging.debug(u'Collection process: {0!s} stopped'.format(self._name))
     if rpc_proxy_client:
-      _ = rpc_proxy_client.GetData(u'signal_end_of_collection')
+      _ = rpc_proxy_client.CallFunction()
 
   def SignalAbort(self):
     """Signals the process to abort."""
@@ -573,65 +579,59 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     self._parser_filter_string = parser_filter_string
     self._hasher_names_string = hasher_names_string
 
-    # Attributes for RPC proxy server thread.
-    self._proxy_thread = None
-    self._rpc_proxy_server = None
+    self._rpc_server = None
+    self._status_is_running = False
 
-  def _StartRPCProxyServerThread(self):
-    """Starts the RPC proxy server thread."""
-    if self._rpc_proxy_server or self._proxy_thread:
+  def _GetStatus(self):
+    """Returns a status dictionary."""
+    status = self._extraction_worker.GetStatus()
+    self._status_is_running = status.get(u'is_running', False)
+    return status
+
+  def _StartProcessStatusRPCServer(self):
+    """Starts the process status RPC server."""
+    if self._rpc_server:
       return
 
-    # Set up a simple XML RPC server for the worker for status indications.
-    # Since we don't know the worker's PID for now we'll set the initial port
-    # number to zero and then adjust it later.
-    self._rpc_proxy_server = rpc_proxy.StandardRpcProxyServer()
+    self._rpc_server = xmlrpc.XMLProcessStatusRPCServer(self._GetStatus)
 
-    try:
-      # Note the proxy will adjust the port number if pid < 1024 and
-      # pid > 65535.
-      self._rpc_proxy_server.SetListeningPort(os.getpid())
-      self._rpc_proxy_server.Open()
-      self._rpc_proxy_server.RegisterFunction(
-          'status', self._extraction_worker.GetStatus)
+    pid = os.getpid()
+    hostname = u'localhost'
+    port = rpc.GetProxyPortNumberFromPID(pid)
 
-      logging.debug(
-          u'Worker process: {0!s} monitor RPC server started'.format(
-              self._name))
-
-      self._proxy_thread = threading.Thread(
-          name='rpc_proxy', target=self._rpc_proxy_server.StartProxy)
-      self._proxy_thread.start()
-
-      logging.debug(
-          u'Worker process: {0!s} monitor thread started'.format(self._name))
-
-    except errors.ProxyFailedToStart as exception:
+    if not self._rpc_server.Start(hostname, port):
       logging.error((
-          u'Unable to setup a RPC server for the worker: {0:d} [PID {1:d}] '
-          u'with error: {2:s}').format(
-              self._identity, os.getpid(), exception))
+          u'Unable to start a process status RPC server for worker: {0!s} '
+          u'(PID: {1:d})').format(self._name, pid))
 
-  def _StopRPCProxyServerThread(self):
-    """Stops the RPC proxy server thread."""
-    if not self._rpc_proxy_server or not self._proxy_thread:
+      self._rpc_server = None
       return
-
-    # Close the proxy, free up resources so we can shut down the thread.
-    self._rpc_proxy_server.Close()
 
     logging.debug(
-        u'Worker process: {0!s} monitor RPC server stopped'.format(
+        u'Worker process: {0!s} process status RPC server started'.format(
             self._name))
 
-    if self._proxy_thread.isAlive():
-      self._proxy_thread.join()
+  def _StopProcessStatusRPCServer(self):
+    """Stops the process status RPC server."""
+    if not self._rpc_server:
+      return
+
+    # Make sure the foreman gets one more status update so it knows
+    # the worker has completed.
+    time.sleep(0.5)
+    time_slept = 0.5
+    while self._status_is_running:
+      time.sleep(0.5)
+      time_slept += 0.5
+      if time_slept >= 5.0:
+        break
+
+    self._rpc_server.Stop()
+    self._rpc_server = None
 
     logging.debug(
-        u'Worker process: {0!s} monitor thread stopped'.format(self._name))
-
-    self._rpc_proxy_server = None
-    self._proxy_thread = None
+        u'Worker process: {0!s} process status RPC server stopped'.format(
+            self._name))
 
   # This method part of the multiprocessing.Process interface hence its name
   # is not following the style guide.
@@ -651,7 +651,7 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
       self._extraction_worker.SetHashers(self._hasher_names_string)
 
     logging.debug(u'Worker process: {0!s} started'.format(self._name))
-    self._StartRPCProxyServerThread()
+    self._StartProcessStatusRPCServer()
 
     logging.debug(u'Worker process: {0!s} extraction started'.format(
         self._name))
@@ -659,7 +659,7 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     logging.debug(u'Worker process: {0!s} extraction stopped'.format(
         self._name))
 
-    self._StopRPCProxyServerThread()
+    self._StopProcessStatusRPCServer()
     logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
 
   def SignalAbort(self):
