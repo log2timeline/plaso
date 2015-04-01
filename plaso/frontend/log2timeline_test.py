@@ -43,15 +43,13 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
 
     test_front_end.ParseOptions(options)
     test_front_end.SetStorageFile(storage_file_path=storage_file_path)
-    test_front_end.SetRunForeman(run_foreman=False)
 
     test_front_end.ProcessSource(options)
 
     try:
       storage_file = storage.StorageFile(storage_file_path, read_only=True)
     except IOError:
-      # This is not a storage file, we should fail.
-      self.assertTrue(False)
+      self.fail(u'Not a storage file.')
 
     # Make sure we can read an event out of the storage.
     event_object = storage_file.GetSortedEntry()
