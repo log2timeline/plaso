@@ -207,7 +207,6 @@ class MultiProcessEngine(engine.BaseEngine):
   def ProcessSource(
       self, collector_object, storage_writer, parser_filter_string=None,
       hasher_names_string=None, number_of_extraction_workers=0,
-      have_collection_process=True, have_foreman_process=True,
       show_memory_usage=False):
     """Processes the source and extracts event objects.
 
@@ -221,28 +220,19 @@ class MultiProcessEngine(engine.BaseEngine):
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
-      have_collection_process: Optional boolean value to indicate a separate
-                               collection process should be run. The default
-                               is True.
-      have_foreman_process: Optional boolean value to indicate a separate
-                            foreman process should be run to make sure the
-                            workers are extracting event objects. The default
-                            is True.
       show_memory_usage: Optional boolean value to indicate memory information
                          should be included in logging. The default is False.
     """
     if number_of_extraction_workers < 1:
       # One worker for each "available" CPU (minus other processes).
       # The number here is derived from the fact that the engine starts up:
-      #   + A collector process (optional).
+      #   + A collection process.
       #   + A storage process.
       #
       # If we want to utilize all CPUs on the system we therefore need to start
       # up workers that amounts to the total number of CPUs - the other
       # processes.
       cpu_count = multiprocessing.cpu_count() - 2
-      if have_collection_process:
-        cpu_count -= 1
 
       if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
         cpu_count = self._WORKER_PROCESSES_MINIMUM
@@ -252,19 +242,17 @@ class MultiProcessEngine(engine.BaseEngine):
 
       number_of_extraction_workers = cpu_count
 
-    if have_foreman_process:
-      self._foreman_object = foreman.Foreman(
-          show_memory_usage=show_memory_usage)
-      self._StartCollectionStatusRPCServer(self._foreman_object)
+    self._foreman_object = foreman.Foreman(
+        show_memory_usage=show_memory_usage)
+    self._StartCollectionStatusRPCServer(self._foreman_object)
 
     self._storage_process = MultiProcessStorageProcess(
         storage_writer, name='StorageProcess')
     self._storage_process.start()
 
-    if have_collection_process:
-      self._collection_process = MultiProcessCollectionProcess(
-          collector_object, self._rpc_port_number, name='CollectionProcess')
-      self._collection_process.start()
+    self._collection_process = MultiProcessCollectionProcess(
+        collector_object, self._rpc_port_number, name='CollectionProcess')
+    self._collection_process.start()
 
     logging.info(u'Starting extraction worker processes.')
     for worker_number in range(number_of_extraction_workers):
@@ -278,22 +266,13 @@ class MultiProcessEngine(engine.BaseEngine):
           name=worker_name)
       worker_process.start()
 
-      if self._foreman_object:
-        self._foreman_object.MonitorWorker(
-            pid=worker_process.pid, name=worker_name)
-
+      self._foreman_object.MonitorWorker(
+          pid=worker_process.pid, name=worker_name)
       self._worker_processes[worker_name] = worker_process
 
     logging.debug(u'Collection started.')
-    if not self._collection_process:
-      collector_object.Collect()
-
-    elif not self._foreman_object:
-      self._collection_process.join()
-
-    else:
-      while not self._foreman_object.CheckStatus():
-        time.sleep(self._FOREMAN_CHECK_SLEEP)
+    while not self._foreman_object.CheckStatus():
+      time.sleep(self._FOREMAN_CHECK_SLEEP)
 
       self._collection_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
@@ -311,17 +290,11 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     force_termination = False
 
-    if self._foreman_object:
-      worker_process_label = self._foreman_object.GetLabelByPid(
-          worker_process.pid)
-    else:
-      worker_process_label = None
+    worker_process_label = self._foreman_object.GetLabelByPid(
+        worker_process.pid)
 
     if worker_process.is_alive():
       if not worker_process_label:
-        if not self._foreman_object:
-          return
-
         logging.warning((
             u'Process {0:s} (PID: {1:d}) is not monitored by the foreman '
             u'forcing termination.').format(worker_name, worker_process.pid))
@@ -379,9 +352,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _StopProcessing(self):
     """Stops the foreman and worker processes."""
-    if self._foreman_object:
-      self._foreman_object.SignalEndOfProcessing()
-      self._StopCollectionStatusRPCServer()
+    self._foreman_object.SignalEndOfProcessing()
+    self._StopCollectionStatusRPCServer()
 
     # Run through the running workers, one by one.
     # This will go through a list of all active worker processes and check its
@@ -397,8 +369,7 @@ class MultiProcessEngine(engine.BaseEngine):
           self._worker_processes.items()):
         self._CheckWorkerProcess(worker_name, worker_process)
 
-    if self._foreman_object:
-      self._foreman_object = None
+    self._foreman_object = None
 
     logging.info(u'Extraction workers stopped.')
     self._event_queue_producer.SignalEndOfInput()

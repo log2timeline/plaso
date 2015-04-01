@@ -174,18 +174,10 @@ def Main():
 
   info_group.add_argument(
       '--show_memory_usage', '--show-memory-usage', action='store_true',
-      default=False, dest='foreman_verbose', help=(
+      default=False, dest='show_memory_usage', help=(
           u'Indicates that basic memory usage should be included in the '
           u'output of the process monitor. If this option is not set the '
           u'tool only displays basic status and counter information.'))
-
-  info_group.add_argument(
-      '--disable_worker_monitor', '--disable-worker-monitor',
-      action='store_false', default=True, dest='foreman_enabled', help=(
-          u'Turn off the foreman. The foreman monitors all worker processes '
-          u'and periodically prints out information about all running workers.'
-          u'By default the foreman is run, but it can be turned off using this '
-          u'parameter.'))
 
   front_end.AddExtractionOptions(function_group)
 
@@ -294,8 +286,7 @@ def Main():
     return False
 
   # Configure the foreman (monitors workers).
-  front_end.SetShowMemoryInformation(show_memory=options.foreman_verbose)
-  front_end.SetRunForeman(run_foreman=options.foreman_enabled)
+  front_end.SetShowMemoryInformation(show_memory=options.show_memory_usage)
 
   try:
     front_end.ProcessSource(options)
