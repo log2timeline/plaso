@@ -8,7 +8,7 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class TestOutput(interface.LogOutputFormatter):
+class TestOutput(interface.OutputModule):
   """Test output module."""
 
   NAME = 'test_output'
@@ -16,11 +16,6 @@ class TestOutput(interface.LogOutputFormatter):
 
   def WriteEventBody(self, unused_event_object):
     """Writes the body of an event object to the output.
-
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
 
     Args:
       event_object: the event object (instance of EventObject).

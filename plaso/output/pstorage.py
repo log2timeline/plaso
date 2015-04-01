@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implements a StorageFile output formatter."""
+"""Implements a StorageFile output module."""
 
 from plaso.lib import event
 from plaso.lib import storage
@@ -8,7 +8,7 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
+class PlasoStorageOutputFormatter(interface.OutputModule):
   """Dumps event objects to a plaso storage file."""
 
   NAME = u'pstorage'
@@ -27,15 +27,10 @@ class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
     if hasattr(self._config, 'storagefile') and self._config.storagefile:
       pre_obj.collection_information[
           'file_processed'] = self._config.storagefile
-    self._storage = storage.StorageFile(self.filehandle, pre_obj=pre_obj)
+    self._storage = storage.StorageFile(self._file_object, pre_obj=pre_obj)
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
-
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -43,7 +38,7 @@ class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
     # Needed due to duplicate removals, if two events
     # are merged then we'll just pick the first inode value.
     inode = getattr(event_object, 'inode', None)
-    if type(inode) in (str, unicode):
+    if isinstance(inode, basestring):
       inode_list = inode.split(';')
       try:
         new_inode = int(inode_list[0])

@@ -6,8 +6,8 @@ import unittest
 from plaso.formatters import mediator as formatters_mediator
 
 
-class LogOutputFormatterTestCase(unittest.TestCase):
-  """The unit test case for a log output formatter."""
+class OutputModuleTestCase(unittest.TestCase):
+  """The unit test case for a output module."""
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.

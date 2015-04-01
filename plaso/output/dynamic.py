@@ -12,7 +12,7 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class DynamicOutput(interface.FileLogOutputFormatter):
+class DynamicOutput(interface.FileOutputModule):
   """Dynamic selection of fields for a separated value output format."""
 
   NAME = u'dynamic'
@@ -89,13 +89,13 @@ class DynamicOutput(interface.FileLogOutputFormatter):
 
   def ParseZone(self, _):
     """Return a timezone."""
-    return self.zone
+    return self._timezone
 
   def ParseDate(self, event_object):
     """Return a date string from a timestamp value."""
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self.zone, raise_error=True)
+          event_object.timestamp, self._timezone, raise_error=True)
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
@@ -111,7 +111,7 @@ class DynamicOutput(interface.FileLogOutputFormatter):
     """Return a datetime object from a timestamp, in an ISO format."""
     try:
       return timelib.Timestamp.CopyToIsoFormat(
-          event_object.timestamp, timezone=self.zone, raise_error=True)
+          event_object.timestamp, timezone=self._timezone, raise_error=True)
 
     except OverflowError as exception:
       logging.error((
@@ -126,7 +126,7 @@ class DynamicOutput(interface.FileLogOutputFormatter):
     """Return a timestamp string from an integer timestamp value."""
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self.zone, raise_error=True)
+          event_object.timestamp, self._timezone, raise_error=True)
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
@@ -236,11 +236,6 @@ class DynamicOutput(interface.FileLogOutputFormatter):
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
-
     Args:
       event_object: the event object (instance of EventObject).
     """
@@ -259,7 +254,7 @@ class DynamicOutput(interface.FileLogOutputFormatter):
     out_write = u'{0:s}\n'.format(
         self.separator.join(unicode(x).replace(
             self.separator, u' ') for x in row))
-    self.filehandle.WriteLine(out_write)
+    self._WriteLine(out_write)
 
   def WriteHeader(self):
     """Writes the header to the output."""
@@ -287,8 +282,7 @@ class DynamicOutput(interface.FileLogOutputFormatter):
           for store_number in range(info.store_range[0], info.store_range[1]):
             self._preprocesses[store_number] = info
 
-    self.filehandle.WriteLine('{0:s}\n'.format(
-        self.separator.join(self.fields)))
+    self._WriteLine('{0:s}\n'.format(self.separator.join(self.fields)))
 
 
 manager.OutputManager.RegisterOutput(DynamicOutput)

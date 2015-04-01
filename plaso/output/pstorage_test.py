@@ -32,7 +32,7 @@ class TempDirectory(object):
     shutil.rmtree(self.name, True)
 
 
-class PstorageTest(test_lib.LogOutputFormatterTestCase):
+class PstorageTest(test_lib.OutputModuleTestCase):
   """Tests for the plaso storage outputter."""
 
   def setUp(self):

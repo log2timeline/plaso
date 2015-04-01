@@ -41,7 +41,7 @@ class JsonTestEvent(event.EventObject):
         parent=os_path_spec)
 
 
-class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
+class JsonOutputTest(test_lib.OutputModuleTestCase):
   """Tests for the JSON outputter."""
 
   def setUp(self):
@@ -75,7 +75,7 @@ class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-06-27 18:17:01')
 
-    if sys.platform.startswith('win'):
+    if sys.platform.startswith(u'win'):
       expected_os_location = u'C:\\{0:s}'.format(
           os.path.join(u'cases', u'image.dd'))
       expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
