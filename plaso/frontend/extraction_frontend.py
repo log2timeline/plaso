@@ -70,7 +70,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._queue_size = self._DEFAULT_QUEUE_SIZE
-    self._run_foreman = True
     self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
@@ -304,9 +303,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    # TODO: replace by an option.
-    start_collection_process = True
-
     self._number_of_worker_processes = getattr(options, 'workers', 0)
 
     logging.info(u'Starting extraction in multi process mode.')
@@ -366,10 +362,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     else:
       filter_find_specs = None
 
-    if start_collection_process:
-      resolver_context = context.Context()
-    else:
-      resolver_context = self._resolver_context
+    resolver_context = context.Context()
 
     # TODO: create multi process collector.
     self._collector = self._engine.CreateCollector(
@@ -394,8 +387,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
           parser_filter_string=parser_filter_string,
           hasher_names_string=hasher_names_string,
           number_of_extraction_workers=self._number_of_worker_processes,
-          have_collection_process=start_collection_process,
-          have_foreman_process=self._run_foreman,
           show_memory_usage=self._show_worker_memory_information)
 
     except KeyboardInterrupt:
@@ -829,15 +820,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
         self._EVENT_SERIALIZER_FORMAT_PROTO):
       return
     self._storage_serializer_format = storage_serializer_format
-
-  def SetRunForeman(self, run_foreman=True):
-    """Sets a flag indicating whether the frontend should monitor workers.
-
-    Args:
-      run_foreman: A boolean (defaults to true) that indicates whether or not
-                   the frontend should start a foreman that monitors workers.
-    """
-    self._run_foreman = run_foreman
 
   def SetShowMemoryInformation(self, show_memory=True):
     """Sets a flag telling the worker monitor to show memory information.
