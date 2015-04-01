@@ -4,6 +4,8 @@
 Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 """
 
+import sys
+
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -13,19 +15,40 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
+class L2tCsvOutputFormatter(interface.FileOutputModule):
   """CSV format used by log2timeline, with 17 fixed fields."""
 
   NAME = u'l2tcsv'
   DESCRIPTION = u'CSV format used by legacy log2timeline, with 17 fixed fields.'
 
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
+    """Initializes the output module object.
+
+    Args:
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: The formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
+
+    Raises:
+      ValueError: if the filehandle value is not supported.
+    """
+    super(L2tCsvOutputFormatter, self).__init__(
+        store, formatter_mediator, filehandle=filehandle, config=config,
+        filter_use=filter_use)
+    self._hostnames = {}
+    self._preprocesses = {}
+
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
-
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -49,7 +72,7 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
     source_short, source_long = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self.zone)
+        event_object.timestamp, self._timezone)
     extras = []
 
     format_variables = event_formatter.GetFormatStringAttributeNames()
@@ -102,7 +125,7 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
             date_use.month, date_use.day, date_use.year),
         u'{0:02d}:{1:02d}:{2:02d}'.format(
             date_use.hour, date_use.minute, date_use.second),
-        self.zone,
+        self._timezone,
         helper.GetLegacy(event_object),
         source_short,
         source_long,
@@ -120,22 +143,20 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
 
     out_write = u'{0:s}\n'.format(
         u','.join(unicode(x).replace(u',', u' ') for x in row))
-    self.filehandle.WriteLine(out_write)
+    self._WriteLine(out_write)
 
   def WriteHeader(self):
     """Writes the header to the output."""
     # Build a hostname and username dict objects.
-    self._hostnames = {}
     if self.store:
       self._hostnames = helper.BuildHostDict(self.store)
-      self._preprocesses = {}
       for info in self.store.GetStorageInformation():
         if hasattr(info, u'store_range'):
           for store_number in range(
               info.store_range[0], info.store_range[1] + 1):
             self._preprocesses[store_number] = info
 
-    self.filehandle.WriteLine(
+    self._WriteLine(
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         u'version,filename,inode,notes,format,extra\n')
 

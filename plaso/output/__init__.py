@@ -11,7 +11,6 @@ except ImportError:
   pass
 from plaso.output import json_out
 from plaso.output import l2t_csv
-from plaso.output import l2t_tln
 try:
   from plaso.output import mysql_4n6
 except ImportError:

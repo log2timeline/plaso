@@ -15,7 +15,7 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class ElasticSearchOutput(interface.LogOutputFormatter):
+class ElasticSearchOutput(interface.OutputModule):
   """Saves the events into an ElasticSearch database."""
 
   # Add configuration data for this output module.
@@ -59,12 +59,12 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
   def __init__(
       self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
-    """Initializes the log output formatter object.
+    """Initializes the output module object.
 
     Args:
       store: A storage file object (instance of StorageFile) that defines
              the storage.
-      formatter_mediator: the formatter mediator object (instance of
+      formatter_mediator: The formatter mediator object (instance of
                           FormatterMediator).
       filehandle: Optional file-like object that can be written to.
                   The default is sys.stdout.
@@ -134,7 +134,7 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
     # conversion).
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
-        timezone=self.zone)
+        timezone=self._timezone)
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         self._formatter_mediator, event_object)
     ret_dict['message'] = msg
@@ -179,11 +179,6 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
-
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
 
     Args:
       event_object: the event object (instance of EventObject).

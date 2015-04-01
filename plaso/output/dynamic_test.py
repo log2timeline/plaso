@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the dynamic output formatter for plaso."""
+"""Tests for the dynamic output module."""
 
 import io
 import unittest
@@ -45,7 +45,7 @@ class FakeFilter(object):
     self.separator = separator
 
 
-class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
+class DynamicOutputTest(test_lib.OutputModuleTestCase):
   """Test the dynamic output module."""
 
   def testHeader(self):

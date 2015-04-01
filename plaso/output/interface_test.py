@@ -26,7 +26,7 @@ class DummyEvent(object):
     return u';'.join(map(str, [self.timestamp, self.entry]))
 
 
-class TestOutput(interface.LogOutputFormatter):
+class TestOutput(interface.OutputModule):
   """This is a test output module that provides a simple XML."""
 
   NAME = u'testoutput'
@@ -35,12 +35,12 @@ class TestOutput(interface.LogOutputFormatter):
   def __init__(
       self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
-    """Initializes the log output formatter object.
+    """Initializes the output module object.
 
     Args:
       store: A storage file object (instance of StorageFile) that defines
              the storage.
-      formatter_mediator: the formatter mediator object (instance of
+      formatter_mediator: The formatter mediator object (instance of
                           FormatterMediator).
       filehandle: Optional file-like object that can be written to.
                   The default is sys.stdout.
@@ -56,44 +56,39 @@ class TestOutput(interface.LogOutputFormatter):
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
-
     Args:
       event_object: the event object (instance of EventObject).
     """
-    self.filehandle.write((
+    self._file_object.write((
         u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
         u'\t<Entry>{2:s}</Entry>\n').format(
             event_object.date, event_object.timestamp, event_object.entry))
 
   def WriteEventEnd(self):
     """Writes the end of an event object to the output."""
-    self.filehandle.write(u'</Event>\n')
+    self._file_object.write(u'</Event>\n')
 
   def WriteEventStart(self):
     """Writes the start of an event object to the output."""
-    self.filehandle.write(u'<Event>\n')
+    self._file_object.write(u'<Event>\n')
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self.filehandle.write(u'</EventFile>\n')
+    self._file_object.write(u'</EventFile>\n')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self.filehandle.write(u'<EventFile>\n')
+    self._file_object.write(u'<EventFile>\n')
 
 
 manager.OutputManager.RegisterOutput(TestOutput)
 
 
-class PlasoOutputUnitTest(test_lib.LogOutputFormatterTestCase):
+class PlasoOutputUnitTest(test_lib.OutputModuleTestCase):
   """The unit test for plaso output formatting."""
 
   def testOutput(self):
-    """Test a test implementation of the output formatter."""
+    """Tests an implementation of output module."""
     events = [
         DummyEvent(123456, u'My Event Is Now!'),
         DummyEvent(123458, u'There is no tomorrow.'),
@@ -139,7 +134,7 @@ class PlasoOutputUnitTest(test_lib.LogOutputFormatterTestCase):
     self.assertTrue(module_seen)
 
 
-class EventBufferTest(test_lib.LogOutputFormatterTestCase):
+class EventBufferTest(test_lib.OutputModuleTestCase):
   """Few unit tests for the EventBuffer class."""
 
   def testFlush(self):
@@ -208,9 +203,8 @@ class OutputFilehandleTest(unittest.TestCase):
       fh.Open(sys.stdout)
       try:
         fh.WriteLine(self._GetLine())
-        self.assertTrue(True)
-      except (UnicodeEncodeError, UnicodeDecodeError):
-        self.assertTrue(False)
+      except (UnicodeDecodeError, UnicodeEncodeError):
+        self.fail(u'Unicode decode/encode error exception.')
 
 
 if __name__ == '__main__':
