@@ -60,7 +60,7 @@ class TimesketchTestEvent(event.EventObject):
         u'closed for user root)')
 
 
-class TimesketchTest(test_lib.LogOutputFormatterTestCase):
+class TimesketchTest(test_lib.OutputModuleTestCase):
   """Tests for the Timesketch output class."""
 
   def setUp(self):

@@ -35,7 +35,7 @@ class OutputManager(object):
       name: The name of the output.
 
     Returns:
-      The corresponding output (instance of LogOutputFormatter).
+      The corresponding output (instance of OutputModule).
 
     Raises:
       ValueError: if name is not a string.
@@ -53,7 +53,7 @@ class OutputManager(object):
 
   @classmethod
   def GetOutputs(cls):
-    """Generate a list of all available output formatter classes."""
+    """Generate a list of all available output module classes."""
     for output_class in cls._output_classes.itervalues():
       yield output_class.NAME, output_class.DESCRIPTION
 
@@ -80,7 +80,7 @@ class OutputManager(object):
 
     Args:
       output_class: the class object of the output (instance of
-                    LogOutputFormatter).
+                    OutputModule).
 
     Raises:
       KeyError: if output class is already set for the corresponding
@@ -102,7 +102,7 @@ class OutputManager(object):
 
     Args:
       output_classes: a list of class objects of the outputs (instance of
-                       LogOutputFormatter).
+                       OutputModule).
 
     Raises:
       KeyError: if output class is already set for the corresponding name.

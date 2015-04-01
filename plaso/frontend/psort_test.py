@@ -46,8 +46,8 @@ class PsortTestEventFormatter(formatters_interface.EventFormatter):
 formatters_manager.FormattersManager.RegisterFormatter(PsortTestEventFormatter)
 
 
-class TestFormatter(output_interface.LogOutputFormatter):
-  """Dummy formatter."""
+class TestFormatter(output_interface.OutputModule):
+  """Test output module."""
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
@@ -64,12 +64,12 @@ class TestFormatter(output_interface.LogOutputFormatter):
         event_object.data_type)
     msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
-    self.filehandle.write(u'{0:s}/{1:s} {2:s}\n'.format(
+    self._file_object.write(u'{0:s}/{1:s} {2:s}\n'.format(
         source_short, source_long, msg))
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self.filehandle.write((
+    self._file_object.write((
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
         u'short,desc,version,filename,inode,notes,format,extra\n'))
 
