@@ -6,6 +6,9 @@ before_install:
   - sudo pip install ipython --upgrade
 script:
   - ./run_tests.py
+  - ./setup.py build
+  - ./setup.py sdist
+  - ./setup.py bdist
   - coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
 after_success:
   - coveralls --verbose
