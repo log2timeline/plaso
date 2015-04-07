@@ -92,6 +92,25 @@ class SlowLexicalTextParser(
       else:
         self.attributes[attr] = ''
 
+  # TODO: this is a rough initial implementation to get this working.
+  def CreateEvent(self, timestamp, offset, attributes):
+    """Creates an event.
+
+       This function should be overwritten by text parsers that required
+       the generation of specific event object type, the default event
+       type is TextEvent.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      offset: The offset of the event.
+      attributes: A dictionary that contains the event's attributes.
+
+    Returns:
+      An event object (instance of TextEvent).
+    """
+    return text_events.TextEvent(timestamp, offset, attributes)
+
   def ParseIncomplete(self, match=None, **unused_kwargs):
     """Indication that we've got a partial line to match against.
 
@@ -104,48 +123,6 @@ class SlowLexicalTextParser(
   def ParseMessage(self, **unused_kwargs):
     """Signal that a line is ready to be parsed."""
     self.line_ready = True
-
-  def SetMonth(self, match=None, **unused_kwargs):
-    """Parses the month.
-
-       This is a callback function for the text parser (lexer) and is
-       called by the corresponding lexer state.
-
-    Args:
-      match: The regular expression match object.
-    """
-    self.attributes['imonth'] = int(
-        timelib.MONTH_DICT.get(match.group(1).lower(), 1))
-
-  def SetDay(self, match=None, **unused_kwargs):
-    """Parses the day of the month.
-
-       This is a callback function for the text parser (lexer) and is
-       called by the corresponding lexer state.
-
-    Args:
-      match: The regular expression match object.
-    """
-    self.attributes['iday'] = int(match.group(1))
-
-  def SetTime(self, match=None, **unused_kwargs):
-    """Set the time attribute.
-
-    Args:
-      match: The regular expression match object.
-    """
-    self.attributes['time'] = match.group(1)
-
-  def SetYear(self, match=None, **unused_kwargs):
-    """Parses the year.
-
-       This is a callback function for the text parser (lexer) and is
-       called by the corresponding lexer state.
-
-    Args:
-      match: The regular expression match object.
-    """
-    self.attributes['iyear'] = int(match.group(1))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a lexer.
@@ -197,9 +174,7 @@ class SlowLexicalTextParser(
 
       if self.line_ready:
         try:
-          event_object = self.ParseLine(parser_mediator)
-          parser_mediator.ProduceEvent(event_object)
-
+          self.ParseLine(parser_mediator)
           file_verified = True
 
         except errors.TimestampNotCorrectlyFormed as exception:
@@ -300,9 +275,6 @@ class SlowLexicalTextParser(
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Returns:
-      An event object (instance of TextEvent).
     """
     if not self.attributes['time']:
       raise errors.TimestampNotCorrectlyFormed(
@@ -340,26 +312,51 @@ class SlowLexicalTextParser(
           u'Unable to parse: {0:s} with error: {1:s}'.format(
               self.PrintLine(), exception))
 
-    return self.CreateEvent(
+    event_object = self.CreateEvent(
         timestamp, getattr(self, 'entry_offset', 0), self.attributes)
+    parser_mediator.ProduceEvent(event_object)
 
-  # TODO: this is a rough initial implementation to get this working.
-  def CreateEvent(self, timestamp, offset, attributes):
-    """Creates an event.
 
-       This function should be overwritten by text parsers that require
-       to generate specific event object type, the default is TextEvent.
+  def SetDay(self, match=None, **unused_kwargs):
+    """Parses the day of the month.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the corresponding lexer state.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      offset: The offset of the event.
-      attributes: A dict that contains the events attributes.
-
-    Returns:
-      An event object (instance of TextEvent).
+      match: The regular expression match object.
     """
-    return text_events.TextEvent(timestamp, offset, attributes)
+    self.attributes['iday'] = int(match.group(1))
+  def SetMonth(self, match=None, **unused_kwargs):
+    """Parses the month.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the corresponding lexer state.
+
+    Args:
+      match: The regular expression match object.
+    """
+    self.attributes['imonth'] = int(
+        timelib.MONTH_DICT.get(match.group(1).lower(), 1))
+
+  def SetTime(self, match=None, **unused_kwargs):
+    """Set the time attribute.
+
+    Args:
+      match: The regular expression match object.
+    """
+    self.attributes['time'] = match.group(1)
+
+  def SetYear(self, match=None, **unused_kwargs):
+    """Parses the year.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the corresponding lexer state.
+
+    Args:
+      match: The regular expression match object.
+    """
+    self.attributes['iyear'] = int(match.group(1))
 
 
 class TextCSVParser(interface.SingleFileBaseParser):
