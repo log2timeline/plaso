@@ -88,9 +88,6 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Returns:
-      An event object (instance of TextEvent).
     """
     # Note this an older comment applying to a similar approach previously
     # the init function.
@@ -116,7 +113,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
     self.attributes['iyear'] = self._year_use
 
-    return super(SyslogParser, self).ParseLine(parser_mediator)
+    super(SyslogParser, self).ParseLine(parser_mediator)
 
   def ParseHostname(self, match=None, **unused_kwargs):
     """Parses the hostname.
