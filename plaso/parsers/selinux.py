@@ -80,7 +80,7 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     """Initializes a parser object."""
     # Set local_zone to false, since timestamps are UTC.
     super(SELinuxParser, self).__init__(local_zone=False)
-    self.attributes = {'audit_type': '', 'pid': '', 'body': ''}
+    self.attributes = {u'audit_type': '', u'pid': '', u'body': ''}
     self.timestamp = 0
 
   def ParseType(self, match=None, **unused_kwargs):
@@ -89,7 +89,7 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     Args:
       match: The regular expression match object.
     """
-    self.attributes['audit_type'] = match.group(1)
+    self.attributes[u'audit_type'] = match.group(1)
 
   def ParseTime(self, match=None, **unused_kwargs):
     """Parse the log timestamp.
@@ -119,16 +119,16 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       match: The regular expression match object.
     """
     try:
-      self.attributes['body'] += match.group(1)
+      self.attributes[u'body'] += match.group(1)
       # TODO: fix it using lexer or remove pid parsing.
       # Indeed this is something that lexer is able to manage, but 'pid' field
       # is non positional: so, by doing the following step, the FSM is kept
       # simpler. Left the 'to do' as a reminder of possible refactoring.
-      pid_search = self.PID_RE.search(self.attributes['body'])
+      pid_search = self.PID_RE.search(self.attributes[u'body'])
       if pid_search:
-        self.attributes['pid'] = pid_search.group(1)
+        self.attributes[u'pid'] = pid_search.group(1)
     except IndexError:
-      self.attributes['body'] += match.group(0).strip('\n')
+      self.attributes[u'body'] += match.group(0).strip(u'\n')
 
   def ParseFailed(self, **unused_kwargs):
     """Entry parsing failed callback."""
@@ -142,18 +142,15 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Returns:
-      An event object (instance of EventObject) that is constructed
-      from the selinux entry.
     """
     if not self.timestamp:
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse entry, timestamp not defined.')
-    offset = getattr(self, 'entry_offset', 0)
+
+    offset = getattr(self, u'entry_offset', 0)
     event_object = SELinuxLineEvent(self.timestamp, offset, self.attributes)
+    parser_mediator.ProduceEvent(event_object)
     self.timestamp = 0
-    return event_object
 
 
 manager.ParsersManager.RegisterParser(SELinuxParser)
