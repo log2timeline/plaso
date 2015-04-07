@@ -164,53 +164,51 @@ def CheckLibyal(libyal_python_modules, latest_version_check=False):
   for module_name, module_version in libyal_python_modules:
     try:
       module_object = map(__import__, [module_name])[0]
-      module_loaded = True
     except ImportError:
       print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
-      module_loaded = False
       result = False
+      continue
 
-    if module_loaded:
-      libyal_name = u'lib{0:s}'.format(module_name[2:])
+    libyal_name = u'lib{0:s}'.format(module_name[2:])
 
-      installed_version = int(module_object.get_version())
+    installed_version = int(module_object.get_version())
 
-      latest_version = None
-      if latest_version_check:
+    latest_version = None
+    if latest_version_check:
+      try:
+        latest_version = GetLibyalGithubReleasesLatestVersion(libyal_name)
+      except urllib2.URLError:
+        latest_version = None
+
+      if not latest_version:
         try:
-          latest_version = GetLibyalGithubReleasesLatestVersion(libyal_name)
+          latest_version = GetLibyalGoogleDriveLatestVersion(libyal_name)
         except urllib2.URLError:
           latest_version = None
 
-        if not latest_version:
-          try:
-            latest_version = GetLibyalGoogleDriveLatestVersion(libyal_name)
-          except urllib2.URLError:
-            latest_version = None
-
-        if not latest_version:
-          print (
-              u'Unable to determine latest version of {0:s} ({1:s}).\n').format(
-                  libyal_name, module_name)
-          latest_version = None
-          connection_error = True
-
-      if module_version is not None and installed_version < module_version:
+      if not latest_version:
         print (
-            u'[FAILURE]\t{0:s} ({1:s}) version: {2:d} is too old, {3:d} or '
-            u'later required.').format(
-                libyal_name, module_name, installed_version, module_version)
-        result = False
+            u'Unable to determine latest version of {0:s} ({1:s}).\n').format(
+                libyal_name, module_name)
+        latest_version = None
+        connection_error = True
 
-      elif latest_version and installed_version != latest_version:
-        print (
-            u'[INFO]\t\t{0:s} ({1:s}) version: {2:d} installed, '
-            u'version: {3:d} available.').format(
-                libyal_name, module_name, installed_version, latest_version)
+    if module_version is not None and installed_version < module_version:
+      print (
+          u'[FAILURE]\t{0:s} ({1:s}) version: {2:d} is too old, {3:d} or '
+          u'later required.').format(
+              libyal_name, module_name, installed_version, module_version)
+      result = False
 
-      else:
-        print u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
-            libyal_name, module_name, installed_version)
+    elif latest_version and installed_version != latest_version:
+      print (
+          u'[INFO]\t\t{0:s} ({1:s}) version: {2:d} installed, '
+          u'version: {3:d} available.').format(
+              libyal_name, module_name, installed_version, latest_version)
+
+    else:
+      print u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
+          libyal_name, module_name, installed_version)
 
   if connection_error:
     print (
@@ -373,6 +371,6 @@ def GetInstallRequires():
     if not values[1]:
       install_requires.append(values[0])
     else:
-      install_requires.append(u'{0:s} >= {1:s}'.format(values[0], values[1]))
+      install_requires.append(u'{0:s} >= {1:d}'.format(values[0], values[1]))
 
   return sorted(install_requires)
