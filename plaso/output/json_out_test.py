@@ -46,10 +46,10 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    super(JsonOutputTest, self).setUp()
     self._output = io.BytesIO()
-    self._formatter = json_out.JsonOutputFormatter(
-        None, self._formatter_mediator, filehandle=self._output)
+    output_mediator = self._CreateOutputMediator()
+    self._formatter = json_out.JsonOutputModule(
+        output_mediator, filehandle=self._output)
     self._event_object = JsonTestEvent()
 
   def testWriteHeaderAndfooter(self):

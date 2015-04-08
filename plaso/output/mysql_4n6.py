@@ -4,13 +4,11 @@
 # TODO: Add a unit test for this output module.
 
 import logging
-import sys
 
 import MySQLdb
 
 from plaso import formatters
 from plaso.formatters import interface as formatters_interface
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -22,7 +20,7 @@ from plaso.output import manager
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Mysql4n6OutputFormatter(interface.OutputModule):
+class MySQL4n6OutputModule(interface.OutputModule):
   """Class defining the MySQL database output module for 4n6time."""
 
   NAME = 'mysql4n6'
@@ -87,37 +85,33 @@ class Mysql4n6OutputFormatter(interface.OutputModule):
           'type': unicode,
           'default': '-'})]
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
+  _DEFAULT_FIELDS = [
+      u'host', u'user', u'source', u'sourcetype', u'type', u'datetime',
+      u'color']
+
+  def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
 
     Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
+      output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(Mysql4n6OutputFormatter, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config,
-        filter_use=filter_use)
+    super(MySQL4n6OutputModule, self).__init__(output_mediator, **kwargs)
 
-    self.set_status = getattr(config, 'set_status', None)
-
-    self.host = getattr(config, 'db_host', 'localhost')
-    self.user = getattr(config, 'db_user', 'root')
-    self.password = getattr(config, 'db_pass', 'forensic')
-    self.dbname = getattr(config, 'db_name', 'log2timeline')
-    self.evidence = getattr(config, 'evidence', '-')
-    self.append = getattr(config, 'append', False)
-    self.fields = getattr(config, 'fields', [
-        'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
+    self.set_status = self._output_mediator.GetConfigurationValue(u'set_status')
+    self.host = self._output_mediator.GetConfigurationValue(
+        u'db_host', default_value=u'localhost')
+    self.user = self._output_mediator.GetConfigurationValue(
+        u'db_user', default_value=u'root')
+    self.password = self._output_mediator.GetConfigurationValue(
+        u'db_pass', default_value=u'forensic')
+    self.dbname = self._output_mediator.GetConfigurationValue(
+        u'db_name', default_value=u'log2timeline')
+    self.evidence = self._output_mediator.GetConfigurationValue(
+        u'evidence', default_value=u'-')
+    self.append = self._output_mediator.GetConfigurationValue(
+        u'append', default_value=False)
+    self.fields = self._output_mediator.GetConfigurationValue(
+        u'fields', default_value=self._DEFAULT_FIELDS)
 
   def _GetDistinctValues(self, field_name):
     """Query database for unique field types.
@@ -282,17 +276,16 @@ class Mysql4n6OutputFormatter(interface.OutputModule):
     Raises:
       raise errors.NoFormatterFound: If no formatter for this event is found.
     """
-    if not hasattr(event_object, 'timestamp'):
+    if not hasattr(event_object, u'timestamp'):
       return
 
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
+    # TODO: remove this hack part of the storage/output refactor.
+    # The event formatter class constants should not be changed directly.
+    event_formatter = self._output_mediator.GetEventFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to output event, no event formatter found.')
 
-    # TODO: remove this hack part of the storage/output refactor.
-    # The event formatter class constants should not be changed directly.
     if (isinstance(
         event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
         event_formatter.FORMAT_STRING.find('<|>') == -1):
@@ -306,11 +299,12 @@ class Mysql4n6OutputFormatter(interface.OutputModule):
       event_formatter.FORMAT_STRING = event_formatter.FORMAT_STRING.replace(
           '}', '}<|>')
 
-    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
-    source_short, source_long = event_formatter.GetSources(event_object)
+    msg, _ = self._output_mediator.GetFormattedMessages(event_object)
+    source_short, source_long = self._output_mediator.GetFormattedSources(
+        event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self._timezone)
+        event_object.timestamp, self._output_mediator.timezone)
     if not date_use:
       logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
@@ -343,7 +337,7 @@ class Mysql4n6OutputFormatter(interface.OutputModule):
 
     taglist = u','.join(tags)
     row = (
-        str(self._timezone),
+        str(self._output_mediator.timezone),
         helper.GetLegacy(event_object),
         source_short,
         source_long,
@@ -408,4 +402,4 @@ class Mysql4n6OutputFormatter(interface.OutputModule):
     return getattr(event_object.pathspec, 'vss_store_number', -1)
 
 
-manager.OutputManager.RegisterOutput(Mysql4n6OutputFormatter)
+manager.OutputManager.RegisterOutput(MySQL4n6OutputModule)
