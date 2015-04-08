@@ -27,7 +27,7 @@ class AnalysisReport(object):
     self._tags = []
 
   def __unicode__(self):
-    """Return an unicode string representation of the report."""
+    """Returns a Unicode representation of the report."""
     return self.GetString()
 
   def GetAnomalies(self):
@@ -35,7 +35,7 @@ class AnalysisReport(object):
     return self._anomalies
 
   def GetString(self):
-    """Return an unicode string representation of the report."""
+    """Returns a Unicode representation of the report."""
     # TODO: Make this a more complete function that includes images
     # and the option of saving as a full fledged HTML document.
     string_list = []
@@ -155,9 +155,9 @@ class EventObject(object):
     attributes = []
     for attribute in fields:
       value = getattr(self, attribute)
-      if type(value) is dict:
+      if isinstance(value, dict):
         attributes.append(sorted(value.items()))
-      elif type(value) is set:
+      elif isinstance(value, set):
         attributes.append(sorted(list(value)))
       else:
         attributes.append(value)

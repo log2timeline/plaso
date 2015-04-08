@@ -1539,6 +1539,7 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
     # TODO: Re-enable this when storage library has been split up.
+    # Also update code to use NewOutputModule().
     # pylint: disable=pointless-string-statement
     """
     output_class = output_manager.OutputManager.GetOutputClass(

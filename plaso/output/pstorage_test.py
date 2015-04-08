@@ -37,7 +37,6 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    super(PstorageTest, self).setUp()
     self.test_filename = os.path.join(u'test_data', u'psort_test.out')
 
     # Show full diff results, part of TestCase so does not follow our naming
@@ -49,8 +48,10 @@ class PstorageTest(test_lib.OutputModuleTestCase):
       dump_file = os.path.join(dirname, u'plaso.db')
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:
-        formatter = pstorage.PlasoStorageOutputFormatter(
-            store, self._formatter_mediator, filehandle=dump_file)
+        output_mediator = self._CreateOutputMediator(storage_object=store)
+        formatter = pstorage.PlasoStorageOutputModule(
+            output_mediator, filehandle=dump_file)
+
         with interface.EventBuffer(
             formatter, check_dedups=False) as output_buffer:
           event_object = store.GetSortedEntry()

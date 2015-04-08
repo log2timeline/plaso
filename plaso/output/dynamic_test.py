@@ -45,14 +45,14 @@ class FakeFilter(object):
     self.separator = separator
 
 
-class DynamicOutputTest(test_lib.OutputModuleTestCase):
+class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the dynamic output module."""
 
   def testHeader(self):
     """Tests the WriteHeader function."""
     output = io.BytesIO()
-    formatter = dynamic.DynamicOutput(
-        None, self._formatter_mediator, filehandle=output)
+    output_mediator = self._CreateOutputMediator()
+    formatter = dynamic.DynamicOutputModule(output_mediator, filehandle=output)
     expected_header = (
         b'datetime,timestamp_desc,source,source_long,message,parser,'
         b'display_name,tag,store_number,store_index\n')
@@ -63,9 +63,9 @@ class DynamicOutputTest(test_lib.OutputModuleTestCase):
     output = io.BytesIO()
     filter_object = FakeFilter([
         u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
-    formatter = dynamic.DynamicOutput(
-        None, self._formatter_mediator, filehandle=output,
-        filter_use=filter_object)
+    output_mediator = self._CreateOutputMediator()
+    formatter = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object, filehandle=output)
 
     expected_header = b'date,time,message,hostname,filename,some_stuff\n'
     formatter.WriteHeader()
@@ -75,9 +75,9 @@ class DynamicOutputTest(test_lib.OutputModuleTestCase):
     filter_object = FakeFilter(
         [u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'],
         separator='@')
-    formatter = dynamic.DynamicOutput(
-        None, self._formatter_mediator, filehandle=output,
-        filter_use=filter_object)
+    output_mediator = self._CreateOutputMediator()
+    formatter = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object, filehandle=output)
 
     expected_header = b'date@time@message@hostname@filename@some_stuff\n'
     formatter.WriteHeader()
@@ -95,9 +95,9 @@ class DynamicOutputTest(test_lib.OutputModuleTestCase):
         u'date', u'time', u'timezone', u'macb', u'source', u'sourcetype',
         u'type', u'user', u'host', u'message_short', u'message',
         u'filename', u'inode', u'notes', u'format', u'extra'])
-    formatter = dynamic.DynamicOutput(
-        None, self._formatter_mediator, filehandle=output,
-        filter_use=filter_object)
+    output_mediator = self._CreateOutputMediator()
+    formatter = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object, filehandle=output)
 
     formatter.WriteHeader()
     expected_header = (
@@ -118,9 +118,9 @@ class DynamicOutputTest(test_lib.OutputModuleTestCase):
     output = io.BytesIO()
     filter_object = FakeFilter([
         u'datetime', u'nonsense', u'hostname', u'message'])
-    formatter = dynamic.DynamicOutput(
-        None, self._formatter_mediator, filehandle=output,
-        filter_use=filter_object)
+    output_mediator = self._CreateOutputMediator()
+    formatter = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object, filehandle=output)
 
     expected_header = b'datetime,nonsense,hostname,message\n'
     formatter.WriteHeader()

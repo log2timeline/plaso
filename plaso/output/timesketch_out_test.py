@@ -60,18 +60,20 @@ class TimesketchTestEvent(event.EventObject):
         u'closed for user root)')
 
 
-class TimesketchTest(test_lib.OutputModuleTestCase):
+class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the Timesketch output class."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    super(TimesketchTest, self).setUp()
     plaso_timestamp = timelib.Timestamp()
     self._event_timestamp = plaso_timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')
     self._event_object = TimesketchTestEvent(self._event_timestamp)
-    self._timesketch_output = timesketch_out.TimesketchOutput(
-        None, self._formatter_mediator, config=TimesketchTestConfig)
+
+    test_config = TimesketchTestConfig()
+    output_mediator = self._CreateOutputMediator(config=test_config)
+    self._timesketch_output = timesketch_out.TimesketchOutputModule(
+        output_mediator)
 
   def testEventToDict(self):
     """Tests the _EventToDict function."""

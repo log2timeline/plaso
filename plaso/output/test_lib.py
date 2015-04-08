@@ -4,6 +4,7 @@
 import unittest
 
 from plaso.formatters import mediator as formatters_mediator
+from plaso.output import mediator
 
 
 class OutputModuleTestCase(unittest.TestCase):
@@ -13,6 +14,18 @@ class OutputModuleTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
-  def setUp(self):
-    """Sets up the objects used throughout a single test."""
-    self._formatter_mediator = formatters_mediator.FormatterMediator()
+  def _CreateOutputMediator(self, config=None, storage_object=None):
+    """Creates an output mediator.
+
+    Args:
+      config: optional configuration object, containing config information.
+              The default is None.
+      storage_object: optional storage file object (instance of StorageFile)
+                      that defines the storage. The default is None.
+
+    Returns:
+      An output mediator (instance of OutputMediator).
+    """
+    formatter_mediator = formatters_mediator.FormatterMediator()
+    return mediator.OutputMediator(
+        formatter_mediator, storage_object, config=config)

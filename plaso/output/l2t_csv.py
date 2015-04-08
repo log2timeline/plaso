@@ -1,51 +1,64 @@
 # -*- coding: utf-8 -*-
-"""Contains functions for outputting as l2t_csv.
+"""Output module for the log2timeline (L2T) CSV format.
 
-Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
+For documentation on the L2T CSV format see:
+http://forensicswiki.org/wiki/L2T_CSV
 """
 
-import sys
-
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
 
 
-class L2tCsvOutputFormatter(interface.FileOutputModule):
+class L2TCSVOutputModule(interface.FileOutputModule):
   """CSV format used by log2timeline, with 17 fixed fields."""
 
   NAME = u'l2tcsv'
   DESCRIPTION = u'CSV format used by legacy log2timeline, with 17 fixed fields.'
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
-    """Initializes the output module object.
+  _FIELD_DELIMITER = u','
+  _HEADER = (
+      u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+      u'version,filename,inode,notes,format,extra\n')
+
+  def _FormatField(self, field):
+    """Formats a field.
 
     Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
+      field: the string that makes up the field.
 
-    Raises:
-      ValueError: if the filehandle value is not supported.
+     Returns:
+       A string containing the value for the field.
     """
-    super(L2tCsvOutputFormatter, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config,
-        filter_use=filter_use)
-    self._hostnames = {}
-    self._preprocesses = {}
+    if self._FIELD_DELIMITER:
+      return field.replace(self._FIELD_DELIMITER, u' ')
+    return field
+
+  def _FormatHostname(self, event_object):
+    """Formats the hostname.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the hostname field.
+    """
+    hostname = self._output_mediator.GetHostname(event_object)
+    return self._FormatField(hostname)
+
+  def _FormatUsername(self, event_object):
+    """Formats the username.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the username field.
+    """
+    username = self._output_mediator.GetUsername(event_object)
+    return self._FormatField(username)
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
@@ -54,28 +67,23 @@ class L2tCsvOutputFormatter(interface.FileOutputModule):
       event_object: the event object (instance of EventObject).
 
     Raises:
-      errors.NoFormatterFound: If no formatter for that event is found.
+      NoFormatterFound: If no event formatter can be found to match the data
+                        type in the event object.
     """
     if not hasattr(event_object, u'timestamp'):
       return
 
-    # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
-    if not event_formatter:
-      raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              event_object.data_type))
-
-    msg, msg_short = event_formatter.GetMessages(
-        self._formatter_mediator, event_object)
-    source_short, source_long = event_formatter.GetSources(event_object)
+    message, message_short = self._output_mediator.GetFormattedMessages(
+        event_object)
+    source_short, source_long = self._output_mediator.GetFormattedSources(
+        event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self._timezone)
+        event_object.timestamp, self._output_mediator.timezone)
     extras = []
 
-    format_variables = event_formatter.GetFormatStringAttributeNames()
+    format_variables = self._output_mediator.GetFormatStringAttributeNames(
+        event_object)
     for key in event_object.GetAttributes():
       if (key in definitions.RESERVED_VARIABLE_NAMES or
           key in format_variables):
@@ -94,19 +102,8 @@ class L2tCsvOutputFormatter(interface.FileOutputModule):
           event_object.pathspec, u'image_inode'):
         inode = event_object.pathspec.image_inode
 
-    hostname = getattr(event_object, u'hostname', u'')
-
-    # TODO: move this into a base output class.
-    username = getattr(event_object, u'username', u'-')
-    if self.store:
-      if not hostname:
-        hostname = self._hostnames.get(event_object.store_number, u'-')
-
-      pre_obj = self._preprocesses.get(event_object.store_number)
-      if pre_obj:
-        check_user = pre_obj.GetUsernameById(username)
-        if check_user != u'-':
-          username = check_user
+    hostname = self._FormatHostname(event_object)
+    username = self._FormatUsername(event_object)
 
     notes = []
     note_string = getattr(event_object, u'notes', None)
@@ -125,15 +122,15 @@ class L2tCsvOutputFormatter(interface.FileOutputModule):
             date_use.month, date_use.day, date_use.year),
         u'{0:02d}:{1:02d}:{2:02d}'.format(
             date_use.hour, date_use.minute, date_use.second),
-        self._timezone,
+        self._output_mediator.timezone,
         helper.GetLegacy(event_object),
         source_short,
         source_long,
         getattr(event_object, u'timestamp_desc', u'-'),
         username,
         hostname,
-        msg_short,
-        msg,
+        message_short,
+        message,
         u'2',
         getattr(event_object, u'display_name', u'-'),
         inode,
@@ -147,18 +144,7 @@ class L2tCsvOutputFormatter(interface.FileOutputModule):
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    # Build a hostname and username dict objects.
-    if self.store:
-      self._hostnames = helper.BuildHostDict(self.store)
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, u'store_range'):
-          for store_number in range(
-              info.store_range[0], info.store_range[1] + 1):
-            self._preprocesses[store_number] = info
-
-    self._WriteLine(
-        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        u'version,filename,inode,notes,format,extra\n')
+    self._WriteLine(self._HEADER)
 
 
-manager.OutputManager.RegisterOutput(L2tCsvOutputFormatter)
+manager.OutputManager.RegisterOutput(L2TCSVOutputModule)

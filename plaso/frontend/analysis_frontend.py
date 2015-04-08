@@ -38,11 +38,11 @@ class AnalysisFrontend(frontend.Frontend):
         u'storage_file', metavar=u'STORAGE_FILE', action=u'store', nargs=u'?',
         type=unicode, default=None, help=u'The path of the storage file.')
 
-  def GetFormatMediator(self):
-    """Retrieves the format mediator.
+  def GetFormatterMediator(self):
+    """Retrieves the formatter mediator.
 
     Returns:
-      The format mediator (instance of FormatMediator).
+      The formatter mediator (instance of FormatterMediator).
     """
     return formatters_mediator.FormatterMediator(
         data_location=self._data_location)
