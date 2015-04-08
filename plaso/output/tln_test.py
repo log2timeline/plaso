@@ -38,15 +38,15 @@ class TLNTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-class TLNOutputFormatterTest(test_lib.OutputModuleTestCase):
+class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the TLN output module."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    super(TLNOutputFormatterTest, self).setUp()
     self._output = io.BytesIO()
-    self._formatter = tln.TLNOutputFormatter(
-        None, self._formatter_mediator, filehandle=self._output)
+    output_mediator = self._CreateOutputMediator()
+    self._formatter = tln.TLNOutputModule(
+        output_mediator, filehandle=self._output)
     self._event_object = TLNTestEvent()
 
   def testWriteHeader(self):
@@ -79,15 +79,15 @@ class TLNOutputFormatterTest(test_lib.OutputModuleTestCase):
         TLNTestEventFormatter)
 
 
-class L2TTLNOutputFormatterTest(test_lib.OutputModuleTestCase):
+class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the log2timeline TLN output module."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    super(L2TTLNOutputFormatterTest, self).setUp()
     self._output = io.BytesIO()
-    self._formatter = tln.L2TTLNOutputFormatter(
-        None, self._formatter_mediator, filehandle=self._output)
+    output_mediator = self._CreateOutputMediator()
+    self._formatter = tln.L2TTLNOutputModule(
+        output_mediator, filehandle=self._output)
     self._event_object = TLNTestEvent()
 
   def testWriteHeader(self):

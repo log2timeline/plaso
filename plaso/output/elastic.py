@@ -8,14 +8,12 @@ import uuid
 
 import pyelasticsearch
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import timelib
-from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
 
 
-class ElasticSearchOutput(interface.OutputModule):
+class ElasticSearchOutputModule(interface.OutputModule):
   """Saves the events into an ElasticSearch database."""
 
   # Add configuration data for this output module.
@@ -56,36 +54,27 @@ class ElasticSearchOutput(interface.OutputModule):
   NAME = u'elastic'
   DESCRIPTION = u'Saves the events into an ElasticSearch database.'
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
+  def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
 
     Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
+      output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(ElasticSearchOutput, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config,
-        filter_use=filter_use)
+    super(ElasticSearchOutputModule, self).__init__(output_mediator, **kwargs)
     self._counter = 0
     self._data = []
 
-    elastic_host = getattr(config, 'elastic_server', '127.0.0.1')
-    elastic_port = getattr(config, 'elastic_port', 9200)
+    elastic_host = self._output_mediator.GetConfigurationValue(
+        u'elastic_server', default_value=u'127.0.0.1')
+    elastic_port = self._output_mediator.GetConfigurationValue(
+        u'elastic_port', default_value=9200)
     self._elastic_db = pyelasticsearch.ElasticSearch(
         u'http://{0:s}:{1:d}'.format(elastic_host, elastic_port))
 
-    case_name = getattr(config, 'case_name', u'')
-    document_type = getattr(config, 'document_type', u'')
+    case_name = self._output_mediator.GetConfigurationValue(
+        u'case_name', default_value=u'')
+    document_type = self._output_mediator.GetConfigurationValue(
+        u'document_type', default_value=u'')
 
     # case_name becomes the index name in Elastic.
     if case_name:
@@ -98,10 +87,6 @@ class ElasticSearchOutput(interface.OutputModule):
       self._doc_type = document_type.lower()
     else:
       self._doc_type = u'event'
-
-    # Build up a list of available hostnames in this storage file.
-    self._hostnames = {}
-    self._preprocesses = {}
 
   def _EventToDict(self, event_object):
     """Returns a dict built from an event object.
@@ -134,36 +119,20 @@ class ElasticSearchOutput(interface.OutputModule):
     # conversion).
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
-        timezone=self._timezone)
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        self._formatter_mediator, event_object)
-    ret_dict['message'] = msg
+        timezone=self._output_mediator.timezone)
+    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    ret_dict['message'] = message
 
-    source_type, source = formatters_manager.FormattersManager.GetSourceStrings(
+    source_type, source = self._output_mediator.GetFormattedSources(
         event_object)
 
     ret_dict['source_short'] = source_type
     ret_dict['source_long'] = source
 
-    hostname = getattr(event_object, 'hostname', '')
-    if self.store and not not hostname:
-      hostname = self._hostnames.get(event_object.store_number, '-')
-
+    hostname = self._output_mediator.GetHostname(event_object)
     ret_dict['hostname'] = hostname
 
-    # TODO: move this into a base output class.
-    username = getattr(event_object, 'username', '-')
-    if self.store:
-      pre_obj = self._preprocesses.get(event_object.store_number)
-      if pre_obj:
-        check_user = pre_obj.GetUsernameById(username)
-
-        if check_user != '-':
-          username = check_user
-
-    if username == '-' and hasattr(event_object, 'user_sid'):
-      username = getattr(event_object, 'user_sid', '-')
-
+    username = self._output_mediator.GetUsername(event_object)
     ret_dict['username'] = username
 
     return ret_dict
@@ -195,13 +164,6 @@ class ElasticSearchOutput(interface.OutputModule):
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    if self.store:
-      self._hostnames = helper.BuildHostDict(self.store)
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, 'store_range'):
-          for store_number in range(info.store_range[0], info.store_range[1]):
-            self._preprocesses[store_number] = info
-
     mapping = {
         self._doc_type: {
             u'_timestamp': {
@@ -237,4 +199,4 @@ class ElasticSearchOutput(interface.OutputModule):
     sys.stdout.flush()
 
 
-manager.OutputManager.RegisterOutput(ElasticSearchOutput)
+manager.OutputManager.RegisterOutput(ElasticSearchOutputModule)

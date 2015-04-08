@@ -18,6 +18,7 @@ from plaso.lib import event
 from plaso.lib import storage
 from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
+from plaso.output import mediator as output_mediator
 from plaso.output import pstorage  # pylint: disable=unused-import
 
 
@@ -424,7 +425,7 @@ class ClusteringEngine(object):
       field_name: an event_object attribute name.
       attribute: the corresponding event_object attribute.
     """
-    if type(attribute) in [dict, sets.Set]:
+    if isinstance(attribute, (dict, sets.Set)):
       value = repr(sorted(attribute.items()))
     else:
       value = unicode(attribute)
@@ -519,24 +520,34 @@ class ClusteringEngine(object):
     sys.stdout.flush()
     # Whether these incremental files should remain a feature or not is still
     # being decided. They're just here for now to make development faster.
-    nodup_filename = '.{}_dedup'.format(self.plaso_hash)
+    nodup_filename = '.{0:s}_dedup'.format(self.plaso_hash)
     if os.path.isfile(nodup_filename):
       sys.stdout.write(u'Using previously calculated results.\n')
     else:
       with SetupStorage(dump_filename) as store:
         total_events = store.GetNumberOfEvents()
         events_per_dot = operator.floordiv(total_events, 80)
+
+        formatter_mediator = self.GetFormatterMediator()
+
+        try:
+          formatter_mediator.SetPreferredLanguageIdentifier(
+              self._preferred_language)
+        except (KeyError, TypeError) as exception:
+          raise RuntimeError(exception)
+
         # TODO: When storage refactor is done change this so that we do not
         # always choose pstorage but whatever storage mechanism that was used
         # to begin with (as in if the storage is SQLite then use SQLite for
         # output).
-        formatter_cls = output_manager.OutputManager.GetOutputClass(u'pstorage')
-        store_dedup = open(nodup_filename, 'wb')
-        formatter = formatter_cls(
-            store, self._formatter_mediator, filehandle=store_dedup)
+        output_mediator_object = output_mediator.OutputMediator(
+            formatter_mediator, store)
+
+        output_module = output_manager.OutputManager.NewOutputModule(
+            u'pstorage', output_mediator_object, filehandle=nodup_filename)
 
         with output_interface.EventBuffer(
-            formatter, check_dedups=True) as output_buffer:
+            output_module, check_dedups=True) as output_buffer:
           event_object = store.GetSortedEntry()
           counter = 0
           while event_object:
@@ -546,6 +557,7 @@ class ClusteringEngine(object):
               sys.stdout.write(u'.')
               sys.stdout.flush()
             event_object = store.GetSortedEntry()
+
       sys.stdout.write(u'\n')
     return nodup_filename
 

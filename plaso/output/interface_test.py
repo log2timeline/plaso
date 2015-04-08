@@ -26,32 +26,11 @@ class DummyEvent(object):
     return u';'.join(map(str, [self.timestamp, self.entry]))
 
 
-class TestOutput(interface.OutputModule):
+class TestOutputModule(interface.FileOutputModule):
   """This is a test output module that provides a simple XML."""
 
   NAME = u'testoutput'
   DESCRIPTION = u'Test output that provides a simple mocked XML.'
-
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
-    """Initializes the output module object.
-
-    Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
-    """
-    super(TestOutput, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config,
-        filter_use=filter_use)
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
@@ -59,29 +38,26 @@ class TestOutput(interface.OutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    self._file_object.write((
+    self._WriteLine((
         u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
         u'\t<Entry>{2:s}</Entry>\n').format(
             event_object.date, event_object.timestamp, event_object.entry))
 
   def WriteEventEnd(self):
     """Writes the end of an event object to the output."""
-    self._file_object.write(u'</Event>\n')
+    self._WriteLine(u'</Event>\n')
 
   def WriteEventStart(self):
     """Writes the start of an event object to the output."""
-    self._file_object.write(u'<Event>\n')
+    self._WriteLine(u'<Event>\n')
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._file_object.write(u'</EventFile>\n')
+    self._WriteLine(u'</EventFile>\n')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._file_object.write(u'<EventFile>\n')
-
-
-manager.OutputManager.RegisterOutput(TestOutput)
+    self._WriteLine(u'<EventFile>\n')
 
 
 class PlasoOutputUnitTest(test_lib.OutputModuleTestCase):
@@ -96,15 +72,16 @@ class PlasoOutputUnitTest(test_lib.OutputModuleTestCase):
         DummyEvent(123489, u'This is just some stuff to fill the line.')]
 
     lines = []
-    with tempfile.NamedTemporaryFile() as fh:
-      formatter = TestOutput(None, self._formatter_mediator, filehandle=fh)
+    with tempfile.NamedTemporaryFile() as file_object:
+      output_mediator = self._CreateOutputMediator()
+      formatter = TestOutputModule(output_mediator, filehandle=file_object)
       formatter.WriteHeader()
       for event_object in events:
         formatter.WriteEvent(event_object)
       formatter.WriteFooter()
 
-      fh.seek(0)
-      for line in fh:
+      file_object.seek(0, os.SEEK_SET)
+      for line in file_object:
         lines.append(line)
 
     self.assertEqual(len(lines), 22)
@@ -124,6 +101,8 @@ class PlasoOutputUnitTest(test_lib.OutputModuleTestCase):
 
   def testOutputList(self):
     """Test listing up all available registered modules."""
+    manager.OutputManager.RegisterOutput(TestOutputModule)
+
     module_seen = False
     for name, description in manager.OutputManager.GetOutputs():
       if name == 'testoutput':
@@ -133,13 +112,15 @@ class PlasoOutputUnitTest(test_lib.OutputModuleTestCase):
 
     self.assertTrue(module_seen)
 
+    manager.OutputManager.DeregisterOutput(TestOutputModule)
+
 
 class EventBufferTest(test_lib.OutputModuleTestCase):
   """Few unit tests for the EventBuffer class."""
 
   def testFlush(self):
     """Test to ensure we empty our buffers and sends to output properly."""
-    with tempfile.NamedTemporaryFile() as fh:
+    with tempfile.NamedTemporaryFile() as file_object:
 
       def CheckBufferLength(event_buffer, expected):
         if not event_buffer.check_dedups:
@@ -147,7 +128,8 @@ class EventBufferTest(test_lib.OutputModuleTestCase):
         # pylint: disable=protected-access
         self.assertEqual(len(event_buffer._buffer_dict), expected)
 
-      formatter = TestOutput(None, self._formatter_mediator, filehandle=fh)
+      output_mediator = self._CreateOutputMediator()
+      formatter = TestOutputModule(output_mediator, filehandle=file_object)
       event_buffer = interface.EventBuffer(formatter, False)
 
       event_buffer.Append(DummyEvent(123456, u'Now is now'))
@@ -179,30 +161,31 @@ class OutputFilehandleTest(unittest.TestCase):
 
   def _GetLine(self):
     # Time, Þorri allra landsmanna hlýddu á atburðinn.
-    return ('Time, \xc3\x9eorri allra landsmanna hl\xc3\xbdddu \xc3\xa1 '
-            'atbur\xc3\xb0inn.\n').decode('utf-8')
+    return (
+        b'Time, \xc3\x9eorri allra landsmanna hl\xc3\xbdddu \xc3\xa1 '
+        b'atbur\xc3\xb0inn.\n').decode(u'utf-8')
 
   def testFilePath(self):
     temp_path = ''
     with tempfile.NamedTemporaryFile(delete=True) as temp_file:
       temp_path = temp_file.name
 
-    with interface.OutputFilehandle(self.preferred_encoding) as fh:
-      fh.Open(path=temp_path)
-      fh.WriteLine(self._GetLine())
+    with interface.OutputFilehandle(self.preferred_encoding) as file_object:
+      file_object.Open(path=temp_path)
+      file_object.WriteLine(self._GetLine())
 
     line_read = u''
     with open(temp_path, 'rb') as output_file:
       line_read = output_file.read()
 
     os.remove(temp_path)
-    self.assertEqual(line_read, self._GetLine().encode('utf-8'))
+    self.assertEqual(line_read, self._GetLine().encode(u'utf-8'))
 
   def testStdOut(self):
-    with interface.OutputFilehandle(self.preferred_encoding) as fh:
-      fh.Open(sys.stdout)
+    with interface.OutputFilehandle(self.preferred_encoding) as file_object:
+      file_object.Open(sys.stdout)
       try:
-        fh.WriteLine(self._GetLine())
+        file_object.WriteLine(self._GetLine())
       except (UnicodeDecodeError, UnicodeEncodeError):
         self.fail(u'Unicode decode/encode error exception.')
 

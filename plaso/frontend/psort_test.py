@@ -16,6 +16,7 @@ from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.output import interface as output_interface
+from plaso.output import mediator as output_mediator
 
 
 class PsortTestEvent(event.EventObject):
@@ -43,41 +44,34 @@ class PsortTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = u'None in Particular'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(PsortTestEventFormatter)
-
-
-class TestFormatter(output_interface.OutputModule):
+class TestOutputModule(output_interface.FileOutputModule):
   """Test output module."""
+
+  _HEADER = (
+      u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
+      u'short,desc,version,filename,inode,notes,format,extra\n')
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The "raw" representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
-
     Args:
       event_object: the event object (instance of EventObject).
     """
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
-    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
-    source_short, source_long = event_formatter.GetSources(event_object)
-    self._file_object.write(u'{0:s}/{1:s} {2:s}\n'.format(
-        source_short, source_long, msg))
+    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    source_short, source_long = self._output_mediator.GetFormattedSources(
+        event_object)
+    self._WriteLine(u'{0:s}/{1:s} {2:s}\n'.format(
+        source_short, source_long, message))
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._file_object.write((
-        u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
-        u'short,desc,version,filename,inode,notes,format,extra\n'))
+    self._WriteLine(self._HEADER)
 
 
 class TestEventBuffer(output_interface.EventBuffer):
   """A test event buffer."""
 
-  def __init__(self, formatter, check_dedups=True, store=None):
+  def __init__(self, output_module, check_dedups=True, store=None):
     """Initialize the EventBuffer.
 
     This class is used for buffering up events for duplicate removals
@@ -85,13 +79,14 @@ class TestEventBuffer(output_interface.EventBuffer):
     by the appropriate output module.
 
     Args:
-      formatter: An OutputFormatter object.
+      output_module: The output module (instance of OutputModule).
       check_dedups: Optional boolean value indicating whether or not the buffer
                     should check and merge duplicate entries or not.
       store: Optional storage file object (instance of StorageFile) that defines
              the storage.
     """
-    super(TestEventBuffer, self).__init__(formatter, check_dedups=check_dedups)
+    super(TestEventBuffer, self).__init__(
+        output_module, check_dedups=check_dedups)
     self.record_count = 0
     self.store = store
 
@@ -101,7 +96,7 @@ class TestEventBuffer(output_interface.EventBuffer):
 
   def Flush(self):
     for event_object_key in self._buffer_dict:
-      self.formatter.WriteEventBody(self._buffer_dict[event_object_key])
+      self._output_module.WriteEventBody(self._buffer_dict[event_object_key])
     self._buffer_dict = {}
 
   def End(self):
@@ -144,6 +139,9 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
   def testOutput(self):
     """Testing if psort can output data."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        PsortTestEventFormatter)
+
     events = []
     events.append(PsortTestEvent(5134324321))
     events.append(PsortTestEvent(2134324321))
@@ -152,7 +150,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     events.append(PsortTestEvent(5134324322))
     events.append(PsortTestEvent(5134024321))
 
-    output_fd = io.StringIO()
+    output_fd = io.BytesIO()
 
     with test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
@@ -165,29 +163,34 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
       with storage.StorageFile(temp_file) as storage_file:
         storage_file.store_range = [1]
-        formatter = TestFormatter(
-            storage_file, self._formatter_mediator, filehandle=output_fd)
+        output_mediator_object = output_mediator.OutputMediator(
+            self._formatter_mediator, storage_file)
+        output_module = TestOutputModule(
+            output_mediator_object, filehandle=output_fd)
         event_buffer = TestEventBuffer(
-            formatter, check_dedups=False, store=storage_file)
+            output_module, check_dedups=False, store=storage_file)
 
         self._front_end.ProcessOutput(storage_file, event_buffer)
 
     event_buffer.Flush()
     lines = []
-    for line in output_fd.getvalue().split(u'\n'):
-      if line == u'.':
+    for line in output_fd.getvalue().split(b'\n'):
+      if line == b'.':
         continue
       if line:
         lines.append(line)
 
     # One more line than events (header row).
     self.assertEqual(len(lines), 7)
-    self.assertTrue(u'My text goes along: My text dude. lines' in lines[2])
-    self.assertTrue(u'LOG/' in lines[2])
-    self.assertTrue(u'None in Particular' in lines[2])
+    self.assertTrue(b'My text goes along: My text dude. lines' in lines[2])
+    self.assertTrue(b'LOG/' in lines[2])
+    self.assertTrue(b'None in Particular' in lines[2])
     self.assertEqual(lines[0], (
-        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        u'version,filename,inode,notes,format,extra'))
+        b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        b'version,filename,inode,notes,format,extra'))
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        PsortTestEventFormatter)
 
   # TODO: add bogus data location test.
 

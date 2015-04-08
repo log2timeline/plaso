@@ -25,6 +25,7 @@ from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
+from plaso.output import mediator as output_mediator
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 from plaso.winnt import language_ids
@@ -286,7 +287,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       else:
         output_stream = sys.stdout
 
-      formatter_mediator = self.GetFormatMediator()
+      formatter_mediator = self.GetFormatterMediator()
 
       try:
         formatter_mediator.SetPreferredLanguageIdentifier(
@@ -294,13 +295,18 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       except (KeyError, TypeError) as exception:
         raise RuntimeError(exception)
 
+      output_mediator_object = output_mediator.OutputMediator(
+          formatter_mediator, storage_file, config=options)
+
+      kwargs = {}
+      if self._filter_object:
+        kwargs[u'field_filter'] = self._filter_object
+      if output_stream:
+        kwargs[u'filehandle'] = output_stream
+
       try:
-        # TODO: move this into a factory function?
-        output_module_class = output_manager.OutputManager.GetOutputClass(
-            self._output_format)
-        output_module = output_module_class(
-            storage_file, formatter_mediator, filehandle=output_stream,
-            config=options, filter_use=self._filter_object)
+        output_module = output_manager.OutputManager.NewOutputModule(
+            self._output_format, output_mediator_object, **kwargs)
 
       except IOError as exception:
         raise RuntimeError(
