@@ -3,16 +3,15 @@
 
 import logging
 import re
+import sys
 
-from plaso.formatters import manager as formatters_manager
-from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
 
 
-class DynamicOutput(interface.FileOutputModule):
+class DynamicOutputModule(interface.FileOutputModule):
   """Dynamic selection of fields for a separated value output format."""
 
   NAME = u'dynamic'
@@ -21,81 +20,82 @@ class DynamicOutput(interface.FileOutputModule):
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
-  # A dict containing mappings between "special" attributes and
-  # how they should be calculated and presented.
+  # TODO: Evaluate which fields should be included by default.
+  _DEFAULT_FIELDS = [
+      u'datetime', u'timestamp_desc', u'source', u'source_long',
+      u'message', u'parser', u'display_name', u'tag', u'store_number',
+      u'store_index']
+
+  _FIELD_DELIMITER = u','
+
+  # A dict containing mappings between the name of fields and
+  # a callback function that formats the field value.
   # They should be documented here:
   #   http://plaso.kiddaland.net/usage/psort/output
-  SPECIAL_HANDLING = {
-      'date': 'ParseDate',
-      'datetime': 'ParseDateTime',
-      'description': 'ParseMessage',
-      'description_short': 'ParseMessageShort',
-      'host': 'ParseHostname',
-      'hostname': 'ParseHostname',
-      'inode': 'ParseInode',
-      'macb': 'ParseMacb',
-      'message': 'ParseMessage',
-      'message_short': 'ParseMessageShort',
-      'source': 'ParseSourceShort',
-      'sourcetype': 'ParseSource',
-      'source_long': 'ParseSource',
-      'tag': 'ParseTag',
-      'time': 'ParseTime',
-      'timezone': 'ParseZone',
-      'type': 'ParseTimestampDescription',
-      'user': 'ParseUsername',
-      'username': 'ParseUsername',
-      'zone': 'ParseZone',
+  _FIELD_FORMAT_CALLBACKS = {
+      u'date': u'_FormatDate',
+      u'datetime': u'_FormatDateTime',
+      u'description': u'_FormatMessage',
+      u'description_short': u'_FormatMessageShort',
+      u'host': u'_FormatHostname',
+      u'hostname': u'_FormatHostname',
+      u'inode': u'_FormatInode',
+      u'macb': u'_FormatMacb',
+      u'message': u'_FormatMessage',
+      u'message_short': u'_FormatMessageShort',
+      u'source': u'_FormatSourceShort',
+      u'sourcetype': u'_FormatSource',
+      u'source_long': u'_FormatSource',
+      u'tag': u'_FormatTag',
+      u'time': u'_FormatTime',
+      u'timezone': u'_FormatZone',
+      u'type': u'_FormatTimestampDescription',
+      u'user': u'_FormatUsername',
+      u'username': u'_FormatUsername',
+      u'zone': u'_FormatZone',
   }
 
-  def ParseTimestampDescription(self, event_object):
-    """Return the timestamp description."""
-    return getattr(event_object, 'timestamp_desc', '-')
+  def __init__(
+      self, output_mediator, fields_filter=None, filehandle=sys.stdout,
+      **kwargs):
+    """Initializes the output module object.
 
-  def ParseTag(self, event_object):
-    """Return tagging information."""
-    tag = getattr(event_object, 'tag', None)
+    Args:
+      output_mediator: The output mediator object (instance of OutputMediator).
+      fields_filter: optional filter object (instance of FilterObject) to
+                     indicate which fields should be outputed. The default
+                     is None.
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+    """
+    super(DynamicOutputModule, self).__init__(
+        output_mediator, filehandle=filehandle, **kwargs)
+    self._fields = None
+    self._field_delimiter = None
 
-    if not tag:
-      return u'-'
+    if fields_filter:
+      self._fields = fields_filter.fields
+      self._field_delimiter = fields_filter.separator
 
-    return u' '.join(tag.tags)
+    if not self._fields:
+      self._fields = self._DEFAULT_FIELDS
 
-  def ParseSource(self, event_object):
-    """Return the source string."""
-    # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
-    if not event_formatter:
-      raise errors.NoFormatterFound(
-          u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.data_type))
+    if not self._field_delimiter:
+      self._field_delimiter = self._FIELD_DELIMITER
 
-    _, source = event_formatter.GetSources(event_object)
-    return source
+  def _FormatDate(self, event_object):
+    """Formats the date.
 
-  def ParseSourceShort(self, event_object):
-    """Return the source string."""
-    # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
-    if not event_formatter:
-      raise errors.NoFormatterFound(
-          u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.data_type))
+    Args:
+      event_object: the event object (instance of EventObject).
 
-    source, _ = event_formatter.GetSources(event_object)
-    return source
-
-  def ParseZone(self, _):
-    """Return a timezone."""
-    return self._timezone
-
-  def ParseDate(self, event_object):
-    """Return a date string from a timestamp value."""
+     Returns:
+       A string containing the value for the date field.
+    """
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self._timezone, raise_error=True)
+          event_object.timestamp, self._output_mediator.timezone,
+          raise_error=True)
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
@@ -107,11 +107,19 @@ class DynamicOutput(interface.FileOutputModule):
     return u'{0:04d}-{1:02d}-{2:02d}'.format(
         date_use.year, date_use.month, date_use.day)
 
-  def ParseDateTime(self, event_object):
-    """Return a datetime object from a timestamp, in an ISO format."""
+  def _FormatDateTime(self, event_object):
+    """Formats the date and time in ISO 8601 format.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the date field.
+    """
     try:
       return timelib.Timestamp.CopyToIsoFormat(
-          event_object.timestamp, timezone=self._timezone, raise_error=True)
+          event_object.timestamp, timezone=self._output_mediator.timezone,
+          raise_error=True)
 
     except OverflowError as exception:
       logging.error((
@@ -120,13 +128,134 @@ class DynamicOutput(interface.FileOutputModule):
               event_object.timestamp, exception,
               getattr(event_object, 'store_number', u''),
               getattr(event_object, 'store_index', u'')))
+
       return u'0000-00-00T00:00:00'
 
-  def ParseTime(self, event_object):
-    """Return a timestamp string from an integer timestamp value."""
+  def _FormatHostname(self, event_object):
+    """Formats the hostname.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the hostname field.
+    """
+    hostname = self._output_mediator.GetHostname(event_object)
+    return self._SanitizeField(hostname)
+
+  def _FormatMessage(self, event_object):
+    """Formats the message.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the message field.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+                        type in the event object.
+    """
+    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    return self._SanitizeField(message)
+
+  def _FormatMessageShort(self, event_object):
+    """Formats the short message.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the short message field.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+                        type in the event object.
+    """
+    _, message_short = self._output_mediator.GetFormattedMessages(event_object)
+    return self._SanitizeField(message_short)
+
+  def _FormatSource(self, event_object):
+    """Formats the source.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the source field.
+    """
+    _, source = self._output_mediator.GetFormattedSources(event_object)
+    return self._SanitizeField(source)
+
+  def _FormatSourceShort(self, event_object):
+    """Formats the short source.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the short source field.
+    """
+    source_short, _ = self._output_mediator.GetFormattedSources(event_object)
+    return self._SanitizeField(source_short)
+
+  def _FormatInode(self, event_object):
+    """Formats the inode.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the inode field.
+    """
+    inode = getattr(event_object, 'inode', '-')
+    if inode == '-':
+      if hasattr(event_object, 'pathspec') and hasattr(
+          event_object.pathspec, 'image_inode'):
+        inode = event_object.pathspec.image_inode
+
+    return inode
+
+  def _FormatMacb(self, event_object):
+    """Formats the legacy MACB representation.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the MACB field.
+    """
+    return helper.GetLegacy(event_object)
+
+  def _FormatTag(self, event_object):
+    """Formats the event tag.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the event tag field.
+    """
+    tag = getattr(event_object, 'tag', None)
+
+    if not tag:
+      return u'-'
+
+    return u' '.join(tag.tags)
+
+  def _FormatTime(self, event_object):
+    """Formats the timestamp.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+     Returns:
+       A string containing the value for the timestamp field.
+    """
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self._timezone, raise_error=True)
+          event_object.timestamp, self._output_mediator.timezone,
+          raise_error=True)
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
@@ -138,100 +267,54 @@ class DynamicOutput(interface.FileOutputModule):
     return u'{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)
 
-  def ParseHostname(self, event_object):
-    """Return a hostname."""
-    hostname = getattr(event_object, 'hostname', '')
-    if self.store:
-      if not hostname:
-        hostname = self._hostnames.get(event_object.store_number, '-')
-
-    return hostname
-
-  # TODO: move this into a base output class.
-  def ParseUsername(self, event_object):
-    """Determines an username based on an event and extracted information.
-
-    Uses the extracted information from the pre processing information and the
-    event object itself to determine an username.
+  def _FormatTimestampDescription(self, event_object):
+    """Formats the timestamp description.
 
     Args:
-      event_object: The event object (instance of EventObject).
+      event_object: the event object (instance of EventObject).
 
-    Returns:
-      An Unicode string containing the username, or - if none found.
+     Returns:
+       A string containing the value for the timestamp description field.
     """
-    username = getattr(event_object, u'username', u'-')
-    if self.store:
-      pre_obj = self._preprocesses.get(event_object.store_number)
-      if pre_obj:
-        check_user = pre_obj.GetUsernameById(username)
+    return getattr(event_object, 'timestamp_desc', '-')
 
-        if check_user != u'-':
-          username = check_user
-
-    if username == '-' and hasattr(event_object, u'user_sid'):
-      if not pre_obj:
-        return getattr(event_object, u'user_sid', u'-')
-
-      return pre_obj.GetUsernameById(
-          getattr(event_object, u'user_sid', u'-'))
-
-    return username
-
-  def ParseMessage(self, event_object):
-    """Return the message string from the EventObject.
+  def _FormatUsername(self, event_object):
+    """Formats the username.
 
     Args:
-      event_object: The event object (EventObject).
+      event_object: the event object (instance of EventObject).
 
-    Raises:
-      errors.NoFormatterFound: If no formatter for that event is found.
+     Returns:
+       A string containing the value for the username field.
     """
-    # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
-    if not event_formatter:
-      raise errors.NoFormatterFound(
-          u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.data_type))
+    username = self._output_mediator.GetUsername(event_object)
+    return self._SanitizeField(username)
 
-    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
-    return msg
-
-  def ParseMessageShort(self, event_object):
-    """Return the message string from the EventObject.
+  def _FormatZone(self, unused_event_object):
+    """Formats the timezone.
 
     Args:
-      event_object: The event object (EventObject).
+      event_object: the event object (instance of EventObject).
 
-    Raises:
-      errors.NoFormatterFound: If no formatter for that event is found.
+     Returns:
+       A string containing the value for the timezone field.
     """
-    # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        event_object.data_type)
-    if not event_formatter:
-      raise errors.NoFormatterFound(
-          u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.data_type))
+    return self._output_mediator.timezone
 
-    _, msg_short = event_formatter.GetMessages(
-        self._formatter_mediator, event_object)
-    return msg_short
+  def _SanitizeField(self, field):
+    """Sanitizes a field for output.
 
-  def ParseInode(self, event_object):
-    """Return an inode number."""
-    inode = getattr(event_object, 'inode', '-')
-    if inode == '-':
-      if hasattr(event_object, 'pathspec') and hasattr(
-          event_object.pathspec, 'image_inode'):
-        inode = event_object.pathspec.image_inode
+    This method removes the field delimiter from the field string.
 
-    return inode
+    Args:
+      field: the string that makes up the field.
 
-  def ParseMacb(self, event_object):
-    """Return a legacy MACB representation."""
-    return helper.GetLegacy(event_object)
+     Returns:
+       A string containing the value for the field.
+    """
+    if self._field_delimiter:
+      return field.replace(self._field_delimiter, u' ')
+    return field
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
@@ -240,49 +323,26 @@ class DynamicOutput(interface.FileOutputModule):
       event_object: the event object (instance of EventObject).
     """
     row = []
-    for field in self.fields:
-      has_call_back = self.SPECIAL_HANDLING.get(field, None)
-      call_back = None
-      if has_call_back:
-        call_back = getattr(self, has_call_back, None)
+    for field in self._fields:
+      callback_name = self._FIELD_FORMAT_CALLBACKS.get(field, None)
+      callback_function = None
+      if callback_name:
+        callback_function = getattr(self, callback_name, None)
 
-      if call_back:
-        row.append(call_back(event_object))
+      if callback_function:
+        row.append(callback_function(event_object))
       else:
         row.append(getattr(event_object, field, u'-'))
 
     out_write = u'{0:s}\n'.format(
-        self.separator.join(unicode(x).replace(
-            self.separator, u' ') for x in row))
+        self._field_delimiter.join(unicode(x).replace(
+            self._field_delimiter, u' ') for x in row))
     self._WriteLine(out_write)
 
   def WriteHeader(self):
     """Writes the header to the output."""
     # Start by finding out which fields are to be used.
-    self.fields = []
-
-    if self._filter:
-      self.fields = self._filter.fields
-      self.separator = self._filter.separator
-    else:
-      self.separator = u','
-
-    if not self.fields:
-      # TODO: Evaluate which fields should be included by default.
-      self.fields = [
-          'datetime', 'timestamp_desc', 'source', 'source_long',
-          'message', 'parser', 'display_name', 'tag', 'store_number',
-          'store_index']
-
-    if self.store:
-      self._hostnames = helper.BuildHostDict(self.store)
-      self._preprocesses = {}
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, 'store_range'):
-          for store_number in range(info.store_range[0], info.store_range[1]):
-            self._preprocesses[store_number] = info
-
-    self._WriteLine('{0:s}\n'.format(self.separator.join(self.fields)))
+    self._WriteLine(u'{0:s}\n'.format(self._field_delimiter.join(self._fields)))
 
 
-manager.OutputManager.RegisterOutput(DynamicOutput)
+manager.OutputManager.RegisterOutput(DynamicOutputModule)

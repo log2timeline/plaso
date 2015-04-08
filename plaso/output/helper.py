@@ -61,33 +61,3 @@ def GetLegacy(evt):
     return '..C.'
 
   return '....'
-
-
-def BuildHostDict(storage_object):
-  """Return a dict object from a StorageFile object.
-
-  Build a dict object based on the preprocess objects stored inside
-  a storage file.
-
-  Args:
-    storage_object: The StorageFile object that stores all the EventObjects.
-
-  Returns:
-    A dict object that has the store number as a key and the hostname
-    as the value to that key.
-  """
-  host_dict = {}
-  if not storage_object:
-    return host_dict
-
-  if not hasattr(storage_object, 'GetStorageInformation'):
-    return host_dict
-
-  for info in storage_object.GetStorageInformation():
-    if hasattr(info, 'store_range') and hasattr(info, 'hostname'):
-      for store_number in range(info.store_range[0], info.store_range[1]):
-        # TODO: A bit wasteful, if the range is large we are wasting keys.
-        # Rewrite this logic into a more optimal one.
-        host_dict[store_number] = info.hostname
-
-  return host_dict

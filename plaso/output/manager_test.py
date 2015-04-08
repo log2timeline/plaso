@@ -52,24 +52,14 @@ class OutputManagerTest(unittest.TestCase):
     """Tests the GetOutputClass function."""
     manager.OutputManager.RegisterOutput(TestOutput)
 
-    output_class = manager.OutputManager.GetOutputClass('test_output')
+    output_class = manager.OutputManager.GetOutputClass(u'test_output')
     self.assertEqual(output_class, TestOutput)
 
     with self.assertRaises(ValueError):
       _ = manager.OutputManager.GetOutputClass(1)
 
     with self.assertRaises(KeyError):
-      _ = manager.OutputManager.GetOutputClass('bogus')
-
-    manager.OutputManager.DeregisterOutput(TestOutput)
-
-  def testHasOutputClass(self):
-    """Tests the HasOutputClass function."""
-    manager.OutputManager.RegisterOutput(TestOutput)
-
-    self.assertTrue(manager.OutputManager.HasOutputClass('test_output'))
-    self.assertFalse(manager.OutputManager.HasOutputClass('bogus'))
-    self.assertFalse(manager.OutputManager.HasOutputClass(1))
+      _ = manager.OutputManager.GetOutputClass(u'bogus')
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 
@@ -84,8 +74,33 @@ class OutputManagerTest(unittest.TestCase):
       names.append(name)
       descriptions.append(description)
 
-    self.assertIn('test_output', names)
+    self.assertIn(u'test_output', names)
     self.assertIn(u'This is a test output module.', descriptions)
+
+    manager.OutputManager.DeregisterOutput(TestOutput)
+
+  def testHasOutputClass(self):
+    """Tests the HasOutputClass function."""
+    manager.OutputManager.RegisterOutput(TestOutput)
+
+    self.assertTrue(manager.OutputManager.HasOutputClass(u'test_output'))
+    self.assertFalse(manager.OutputManager.HasOutputClass(u'bogus'))
+    self.assertFalse(manager.OutputManager.HasOutputClass(1))
+
+    manager.OutputManager.DeregisterOutput(TestOutput)
+
+  def testNewOutputModule(self):
+    """Tests the NewOutputModule function."""
+    manager.OutputManager.RegisterOutput(TestOutput)
+
+    output_module = manager.OutputManager.NewOutputModule(u'test_output', None)
+    self.assertIsInstance(output_module, TestOutput)
+
+    with self.assertRaises(ValueError):
+      _ = manager.OutputManager.NewOutputModule(1, None)
+
+    with self.assertRaises(KeyError):
+      _ = manager.OutputManager.NewOutputModule(u'bogus', None)
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 

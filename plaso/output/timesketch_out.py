@@ -15,7 +15,6 @@ from timesketch.models import db_session
 from timesketch.models.sketch import SearchIndex
 from timesketch.models.user import User
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -25,7 +24,7 @@ elastic_logger = logging.getLogger(u'elasticsearch')
 elastic_logger.propagate = False
 
 
-class TimesketchOutput(interface.OutputModule):
+class TimesketchOutputModule(interface.OutputModule):
   """Output module for Timesketch."""
 
   NAME = u'timesketch'
@@ -66,25 +65,13 @@ class TimesketchOutput(interface.OutputModule):
           u'required': False,
           u'default': 1000})]
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
+  def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
 
     Args:
-      store: A storage file object (instance of StorageFile).
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
+      output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(TimesketchOutput, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config,
-        filter_use=filter_use)
+    super(TimesketchOutputModule, self).__init__(output_mediator, **kwargs)
 
     # Get Elasticsearch config from Timesketch.
     self._timesketch = timesketch.create_app()
@@ -96,19 +83,16 @@ class TimesketchOutput(interface.OutputModule):
     self._counter = Counter()
     self._doc_type = u'plaso_event'
     self._events = []
-    self._flush_interval = getattr(config, u'flush_interval')
-    self._index_name = getattr(config, u'index')
-    self._timeline_name = getattr(config, u'name')
-    self._timeline_owner = getattr(config, u'owner')
+    self._flush_interval = self._output_mediator.GetConfigurationValue(
+        u'flush_interval')
+    self._index_name = self._output_mediator.GetConfigurationValue(u'index')
+    self._timeline_name = self._output_mediator.GetConfigurationValue(u'name')
+    self._timeline_owner = self._output_mediator.GetConfigurationValue(u'owner')
     self._timing_start = datetime.now()
 
-    # Try to get the hostname from the pre-processing object.
-    hostname = None
-    if self.store:
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, u'hostname'):
-          hostname = info.hostname
-          logging.info(u'Hostname: {0:s}'.format(hostname))
+    hostname = self._output_mediator.GetStoredHostname()
+    if hostname:
+      logging.info(u'Hostname: {0:s}'.format(hostname))
 
     # Make sure we have a name for the timeline. Prompt the user if not.
     if not self._timeline_name:
@@ -150,13 +134,12 @@ class TimesketchOutput(interface.OutputModule):
     # conversion).
     event_values[u'datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
-        timezone=self._timezone)
+        timezone=self._output_mediator.timezone)
 
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        self._formatter_mediator, event_object)
-    event_values[u'message'] = msg
+    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    event_values[u'message'] = message
 
-    source_type, source = formatters_manager.FormattersManager.GetSourceStrings(
+    source_type, source = self._output_mediator.GetFormattedSources(
         event_object)
     event_values[u'source_short'] = source_type
     event_values[u'source_long'] = source
@@ -257,4 +240,4 @@ class TimesketchOutput(interface.OutputModule):
     logging.info(u'Adding events to Timesketch..')
 
 
-manager.OutputManager.RegisterOutput(TimesketchOutput)
+manager.OutputManager.RegisterOutput(TimesketchOutputModule)

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the L2tCsv output class."""
+"""Tests for the log2timeline (l2t) CSV output class."""
 
 import io
 import unittest
@@ -42,15 +42,15 @@ class L2tTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-class L2tCsvTest(test_lib.OutputModuleTestCase):
+class L2TCSVTest(test_lib.OutputModuleTestCase):
   """Contains tests to validate the L2tCSV outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    super(L2tCsvTest, self).setUp()
     self.output = io.BytesIO()
-    self.formatter = l2t_csv.L2tCsvOutputFormatter(
-        None, self._formatter_mediator, filehandle=self.output)
+    output_mediator = self._CreateOutputMediator()
+    self.formatter = l2t_csv.L2TCSVOutputModule(
+        output_mediator, filehandle=self.output)
     self.event_object = L2tTestEvent()
 
   def testWriteHeader(self):

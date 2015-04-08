@@ -5,11 +5,8 @@ import abc
 import logging
 import sys
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import utils
-
-import pytz
 
 
 class OutputModule(object):
@@ -32,54 +29,23 @@ class OutputModule(object):
   NAME = u''
   DESCRIPTION = u''
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
+  def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
 
     Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
+      output_mediator: The output mediator object (instance of OutputMediator).
+      kwargs: a dictionary of keyword arguments dependending on the output
+              module.
+
+    Raises:
+      ValueError: when there are unused keyword arguments.
     """
+    if kwargs:
+      raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
+          u', '.join(kwargs.keys())))
+
     super(OutputModule, self).__init__()
-    self._config = config
-    self._filter = filter_use
-    self._file_object = filehandle
-    self._formatter_mediator = formatter_mediator
-
-    timezone = getattr(config, u'timezone', u'UTC')
-    try:
-      self._timezone = pytz.timezone(timezone)
-    except pytz.UnknownTimeZoneError:
-      logging.warning(u'Unkown timezone: {0:s} defaulting to: UTC'.format(
-          timezone))
-      self._timezone = pytz.utc
-
-    self.encoding = getattr(config, u'preferred_encoding', u'utf-8')
-    self.store = store
-
-  def _GetEventFormatter(self, event_object):
-    """Retrieves the event formatter for a specific event object type.
-
-    Args:
-      event_object: the event object (instance of EventObject)
-
-    Returns:
-      The event formatter object (instance of EventFormatter) or None.
-    """
-    data_type = getattr(event_object, u'data_type', None)
-    if not data_type:
-      return
-
-    return formatters_manager.FormattersManager.GetFormatterObject(data_type)
+    self._output_mediator = output_mediator
 
   def Close(self):
     """Closes the output."""
@@ -154,28 +120,15 @@ class OutputModule(object):
 class FileOutputModule(OutputModule):
   """A file-based output module."""
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
+  def __init__(self, output_mediator, filehandle=sys.stdout, **kwargs):
     """Initializes the output module object.
 
     Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
+      output_mediator: The output mediator object (instance of OutputMediator).
       filehandle: Optional file-like object that can be written to.
                   The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
-
-    Raises:
-      ValueError: if the filehandle value is not supported.
     """
-    super(FileOutputModule, self).__init__(
-        store, formatter_mediator, config=config, filter_use=filter_use)
+    super(FileOutputModule, self).__init__(output_mediator, **kwargs)
 
     if isinstance(filehandle, basestring):
       open_file_object = open(filehandle, 'wb')
@@ -187,7 +140,7 @@ class FileOutputModule(OutputModule):
     else:
       raise ValueError(u'Unsupported file handle.')
 
-    self._file_object = OutputFilehandle(self.encoding)
+    self._file_object = OutputFilehandle(self._output_mediator.encoding)
     self._file_object.Open(open_file_object)
 
   def _WriteLine(self, line):
@@ -206,28 +159,28 @@ class FileOutputModule(OutputModule):
 class EventBuffer(object):
   """Buffer class for EventObject output processing."""
 
-  MERGE_ATTRIBUTES = ['inode', 'filename', 'display_name']
+  MERGE_ATTRIBUTES = [u'inode', u'filename', u'display_name']
 
-  def __init__(self, formatter, check_dedups=True):
-    """Initialize the EventBuffer.
+  def __init__(self, output_module, check_dedups=True):
+    """Initializes an event buffer object.
 
     This class is used for buffering up events for duplicate removals
     and for other post-processing/analysis of events before being presented
     by the appropriate output module.
 
     Args:
-      formatter: An OutputFormatter object.
+      output_module: An output module object (instance of OutputModule).
       check_dedups: Optional boolean value indicating whether or not the buffer
                     should check and merge duplicate entries or not.
     """
     self._buffer_dict = {}
     self._current_timestamp = 0
-    self.duplicate_counter = 0
-    self.check_dedups = check_dedups
+    self._output_module = output_module
+    self._output_module.Open()
+    self._output_module.WriteHeader()
 
-    self.formatter = formatter
-    self.formatter.Open()
-    self.formatter.WriteHeader()
+    self.check_dedups = check_dedups
+    self.duplicate_counter = 0
 
   def Append(self, event_object):
     """Append an EventObject into the processing pipeline.
@@ -236,7 +189,7 @@ class EventBuffer(object):
       event_object: The EventObject that is being added.
     """
     if not self.check_dedups:
-      self.formatter.WriteEvent(event_object)
+      self._output_module.WriteEvent(event_object)
       return
 
     if event_object.timestamp != self._current_timestamp:
@@ -255,7 +208,7 @@ class EventBuffer(object):
 
     for event_object in self._buffer_dict.values():
       try:
-        self.formatter.WriteEvent(event_object)
+        self._output_module.WriteEvent(event_object)
       except errors.WrongFormatter as exception:
         logging.error(u'Unable to write event: {:s}'.format(exception))
 
@@ -290,9 +243,9 @@ class EventBuffer(object):
     """Call the formatter to produce the closing line."""
     self.Flush()
 
-    if self.formatter:
-      self.formatter.WriteFooter()
-      self.formatter.Close()
+    if self._output_module:
+      self._output_module.WriteFooter()
+      self._output_module.Close()
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""

@@ -1,39 +1,24 @@
 # -*- coding: utf-8 -*-
 """An output module that saves data into a JSON format."""
 
-import sys
-
 from plaso.output import interface
 from plaso.output import manager
 from plaso.serializer import json_serializer
 
 
-class JsonOutputFormatter(interface.FileOutputModule):
+class JsonOutputModule(interface.FileOutputModule):
   """Output module for the JSON format."""
 
   NAME = u'json'
   DESCRIPTION = u'Saves the events into a JSON format.'
 
-  def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
-      filter_use=None):
+  def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
 
     Args:
-      store: A storage file object (instance of StorageFile) that defines
-             the storage.
-      formatter_mediator: The formatter mediator object (instance of
-                          FormatterMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-      config: Optional configuration object, containing config information.
-              The default is None.
-      filter_use: Optional filter object (instance of FilterObject).
-                  The default is None.
+      output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(JsonOutputFormatter, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config,
-        filter_use=filter_use)
+    super(JsonOutputModule, self).__init__(output_mediator, **kwargs)
     self._event_counter = 0
 
   def WriteEventBody(self, event_object):
@@ -63,4 +48,4 @@ class JsonOutputFormatter(interface.FileOutputModule):
     self._event_counter = 0
 
 
-manager.OutputManager.RegisterOutput(JsonOutputFormatter)
+manager.OutputManager.RegisterOutput(JsonOutputModule)
