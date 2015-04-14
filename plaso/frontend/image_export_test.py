@@ -11,7 +11,6 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.frontend import frontend
 from plaso.frontend import image_export
 from plaso.frontend import test_lib
 
@@ -148,17 +147,23 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourceExtractWithDateTimeFilter(self):
     """Tests extract with a date time filter."""
     test_front_end = image_export.ImageExportFrontend()
+    source_path = self._GetTestFilePath([u'image.qcow2'])
 
-    options = frontend.Options()
-    options.image = self._GetTestFilePath([u'image.qcow2'])
-    options.path = self._temp_directory
-    options.include_duplicates = True
-    options.date_filters = [u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20']
+    test_front_end.ParseDateFilters([
+        u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
 
-    test_front_end.ParseOptions(options, source_option=u'image')
-    test_front_end.PrintFilterCollection()
+    output_writer = test_lib.StringIOOutputWriter()
+    test_front_end.PrintFilterCollection(output_writer)
 
-    test_front_end.ProcessSource(options)
+    expected_value = (
+        u'Filters:\n'
+        u'\tctime between 2012-05-25T15:59:00+00:00 and '
+        u'2012-05-25T15:59:20+00:00\n')
+    value = output_writer.GetValue()
+    self.assertEqual(value, expected_value)
+
+    test_front_end.ScanSource(source_path)
+    test_front_end.ProcessSource(self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'a_directory'),
@@ -171,15 +176,12 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourceExtractWithExtensionsFilter(self):
     """Tests extract with an extensions filter."""
     test_front_end = image_export.ImageExportFrontend()
+    source_path = self._GetTestFilePath([u'image.qcow2'])
 
-    options = frontend.Options()
-    options.image = self._GetTestFilePath([u'image.qcow2'])
-    options.path = self._temp_directory
-    options.extensions_string = u'txt'
+    test_front_end.ParseExtensionsString(u'txt')
 
-    test_front_end.ParseOptions(options, source_option=u'image')
-
-    test_front_end.ProcessSource(options)
+    test_front_end.ScanSource(source_path)
+    test_front_end.ProcessSource(self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'passwords.txt')])
@@ -191,15 +193,11 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourceExtractWithNamesFilter(self):
     """Tests extract with a names filter."""
     test_front_end = image_export.ImageExportFrontend()
+    source_path = self._GetTestFilePath([u'image.qcow2'])
 
-    options = frontend.Options()
-    options.image = self._GetTestFilePath([u'image.qcow2'])
-    options.path = self._temp_directory
-    options.names_string = u'another_file'
-
-    test_front_end.ParseOptions(options, source_option=u'image')
-
-    test_front_end.ProcessSource(options)
+    test_front_end.ParseNamesString(u'another_file')
+    test_front_end.ScanSource(source_path)
+    test_front_end.ProcessSource(self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'a_directory'),
@@ -212,18 +210,14 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourceExtractWithFilter(self):
     """Tests extract with a filter file."""
     test_front_end = image_export.ImageExportFrontend()
+    source_path = self._GetTestFilePath([u'image.qcow2'])
 
-    options = frontend.Options()
-    options.image = self._GetTestFilePath([u'image.qcow2'])
-    options.path = self._temp_directory
-
-    options.filter = os.path.join(self._temp_directory, u'filter.txt')
-    with open(options.filter, 'wb') as file_object:
+    filter_file = os.path.join(self._temp_directory, u'filter.txt')
+    with open(filter_file, 'wb') as file_object:
       file_object.write(b'/a_directory/.+_file\n')
 
-    test_front_end.ParseOptions(options, source_option=u'image')
-
-    test_front_end.ProcessSource(options)
+    test_front_end.ScanSource(source_path)
+    test_front_end.ProcessSource(self._temp_directory, filter_file=filter_file)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'filter.txt'),
@@ -238,16 +232,11 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourceExtractWithSignaturesFilter(self):
     """Tests extract with a signatures filter."""
     test_front_end = image_export.ImageExportFrontend()
+    source_path = self._GetTestFilePath([u'syslog_image.dd'])
 
-    options = frontend.Options()
-    options.image = self._GetTestFilePath([u'syslog_image.dd'])
-    options.path = self._temp_directory
-    options.data_location = self._DATA_PATH
-    options.signature_identifiers = u'gzip'
-
-    test_front_end.ParseOptions(options, source_option=u'image')
-
-    test_front_end.ProcessSource(options)
+    test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
+    test_front_end.ScanSource(source_path)
+    test_front_end.ProcessSource(self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'logs'),
@@ -258,6 +247,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   # TODO: add bogus data location test.
+  # TODO: add test with remove duplicates disabled.
 
 
 if __name__ == '__main__':

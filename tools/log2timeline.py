@@ -9,19 +9,26 @@ import sys
 import time
 import textwrap
 
-import plaso
-
+from plaso.cli import extraction_tool
 from plaso.frontend import log2timeline
+from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 
 
-def Main():
-  """Start the tool."""
-  multiprocessing.freeze_support()
+class Log2TimelineTool(extraction_tool.ExtractionTool):
+  """Class that implements the log2timeline CLI tool."""
 
-  front_end = log2timeline.Log2TimelineFrontend()
+  NAME = u'log2timeline'
+  USAGE = textwrap.dedent(u'\n'.join([
+      u'',
+      u'log2timeline is the main front-end to the plaso back-end, used to',
+      u'collect and correlate events extracted from a filesystem.',
+      u'',
+      u'More information can be gathered from here:',
+      u'    http://plaso.kiddaland.net/usage/log2timeline',
+      u'']))
 
-  epilog = u'\n'.join([
+  EPILOG = textwrap.dedent(u'\n'.join([
       u'',
       u'Example usage:',
       u'',
@@ -33,264 +40,405 @@ def Main():
       (u'    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.dump '
        u'image.E01'),
       u'',
-      u'And that\'s how you build a timeline using log2timeline...',
-      u''])
+      u'And that is how you build a timeline using log2timeline...',
+      u'']))
 
-  description = u'\n'.join([
-      u'',
-      u'log2timeline is the main front-end to the plaso back-end, used to',
-      u'collect and correlate events extracted from a filesystem.',
-      u'',
-      u'More information can be gathered from here:',
-      u'    http://plaso.kiddaland.net/usage/log2timeline',
-      u''])
+  def __init__(self, input_reader=None, output_writer=None):
+    """Initializes the CLI tool object.
 
-  arg_parser = argparse.ArgumentParser(
-      description=textwrap.dedent(description),
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      epilog=textwrap.dedent(epilog), add_help=False)
+    Args:
+      input_reader: the input reader (instance of InputReader).
+                    The default is None which indicates the use of the stdin
+                    input reader.
+      output_writer: the output writer (instance of OutputWriter).
+                     The default is None which indicates the use of the stdout
+                     output writer.
+    """
+    super(Log2TimelineTool, self).__init__(
+        input_reader=input_reader, output_writer=output_writer)
+    self._foreman_verbose = False
+    self._front_end = log2timeline.Log2TimelineFrontend()
+    self._options = None
+    self._output = None
+    self.list_timezones = False
+    self.list_parsers_and_plugins = False
 
-  # Create few argument groups to make formatting help messages clearer.
-  info_group = arg_parser.add_argument_group('Informational Arguments')
-  function_group = arg_parser.add_argument_group('Functional Arguments')
-  deep_group = arg_parser.add_argument_group('Deep Analysis Arguments')
-  performance_group = arg_parser.add_argument_group('Performance Arguments')
+  def ListPluginInformation(self):
+    """Lists all plugin and parser information."""
+    plugin_list = self._front_end.GetPluginData()
+    return_string_pieces = []
 
-  function_group.add_argument(
-      '-z', '--zone', '--timezone', dest='timezone', action='store', type=str,
-      default='UTC', help=(
-          u'Define the timezone of the IMAGE (not the output). This is usually '
-          u'discovered automatically by preprocessing but might need to be '
-          u'specifically set if preprocessing does not properly detect or to '
-          u'overwrite the detected time zone.'))
+    return_string_pieces.append(
+        u'{:=^80}'.format(u' log2timeline/plaso information. '))
 
-  function_group.add_argument(
-      '-t', '--text', dest='text_prepend', action='store', type=unicode,
-      default=u'', metavar='TEXT', help=(
-          u'Define a free form text string that is prepended to each path '
-          u'to make it easier to distinguish one record from another in a '
-          u'timeline (like c:\\, or host_w_c:\\)'))
+    for header, data in plugin_list.items():
+      # TODO: Using the frontend utils here instead of "self.PrintHeader"
+      # since the desired output here is a string that can be sent later
+      # to an output writer. Change this entire function so it can utilize
+      # PrintHeader or something similar.
 
-  function_group.add_argument(
-      '--parsers', dest='parsers', type=str, action='store', default='',
-      metavar='PARSER_LIST', help=(
-          u'Define a list of parsers to use by the tool. This is a comma '
-          u'separated list where each entry can be either a name of a parser '
-          u'or a parser list. Each entry can be prepended with a minus sign '
-          u'to negate the selection (exclude it). The list match is an '
-          u'exact match while an individual parser matching is a case '
-          u'insensitive substring match, with support for glob patterns. '
-          u'Examples would be: "reg" that matches the substring "reg" in '
-          u'all parser names or the glob pattern "sky[pd]" that would match '
-          u'all parsers that have the string "skyp" or "skyd" in it\'s name. '
-          u'All matching is case insensitive.'))
+      # TODO: refactor usage of frontend utils away.
+      return_string_pieces.append(frontend_utils.FormatHeader(header))
+      for entry_header, entry_data in sorted(data):
+        return_string_pieces.append(
+            frontend_utils.FormatOutputString(entry_header, entry_data))
 
-  function_group.add_argument(
-      '--hashers', dest='hashers', type=str, action='store', default='',
-      metavar='HASHER_LIST', help=(
-          u'Define a list of hashers to use by the tool. This is a comma '
-          u'separated list where each entry is the name of a hasher. eg. md5,'
-          u'sha256.'
-      ))
+    return_string_pieces.append(u'')
+    self._output_writer.Write(u'\n'.join(return_string_pieces))
 
-  info_group.add_argument(
-      '-h', '--help', action='help', help=u'Show this help message and exit.')
+  def ListTimeZones(self):
+    """Lists the time zones."""
+    self._output_writer.Write(u'=' * 40)
+    self._output_writer.Write(u'       ZONES')
+    self._output_writer.Write(u'-' * 40)
+    for timezone in self._front_end.GetTimeZones():
+      self._output_writer.Write(u'  {0:s}'.format(timezone))
+    self._output_writer.Write(u'=' * 40)
 
-  info_group.add_argument(
-      '--logfile', action='store', metavar='FILENAME', dest='logfile',
-      type=unicode, default=u'', help=(
-          u'If defined all log messages will be redirected to this file '
-          u'instead the default STDERR.'))
+  def ParseArguments(self):
+    """Parses the command line arguments.
 
-  function_group.add_argument(
-      '-p', '--preprocess', dest='preprocess', action='store_true',
-      default=False, help=(
-          u'Turn on preprocessing. Preprocessing is turned on by default '
-          u'when parsing image files, however if a mount point is being '
-          u'parsed then this parameter needs to be set manually.'))
-
-  front_end.AddPerformanceOptions(performance_group)
-
-  performance_group.add_argument(
-      '--workers', dest='workers', action='store', type=int, default=0,
-      help=(u'The number of worker threads [defaults to available system '
-            u'CPU\'s minus three].'))
-
-  # TODO: seems to be no longer used, remove.
-  # function_group.add_argument(
-  #     '-i', '--image', dest='image', action='store_true', default=False,
-  #     help=(
-  #         'Indicates that this is an image instead of a regular file. It is '
-  #         'not necessary to include this option if -o (offset) is used, then '
-  #         'this option is assumed. Use this when parsing an image with an '
-  #         'offset of zero.'))
-
-  front_end.AddVssProcessingOptions(deep_group)
-
-  performance_group.add_argument(
-      '--single_thread', '--single-thread', '--single_process',
-      '--single-process', dest='single_process', action='store_true',
-      default=False, help=(
-          u'Indicate that the tool should run in a single process.'))
-
-  function_group.add_argument(
-      '-f', '--file_filter', '--file-filter', dest='file_filter',
-      action='store', type=unicode, default=None, help=(
-          u'List of files to include for targeted collection of files to '
-          u'parse, one line per file path, setup is /path|file - where each '
-          u'element can contain either a variable set in the preprocessing '
-          u'stage or a regular expression.'))
-
-  deep_group.add_argument(
-      '--scan_archives', dest='scan_archives', action='store_true',
-      default=False, help=argparse.SUPPRESS)
-
-  # This option is "hidden" for the time being, still left in there for testing
-  # purposes, but hidden from the tool usage and help messages.
-  #    help=('Indicate that the tool should try to open files to extract embedd'
-  #          'ed files within them, for instance to extract files from compress'
-  #          'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
-
-  front_end.AddImageOptions(function_group)
-
-  function_group.add_argument(
-      '--partition', dest='partition_number', action='store', type=int,
-      default=None, help=(
-          u'Choose a partition number from a disk image. This partition '
-          u'number should correspond to the partion number on the disk '
-          u'image, starting from partition 1.'))
-
-  # Build the version information.
-  version_string = u'log2timeline - plaso back-end {0:s}'.format(
-      plaso.GetVersion())
-
-  info_group.add_argument(
-      '-v', '--version', action='version', version=version_string,
-      help=u'Show the current version of the back-end.')
-
-  info_group.add_argument(
-      '--info', dest='show_info', action='store_true', default=False,
-      help=u'Print out information about supported plugins and parsers.')
-
-  info_group.add_argument(
-      '--show_memory_usage', '--show-memory-usage', action='store_true',
-      default=False, dest='show_memory_usage', help=(
-          u'Indicates that basic memory usage should be included in the '
-          u'output of the process monitor. If this option is not set the '
-          u'tool only displays basic status and counter information.'))
-
-  front_end.AddExtractionOptions(function_group)
-
-  function_group.add_argument(
-      '--output', dest='output_module', action='store', type=unicode,
-      default='', help=(
-          u'Bypass the storage module directly storing events according to '
-          u'the output module. This means that the output will not be in the '
-          u'pstorage format but in the format chosen by the output module. '
-          u'[Please not this feature is EXPERIMENTAL at this time, use at '
-          u'own risk (eg. sqlite output does not yet work)]'))
-
-  function_group.add_argument(
-      '--serializer-format', '--serializer_format', dest='serializer_format',
-      action='store', default='proto', metavar='FORMAT', help=(
-          u'By default the storage uses protobufs for serializing event '
-          u'objects. This parameter can be used to change that behavior. '
-          u'The choices are "proto" and "json".'))
-
-  front_end.AddInformationalOptions(info_group)
-
-  arg_parser.add_argument(
-      'output', action='store', metavar='STORAGE_FILE', nargs='?',
-      type=unicode, help=(
-          u'The path to the output file, if the file exists it will get '
-          u'appended to.'))
-
-  arg_parser.add_argument(
-      'source', action='store', metavar='SOURCE',
-      nargs='?', type=unicode, help=(
-          u'The path to the source device, file or directory. If the source is '
-          u'a supported storage media device or image file, archive file or '
-          u'a directory, the files within are processed recursively.'))
-
-  arg_parser.add_argument(
-      'filter', action='store', metavar='FILTER', nargs='?', default=None,
-      type=unicode, help=(
-          u'A filter that can be used to filter the dataset before it '
-          u'is written into storage. More information about the filters '
-          u'and it\'s usage can be found here: http://plaso.kiddaland.'
-          u'net/usage/filters'))
-
-  # Properly prepare the attributes according to local encoding.
-  if front_end.preferred_encoding == 'ascii':
-    logging.warning(
-        u'The preferred encoding of your system is ASCII, which is not optimal '
-        u'for the typically non-ASCII characters that need to be parsed and '
-        u'processed. The tool will most likely crash and die, perhaps in a way '
-        u'that may not be recoverable. A five second delay is introduced to '
-        u'give you time to cancel the runtime and reconfigure your preferred '
-        u'encoding, otherwise continue at own risk.')
-    time.sleep(5)
-
-  u_argv = [x.decode(front_end.preferred_encoding) for x in sys.argv]
-  sys.argv = u_argv
-  try:
-    options = arg_parser.parse_args()
-  except UnicodeEncodeError:
-    # If we get here we are attempting to print help in a "dumb" terminal.
-    print arg_parser.format_help().encode(front_end.preferred_encoding)
-    return False
-
-  if options.timezone == 'list':
-    front_end.ListTimeZones()
-    return True
-
-  if options.show_info:
-    front_end.ListPluginInformation()
-    return True
-
-  format_str = (
-      u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-      u'<%(module)s> %(message)s')
-
-  if options.debug:
-    if options.logfile:
-      logging.basicConfig(
-          level=logging.DEBUG, format=format_str, filename=options.logfile)
-    else:
-      logging.basicConfig(level=logging.DEBUG, format=format_str)
-
-    logging_filter = log2timeline.LoggingFilter()
-    root_logger = logging.getLogger()
-    root_logger.addFilter(logging_filter)
-  elif options.logfile:
+    Returns:
+      A boolean value indicating the arguments were successfully parsed.
+    """
     logging.basicConfig(
-        level=logging.INFO, format=format_str, filename=options.logfile)
-  else:
-    logging.basicConfig(level=logging.INFO, format=format_str)
+        level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
-  if not options.output:
-    arg_parser.print_help()
-    print u''
-    arg_parser.print_usage()
-    print u''
-    logging.error(u'Wrong usage: need to define an output.')
-    return False
+    argument_parser = argparse.ArgumentParser(
+        description=self.USAGE, epilog=self.EPILOG, add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
-  try:
-    front_end.ParseOptions(options)
-    front_end.SetStorageFile(options.output)
-  except errors.BadConfigOption as exception:
-    arg_parser.print_help()
-    print u''
-    logging.error(u'{0:s}'.format(exception))
-    return False
+    # Create few argument groups to make formatting help messages clearer.
+    info_group = argument_parser.add_argument_group(u'Informational Arguments')
+    function_group = argument_parser.add_argument_group(u'Functional Arguments')
+    deep_group = argument_parser.add_argument_group(u'Deep Analysis Arguments')
+    performance_group = argument_parser.add_argument_group(
+        u'Performance Arguments')
 
-  # Configure the foreman (monitors workers).
-  front_end.SetShowMemoryInformation(show_memory=options.show_memory_usage)
+    self.AddBasicOptions(argument_parser)
 
-  try:
-    front_end.ProcessSource(options)
+    function_group.add_argument(
+        u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
+        type=unicode, default=u'UTC', help=(
+            u'Define the timezone of the IMAGE (not the output). This is '
+            u'usually discovered automatically by preprocessing but might '
+            u'need to be specifically set if preprocessing does not properly '
+            u'detect or to override the detected time zone.'))
+
+    function_group.add_argument(
+        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=unicode,
+        default=u'', metavar=u'TEXT', help=(
+            u'Define a free form text string that is prepended to each path '
+            u'to make it easier to distinguish one record from another in a '
+            u'timeline (like c:\\, or host_w_c:\\)'))
+
+    function_group.add_argument(
+        u'--parsers', dest=u'parsers', type=unicode, action=u'store',
+        default=u'', metavar=u'PARSER_LIST', help=(
+            u'Define a list of parsers to use by the tool. This is a comma '
+            u'separated list where each entry can be either a name of a parser '
+            u'or a parser list. Each entry can be prepended with a minus sign '
+            u'to negate the selection (exclude it). The list match is an '
+            u'exact match while an individual parser matching is a case '
+            u'insensitive substring match, with support for glob patterns. '
+            u'Examples would be: "reg" that matches the substring "reg" in '
+            u'all parser names or the glob pattern "sky[pd]" that would match '
+            u'all parsers that have the string "skyp" or "skyd" in its name. '
+            u'All matching is case insensitive.'))
+
+    function_group.add_argument(
+        u'--hashers', dest=u'hashers', type=str, action=u'store', default=u'',
+        metavar=u'HASHER_LIST', help=(
+            u'Define a list of hashers to use by the tool. This is a comma '
+            u'separated list where each entry is the name of a hasher. eg. md5,'
+            u'sha256.'
+        ))
+
+    info_group.add_argument(
+        u'--logfile', action=u'store', metavar=u'FILENAME', dest=u'logfile',
+        type=unicode, default=u'', help=(
+            u'If defined all log messages will be redirected to this file '
+            u'instead the default STDERR.'))
+
+    function_group.add_argument(
+        u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
+        default=False, help=(
+            u'Turn on preprocessing. Preprocessing is turned on by default '
+            u'when parsing image files, however if a mount point is being '
+            u'parsed then this parameter needs to be set manually.'))
+
+    self.AddPerformanceOptions(performance_group)
+
+    performance_group.add_argument(
+        u'--workers', dest=u'workers', action=u'store', type=int, default=0,
+        help=(u'The number of worker threads [defaults to available system '
+              u'CPUs minus three].'))
+
+    self.AddVssProcessingOptions(deep_group)
+
+    performance_group.add_argument(
+        u'--single_process', u'--single-process', dest=u'single_process',
+        action=u'store_true', default=False, help=(
+            u'Indicate that the tool should run in a single process.'))
+
+    function_group.add_argument(
+        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
+        action=u'store', type=unicode, default=None, help=(
+            u'List of files to include for targeted collection of files to '
+            u'parse, one line per file path, setup is /path|file - where each '
+            u'element can contain either a variable set in the preprocessing '
+            u'stage or a regular expression.'))
+
+    deep_group.add_argument(
+        u'--scan_archives', dest=u'scan_archives', action=u'store_true',
+        default=False, help=argparse.SUPPRESS)
+
+    # This option is "hidden" for the time being, still left in there for
+    # testing purposes, but hidden from the tool usage and help messages.
+    #    help=(u'Indicate that the tool should try to open files to extract '
+    #          u'embedded files within them, for instance to extract files '
+    #          u'from compressed containers, etc. Be AWARE THAT THIS IS '
+    #          u'EXTREMELY SLOW.'))
+
+    self.AddImageOptions(function_group)
+
+    function_group.add_argument(
+        u'--partition', dest=u'partition_number', action=u'store', type=int,
+        default=None, help=(
+            u'Choose a partition number from a disk image. This partition '
+            u'number should correspond to the partion number on the disk '
+            u'image, starting from partition 1.'))
+
+    info_group.add_argument(
+        u'--info', dest=u'show_info', action=u'store_true', default=False,
+        help=u'Print out information about supported plugins and parsers.')
+
+    info_group.add_argument(
+        u'--show_memory_usage', u'--show-memory-usage', action=u'store_true',
+        default=False, dest=u'foreman_verbose', help=(
+            u'Indicates that basic memory usage should be included in the '
+            u'output of the process monitor. If this option is not set the '
+            u'tool only displays basic status and counter information.'))
+
+    info_group.add_argument(
+        u'--disable_worker_monitor', u'--disable-worker-monitor',
+        action=u'store_false', default=True, dest=u'foreman_enabled', help=(
+            u'Turn off the foreman. The foreman monitors all worker processes '
+            u'and periodically prints out information about all running '
+            u'workers. By default the foreman is run, but it can be turned off '
+            u'using this parameter.'))
+
+    self.AddExtractionOptions(function_group)
+
+    function_group.add_argument(
+        u'--output', dest=u'output_module', action=u'store', type=unicode,
+        default=u'', help=(
+            u'Bypass the storage module directly storing events according to '
+            u'the output module. This means that the output will not be in the '
+            u'pstorage format but in the format chosen by the output module. '
+            u'[Please note this feature is EXPERIMENTAL at this time, use at '
+            u'own risk (eg. sqlite output does not yet work)]'))
+
+    function_group.add_argument(
+        u'--serializer-format', u'--serializer_format', action=u'store',
+        dest=u'serializer_format', default=u'proto', metavar=u'FORMAT', help=(
+            u'By default the storage uses protobufs for serializing event '
+            u'objects. This parameter can be used to change that behavior. '
+            u'The choices are "proto" and "json".'))
+
+    self.AddInformationalOptions(info_group)
+
+    argument_parser.add_argument(
+        u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
+        type=unicode, help=(
+            u'The path to the output file, if the file exists it will get '
+            u'appended to.'))
+
+    argument_parser.add_argument(
+        u'source', action=u'store', metavar=u'SOURCE', nargs=u'?', type=unicode,
+        help=(
+            u'The path to the source device, file or directory. If the source '
+            u'is a supported storage media device or image file, archive file '
+            u'or a directory, the files within are processed recursively.'))
+
+    argument_parser.add_argument(
+        u'filter', action=u'store', metavar=u'FILTER', nargs=u'?', default=None,
+        type=unicode, help=(
+            u'A filter that can be used to filter the dataset before it '
+            u'is written into storage. More information about the filters '
+            u'and its usage can be found here: http://plaso.kiddaland.'
+            u'net/usage/filters'))
+
+    try:
+      options = argument_parser.parse_args()
+    except UnicodeEncodeError:
+      # If we get here we are attempting to print help in a non-Unicode
+      # terminal.
+      self._output_writer.Write(u'')
+      self._output_writer.Write(argument_parser.format_help())
+      return False
+
+    # Properly prepare the attributes according to local encoding.
+    if self.preferred_encoding == u'ascii':
+      logging.warning(
+          u'The preferred encoding of your system is ASCII, which is not '
+          u'optimal for the typically non-ASCII characters that need to be '
+          u'parsed and processed. The tool will most likely crash and die, '
+          u'perhaps in a way that may not be recoverable. A five second delay '
+          u'is introduced to give you time to cancel the runtime and '
+          u'reconfigure your preferred encoding, otherwise continue at own '
+          u'risk.')
+      time.sleep(5)
+
+    try:
+      self.ParseOptions(options)
+    except errors.BadConfigOption as exception:
+      logging.error(u'{0:s}'.format(exception))
+
+      self._output_writer.Write(u'')
+      self._output_writer.Write(argument_parser.format_help())
+
+      return False
+
+    return True
+
+  def ParseOptions(self, options):
+    """Parses the options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    super(Log2TimelineTool, self).ParseOptions(options)
+
+    format_string = (
+        u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        u'<%(module)s> %(message)s')
+
+    debug = getattr(options, u'debug', False)
+    logfile = getattr(options, u'logfile', None)
+
+    if debug:
+      logging_level = logging.DEBUG
+    else:
+      logging_level = logging.INFO
+
+    if logfile:
+      logging.basicConfig(
+          level=logging_level, format=format_string, filename=logfile)
+    else:
+      logging.basicConfig(level=logging_level, format=format_string)
+
+    if debug:
+      logging_filter = log2timeline.LoggingFilter()
+      root_logger = logging.getLogger()
+      root_logger.addFilter(logging_filter)
+
+    self._output = getattr(options, u'output', None)
+    if not self._output:
+      raise errors.BadConfigOption(u'No output defined.')
+
+    timezone_string = getattr(options, u'timezone', None)
+    if timezone_string and timezone_string == u'list':
+      self.list_timezones = True
+
+    self.list_parsers_and_plugins = getattr(options, u'show_info', False)
+
+    self._foreman_verbose = getattr(options, u'foreman_verbose', False)
+
+    # TODO: refactor remove the need to pass options here.
+    self._options = options
+
+  def PrintOptions(self):
+    """Prints the options."""
+    self._output_writer.Write(u'\n')
+    self._output_writer.Write(
+        u'Source path\t\t\t\t: {0:s}\n'.format(self._source_path))
+
+    is_image = self._front_end.SourceIsStorageMediaImage()
+    self._output_writer.Write(
+        u'Is storage media image or device\t: {0!s}\n'.format(is_image))
+
+    if is_image:
+      image_offset_bytes = self._front_end.partition_offset
+      if isinstance(image_offset_bytes, basestring):
+        try:
+          image_offset_bytes = int(image_offset_bytes, 10)
+        except ValueError:
+          image_offset_bytes = 0
+      elif image_offset_bytes is None:
+        image_offset_bytes = 0
+
+      self._output_writer.Write(
+          u'Partition offset\t\t\t: {0:d} (0x{0:08x})\n'.format(
+              image_offset_bytes))
+
+      if self._front_end.process_vss and self._front_end.vss_stores:
+        self._output_writer.Write(
+            u'VSS stores\t\t\t\t: {0!s}\n'.format(self._front_end.vss_stores))
+
+    if self._filter_file:
+      self._output_writer.Write(u'Filter file\t\t\t\t: {0:s}\n'.format(
+          self._filter_file))
+
+    self._output_writer.Write(u'\n')
+
+  def ProcessSource(self):
+    """Processes the source.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      SourceScannerError: if the source scanner could not find a supported
+                          file system.
+      UserAbort: if the user initiated an abort.
+    """
+    self._front_end.SetStorageFile(self._output)
+    self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
+
+    self._front_end.ScanSource(
+        self._source_path, partition_number=self._partition_number,
+        partition_offset=self._partition_offset, enable_vss=self._process_vss,
+        vss_stores=self._vss_stores)
+
+    self.PrintOptions()
+
+    logging.info(u'Processing started.')
+    # TODO: refactor remove the need to pass options here.
+    self._front_end.ProcessSource(self._options)
     logging.info(u'Processing completed.')
+
+
+def Main():
+  """The main function."""
+  multiprocessing.freeze_support()
+
+  tool = Log2TimelineTool()
+
+  if not tool.ParseArguments():
+    return False
+
+  # TODO: fix this. An explanation why this is needed is missing.
+  # u_argv = [x.decode(front_end.preferred_encoding) for x in sys.argv]
+  # sys.argv = u_argv
+
+  have_list_option = False
+  if tool.list_timezones:
+    tool.ListTimeZones()
+    have_list_option = True
+
+  if tool.list_parsers_and_plugins:
+    tool.ListPluginInformation()
+    have_list_option = True
+
+  if have_list_option:
+    return True
+
+  try:
+    tool.ProcessSource()
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')
