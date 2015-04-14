@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a xchatlog formatter in plaso."""
+"""The XChat log file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class XChatLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for XChat log files."""
+  """Formatter for a XChat log file entry event."""
 
   DATA_TYPE = 'xchat:log:line'
 

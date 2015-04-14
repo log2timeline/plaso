@@ -118,14 +118,14 @@ class EventFormatter(object):
     """Retrieves the attribute names in the format string.
 
     Returns:
-      A list containing the attribute names.
+      A set containing the attribute names.
     """
     if self._format_string_attribute_names is None:
       self._format_string_attribute_names = (
           self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
               self.FORMAT_STRING))
 
-    return self._format_string_attribute_names
+    return set(self._format_string_attribute_names)
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
@@ -279,7 +279,7 @@ class ConditionalEventFormatter(EventFormatter):
     """Retrieves the attribute names in the format string.
 
     Returns:
-      A list containing the attribute names.
+      A set containing the attribute names.
     """
     if self._format_string_attribute_names is None:
       self._format_string_attribute_names = []
@@ -290,7 +290,7 @@ class ConditionalEventFormatter(EventFormatter):
         if attribute_names:
           self._format_string_attribute_names.extend(attribute_names)
 
-    return self._format_string_attribute_names
+    return set(self._format_string_attribute_names)
 
   def GetMessages(self, unused_ormatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
