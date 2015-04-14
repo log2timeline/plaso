@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the UTMP binary files."""
+"""The UTMP binary file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class UtmpSessionFormatter(interface.ConditionalEventFormatter):
-  """Formatter for UTMP session."""
+  """Formatter for an UTMP session event."""
 
   DATA_TYPE = 'linux:utmp:event'
 

@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Skype Main database events."""
+"""The Skype main database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class SkypeAccountFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Skype Account information."""
+  """Formatter for a Skype account event."""
 
   DATA_TYPE = 'skype:event:account'
 
-  FORMAT_STRING_PIECES = [u'{username}', u'[{email}]', u'Country: {country}']
+  FORMAT_STRING_PIECES = [
+      u'{username}',
+      u'[{email}]',
+      u'Country: {country}']
 
   SOURCE_LONG = 'Skype Account'
   SOURCE_SHORT = 'LOG'
 
 
 class SkypeChatFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Skype chat events."""
+  """Formatter for a Skype chat message event."""
 
   DATA_TYPE = 'skype:event:chat'
 
@@ -27,25 +30,29 @@ class SkypeChatFormatter(interface.ConditionalEventFormatter):
       u'[{title}]',
       u'Message: [{text}]']
 
-  FORMAT_STRING_SHORT_PIECES = [u'From: {from_account}', u' To: {to_account}']
+  FORMAT_STRING_SHORT_PIECES = [
+      u'From: {from_account}',
+      u'To: {to_account}']
 
   SOURCE_LONG = 'Skype Chat MSG'
   SOURCE_SHORT = 'LOG'
 
 
 class SkypeSMSFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Skype SMS."""
+  """Formatter for a Skype SMS event."""
 
   DATA_TYPE = 'skype:event:sms'
 
-  FORMAT_STRING_PIECES = [u'To: {number}', u'[{text}]']
+  FORMAT_STRING_PIECES = [
+      u'To: {number}',
+      u'[{text}]']
 
   SOURCE_LONG = 'Skype SMS'
   SOURCE_SHORT = 'LOG'
 
 
 class SkypeCallFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Skype calls."""
+  """Formatter for a Skype call event."""
 
   DATA_TYPE = 'skype:event:call'
 
@@ -59,7 +66,7 @@ class SkypeCallFormatter(interface.ConditionalEventFormatter):
 
 
 class SkypeTransferFileFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Skype transfer files"""
+  """Formatter for a Skype transfer file event."""
 
   DATA_TYPE = 'skype:event:transferfile'
 

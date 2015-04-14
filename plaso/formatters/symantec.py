@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for Symantec logs."""
+"""The Symantec AV log file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -9,8 +9,8 @@ from plaso.lib import errors
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class SymantecFormatter(interface.ConditionalEventFormatter):
-  """Define the formatting for Symantec events."""
+class SymantecAVFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a Symantec AV log file event."""
 
   DATA_TYPE = 'av:symantec:scanlog'
 
@@ -90,22 +90,22 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
       '74': 'GL_EVENT_LOAD_ERROR_SYKNAPPS',
       '75': 'GL_EVENT_INTERESTING_PROCESS_DETECTED_FINISH',
       '76': 'GL_EVENT_HPP_SCAN_NOT_SUPPORTED_FOR_OS',
-      '77': 'GL_EVENT_HEUR_THREAT_NOW_KNOWN'
-  }
+      '77': 'GL_EVENT_HEUR_THREAT_NOW_KNOWN'}
+
   CATEGORY_NAMES = {
       '1': 'GL_CAT_INFECTION',
       '2': 'GL_CAT_SUMMARY',
       '3': 'GL_CAT_PATTERN',
-      '4': 'GL_CAT_SECURITY'
-  }
+      '4': 'GL_CAT_SECURITY'}
+
   ACTION_1_2_NAMES = {
       '1': 'Quarantine infected file',
       '2': 'Rename infected file',
       '3': 'Delete infected file',
       '4': 'Leave alone (log only)',
       '5': 'Clean virus from file',
-      '6': 'Clean or delete macros'
-  }
+      '6': 'Clean or delete macros'}
+
   ACTION_0_NAMES = {
       '1': 'Quarantined',
       '2': 'Renamed',
@@ -120,8 +120,7 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
       '10': 'Renamed backup file',
       '11': 'Undo action in Quarantine View',
       '12': 'Write protected or lack of permissions - Unable to act on file',
-      '13': 'Backed up file'
-  }
+      '13': 'Backed up file'}
 
   # The identifier for the formatter (a regular expression)
   FORMAT_STRING_SEPARATOR = u'; '
@@ -195,4 +194,4 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(SymantecFormatter)
+manager.FormattersManager.RegisterFormatter(SymantecAVFormatter)

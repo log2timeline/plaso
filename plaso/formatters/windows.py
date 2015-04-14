@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Windows events."""
+"""The Windows event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
-  """Class that formats Windows volume creation events."""
+  """Formatter for a Windows volume creation event."""
 
   DATA_TYPE = 'windows:volume:creation'
 

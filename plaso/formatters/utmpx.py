@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the UTMPX binary files."""
+"""The UTMPX binary file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
-  """Formatter for UTMPX session."""
+  """Formatter for an UTMPX session event."""
 
   DATA_TYPE = 'mac:utmpx:event'
 

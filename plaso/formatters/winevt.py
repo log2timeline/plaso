@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Windows EventLog (EVT) files."""
+"""The Windows EventLog (EVT) file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class WinEvtFormatter(interface.ConditionalEventFormatter):
-  """Define the formatting for Windows EventLog (EVT) record."""
+class WinEVTFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a Windows EventLog (EVT) record event."""
 
   DATA_TYPE = 'windows:evt:record'
 
@@ -120,4 +120,4 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(WinEvtFormatter)
+manager.FormattersManager.RegisterFormatter(WinEVTFormatter)

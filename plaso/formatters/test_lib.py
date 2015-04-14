@@ -24,7 +24,7 @@ class EventFormatterTestCase(unittest.TestCase):
 
     Args:
       event_formatter: the event formatter (instance of EventFormatter).
-      expected_attribute_names: sorted list of the expected attribute names.
+      expected_attribute_names: list of the expected attribute names.
     """
     attribute_names = event_formatter.GetFormatStringAttributeNames()
     self.assertEqual(sorted(attribute_names), sorted(expected_attribute_names))
