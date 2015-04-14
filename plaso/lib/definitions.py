@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """The definitions."""
 
+SERIALIZER_FORMAT_JSON = u'json'
+SERIALIZER_FORMAT_PROTOBUF = u'proto'
+
+SERIALIZER_FORMATS = frozenset([
+    SERIALIZER_FORMAT_JSON, SERIALIZER_FORMAT_PROTOBUF])
+
 RESERVED_VARIABLE_NAMES = frozenset([
     u'body',
     u'data_type',

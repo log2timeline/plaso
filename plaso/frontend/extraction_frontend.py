@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The extraction front-end functionality."""
+"""The extraction front-end."""
 
 import logging
 import os
@@ -13,11 +13,10 @@ from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
-from plaso.engine import worker
-from plaso.frontend import frontend
+from plaso.frontend import storage_media_frontend
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
@@ -27,7 +26,7 @@ from plaso.parsers import manager as parsers_manager
 import pytz
 
 
-class ExtractionFrontend(frontend.StorageMediaFrontend):
+class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
   """Class that implements an extraction front-end."""
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
@@ -35,23 +34,11 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
 
-  _EVENT_SERIALIZER_FORMAT_PROTO = u'proto'
-  _EVENT_SERIALIZER_FORMAT_JSON = u'json'
-
   _BYTES_IN_A_MIB = 1024 * 1024
 
-  def __init__(self, input_reader, output_writer):
-    """Initializes the front-end object.
-
-    Args:
-      input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
-    """
-    super(ExtractionFrontend, self).__init__(input_reader, output_writer)
+  def __init__(self):
+    """Initializes the front-end object."""
+    super(ExtractionFrontend, self).__init__()
     self._buffer_size = 0
     self._collection_process = None
     self._collector = None
@@ -61,7 +48,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     self._filter_expression = None
     self._filter_object = None
     self._mount_path = None
-    self._number_of_worker_processes = 0
     self._old_preprocess = False
     self._operating_system = None
     self._output_module = None
@@ -73,7 +59,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
-    self._storage_serializer_format = self._EVENT_SERIALIZER_FORMAT_PROTO
+    self._text_prepend = None
     self._timezone = pytz.utc
 
   def _CheckStorageFile(self, storage_file_path):
@@ -124,23 +110,20 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    filter_file = getattr(options, 'file_filter', None)
-    if self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+    filter_file = getattr(options, u'file_filter', None)
+    if self.SourceIsStorageMediaImage():
       if filter_file:
         logging.debug(u'Starting a collection on image with filter.')
       else:
         logging.debug(u'Starting a collection on image.')
 
-    elif self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_DIRECTORY]:
+    elif self.SourceIsDirectory():
       if filter_file:
         logging.debug(u'Starting a collection on directory with filter.')
       else:
         logging.debug(u'Starting a collection on directory.')
 
-    elif self._scan_context.source_type == self._scan_context.SOURCE_TYPE_FILE:
+    elif self.SourceIsFile():
       logging.debug(u'Starting a collection on a single file.')
 
     else:
@@ -148,12 +131,14 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
 
   # TODO: have the frontend fill collecton information gradually
   # and set it as the last step of preprocessing?
-  def _PreprocessSetCollectionInformation(self, options, pre_obj):
+  def _PreprocessSetCollectionInformation(
+      self, options, pre_obj, unused_engine):
     """Sets the collection information as part of the preprocessing.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
       pre_obj: the preprocess object (instance of PreprocessObject).
+      engine: the engine object (instance of BaseEngine).
     """
     collection_information = {}
 
@@ -170,14 +155,13 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     collection_information['parsers'] = self._parser_names
     collection_information['preprocess'] = self._preprocess
 
-    if self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_DIRECTORY]:
+    if self.SourceIsDirectory():
       recursive = True
     else:
       recursive = False
     collection_information['recursive'] = recursive
     collection_information['debug'] = self._debug_mode
-    collection_information['vss parsing'] = bool(self._vss_stores)
+    collection_information['vss parsing'] = bool(self.vss_stores)
 
     if self._filter_expression:
       collection_information['filter'] = self._filter_expression
@@ -196,11 +180,9 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     else:
       collection_information['os_detected'] = 'N/A'
 
-    if self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+    if self.SourceIsStorageMediaImage():
       collection_information['method'] = 'imaged processed'
-      collection_information['image_offset'] = self._partition_offset
+      collection_information['image_offset'] = self.partition_offset
     else:
       collection_information['method'] = 'OS collection'
 
@@ -208,7 +190,10 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
       collection_information['runtime'] = 'single process mode'
     else:
       collection_information['runtime'] = 'multi process mode'
-      collection_information['workers'] = self._number_of_worker_processes
+      # TODO: retrieve this value from the multi-process engine.
+      # refactor engine to set number_of_extraction_workers
+      # before ProcessSource.
+      collection_information['workers'] = 0
 
     pre_obj.collection_information = collection_information
 
@@ -295,16 +280,19 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     if not getattr(pre_obj, 'zone', None):
       pre_obj.zone = self._timezone
 
-  def _ProcessSourceMultiProcessMode(self, options):
-    """Processes the source in a multiple process.
-
-    Multiprocessing is used to start up separate processes.
+  def _ProcessSourceMultiProcessMode(
+      self, options, number_of_worker_processes=0,
+      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
+    """Processes the source with multiple processes.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      number_of_worker_processes: optional number of worker processes.
+                                  The default is 0 which represents deterimine
+                                  automatically.
+      storage_serializer_format: optional storage serializer format.
+                                 The default is protobuf.
     """
-    self._number_of_worker_processes = getattr(options, 'workers', 0)
-
     logging.info(u'Starting extraction in multi process mode.')
 
     self._engine = multi_process.MultiProcessEngine(
@@ -348,7 +336,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
         hasher_names_string=hasher_names_string):
       self._hasher_names.append(hasher_name)
 
-    self._PreprocessSetCollectionInformation(options, pre_obj)
+    self._PreprocessSetCollectionInformation(options, pre_obj, self._engine)
 
     if 'filestat' in self._parser_names:
       include_directory_stat = True
@@ -366,7 +354,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
 
     # TODO: create multi process collector.
     self._collector = self._engine.CreateCollector(
-        include_directory_stat, vss_stores=self._vss_stores,
+        include_directory_stat, vss_stores=self.vss_stores,
         filter_find_specs=filter_find_specs, resolver_context=resolver_context)
 
     self._DebugPrintCollector(options)
@@ -379,30 +367,35 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
       storage_writer = storage.StorageFileWriter(
           self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
-          serializer_format=self._storage_serializer_format)
+          serializer_format=storage_serializer_format)
 
     try:
       self._engine.ProcessSource(
           self._collector, storage_writer,
           parser_filter_string=parser_filter_string,
           hasher_names_string=hasher_names_string,
-          number_of_extraction_workers=self._number_of_worker_processes,
+          number_of_extraction_workers=number_of_worker_processes,
           show_memory_usage=self._show_worker_memory_information)
 
     except KeyboardInterrupt:
       self._CleanUpAfterAbort()
       raise errors.UserAbort(u'Process source aborted.')
 
-  def _ProcessSourceSingleProcessMode(self, options):
+  def _ProcessSourceSingleProcessMode(
+      self, options,
+      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Processes the source in a single process.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      storage_serializer_format: optional storage serializer format.
+                                 The default is protobuf.
     """
     logging.info(u'Starting extraction in single process mode.')
 
     try:
-      self._StartSingleThread(options)
+      self._StartSingleThread(
+          options, storage_serializer_format=storage_serializer_format)
     except Exception as exception:
       # The tool should generally not be run in single process mode
       # for other reasons than to debug. Hence the general error
@@ -412,7 +405,9 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
       if self._debug_mode:
         pdb.post_mortem()
 
-  def _StartSingleThread(self, options):
+  def _StartSingleThread(
+      self, options,
+      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Starts everything up in a single process.
 
     This should not normally be used, since running the tool in a single
@@ -430,6 +425,8 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      storage_serializer_format: optional storage serializer format.
+                                 The default is protobuf.
     """
     self._engine = single_process.SingleProcessEngine(self._queue_size)
     self._engine.SetEnableDebugOutput(self._debug_mode)
@@ -464,7 +461,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
         parser_filter_string=parser_filter_string):
       self._parser_names.append(parser_class.NAME)
 
-    self._PreprocessSetCollectionInformation(options, pre_obj)
+    self._PreprocessSetCollectionInformation(options, pre_obj, self._engine)
 
     if 'filestat' in self._parser_names:
       include_directory_stat = True
@@ -479,7 +476,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
       filter_find_specs = None
 
     self._collector = self._engine.CreateCollector(
-        include_directory_stat, vss_stores=self._vss_stores,
+        include_directory_stat, vss_stores=self.vss_stores,
         filter_find_specs=filter_find_specs,
         resolver_context=self._resolver_context)
 
@@ -493,7 +490,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
       storage_writer = storage.StorageFileWriter(
           self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
-          serializer_format=self._storage_serializer_format)
+          serializer_format=storage_serializer_format)
 
     hasher_names_string = getattr(options, u'hashers', u'')
 
@@ -510,66 +507,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     finally:
       self._resolver_context.Empty()
 
-  def AddExtractionOptions(self, argument_group):
-    """Adds the extraction options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
-        action='store_true', default=False, help=(
-            u'Only used in conjunction when appending to a previous storage '
-            u'file. When this option is used then a new preprocessing object '
-            u'is not calculated and instead the last one that got added to '
-            u'the storage file is used. This can be handy when parsing an '
-            u'image that contains more than a single partition.'))
-
-  def AddInformationalOptions(self, argument_group):
-    """Adds the informational options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        '-d', '--debug', dest='debug', action='store_true', default=False,
-        help=(
-            u'Enable debug mode. Intended for troubleshooting parsing '
-            u'issues.'))
-
-  def AddPerformanceOptions(self, argument_group):
-    """Adds the performance options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        '--buffer_size', '--buffer-size', '--bs', dest='buffer_size',
-        action='store', default=0,
-        help=u'The buffer size for the output (defaults to 196MiB).')
-
-    argument_group.add_argument(
-        '--queue_size', '--queue-size', dest='queue_size', action='store',
-        default=0, help=(
-            u'The maximum number of queued items per worker '
-            u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
-
-    if worker.BaseEventExtractionWorker.SupportsProfiling():
-      argument_group.add_argument(
-          '--profile', dest='enable_profiling', action='store_true',
-          default=False, help=(
-              u'Enable profiling of memory usage. Intended for '
-              u'troubleshooting memory issues.'))
-
-      argument_group.add_argument(
-          '--profile_sample_rate', '--profile-sample-rate',
-          dest='profile_sample_rate', action='store', default=0, help=(
-              u'The profile sample rate (defaults to a sample every {0:d} '
-              u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
-
   def GetSourceFileSystemSearcher(self):
     """Retrieves the file system searcher of the source.
 
@@ -578,89 +515,6 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
     """
     return self._engine.GetSourceFileSystemSearcher(
         resolver_context=self._resolver_context)
-
-  def ParseOptions(self, options, source_option='source'):
-    """Parses the options and initializes the front-end.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_option: optional name of the source option. The default is source.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(ExtractionFrontend, self).ParseOptions(
-        options, source_option=source_option)
-
-    self._buffer_size = getattr(options, 'buffer_size', 0)
-    if self._buffer_size:
-      # TODO: turn this into a generic function that supports more size
-      # suffixes both MB and MiB and also that does not allow m as a valid
-      # indicator for MiB since m represents milli not Mega.
-      try:
-        if self._buffer_size[-1].lower() == 'm':
-          self._buffer_size = int(self._buffer_size[:-1], 10)
-          self._buffer_size *= self._BYTES_IN_A_MIB
-        else:
-          self._buffer_size = int(self._buffer_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
-
-    queue_size = getattr(options, 'queue_size', None)
-    if queue_size:
-      try:
-        self._queue_size = int(queue_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid queue size: {0:s}.'.format(queue_size))
-
-    self._enable_profiling = getattr(options, 'enable_profiling', False)
-
-    profile_sample_rate = getattr(options, 'profile_sample_rate', None)
-    if profile_sample_rate:
-      try:
-        self._profiling_sample_rate = int(profile_sample_rate, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
-
-    serializer_format = getattr(
-        options, 'serializer_format', self._EVENT_SERIALIZER_FORMAT_PROTO)
-    if serializer_format:
-      self.SetStorageSerializer(serializer_format)
-
-    self._filter_expression = getattr(options, 'filter', None)
-    if self._filter_expression:
-      self._filter_object = pfilter.GetMatcher(self._filter_expression)
-      if not self._filter_object:
-        raise errors.BadConfigOption(
-            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
-
-    filter_file = getattr(options, 'file_filter', None)
-    if filter_file and not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(filter_file))
-
-    self._debug_mode = getattr(options, 'debug', False)
-
-    self._old_preprocess = getattr(options, 'old_preprocess', False)
-
-    timezone_string = getattr(options, 'timezone', None)
-    if timezone_string:
-      self._timezone = pytz.timezone(timezone_string)
-
-    self._single_process_mode = getattr(
-        options, 'single_process', False)
-
-    self._output_module = getattr(options, 'output_module', None)
-
-    self._operating_system = getattr(options, 'os', None)
-    self._process_archive_files = getattr(options, 'scan_archives', False)
-    self._text_prepend = getattr(options, 'text_prepend', None)
-
-    if self._operating_system:
-      self._mount_path = getattr(options, 'filename', None)
 
   def PreprocessSource(self, options):
     """Preprocesses the source.
@@ -686,10 +540,8 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
       except IOError:
         logging.warning(u'Storage file does not exist, running preprocess.')
 
-    if self._preprocess and self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_DIRECTORY,
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+    if (self._preprocess and
+        (self.SourceIsDirectory() or self.SourceIsStorageMediaImage())):
       try:
         self._engine.PreprocessSource(
             self._operating_system, resolver_context=self._resolver_context)
@@ -700,7 +552,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
 
     # TODO: Remove the need for direct access to the pre_obj in favor
     # of the knowledge base.
-    pre_obj = getattr(self._engine.knowledge_base, '_pre_obj', None)
+    pre_obj = getattr(self._engine.knowledge_base, u'_pre_obj', None)
 
     if not pre_obj:
       pre_obj = event.PreprocessObject()
@@ -710,94 +562,40 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
 
     return pre_obj
 
-  def PrintOptions(self, options, source_path):
-    """Prints the options.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_path: the source path.
-    """
-    self._output_writer.Write(u'\n')
-    self._output_writer.Write(
-        u'Source path\t\t\t\t: {0:s}\n'.format(source_path))
-
-    if self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
-      is_image = True
-    else:
-      is_image = False
-
-    self._output_writer.Write(
-        u'Is storage media image or device\t: {0!s}\n'.format(is_image))
-
-    if is_image:
-      image_offset_bytes = self._partition_offset
-      if isinstance(image_offset_bytes, basestring):
-        try:
-          image_offset_bytes = int(image_offset_bytes, 10)
-        except ValueError:
-          image_offset_bytes = 0
-      elif image_offset_bytes is None:
-        image_offset_bytes = 0
-
-      self._output_writer.Write(
-          u'Partition offset\t\t\t: {0:d} (0x{0:08x})\n'.format(
-              image_offset_bytes))
-
-      if self._process_vss and self._vss_stores:
-        self._output_writer.Write(
-            u'VSS stores\t\t\t\t: {0!s}\n'.format(self._vss_stores))
-
-    filter_file = getattr(options, 'file_filter', None)
-    if filter_file:
-      self._output_writer.Write(u'Filter file\t\t\t\t: {0:s}\n'.format(
-          filter_file))
-
-    self._output_writer.Write(u'\n')
-
-  def ProcessSource(self, options):
+  def ProcessSource(
+      self, options,
+      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Processes the source.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      storage_serializer_format: optional storage serializer format.
+                                 The default is protobuf.
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
                           file system.
       UserAbort: if the user initiated an abort.
     """
-    self.ScanSource(options)
-
-    self.PrintOptions(options, self._source_path)
-
-    if self._partition_offset is None:
-      self._preprocess = False
-
-    else:
-      # If we're dealing with a storage media image always run pre-processing.
+    if self.SourceIsDirectory() or self.SourceIsStorageMediaImage():
+      # If the source is a directory or a storage media image
+      # run pre-processing.
       self._preprocess = True
+    else:
+      self._preprocess = False
 
     self._CheckStorageFile(self._storage_file_path)
 
-    # No need to multi process when we're only processing a single file.
-    if self._scan_context.source_type == self._scan_context.SOURCE_TYPE_FILE:
-      # If we are only processing a single file we don't need more than a
-      # single worker.
-      # TODO: Refactor this use of using the options object.
-      options.workers = 1
+    if self.SourceIsFile():
+      # No need to multi process a single file source.
       self._single_process_mode = True
 
-    if self._scan_context.source_type in [
-        self._scan_context.SOURCE_TYPE_DIRECTORY]:
-      # If we are dealing with a directory we would like to attempt
-      # pre-processing.
-      self._preprocess = True
-
     if self._single_process_mode:
-      self._ProcessSourceSingleProcessMode(options)
+      self._ProcessSourceSingleProcessMode(
+          options, storage_serializer_format=storage_serializer_format)
     else:
-      self._ProcessSourceMultiProcessMode(options)
+      self._ProcessSourceMultiProcessMode(
+          options, storage_serializer_format=storage_serializer_format)
 
   def SetStorageFile(self, storage_file_path):
     """Sets the storage file path.
@@ -819,6 +617,7 @@ class ExtractionFrontend(frontend.StorageMediaFrontend):
         self._EVENT_SERIALIZER_FORMAT_JSON,
         self._EVENT_SERIALIZER_FORMAT_PROTO):
       return
+
     self._storage_serializer_format = storage_serializer_format
 
   def SetShowMemoryInformation(self, show_memory=True):

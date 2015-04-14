@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The analysis front-end functionality."""
+"""The analysis front-end."""
 
 import os
 

@@ -92,6 +92,7 @@ from google.protobuf import message
 import yaml
 
 from plaso.engine import queue
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
@@ -208,7 +209,7 @@ class StorageFile(object):
 
   def __init__(
       self, output_file, buffer_size=0, read_only=False, pre_obj=None,
-      serializer_format='proto'):
+      serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Initializes the storage file.
 
     Args:
@@ -219,8 +220,8 @@ class StorageFile(object):
                  for reading only. The default is false.
       pre_obj: Optional preprocessing object that gets stored inside
                the storage file. The default is None.
-      serializer_format: A string containing either "proto" or "json". The
-                         default is proto.
+      serializer_format: Optional storage serializer format. The default is
+                         protobuf.
 
     Raises:
       IOError: if we open up the file in read only mode and the file does
@@ -774,16 +775,28 @@ class StorageFile(object):
 
     return ''.join(data_segments)
 
-  def _SetEventObjectSerializer(self, serializer_string):
-    """Set the serializer for the event object."""
-    if serializer_string == 'json':
+  def _SetEventObjectSerializer(self, serializer_format):
+    """Set the serializer for the event object.
+
+    Args:
+      serializer_format: The storage serializer format.
+
+    Raises:
+      ValueError: if the serializer format is not suported.
+    """
+    if serializer_format == definitions.SERIALIZER_FORMAT_JSON:
       self._event_object_serializer = (
           json_serializer.JsonEventObjectSerializer)
-      self._event_serializer_format_string = 'json'
-    else:
+      self._event_serializer_format_string = u'json'
+
+    elif serializer_format == definitions.SERIALIZER_FORMAT_PROTOBUF:
       self._event_object_serializer = (
           protobuf_serializer.ProtobufEventObjectSerializer)
-      self._event_serializer_format_string = 'proto'
+      self._event_serializer_format_string = u'proto'
+
+    else:
+      raise ValueError(
+          u'Unsupported serializer format: {0:s}'.format(serializer_format))
 
   def _WritePreprocessObject(self, pre_obj):
     """Writes a preprocess object to the storage file.

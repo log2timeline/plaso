@@ -52,7 +52,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     hive_path = self._GetTestFilePath([u'NTUSER.DAT'])
     options.regfile = hive_path
 
-    front_end.ParseOptions(options, source_option='image')
+    front_end.ParseOptions(options)
 
     # Test the --info parameter to the tool.
     info_string = front_end.GetListOfAllPlugins()
@@ -110,7 +110,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options.regfile = self._GetTestFilePath(['NTUSER.DAT'])
     options.verbose = False
 
-    shell_helper.tool_front_end.ParseOptions(options, source_option='image')
+    shell_helper.tool_front_end.ParseOptions(options)
     shell_helper.tool_front_end.RunModeRegistryPlugin(options, u'userassist')
 
     self.assertTrue((
@@ -129,7 +129,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options.regfile = self._GetTestFilePath(['SOFTWARE'])
     options.verbose = False
 
-    shell_helper.tool_front_end.ParseOptions(options, source_option='image')
+    shell_helper.tool_front_end.ParseOptions(options)
     shell_helper.tool_front_end.RunModeRegistryKey(options, u'')
 
     self.assertTrue(
@@ -142,7 +142,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options = shell_helper.tool_options
     options.regfile = self._GetTestFilePath(['SOFTWARE'])
 
-    shell_helper.tool_front_end.ParseOptions(options, source_option='image')
+    shell_helper.tool_front_end.ParseOptions(options)
     shell_helper.tool_front_end.RunModeRegistryFile(options, options.regfile)
 
     plugins = set()
