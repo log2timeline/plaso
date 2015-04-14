@@ -321,7 +321,7 @@ class MRUListExStringAndShellItemPlugin(
       try:
         # The struct includes the end-of-string character that we need
         # to strip off.
-        path = ''.join(value_struct.string).decode('utf16')[:-1]
+        path = b''.join(value_struct.string).decode(u'utf16')[:-1]
       except UnicodeDecodeError as exception:
         logging.warning((
             u'[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
@@ -424,7 +424,7 @@ class MRUListExStringAndShellItemListPlugin(
       try:
         # The struct includes the end-of-string character that we need
         # to strip off.
-        path = ''.join(value_struct.string).decode('utf16')[:-1]
+        path = b''.join(value_struct.string).decode(u'utf16')[:-1]
       except UnicodeDecodeError as exception:
         logging.warning((
             u'[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
