@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Windows Prefetch events."""
+"""The Windows Prefetch event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -7,7 +7,7 @@ from plaso.lib import errors
 
 
 class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
-  """Class that formats Windows Prefetch execution events."""
+  """Formatter for a Windows Prefetch execution event."""
 
   DATA_TYPE = 'windows:prefetch:execution'
 

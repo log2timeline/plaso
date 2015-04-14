@@ -56,8 +56,7 @@ class MsieWebCacheContainersEventFormatterTest(test_lib.EventFormatterTestCase):
         u'container_identifier',
         u'set_identifier',
         u'name',
-        u'directory',
-        u'container_identifier']
+        u'directory']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

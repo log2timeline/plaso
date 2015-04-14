@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Windows firewall log files."""
+"""The Windows firewall log file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class WinFirewallFormatter(interface.ConditionalEventFormatter):
-  """A formatter for Windows firewall log entries."""
+  """Formatter for a Windows firewall log entry event."""
 
   DATA_TYPE = 'windows:firewall:log_entry'
 
@@ -31,8 +31,7 @@ class WinFirewallFormatter(interface.ConditionalEventFormatter):
       u'TCP Window Size (bytes): {tcp_win}',
       u'ICMP type: {icmp_type}',
       u'ICMP code: {icmp_code}',
-      u'Additional info: {info}',
-      ]
+      u'Additional info: {info}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'{action}',
@@ -41,8 +40,7 @@ class WinFirewallFormatter(interface.ConditionalEventFormatter):
       u': {source_port}',
       u'>',
       u'{dest_ip}',
-      u': {dest_port}',
-      ]
+      u': {dest_port}']
 
   SOURCE_LONG = 'Windows Firewall Log'
   SOURCE_SHORT = 'LOG'

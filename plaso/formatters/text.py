@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for text file-based events."""
+"""The text file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class TextEventFormatter(interface.EventFormatter):
-  """Text event formatter."""
+class TextEntryFormatter(interface.EventFormatter):
+  """Formatter for a text file entry event."""
 
   DATA_TYPE = u'text:entry'
   FORMAT_STRING = u'{text}'
@@ -15,4 +15,4 @@ class TextEventFormatter(interface.EventFormatter):
   SOURCE_LONG = u'Text File'
 
 
-manager.FormattersManager.RegisterFormatter(TextEventFormatter)
+manager.FormattersManager.RegisterFormatter(TextEntryFormatter)

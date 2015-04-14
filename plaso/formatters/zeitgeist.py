@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for Zeitgeist."""
+"""The Zeitgeist event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class ZeitgeistEventFormatter(interface.EventFormatter):
-  """The event formatter for Zeitgeist event."""
+class ZeitgeistFormatter(interface.EventFormatter):
+  """Formatter for a Zeitgeist activity database event."""
 
   DATA_TYPE = 'zeitgeist:activity'
 
@@ -16,4 +16,4 @@ class ZeitgeistEventFormatter(interface.EventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-manager.FormattersManager.RegisterFormatter(ZeitgeistEventFormatter)
+manager.FormattersManager.RegisterFormatter(ZeitgeistFormatter)

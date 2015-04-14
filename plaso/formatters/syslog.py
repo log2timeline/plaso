@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a syslog formatter in plaso."""
+"""The syslog file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class SyslogLineFormatter(interface.ConditionalEventFormatter):
-  """Formatter for syslog files."""
+  """Formatter for a syslog line event."""
 
   DATA_TYPE = 'syslog:line'
 

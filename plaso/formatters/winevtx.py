@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Windows XML EventLog (EVTX) files."""
+"""The Windows XML EventLog (EVTX) file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class WinEvtxFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Windows XML EventLog (EVTX) record."""
+class WinEVTXFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a Windows XML EventLog (EVTX) record event."""
+
   DATA_TYPE = 'windows:evtx:record'
 
   FORMAT_STRING_PIECES = [
@@ -66,4 +67,4 @@ class WinEvtxFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(WinEvtxFormatter)
+manager.FormattersManager.RegisterFormatter(WinEVTXFormatter)

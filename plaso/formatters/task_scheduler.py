@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Task Scheduler events."""
+"""The Task Scheduler event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class TaskCacheEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a generic Task Cache event."""
+  """Formatter for a Task Scheduler Cache event."""
 
   DATA_TYPE = 'task_scheduler:task_cache:entry'
 
