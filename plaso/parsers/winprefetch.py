@@ -63,9 +63,9 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
   NAME = u'prefetch'
   DESCRIPTION = u'Parser for Windows Prefetch files.'
 
-  FILE_SIGNATURE = b'SCCA'
+  _FILE_SIGNATURE = b'SCCA'
 
-  FILE_HEADER_STRUCT = construct.Struct(
+  _FILE_HEADER_STRUCT = construct.Struct(
       u'file_header',
       construct.ULInt32(u'version'),
       construct.String(u'signature', 4),
@@ -75,7 +75,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       construct.ULInt32(u'prefetch_hash'),
       construct.ULInt32(u'flags'))
 
-  FILE_INFORMATION_V17 = construct.Struct(
+  _FILE_INFORMATION_V17 = construct.Struct(
       u'file_information_v17',
       construct.ULInt32(u'metrics_array_offset'),
       construct.ULInt32(u'number_of_metrics_array_entries'),
@@ -91,7 +91,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       construct.ULInt32(u'run_count'),
       construct.Padding(4))
 
-  FILE_INFORMATION_V23 = construct.Struct(
+  _FILE_INFORMATION_V23 = construct.Struct(
       u'file_information_v23',
       construct.ULInt32(u'metrics_array_offset'),
       construct.ULInt32(u'number_of_metrics_array_entries'),
@@ -108,7 +108,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       construct.ULInt32(u'run_count'),
       construct.Padding(84))
 
-  FILE_INFORMATION_V26 = construct.Struct(
+  _FILE_INFORMATION_V26 = construct.Struct(
       u'file_information_v26',
       construct.ULInt32(u'metrics_array_offset'),
       construct.ULInt32(u'number_of_metrics_array_entries'),
@@ -132,7 +132,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       construct.ULInt32(u'run_count'),
       construct.Padding(96))
 
-  METRICS_ARRAY_ENTRY_V17 = construct.Struct(
+  _METRICS_ARRAY_ENTRY_V17 = construct.Struct(
       u'metrics_array_entry_v17',
       construct.ULInt32(u'start_time'),
       construct.ULInt32(u'duration'),
@@ -142,7 +142,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
 
   # Note that at the moment for the purpose of this parser
   # the v23 and v26 metrics array entry structures are the same.
-  METRICS_ARRAY_ENTRY_V23 = construct.Struct(
+  _METRICS_ARRAY_ENTRY_V23 = construct.Struct(
       u'metrics_array_entry_v23',
       construct.ULInt32(u'start_time'),
       construct.ULInt32(u'duration'),
@@ -152,7 +152,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       construct.Padding(4),
       construct.ULInt64(u'file_reference'))
 
-  VOLUME_INFORMATION_V17 = construct.Struct(
+  _VOLUME_INFORMATION_V17 = construct.Struct(
       u'volume_information_v17',
       construct.ULInt32(u'device_path_offset'),
       construct.ULInt32(u'device_path_number_of_characters'),
@@ -165,7 +165,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
 
   # Note that at the moment for the purpose of this parser
   # the v23 and v26 volume information structures are the same.
-  VOLUME_INFORMATION_V23 = construct.Struct(
+  _VOLUME_INFORMATION_V23 = construct.Struct(
       u'volume_information_v23',
       construct.ULInt32(u'device_path_offset'),
       construct.ULInt32(u'device_path_number_of_characters'),
@@ -186,7 +186,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       The file header construct object.
     """
     try:
-      file_header = self.FILE_HEADER_STRUCT.parse_stream(file_object)
+      file_header = self._FILE_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse file header with error: {0:s}'.format(exception))
@@ -194,7 +194,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
     if not file_header:
       raise errors.UnableToParseFile(u'Unable to read file header')
 
-    if file_header.get(u'signature', None) != self.FILE_SIGNATURE:
+    if file_header.get(u'signature', None) != self._FILE_SIGNATURE:
       raise errors.UnableToParseFile(u'Unsupported file signature')
 
     return file_header
@@ -211,11 +211,11 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
     """
     try:
       if format_version == 17:
-        file_information = self.FILE_INFORMATION_V17.parse_stream(file_object)
+        file_information = self._FILE_INFORMATION_V17.parse_stream(file_object)
       elif format_version == 23:
-        file_information = self.FILE_INFORMATION_V23.parse_stream(file_object)
+        file_information = self._FILE_INFORMATION_V23.parse_stream(file_object)
       elif format_version == 26:
-        file_information = self.FILE_INFORMATION_V26.parse_stream(file_object)
+        file_information = self._FILE_INFORMATION_V26.parse_stream(file_object)
       else:
         file_information = None
     except (IOError, construct.FieldError) as exception:
@@ -251,10 +251,10 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       for entry_index in range(0, number_of_metrics_array_entries):
         try:
           if format_version == 17:
-            metrics_array_entry = self.METRICS_ARRAY_ENTRY_V17.parse_stream(
+            metrics_array_entry = self._METRICS_ARRAY_ENTRY_V17.parse_stream(
                 file_object)
           elif format_version in [23, 26]:
-            metrics_array_entry = self.METRICS_ARRAY_ENTRY_V23.parse_stream(
+            metrics_array_entry = self._METRICS_ARRAY_ENTRY_V23.parse_stream(
                 file_object)
           else:
             metrics_array_entry = None
@@ -319,9 +319,9 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       while number_of_volumes > 0:
         try:
           if format_version == 17:
-            yield self.VOLUME_INFORMATION_V17.parse_stream(file_object)
+            yield self._VOLUME_INFORMATION_V17.parse_stream(file_object)
           else:
-            yield self.VOLUME_INFORMATION_V23.parse_stream(file_object)
+            yield self._VOLUME_INFORMATION_V23.parse_stream(file_object)
         except (IOError, construct.FieldError) as exception:
           raise errors.UnableToParseFile((
               u'Unable to parse v{0:d} volume information with error: '
@@ -369,7 +369,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
   def GetFormatSpecification(cls):
     """Retrieves the format specification."""
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls.FILE_SIGNATURE, offset=4)
+    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=4)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
