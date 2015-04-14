@@ -51,6 +51,9 @@ class ParsersManager(object):
     includes = []
     excludes = []
 
+    if not parser_filter_string:
+      return includes, excludes
+
     preset_categories = presets.categories.keys()
 
     for filter_string in parser_filter_string.split(u','):

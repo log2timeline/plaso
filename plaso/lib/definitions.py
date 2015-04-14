@@ -32,3 +32,10 @@ RESERVED_VARIABLE_NAMES = frozenset([
     u'timezone',
     u'username',
     u'uuid'])
+
+OS_LINUX = u'Linux'
+OS_MACOSX = u'MacOSX'
+# TODO: keeping this compatible with the existing code for now.
+# Rename None to Unknown in the future.
+OS_UNKNOWN = u'None'
+OS_WINDOWS = u'Windows'

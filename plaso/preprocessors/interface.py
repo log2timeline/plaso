@@ -6,6 +6,7 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
+from plaso.lib import definitions
 from plaso.lib import errors
 
 
@@ -196,12 +197,12 @@ def GuessOS(searcher):
       u'\\wtsrv\\system32', u'/wtsrv/system32'])
 
   if windows_locations.intersection(set(locations)):
-    return 'Windows'
+    return definitions.OS_WINDOWS
 
   if u'/system/library' in locations:
-    return 'MacOSX'
+    return definitions.OS_MACOSX
 
   if u'/etc' in locations:
-    return 'Linux'
+    return definitions.OS_LINUX
 
-  return 'None'
+  return definitions.OS_UNKNOWN

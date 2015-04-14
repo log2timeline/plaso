@@ -13,13 +13,14 @@ from plaso.cli import extraction_tool
 from plaso.frontend import log2timeline
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
+from plaso.lib import pfilter
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Class that implements the log2timeline CLI tool."""
 
   NAME = u'log2timeline'
-  USAGE = textwrap.dedent(u'\n'.join([
+  DESCRIPTION = textwrap.dedent(u'\n'.join([
       u'',
       u'log2timeline is the main front-end to the plaso back-end, used to',
       u'collect and correlate events extracted from a filesystem.',
@@ -56,12 +57,107 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._filter_expression = None
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
-    self._options = None
     self._output = None
     self.list_timezones = False
     self.list_parsers_and_plugins = False
+
+  def _DebugPrintCollection(self):
+    """Prints debug information about the collection."""
+    if self._front_end.SourceIsStorageMediaImage():
+      if self._filter_file:
+        logging.debug(u'Starting a collection on image with filter.')
+      else:
+        logging.debug(u'Starting a collection on image.')
+
+    elif self._front_end.SourceIsDirectory():
+      if self._filter_file:
+        logging.debug(u'Starting a collection on directory with filter.')
+      else:
+        logging.debug(u'Starting a collection on directory.')
+
+    elif self._front_end.SourceIsFile():
+      logging.debug(u'Starting a collection on a single file.')
+
+    else:
+      logging.warning(u'Unsupported source type.')
+
+  def _ParseOutputOptions(self, options):
+    """Parses the output options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._output_module = getattr(options, u'output_module', None)
+
+    self._text_prepend = getattr(options, u'text_prepend', None)
+
+  def _ParseProcessingOptions(self, options):
+    """Parses the processing options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._single_process_mode = getattr(options, u'single_process', False)
+
+    self._foreman_verbose = getattr(options, u'foreman_verbose', False)
+
+    # TODO: workers.
+
+  def AddOutputOptions(self, argument_group):
+    """Adds the output options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--output', dest=u'output_module', action=u'store', type=unicode,
+        default=u'', help=(
+            u'Bypass the storage module directly storing events according to '
+            u'the output module. This means that the output will not be in the '
+            u'pstorage format but in the format chosen by the output module. '
+            u'[Please note this feature is EXPERIMENTAL at this time, use at '
+            u'own risk (eg. sqlite output does not yet work)]'))
+
+    argument_group.add_argument(
+        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=unicode,
+        default=u'', metavar=u'TEXT', help=(
+            u'Define a free form text string that is prepended to each path '
+            u'to make it easier to distinguish one record from another in a '
+            u'timeline (like c:\\, or host_w_c:\\)'))
+
+  def AddProcessingOptions(self, argument_group):
+    """Adds the processing options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--single_process', u'--single-process', dest=u'single_process',
+        action=u'store_true', default=False, help=(
+            u'Indicate that the tool should run in a single process.'))
+
+    argument_group.add_argument(
+        u'--show_memory_usage', u'--show-memory-usage', action=u'store_true',
+        default=False, dest=u'foreman_verbose', help=(
+            u'Indicates that basic memory usage should be included in the '
+            u'output of the process monitor. If this option is not set the '
+            u'tool only displays basic status and counter information.'))
+
+    argument_group.add_argument(
+        u'--workers', dest=u'workers', action=u'store', type=int, default=0,
+        help=(u'The number of worker threads [defaults to available system '
+              u'CPUs minus three].'))
 
   def ListPluginInformation(self):
     """Lists all plugin and parser information."""
@@ -105,54 +201,26 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
     argument_parser = argparse.ArgumentParser(
-        description=self.USAGE, epilog=self.EPILOG, add_help=False,
+        description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    # Create few argument groups to make formatting help messages clearer.
-    info_group = argument_parser.add_argument_group(u'Informational Arguments')
-    function_group = argument_parser.add_argument_group(u'Functional Arguments')
-    deep_group = argument_parser.add_argument_group(u'Deep Analysis Arguments')
-    performance_group = argument_parser.add_argument_group(
-        u'Performance Arguments')
 
     self.AddBasicOptions(argument_parser)
 
-    function_group.add_argument(
-        u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
-        type=unicode, default=u'UTC', help=(
-            u'Define the timezone of the IMAGE (not the output). This is '
-            u'usually discovered automatically by preprocessing but might '
-            u'need to be specifically set if preprocessing does not properly '
-            u'detect or to override the detected time zone.'))
+    extraction_group = argument_parser.add_argument_group(
+        u'Extraction Arguments')
 
-    function_group.add_argument(
-        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=unicode,
-        default=u'', metavar=u'TEXT', help=(
-            u'Define a free form text string that is prepended to each path '
-            u'to make it easier to distinguish one record from another in a '
-            u'timeline (like c:\\, or host_w_c:\\)'))
+    self.AddExtractionOptions(extraction_group)
+    self.AddFilterOptions(extraction_group)
+    self.AddStorageMediaImageOptions(extraction_group)
+    self.AddVssProcessingOptions(extraction_group)
 
-    function_group.add_argument(
-        u'--parsers', dest=u'parsers', type=unicode, action=u'store',
-        default=u'', metavar=u'PARSER_LIST', help=(
-            u'Define a list of parsers to use by the tool. This is a comma '
-            u'separated list where each entry can be either a name of a parser '
-            u'or a parser list. Each entry can be prepended with a minus sign '
-            u'to negate the selection (exclude it). The list match is an '
-            u'exact match while an individual parser matching is a case '
-            u'insensitive substring match, with support for glob patterns. '
-            u'Examples would be: "reg" that matches the substring "reg" in '
-            u'all parser names or the glob pattern "sky[pd]" that would match '
-            u'all parsers that have the string "skyp" or "skyd" in its name. '
-            u'All matching is case insensitive.'))
+    info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
-    function_group.add_argument(
-        u'--hashers', dest=u'hashers', type=str, action=u'store', default=u'',
-        metavar=u'HASHER_LIST', help=(
-            u'Define a list of hashers to use by the tool. This is a comma '
-            u'separated list where each entry is the name of a hasher. eg. md5,'
-            u'sha256.'
-        ))
+    self.AddInformationalOptions(info_group)
+
+    info_group.add_argument(
+        u'--info', dest=u'show_info', action=u'store_true', default=False,
+        help=u'Print out information about supported plugins and parsers.')
 
     info_group.add_argument(
         u'--logfile', action=u'store', metavar=u'FILENAME', dest=u'logfile',
@@ -160,93 +228,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
 
-    function_group.add_argument(
-        u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
-        default=False, help=(
-            u'Turn on preprocessing. Preprocessing is turned on by default '
-            u'when parsing image files, however if a mount point is being '
-            u'parsed then this parameter needs to be set manually.'))
+    output_group = argument_parser.add_argument_group(u'Output Arguments')
 
-    self.AddPerformanceOptions(performance_group)
+    self.AddOutputOptions(output_group)
+    self.AddStorageOptions(output_group)
 
-    performance_group.add_argument(
-        u'--workers', dest=u'workers', action=u'store', type=int, default=0,
-        help=(u'The number of worker threads [defaults to available system '
-              u'CPUs minus three].'))
+    processing_group = argument_parser.add_argument_group(
+        u'Processing Arguments')
 
-    self.AddVssProcessingOptions(deep_group)
-
-    performance_group.add_argument(
-        u'--single_process', u'--single-process', dest=u'single_process',
-        action=u'store_true', default=False, help=(
-            u'Indicate that the tool should run in a single process.'))
-
-    function_group.add_argument(
-        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
-        action=u'store', type=unicode, default=None, help=(
-            u'List of files to include for targeted collection of files to '
-            u'parse, one line per file path, setup is /path|file - where each '
-            u'element can contain either a variable set in the preprocessing '
-            u'stage or a regular expression.'))
-
-    deep_group.add_argument(
-        u'--scan_archives', dest=u'scan_archives', action=u'store_true',
-        default=False, help=argparse.SUPPRESS)
-
-    # This option is "hidden" for the time being, still left in there for
-    # testing purposes, but hidden from the tool usage and help messages.
-    #    help=(u'Indicate that the tool should try to open files to extract '
-    #          u'embedded files within them, for instance to extract files '
-    #          u'from compressed containers, etc. Be AWARE THAT THIS IS '
-    #          u'EXTREMELY SLOW.'))
-
-    self.AddImageOptions(function_group)
-
-    function_group.add_argument(
-        u'--partition', dest=u'partition_number', action=u'store', type=int,
-        default=None, help=(
-            u'Choose a partition number from a disk image. This partition '
-            u'number should correspond to the partion number on the disk '
-            u'image, starting from partition 1.'))
-
-    info_group.add_argument(
-        u'--info', dest=u'show_info', action=u'store_true', default=False,
-        help=u'Print out information about supported plugins and parsers.')
-
-    info_group.add_argument(
-        u'--show_memory_usage', u'--show-memory-usage', action=u'store_true',
-        default=False, dest=u'foreman_verbose', help=(
-            u'Indicates that basic memory usage should be included in the '
-            u'output of the process monitor. If this option is not set the '
-            u'tool only displays basic status and counter information.'))
-
-    info_group.add_argument(
-        u'--disable_worker_monitor', u'--disable-worker-monitor',
-        action=u'store_false', default=True, dest=u'foreman_enabled', help=(
-            u'Turn off the foreman. The foreman monitors all worker processes '
-            u'and periodically prints out information about all running '
-            u'workers. By default the foreman is run, but it can be turned off '
-            u'using this parameter.'))
-
-    self.AddExtractionOptions(function_group)
-
-    function_group.add_argument(
-        u'--output', dest=u'output_module', action=u'store', type=unicode,
-        default=u'', help=(
-            u'Bypass the storage module directly storing events according to '
-            u'the output module. This means that the output will not be in the '
-            u'pstorage format but in the format chosen by the output module. '
-            u'[Please note this feature is EXPERIMENTAL at this time, use at '
-            u'own risk (eg. sqlite output does not yet work)]'))
-
-    function_group.add_argument(
-        u'--serializer-format', u'--serializer_format', action=u'store',
-        dest=u'serializer_format', default=u'proto', metavar=u'FORMAT', help=(
-            u'By default the storage uses protobufs for serializing event '
-            u'objects. This parameter can be used to change that behavior. '
-            u'The choices are "proto" and "json".'))
-
-    self.AddInformationalOptions(info_group)
+    self.AddPerformanceOptions(processing_group)
+    self.AddProcessingOptions(processing_group)
 
     argument_parser.add_argument(
         u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
@@ -312,6 +303,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       BadConfigOption: if the options are invalid.
     """
     super(Log2TimelineTool, self).ParseOptions(options)
+    self._ParseOutputOptions(options)
+    self._ParseProcessingOptions(options)
 
     format_string = (
         u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
@@ -331,7 +324,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging.basicConfig(level=logging_level, format=format_string)
 
-    if debug:
+    if self._debug_mode:
       logging_filter = log2timeline.LoggingFilter()
       root_logger = logging.getLogger()
       root_logger.addFilter(logging_filter)
@@ -340,16 +333,26 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if not self._output:
       raise errors.BadConfigOption(u'No output defined.')
 
+    # TODO: consider moving this into the extraction frontend.
     timezone_string = getattr(options, u'timezone', None)
     if timezone_string and timezone_string == u'list':
       self.list_timezones = True
 
     self.list_parsers_and_plugins = getattr(options, u'show_info', False)
 
-    self._foreman_verbose = getattr(options, u'foreman_verbose', False)
+    # TODO: where is this defined?
+    self._operating_system = getattr(options, u'os', None)
 
-    # TODO: refactor remove the need to pass options here.
-    self._options = options
+    if self._operating_system:
+      self._mount_path = getattr(options, u'filename', None)
+
+    self._filter_expression = getattr(options, u'filter', None)
+    if self._filter_expression:
+      # TODO: refactor self._filter_object out the tool into the frontend.
+      self._filter_object = pfilter.GetMatcher(self._filter_expression)
+      if not self._filter_object:
+        raise errors.BadConfigOption(
+            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
   def PrintOptions(self):
     """Prints the options."""
@@ -385,6 +388,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._output_writer.Write(u'\n')
 
+    # TODO: merge this into the output of PrintOptions.
+    self._DebugPrintCollection()
+
   def ProcessSource(self):
     """Processes the source.
 
@@ -407,8 +413,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.PrintOptions()
 
     logging.info(u'Processing started.')
-    # TODO: refactor remove the need to pass options here.
-    self._front_end.ProcessSource(self._options)
+
+    self._front_end.ProcessSource(
+        filter_file=self._filter_file,
+        parser_filter_string=self._parser_filter_string,
+        hasher_names_string=self._hasher_names_string,
+        storage_serializer_format=self._storage_serializer_format,
+        timezone=self._timezone)
+
     logging.info(u'Processing completed.')
 
 

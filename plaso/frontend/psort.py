@@ -253,7 +253,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     if slice_option:
       timezone = getattr(options, u'timezone', u'UTC')
       if timezone == u'UTC':
-        zone = pytz.utc
+        zone = pytz.UTC
       else:
         zone = pytz.timezone(timezone)
 

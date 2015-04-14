@@ -25,7 +25,7 @@ class KnowledgeBase(object):
     self._pre_obj = event.PreprocessObject()
 
     self._default_codepage = u'cp1252'
-    self._default_timezone = pytz.timezone('UTC')
+    self._default_timezone = pytz.timezone(u'UTC')
 
   @property
   def pre_obj(self):
@@ -35,37 +35,37 @@ class KnowledgeBase(object):
   @property
   def codepage(self):
     """The codepage."""
-    return getattr(self._pre_obj, 'codepage', self._default_codepage)
+    return getattr(self._pre_obj, u'codepage', self._default_codepage)
 
   @property
   def hostname(self):
     """The hostname."""
-    return getattr(self._pre_obj, 'hostname', u'')
+    return getattr(self._pre_obj, u'hostname', u'')
 
   @property
   def platform(self):
     """The platform."""
-    return getattr(self._pre_obj, 'guessed_os', u'')
+    return getattr(self._pre_obj, u'guessed_os', u'')
 
   @platform.setter
   def platform(self, value):
     """The platform."""
-    setattr(self._pre_obj, 'guessed_os', value)
+    setattr(self._pre_obj, u'guessed_os', value)
 
   @property
   def timezone(self):
     """The timezone object."""
-    return getattr(self._pre_obj, 'zone', self._default_timezone)
+    return getattr(self._pre_obj, u'zone', self._default_timezone)
 
   @property
   def users(self):
     """The list of users."""
-    return getattr(self._pre_obj, 'users', [])
+    return getattr(self._pre_obj, u'users', [])
 
   @property
   def year(self):
     """The year."""
-    return getattr(self._pre_obj, 'year', 0)
+    return getattr(self._pre_obj, u'year', 0)
 
   def GetUsernameByIdentifier(self, identifier):
     """Retrieves the username based on an identifier.

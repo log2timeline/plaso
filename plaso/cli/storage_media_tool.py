@@ -34,7 +34,7 @@ class StorageMediaTool(tools.CLITool):
     self._source_path = None
     self._vss_stores = None
 
-  def _ParseImageOptions(self, options):
+  def _ParseStorageMediaImageOptions(self, options):
     """Parses the storage media image options.
 
     Args:
@@ -105,13 +105,20 @@ class StorageMediaTool(tools.CLITool):
 
     self._vss_stores = vss_stores
 
-  def AddImageOptions(self, argument_group):
+  def AddStorageMediaImageOptions(self, argument_group):
     """Adds the storage media image options to the argument group.
 
     Args:
       argument_group: The argparse argument group (instance of
                       argparse._ArgumentGroup).
     """
+    argument_group.add_argument(
+        u'--partition', dest=u'partition_number', action=u'store', type=int,
+        default=None, help=(
+            u'Choose a partition number from a disk image. This partition '
+            u'number should correspond to the partion number on the disk '
+            u'image, starting from partition 1.'))
+
     argument_group.add_argument(
         u'-o', u'--offset', dest=u'image_offset', action=u'store', default=None,
         type=int, help=(
@@ -167,6 +174,8 @@ class StorageMediaTool(tools.CLITool):
       BadConfigOption: if the options are invalid.
     """
     super(StorageMediaTool, self).ParseOptions(options)
+    self._ParseStorageMediaImageOptions(options)
+    self._ParseVssProcessingOptions(options)
 
     self._source_path = getattr(options, self._SOURCE_OPTION, None)
     if not self._source_path:
@@ -194,6 +203,3 @@ class StorageMediaTool(tools.CLITool):
           u'Unsupported source path, string type required.')
 
     self._source_path = os.path.abspath(self._source_path)
-
-    self._ParseImageOptions(options)
-    self._ParseVssProcessingOptions(options)
