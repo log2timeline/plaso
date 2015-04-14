@@ -90,10 +90,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
   def __init__(self, output_writer):
     """Initializes the front-end object."""
-    input_reader = frontend.StdinFrontendInputReader()
-
-    super(PregFrontend, self).__init__(input_reader, output_writer)
+    super(PregFrontend, self).__init__()
     self._key_path = None
+    # TODO: refactor.
+    self._output_writer = output_writer
     self._parse_restore_points = False
     self._verbose_output = False
     self.plugins = None
@@ -209,12 +209,11 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return u'\n'.join(print_strings)
 
-  def ParseOptions(self, options, source_option='source'):
+  def ParseOptions(self, options):
     """Parses the options and initializes the front-end.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
-      source_option: optional name of the source option. The default is source.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -494,7 +493,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     searchers.append((u'', searcher))
 
-    vss_stores = self._vss_stores
+    vss_stores = self.vss_stores
 
     if not vss_stores:
       return searchers
@@ -849,6 +848,7 @@ class PregHelper(object):
       print u'No new discovered hives.'
       return
 
+    # pylint: disable=unidiomatic-typecheck
     if type(hives) in (list, tuple):
       for hive in hives:
         for name, collector in collectors:
@@ -859,7 +859,7 @@ class PregHelper(object):
     else:
       for name, collector in collectors:
         hive_helper = self.OpenHive(
-              hives, hive_collector=collector, hive_collector_name=name)
+            hives, hive_collector=collector, hive_collector_name=name)
         if hive_helper:
           self.hive_storage.AppendHive(hive_helper)
 
@@ -1023,6 +1023,7 @@ class PregStorage(object):
     Args:
       hive_helpers: A list of hive objects (instance of PregHiveHelper)
     """
+    # pylint: disable=unidiomatic-typecheck
     if type(hive_helpers) not in (list, tuple):
       hive_helpers = [hive_helpers]
 

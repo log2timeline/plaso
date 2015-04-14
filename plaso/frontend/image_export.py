@@ -5,7 +5,6 @@ import abc
 import collections
 import logging
 import os
-import textwrap
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -19,10 +18,9 @@ from plaso.engine import collector
 from plaso.engine import utils as engine_utils
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.frontend import frontend
+from plaso.frontend import storage_media_frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.hashers import manager as hashers_manager
-from plaso.lib import errors
 from plaso.lib import specification
 from plaso.lib import timelib
 from plaso.preprocessors import interface as preprocess_interface
@@ -379,6 +377,14 @@ class FileEntryFilterCollection(object):
     """
     self._filters.append(file_entry_filter)
 
+  def HasFilters(self):
+    """Determines if filters are defined.
+
+    Returns:
+      A boolean value indicating if filters are defined.
+    """
+    return bool(self._filters)
+
   def Matches(self, file_entry):
     """Compares the file entry against the filter collection.
 
@@ -563,26 +569,25 @@ class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
         path_spec, self._destination_path, filename_prefix=filename_prefix)
 
 
-class ImageExportFrontend(frontend.StorageMediaFrontend):
+class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
   """Class that implements the image export front-end."""
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = frontend.StdinFrontendInputReader()
-    output_writer = frontend.StdoutFrontendOutputWriter()
-
-    super(ImageExportFrontend, self).__init__(input_reader, output_writer)
+    super(ImageExportFrontend, self).__init__()
     self._filter_collection = FileEntryFilterCollection()
     self._knowledge_base = None
-    self._remove_duplicates = True
     self._source_path_spec = None
 
   # TODO: merge with collector and/or engine.
-  def _Extract(self, destination_path):
+  def _Extract(self, destination_path, remove_duplicates=True):
     """Extracts files.
 
     Args:
       destination_path: the path where the extracted files should be stored.
+      remove_duplicates: optional boolean value to indicate if files with
+                         duplicate content should be removed. The default
+                         is True.
     """
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
@@ -597,7 +602,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     image_collector.Collect()
 
-    file_saver = FileSaver(skip_duplicates=self._remove_duplicates)
+    file_saver = FileSaver(skip_duplicates=remove_duplicates)
     input_queue_consumer = ImageExtractorQueueConsumer(
         input_queue, file_saver, destination_path, self._filter_collection)
     input_queue_consumer.ConsumeItems()
@@ -624,7 +629,8 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         path_spec, destination_path, filename_prefix=filename_prefix)
 
   # TODO: merge with collector and/or engine.
-  def _ExtractWithFilter(self, destination_path, filter_file_path):
+  def _ExtractWithFilter(
+      self, destination_path, filter_file_path, remove_duplicates=True):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
@@ -634,6 +640,9 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
       destination_path: The path where the extracted files should be stored.
       filter_file_path: The path of the file that contains the filter
                         expressions.
+      remove_duplicates: optional boolean value to indicate if files with
+                         duplicate content should be removed. The default
+                         is True.
     """
     # TODO: add support to handle multiple partitions.
     self._source_path_spec = self.GetSourcePathSpec()
@@ -651,12 +660,12 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         filter_file_path, pre_obj=self._knowledge_base.pre_obj)
 
     # Save the regular files.
-    file_saver = FileSaver(skip_duplicates=self._remove_duplicates)
+    file_saver = FileSaver(skip_duplicates=remove_duplicates)
 
     for path_spec in searcher.Find(find_specs=find_specs):
       self._ExtractFile(file_saver, path_spec, destination_path)
 
-    if self._process_vss and self._vss_stores:
+    if self.process_vss and self.vss_stores:
       volume_path_spec = self._source_path_spec.parent
 
       logging.info(u'Extracting files from VSS.')
@@ -670,7 +679,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
       # In plaso 1 represents the first store index in dfvfs and pyvshadow 0
       # represents the first store index so 1 is subtracted.
-      vss_store_range = [store_nr - 1 for store_nr in self._vss_stores]
+      vss_store_range = [store_nr - 1 for store_nr in self.vss_stores]
 
       for store_index in vss_store_range:
         logging.info(u'Extracting files from VSS {0:d} out of {1:d}'.format(
@@ -722,114 +731,6 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     # TODO: add explicit close of file_system.
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
-
-  def _ParseDateFiltersOption(self, options):
-    """Parses the date filters option.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    date_filters = getattr(options, u'date_filters', None)
-    if not date_filters:
-      return
-
-    file_entry_filter = DateTimeFileEntryFilter()
-
-    for date_filter in date_filters:
-      date_filter_pieces = date_filter.split(u',')
-      if len(date_filter_pieces) != 3:
-        raise errors.BadConfigOption(
-            u'Date filter badly formed: {0:s}'.format(date_filter))
-
-      time_value, start_time_string, end_time_string = date_filter_pieces
-      time_value = time_value.strip()
-      start_time_string = start_time_string.strip()
-      end_time_string = end_time_string.strip()
-
-      try:
-        file_entry_filter.AddDateTimeRange(
-            time_value, start_time_string=start_time_string,
-            end_time_string=end_time_string)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Date filter badly formed: {0:s}'.format(date_filter))
-
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def _ParseExtensionsStringOption(self, options):
-    """Parses the extensions string option.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    extensions_string = getattr(options, u'extensions_string', None)
-    if not extensions_string:
-      return
-
-    extensions_string = extensions_string.lower()
-    extensions = [
-        extension.strip() for extension in extensions_string.split(u',')]
-    file_entry_filter = ExtensionsFileEntryFilter(extensions)
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def _ParseNamesStringOption(self, options):
-    """Parses the name string option.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    names_string = getattr(options, u'names_string', None)
-    if not names_string:
-      return
-
-    names_string = names_string.lower()
-    names = [name.strip() for name in names_string.split(u',')]
-    file_entry_filter = NamesFileEntryFilter(names)
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def _ParseSignatureIdentifiersOptions(self, options):
-    """Parses the signature identifiers option.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    signature_identifiers = getattr(options, u'signature_identifiers', None)
-    if not signature_identifiers:
-      return
-
-    if not self._data_location:
-      raise errors.BadConfigOption(u'Missing data location.')
-
-    path = os.path.join(self._data_location, u'signatures.conf')
-    if not os.path.exists(path):
-      raise errors.BadConfigOption(
-          u'No such format specification file: {0:s}'.format(path))
-
-    try:
-      specification_store = self._ReadSpecificationFile(path)
-    except IOError as exception:
-      raise errors.BadConfigOption((
-          u'Unable to read format specification file: {0:s} with error: '
-          u'{1:s}').format(path, exception))
-
-    signature_identifiers = signature_identifiers.lower()
-    signature_identifiers = [
-        identifier.strip() for identifier in signature_identifiers.split(u',')]
-    file_entry_filter = SignaturesFileEntryFilter(
-        specification_store, signature_identifiers)
-    self._filter_collection.AddFilter(file_entry_filter)
 
   def _Preprocess(self, searcher):
     """Preprocesses the image.
@@ -901,89 +802,149 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     return specification_store
 
-  def ListSignatureIdentifiers(self, options):
-    """Lists the signature identifier.
+  def HasFilters(self):
+    """Determines if filters are defined.
+
+    Returns:
+      A boolean value indicating if filters are defined.
+    """
+    return self._filter_collection.HasFilters()
+
+  def ParseDateFilters(self, date_filters):
+    """Parses the date filters.
+
+    A date filter string is formatted as 3 comma separated values:
+    time value, start date and time (string) and end date and time (string)
+
+    The time value and either a start or end date and time is required.
+
+    The date and time strings are formatted as:
+    YYYY-MM-DD hh:mm:ss.######[+-]##:##
+    Where # are numeric digits ranging from 0 to 9 and the seconds
+    fraction can be either 3 or 6 digits. The time of day, seconds fraction
+    and timezone offset are optional. The default timezone is UTC.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      date_filters: a list of strings containing date filter definitions.
 
     Raises:
-      BadConfigOption: if the options are invalid.
+      ValueError: if the date filter definitions are invalid.
     """
-    data_location = getattr(options, u'data_location', None)
+    if not date_filters:
+      return
+
+    file_entry_filter = DateTimeFileEntryFilter()
+
+    for date_filter in date_filters:
+      date_filter_pieces = date_filter.split(u',')
+      if len(date_filter_pieces) != 3:
+        raise ValueError(
+            u'Badly formed date filter: {0:s}'.format(date_filter))
+
+      time_value, start_time_string, end_time_string = date_filter_pieces
+      time_value = time_value.strip()
+      start_time_string = start_time_string.strip()
+      end_time_string = end_time_string.strip()
+
+      try:
+        file_entry_filter.AddDateTimeRange(
+            time_value, start_time_string=start_time_string,
+            end_time_string=end_time_string)
+      except ValueError:
+        raise ValueError(
+            u'Badly formed date filter: {0:s}'.format(date_filter))
+
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def ParseExtensionsString(self, extensions_string):
+    """Parses the extensions string.
+
+    Args:
+      extensions_string: a string with comma separated extensions to filter.
+    """
+    if not extensions_string:
+      return
+
+    extensions_string = extensions_string.lower()
+    extensions = [
+        extension.strip() for extension in extensions_string.split(u',')]
+    file_entry_filter = ExtensionsFileEntryFilter(extensions)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def ParseNamesString(self, names_string):
+    """Parses the name string.
+
+    Args:
+      names_string: a string with comma separated filenames to filter.
+    """
+    if not names_string:
+      return
+
+    names_string = names_string.lower()
+    names = [name.strip() for name in names_string.split(u',')]
+    file_entry_filter = NamesFileEntryFilter(names)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def ParseSignatureIdentifiers(self, data_location, signature_identifiers):
+    """Parses the signature identifiers.
+
+    Args:
+      data_location: the location of the format specification file
+                     (signatures.conf).
+      signature_identifiers: a string with comma separated signature
+                             identifiers.
+
+    Raises:
+      IOError: if the format specification file could not be read from
+               the specified data location.
+      ValueError: if no data location was specified.
+    """
+    if not signature_identifiers:
+      return
+
     if not data_location:
-      raise errors.BadConfigOption(u'Missing data location.')
+      raise ValueError(u'Missing data location.')
 
     path = os.path.join(data_location, u'signatures.conf')
     if not os.path.exists(path):
-      raise errors.BadConfigOption(
+      raise IOError(
           u'No such format specification file: {0:s}'.format(path))
 
     try:
       specification_store = self._ReadSpecificationFile(path)
     except IOError as exception:
-      raise errors.BadConfigOption((
+      raise IOError((
           u'Unable to read format specification file: {0:s} with error: '
           u'{1:s}').format(path, exception))
 
-    identifiers = []
-    for format_specification in specification_store.specifications:
-      identifiers.append(format_specification.identifier)
+    signature_identifiers = signature_identifiers.lower()
+    signature_identifiers = [
+        identifier.strip() for identifier in signature_identifiers.split(u',')]
+    file_entry_filter = SignaturesFileEntryFilter(
+        specification_store, signature_identifiers)
+    self._filter_collection.AddFilter(file_entry_filter)
 
-    self._output_writer.Write(u'Available signature identifiers:\n')
-    self._output_writer.Write(
-        u'\n'.join(textwrap.wrap(u', '.join(sorted(identifiers)), 79)))
-    self._output_writer.Write(u'\n\n')
-
-  def ParseOptions(self, options, source_option=u'source'):
-    """Parses the options and initializes the front-end.
+  def PrintFilterCollection(self, output_writer):
+    """Prints the filter collection.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_option: optional name of the source option. The default is source.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
+      output_writer: the output writer (instance of OutputWriter).
     """
-    super(ImageExportFrontend, self).ParseOptions(
-        options, source_option=source_option)
+    self._filter_collection.Print(output_writer)
 
-    filter_file = getattr(options, u'filter', None)
-    if filter_file and not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'Unable to proceed, filter file: {0:s} does not exist.'.format(
-              filter_file))
-
-    if (getattr(options, u'no_vss', False) or
-        getattr(options, u'include_duplicates', False)):
-      self._remove_duplicates = False
-
-    self._data_location = getattr(options, u'data_location', None)
-
-    self._ParseDateFiltersOption(options)
-    self._ParseExtensionsStringOption(options)
-    self._ParseNamesStringOption(options)
-    self._ParseSignatureIdentifiersOptions(options)
-
-  def PrintFilterCollection(self):
-    """Prints the filter collection."""
-    self._filter_collection.Print(self._output_writer)
-
-  def ProcessSource(self, options):
+  def ProcessSource(
+      self, destination_path, filter_file=None, remove_duplicates=True):
     """Processes the source.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      SourceScannerError: if the source scanner could not find a supported
-                          file system.
-      UserAbort: if the user initiated an abort.
+      destination_path: the path where the extracted files should be stored.
+      filter_file: optional name of of the filter file. The default is None.
+      remove_duplicates: optional boolean value to indicate if files with
+                         duplicate content should be removed. The default
+                         is True.
     """
-    self.ScanSource(options)
-
-    filter_file = getattr(options, u'filter', None)
     if filter_file:
-      self._ExtractWithFilter(options.path, filter_file)
+      self._ExtractWithFilter(
+          destination_path, filter_file, remove_duplicates=remove_duplicates)
     else:
-      self._Extract(options.path)
+      self._Extract(destination_path, remove_duplicates=remove_duplicates)

@@ -194,13 +194,21 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     argument_parser = argparse.ArgumentParser(description=self.USAGE)
 
+    self.AddBasicOptions(argument_parser)
     self.AddStorageFileOptions(argument_parser)
 
     argument_parser.add_argument(
         u'-v', u'--verbose', dest=u'verbose', action=u'store_true',
         default=False, help=u'Print verbose output.')
 
-    options = argument_parser.parse_args()
+    try:
+      options = argument_parser.parse_args()
+    except UnicodeEncodeError:
+      # If we get here we are attempting to print help in a non-Unicode
+      # terminal.
+      self._output_writer.Write(u'')
+      self._output_writer.Write(argument_parser.format_help())
+      return False
 
     try:
       self.ParseOptions(options)
@@ -257,7 +265,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
 
 def Main():
-  """Start the tool."""
+  """The main function."""
   tool = PinfoTool()
 
   if not tool.ParseArguments():
