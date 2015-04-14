@@ -6,7 +6,7 @@ import logging
 import os
 
 
-def ByteArrayCopyToString(byte_array, codepage='utf-8'):
+def ByteArrayCopyToString(byte_array, codepage=u'utf-8'):
   """Copies a UTF-8 encoded byte array into a Unicode string.
 
   Args:
@@ -16,11 +16,11 @@ def ByteArrayCopyToString(byte_array, codepage='utf-8'):
   Returns:
     A Unicode string.
   """
-  byte_stream = ''.join(map(chr, byte_array))
+  byte_stream = b''.join(map(chr, byte_array))
   return ByteStreamCopyToString(byte_stream, codepage=codepage)
 
 
-def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
+def ByteStreamCopyToString(byte_stream, codepage=u'utf-8'):
   """Copies a UTF-8 encoded byte stream into a Unicode string.
 
   Args:
@@ -37,11 +37,11 @@ def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
         u'Unable to decode {0:s} formatted byte stream.'.format(codepage))
     string = byte_stream.decode(codepage, errors='ignore')
 
-  string, _, _ = string.partition('\x00')
+  string, _, _ = string.partition(u'\x00')
   return string
 
 
-def ByteStreamCopyToGuid(byte_stream, byte_order='little-endian'):
+def ByteStreamCopyToGuid(byte_stream, byte_order=u'little-endian'):
   """Reads a GUID from the byte stream.
 
   Args:
@@ -53,13 +53,13 @@ def ByteStreamCopyToGuid(byte_stream, byte_order='little-endian'):
     String containing the GUID.
   """
   if len(byte_stream) >= 16:
-    if byte_order == 'big-endian':
+    if byte_order == u'big-endian':
       return (
           u'{{{0:02x}{1:02x}{2:02x}{3:02x}-{4:02x}{5:02x}-'
           u'{6:02x}{7:02x}-{8:02x}{9:02x}-'
           u'{10:02x}{11:02x}{12:02x}{13:02x}{14:02x}{15:02x}}}').format(
               *byte_stream[:16])
-    elif byte_order == 'little-endian':
+    elif byte_order == u'little-endian':
       return (
           u'{{{3:02x}{2:02x}{1:02x}{0:02x}-{5:02x}{4:02x}-'
           u'{7:02x}{6:02x}-{8:02x}{9:02x}-'
@@ -87,8 +87,8 @@ def ByteStreamCopyToUtf16Stream(byte_stream, byte_stream_size=None):
     byte_stream_size = len(byte_stream)
 
   while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == '\x00' and
-        byte_stream[byte_stream_index + 1] == '\x00'):
+    if (byte_stream[byte_stream_index] == b'\x00' and
+        byte_stream[byte_stream_index + 1] == b'\x00'):
       break
 
     byte_stream_index += 2
@@ -123,13 +123,13 @@ def ReadUtf16Stream(file_object, offset=None, byte_size=0):
     if byte_size and stream_index >= byte_size:
       break
 
-    if '\x00\x00' in char_raw:
+    if b'\x00\x00' in char_raw:
       break
     char_buffer.append(char_raw)
     stream_index += 2
     char_raw = file_object.read(2)
 
-  return ReadUtf16(''.join(char_buffer))
+  return ReadUtf16(b''.join(char_buffer))
 
 
 def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
@@ -150,12 +150,12 @@ def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
       byte_stream, byte_stream_size=byte_stream_size)
 
   try:
-    return utf16_stream.decode('utf-16-le')
+    return utf16_stream.decode(u'utf-16-le')
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
     logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
         HexifyBuffer(utf16_stream), exception))
 
-  return utf16_stream.decode('utf-16-le', errors='ignore')
+  return utf16_stream.decode(u'utf-16-le', errors=u'ignore')
 
 
 def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
@@ -179,15 +179,15 @@ def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
     byte_stream_size = len(byte_stream)
 
   while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == '\x00' and
-        byte_stream[byte_stream_index + 1] == '\x00'):
+    if (byte_stream[byte_stream_index] == b'\x00' and
+        byte_stream[byte_stream_index + 1] == b'\x00'):
 
       if byte_stream_index - utf16_stream_start <= 2:
         break
 
       array_of_strings.append(
           byte_stream[utf16_stream_start:byte_stream_index].decode(
-              'utf-16-le'))
+              u'utf-16-le'))
       utf16_stream_start = byte_stream_index + 2
 
     byte_stream_index += 2
@@ -217,14 +217,14 @@ def ArrayOfUt16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
     byte_stream_size = len(byte_stream)
 
   while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == '\x00' and
-        byte_stream[byte_stream_index + 1] == '\x00'):
+    if (byte_stream[byte_stream_index] == b'\x00' and
+        byte_stream[byte_stream_index + 1] == b'\x00'):
 
       if byte_stream_index - utf16_stream_start <= 2:
         break
 
       string = byte_stream[utf16_stream_start:byte_stream_index].decode(
-          'utf-16-le')
+          u'utf-16-le')
       string_table[utf16_stream_start] = string
       utf16_stream_start = byte_stream_index + 2
 
@@ -235,16 +235,16 @@ def ArrayOfUt16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
 
 def ReadUtf16(string_buffer):
   """Returns a decoded UTF-16 string from a string buffer."""
-  if type(string_buffer) in (list, tuple):
+  if isinstance(string_buffer, (list, tuple)):
     use_buffer = u''.join(string_buffer)
   else:
     use_buffer = string_buffer
 
-  if not type(use_buffer) in (str, unicode):
+  if not isinstance(use_buffer, basestring):
     return u''
 
   try:
-    return use_buffer.decode('utf-16').replace('\x00', '')
+    return use_buffer.decode(u'utf-16').replace(u'\x00', u'')
   except SyntaxError as exception:
     logging.error(u'Unable to decode string: {0:s} with error: {1:s}.'.format(
         HexifyBuffer(string_buffer), exception))
@@ -252,7 +252,7 @@ def ReadUtf16(string_buffer):
     logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
         HexifyBuffer(string_buffer), exception))
 
-  return use_buffer.decode('utf-16', errors='ignore').replace('\x00', '')
+  return use_buffer.decode(u'utf-16', errors=u'ignore').replace(u'\x00', u'')
 
 
 def HexifyBuffer(string_buffer):
