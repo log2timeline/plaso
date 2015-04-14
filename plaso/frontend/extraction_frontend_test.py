@@ -43,13 +43,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     source_file = self._GetTestFilePath([u'ímynd.dd'])
     storage_file_path = os.path.join(self._temp_directory, u'plaso.db')
 
-    # TODO: refactor this.
-    options = frontend.Options()
-
     test_front_end.SetStorageFile(storage_file_path=storage_file_path)
 
     test_front_end.ScanSource(source_file)
-    test_front_end.ProcessSource(options)
+    test_front_end.ProcessSource()
 
     try:
       storage_file = storage.StorageFile(storage_file_path, read_only=True)

@@ -22,7 +22,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
   _INDENTATION_LEVEL = 8
 
   NAME = u'pinfo'
-  USAGE = (
+  DESCRIPTION = (
       u'Gives you information about the storage file, how it was '
       u'collected, what information was gained from the image, etc.')
 
@@ -192,7 +192,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     logging.basicConfig(
         level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
-    argument_parser = argparse.ArgumentParser(description=self.USAGE)
+    argument_parser = argparse.ArgumentParser(description=self.DESCRIPTION)
 
     self.AddBasicOptions(argument_parser)
     self.AddStorageFileOptions(argument_parser)
