@@ -17,7 +17,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
   """Class that implements the image export CLI tool."""
 
   NAME = u'image_export'
-  USAGE = (
+  DESCRIPTION = (
       u'This is a simple collector designed to export files inside an '
       u'image, both within a regular RAW image as well as inside a VSS. '
       u'The tool uses a collection filter that uses the same syntax as a '
@@ -88,7 +88,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
     argument_parser = argparse.ArgumentParser(
-        description=self.USAGE, epilog=self.EPILOG)
+        description=self.DESCRIPTION, epilog=self.EPILOG)
 
     self.AddBasicOptions(argument_parser)
 
@@ -161,7 +161,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             u'previously exported files and duplicates are skipped. Use '
             u'this option to include duplicate files in the export.'))
 
-    self.AddImageOptions(argument_parser)
+    self.AddStorageMediaImageOptions(argument_parser)
     self.AddVssProcessingOptions(argument_parser)
 
     argument_parser.add_argument(
