@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Windows Scheduled Task job events."""
+"""The Windows Scheduled Task (job) event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class WinJobFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Java Cache IDX download item."""
+  """Formatter for a Windows Scheduled Task (job) event."""
 
   DATA_TYPE = 'windows:tasks:job'
 

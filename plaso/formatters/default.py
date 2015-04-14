@@ -6,7 +6,7 @@ from plaso.lib import definitions
 
 
 class DefaultFormatter(interface.EventFormatter):
-  """Default formatter for events that do not have any defined formatter."""
+  """Formatter for events that do not have any defined formatter."""
 
   DATA_TYPE = u'event'
   FORMAT_STRING = u'<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'

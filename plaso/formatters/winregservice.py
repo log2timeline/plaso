@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Formatter for service entries derived from Windows Registry files."""
+"""The Windows services event formatter.
+
+The Windows services are derived from Windows Registry files.
+"""
 
 from plaso.formatters import manager
 from plaso.formatters import winreg
@@ -7,7 +10,7 @@ from plaso.winnt import human_readable_service_enums
 
 
 class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
-  """Formatter for a Windows service event extracted from the Registry."""
+  """Formatter for a Windows service event."""
 
   DATA_TYPE = 'windows:registry:service'
 
