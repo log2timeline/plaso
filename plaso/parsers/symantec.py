@@ -42,7 +42,7 @@ class SymantecParser(text_parser.TextCSVParser):
       'domain_guid', 'log_session_guid', 'vbin_session_id',
       'login_domain', 'extra']
 
-  def _GetTimestamp(self, timestamp_raw, timezone=pytz.utc):
+  def _GetTimestamp(self, timestamp_raw, timezone=pytz.UTC):
     """Return a 64-bit signed timestamp value in micro seconds since Epoch.
 
     The timestamp consists of six hexadecimal octets.

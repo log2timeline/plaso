@@ -915,8 +915,8 @@ class BsmParser(interface.SingleFileBaseParser):
       #       event object.
       timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
           token.timestamp, token.microsecond)
-      date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.utc)
-      date_time_string = date_time.strftime('%Y-%m-%d %H:%M:%S')
+      date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.UTC)
+      date_time_string = date_time.strftime(u'%Y-%m-%d %H:%M:%S')
 
       string = self._CopyUtf8ByteArrayToString(token.text)
       return u'[{0}: {1:s}, timestamp: {2:s}]'.format(

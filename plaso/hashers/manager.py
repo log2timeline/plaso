@@ -44,6 +44,9 @@ class HashersManager(object):
     """
     hasher_names = []
 
+    if not hasher_names_string:
+      return hasher_names
+
     for hasher_name in hasher_names_string.split(u','):
       hasher_name = hasher_name.strip()
       if not hasher_name:

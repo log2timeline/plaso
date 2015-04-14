@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
+import argparse
 import os
 
 from plaso.cli import storage_media_tool
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import pfilter
 
 import pytz
 
@@ -36,20 +36,129 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._buffer_size = 0
     self._debug_mode = False
     self._enable_profiling = False
-    self._filter_expression = None
     self._filter_file = None
     self._filter_object = None
+    self._hasher_names_string = None
     self._mount_path = None
     self._old_preprocess = False
     self._operating_system = None
     self._output_module = None
+    self._parser_filter_string = None
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_PROTOBUF
     self._text_prepend = None
-    self._timezone = pytz.utc
+    self._timezone = pytz.UTC
+
+  def _ParseExtractionOptions(self, options):
+    """Parses the extraction options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._hasher_names_string = getattr(options, u'hashers', u'')
+    self._parser_filter_string = getattr(options, u'parsers', u'')
+
+    # TODO: preprocess.
+
+    self._old_preprocess = getattr(options, u'old_preprocess', False)
+
+    self._process_archive_files = getattr(options, u'scan_archives', False)
+
+    timezone_string = getattr(options, u'timezone', None)
+    if timezone_string and timezone_string != u'list':
+      self._timezone = pytz.timezone(timezone_string)
+
+  def _ParseFilterOptions(self, options):
+    """Parses the filter options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    filter_file = getattr(options, u'file_filter', None)
+    if filter_file and not os.path.isfile(filter_file):
+      raise errors.BadConfigOption(
+          u'No such collection filter file: {0:s}.'.format(filter_file))
+
+    self._filter_file = filter_file
+
+  def _ParseInformationalOptions(self, options):
+    """Parses the informational options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._debug_mode = getattr(options, u'debug', False)
+
+  def _ParsePerformanceOptions(self, options):
+    """Parses the performance options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._buffer_size = getattr(options, u'buffer_size', 0)
+    if self._buffer_size:
+      # TODO: turn this into a generic function that supports more size
+      # suffixes both MB and MiB and also that does not allow m as a valid
+      # indicator for MiB since m represents milli not Mega.
+      try:
+        if self._buffer_size[-1].lower() == u'm':
+          self._buffer_size = int(self._buffer_size[:-1], 10)
+          self._buffer_size *= self._BYTES_IN_A_MIB
+        else:
+          self._buffer_size = int(self._buffer_size, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
+
+    queue_size = getattr(options, u'queue_size', None)
+    if queue_size:
+      try:
+        self._queue_size = int(queue_size, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid queue size: {0:s}.'.format(queue_size))
+
+    self._enable_profiling = getattr(options, u'enable_profiling', False)
+
+    profile_sample_rate = getattr(options, u'profile_sample_rate', None)
+    if profile_sample_rate:
+      try:
+        self._profiling_sample_rate = int(profile_sample_rate, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
+
+  def _ParseStorageOptions(self, options):
+    """Parses the storage options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    serializer_format = getattr(
+        options, u'serializer_format', definitions.SERIALIZER_FORMAT_PROTOBUF)
+    if serializer_format not in definitions.SERIALIZER_FORMATS:
+      raise errors.BadConfigOption(
+          u'Unsupported storage serializer format: {0:s}.'.format(
+              serializer_format))
+    self._storage_serializer_format = serializer_format
 
   def AddExtractionOptions(self, argument_group):
     """Adds the extraction options to the argument group.
@@ -59,6 +168,46 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
+        u'--hashers', dest=u'hashers', type=str, action=u'store', default=u'',
+        metavar=u'HASHER_LIST', help=(
+            u'Define a list of hashers to use by the tool. This is a comma '
+            u'separated list where each entry is the name of a hasher. eg. md5,'
+            u'sha256.'))
+
+    # TODO: rename option name to parser_filter_string.
+    argument_group.add_argument(
+        u'--parsers', dest=u'parsers', type=unicode, action=u'store',
+        default=u'', metavar=u'PARSER_LIST', help=(
+            u'Define a list of parsers to use by the tool. This is a comma '
+            u'separated list where each entry can be either a name of a parser '
+            u'or a parser list. Each entry can be prepended with a minus sign '
+            u'to negate the selection (exclude it). The list match is an '
+            u'exact match while an individual parser matching is a case '
+            u'insensitive substring match, with support for glob patterns. '
+            u'Examples would be: "reg" that matches the substring "reg" in '
+            u'all parser names or the glob pattern "sky[pd]" that would match '
+            u'all parsers that have the string "skyp" or "skyd" in its name. '
+            u'All matching is case insensitive.'))
+
+    argument_group.add_argument(
+        u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
+        default=False, help=(
+            u'Turn on preprocessing. Preprocessing is turned on by default '
+            u'when parsing image files, however if a mount point is being '
+            u'parsed then this parameter needs to be set manually.'))
+
+    argument_group.add_argument(
+        u'--scan_archives', dest=u'scan_archives', action=u'store_true',
+        default=False, help=argparse.SUPPRESS)
+
+    # This option is "hidden" for the time being, still left in there for
+    # testing purposes, but hidden from the tool usage and help messages.
+    #    help=(u'Indicate that the tool should try to open files to extract '
+    #          u'embedded files within them, for instance to extract files '
+    #          u'from compressed containers, etc. Be AWARE THAT THIS IS '
+    #          u'EXTREMELY SLOW.'))
+
+    argument_group.add_argument(
         '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
         action='store_true', default=False, help=(
             u'Only used in conjunction when appending to a previous storage '
@@ -66,6 +215,29 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'is not calculated and instead the last one that got added to '
             u'the storage file is used. This can be handy when parsing an '
             u'image that contains more than a single partition.'))
+
+    argument_group.add_argument(
+        u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
+        type=unicode, default=u'UTC', help=(
+            u'Define the timezone of the IMAGE (not the output). This is '
+            u'usually discovered automatically by preprocessing but might '
+            u'need to be specifically set if preprocessing does not properly '
+            u'detect or to override the detected time zone.'))
+
+  def AddFilterOptions(self, argument_group):
+    """Adds the filter options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
+        action=u'store', type=unicode, default=None, help=(
+            u'List of files to include for targeted collection of files to '
+            u'parse, one line per file path, setup is /path|file - where each '
+            u'element can contain either a variable set in the preprocessing '
+            u'stage or a regular expression.'))
 
   def AddInformationalOptions(self, argument_group):
     """Adds the informational options to the argument group.
@@ -112,6 +284,20 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
               u'The profile sample rate (defaults to a sample every {0:d} '
               u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
 
+  def AddStorageOptions(self, argument_group):
+    """Adds the storage options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--serializer-format', u'--serializer_format', action=u'store',
+        dest=u'serializer_format', default=u'proto', metavar=u'FORMAT', help=(
+            u'By default the storage uses protobufs for serializing event '
+            u'objects. This parameter can be used to change that behavior. '
+            u'The choices are "proto" and "json".'))
+
   def ParseOptions(self, options):
     """Parses tool specific options.
 
@@ -122,83 +308,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the options are invalid.
     """
     super(ExtractionTool, self).ParseOptions(options)
-
-    # TODO: refactor in sub parse functions.
-    # TODO: make sure that only/all options defined in the add functions
-    # are parsed.
-
-    self._buffer_size = getattr(options, u'buffer_size', 0)
-    if self._buffer_size:
-      # TODO: turn this into a generic function that supports more size
-      # suffixes both MB and MiB and also that does not allow m as a valid
-      # indicator for MiB since m represents milli not Mega.
-      try:
-        if self._buffer_size[-1].lower() == u'm':
-          self._buffer_size = int(self._buffer_size[:-1], 10)
-          self._buffer_size *= self._BYTES_IN_A_MIB
-        else:
-          self._buffer_size = int(self._buffer_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
-
-    queue_size = getattr(options, u'queue_size', None)
-    if queue_size:
-      try:
-        self._queue_size = int(queue_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid queue size: {0:s}.'.format(queue_size))
-
-    self._enable_profiling = getattr(options, u'enable_profiling', False)
-
-    profile_sample_rate = getattr(options, u'profile_sample_rate', None)
-    if profile_sample_rate:
-      try:
-        self._profiling_sample_rate = int(profile_sample_rate, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
-
-    serializer_format = getattr(
-        options, u'serializer_format', definitions.SERIALIZER_FORMAT_PROTOBUF)
-    if serializer_format not in definitions.SERIALIZER_FORMATS:
-      raise errors.BadConfigOption(
-          u'Unsupported storage serializer format: {0:s}.'.format(
-              serializer_format))
-    self._storage_serializer_format = serializer_format
-
-    self._filter_expression = getattr(options, u'filter', None)
-    if self._filter_expression:
-      # TODO: refactor self._filter_object out the tool into the frontend.
-      self._filter_object = pfilter.GetMatcher(self._filter_expression)
-      if not self._filter_object:
-        raise errors.BadConfigOption(
-            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
-
-    filter_file = getattr(options, u'file_filter', None)
-    if filter_file and not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(filter_file))
-
-    self._filter_file = filter_file
-
-    self._debug_mode = getattr(options, u'debug', False)
-
-    self._old_preprocess = getattr(options, u'old_preprocess', False)
-
-    timezone_string = getattr(options, u'timezone', None)
-    if timezone_string and timezone_string != u'list':
-      self._timezone = pytz.timezone(timezone_string)
-
-    self._single_process_mode = getattr(
-        options, u'single_process', False)
-
-    self._output_module = getattr(options, u'output_module', None)
-
-    self._operating_system = getattr(options, u'os', None)
-    self._process_archive_files = getattr(options, u'scan_archives', False)
-    self._text_prepend = getattr(options, u'text_prepend', None)
-
-    if self._operating_system:
-      self._mount_path = getattr(options, u'filename', None)
+    self._ParseExtractionOptions(options)
+    self._ParseFilterOptions(options)
+    self._ParseInformationalOptions(options)
+    self._ParsePerformanceOptions(options)
+    self._ParseStorageOptions(options)

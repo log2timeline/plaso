@@ -261,7 +261,7 @@ class Timestamp(object):
                      occurs. Otherwise the error is absorbed and a datetime
                      object from the beginning of UNIX Epoch is returned.
     """
-    datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc)
+    datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
     try:
       datetime_object += datetime.timedelta(microseconds=timestamp)
       return datetime_object.astimezone(timezone)
@@ -276,7 +276,7 @@ class Timestamp(object):
     return datetime_object
 
   @classmethod
-  def CopyToIsoFormat(cls, timestamp, timezone=pytz.utc, raise_error=False):
+  def CopyToIsoFormat(cls, timestamp, timezone=pytz.UTC, raise_error=False):
     """Copies the timestamp to an ISO 8601 formatted string.
 
     Args:
@@ -481,7 +481,7 @@ class Timestamp(object):
     return timestamp
 
   @classmethod
-  def FromHfsTime(cls, hfs_time, timezone=pytz.utc, is_dst=False):
+  def FromHfsTime(cls, hfs_time, timezone=pytz.UTC, is_dst=False):
     """Converts a HFS time to a timestamp.
 
     HFS time is the same as HFS+ time, except stored in the local
@@ -584,7 +584,7 @@ class Timestamp(object):
   @classmethod
   def FromTimeParts(
       cls, year, month, day, hour, minutes, seconds, microseconds=0,
-      timezone=pytz.utc):
+      timezone=pytz.UTC):
     """Converts a list of time entries to a timestamp.
 
     Args:
@@ -613,7 +613,7 @@ class Timestamp(object):
               exception))
       return 0
 
-    if type(timezone) is str:
+    if isinstance(timezone, basestring):
       timezone = pytz.timezone(timezone)
 
     date_use = timezone.localize(date)
@@ -623,7 +623,7 @@ class Timestamp(object):
 
   @classmethod
   def FromTimeString(
-      cls, time_string, timezone=pytz.utc, dayfirst=False,
+      cls, time_string, timezone=pytz.UTC, dayfirst=False,
       gmt_as_timezone=True):
     """Converts a string containing a date and time value into a timestamp.
 
@@ -703,7 +703,7 @@ class Timestamp(object):
     Returns:
       An integer containing the timestamp or 0 on error.
     """
-    if timezone and timezone != pytz.utc:
+    if timezone and timezone != pytz.UTC:
       datetime_object = (
           datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=None) +
           datetime.timedelta(microseconds=timestamp))
@@ -729,7 +729,7 @@ class Timestamp(object):
 # TODO: deprecate in favor of CopyFromString, which will remove the
 # dependency on dateutil.parser.
 def StringToDatetime(
-    time_string, timezone=pytz.utc, dayfirst=False, gmt_as_timezone=True):
+    time_string, timezone=pytz.UTC, dayfirst=False, gmt_as_timezone=True):
   """Converts a string representation of a timestamp into a datetime object.
 
   Args:
@@ -760,10 +760,10 @@ def StringToDatetime(
     logging.error(
         u'Unable to copy {0:s} to a datetime object with error: {1:s}'.format(
             time_string, exception))
-    return datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc)
+    return datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
 
   if datetime_object.tzinfo:
-    return datetime_object.astimezone(pytz.utc)
+    return datetime_object.astimezone(pytz.UTC)
 
   return timezone.localize(datetime_object)
 

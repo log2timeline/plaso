@@ -193,8 +193,10 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(timelib.Timestamp.DayOfYear(0, 0, 2013), 0)
     self.assertEqual(timelib.Timestamp.DayOfYear(0, 2, 2013), 31 + 28)
     self.assertEqual(timelib.Timestamp.DayOfYear(0, 2, 2012), 31 + 29)
-    self.assertEqual(timelib.Timestamp.DayOfYear(0, 11, 2013),
-                      31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30)
+
+    expected_day_of_year = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30
+    self.assertEqual(
+        timelib.Timestamp.DayOfYear(0, 11, 2013), expected_day_of_year)
 
   def testTimestampFromDelphiTime(self):
     """Test the Delphi date time conversion."""
@@ -344,7 +346,7 @@ class TimeLibTest(unittest.TestCase):
 
     # Use the UTC timezone.
     self.assertEqual(
-        timelib.Timestamp.LocaltimeToUTC(local_timestamp, pytz.utc),
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, pytz.UTC),
         local_timestamp)
 
     # Use a timezone in the Western Hemisphere.
@@ -453,7 +455,7 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(timestamp, expected_timestamp)
 
   def _TestStringToDatetime(
-      self, expected_timestamp, time_string, timezone=pytz.utc, dayfirst=False):
+      self, expected_timestamp, time_string, timezone=pytz.UTC, dayfirst=False):
     """Tests the StringToDatetime function.
 
     Args:

@@ -108,7 +108,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if self.use_local_zone:
       zone = parser_mediator.timezone
     else:
-      zone = pytz.utc
+      zone = pytz.UTC
 
     timestamp = timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, timezone=zone)
@@ -121,14 +121,14 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME, self.DATA_TYPE)
 
     for key, value in log_dict.items():
-      if key in ('time', 'date'):
+      if key in (u'time', u'date'):
         continue
       if value == '-':
         continue
 
-      if type(value) is pyparsing.ParseResults:
-        print value
-        setattr(event_object, key, ''.join(value))
+      if isinstance(value, pyparsing.ParseResults):
+        setattr(event_object, key, u''.join(value))
+
       else:
         try:
           save_value = int(value)

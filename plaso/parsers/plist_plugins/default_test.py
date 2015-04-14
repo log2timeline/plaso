@@ -26,7 +26,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         'DE-00-AD-00-BE-EF': {
             'Name': 'DBF Industries Slideshow Lazer', 'LastUsed':
             datetime.datetime(
-                2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.utc)}}
+                2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC)}}
 
     event_object_generator = self._ParsePlistWithPlugin(
         self._plugin, 'single', top_level_dict_single)
@@ -57,23 +57,23 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 'SupportedFeatures': '\x00\x00\x00\x00', 'Manufacturer': 76,
                 'PageScanPeriod': 0, 'ClockOffset': 17981, 'LastNameUpdate':
                 datetime.datetime(
-                    2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.utc),
+                    2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC),
                 'InquiryRSSI': 198, 'PageScanRepetitionMode': 1,
                 'LastServicesUpdate':
-                datetime.datetime(2012, 11, 2, 1, 13, 23, tzinfo=pytz.utc),
+                datetime.datetime(2012, 11, 2, 1, 13, 23, tzinfo=pytz.UTC),
                 'displayName': 'Apple Magic Trackpad 2', 'LastInquiryUpdate':
                 datetime.datetime(
-                    2012, 11, 2, 1, 13, 17, 324095, tzinfo=pytz.utc),
+                    2012, 11, 2, 1, 13, 17, 324095, tzinfo=pytz.UTC),
                 'Services': '', 'BatteryPercent': 0.61},
             '44-00-00-00-00-02': {
                 'Name': 'test-macpro', 'ClockOffset': 28180, 'ClassOfDevice':
                 3670276, 'PageScanMode': 0, 'LastNameUpdate':
                 datetime.datetime(
-                    2011, 4, 7, 17, 56, 53, 524275, tzinfo=pytz.utc),
+                    2011, 4, 7, 17, 56, 53, 524275, tzinfo=pytz.UTC),
                 'PageScanPeriod': 2, 'PageScanRepetitionMode': 1,
                 'LastInquiryUpdate':
                 datetime.datetime(
-                    2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.utc)}}}
+                    2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.UTC)}}}
 
     event_queue_consumer = self._ParsePlistWithPlugin(
         self._plugin, 'nested', top_level_dict_many_keys)
