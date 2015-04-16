@@ -108,5 +108,7 @@ setup(
         ('share/plaso', glob.glob(os.path.join('data', '*'))),
         ('share/doc/plaso', glob.glob(os.path.join('doc', '*'))),
     ],
-    install_requires=plaso.dependencies.GetInstallRequires(),
+    # TODO: this is disabled for now since setup.py will actually try
+    # to install the depencies directly from pypi.
+    # install_requires=plaso.dependencies.GetInstallRequires(),
 )
