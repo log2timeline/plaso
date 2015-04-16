@@ -28,10 +28,10 @@ class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
     """
     super(MsieWebCacheContainersEventObject, self).__init__(timestamp, usage)
 
-    self.container_identifier = record_values.get('ContainerId', 0)
-    self.set_identifier = record_values.get('SetId', 0)
-    self.name = record_values.get('Name', u'')
-    self.directory = record_values.get('Directory', u'')
+    self.container_identifier = record_values.get(u'ContainerId', 0)
+    self.set_identifier = record_values.get(u'SetId', 0)
+    self.name = record_values.get(u'Name', u'')
+    self.directory = record_values.get(u'Directory', u'')
 
 
 class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
@@ -68,12 +68,12 @@ class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
 
     # Ignore non-Unicode request headers values.
     request_headers = record_values.get(u'RequestHeaders', u'')
-    if type(request_headers) == unicode and request_headers:
+    if isinstance(request_headers, unicode) and request_headers:
       self.request_headers = request_headers
 
     # Ignore non-Unicode response headers values.
     response_headers = record_values.get(u'ResponseHeaders', u'')
-    if type(response_headers) == unicode and response_headers:
+    if isinstance(response_headers, unicode) and response_headers:
       self.response_headers = response_headers
 
 
@@ -92,8 +92,8 @@ class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
     """
     super(MsieWebCacheLeakFilesEventObject, self).__init__(timestamp, usage)
 
-    self.leak_identifier = record_values.get('LeakId', 0)
-    self.cached_filename = record_values.get('Filename', u'')
+    self.leak_identifier = record_values.get(u'LeakId', 0)
+    self.cached_filename = record_values.get(u'Filename', u'')
 
 
 class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
@@ -111,10 +111,10 @@ class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
     """
     super(MsieWebCachePartitionsEventObject, self).__init__(timestamp, usage)
 
-    self.partition_identifier = record_values.get('PartitionId', 0)
-    self.partition_type = record_values.get('PartitionType', 0)
-    self.directory = record_values.get('Directory', u'')
-    self.table_identifier = record_values.get('TableId', 0)
+    self.partition_identifier = record_values.get(u'PartitionId', 0)
+    self.partition_type = record_values.get(u'PartitionType', 0)
+    self.directory = record_values.get(u'Directory', u'')
+    self.table_identifier = record_values.get(u'TableId', 0)
 
 
 class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
@@ -126,13 +126,13 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
   # TODO: add support for AppCache_#, AppCacheEntry_#, DependencyEntry_#
 
   REQUIRED_TABLES = {
-      'Containers': 'ParseContainersTable',
-      'LeakFiles': 'ParseLeakFilesTable',
-      'Partitions': 'ParsePartitionsTable'}
+      u'Containers': u'ParseContainersTable',
+      u'LeakFiles': u'ParseLeakFilesTable',
+      u'Partitions': u'ParsePartitionsTable'}
 
   _CONTAINER_TABLE_VALUE_MAPPINGS = {
-      'RequestHeaders': '_ConvertValueBinaryDataToStringAscii',
-      'ResponseHeaders': '_ConvertValueBinaryDataToStringAscii'}
+      u'RequestHeaders': u'_ConvertValueBinaryDataToStringAscii',
+      u'ResponseHeaders': u'_ConvertValueBinaryDataToStringAscii'}
 
   def _ParseContainerTable(self, parser_mediator, table, container_name):
     """Parses a Container_# table.

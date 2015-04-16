@@ -40,10 +40,10 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
 
   # TODO: Add support for other tables as well, backupset, file, library, etc.
   REQUIRED_TABLES = {
-      'backupset': '',
-      'file': '',
-      'library': '',
-      'namespace': 'ParseNameSpace'}
+      u'backupset': u'',
+      u'file': u'',
+      u'library': u'',
+      u'namespace': u'ParseNameSpace'}
 
   def _GetDictFromStringsTable(self, table):
     """Build a dict for the strings table.
@@ -94,7 +94,7 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
       logging.warning(u'[{0:s}] invalid Containers table'.format(self.NAME))
       return
 
-    strings = cache.GetResults('strings')
+    strings = cache.GetResults(u'strings')
     if not strings:
       strings = self._GetDictFromStringsTable(
           database.get_table_by_name(u'string'))
@@ -103,7 +103,7 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
     for esedb_record in table.records:
       record_values = self._GetRecordValues(table.name, esedb_record)
 
-      filename = strings.get(record_values.get('id', -1), u'')
+      filename = strings.get(record_values.get(u'id', -1), u'')
       created_timestamp = record_values.get(u'fileCreated')
 
       if created_timestamp:
