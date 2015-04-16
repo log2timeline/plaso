@@ -8,48 +8,48 @@ import urllib2
 # The tuple values are:
 # module_name, minimum_version
 LIBYAL_DEPENDENCIES = [
-    (u'pybde', 20140531),
-    (u'pyesedb', 20150409),
-    (u'pyevt', None),
-    (u'pyevtx', 20141112),
-    (u'pyewf', 20131210),
-    (u'pyfwsi', 20140714),
-    (u'pylnk', 20141026),
-    (u'pymsiecf', 20150314),
-    (u'pyolecf', 20131012),
-    (u'pyqcow', 20131204),
-    (u'pyregf', 20150315),
-    (u'pysigscan', 20150114),
-    (u'pysmdev', 20140529),
-    (u'pysmraw', 20140612),
-    (u'pyvhdi', 20131210),
-    (u'pyvmdk', 20140421),
-    (u'pyvshadow', 20131209)]
+#    (u'pybde', 20140531),
+#    (u'pyesedb', 20150409),
+#    (u'pyevt', None),
+#    (u'pyevtx', 20141112),
+#    (u'pyewf', 20131210),
+#    (u'pyfwsi', 20140714),
+#    (u'pylnk', 20141026),
+#    (u'pymsiecf', 20150314),
+#    (u'pyolecf', 20131012),
+#    (u'pyqcow', 20131204),
+#    (u'pyregf', 20150315),
+#    (u'pysigscan', 20150114),
+#    (u'pysmdev', 20140529),
+#    (u'pysmraw', 20140612),
+#    (u'pyvhdi', 20131210),
+#    (u'pyvmdk', 20140421),
+#    (u'pyvshadow', 20131209)]
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_DEPENDENCIES = [
     # The bencode module does not appear to have no version information.
-    (u'bencode', u'', u'', None),
-    (u'binplist', u'__version__', u'0.1.4', None),
-    (u'construct', u'__version__', u'2.5.2', None),
-    (u'dateutil', u'__version__', u'1.5', None),
-    (u'dfvfs', u'__version__', u'20150303', None),
-    (u'dpkt', u'__version__', u'1.8', None),
+#    (u'bencode', u'', u'', None),
+#    (u'binplist', u'__version__', u'0.1.4', None),
+#    (u'construct', u'__version__', u'2.5.2', None),
+#    (u'dateutil', u'__version__', u'1.5', None),
+#    (u'dfvfs', u'__version__', u'20150303', None),
+#    (u'dpkt', u'__version__', u'1.8', None),
     # The protobuf module does not appear to have version information.
-    (u'google.protobuf', u'', u'', None),
-    (u'hachoir_core', u'__version__', u'1.3.3', None),
-    (u'hachoir_parser', u'__version__', u'1.3.4', None),
-    (u'hachoir_metadata', u'__version__', u'1.3.3', None),
-    (u'IPython', u'__version__', u'1.2.1', None),
-    (u'psutil', u'__version__', u'1.2.1', None),
-    (u'pyparsing', u'__version__', u'2.0.3', None),
+#    (u'google.protobuf', u'', u'', None),
+#    (u'hachoir_core', u'__version__', u'1.3.3', None),
+#    (u'hachoir_parser', u'__version__', u'1.3.4', None),
+#    (u'hachoir_metadata', u'__version__', u'1.3.3', None),
+#    (u'IPython', u'__version__', u'1.2.1', None),
+#    (u'psutil', u'__version__', u'1.2.1', None),
+#    (u'pyparsing', u'__version__', u'2.0.3', None),
     # TODO: determine the version of pytz.
     # pytz uses __version__ but has a different version indicator e.g. 2012d
-    (u'pytz', u'', u'', None),
-    (u'six', u'__version__', u'1.1.0', None),
-    (u'sqlite3', u'sqlite_version', u'3.7.8', None),
-    (u'yaml', u'__version__', u'3.10', None)]
+#   (u'pytz', u'', u'', None),
+#    (u'six', u'__version__', u'1.1.0', None),
+#    (u'sqlite3', u'sqlite_version', u'3.7.8', None),
+#    (u'PyYAML', u'__version__', u'3.10', None)]
 
 
 def DownloadPageContent(download_url):
@@ -365,7 +365,7 @@ def GetInstallRequires():
     else:
       install_requires.append(u'{0:s} >= {1:s}'.format(values[0], values[2]))
 
-  install_requires.append(u'pytsk >= 4.1.2')
+  #install_requires.append(u'pytsk >= 4.1.2')
 
   for values in LIBYAL_DEPENDENCIES:
     if not values[1]:
