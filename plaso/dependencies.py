@@ -7,24 +7,24 @@ import urllib2
 
 # The tuple values are:
 # module_name, minimum_version
-LIBYAL_DEPENDENCIES = [
-    (u'pybde', 20140531),
-    (u'pyesedb', 20150409),
-    (u'pyevt', None),
-    (u'pyevtx', 20141112),
-    (u'pyewf', 20131210),
-    (u'pyfwsi', 20140714),
-    (u'pylnk', 20141026),
-    (u'pymsiecf', 20150314),
-    (u'pyolecf', 20131012),
-    (u'pyqcow', 20131204),
-    (u'pyregf', 20150315),
-    (u'pysigscan', 20150114),
-    (u'pysmdev', 20140529),
-    (u'pysmraw', 20140612),
-    (u'pyvhdi', 20131210),
-    (u'pyvmdk', 20140421),
-    (u'pyvshadow', 20131209)]
+LIBYAL_DEPENDENCIES = {
+    u'pybde': 20140531,
+    u'pyesedb': 20140301,
+    u'pyevt': 20120410,
+    u'pyevtx': 20141112,
+    u'pyewf': 20131210,
+    u'pyfwsi': 20140714,
+    u'pylnk': 20141026,
+    u'pymsiecf': 20150314,
+    u'pyolecf': 20131012,
+    u'pyqcow': 20131204,
+    u'pyregf': 20150315,
+    u'pysigscan': 20150114,
+    u'pysmdev': 20140529,
+    u'pysmraw': 20140612,
+    u'pyvhdi': 20131210,
+    u'pyvmdk': 20140421,
+    u'pyvshadow': 20131209}
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
@@ -151,8 +151,9 @@ def CheckLibyal(libyal_python_modules, latest_version_check=False):
   """Checks the availability of libyal libraries.
 
   Args:
-    libyal_python_modules: list of libyal python module names.
-    latest_version_check: Optional boolean value to indicate if the project
+    libyal_python_modules: a dictionary of libyal python module name as
+                           the key and version as the value.
+    latest_version_check: optional boolean value to indicate if the project
                           site should be checked for the latest version.
                           The default is False.
 
@@ -161,7 +162,7 @@ def CheckLibyal(libyal_python_modules, latest_version_check=False):
   """
   connection_error = False
   result = True
-  for module_name, module_version in libyal_python_modules:
+  for module_name, module_version in sorted(libyal_python_modules.items()):
     try:
       module_object = map(__import__, [module_name])[0]
     except ImportError:
@@ -360,17 +361,31 @@ def GetInstallRequires():
   """Returns the install_requires for setup.py"""
   install_requires = []
   for values in PYTHON_DEPENDENCIES:
-    if not values[2]:
-      install_requires.append(values[0])
-    else:
-      install_requires.append(u'{0:s} >= {1:s}'.format(values[0], values[2]))
+    module_name = values[0]
+    module_version = values[2]
 
-  install_requires.append(u'pytsk >= 4.1.2')
+    # Map the import name to the pypi name.
+    if module_name == u'yaml':
+      module_name = u'PyYAML'
+    elif module_name == u'sqlite3':
+      # Override the pysqlite version since it does not match
+      # the sqlite3 version.
+      module_name = u'pysqlite'
+      module_version = None
 
-  for values in LIBYAL_DEPENDENCIES:
-    if not values[1]:
-      install_requires.append(values[0])
+    if not module_version:
+      install_requires.append(module_name)
     else:
-      install_requires.append(u'{0:s} >= {1:d}'.format(values[0], values[1]))
+      install_requires.append(u'{0:s} >= {1:s}'.format(
+          module_name, module_version))
+
+  install_requires.append(u'pytsk3 >= 4.1.2')
+
+  for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
+    if not module_version:
+      install_requires.append(module_name)
+    else:
+      install_requires.append(u'{0:s} >= {1:d}'.format(
+          module_name, module_version))
 
   return sorted(install_requires)
