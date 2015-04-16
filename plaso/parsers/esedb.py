@@ -12,8 +12,8 @@ from plaso.parsers import manager
 from plaso.parsers import plugins
 
 
-if pyesedb.get_version() < '20140301':
-  raise ImportWarning(u'EseDbParser requires at least pyesedb 20140301.')
+if pyesedb.get_version() < '20150409':
+  raise ImportWarning(u'EseDbParser requires at least pyesedb 20150409.')
 
 
 class EseDbCache(plugins.BasePluginCache):
@@ -75,7 +75,7 @@ class EseDbParser(interface.SingleFileBasePluginsParser):
     for plugin_object in self._plugins:
       try:
         plugin_object.UpdateChainAndProcess(
-           parser_mediator, database=esedb_file, cache=cache)
+            parser_mediator, database=esedb_file, cache=cache)
       except errors.WrongPlugin:
         logging.debug((
             u'[{0:s}] plugin: {1:s} cannot parse the ESE database: '

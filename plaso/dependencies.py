@@ -9,7 +9,7 @@ import urllib2
 # module_name, minimum_version
 LIBYAL_DEPENDENCIES = [
     (u'pybde', 20140531),
-    (u'pyesedb', 20140301),
+    (u'pyesedb', 20150409),
     (u'pyevt', None),
     (u'pyevtx', 20141112),
     (u'pyewf', 20131210),
