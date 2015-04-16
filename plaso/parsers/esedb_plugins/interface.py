@@ -37,8 +37,8 @@ class EseDbPlugin(plugins.BasePlugin):
       pyesedb.column_types.TEXT,
       pyesedb.column_types.LARGE_TEXT])
 
-  _UINT64_BIG_ENDIAN = construct.UBInt64('value')
-  _UINT64_LITTLE_ENDIAN = construct.ULInt64('value')
+  _UINT64_BIG_ENDIAN = construct.UBInt64(u'value')
+  _UINT64_LITTLE_ENDIAN = construct.ULInt64(u'value')
 
   # Dictionary containing a callback method per table name.
   # E.g. 'SystemIndex_0A': 'ParseSystemIndex_0A'
@@ -75,7 +75,7 @@ class EseDbPlugin(plugins.BasePlugin):
       A string or None if value is None.
     """
     if value:
-      return value.encode('hex')
+      return value.encode(u'hex')
 
   def _ConvertValueBinaryDataToUBInt64(self, value):
     """Converts a binary data value into an integer.
@@ -112,34 +112,48 @@ class EseDbPlugin(plugins.BasePlugin):
 
     Returns:
       An object containing the value.
+
+    Raises:
+      ValueError: if the value is not supported.
     """
     column_type = record.get_column_type(value_entry)
-    value_data_flags = record.get_value_data_flags(value_entry)
+    long_value = None
 
-    if value_data_flags & pyesedb.value_flags.MULTI_VALUE:
+    if record.is_long_value(value_entry):
+      long_value = record.get_value_data_as_long_value(value_entry)
+
+    if record.is_multi_value(value_entry):
       # TODO: implement
-      pass
+      raise ValueError(u'Multi value support not implemented yet.')
 
-    elif column_type == pyesedb.column_types.NULL:
+    if column_type == pyesedb.column_types.NULL:
       return
 
     elif column_type == pyesedb.column_types.BOOLEAN:
       # TODO: implement
-      pass
+      raise ValueError(u'Boolean value support not implemented yet.')
 
     elif column_type in self.INTEGER_COLUMN_TYPES:
+      if long_value:
+        raise ValueError(u'Long integer value not supported.')
       return record.get_value_data_as_integer(value_entry)
 
     elif column_type in self.FLOATING_POINT_COLUMN_TYPES:
+      if long_value:
+        raise ValueError(u'Long floating point value not supported.')
       return record.get_value_data_as_floating_point(value_entry)
 
     elif column_type in self.STRING_COLUMN_TYPES:
+      if long_value:
+        return long_value.get_data_as_string()
       return record.get_value_data_as_string(value_entry)
 
     elif column_type == pyesedb.column_types.GUID:
       # TODO: implement
-      pass
+      raise ValueError(u'GUID value support not implemented yet.')
 
+    if long_value:
+      return long_value.get_data()
     return record.get_value_data(value_entry)
 
   def _GetRecordValues(self, table_name, record, value_mappings=None):
@@ -175,7 +189,11 @@ class EseDbPlugin(plugins.BasePlugin):
                 u'{2:s} in table: {3:s}').format(
                     self.NAME, value_callback_method, column_name, table_name))
 
-      value = self._GetRecordValue(record, value_entry)
+      try:
+        value = self._GetRecordValue(record, value_entry)
+      except ValueError as exception:
+        logging.warning(exception)
+
       if value_callback:
         value = value_callback(value)
 
