@@ -15,6 +15,7 @@ from plaso import output   # pylint: disable=unused-import
 from plaso.analysis import context as analysis_context
 from plaso.analysis import interface as analysis_interface
 from plaso.artifacts import knowledge_base
+from plaso.cli import tools as cli_tools
 from plaso.engine import queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
@@ -48,6 +49,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._filter_expression = None
     self._filter_object = None
     self._output_filename = None
+    self._output_file_object = None
     self._output_format = None
     self._preferred_language = u'en-US'
     self._slice_size = 5
@@ -282,11 +284,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     with storage_file:
       storage_file.SetStoreLimit(self._filter_object)
 
-      if self._output_filename:
-        output_stream = self._output_filename
-      else:
-        output_stream = sys.stdout
-
       formatter_mediator = self.GetFormatterMediator()
 
       try:
@@ -301,8 +298,17 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       kwargs = {}
       if self._filter_object:
         kwargs[u'field_filter'] = self._filter_object
-      if output_stream:
-        kwargs[u'filehandle'] = output_stream
+
+      # TODO: refactor this to use CLI argument helpers.
+      if self._output_format in [u'pstorage', u'sql4n6']:
+        kwargs[u'filehandle'] = self._output_filename
+      elif self._output_format not in [u'elastic', u'timesketch']:
+        if self._output_filename:
+          self._output_file_object = open(self._output_filename, 'wb')
+          kwargs[u'output_writer'] = cli_tools.FileObjectOutputWriter(
+              self._output_file_object)
+        else:
+          kwargs[u'output_writer'] = self._output_writer
 
       try:
         output_module = output_manager.OutputManager.NewOutputModule(
@@ -443,6 +449,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
         for item, value in analysis_queue_consumer.counter.iteritems():
           counter[item] = value
+
+    if self._output_file_object:
+      self._output_file_object.close()
+      self._output_file_object = None
 
     if self._filter_object and not counter[u'Limited By']:
       counter[u'Filter By Date'] = (

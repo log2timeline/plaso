@@ -14,7 +14,6 @@ from plaso.formatters import interface as formatters_interface
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
 
@@ -186,7 +185,8 @@ class SQLite4n6OutputModule(interface.OutputModule):
       event_object: the event object (instance of EventObject).
 
     Raises:
-      raise errors.NoFormatterFound: If no event formatter was found.
+      NoFormatterFound: If no event formatter can be found to match the data
+                        type in the event object.
     """
     if u'timestamp' not in event_object.GetAttributes():
       return
@@ -196,7 +196,8 @@ class SQLite4n6OutputModule(interface.OutputModule):
     event_formatter = self._output_mediator.GetEventFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to output event, no event formatter found.')
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
 
     if (isinstance(
         event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
@@ -211,17 +212,31 @@ class SQLite4n6OutputModule(interface.OutputModule):
       event_formatter.FORMAT_STRING = event_formatter.FORMAT_STRING.replace(
           '}', '}<|>')
 
-    msg, _ = self._output_mediator.GetFormattedMessages(event_object)
-    source_short, source_long = self._output_mediator.GetFormattedSources(
+    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    if message is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
+    source_short, source = self._output_mediator.GetFormattedSources(
         event_object)
+    if source is None or source_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self._output_mediator.timezone)
     if not date_use:
-      logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
+      logging.error(u'Unable to process date for entry: {0:s}'.format(message))
       return
-    extra = []
     format_variables = self._output_mediator.GetFormatStringAttributeNames()
+    if format_variables is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
+    extra = []
     for key in event_object.GetAttributes():
       if (key in definitions.RESERVED_VARIABLE_NAMES or
           key in format_variables):
@@ -246,13 +261,13 @@ class SQLite4n6OutputModule(interface.OutputModule):
         tags = event_object.tag.tags
     taglist = ','.join(tags)
     row = (str(self._output_mediator.timezone),
-           helper.GetLegacy(event_object),
+           self._output_mediator.GetMACBRepresentation(event_object),
            source_short,
-           source_long,
+           source,
            getattr(event_object, 'timestamp_desc', '-'),
            getattr(event_object, 'username', '-'),
            getattr(event_object, 'hostname', '-'),
-           msg,
+           message,
            getattr(event_object, 'filename', '-'),
            inode,
            getattr(event_object, 'notes', '-'),

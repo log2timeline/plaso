@@ -3,15 +3,14 @@
 
 import logging
 import re
-import sys
 
+from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
 
 
-class DynamicOutputModule(interface.FileOutputModule):
+class DynamicOutputModule(interface.LinearOutputModule):
   """Dynamic selection of fields for a separated value output format."""
 
   NAME = u'dynamic'
@@ -40,7 +39,7 @@ class DynamicOutputModule(interface.FileOutputModule):
       u'host': u'_FormatHostname',
       u'hostname': u'_FormatHostname',
       u'inode': u'_FormatInode',
-      u'macb': u'_FormatMacb',
+      u'macb': u'_FormatMACB',
       u'message': u'_FormatMessage',
       u'message_short': u'_FormatMessageShort',
       u'source': u'_FormatSourceShort',
@@ -56,8 +55,7 @@ class DynamicOutputModule(interface.FileOutputModule):
   }
 
   def __init__(
-      self, output_mediator, fields_filter=None, filehandle=sys.stdout,
-      **kwargs):
+      self, output_mediator, fields_filter=None, output_writer=None, **kwargs):
     """Initializes the output module object.
 
     Args:
@@ -65,11 +63,11 @@ class DynamicOutputModule(interface.FileOutputModule):
       fields_filter: optional filter object (instance of FilterObject) to
                      indicate which fields should be outputed. The default
                      is None.
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
+      output_writer: Optional output writer object (instance of
+                     CLIOutputWriter). The default is None.
     """
     super(DynamicOutputModule, self).__init__(
-        output_mediator, filehandle=filehandle, **kwargs)
+        output_mediator, output_writer=output_writer, **kwargs)
     self._fields = None
     self._field_delimiter = None
 
@@ -157,6 +155,11 @@ class DynamicOutputModule(interface.FileOutputModule):
                         type in the event object.
     """
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    if message is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     return self._SanitizeField(message)
 
   def _FormatMessageShort(self, event_object):
@@ -173,6 +176,11 @@ class DynamicOutputModule(interface.FileOutputModule):
                         type in the event object.
     """
     _, message_short = self._output_mediator.GetFormattedMessages(event_object)
+    if message_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     return self._SanitizeField(message_short)
 
   def _FormatSource(self, event_object):
@@ -183,8 +191,17 @@ class DynamicOutputModule(interface.FileOutputModule):
 
      Returns:
        A string containing the value for the source field.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+                        type in the event object.
     """
     _, source = self._output_mediator.GetFormattedSources(event_object)
+    if source is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     return self._SanitizeField(source)
 
   def _FormatSourceShort(self, event_object):
@@ -195,8 +212,17 @@ class DynamicOutputModule(interface.FileOutputModule):
 
      Returns:
        A string containing the value for the short source field.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+                        type in the event object.
     """
     source_short, _ = self._output_mediator.GetFormattedSources(event_object)
+    if source_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     return self._SanitizeField(source_short)
 
   def _FormatInode(self, event_object):
@@ -216,7 +242,7 @@ class DynamicOutputModule(interface.FileOutputModule):
 
     return inode
 
-  def _FormatMacb(self, event_object):
+  def _FormatMACB(self, event_object):
     """Formats the legacy MACB representation.
 
     Args:
@@ -225,7 +251,7 @@ class DynamicOutputModule(interface.FileOutputModule):
      Returns:
        A string containing the value for the MACB field.
     """
-    return helper.GetLegacy(event_object)
+    return self._output_mediator.GetMACBRepresentation(event_object)
 
   def _FormatTag(self, event_object):
     """Formats the event tag.

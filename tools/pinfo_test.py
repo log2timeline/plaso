@@ -2,25 +2,20 @@
 # -*- coding: utf-8 -*-
 """Tests for the pinfo CLI tool."""
 
-import io
-import sys
 import unittest
 
-from plaso.cli import test_lib
-from plaso.cli import tools
+from plaso.cli import test_lib as cli_test_lib
 from plaso.frontend import frontend
 from tools import pinfo
 
 
-class PinfoToolTest(test_lib.CLIToolTestCase):
+class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
-    original_stdout = sys.stdout
-
     # Make sure the test outputs UTF-8.
-    output_writer = tools.StdoutOutputWriter(encoding=u'utf-8')
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
 
     options = frontend.Options()
@@ -28,7 +23,6 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     test_tool.ParseOptions(options)
 
-    sys.stdout = io.BytesIO()
     test_tool.PrintStorageInformation()
 
     # TODO: clean up output so that u'...' is not generated.
@@ -85,11 +79,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         b'-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+'
         b'-+-+-+-+-+-+').format(options.storage_file.encode(u'utf-8'))
 
-    output = sys.stdout.getvalue()
+    output = output_writer.ReadOutput()
 
     self.assertEqual(output, expected_output)
-
-    sys.stdout = original_stdout
 
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ from plaso.output import manager
 from plaso.serializer import json_serializer
 
 
-class JsonOutputModule(interface.FileOutputModule):
+class JsonOutputModule(interface.LinearOutputModule):
   """Output module for the JSON format."""
 
   NAME = u'json'

@@ -4,12 +4,13 @@
 For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN
 """
 
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
 
 
-class TLNBaseOutputModule(interface.FileOutputModule):
+class TLNBaseOutputModule(interface.LinearOutputModule):
   """Base class for a TLN output module."""
   # Stop pylint from complaining about missing WriteEventBody.
   # pylint: disable=abstract-method
@@ -31,7 +32,12 @@ class TLNBaseOutputModule(interface.FileOutputModule):
     date_time_string = timelib.Timestamp.CopyToIsoFormat(
         event_object.timestamp, timezone=self._output_mediator.timezone)
     timestamp_description = getattr(event_object, u'timestamp_desc', u'UNKNOWN')
+
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    if message is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
 
     description = u'{0:s}; {1:s}; {2:s}'.format(
         date_time_string, timestamp_description,
@@ -60,6 +66,11 @@ class TLNBaseOutputModule(interface.FileOutputModule):
        A string containing the value for the source field.
     """
     source_short, _ = self._output_mediator.GetFormattedSources(event_object)
+    if source_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     return self._SanitizeField(source_short)
 
   def _FormatUsername(self, event_object):
