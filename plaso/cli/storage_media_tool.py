@@ -131,7 +131,7 @@ class StorageMediaTool(tools.CLITool):
         u'--sector_size', u'--sector-size', dest=u'bytes_per_sector',
         action=u'store', type=int, default=self._DEFAULT_BYTES_PER_SECTOR,
         help=(
-            u'The number of bytes per sector, which is {0:s} by '
+            u'The number of bytes per sector, which is {0:d} by '
             u'default.').format(self._DEFAULT_BYTES_PER_SECTOR))
 
     argument_group.add_argument(
