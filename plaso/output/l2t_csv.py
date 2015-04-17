@@ -6,13 +6,13 @@ http://forensicswiki.org/wiki/L2T_CSV
 """
 
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
 
 
-class L2TCSVOutputModule(interface.FileOutputModule):
+class L2TCSVOutputModule(interface.LinearOutputModule):
   """CSV format used by log2timeline, with 17 fixed fields."""
 
   NAME = u'l2tcsv'
@@ -75,15 +75,29 @@ class L2TCSVOutputModule(interface.FileOutputModule):
 
     message, message_short = self._output_mediator.GetFormattedMessages(
         event_object)
-    source_short, source_long = self._output_mediator.GetFormattedSources(
+    if message is None or message_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
+    source_short, source = self._output_mediator.GetFormattedSources(
         event_object)
+    if source is None or source_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self._output_mediator.timezone)
-    extras = []
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
         event_object)
+    if format_variables is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
+    extras = []
     for key in event_object.GetAttributes():
       if (key in definitions.RESERVED_VARIABLE_NAMES or
           key in format_variables):
@@ -123,9 +137,9 @@ class L2TCSVOutputModule(interface.FileOutputModule):
         u'{0:02d}:{1:02d}:{2:02d}'.format(
             date_use.hour, date_use.minute, date_use.second),
         self._output_mediator.timezone,
-        helper.GetLegacy(event_object),
+        self._output_mediator.GetMACBRepresentation(event_object),
         source_short,
-        source_long,
+        source,
         getattr(event_object, u'timestamp_desc', u'-'),
         username,
         hostname,

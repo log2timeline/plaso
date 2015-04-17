@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the JSON output class."""
 
-import io
 import os
 import sys
 import unittest
@@ -10,6 +9,7 @@ import unittest
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.cli import test_lib as cli_test_lib
 from plaso.lib import event
 from plaso.lib import timelib
 from plaso.output import json_out
@@ -46,30 +46,33 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self._output = io.BytesIO()
     output_mediator = self._CreateOutputMediator()
-    self._formatter = json_out.JsonOutputModule(
-        output_mediator, filehandle=self._output)
+    self._output_writer = cli_test_lib.TestOutputWriter()
+    self._output_module = json_out.JsonOutputModule(
+        output_mediator, output_writer=self._output_writer)
     self._event_object = JsonTestEvent()
 
-  def testWriteHeaderAndfooter(self):
-    """Tests the WriteHeader and WriteFooter functions."""
+  def testWriteHeader(self):
+    """Tests the WriteHeader functions."""
     expected_header = b'{'
-    expected_footer = b'{"event_foo": "{}"}'
 
-    self._formatter.WriteHeader()
+    self._output_module.WriteHeader()
 
-    header = self._output.getvalue()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
-    self._formatter.WriteFooter()
+  def testWriteFooter(self):
+    """Tests the WriteFooter functions."""
+    expected_footer = b'"event_foo": "{}"}'
 
-    footer = self._output.getvalue()
+    self._output_module.WriteFooter()
+
+    footer = self._output_writer.ReadOutput()
     self.assertEqual(footer, expected_footer)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    self._formatter.WriteEventBody(self._event_object)
+    self._output_module.WriteEventBody(self._event_object)
 
     expected_uuid = self._event_object.uuid.encode(u'utf-8')
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -99,7 +102,7 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
         b'"inode": 12345678}},\n').format(
             expected_uuid, expected_timestamp, expected_os_location)
 
-    event_body = self._output.getvalue()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
 

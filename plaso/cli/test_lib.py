@@ -1,8 +1,37 @@
 # -*- coding: utf-8 -*-
 """CLI related functions and classes for testing."""
 
+import io
 import os
 import unittest
+
+from plaso.cli import tools
+
+
+class TestOutputWriter(tools.FileObjectOutputWriter):
+  """Class that implements a test output writer."""
+
+  def __init__(self, encoding=u'utf-8'):
+    """Initializes the output writer object.
+
+    Args:
+      encoding: optional output encoding. The default is "utf-8".
+    """
+    file_object = io.BytesIO()
+    super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
+    self._read_offset = 0
+
+  def ReadOutput(self):
+    """Reads the newly added output data.
+
+    Returns:
+      A binary string of the encoded output data.
+    """
+    self._file_object.seek(self._read_offset, os.SEEK_SET)
+    output_data = self._file_object.read()
+    self._read_offset = self._file_object.tell()
+
+    return output_data
 
 
 class CLIToolTestCase(unittest.TestCase):

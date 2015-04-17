@@ -15,30 +15,25 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
   def testPrintColumnValue(self):
     """Tests the PrintColumnValue function."""
-    original_stdout = sys.stdout
+    output_writer = test_lib.TestOutputWriter()
+    cli_tool = tools.CLITool(output_writer=output_writer)
 
-    cli_tool = tools.CLITool()
-
-    sys.stdout = io.BytesIO()
     cli_tool.PrintColumnValue(u'Name', u'Description')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = b'                     Name : Description\n'
     self.assertEqual(string, expected_string)
 
-    sys.stdout = io.BytesIO()
     cli_tool.PrintColumnValue(u'Name', u'Description', column_width=10)
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = b'      Name : Description\n'
     self.assertEqual(string, expected_string)
 
-    sys.stdout = io.BytesIO()
     with self.assertRaises(ValueError):
       cli_tool.PrintColumnValue(u'Name', u'Description', column_width=-10)
 
     # TODO: determine if this is the desired behavior.
-    sys.stdout = io.BytesIO()
     cli_tool.PrintColumnValue(u'Name', u'Description', column_width=100)
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = (
         b'                                                                     '
         b'                           Name : \n'
@@ -46,17 +41,13 @@ class CLIToolTest(test_lib.CLIToolTestCase):
         b'                                  Description\n')
     self.assertEqual(string, expected_string)
 
-    sys.stdout = original_stdout
-
   def testPrintHeader(self):
     """Tests the PrintHeader function."""
-    original_stdout = sys.stdout
+    output_writer = test_lib.TestOutputWriter()
+    cli_tool = tools.CLITool(output_writer=output_writer)
 
-    cli_tool = tools.CLITool()
-
-    sys.stdout = io.BytesIO()
     cli_tool.PrintHeader(u'Text')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = (
         b'\n'
         b'************************************* '
@@ -64,9 +55,8 @@ class CLIToolTest(test_lib.CLIToolTestCase):
         b'*************************************\n')
     self.assertEqual(string, expected_string)
 
-    sys.stdout = io.BytesIO()
     cli_tool.PrintHeader(u'Another Text', character=u'x')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = (
         b'\n'
         b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx '
@@ -75,9 +65,8 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(string, expected_string)
 
     # TODO: determine if this is the desired behavior.
-    sys.stdout = io.BytesIO()
     cli_tool.PrintHeader(u'')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = (
         b'\n'
         b'*************************************** '
@@ -86,9 +75,8 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(string, expected_string)
 
     # TODO: determine if this is the desired behavior.
-    sys.stdout = io.BytesIO()
     cli_tool.PrintHeader(None)
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = (
         b'\n'
         b'************************************* '
@@ -97,33 +85,26 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(string, expected_string)
 
     # TODO: determine if this is the desired behavior.
-    sys.stdout = io.BytesIO()
     expected_string = (
         u'\n '
         u'In computer programming, a string is traditionally a sequence '
         u'of characters, either as a literal constant or as some kind of '
         u'variable. \n')
     cli_tool.PrintHeader(expected_string[2:-2])
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, expected_string)
-
-    sys.stdout = original_stdout
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
-    original_stdout = sys.stdout
+    output_writer = test_lib.TestOutputWriter()
+    cli_tool = tools.CLITool(output_writer=output_writer)
 
-    cli_tool = tools.CLITool()
-
-    sys.stdout = io.BytesIO()
     cli_tool.PrintSeparatorLine()
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     expected_string = (
         b'----------------------------------------'
         b'----------------------------------------\n')
     self.assertEqual(string, expected_string)
-
-    sys.stdout = original_stdout
 
 
 class StdinInputReaderTest(unittest.TestCase):
@@ -188,70 +169,56 @@ class StdinInputReaderTest(unittest.TestCase):
     sys.stdin = original_stdin
 
 
-class StdoutOutputWriterTest(unittest.TestCase):
-  """The unit test case for a stdout output writer."""
+class FileObjectOutputWriterTest(unittest.TestCase):
+  """The unit test case for a file-like object output writer."""
 
   def testWriteAscii(self):
     """Tests the Write function with ASCII encoding."""
-    original_stdout = sys.stdout
-    output_writer = tools.StdoutOutputWriter(encoding=u'ascii')
+    output_writer = test_lib.TestOutputWriter(encoding=u'ascii')
 
-    sys.stdout = io.BytesIO()
     output_writer.Write(u'A first string\n')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, b'A first string\n')
 
     # Byte string with ASCII characters.
-    sys.stdout = io.BytesIO()
     output_writer.Write(b'A 2nd string\n')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, b'A 2nd string\n')
 
     # Unicode string with non-ASCII characters.
-    sys.stdout = io.BytesIO()
     output_writer.Write(u'þriðja string\n')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, b'?ri?ja string\n')
 
     # Byte string with non-ASCII characters.
-    sys.stdout = io.BytesIO()
     with self.assertRaises(UnicodeDecodeError):
       # This fails because the byte string cannot be converted to
       # a Unicode string before the call to encode().
       output_writer.Write(b'\xc3\xberi\xc3\xb0ja string\n')
-
-    sys.stdout = original_stdout
 
   def testWriteUtf8(self):
     """Tests the Write function with UTF-8 encoding."""
-    original_stdout = sys.stdout
-    output_writer = tools.StdoutOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
-    sys.stdout = io.BytesIO()
     output_writer.Write(u'A first string\n')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, b'A first string\n')
 
     # Byte string with ASCII characters.
-    sys.stdout = io.BytesIO()
     output_writer.Write(b'A 2nd string\n')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, b'A 2nd string\n')
 
     # Unicode string with non-ASCII characters.
-    sys.stdout = io.BytesIO()
     output_writer.Write(u'þriðja string\n')
-    string = sys.stdout.getvalue()
+    string = output_writer.ReadOutput()
     self.assertEqual(string, b'\xc3\xberi\xc3\xb0ja string\n')
 
     # Byte string with non-ASCII characters.
-    sys.stdout = io.BytesIO()
     with self.assertRaises(UnicodeDecodeError):
       # This fails because the byte string cannot be converted to
       # a Unicode string before the call to encode().
       output_writer.Write(b'\xc3\xberi\xc3\xb0ja string\n')
-
-    sys.stdout = original_stdout
 
 
 if __name__ == '__main__':

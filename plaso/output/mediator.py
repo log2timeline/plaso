@@ -4,7 +4,7 @@
 import logging
 
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import errors
+from plaso.lib import eventdata
 
 import pytz
 
@@ -110,27 +110,14 @@ class OutputMediator(object):
       event_object: the event object (instance of EventObject)
 
     Returns:
-      The event formatter object (instance of EventFormatter).
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+      The event formatter object (instance of EventFormatter) or None.
     """
-    # TODO: do not raise NoFormatterFound, discuss alternative.
     data_type = getattr(event_object, u'data_type', None)
     if not data_type:
-      raise errors.NoFormatterFound(
-          u'Unable to find event formatter data type is missing from event '
-          u'object.')
+      return
 
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+    return formatters_manager.FormattersManager.GetFormatterObject(
         event_object.data_type)
-    if not event_formatter:
-      raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              event_object.data_type))
-
-    return event_formatter
 
   def GetFormattedMessages(self, event_object):
     """Retrieves the formatted messages related to the event object.
@@ -140,12 +127,13 @@ class OutputMediator(object):
 
     Returns:
       A tuple containing the formatted message string and short message string.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+      If no event formatter to match the event object can be found the function
+      returns a tuple of None, None.
     """
     event_formatter = self.GetEventFormatter(event_object)
+    if not event_formatter:
+      return None, None
+
     return event_formatter.GetMessages(self._formatter_mediator, event_object)
 
   def GetFormattedSources(self, event_object):
@@ -155,13 +143,14 @@ class OutputMediator(object):
       event_object: the event object (instance of EventObject).
 
     Returns:
-      A tuple of the short and long source string.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+      A tuple of the short and long source string. If no event formatter
+      to match the event object can be found the function returns a tuple
+      of None, None.
     """
     event_formatter = self.GetEventFormatter(event_object)
+    if not event_formatter:
+      return None, None
+
     return event_formatter.GetSources(event_object)
 
   def GetFormatStringAttributeNames(self, event_object):
@@ -171,13 +160,13 @@ class OutputMediator(object):
       event_object: the event object (instance of EventObject).
 
     Returns:
-      A list containing the attribute names.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+      A list containing the attribute names. If no event formatter to match
+      the event object can be found the function returns None.
     """
     event_formatter = self.GetEventFormatter(event_object)
+    if not event_formatter:
+      return
+
     return event_formatter.GetFormatStringAttributeNames()
 
   def GetHostname(self, event_object, default_hostname=u'-'):
@@ -206,6 +195,76 @@ class OutputMediator(object):
       self._InitializeLookupDictionaries()
 
     return self._hostnames.get(store_number, default_hostname)
+
+  # TODO: Fix this function when the MFT parser has been implemented.
+  def GetMACBRepresentation(self, event_object):
+    """Retrieves the MACB representation.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A string containing the MACB representation.
+    """
+    data_type = getattr(event_object, u'data_type', None)
+    if not data_type:
+      return u'....'
+
+    # The filestat parser is somewhat limited.
+    # Also fix this when duplicate entries have been implemented so that
+    # the function actually returns more than a single entry (as in combined).
+    if data_type.startswith('fs:'):
+      letter = event_object.timestamp_desc[0]
+
+      if letter == u'm':
+        return u'M...'
+      elif letter == u'a':
+        return u'.A..'
+      elif letter == u'c':
+        if event_object.timestamp_desc[1] == u'r':
+          return u'...B'
+
+        return u'..C.'
+      else:
+        return u'....'
+
+    # Access time.
+    if event_object.timestamp_desc in [
+        eventdata.EventTimestamp.ACCESS_TIME,
+        eventdata.EventTimestamp.ACCOUNT_CREATED,
+        eventdata.EventTimestamp.PAGE_VISITED,
+        eventdata.EventTimestamp.LAST_VISITED_TIME,
+        eventdata.EventTimestamp.START_TIME,
+        eventdata.EventTimestamp.LAST_SHUTDOWN,
+        eventdata.EventTimestamp.LAST_LOGIN_TIME,
+        eventdata.EventTimestamp.LAST_PASSWORD_RESET,
+        eventdata.EventTimestamp.LAST_CONNECTED,
+        eventdata.EventTimestamp.LAST_RUNTIME,
+        eventdata.EventTimestamp.LAST_PRINTED]:
+      return u'.A..'
+
+    # Content modification.
+    if event_object.timestamp_desc in [
+        eventdata.EventTimestamp.MODIFICATION_TIME,
+        eventdata.EventTimestamp.WRITTEN_TIME,
+        eventdata.EventTimestamp.DELETED_TIME]:
+      return u'M...'
+
+    # Content creation time.
+    if event_object.timestamp_desc in [
+        eventdata.EventTimestamp.CREATION_TIME,
+        eventdata.EventTimestamp.ADDED_TIME,
+        eventdata.EventTimestamp.FILE_DOWNLOADED,
+        eventdata.EventTimestamp.FIRST_CONNECTED]:
+      return '...B'
+
+    # Metadata modification.
+    if event_object.timestamp_desc in [
+        eventdata.EventTimestamp.CHANGE_TIME,
+        eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME]:
+      return u'..C.'
+
+    return u'....'
 
   def GetStoredHostname(self):
     """Retrieves the stored hostname.

@@ -7,6 +7,10 @@ from plaso.formatters import mediator as formatters_mediator
 from plaso.output import mediator
 
 
+class TestConfig(object):
+  """Test config value object."""
+
+
 class OutputModuleTestCase(unittest.TestCase):
   """The unit test case for a output module."""
 
@@ -15,7 +19,7 @@ class OutputModuleTestCase(unittest.TestCase):
   maxDiff = None
 
   def _CreateOutputMediator(self, config=None, storage_object=None):
-    """Creates an output mediator.
+    """Creates a test output mediator.
 
     Args:
       config: optional configuration object, containing config information.

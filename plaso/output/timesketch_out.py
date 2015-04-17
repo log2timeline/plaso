@@ -15,6 +15,7 @@ from timesketch.models import db_session
 from timesketch.models.sketch import SearchIndex
 from timesketch.models.user import User
 
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -137,11 +138,21 @@ class TimesketchOutputModule(interface.OutputModule):
         timezone=self._output_mediator.timezone)
 
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    if message is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     event_values[u'message'] = message
 
-    source_type, source = self._output_mediator.GetFormattedSources(
+    source_short, source = self._output_mediator.GetFormattedSources(
         event_object)
-    event_values[u'source_short'] = source_type
+    if source is None or source_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
+    event_values[u'source_short'] = source_short
     event_values[u'source_long'] = source
 
     return event_values

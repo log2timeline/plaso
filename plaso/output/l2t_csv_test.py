@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline (l2t) CSV output class."""
 
-import io
 import unittest
 
+from plaso.cli import test_lib as cli_test_lib
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
@@ -47,10 +47,10 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self.output = io.BytesIO()
     output_mediator = self._CreateOutputMediator()
+    self._output_writer = cli_test_lib.TestOutputWriter()
     self.formatter = l2t_csv.L2TCSVOutputModule(
-        output_mediator, filehandle=self.output)
+        output_mediator, output_writer=self._output_writer)
     self.event_object = L2tTestEvent()
 
   def testWriteHeader(self):
@@ -61,7 +61,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     self.formatter.WriteHeader()
 
-    header = self.output.getvalue()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -84,7 +84,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         b'2,log/syslog.1,-,Malware Document Printed,'
         b'-,my_number: 123  some_additional_foo: True \n')
 
-    event_body = self.output.getvalue()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     # Ensure that the only commas returned are the 16 delimeters.

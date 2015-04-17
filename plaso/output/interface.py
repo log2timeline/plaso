@@ -3,7 +3,6 @@
 
 import abc
 import logging
-import sys
 
 from plaso.lib import errors
 from plaso.lib import utils
@@ -113,35 +112,30 @@ class OutputModule(object):
     pass
 
 
-# Need to suppress this since these classes do not implement the
-# abstract method WriteEventBody, classes that inherit from one of these
-# classes need to implement that function.
-# pylint: disable=abstract-method
-class FileOutputModule(OutputModule):
-  """A file-based output module."""
+class LinearOutputModule(OutputModule):
+  """Class that implements a linear output module object."""
 
-  def __init__(self, output_mediator, filehandle=sys.stdout, **kwargs):
+  # Need to suppress this since these classes do not implement the
+  # abstract method WriteEventBody, classes that inherit from one of these
+  # classes need to implement that function.
+  # pylint: disable=abstract-method
+
+  def __init__(self, output_mediator, output_writer=None, **kwargs):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
+      output_writer: Optional output writer object (instance of
+                     CLIOutputWriter). The default is None.
+
+    Raises:
+      ValueError: if the output writer is missing.
     """
-    super(FileOutputModule, self).__init__(output_mediator, **kwargs)
+    if not output_writer:
+      raise ValueError(u'Missing output writer.')
 
-    if isinstance(filehandle, basestring):
-      open_file_object = open(filehandle, 'wb')
-
-    # Check if the filehandle object has a write method.
-    elif hasattr(filehandle, u'write'):
-      open_file_object = filehandle
-
-    else:
-      raise ValueError(u'Unsupported file handle.')
-
-    self._file_object = OutputFilehandle(self._output_mediator.encoding)
-    self._file_object.Open(open_file_object)
+    super(LinearOutputModule, self).__init__(output_mediator, **kwargs)
+    self._output_writer = output_writer
 
   def _WriteLine(self, line):
     """Write a single line to the supplied file-like object.
@@ -149,11 +143,11 @@ class FileOutputModule(OutputModule):
     Args:
       line: the line of text to write.
     """
-    self._file_object.WriteLine(line)
+    self._output_writer.Write(line)
 
   def Close(self):
     """Closes the output."""
-    self._file_object.Close()
+    self._output_writer = None
 
 
 class EventBuffer(object):
@@ -250,88 +244,6 @@ class EventBuffer(object):
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
     self.End()
-
-  def __enter__(self):
-    """Make usable with "with" statement."""
-    return self
-
-
-# TODO: replace by output writer.
-class OutputFilehandle(object):
-  """A simple wrapper for filehandles to make character encoding easier.
-
-  All data is stored as an unicode text internally. However there are some
-  issues with clients that try to output unicode text to a non-unicode terminal.
-  Therefore a wrapper is created that checks if we are writing to a file, thus
-  using the default unicode encoding or if the attempt is to write to the
-  terminal, for which the default encoding of that terminal is used to encode
-  the text (if possible).
-  """
-
-  DEFAULT_ENCODING = 'utf-8'
-
-  def __init__(self, encoding='utf-8'):
-    """Initialize the output file handler.
-
-    Args:
-      encoding: The default terminal encoding, only used if attempted to write
-                to the terminal.
-    """
-    super(OutputFilehandle, self).__init__()
-    self._encoding = encoding
-    self._file_object = None
-    # An attribute stating whether or not this is STDOUT.
-    self._standard_out = False
-
-  def Open(self, filehandle=sys.stdout, path=''):
-    """Open a filehandle to an output file.
-
-    Args:
-      filehandle: A file-like object that is used to write data to.
-      path: If a file like object is not passed in it is possible
-            to pass in a path to a file, and a file-like object will be created.
-    """
-    if path:
-      self._file_object = open(path, 'wb')
-    else:
-      self._file_object = filehandle
-
-    if not hasattr(self._file_object, 'name'):
-      self._standard_out = True
-    elif self._file_object.name.startswith('<stdout>'):
-      self._standard_out = True
-
-  def WriteLine(self, line):
-    """Write a single line to the supplied filehandle.
-
-    Args:
-      line: the line of text to write.
-    """
-    if not self._file_object:
-      return
-
-    if self._standard_out:
-      # Write using preferred user encoding.
-      try:
-        self._file_object.write(line.encode(self._encoding))
-      except UnicodeEncodeError:
-        logging.error(
-            u'Unable to properly write logline, save output to a file to '
-            u'prevent missing data.')
-        self._file_object.write(line.encode(self._encoding, 'ignore'))
-
-    else:
-      # Write to a file, use unicode.
-      self._file_object.write(line.encode(self.DEFAULT_ENCODING))
-
-  def Close(self):
-    """Close the filehandle, if applicable."""
-    if self._file_object and not self._standard_out:
-      self._file_object.close()
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self.Close()
 
   def __enter__(self):
     """Make usable with "with" statement."""
