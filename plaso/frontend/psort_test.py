@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """Tests for the psort front-end."""
 
-import io
 import os
 import unittest
 
+from plaso.cli import test_lib as cli_test_lib
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -44,7 +44,7 @@ class PsortTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = u'None in Particular'
 
 
-class TestOutputModule(output_interface.FileOutputModule):
+class TestOutputModule(output_interface.LinearOutputModule):
   """Test output module."""
 
   _HEADER = (
@@ -150,7 +150,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     events.append(PsortTestEvent(5134324322))
     events.append(PsortTestEvent(5134024321))
 
-    output_fd = io.BytesIO()
+    output_writer = cli_test_lib.TestOutputWriter()
 
     with test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
@@ -166,7 +166,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator, storage_file)
         output_module = TestOutputModule(
-            output_mediator_object, filehandle=output_fd)
+            output_mediator_object, output_writer=output_writer)
         event_buffer = TestEventBuffer(
             output_module, check_dedups=False, store=storage_file)
 
@@ -174,7 +174,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
     event_buffer.Flush()
     lines = []
-    for line in output_fd.getvalue().split(b'\n'):
+    output = output_writer.ReadOutput()
+    for line in output.split(b'\n'):
       if line == b'.':
         continue
       if line:

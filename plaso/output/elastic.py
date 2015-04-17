@@ -8,6 +8,7 @@ import uuid
 
 import pyelasticsearch
 
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -15,6 +16,9 @@ from plaso.output import manager
 
 class ElasticSearchOutputModule(interface.OutputModule):
   """Saves the events into an ElasticSearch database."""
+
+  NAME = u'elastic'
+  DESCRIPTION = u'Saves the events into an ElasticSearch database.'
 
   # Add configuration data for this output module.
   ARGUMENTS = [
@@ -50,9 +54,6 @@ class ElasticSearchOutputModule(interface.OutputModule):
               'can be defined.'),
           'action': 'store',
           'default': 9200})]
-
-  NAME = u'elastic'
-  DESCRIPTION = u'Saves the events into an ElasticSearch database.'
 
   def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
@@ -120,13 +121,23 @@ class ElasticSearchOutputModule(interface.OutputModule):
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
         timezone=self._output_mediator.timezone)
+
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    if message is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
+
     ret_dict['message'] = message
 
-    source_type, source = self._output_mediator.GetFormattedSources(
+    source_short, source = self._output_mediator.GetFormattedSources(
         event_object)
+    if source is None or source_short is None:
+      raise errors.NoFormatterFound(
+          u'Unable to find event formatter for: {0:s}.'.format(
+              getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    ret_dict['source_short'] = source_type
+    ret_dict['source_short'] = source_short
     ret_dict['source_long'] = source
 
     hostname = self._output_mediator.GetHostname(event_object)

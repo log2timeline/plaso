@@ -5,7 +5,7 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class NativePythonOutputModule(interface.FileOutputModule):
+class NativePythonOutputModule(interface.LinearOutputModule):
   """Output module for the "raw" (or native) Python output format."""
 
   NAME = u'rawpy'

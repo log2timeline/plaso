@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the TLN output class."""
 
-import io
 import unittest
 
+from plaso.cli import test_lib as cli_test_lib
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
@@ -43,19 +43,19 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self._output = io.BytesIO()
+    self._output_writer = cli_test_lib.TestOutputWriter()
     output_mediator = self._CreateOutputMediator()
-    self._formatter = tln.TLNOutputModule(
-        output_mediator, filehandle=self._output)
+    self._output_module = tln.TLNOutputModule(
+        output_mediator, output_writer=self._output_writer)
     self._event_object = TLNTestEvent()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     expected_header = b'Time|Source|Host|User|Description\n'
 
-    self._formatter.WriteHeader()
+    self._output_module.WriteHeader()
 
-    header = self._output.getvalue()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -63,14 +63,14 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         TLNTestEventFormatter)
 
-    self._formatter.WriteEventBody(self._event_object)
+    self._output_module.WriteEventBody(self._event_object)
 
     expected_event_body = (
         b'1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; UNKNOWN; '
         b'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         b'session closed for user root)\n')
 
-    event_body = self._output.getvalue()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count(b'|'), 4)
@@ -84,19 +84,19 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self._output = io.BytesIO()
     output_mediator = self._CreateOutputMediator()
-    self._formatter = tln.L2TTLNOutputModule(
-        output_mediator, filehandle=self._output)
+    self._output_writer = cli_test_lib.TestOutputWriter()
+    self._output_module = tln.L2TTLNOutputModule(
+        output_mediator, output_writer=self._output_writer)
     self._event_object = TLNTestEvent()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     expected_header = b'Time|Source|Host|User|Description|TZ|Notes\n'
 
-    self._formatter.WriteHeader()
+    self._output_module.WriteHeader()
 
-    header = self._output.getvalue()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -104,7 +104,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         TLNTestEventFormatter)
 
-    self._formatter.WriteEventBody(self._event_object)
+    self._output_module.WriteEventBody(self._event_object)
 
     expected_event_body = (
         b'1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; UNKNOWN; '
@@ -112,7 +112,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         b'session closed for user root)'
         b'|UTC|File: OS: log/syslog.1 inode: 12345678\n')
 
-    event_body = self._output.getvalue()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count(b'|'), 6)

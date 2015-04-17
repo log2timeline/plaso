@@ -179,17 +179,22 @@ class CLIOutputWriter(object):
     """
 
 
-class StdinInputReader(CLIInputReader):
-  """Class that implements a stdin input reader."""
+class FileObjectInputReader(CLIInputReader):
+  """Class that implements a file-like object input reader.
 
-  def __init__(self, encoding=u'utf-8'):
+  This input reader relies on the file-like object having a readline method.
+  """
+
+  def __init__(self, file_object, encoding=u'utf-8'):
     """Initializes the input reader object.
 
     Args:
+      file_object: the file-like object to read from.
       encoding: optional input encoding. The default is "utf-8".
     """
-    super(StdinInputReader, self).__init__(encoding=encoding)
+    super(FileObjectInputReader, self).__init__(encoding=encoding)
     self._errors = u'strict'
+    self._file_object = file_object
 
   def Read(self):
     """Reads a string from the input.
@@ -197,7 +202,7 @@ class StdinInputReader(CLIInputReader):
     Returns:
       A string containing the input.
     """
-    encoded_string = sys.stdin.readline()
+    encoded_string = self._file_object.readline()
 
     try:
       string = encoded_string.decode(self._encoding, errors=self._errors)
@@ -215,17 +220,34 @@ class StdinInputReader(CLIInputReader):
     return string
 
 
-class StdoutOutputWriter(CLIOutputWriter):
-  """Class that implements a stdout output writer."""
+class StdinInputReader(FileObjectInputReader):
+  """Class that implements a stdin input reader."""
 
   def __init__(self, encoding=u'utf-8'):
+    """Initializes the input reader object.
+
+    Args:
+      encoding: optional input encoding. The default is "utf-8".
+    """
+    super(StdinInputReader, self).__init__(sys.stdin, encoding=encoding)
+
+
+class FileObjectOutputWriter(CLIOutputWriter):
+  """Class that implements a file-like object output writer.
+
+  This output writer relies on the file-like object having a write method.
+  """
+
+  def __init__(self, file_object, encoding=u'utf-8'):
     """Initializes the output writer object.
 
     Args:
+      file_object: the file-like object to write to.
       encoding: optional output encoding. The default is "utf-8".
     """
-    super(StdoutOutputWriter, self).__init__(encoding=encoding)
+    super(FileObjectOutputWriter, self).__init__(encoding=encoding)
     self._errors = u'strict'
+    self._file_object = file_object
 
   def Write(self, string):
     """Writes a string to the output.
@@ -248,4 +270,16 @@ class StdoutOutputWriter(CLIOutputWriter):
 
       encoded_string = string.encode(self._encoding, errors=self._errors)
 
-    sys.stdout.write(encoded_string)
+    self._file_object.write(encoded_string)
+
+
+class StdoutOutputWriter(FileObjectOutputWriter):
+  """Class that implements a stdout output writer."""
+
+  def __init__(self, encoding=u'utf-8'):
+    """Initializes the output writer object.
+
+    Args:
+      encoding: optional output encoding. The default is "utf-8".
+    """
+    super(StdoutOutputWriter, self).__init__(sys.stdout, encoding=encoding)

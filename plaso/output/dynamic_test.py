@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the dynamic output module."""
 
-import io
 import unittest
 
+from plaso.cli import test_lib as cli_test_lib
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
@@ -50,38 +50,44 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testHeader(self):
     """Tests the WriteHeader function."""
-    output = io.BytesIO()
     output_mediator = self._CreateOutputMediator()
-    formatter = dynamic.DynamicOutputModule(output_mediator, filehandle=output)
+    output_writer = cli_test_lib.TestOutputWriter()
+    output_module = dynamic.DynamicOutputModule(
+        output_mediator, output_writer=output_writer)
     expected_header = (
         b'datetime,timestamp_desc,source,source_long,message,parser,'
         b'display_name,tag,store_number,store_index\n')
 
-    formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), expected_header)
+    output_module.WriteHeader()
+    header = output_writer.ReadOutput()
+    self.assertEqual(header, expected_header)
 
-    output = io.BytesIO()
     filter_object = FakeFilter([
         u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
     output_mediator = self._CreateOutputMediator()
-    formatter = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object, filehandle=output)
+    output_writer = cli_test_lib.TestOutputWriter()
+    output_module = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object,
+        output_writer=output_writer)
 
     expected_header = b'date,time,message,hostname,filename,some_stuff\n'
-    formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), expected_header)
+    output_module.WriteHeader()
+    header = output_writer.ReadOutput()
+    self.assertEqual(header, expected_header)
 
-    output = io.BytesIO()
     filter_object = FakeFilter(
         [u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'],
         separator='@')
     output_mediator = self._CreateOutputMediator()
-    formatter = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object, filehandle=output)
+    output_writer = cli_test_lib.TestOutputWriter()
+    output_module = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object,
+        output_writer=output_writer)
 
     expected_header = b'date@time@message@hostname@filename@some_stuff\n'
-    formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), expected_header)
+    output_module.WriteHeader()
+    header = output_writer.ReadOutput()
+    self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
@@ -89,51 +95,54 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         TestEventFormatter)
 
     event_object = TestEvent()
-    output = io.BytesIO()
 
     filter_object = FakeFilter([
         u'date', u'time', u'timezone', u'macb', u'source', u'sourcetype',
         u'type', u'user', u'host', u'message_short', u'message',
         u'filename', u'inode', u'notes', u'format', u'extra'])
     output_mediator = self._CreateOutputMediator()
-    formatter = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object, filehandle=output)
+    output_writer = cli_test_lib.TestOutputWriter()
+    output_module = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object,
+        output_writer=output_writer)
 
-    formatter.WriteHeader()
+    output_module.WriteHeader()
     expected_header = (
         b'date,time,timezone,macb,source,sourcetype,type,user,host,'
         b'message_short,message,filename,inode,notes,format,extra\n')
-    self.assertEqual(output.getvalue(), expected_header)
+    header = output_writer.ReadOutput()
+    self.assertEqual(header, expected_header)
 
-    formatter.WriteEventBody(event_object)
+    output_module.WriteEventBody(event_object)
     expected_event_body = (
-        b'{0:s}'
         b'2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
         b'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         b'closed for user root),Reporter <CRON> PID: 8442 '
         b'(pam_unix(cron:session): session closed for user root),log/syslog.1'
-        b',-,-,-,-\n').format(expected_header)
-    self.assertEqual(output.getvalue(), expected_event_body)
+        b',-,-,-,-\n')
+    event_body = output_writer.ReadOutput()
+    self.assertEqual(event_body, expected_event_body)
 
-    output = io.BytesIO()
     filter_object = FakeFilter([
         u'datetime', u'nonsense', u'hostname', u'message'])
     output_mediator = self._CreateOutputMediator()
-    formatter = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object, filehandle=output)
+    output_writer = cli_test_lib.TestOutputWriter()
+    output_module = dynamic.DynamicOutputModule(
+        output_mediator, fields_filter=filter_object,
+        output_writer=output_writer)
 
     expected_header = b'datetime,nonsense,hostname,message\n'
-    formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), expected_header)
+    output_module.WriteHeader()
+    header = output_writer.ReadOutput()
+    self.assertEqual(header, expected_header)
 
     expected_event_body = (
-        b'{0:s}'
         b'2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
-        b' (pam_unix(cron:session): session closed for user root)\n').format(
-            expected_header)
+        b' (pam_unix(cron:session): session closed for user root)\n')
 
-    formatter.WriteEventBody(event_object)
-    self.assertEqual(output.getvalue(), expected_event_body)
+    output_module.WriteEventBody(event_object)
+    event_body = output_writer.ReadOutput()
+    self.assertEqual(event_body, expected_event_body)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         TestEventFormatter)
