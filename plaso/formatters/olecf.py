@@ -159,7 +159,7 @@ class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
     security = event_values.get(u'security', None)
     if security:
       security_flags = []
-      for flag, description in self._SECURITY_VALUES:
+      for flag, description in self._SECURITY_VALUES.iteritems():
         if security & flag:
           security_flags.append(description)
 
