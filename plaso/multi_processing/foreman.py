@@ -30,18 +30,21 @@ class Foreman(object):
 
   PROCESS_LABEL = collections.namedtuple(u'process_label', u'label pid process')
 
-  def __init__(self, show_memory_usage=False):
+  def __init__(self, event_queue_producer, show_memory_usage=False):
     """Initialize the foreman process.
 
     Args:
+      event_queue_producer: The event object queue producer (instance of
+                            ItemQueueProducer).
       show_memory_usage: Optional boolean value to indicate memory information
                          should be included in logging. The default is false.
     """
     super(Foreman, self).__init__()
     self._completed_process_labels = {}
+    self._event_queue_producer = event_queue_producer
     self._last_status_dict = {}
     self._monitored_process_labels = {}
-    self._processing_done = False
+    self._processing_completed = False
     self._rpc_clients_per_pid = {}
     self._show_memory_usage = show_memory_usage
 
@@ -67,14 +70,16 @@ class Foreman(object):
       A boolean indicating whether processing is complete.
 
     Raises:
+      KeyError: if the process label is not in the monitoring list.
       ValueError: if the process label is missing.
     """
     if not process_label:
       raise ValueError(u'Missing process label.')
 
     if process_label.pid not in self._monitored_process_labels:
-      return False
+      raise KeyError(u'Process label not in monitoring list.')
 
+    worker_is_running = True
     if not process_label.process.IsAlive():
       logging.info(u'Process {0:s} (PID: {1:d}) is not alive.'.format(
           process_label.label, process_label.pid))
@@ -82,15 +87,16 @@ class Foreman(object):
     else:
       rpc_client = self._rpc_clients_per_pid.get(process_label.pid, None)
       status_dict = rpc_client.CallFunction()
-      if not isinstance(status_dict, dict) and not self._processing_done:
+      if not isinstance(status_dict, dict):
         logging.warning((
             u'Unable to retrieve status of process: {0:s} via RPC socket: '
             u'http://localhost:{1:d}').format(
                 process_label.label, process_label.pid))
 
-      if status_dict:
+      else:
         self._last_status_dict[process_label.pid] = status_dict
-        if status_dict.get(u'is_running', False):
+        worker_is_running = status_dict.get(u'is_running', False)
+        if worker_is_running:
           self._LogWorkerInformation(process_label, status_dict)
           if self._show_memory_usage:
             self._LogMemoryUsage(process_label)
@@ -102,7 +108,7 @@ class Foreman(object):
                 process_label.label, process_label.pid,
                 status_dict.get(u'counter', 0)))
 
-    if not self._processing_done:
+    if worker_is_running and not self._processing_completed:
       # We need to terminate the process.
       # TODO: Add a function to start a new instance of a worker instead of
       # just removing and killing it.
@@ -209,6 +215,13 @@ class Foreman(object):
     for _, process_label in sorted(self._monitored_process_labels.items()):
       if not self._CheckStatus(process_label):
         processing_complete = False
+
+    if not self._processing_completed:
+      if processing_complete:
+        logging.info(u'All extraction workers stopped.')
+        self._event_queue_producer.SignalEndOfInput()
+      return False
+
     return processing_complete
 
   def GetLabelByPid(self, pid):
@@ -293,8 +306,8 @@ class Foreman(object):
       self._monitored_process_labels[label.pid] = label
 
   def SignalEndOfProcessing(self):
-    """Signals that the processing is done."""
-    self._processing_done = True
+    """Signals that the processing is completed."""
+    self._processing_completed = True
 
     logging.info(
         u'Foreman received a signal indicating that processing is completed.')
