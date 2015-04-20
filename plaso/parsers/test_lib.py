@@ -117,6 +117,7 @@ class ParserTestCase(unittest.TestCase):
         knowledge_base_object)
     if file_entry:
       new_mediator.SetFileEntry(file_entry)
+
     if parser_chain:
       new_mediator.parser_chain = parser_chain
     return new_mediator
@@ -190,7 +191,10 @@ class ParserTestCase(unittest.TestCase):
         knowledge_base_values=knowledge_base_values)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
+
+    # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain(parser_object)
+
     parser_object.Parse(parser_mediator)
 
     return event_queue_consumer
