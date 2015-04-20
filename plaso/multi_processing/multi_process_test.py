@@ -11,7 +11,7 @@ from plaso.multi_processing import multi_process
 class MultiProcessingQueueTest(unittest.TestCase):
   """Tests the multi-processing queue."""
 
-  _ITEMS = frozenset(['item1', 'item2', 'item3', 'item4'])
+  _ITEMS = frozenset([u'item1', u'item2', u'item3', u'item4'])
 
   def testPushPopItem(self):
     """Tests the PushItem and PopItem functions."""

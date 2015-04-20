@@ -55,10 +55,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
-    self._hasher_names = None
     self._identifier = identifier
+    self._identifier_string = u'Worker_{0:d}'.format(identifier)
     self._file_scanner = None
     self._filestat_parser_object = None
+    self._hasher_names = None
     self._non_sigscan_parser_names = None
     self._open_files = False
     self._parser_mediator = parser_mediator
@@ -73,6 +74,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     # Attributes that contain the current status of the worker.
     self._current_working_file = u''
     self._is_running = False
+    self._number_of_file_entries = 0
 
     # Attributes for profiling.
     self._enable_profiling = False
@@ -102,9 +104,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           for hash_name, digest in digests.iteritems():
             attribute_string = u'{0:s}_hash'.format(hash_name)
             self._parser_mediator.AddEventAttribute(attribute_string, digest)
+
       except IOError as exception:
         logging.warning(u'Unable to hash file: {0:s} with error: {1:s}'.format(
-           path_spec.comparable, exception))
+            path_spec.comparable, exception))
 
     try:
       self.ParseFileEntry(file_entry)
@@ -157,7 +160,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     # We need to reset the parser mediator before each file, to clear out any
     # lingering data from the previous file parsed.
-    self._parser_mediator.Reset()
     self._parser_mediator.SetFileEntry(file_entry)
 
     reference_count = self._resolver_context.GetFileObjectReferenceCount(
@@ -194,7 +196,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         self._DebugParseFileEntry()
 
     finally:
-      self._parser_mediator.SetFileEntry(None)
+      self._parser_mediator.ResetFileEntry()
 
     if reference_count != self._resolver_context.GetFileObjectReferenceCount(
         file_entry.path_spec):
@@ -341,10 +343,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def GetStatus(self):
     """Returns a status dictionary."""
     return {
-        u'is_running': self._is_running,
-        u'identifier': u'Worker_{0:d}'.format(self._identifier),
         u'current_file': self._current_working_file,
-        u'counter': self._parser_mediator.number_of_events}
+        u'identifier': self._identifier_string,
+        u'is_running': self._is_running,
+        u'number_of_events': self._parser_mediator.number_of_events}
 
   def HashFileEntry(self, file_entry):
     """Produces a dictionary containing hash digests of the file entry content.
@@ -478,9 +480,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       # to only apply the filestat parser?
       self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
 
-    logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
-        file_entry.path_spec.comparable))
-
     if reference_count != self._resolver_context.GetFileObjectReferenceCount(
         file_entry.path_spec):
       # Clean up after parsers that do not call close explicitly.
@@ -488,6 +487,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.warning((
             u'File-object not explicitly closed for path specification: '
             u'{0:s}.').format(file_entry.path_spec.comparable))
+
+    # We do not clear self._current_working_file here to allow the foreman
+    # to see which file was previously processed.
+    self._number_of_file_entries += 1
+
+    logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
+        file_entry.path_spec.comparable))
 
     if self._enable_profiling:
       self._ProfilingUpdate()
@@ -512,7 +518,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
             self._identifier, os.getpid()))
 
     self._current_working_file = u''
-
     self._is_running = False
 
     if self._enable_profiling:

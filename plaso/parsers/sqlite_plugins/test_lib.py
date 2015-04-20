@@ -37,11 +37,14 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     parser_mediator = self._GetParserMediator(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
-    parser_mediator.AppendToParserChain(plugin_object)
+
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
+
+    # AppendToParserChain needs to be run after SetFileEntry.
+    parser_mediator.AppendToParserChain(plugin_object)
 
     with sqlite.SQLiteDatabase(file_entry) as database:
       plugin_object.Process(parser_mediator, cache=cache, database=database)

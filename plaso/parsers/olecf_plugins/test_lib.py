@@ -51,14 +51,15 @@ class OleCfPluginTestCase(test_lib.ParserTestCase):
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
     olecf_file = self._OpenOleCfFile(path)
-    parser_mediator.SetFileEntry(self._GetTestFileEntryFromPath([path]))
 
+    file_entry = self._GetTestFileEntryFromPath([path])
+    parser_mediator.SetFileEntry(file_entry)
 
     # Get a list of all root items from the OLE CF file.
     root_item = olecf_file.root_item
     item_names = [item.name for item in root_item.sub_items]
 
-    plugin_object.Process(parser_mediator, root_item=root_item,
-                          item_names=item_names)
+    plugin_object.Process(
+        parser_mediator, root_item=root_item, item_names=item_names)
 
     return event_queue_consumer

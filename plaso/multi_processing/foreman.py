@@ -106,7 +106,7 @@ class Foreman(object):
             u'Process {0:s} (PID: {1:d}) has completed its processing. '
             u'Total of {2:d} events extracted').format(
                 process_label.label, process_label.pid,
-                status_dict.get(u'counter', 0)))
+                status_dict.get(u'number_of_events', 0)))
 
     if worker_is_running and not self._processing_completed:
       # We need to terminate the process.
@@ -163,7 +163,8 @@ class Foreman(object):
           u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
           u'- running: {4!s} <{5:s}>').format(
               process_label.label, process_label.pid,
-              status.get(u'counter', -1), status.get(u'current_file', u''),
+              status.get(u'number_of_events', -1),
+              status.get(u'current_file', u''),
               status.get(u'is_running', False), process_label.process.status))
 
   def _TerminateProcess(self, process_label):

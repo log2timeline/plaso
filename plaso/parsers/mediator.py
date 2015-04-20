@@ -136,10 +136,6 @@ class ParserMediator(object):
     """Clear out attributes that should be added to all events."""
     self._extra_event_attributes = {}
 
-  def ClearParserChain(self):
-    """Reset the parser chain to an empty value."""
-    self._parser_chain_components = []
-
   def GetDisplayName(self, file_entry=None):
     """Retrieves the display name for the file entry.
 
@@ -327,26 +323,24 @@ class ParserMediator(object):
       self._parse_error_queue_producer.ProduceItem(parse_error)
       self.number_of_parse_errors += 1
 
-  def Reset(self):
-    """Resets the internal state of the mediator.
-
-    This method will reset:
-      * The parser chain
-      * The event and parser error counters
-      * The file entry attribute (to None)
-    """
-    self.ClearParserChain()
-    self.ResetCounters()
-    self.SetFileEntry(None)
-
   def ResetCounters(self):
     """Resets the counters."""
     self.number_of_events = 0
     self.number_of_parse_errors = 0
 
+  def ResetFileEntry(self):
+    """Resets the file entry and clears the parser chain."""
+    self._file_entry = None
+    self._parser_chain_components = []
+
   def SetFileEntry(self, file_entry):
-    """Set the dfVFS FileEntry object for the file being parsed."""
+    """Sets the current file entry and clears the parser chain.
+
+    Args:
+      file_entry: the file entry (instance of dfvfs.FileEntry).
+    """
     self._file_entry = file_entry
+    self._parser_chain_components = []
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.
