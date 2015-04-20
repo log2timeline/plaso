@@ -138,19 +138,6 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
     self._rpc_thread = None
 
 
-class XMLCollectionStatusRPCClient(XMLRPCClient):
-  """Class that defines a XML collection status RPC client."""
-
-  _RPC_FUNCTION_NAME = u'signal_end_of_collection'
-
-
-class XMLCollectionStatusRPCServer(ThreadedXMLRPCServer):
-  """Class that defines a XML collection status RPC server."""
-
-  _RPC_FUNCTION_NAME = u'signal_end_of_collection'
-  _THREAD_NAME = u'collection_status_rpc_server'
-
-
 class XMLProcessStatusRPCClient(XMLRPCClient):
   """Class that defines a XML process status RPC client."""
 
@@ -162,3 +149,16 @@ class XMLProcessStatusRPCServer(ThreadedXMLRPCServer):
 
   _RPC_FUNCTION_NAME = u'status'
   _THREAD_NAME = u'process_status_rpc_server'
+
+
+class XMLStorageWriterStatusRPCClient(XMLRPCClient):
+  """Class that defines a XML storage writer status RPC client."""
+
+  _RPC_FUNCTION_NAME = u'signal_end_of_input'
+
+
+class XMLStorageWriterStatusRPCServer(ThreadedXMLRPCServer):
+  """Class that defines a XML storage writer status RPC server."""
+
+  _RPC_FUNCTION_NAME = u'signal_end_of_input'
+  _THREAD_NAME = u'storage_writer_status_rpc_server'
