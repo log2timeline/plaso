@@ -296,9 +296,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           formatter_mediator, storage_file, config=options)
 
       kwargs = {}
-      if self._filter_object:
-        kwargs[u'field_filter'] = self._filter_object
-
       # TODO: refactor this to use CLI argument helpers.
       if self._output_format in [u'pstorage', u'sql4n6']:
         kwargs[u'filehandle'] = self._output_filename
