@@ -47,7 +47,7 @@ def SigKill(pid):
 class MultiProcessEngine(engine.BaseEngine):
   """Class that defines the multi-process engine."""
 
-  _FOREMAN_CHECK_SLEEP = 1.0
+  _FOREMAN_CHECK_SLEEP = 1.5
 
   _PROCESS_ABORT_TIMEOUT = 2
   _PROCESS_JOIN_TIMEOUT = 5
@@ -76,46 +76,137 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._collection_process = None
     self._foreman_object = None
-    self._storage_process = None
+    self._storage_writer_completed = False
+    self._storage_writer_process = None
 
     # TODO: turn into a process pool.
     self._worker_processes = {}
 
-    # Attributes for the collection status RPC server.
-    self._rpc_port_number = 0
-    self._rpc_server = None
+    # Attributes for the storage writer status RPC server.
+    self._storage_writer_status_rpc_port_number = 0
+    self._storage_writer_status_rpc_server = None
 
-  def _StartCollectionStatusRPCServer(self, foreman_object):
-    """Starts the collection status RPC server.
+  def _AbortKill(self):
+    """Abort processing by sending SIGKILL or equivalent."""
+    if self._collection_process and self._collection_process.is_alive():
+      logging.warning(u'Killing collection process: {0:d}.'.format(
+          self._collection_process.pid))
+      SigKill(self._collection_process.pid)
+
+    if self._worker_processes:
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        if worker_process.is_alive():
+          logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
+              worker_name, worker_process.pid))
+          SigKill(worker_process.pid)
+
+    if self._storage_writer_process and self._storage_writer_process.is_alive():
+      logging.warning(u'Killing storage process: {0:d}.'.format(
+          self._storage_writer_process.pid))
+      SigKill(self._storage_writer_process.pid)
+
+  def _AbortNormal(self, timeout=None):
+    """Abort in a normal way.
 
     Args:
-      foreman_object: a foreman object (instance of Foreman).
+      timeout: The process join timeout. The default is None meaning
+               no timeout.
     """
-    if self._rpc_server:
+    if self._collection_process:
+      logging.warning(u'Signaling collection process to abort.')
+      self._collection_process.SignalAbort()
+
+    if self._worker_processes:
+      logging.warning(u'Signaling worker processes to abort.')
+      for _, worker_process in self._worker_processes.iteritems():
+        worker_process.SignalAbort()
+
+    logging.warning(u'Signaling storage process to abort.')
+    self._event_queue_producer.SignalEndOfInput()
+    self._storage_writer_process.SignalAbort()
+
+    if self._collection_process:
+      logging.warning(u'Waiting for collection process (PID: {0:d}).'.format(
+          self._collection_process.pid))
+      # TODO: it looks like xmlrpclib.ServerProxy is not allowing the
+      # collection process to close.
+      self._collection_process.join(timeout=timeout)
+      if self._collection_process.is_alive():
+        logging.warning(
+            u'Waiting for collection process (PID: {0:s}) failed'.format(
+                self._collection_process.pid))
+
+    if self._worker_processes:
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        logging.warning(
+            u'Waiting for worker: {0:s} process (PID: {1:d})'.format(
+                worker_name, worker_process.pid))
+        worker_process.join(timeout=timeout)
+        if worker_process.is_alive():
+          logging.warning(
+              u'Waiting for worker: {0:s} process (PID: {1:d}) failed'.format(
+                  worker_name, worker_process.pid))
+
+    if self._storage_writer_process:
+      logging.warning(u'Waiting for storage process (PID: {0:d}).'.format(
+          self._collection_process.pid))
+      self._storage_writer_process.join(timeout=timeout)
+      if self._storage_writer_process.is_alive():
+        logging.warning(
+            u'Waiting for storage process (PID: {0:s}) failed'.format(
+                self._storage_writer_process.pid))
+
+  def _AbortTerminate(self):
+    """Abort processing by sending SIGTERM or equivalent."""
+    if self._collection_process and self._collection_process.is_alive():
+      logging.warning(u'Terminating collection process: {0:d}.'.format(
+          self._collection_process.pid))
+      self._collection_process.terminate()
+
+    if self._worker_processes:
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        if worker_process.is_alive():
+          logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
+              worker_name, worker_process.pid))
+          worker_process.terminate()
+
+    if self._storage_writer_process and self._storage_writer_process.is_alive():
+      logging.warning(u'Terminating storage process: {0:d}.'.format(
+          self._storage_writer_process.pid))
+      self._storage_writer_process.terminate()
+
+  def _SignalEndOfInput(self):
+    """Signals the engine the storage writer received an end of input signal."""
+    self._foreman_object.SignalEndOfProcessing()
+
+  def _StartStorageWriterStatusRPCServer(self):
+    """Starts the storage writer status RPC server."""
+    if self._storage_writer_status_rpc_server:
       return
 
-    self._rpc_server = xmlrpc.XMLCollectionStatusRPCServer(
-        foreman_object.SignalEndOfProcessing)
+    self._storage_writer_status_rpc_server = (
+        xmlrpc.XMLStorageWriterStatusRPCServer(self._SignalEndOfInput))
 
     pid = os.getpid()
     hostname = u'localhost'
     port = rpc.GetProxyPortNumberFromPID(pid)
 
-    if not self._rpc_server.Start(hostname, port):
-      logging.error(
-          u'Unable to start a RPC server for engine (PID: {0:d})'.format(pid))
+    if not self._storage_writer_status_rpc_server.Start(hostname, port):
+      logging.error((
+          u'Unable to start storage writer status RPC server for engine '
+          u'(PID: {0:d})').format(pid))
 
-      self._rpc_server = None
+      self._storage_writer_status_rpc_server = None
       return
 
-    self._rpc_port_number = port
+    self._storage_writer_status_rpc_port_number = port
 
-  def _StopCollectionStatusRPCServer(self):
-    """Stops the collection status RPC server."""
-    if self._rpc_server:
-      self._rpc_server.Stop()
-      self._rpc_server = None
-      self._rpc_port_number = 0
+  def _StopStorageWriterStatusRPCServer(self):
+    """Stops the storage writer status RPC server."""
+    if self._storage_writer_status_rpc_server:
+      self._storage_writer_status_rpc_server.Stop()
+      self._storage_writer_status_rpc_server = None
+      self._storage_writer_status_rpc_port_number = 0
 
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
@@ -243,18 +334,15 @@ class MultiProcessEngine(engine.BaseEngine):
       number_of_extraction_workers = cpu_count
 
     self._foreman_object = foreman.Foreman(
-        show_memory_usage=show_memory_usage)
-    self._StartCollectionStatusRPCServer(self._foreman_object)
+        self._event_queue_producer, show_memory_usage=show_memory_usage)
+    self._StartStorageWriterStatusRPCServer()
 
-    self._storage_process = MultiProcessStorageProcess(
-        storage_writer, name='StorageProcess')
-    self._storage_process.start()
+    logging.info(u'Starting processes.')
+    self._storage_writer_process = MultiProcessStorageWriterProcess(
+        storage_writer, self._storage_writer_status_rpc_port_number,
+        name='StorageWriter')
+    self._storage_writer_process.start()
 
-    self._collection_process = MultiProcessCollectionProcess(
-        collector_object, self._rpc_port_number, name='CollectionProcess')
-    self._collection_process.start()
-
-    logging.info(u'Starting extraction worker processes.')
     for worker_number in range(number_of_extraction_workers):
       extraction_worker = self.CreateExtractionWorker(worker_number)
 
@@ -270,15 +358,19 @@ class MultiProcessEngine(engine.BaseEngine):
           pid=worker_process.pid, name=worker_name)
       self._worker_processes[worker_name] = worker_process
 
-    logging.debug(u'Collection started.')
+    self._collection_process = MultiProcessCollectionProcess(
+        collector_object, name='Collector')
+    self._collection_process.start()
+
+    logging.debug(u'Processing started.')
+
+    time.sleep(self._FOREMAN_CHECK_SLEEP)
     while not self._foreman_object.CheckStatus():
       time.sleep(self._FOREMAN_CHECK_SLEEP)
 
-      self._collection_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+    logging.info(u'Processing stopped.')
 
-    logging.info(u'Collection stopped.')
-
-    self._StopProcessing()
+    self._StopProcesses()
 
   def _CheckWorkerProcess(self, worker_name, worker_process):
     """Checks the worker process and terminates it if necessary.
@@ -350,10 +442,18 @@ class MultiProcessEngine(engine.BaseEngine):
     # Remove the worker process from the list of active workers.
     del self._worker_processes[worker_name]
 
-  def _StopProcessing(self):
-    """Stops the foreman and worker processes."""
-    self._foreman_object.SignalEndOfProcessing()
-    self._StopCollectionStatusRPCServer()
+  def _StopProcesses(self):
+    """Stops the processes."""
+    logging.info(u'Waiting for collector.')
+    self._collection_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+    if self._collection_process.is_alive():
+      logging.warning((
+          u'Forcing termination of collector (PID: {0:d})').format(
+              self._collection_process.pid))
+
+      self._collection_process.terminate()
+
+    logging.info(u'Collector stopped.')
 
     # Run through the running workers, one by one.
     # This will go through a list of all active worker processes and check its
@@ -371,101 +471,18 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._foreman_object = None
 
-    logging.info(u'Extraction workers stopped.')
-    self._event_queue_producer.SignalEndOfInput()
-
     logging.info(u'Waiting for storage writer.')
-    self._storage_process.join()
+    self._storage_writer_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+    if self._storage_writer_process.is_alive():
+      logging.warning((
+          u'Forcing termination of storage writer (PID: {0:d})').format(
+              self._storage_writer_process.pid))
+
+      self._storage_writer_process.terminate()
+
     logging.info(u'Storage writer stopped.')
 
-  def _AbortNormal(self, timeout=None):
-    """Abort in a normal way.
-
-    Args:
-      timeout: The process join timeout. The default is None meaning
-               no timeout.
-    """
-    if self._collection_process:
-      logging.warning(u'Signaling collection process to abort.')
-      self._collection_process.SignalAbort()
-
-    if self._worker_processes:
-      logging.warning(u'Signaling worker processes to abort.')
-      for _, worker_process in self._worker_processes.iteritems():
-        worker_process.SignalAbort()
-
-    logging.warning(u'Signaling storage process to abort.')
-    self._event_queue_producer.SignalEndOfInput()
-    self._storage_process.SignalAbort()
-
-    if self._collection_process:
-      logging.warning(u'Waiting for collection process (PID: {0:d}).'.format(
-          self._collection_process.pid))
-      # TODO: it looks like xmlrpclib.ServerProxy is not allowing the
-      # collection process to close.
-      self._collection_process.join(timeout=timeout)
-      if self._collection_process.is_alive():
-        logging.warning(
-            u'Waiting for collection process (PID: {0:s}) failed'.format(
-                self._collection_process.pid))
-
-    if self._worker_processes:
-      for worker_name, worker_process in self._worker_processes.iteritems():
-        logging.warning(
-            u'Waiting for worker: {0:s} process (PID: {1:d})'.format(
-                worker_name, worker_process.pid))
-        worker_process.join(timeout=timeout)
-        if worker_process.is_alive():
-          logging.warning(
-              u'Waiting for worker: {0:s} process (PID: {1:d}) failed'.format(
-                  worker_name, worker_process.pid))
-
-    if self._storage_process:
-      logging.warning(u'Waiting for storage process (PID: {0:d}).'.format(
-          self._collection_process.pid))
-      self._storage_process.join(timeout=timeout)
-      if self._storage_process.is_alive():
-        logging.warning(
-            u'Waiting for storage process (PID: {0:s}) failed'.format(
-                self._storage_process.pid))
-
-  def _AbortTerminate(self):
-    """Abort processing by sending SIGTERM or equivalent."""
-    if self._collection_process and self._collection_process.is_alive():
-      logging.warning(u'Terminating collection process: {0:d}.'.format(
-          self._collection_process.pid))
-      self._collection_process.terminate()
-
-    if self._worker_processes:
-      for worker_name, worker_process in self._worker_processes.iteritems():
-        if worker_process.is_alive():
-          logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
-              worker_name, worker_process.pid))
-          worker_process.terminate()
-
-    if self._storage_process and self._storage_process.is_alive():
-      logging.warning(u'Terminating storage process: {0:d}.'.format(
-          self._storage_process.pid))
-      self._storage_process.terminate()
-
-  def _AbortKill(self):
-    """Abort processing by sending SIGKILL or equivalent."""
-    if self._collection_process and self._collection_process.is_alive():
-      logging.warning(u'Killing collection process: {0:d}.'.format(
-          self._collection_process.pid))
-      SigKill(self._collection_process.pid)
-
-    if self._worker_processes:
-      for worker_name, worker_process in self._worker_processes.iteritems():
-        if worker_process.is_alive():
-          logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
-              worker_name, worker_process.pid))
-          SigKill(worker_process.pid)
-
-    if self._storage_process and self._storage_process.is_alive():
-      logging.warning(u'Killing storage process: {0:d}.'.format(
-          self._storage_process.pid))
-      SigKill(self._storage_process.pid)
+    self._StopStorageWriterStatusRPCServer()
 
   def SignalAbort(self):
     """Signals the engine to abort."""
@@ -485,17 +502,14 @@ class MultiProcessEngine(engine.BaseEngine):
 class MultiProcessCollectionProcess(multiprocessing.Process):
   """Class that defines a multi-processing collection process."""
 
-  def __init__(self, collector_object, rpc_port_number, **kwargs):
+  def __init__(self, collector_object, **kwargs):
     """Initializes the process object.
 
     Args:
       collector_object: A collector object (instance of Collector).
-      rpc_port_number: An integer value containing the RPC end point port
-                       number or 0 if not set.
     """
     super(MultiProcessCollectionProcess, self).__init__(**kwargs)
     self._collector_object = collector_object
-    self._rpc_port_number = rpc_port_number
 
   # This method part of the multiprocessing.Process interface hence its name
   # is not following the style guide.
@@ -506,22 +520,11 @@ class MultiProcessCollectionProcess(multiprocessing.Process):
     # when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    logging.debug(u'Collection process: {0!s} started'.format(self._name))
+    pid = os.getpid()
 
-    rpc_proxy_client = None
-    if self._rpc_port_number:
-      rpc_proxy_client = xmlrpc.XMLCollectionStatusRPCClient()
-      hostname = u'localhost'
-
-      if not rpc_proxy_client.Open(hostname, self._rpc_port_number):
-        logging.error(
-            u'Unable to setup a RPC client for the collector process')
+    logging.info(u'Collector (PID: {0:d}) started'.format(pid))
 
     self._collector_object.Collect()
-
-    logging.debug(u'Collection process: {0!s} stopped'.format(self._name))
-    if rpc_proxy_client:
-      _ = rpc_proxy_client.CallFunction()
 
   def SignalAbort(self):
     """Signals the process to abort."""
@@ -624,6 +627,11 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     logging.debug(u'Worker process: {0!s} started'.format(self._name))
     self._StartProcessStatusRPCServer()
 
+    # We need to set this explictily to True if the workers complete
+    # before the foreman is able to determine the status of the worker
+    # e.g. in the unit tests.
+    self._status_is_running = True
+
     logging.debug(u'Worker process: {0!s} extraction started'.format(
         self._name))
     self._extraction_worker.Run()
@@ -638,16 +646,19 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     self._extraction_worker.SignalAbort()
 
 
-class MultiProcessStorageProcess(multiprocessing.Process):
-  """Class that defines a multi-processing storage process."""
+class MultiProcessStorageWriterProcess(multiprocessing.Process):
+  """Class that defines a multi-processing storage writer process."""
 
-  def __init__(self, storage_writer, **kwargs):
+  def __init__(self, storage_writer, rpc_port_number, **kwargs):
     """Initializes the process object.
 
     Args:
       storage_writer: A storage writer object (instance of BaseStorageWriter).
+      rpc_port_number: An integer value containing the RPC end point port
+                       number or 0 if not set.
     """
-    super(MultiProcessStorageProcess, self).__init__(**kwargs)
+    super(MultiProcessStorageWriterProcess, self).__init__(**kwargs)
+    self._rpc_port_number = rpc_port_number
     self._storage_writer = storage_writer
 
   # This method part of the multiprocessing.Process interface hence its name
@@ -659,9 +670,24 @@ class MultiProcessStorageProcess(multiprocessing.Process):
     # when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    logging.debug(u'Storage process: {0!s} started'.format(self._name))
+    pid = os.getpid()
+
+    logging.info(u'Storage writer (PID: {0:d}) started.'.format(pid))
+
+    rpc_proxy_client = None
+    if self._rpc_port_number:
+      rpc_proxy_client = xmlrpc.XMLStorageWriterStatusRPCClient()
+      hostname = u'localhost'
+
+      if not rpc_proxy_client.Open(hostname, self._rpc_port_number):
+        logging.error(
+            u'Unable to setup a RPC client for the storage writer process')
+
     self._storage_writer.WriteEventObjects()
-    logging.debug(u'Storage process: {0!s} stopped'.format(self._name))
+
+    logging.info(u'Storage writer (PID: {0:d}) stopped.'.format(pid))
+    if rpc_proxy_client:
+      _ = rpc_proxy_client.CallFunction()
 
   def SignalAbort(self):
     """Signals the process to abort."""
