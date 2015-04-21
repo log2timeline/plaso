@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-"""A plugin that gather extension ID's from Chrome history browser."""
+"""A plugin that gather extension IDs from Chrome history browser."""
 
 import logging
 import re
 import urllib2
 
 from plaso.analysis import interface
+from plaso.analysis import manager
 from plaso.lib import event
 
 
-class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
-  """Convert Chrome extension ID's into names, requires Internet connection."""
+class ChromeExtensionPlugin(interface.AnalysisPlugin):
+  """Convert Chrome extension IDs into names, requires Internet connection."""
 
   NAME = 'chrome_extension'
 
@@ -20,18 +21,13 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
   _TITLE_RE = re.compile('<title>([^<]+)</title>')
   _WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
-  # We need to implement the interface for analysis plugins, but we don't use
-  # command line options here, so disable checking for unused args.
-  # pylint: disable=unused-argument
-  def __init__(self, incoming_queue, options=None):
+  def __init__(self, incoming_queue):
     """Initializes the Chrome extension analysis plugin.
 
     Args:
       incoming_queue: A queue that is used to listen to incoming events.
-      options: Optional command line arguments (instance of
-          argparse.Namespace). The default is None.
     """
-    super(AnalyzeChromeExtensionPlugin, self).__init__(incoming_queue)
+    super(ChromeExtensionPlugin, self).__init__(incoming_queue)
 
     self._results = {}
     self.plugin_type = self.TYPE_REPORT
@@ -43,8 +39,6 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     # Saved list of already looked up extensions.
     self._extensions = {}
-
-  # pylint: enable=unused-argument
 
   def _GetChromeWebStorePage(self, extension_id):
     """Retrieves the page for the extension from the Chrome store website.
@@ -101,12 +95,13 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     self._extensions[extension_id] = u'Not Found'
 
-  def CompileReport(self, analysis_context):
+  def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.
 
     Args:
-      analysis_context: The analysis context object. Instance of
-                        AnalysisContext.
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
+
     Returns:
       The analysis report (instance of AnalysisReport).
     """
@@ -127,12 +122,12 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     return report
 
-  def ExamineEvent(self, analysis_context, event_object, **unused_kwargs):
+  def ExamineEvent(self, analysis_mediator, event_object, **unused_kwargs):
     """Analyzes an event object.
 
     Args:
-      analysis_context: An analysis context object
-        (instance of AnalysisContext).
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
       event_object: An event object (instance of EventObject).
     """
     # Only interested in filesystem events.
@@ -148,15 +143,15 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
       return
 
     if not self._sep:
-      self._sep = analysis_context.GetPathSegmentSeparator(filename)
+      self._sep = analysis_mediator.GetPathSegmentSeparator(filename)
 
     if not self._user_paths:
-      self._user_paths = analysis_context.GetUserPaths(analysis_context.users)
+      self._user_paths = analysis_mediator.GetUserPaths(analysis_mediator.users)
 
     if u'{0:s}Extensions{0:s}'.format(self._sep) not in filename:
       return
 
-    # Now we have extension ID's, let's check if we've got the
+    # Now we have extension IDs, let's check if we've got the
     # folder, nothing else.
     paths = filename.split(self._sep)
     if paths[-2] != u'Extensions':
@@ -167,7 +162,7 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
       return
 
     # Get the user and ID.
-    user = analysis_context.GetUsernameFromPath(
+    user = analysis_mediator.GetUsernameFromPath(
         self._user_paths, filename, self._sep)
 
     # We still want this information in here, so that we can
@@ -186,3 +181,6 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     extension_string = extension.decode('utf-8', 'ignore')
     if (extension_string, extension_id) not in self._results[user]:
       self._results[user].append((extension_string, extension_id))
+
+
+manager.AnalysisPluginManager.RegisterPlugin(ChromeExtensionPlugin)

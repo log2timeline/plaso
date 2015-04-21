@@ -54,7 +54,6 @@ from plaso.lib import filter_interface
 from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import pfilter
-from plaso.lib import registry as class_registry
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -62,7 +61,6 @@ from plaso.lib import utils
 from plaso.multi_processing import foreman
 from plaso.multi_processing import process_info
 
-from plaso.output import helper as output_helper
 from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
 

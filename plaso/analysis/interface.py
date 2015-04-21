@@ -4,15 +4,11 @@
 import abc
 
 from plaso.engine import queue
-from plaso.lib import registry
 from plaso.lib import timelib
 
 
 class AnalysisPlugin(queue.EventObjectQueueConsumer):
-  """Analysis plugin gets a copy of each read event for analysis."""
-
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
+  """Class that implements the analysis plugin object interface."""
 
   # The URLS should contain a list of URLs with additional information about
   # this analysis plugin.
@@ -55,28 +51,24 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
 
   # We need to implement the interface for analysis plugins, but we don't use
   # command line options here, so disable checking for unused args.
-  # pylint: disable=unused-argument
-  def __init__(self, incoming_queue, options=None):
+  def __init__(self, incoming_queue):
     """Initializes an analysis plugin.
 
     Args:
       incoming_queue: A queue that is used to listen to incoming events.
-      options: Optional command line arguments (instance of
-        argparse.Namespace). The default is None.
     """
     super(AnalysisPlugin, self).__init__(incoming_queue)
     self.plugin_type = self.TYPE_REPORT
 
-  # pylint: enable=unused-argument
-  def _ConsumeEventObject(self, event_object, analysis_context=None, **kwargs):
+  def _ConsumeEventObject(self, event_object, analysis_mediator=None, **kwargs):
     """Consumes an event object callback for ConsumeEventObjects.
 
     Args:
       event_object: An event object (instance of EventObject).
-      analysis_context: Optional analysis context object (instance of
-                        AnalysisContext). The default is None.
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
     """
-    self.ExamineEvent(analysis_context, event_object, **kwargs)
+    self.ExamineEvent(analysis_mediator, event_object, **kwargs)
 
   @property
   def plugin_name(self):
@@ -84,7 +76,7 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     return self.NAME
 
   @abc.abstractmethod
-  def CompileReport(self, analysis_context):
+  def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.
 
     After the plugin has received every copy of an event to
@@ -92,36 +84,36 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     can be assembled.
 
     Args:
-      analysis_context: The analysis context object. Instance of
-                        AnalysisContext.
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
 
     Returns:
       The analysis report (instance of AnalysisReport).
     """
 
   @abc.abstractmethod
-  def ExamineEvent(self, analysis_context, event_object, **kwargs):
+  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
     """Analyzes an event object.
 
     Args:
-      analysis_context: An analysis context object (instance of
-        AnalysisContext).
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
       event_object: An event object (instance of EventObject).
     """
 
-  def RunPlugin(self, analysis_context):
+  def RunPlugin(self, analysis_mediator):
     """For each item in the queue send the read event to analysis.
 
     Args:
-      analysis_context: An analysis context object (instance of
-        AnalysisContext).
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
     """
-    self.ConsumeEventObjects(analysis_context=analysis_context)
+    self.ConsumeEventObjects(analysis_mediator=analysis_mediator)
 
-    analysis_report = self.CompileReport(analysis_context)
+    analysis_report = self.CompileReport(analysis_mediator)
 
     if analysis_report:
       # TODO: move this into the plugins?
       analysis_report.time_compiled = timelib.Timestamp.GetNow()
-      analysis_context.ProduceAnalysisReport(
+      analysis_mediator.ProduceAnalysisReport(
           analysis_report, plugin_name=self.plugin_name)

@@ -12,7 +12,7 @@ from plaso import filters
 from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
-from plaso.analysis import context as analysis_context
+from plaso.analysis import mediator as analysis_mediator
 from plaso.analysis import interface as analysis_interface
 from plaso.cli import tools as cli_tools
 from plaso.engine import knowledge_base
@@ -273,6 +273,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       read_only = False
     else:
       read_only = True
+    analysis_plugins_output_format = getattr(
+        options, u'windows-services-output', u'text')
 
     try:
       storage_file = self.OpenStorageFile(read_only=read_only)
@@ -383,11 +385,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         for analysis_plugin in analysis_plugins:
           analysis_report_queue_producer = queue.ItemQueueProducer(
               analysis_output_queue)
-          analysis_context_object = analysis_context.AnalysisContext(
-              analysis_report_queue_producer, knowledge_base_object)
+
+          analysis_mediator_object = analysis_mediator.AnalysisMediator(
+              analysis_report_queue_producer, knowledge_base_object,
+              output_format=analysis_plugins_output_format)
           analysis_process = multiprocessing.Process(
               name=u'Analysis {0:s}'.format(analysis_plugin.plugin_name),
-              target=analysis_plugin.RunPlugin, args=(analysis_context_object,))
+              target=analysis_plugin.RunPlugin,
+              args=(analysis_mediator_object,))
           self._analysis_processes.append(analysis_process)
 
           analysis_process.start()

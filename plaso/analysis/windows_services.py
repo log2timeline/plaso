@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """A plugin to enable quick triage of Windows Services."""
 
+import yaml
+
 from plaso.analysis import interface
+from plaso.analysis import manager
 from plaso.lib import event
 from plaso.winnt import human_readable_service_enums
-
-# Moving this import to the bottom due to complaints from certain versions of
-# linters.
-import yaml
 
 
 class WindowsService(yaml.YAMLObject):
@@ -161,7 +160,7 @@ class WindowsServiceCollection(object):
     return self._services
 
 
-class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
+class WindowsServicesPlugin(interface.AnalysisPlugin):
   """Provides a single list of for Windows services found in the Registry."""
 
   NAME = 'windows_services'
@@ -169,6 +168,8 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
+  # TODO: move this into a CLI argument helper, however this could
+  # be turned into a more generic analysis plugin setting in the process.
   ARGUMENTS = [
       ('--windows-services-output', {
           'dest': 'windows-services-output',
@@ -179,26 +180,24 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
           'default': u'text',
           'choices': [u'text', u'yaml']}),]
 
-  def __init__(self, incoming_queue, options=None):
+  def __init__(self, incoming_queue):
     """Initializes the Windows Services plugin
 
     Args:
       incoming_queue: A queue to read events from.
-      options: Optional command line arguments (instance of
-      argparse.Namespace). The default is None.
     """
-    super(AnalyzeWindowsServicesPlugin, self).__init__(incoming_queue)
+    super(WindowsServicesPlugin, self).__init__(incoming_queue)
     self._service_collection = WindowsServiceCollection()
     self.plugin_type = interface.AnalysisPlugin.TYPE_REPORT
-    self._output_mode = getattr(options, 'windows-services-output', u'text')
 
-  def ExamineEvent(self, analysis_context, event_object, **kwargs):
+  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
     """Analyzes an event_object and creates Windows Services as required.
 
       At present, this method only handles events extracted from the Registry.
 
     Args:
-      analysis_context: The context object analysis plugins.
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
       event_object: The event object (instance of EventObject) to examine.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
@@ -227,19 +226,19 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
       string_segments.append(u'\t\t{0:s}:{1:s}'.format(source[0], source[1]))
     return u'\n'.join(string_segments)
 
-  def CompileReport(self, analysis_context):
+  def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.
 
     Args:
-      analysis_context: The analysis context object. Instance of
-                        AnalysisContext.
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
 
     Returns:
       The analysis report (instance of AnalysisReport).
     """
     report = event.AnalysisReport(self.NAME)
 
-    if self._output_mode == 'yaml':
+    if analysis_mediator.output_format == u'yaml':
       lines_of_text = []
       lines_of_text.append(
           yaml.safe_dump_all(self._service_collection.services))
@@ -253,3 +252,6 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
     report.SetText(lines_of_text)
 
     return report
+
+
+manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesPlugin)

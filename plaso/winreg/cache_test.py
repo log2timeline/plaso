@@ -17,17 +17,17 @@ class CacheTest(test_lib.WinRegTestCase):
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    test_file = self._GetTestFilePath(['SYSTEM'])
+    test_file = self._GetTestFilePath([u'SYSTEM'])
     file_entry = self._GetTestFileEntry(test_file)
-    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+    winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
 
     winreg_cache = cache.WinRegistryCache()
 
     # Test if this function does not raise an exception.
-    winreg_cache.BuildCache(winreg_file, 'SYSTEM')
+    winreg_cache.BuildCache(winreg_file, u'SYSTEM')
 
     self.assertEqual(
-        winreg_cache.attributes['current_control_set'], 'ControlSet001')
+        winreg_cache.attributes[u'current_control_set'], u'ControlSet001')
 
 
 if __name__ == '__main__':

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-"""The analysis context object."""
+"""The analysis plugin mediator object."""
 
 
-class AnalysisContext(object):
-  """Class that implements the analysis context."""
+class AnalysisMediator(object):
+  """Class that implements the analysis plugin mediator."""
 
-  def __init__(self, analysis_report_queue_producer, knowledge_base):
-    """Initializes a analysis plugin context object.
+  # TODO: create output format definitions.
+  def __init__(
+      self, analysis_report_queue_producer, knowledge_base,
+      output_format=u'text'):
+    """Initializes an analysis plugin mediator object.
 
     Args:
       analysis_report_queue_producer: the analysis report queue producer
@@ -14,12 +17,19 @@ class AnalysisContext(object):
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for analysis.
+      output_format: Optional output format. The default is 'text'.
     """
-    super(AnalysisContext, self).__init__()
+    super(AnalysisMediator, self).__init__()
     self._analysis_report_queue_producer = analysis_report_queue_producer
     self._knowledge_base = knowledge_base
+    self._output_format = output_format
 
     self.number_of_produced_analysis_reports = 0
+
+  @property
+  def output_format(self):
+    """The output format."""
+    return self._output_format
 
   @property
   def users(self):
@@ -37,7 +47,7 @@ class AnalysisContext(object):
     """
     # TODO: Solve this differently, quite possibly inside dfVFS using mount
     # path spec.
-    file_path = getattr(path_spec, 'location', None)
+    file_path = getattr(path_spec, u'location', None)
     # TODO: Determine if we need to access the mount_path, as for the parser
     # mediator.
     return file_path
@@ -138,8 +148,8 @@ class AnalysisContext(object):
 
     user_separator = None
     for user in users:
-      name = user.get('name')
-      path = user.get('path')
+      name = user.get(u'name')
+      path = user.get(u'path')
 
       if not path or not name:
         continue
@@ -165,7 +175,7 @@ class AnalysisContext(object):
       analysis_report: the analysis report object (instance of AnalysisReport).
       plugin_name: Optional name of the plugin. The default is None.
     """
-    if not getattr(analysis_report, 'plugin_name', None) and plugin_name:
+    if not getattr(analysis_report, u'plugin_name', None) and plugin_name:
       analysis_report.plugin_name = plugin_name
 
   def ProduceAnalysisReport(self, analysis_report, plugin_name=None):

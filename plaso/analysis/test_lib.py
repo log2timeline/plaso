@@ -8,7 +8,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.analysis import context
+from plaso.analysis import mediator
 from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
@@ -113,13 +113,16 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
     return event_queue
 
-  def _RunAnalysisPlugin(self, analysis_plugin, knowledge_base_object):
+  # TODO: create output format definitions.
+  def _RunAnalysisPlugin(
+      self, analysis_plugin, knowledge_base_object, output_format=u'text'):
     """Analyzes an event object queue using the plugin object.
 
     Args:
       analysis_plugin: the analysis plugin object (instance of AnalysisPlugin).
       knowledge_base_object: the knowledge base object (instance of
                              KnowledgeBase).
+      output_format: Optional output format. The default is 'text'.
 
     Returns:
       An event object queue object (instance of Queue).
@@ -130,10 +133,11 @@ class AnalysisPluginTestCase(unittest.TestCase):
     analysis_report_queue_producer = queue.ItemQueueProducer(
         analysis_report_queue)
 
-    analysis_context = context.AnalysisContext(
-        analysis_report_queue_producer, knowledge_base_object)
+    analysis_mediator = mediator.AnalysisMediator(
+        analysis_report_queue_producer, knowledge_base_object,
+        output_format=output_format)
 
-    analysis_plugin.RunPlugin(analysis_context)
+    analysis_plugin.RunPlugin(analysis_mediator)
     analysis_report_queue.SignalEndOfInput()
 
     return analysis_report_queue_consumer

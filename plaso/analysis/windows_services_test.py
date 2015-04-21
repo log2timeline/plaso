@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the windows services analysis plugin."""
 
-import argparse
 import unittest
 
 from dfvfs.path import fake_path_spec
@@ -30,28 +29,6 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
                       u'Start': 2, u'ObjectName': u''},
        u'timestamp': 1346145839002031},
   ]
-
-  def _CreateAnalysisPlugin(self, input_queue, output_mode):
-    """Create an analysis plugin to test with.
-
-    Args:
-      input_queue: A queue the plugin will read events from.
-      output_mode: The output format the plugin will use.
-          Valid options are 'text' and 'yaml'.
-
-    Returns:
-      An instance of AnalyzeWindowsServicesPlugin.
-    """
-    argument_parser = argparse.ArgumentParser()
-    plugin_args = windows_services.AnalyzeWindowsServicesPlugin.ARGUMENTS
-    for parameter, config in plugin_args:
-      argument_parser.add_argument(parameter, **config)
-    arguments = ['--windows-services-output', output_mode]
-    options = argument_parser.parse_args(arguments)
-    analysis_plugin = windows_services.AnalyzeWindowsServicesPlugin(
-        input_queue, options)
-    return analysis_plugin
-
 
   def _CreateTestEventObject(self, service_event):
     """Create a test event object with a particular path.
@@ -84,7 +61,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
-    analysis_plugin = self._CreateAnalysisPlugin(event_queue, u'text')
+    analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
 
     # Run the analysis plugin.
     knowledge_base = self._SetUpKnowledgeBase()
@@ -121,11 +98,11 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # performance gain is negligible.
 
     knowledge_base = self._SetUpKnowledgeBase()
-    test_path = self._GetTestFilePath(['SYSTEM'])
+    test_path = self._GetTestFilePath([u'SYSTEM'])
     event_queue = self._ParseFile(parser, test_path, knowledge_base)
 
     # Run the analysis plugin.
-    analysis_plugin = self._CreateAnalysisPlugin(event_queue, u'text')
+    analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
     analysis_report_queue_consumer = self._RunAnalysisPlugin(
         analysis_plugin, knowledge_base)
     analysis_reports = self._GetAnalysisReportsFromQueue(
@@ -137,8 +114,12 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,
     # as that's dependent on the full path to the test files.
-    test_strings = [u'1394ohci', u'WwanSvc', u'Sources:', u'ControlSet001',
-                    u'ControlSet002']
+    test_strings = [
+        u'1394ohci',
+        u'WwanSvc',
+        u'Sources:',
+        u'ControlSet001',
+        u'ControlSet002']
     for string in test_strings:
       self.assertTrue(string in text)
 
@@ -149,13 +130,13 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # performance gain is negligible.
 
     knowledge_base = self._SetUpKnowledgeBase()
-    test_path = self._GetTestFilePath(['SYSTEM'])
+    test_path = self._GetTestFilePath([u'SYSTEM'])
     event_queue = self._ParseFile(parser, test_path, knowledge_base)
 
     # Run the analysis plugin.
-    analysis_plugin = self._CreateAnalysisPlugin(event_queue, 'yaml')
+    analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
     analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
+        analysis_plugin, knowledge_base, output_format=u'yaml')
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
@@ -165,8 +146,12 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,
     # as that's dependent on the full path to the test files.
-    test_strings = [windows_services.WindowsService.yaml_tag, u'1394ohci',
-                    u'WwanSvc', u'ControlSet001', u'ControlSet002']
+    test_strings = [
+        windows_services.WindowsService.yaml_tag,
+        u'1394ohci',
+        u'WwanSvc',
+        u'ControlSet001',
+        u'ControlSet002']
 
     for string in test_strings:
       self.assertTrue(string in text, u'{0:s} not found in report text'.format(
