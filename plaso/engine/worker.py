@@ -525,9 +525,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if self._enable_profiling:
       self._ProfilingStop()
 
-    if self._resolver_context:
-      self._resolver_context.Empty()
-
   def SetEnableDebugOutput(self, enable_debug_output):
     """Enables or disables debug output.
 
