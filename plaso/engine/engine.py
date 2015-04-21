@@ -10,6 +10,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import collector
 from plaso.engine import knowledge_base
+from plaso.engine import profiler
 from plaso.engine import queue
 from plaso.lib import errors
 from plaso.preprocessors import interface as preprocess_interface
@@ -38,6 +39,7 @@ class BaseEngine(object):
         parse_error_queue)
     self._process_archive_files = False
     self._profiling_sample_rate = 1000
+    self._profiling_type = u'all'
     self._source = None
     self._source_path_spec = None
     self._source_file_entry = None
@@ -157,18 +159,22 @@ class BaseEngine(object):
     """
     self._enable_debug_output = enable_debug_output
 
-  def SetEnableProfiling(self, enable_profiling, profiling_sample_rate=1000):
+  def SetEnableProfiling(
+      self, enable_profiling, profiling_sample_rate=1000,
+      profiling_type=u'all'):
     """Enables or disables profiling.
 
     Args:
-      enable_debug_output: boolean value to indicate if the profiling
-                           should be enabled.
+      enable_profiling: boolean value to indicate if the profiling should
+                        be enabled.
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
+      profiling_type: optional profiling type. The default is 'all'.
     """
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.
@@ -299,3 +305,8 @@ class BaseEngine(object):
 
     return not path_spec_factory.Factory.IsSystemLevelTypeIndicator(
         self._source_path_spec.type_indicator)
+
+  @classmethod
+  def SupportsMemoryProfiling(cls):
+    """Returns a boolean value to indicate if memory profiling is supported."""
+    return profiler.GuppyMemoryProfiler.IsSupported()

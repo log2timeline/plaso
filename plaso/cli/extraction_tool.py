@@ -5,7 +5,7 @@ import argparse
 import os
 
 from plaso.cli import storage_media_tool
-from plaso.engine import worker
+from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
 
@@ -46,6 +46,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._parser_filter_string = None
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
+    self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_PROTOBUF
@@ -133,15 +134,27 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         raise errors.BadConfigOption(
             u'Invalid queue size: {0:s}.'.format(queue_size))
 
+  def _ParseProfilingOptions(self, options):
+    """Parses the profiling options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
     self._enable_profiling = getattr(options, u'enable_profiling', False)
 
-    profile_sample_rate = getattr(options, u'profile_sample_rate', None)
-    if profile_sample_rate:
+    profiling_sample_rate = getattr(options, u'profiling_sample_rate', None)
+    if profiling_sample_rate:
       try:
-        self._profiling_sample_rate = int(profile_sample_rate, 10)
+        self._profiling_sample_rate = int(profiling_sample_rate, 10)
       except ValueError:
         raise errors.BadConfigOption(
-            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
+            u'Invalid profile sample rate: {0:s}.'.format(
+                profiling_sample_rate))
+
+    self._profiling_type = getattr(options, u'profiling_type', u'all')
 
   def _ParseStorageOptions(self, options):
     """Parses the storage options.
@@ -260,29 +273,45 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        '--buffer_size', '--buffer-size', '--bs', dest='buffer_size',
-        action='store', default=0,
+        u'--buffer_size', u'--buffer-size', u'--bs', dest=u'buffer_size',
+        action=u'store', default=0,
         help=u'The buffer size for the output (defaults to 196MiB).')
 
     argument_group.add_argument(
-        '--queue_size', '--queue-size', dest='queue_size', action='store',
+        u'--queue_size', u'--queue-size', dest=u'queue_size', action=u'store',
         default=0, help=(
             u'The maximum number of queued items per worker '
             u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
 
-    # TODO: move SupportsProfiling to engine.
-    if worker.BaseEventExtractionWorker.SupportsProfiling():
-      argument_group.add_argument(
-          '--profile', dest='enable_profiling', action='store_true',
-          default=False, help=(
-              u'Enable profiling of memory usage. Intended for '
-              u'troubleshooting memory issues.'))
+  def AddProfilingOptions(self, argument_group):
+    """Adds the profiling options to the argument group.
 
-      argument_group.add_argument(
-          '--profile_sample_rate', '--profile-sample-rate',
-          dest='profile_sample_rate', action='store', default=0, help=(
-              u'The profile sample rate (defaults to a sample every {0:d} '
-              u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--profile', dest=u'enable_profiling', action=u'store_true',
+        default=False, help=(
+            u'Enable profiling. Intended usage is to troubleshoot memory '
+            u'and performance issues.'))
+
+    argument_group.add_argument(
+        u'--profiling_sample_rate', u'--profiling-sample-rate',
+        dest=u'profiling_sample_rate', action=u'store', metavar=u'SAMPLE_RATE',
+        default=0, help=(
+            u'The profiling sample rate (defaults to a sample every {0:d} '
+            u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
+
+    profiling_types = [u'all', u'parsers']
+    if engine.BaseEngine.SupportsMemoryProfiling():
+      profiling_types.append(u'memory')
+
+    argument_group.add_argument(
+        u'--profiling_type', dest=u'profiling_type',
+        choices=sorted(profiling_types), action=u'store',
+        metavar=u'TYPE', default=None, help=(
+            u'The profiling type: \'all\', \'memory\' or \'parsers\'.'))
 
   def AddStorageOptions(self, argument_group):
     """Adds the storage options to the argument group.
@@ -312,4 +341,5 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._ParseFilterOptions(options)
     self._ParseInformationalOptions(options)
     self._ParsePerformanceOptions(options)
+    self._ParseProfilingOptions(options)
     self._ParseStorageOptions(options)

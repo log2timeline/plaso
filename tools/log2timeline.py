@@ -237,6 +237,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'Processing Arguments')
 
     self.AddPerformanceOptions(processing_group)
+    self.AddProfilingOptions(processing_group)
     self.AddProcessingOptions(processing_group)
 
     argument_parser.add_argument(
@@ -402,6 +403,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                           file system.
       UserAbort: if the user initiated an abort.
     """
+    self._front_end.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
     self._front_end.SetStorageFile(self._output)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
