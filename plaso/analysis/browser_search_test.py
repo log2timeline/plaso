@@ -27,7 +27,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     test_file = self._GetTestFilePath(['History'])
     event_queue = self._ParseFile(self._parser, test_file, knowledge_base)
 
-    analysis_plugin = browser_search.AnalyzeBrowserSearchPlugin(event_queue)
+    analysis_plugin = browser_search.BrowserSearchPlugin(event_queue)
     analysis_report_queue_consumer = self._RunAnalysisPlugin(
         analysis_plugin, knowledge_base)
     analysis_reports = self._GetAnalysisReportsFromQueue(

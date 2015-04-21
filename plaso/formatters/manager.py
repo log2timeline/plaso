@@ -119,13 +119,14 @@ class FormattersManager(object):
   def RegisterFormatters(cls, formatter_classes):
     """Registers formatter classes.
 
-    The formatter classes are identified based on their lower case name.
+    The formatter classes are identified based on their lower case data type.
 
     Args:
       formatter_classes: a list of class objects of the formatters.
 
     Raises:
-      KeyError: if formatter class is already set for the corresponding name.
+      KeyError: if formatter class is already set for the corresponding
+                data type.
     """
     for formatter_class in formatter_classes:
       cls.RegisterFormatter(formatter_class)

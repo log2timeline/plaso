@@ -7,6 +7,7 @@ import urllib
 
 from plaso import filters
 from plaso.analysis import interface
+from plaso.analysis import manager
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 
@@ -123,7 +124,7 @@ class FilterClass(object):
     return second.replace('+', ' ')
 
 
-class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
+class BrowserSearchPlugin(interface.AnalysisPlugin):
   """Analyze browser search entries from events."""
 
   NAME = 'browser_search'
@@ -144,18 +145,13 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       ('url contains "duckduckgo.com"', 'DuckDuckGo')
   )
 
-  # We need to implement the interface for analysis plugins, but we don't use
-  # command line options here, so disable checking for unused args.
-  # pylint: disable=unused-argument
-  def __init__(self, incoming_queue, options=None):
+  def __init__(self, incoming_queue):
     """Initializes the browser search analysis plugin.
 
     Args:
       incoming_queue: A queue that is used to listen to incoming events.
-      options: Optional command line arguments (instance of
-        argparse.Namespace). The default is None.
     """
-    super(AnalyzeBrowserSearchPlugin, self).__init__(incoming_queue)
+    super(BrowserSearchPlugin, self).__init__(incoming_queue)
     self._filter_dict = {}
     self._counter = collections.Counter()
 
@@ -169,14 +165,12 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       if filter_obj and call_back_obj:
         self._filter_dict[filter_obj] = (call_back, call_back_obj)
 
-  # pylint: enable=unused-argument
-
-  def CompileReport(self, analysis_context):
+  def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.
 
     Args:
-      analysis_context: The analysis context object. Instance of
-                        AnalysisContext.
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
 
     Returns:
       The analysis report (instance of AnalysisReport).
@@ -207,12 +201,12 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
     return report
 
   def ExamineEvent(
-      self, unused_analysis_context, event_object, **unused_kwargs):
+      self, unused_analysis_mediator, event_object, **unused_kwargs):
     """Analyzes an event object.
 
     Args:
-      analysis_context: An analysis context object
-          (instance of AnalysisContext).
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
       event_object: An event object (instance of EventObject).
     """
     # This event requires an URL attribute.
@@ -243,3 +237,6 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
             getattr(event_object, 'plugin', getattr(
                 event_object, 'parser', u'N/A')),
             call_back_name, returned_line))
+
+
+manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

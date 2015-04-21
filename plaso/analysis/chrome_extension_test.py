@@ -16,8 +16,7 @@ from plaso.lib import event
 # pylint: disable=protected-access
 
 
-class AnalyzeChromeExtensionTestPlugin(
-    chrome_extension.AnalyzeChromeExtensionPlugin):
+class TestChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
   """Chrome extension analysis plugin used for testing."""
 
   NAME = 'chrome_extension_test'
@@ -99,7 +98,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
-    analysis_plugin = AnalyzeChromeExtensionTestPlugin(event_queue)
+    analysis_plugin = TestChromeExtensionPlugin(event_queue)
 
     # Run the analysis plugin.
     analysis_report_queue_consumer = self._RunAnalysisPlugin(
@@ -144,7 +143,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
-    analysis_plugin = AnalyzeChromeExtensionTestPlugin(event_queue)
+    analysis_plugin = TestChromeExtensionPlugin(event_queue)
 
     # Run the analysis plugin.
     analysis_report_queue_consumer = self._RunAnalysisPlugin(

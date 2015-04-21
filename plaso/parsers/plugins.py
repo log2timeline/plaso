@@ -70,7 +70,7 @@ class BasePlugin(object):
     """
     if kwargs:
       raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
-          kwargs.keys()))
+          u', '.join(kwargs.keys())))
 
   def UpdateChainAndProcess(self, parser_mediator, **kwargs):
     """Wrapper for Process() to synchronize the parser chain.
