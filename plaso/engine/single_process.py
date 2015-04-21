@@ -154,10 +154,10 @@ class SingleProcessEngine(engine.BaseEngine):
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
 
-    # TODO: move profiler in separate object.
     extraction_worker.SetEnableProfiling(
         self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate)
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
 
     if self._process_archive_files:
       extraction_worker.SetProcessArchiveFiles(self._process_archive_files)

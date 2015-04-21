@@ -35,7 +35,7 @@ class TestQueueConsumer(queue.ItemQueueConsumer):
 class EngineTestCase(unittest.TestCase):
   """The unit test case for a front-end."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.

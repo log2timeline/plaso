@@ -74,7 +74,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     # Attributes for profiling.
     self._enable_profiling = False
-    self._profiler = None
+    self._memory_profiler = None
+    self._parsers_profiler = None
     self._profiling_sample = 0
     self._profiling_sample_rate = 1000
 
@@ -159,6 +160,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     reference_count = self._resolver_context.GetFileObjectReferenceCount(
         file_entry.path_spec)
+
+    if self._parsers_profiler:
+      self._parsers_profiler.StartTiming(parser_object.NAME)
+
     try:
       parser_object.UpdateChainAndParse(self._parser_mediator)
 
@@ -191,14 +196,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         self._DebugParseFileEntry()
 
     finally:
+      if self._parsers_profiler:
+        self._parsers_profiler.StopTiming()
+
       self._parser_mediator.ResetFileEntry()
 
-    if reference_count != self._resolver_context.GetFileObjectReferenceCount(
-        file_entry.path_spec):
-      logging.warning((
-          u'[{0:s}] did not explicitly close file-object for path '
-          u'specification: {1:s}.').format(
-              parser_object.NAME, file_entry.path_spec.comparable))
+      if reference_count != self._resolver_context.GetFileObjectReferenceCount(
+          file_entry.path_spec):
+        logging.warning((
+            u'[{0:s}] did not explicitly close file-object for path '
+            u'specification: {1:s}.').format(
+                parser_object.NAME, file_entry.path_spec.comparable))
 
   def _ProcessArchiveFile(self, file_entry):
     """Processes an archive file (file that contains file entries).
@@ -308,22 +316,31 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     return True
 
-  def _ProfilingStart(self):
-    """Starts the profiling."""
-    self._profiling_sample = 0
-    self._profiler.Start()
+  def _ProfilingSampleMemory(self):
+    """Create a memory profiling sample."""
+    if not self._memory_profiler:
+      return
 
-  def _ProfilingStop(self):
-    """Stops the profiling."""
-    self._profiler.Sample(None)
-
-  def _ProfilingUpdate(self):
-    """Updates the profiling."""
     self._profiling_sample += 1
 
     if self._profiling_sample >= self._profiling_sample_rate:
-      self._profiler.Sample(None)
+      self._memory_profiler.Sample()
       self._profiling_sample = 0
+
+  def _ProfilingStart(self):
+    """Starts the profiling."""
+    self._profiling_sample = 0
+
+    if self._memory_profiler:
+      self._memory_profiler.Start()
+
+  def _ProfilingStop(self):
+    """Stops the profiling."""
+    if self._memory_profiler:
+      self._memory_profiler.Sample()
+
+    if self._parsers_profiler:
+      self._parsers_profiler.Write()
 
   def GetStatus(self):
     """Returns a status dictionary."""
@@ -374,7 +391,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       file_object.close()
 
     if self._enable_profiling:
-      self._ProfilingUpdate()
+      self._ProfilingSampleMemory()
 
     logging.debug(u'[HashFileEntry] Finished hashing: {0:s}'.format(
         file_entry.path_spec.comparable))
@@ -481,7 +498,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         file_entry.path_spec.comparable))
 
     if self._enable_profiling:
-      self._ProfilingUpdate()
+      self._ProfilingSampleMemory()
 
   def Run(self):
     """Extracts event objects from file entries."""
@@ -520,7 +537,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     self._enable_debug_output = enable_debug_output
 
-  def SetEnableProfiling(self, enable_profiling, profiling_sample_rate=1000):
+  def SetEnableProfiling(
+      self, enable_profiling, profiling_sample_rate=1000,
+      profiling_type=u'all'):
     """Enables or disables profiling.
 
     Args:
@@ -529,12 +548,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
+      profiling_type: optional profiling type. The default is 'all'.
     """
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate
 
-    if self._enable_profiling and not self._profiler:
-      self._profiler = profiler.GuppyMemoryProfiler(self._identifier)
+    if self._enable_profiling:
+      if profiling_type in [u'all', u'memory'] and not self._memory_profiler:
+        self._memory_profiler = profiler.GuppyMemoryProfiler(self._identifier)
+
+      if profiling_type in [u'all', u'parsers'] and not self._parsers_profiler:
+        self._parsers_profiler = profiler.ParsersProfiler(self._identifier)
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.
@@ -574,8 +598,3 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """Signals the worker to abort."""
     super(BaseEventExtractionWorker, self).SignalAbort()
     self._parser_mediator.SignalAbort()
-
-  @classmethod
-  def SupportsProfiling(cls):
-    """Returns a boolean value to indicate if profiling is supported."""
-    return profiler.GuppyMemoryProfiler.IsSupported()

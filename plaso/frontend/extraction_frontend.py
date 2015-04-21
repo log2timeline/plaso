@@ -55,6 +55,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     self._preprocess = False
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
+    self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._show_worker_memory_information = False
@@ -159,7 +160,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     engine.SetEnableDebugOutput(self._debug_mode)
     engine.SetEnableProfiling(
         self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate)
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
     engine.SetProcessArchiveFiles(self._process_archive_files)
 
     if self._filter_object:
@@ -186,7 +188,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     engine.SetEnableDebugOutput(self._debug_mode)
     engine.SetEnableProfiling(
         self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate)
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
     engine.SetProcessArchiveFiles(self._process_archive_files)
 
     if self._filter_object:
@@ -627,6 +630,23 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           parser_filter_string=parser_filter_string,
           hasher_names_string=hasher_names_string,
           storage_serializer_format=storage_serializer_format)
+
+  def SetEnableProfiling(
+      self, enable_profiling, profiling_sample_rate=1000,
+      profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if the profiling should
+                        be enabled.
+      profiling_sample_rate: optional integer indicating the profiling sample
+                             rate. The value contains the number of files
+                             processed. The default value is 1000.
+      profiling_type: optional profiling type. The default is 'all'.
+    """
+    self._enable_profiling = enable_profiling
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
 
   def SetStorageFile(self, storage_file_path):
     """Sets the storage file path.
