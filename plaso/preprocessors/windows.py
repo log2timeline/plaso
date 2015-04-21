@@ -23,14 +23,12 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
   3, for instance if the Registry key is dependent on which version of Windows
   is running, information that is collected during priority 2.
   """
-  __abstract = True
-
-  SUPPORTED_OS = ['Windows']
+  SUPPORTED_OS = [u'Windows']
   WEIGHT = 2
 
-  REG_KEY = '\\'
-  REG_PATH = '{sysregistry}'
-  REG_FILE = 'SOFTWARE'
+  REG_KEY = u'\\'
+  REG_PATH = u'{sysregistry}'
+  REG_FILE = u'SOFTWARE'
 
   def __init__(self):
     """Initializes the Window Registry preprocess plugin object."""
@@ -96,7 +94,7 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
           u'results.').format(
               self.REG_FILE, directory_location, len(path_specs)))
 
-    file_location = getattr(path_specs[0], 'location', None)
+    file_location = getattr(path_specs[0], u'location', None)
     if not directory_location:
       raise errors.PreProcessFail(
           u'Missing file location for: {0:s} in directory: {1:s}'.format(
@@ -179,18 +177,18 @@ class WindowsCodepage(WindowsRegistryPreprocessPlugin):
   """A preprocessing class that fetches codepage information."""
 
   # Defines the preprocess attribute to be set.
-  ATTRIBUTE = 'code_page'
+  ATTRIBUTE = u'code_page'
 
   # Depend upon the current control set, thus lower the priority.
   WEIGHT = 3
 
-  REG_KEY = '{current_control_set}\\Control\\Nls\\CodePage'
-  REG_FILE = 'SYSTEM'
+  REG_KEY = u'{current_control_set}\\Control\\Nls\\CodePage'
+  REG_FILE = u'SYSTEM'
 
   def ParseKey(self, key):
     """Retrieves the codepage or cp1252 by default."""
-    value = key.GetValue('ACP')
-    if value and type(value.data) == unicode:
+    value = key.GetValue(u'ACP')
+    if value and isinstance(value.data, unicode):
       return u'cp{0:s}'.format(value.data)
 
     logging.warning(
@@ -202,298 +200,298 @@ class WindowsCodepage(WindowsRegistryPreprocessPlugin):
 class WindowsHostname(WindowsRegistryPreprocessPlugin):
   """A preprocessing class that fetches the hostname information."""
 
-  ATTRIBUTE = 'hostname'
+  ATTRIBUTE = u'hostname'
 
   # Depend upon the current control set to be found.
   WEIGHT = 3
 
-  REG_KEY = '{current_control_set}\\Control\\ComputerName\\ComputerName'
-  REG_FILE = 'SYSTEM'
+  REG_KEY = u'{current_control_set}\\Control\\ComputerName\\ComputerName'
+  REG_FILE = u'SYSTEM'
 
   def ParseKey(self, key):
     """Extract the hostname from the registry."""
-    value = key.GetValue('ComputerName')
-    if value and type(value.data) == unicode:
+    value = key.GetValue(u'ComputerName')
+    if value and isinstance(value.data, unicode):
       return value.data
 
 
 class WindowsProgramFilesPath(WindowsRegistryPreprocessPlugin):
   """Fetch about the location for the Program Files directory."""
 
-  ATTRIBUTE = 'programfiles'
+  ATTRIBUTE = u'programfiles'
 
-  REGFILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
+  REGFILE = u'SOFTWARE'
+  REG_KEY = u'\\Microsoft\\Windows\\CurrentVersion'
 
   def ParseKey(self, key):
     """Extract the version information from the key."""
-    value = key.GetValue('ProgramFilesDir')
+    value = key.GetValue(u'ProgramFilesDir')
     if value:
       # Remove the first drive letter, eg: "C:\Program Files".
-      return u'{0:s}'.format(value.data.partition('\\')[2])
+      return u'{0:s}'.format(value.data.partition(u'\\')[2])
 
 
 class WindowsProgramFilesX86Path(WindowsRegistryPreprocessPlugin):
   """Fetch about the location for the Program Files directory."""
 
-  ATTRIBUTE = 'programfilesx86'
+  ATTRIBUTE = u'programfilesx86'
 
-  REGFILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
+  REGFILE = u'SOFTWARE'
+  REG_KEY = u'\\Microsoft\\Windows\\CurrentVersion'
 
   def ParseKey(self, key):
     """Extract the version information from the key."""
     value = key.GetValue(u'ProgramFilesDir (x86)')
     if value:
       # Remove the first drive letter, eg: "C:\Program Files".
-      return u'{0:s}'.format(value.data.partition('\\')[2])
+      return u'{0:s}'.format(value.data.partition(u'\\')[2])
 
 
 class WindowsSystemRegistryPath(interface.PathPreprocessPlugin):
   """Get the system registry path."""
-  SUPPORTED_OS = ['Windows']
-  ATTRIBUTE = 'sysregistry'
-  PATH = '/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
+  SUPPORTED_OS = [u'Windows']
+  ATTRIBUTE = u'sysregistry'
+  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
 
 
 class WindowsSystemRootPath(interface.PathPreprocessPlugin):
   """Get the system root path."""
-  SUPPORTED_OS = ['Windows']
-  ATTRIBUTE = 'systemroot'
-  PATH = '/(Windows|WinNT|WINNT35|WTSRV)'
+  SUPPORTED_OS = [u'Windows']
+  ATTRIBUTE = u'systemroot'
+  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
 
 
 class WindowsTimeZone(WindowsRegistryPreprocessPlugin):
   """A preprocessing class that fetches timezone information."""
 
   # Defines the preprocess attribute to be set.
-  ATTRIBUTE = 'time_zone_str'
+  ATTRIBUTE = u'time_zone_str'
 
   # Depend upon the current control set, thus lower the priority.
   WEIGHT = 3
 
-  REG_KEY = '{current_control_set}\\Control\\TimeZoneInformation'
-  REG_FILE = 'SYSTEM'
+  REG_KEY = u'{current_control_set}\\Control\\TimeZoneInformation'
+  REG_FILE = u'SYSTEM'
 
   # transform gathered from these sources:
   # Prebuilt from:
   # HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\
   ZONE_LIST = {
-      'IndiaStandardTime': 'Asia/Kolkata',
-      'EasternStandardTime': 'EST5EDT',
-      'EasternDaylightTime': 'EST5EDT',
-      'MountainStandardTime': 'MST7MDT',
-      'MountainDaylightTime': 'MST7MDT',
-      'PacificStandardTime': 'PST8PDT',
-      'PacificDaylightTime': 'PST8PDT',
-      'CentralStandardTime': 'CST6CDT',
-      'CentralDaylightTime': 'CST6CDT',
-      'SamoaStandardTime': 'US/Samoa',
-      'HawaiianStandardTime': 'US/Hawaii',
-      'AlaskanStandardTime': 'US/Alaska',
-      'MexicoStandardTime2': 'MST7MDT',
-      'USMountainStandardTime': 'MST7MDT',
-      'CanadaCentralStandardTime': 'CST6CDT',
-      'MexicoStandardTime': 'CST6CDT',
-      'CentralAmericaStandardTime': 'CST6CDT',
-      'USEasternStandardTime': 'EST5EDT',
-      'SAPacificStandardTime': 'EST5EDT',
-      'MalayPeninsulaStandardTime': 'Asia/Kuching',
-      'PacificSAStandardTime': 'Canada/Atlantic',
-      'AtlanticStandardTime': 'Canada/Atlantic',
-      'SAWesternStandardTime': 'Canada/Atlantic',
-      'NewfoundlandStandardTime': 'Canada/Newfoundland',
-      'AzoresStandardTime': 'Atlantic/Azores',
-      'CapeVerdeStandardTime': 'Atlantic/Azores',
-      'GMTStandardTime': 'GMT',
-      'GreenwichStandardTime': 'GMT',
-      'W.CentralAfricaStandardTime': 'Europe/Belgrade',
-      'W.EuropeStandardTime': 'Europe/Belgrade',
-      'CentralEuropeStandardTime': 'Europe/Belgrade',
-      'RomanceStandardTime': 'Europe/Belgrade',
-      'CentralEuropeanStandardTime': 'Europe/Belgrade',
-      'E.EuropeStandardTime': 'Egypt',
-      'SouthAfricaStandardTime': 'Egypt',
-      'IsraelStandardTime': 'Egypt',
-      'EgyptStandardTime': 'Egypt',
-      'NorthAsiaEastStandardTime': 'Asia/Bangkok',
-      'SingaporeStandardTime': 'Asia/Bangkok',
-      'ChinaStandardTime': 'Asia/Bangkok',
-      'W.AustraliaStandardTime': 'Australia/Perth',
-      'TaipeiStandardTime': 'Asia/Bangkok',
-      'TokyoStandardTime': 'Asia/Tokyo',
-      'KoreaStandardTime': 'Asia/Seoul',
-      '@tzres.dll,-10': 'Atlantic/Azores',
-      '@tzres.dll,-11': 'Atlantic/Azores',
-      '@tzres.dll,-12': 'Atlantic/Azores',
-      '@tzres.dll,-20': 'Atlantic/Cape_Verde',
-      '@tzres.dll,-21': 'Atlantic/Cape_Verde',
-      '@tzres.dll,-22': 'Atlantic/Cape_Verde',
-      '@tzres.dll,-40': 'Brazil/East',
-      '@tzres.dll,-41': 'Brazil/East',
-      '@tzres.dll,-42': 'Brazil/East',
-      '@tzres.dll,-70': 'Canada/Newfoundland',
-      '@tzres.dll,-71': 'Canada/Newfoundland',
-      '@tzres.dll,-72': 'Canada/Newfoundland',
-      '@tzres.dll,-80': 'Canada/Atlantic',
-      '@tzres.dll,-81': 'Canada/Atlantic',
-      '@tzres.dll,-82': 'Canada/Atlantic',
-      '@tzres.dll,-104': 'America/Cuiaba',
-      '@tzres.dll,-105': 'America/Cuiaba',
-      '@tzres.dll,-110': 'EST5EDT',
-      '@tzres.dll,-111': 'EST5EDT',
-      '@tzres.dll,-112': 'EST5EDT',
-      '@tzres.dll,-120': 'EST5EDT',
-      '@tzres.dll,-121': 'EST5EDT',
-      '@tzres.dll,-122': 'EST5EDT',
-      '@tzres.dll,-130': 'EST5EDT',
-      '@tzres.dll,-131': 'EST5EDT',
-      '@tzres.dll,-132': 'EST5EDT',
-      '@tzres.dll,-140': 'CST6CDT',
-      '@tzres.dll,-141': 'CST6CDT',
-      '@tzres.dll,-142': 'CST6CDT',
-      '@tzres.dll,-150': 'America/Guatemala',
-      '@tzres.dll,-151': 'America/Guatemala',
-      '@tzres.dll,-152': 'America/Guatemala',
-      '@tzres.dll,-160': 'CST6CDT',
-      '@tzres.dll,-161': 'CST6CDT',
-      '@tzres.dll,-162': 'CST6CDT',
-      '@tzres.dll,-170': 'America/Mexico_City',
-      '@tzres.dll,-171': 'America/Mexico_City',
-      '@tzres.dll,-172': 'America/Mexico_City',
-      '@tzres.dll,-180': 'MST7MDT',
-      '@tzres.dll,-181': 'MST7MDT',
-      '@tzres.dll,-182': 'MST7MDT',
-      '@tzres.dll,-190': 'MST7MDT',
-      '@tzres.dll,-191': 'MST7MDT',
-      '@tzres.dll,-192': 'MST7MDT',
-      '@tzres.dll,-200': 'MST7MDT',
-      '@tzres.dll,-201': 'MST7MDT',
-      '@tzres.dll,-202': 'MST7MDT',
-      '@tzres.dll,-210': 'PST8PDT',
-      '@tzres.dll,-211': 'PST8PDT',
-      '@tzres.dll,-212': 'PST8PDT',
-      '@tzres.dll,-220': 'US/Alaska',
-      '@tzres.dll,-221': 'US/Alaska',
-      '@tzres.dll,-222': 'US/Alaska',
-      '@tzres.dll,-230': 'US/Hawaii',
-      '@tzres.dll,-231': 'US/Hawaii',
-      '@tzres.dll,-232': 'US/Hawaii',
-      '@tzres.dll,-260': 'GMT',
-      '@tzres.dll,-261': 'GMT',
-      '@tzres.dll,-262': 'GMT',
-      '@tzres.dll,-271': 'UTC',
-      '@tzres.dll,-272': 'UTC',
-      '@tzres.dll,-280': 'Europe/Budapest',
-      '@tzres.dll,-281': 'Europe/Budapest',
-      '@tzres.dll,-282': 'Europe/Budapest',
-      '@tzres.dll,-290': 'Europe/Warsaw',
-      '@tzres.dll,-291': 'Europe/Warsaw',
-      '@tzres.dll,-292': 'Europe/Warsaw',
-      '@tzres.dll,-331': 'Europe/Nicosia',
-      '@tzres.dll,-332': 'Europe/Nicosia',
-      '@tzres.dll,-340': 'Africa/Cairo',
-      '@tzres.dll,-341': 'Africa/Cairo',
-      '@tzres.dll,-342': 'Africa/Cairo',
-      '@tzres.dll,-350': 'Europe/Sofia',
-      '@tzres.dll,-351': 'Europe/Sofia',
-      '@tzres.dll,-352': 'Europe/Sofia',
-      '@tzres.dll,-365': 'Egypt',
-      '@tzres.dll,-390': 'Asia/Kuwait',
-      '@tzres.dll,-391': 'Asia/Kuwait',
-      '@tzres.dll,-392': 'Asia/Kuwait',
-      '@tzres.dll,-400': 'Asia/Baghdad',
-      '@tzres.dll,-401': 'Asia/Baghdad',
-      '@tzres.dll,-402': 'Asia/Baghdad',
-      '@tzres.dll,-410': 'Africa/Nairobi',
-      '@tzres.dll,-411': 'Africa/Nairobi',
-      '@tzres.dll,-412': 'Africa/Nairobi',
-      '@tzres.dll,-434': 'Asia/Tbilisi',
-      '@tzres.dll,-435': 'Asia/Tbilisi',
-      '@tzres.dll,-440': 'Asia/Muscat',
-      '@tzres.dll,-441': 'Asia/Muscat',
-      '@tzres.dll,-442': 'Asia/Muscat',
-      '@tzres.dll,-447': 'Asia/Baku',
-      '@tzres.dll,-448': 'Asia/Baku',
-      '@tzres.dll,-449': 'Asia/Baku',
-      '@tzres.dll,-450': 'Asia/Yerevan',
-      '@tzres.dll,-451': 'Asia/Yerevan',
-      '@tzres.dll,-452': 'Asia/Yerevan',
-      '@tzres.dll,-460': 'Asia/Kabul',
-      '@tzres.dll,-461': 'Asia/Kabul',
-      '@tzres.dll,-462': 'Asia/Kabul',
-      '@tzres.dll,-471': 'Asia/Yekaterinburg',
-      '@tzres.dll,-472': 'Asia/Yekaterinburg',
-      '@tzres.dll,-480': 'Asia/Karachi',
-      '@tzres.dll,-481': 'Asia/Karachi',
-      '@tzres.dll,-482': 'Asia/Karachi',
-      '@tzres.dll,-490': 'Asia/Kolkata',
-      '@tzres.dll,-491': 'Asia/Kolkata',
-      '@tzres.dll,-492': 'Asia/Kolkata',
-      '@tzres.dll,-500': 'Asia/Kathmandu',
-      '@tzres.dll,-501': 'Asia/Kathmandu',
-      '@tzres.dll,-502': 'Asia/Kathmandu',
-      '@tzres.dll,-510': 'Asia/Dhaka',
-      '@tzres.dll,-511': 'Asia/Aqtau',
-      '@tzres.dll,-512': 'Asia/Aqtau',
-      '@tzres.dll,-570': 'Asia/Chongqing',
-      '@tzres.dll,-571': 'Asia/Chongqing',
-      '@tzres.dll,-572': 'Asia/Chongqing',
-      '@tzres.dll,-650': 'Australia/Darwin',
-      '@tzres.dll,-651': 'Australia/Darwin',
-      '@tzres.dll,-652': 'Australia/Darwin',
-      '@tzres.dll,-660': 'Australia/Adelaide',
-      '@tzres.dll,-661': 'Australia/Adelaide',
-      '@tzres.dll,-662': 'Australia/Adelaide',
-      '@tzres.dll,-670': 'Australia/Sydney',
-      '@tzres.dll,-671': 'Australia/Sydney',
-      '@tzres.dll,-672': 'Australia/Sydney',
-      '@tzres.dll,-680': 'Australia/Brisbane',
-      '@tzres.dll,-681': 'Australia/Brisbane',
-      '@tzres.dll,-682': 'Australia/Brisbane',
-      '@tzres.dll,-721': 'Pacific/Port_Moresby',
-      '@tzres.dll,-722': 'Pacific/Port_Moresby',
-      '@tzres.dll,-731': 'Pacific/Fiji',
-      '@tzres.dll,-732': 'Pacific/Fiji',
-      '@tzres.dll,-840': 'America/Argentina/Buenos_Aires',
-      '@tzres.dll,-841': 'America/Argentina/Buenos_Aires',
-      '@tzres.dll,-842': 'America/Argentina/Buenos_Aires',
-      '@tzres.dll,-880': 'UTC',
-      '@tzres.dll,-930': 'UTC',
-      '@tzres.dll,-931': 'UTC',
-      '@tzres.dll,-932': 'UTC',
-      '@tzres.dll,-1010': 'Asia/Aqtau',
-      '@tzres.dll,-1020': 'Asia/Dhaka',
-      '@tzres.dll,-1021': 'Asia/Dhaka',
-      '@tzres.dll,-1022': 'Asia/Dhaka',
-      '@tzres.dll,-1070': 'Asia/Tbilisi',
-      '@tzres.dll,-1120': 'America/Cuiaba',
-      '@tzres.dll,-1140': 'Pacific/Fiji',
-      '@tzres.dll,-1460': 'Pacific/Port_Moresby',
-      '@tzres.dll,-1530': 'Asia/Yekaterinburg',
-      '@tzres.dll,-1630': 'Europe/Nicosia',
-      '@tzres.dll,-1660': 'America/Bahia',
-      '@tzres.dll,-1661': 'America/Bahia',
-      '@tzres.dll,-1662': 'America/Bahia',
-      'Central Standard Time': 'CST6CDT',
-      'Pacific Standard Time': 'PST8PDT',
+      u'AlaskanStandardTime': u'US/Alaska',
+      u'AtlanticStandardTime': u'Canada/Atlantic',
+      u'AzoresStandardTime': u'Atlantic/Azores',
+      u'CanadaCentralStandardTime': u'CST6CDT',
+      u'CapeVerdeStandardTime': u'Atlantic/Azores',
+      u'CentralAmericaStandardTime': u'CST6CDT',
+      u'CentralDaylightTime': u'CST6CDT',
+      u'CentralEuropeanStandardTime': u'Europe/Belgrade',
+      u'CentralEuropeStandardTime': u'Europe/Belgrade',
+      u'Central Standard Time': u'CST6CDT',
+      u'CentralStandardTime': u'CST6CDT',
+      u'ChinaStandardTime': u'Asia/Bangkok',
+      u'EasternDaylightTime': u'EST5EDT',
+      u'EasternStandardTime': u'EST5EDT',
+      u'E.EuropeStandardTime': u'Egypt',
+      u'EgyptStandardTime': u'Egypt',
+      u'GMTStandardTime': u'GMT',
+      u'GreenwichStandardTime': u'GMT',
+      u'HawaiianStandardTime': u'US/Hawaii',
+      u'IndiaStandardTime': u'Asia/Kolkata',
+      u'IsraelStandardTime': u'Egypt',
+      u'KoreaStandardTime': u'Asia/Seoul',
+      u'MalayPeninsulaStandardTime': u'Asia/Kuching',
+      u'MexicoStandardTime2': u'MST7MDT',
+      u'MexicoStandardTime': u'CST6CDT',
+      u'MountainDaylightTime': u'MST7MDT',
+      u'MountainStandardTime': u'MST7MDT',
+      u'NewfoundlandStandardTime': u'Canada/Newfoundland',
+      u'NorthAsiaEastStandardTime': u'Asia/Bangkok',
+      u'PacificDaylightTime': u'PST8PDT',
+      u'PacificSAStandardTime': u'Canada/Atlantic',
+      u'Pacific Standard Time': u'PST8PDT',
+      u'PacificStandardTime': u'PST8PDT',
+      u'RomanceStandardTime': u'Europe/Belgrade',
+      u'SamoaStandardTime': u'US/Samoa',
+      u'SAPacificStandardTime': u'EST5EDT',
+      u'SAWesternStandardTime': u'Canada/Atlantic',
+      u'SingaporeStandardTime': u'Asia/Bangkok',
+      u'SouthAfricaStandardTime': u'Egypt',
+      u'TaipeiStandardTime': u'Asia/Bangkok',
+      u'TokyoStandardTime': u'Asia/Tokyo',
+      u'@tzres.dll,-1010': u'Asia/Aqtau',
+      u'@tzres.dll,-1020': u'Asia/Dhaka',
+      u'@tzres.dll,-1021': u'Asia/Dhaka',
+      u'@tzres.dll,-1022': u'Asia/Dhaka',
+      u'@tzres.dll,-104': u'America/Cuiaba',
+      u'@tzres.dll,-105': u'America/Cuiaba',
+      u'@tzres.dll,-1070': u'Asia/Tbilisi',
+      u'@tzres.dll,-10': u'Atlantic/Azores',
+      u'@tzres.dll,-110': u'EST5EDT',
+      u'@tzres.dll,-111': u'EST5EDT',
+      u'@tzres.dll,-1120': u'America/Cuiaba',
+      u'@tzres.dll,-112': u'EST5EDT',
+      u'@tzres.dll,-1140': u'Pacific/Fiji',
+      u'@tzres.dll,-11': u'Atlantic/Azores',
+      u'@tzres.dll,-120': u'EST5EDT',
+      u'@tzres.dll,-121': u'EST5EDT',
+      u'@tzres.dll,-122': u'EST5EDT',
+      u'@tzres.dll,-12': u'Atlantic/Azores',
+      u'@tzres.dll,-130': u'EST5EDT',
+      u'@tzres.dll,-131': u'EST5EDT',
+      u'@tzres.dll,-132': u'EST5EDT',
+      u'@tzres.dll,-140': u'CST6CDT',
+      u'@tzres.dll,-141': u'CST6CDT',
+      u'@tzres.dll,-142': u'CST6CDT',
+      u'@tzres.dll,-1460': u'Pacific/Port_Moresby',
+      u'@tzres.dll,-150': u'America/Guatemala',
+      u'@tzres.dll,-151': u'America/Guatemala',
+      u'@tzres.dll,-152': u'America/Guatemala',
+      u'@tzres.dll,-1530': u'Asia/Yekaterinburg',
+      u'@tzres.dll,-160': u'CST6CDT',
+      u'@tzres.dll,-161': u'CST6CDT',
+      u'@tzres.dll,-162': u'CST6CDT',
+      u'@tzres.dll,-1630': u'Europe/Nicosia',
+      u'@tzres.dll,-1660': u'America/Bahia',
+      u'@tzres.dll,-1661': u'America/Bahia',
+      u'@tzres.dll,-1662': u'America/Bahia',
+      u'@tzres.dll,-170': u'America/Mexico_City',
+      u'@tzres.dll,-171': u'America/Mexico_City',
+      u'@tzres.dll,-172': u'America/Mexico_City',
+      u'@tzres.dll,-180': u'MST7MDT',
+      u'@tzres.dll,-181': u'MST7MDT',
+      u'@tzres.dll,-182': u'MST7MDT',
+      u'@tzres.dll,-190': u'MST7MDT',
+      u'@tzres.dll,-191': u'MST7MDT',
+      u'@tzres.dll,-192': u'MST7MDT',
+      u'@tzres.dll,-200': u'MST7MDT',
+      u'@tzres.dll,-201': u'MST7MDT',
+      u'@tzres.dll,-202': u'MST7MDT',
+      u'@tzres.dll,-20': u'Atlantic/Cape_Verde',
+      u'@tzres.dll,-210': u'PST8PDT',
+      u'@tzres.dll,-211': u'PST8PDT',
+      u'@tzres.dll,-212': u'PST8PDT',
+      u'@tzres.dll,-21': u'Atlantic/Cape_Verde',
+      u'@tzres.dll,-220': u'US/Alaska',
+      u'@tzres.dll,-221': u'US/Alaska',
+      u'@tzres.dll,-222': u'US/Alaska',
+      u'@tzres.dll,-22': u'Atlantic/Cape_Verde',
+      u'@tzres.dll,-230': u'US/Hawaii',
+      u'@tzres.dll,-231': u'US/Hawaii',
+      u'@tzres.dll,-232': u'US/Hawaii',
+      u'@tzres.dll,-260': u'GMT',
+      u'@tzres.dll,-261': u'GMT',
+      u'@tzres.dll,-262': u'GMT',
+      u'@tzres.dll,-271': u'UTC',
+      u'@tzres.dll,-272': u'UTC',
+      u'@tzres.dll,-280': u'Europe/Budapest',
+      u'@tzres.dll,-281': u'Europe/Budapest',
+      u'@tzres.dll,-282': u'Europe/Budapest',
+      u'@tzres.dll,-290': u'Europe/Warsaw',
+      u'@tzres.dll,-291': u'Europe/Warsaw',
+      u'@tzres.dll,-292': u'Europe/Warsaw',
+      u'@tzres.dll,-331': u'Europe/Nicosia',
+      u'@tzres.dll,-332': u'Europe/Nicosia',
+      u'@tzres.dll,-340': u'Africa/Cairo',
+      u'@tzres.dll,-341': u'Africa/Cairo',
+      u'@tzres.dll,-342': u'Africa/Cairo',
+      u'@tzres.dll,-350': u'Europe/Sofia',
+      u'@tzres.dll,-351': u'Europe/Sofia',
+      u'@tzres.dll,-352': u'Europe/Sofia',
+      u'@tzres.dll,-365': u'Egypt',
+      u'@tzres.dll,-390': u'Asia/Kuwait',
+      u'@tzres.dll,-391': u'Asia/Kuwait',
+      u'@tzres.dll,-392': u'Asia/Kuwait',
+      u'@tzres.dll,-400': u'Asia/Baghdad',
+      u'@tzres.dll,-401': u'Asia/Baghdad',
+      u'@tzres.dll,-402': u'Asia/Baghdad',
+      u'@tzres.dll,-40': u'Brazil/East',
+      u'@tzres.dll,-410': u'Africa/Nairobi',
+      u'@tzres.dll,-411': u'Africa/Nairobi',
+      u'@tzres.dll,-412': u'Africa/Nairobi',
+      u'@tzres.dll,-41': u'Brazil/East',
+      u'@tzres.dll,-42': u'Brazil/East',
+      u'@tzres.dll,-434': u'Asia/Tbilisi',
+      u'@tzres.dll,-435': u'Asia/Tbilisi',
+      u'@tzres.dll,-440': u'Asia/Muscat',
+      u'@tzres.dll,-441': u'Asia/Muscat',
+      u'@tzres.dll,-442': u'Asia/Muscat',
+      u'@tzres.dll,-447': u'Asia/Baku',
+      u'@tzres.dll,-448': u'Asia/Baku',
+      u'@tzres.dll,-449': u'Asia/Baku',
+      u'@tzres.dll,-450': u'Asia/Yerevan',
+      u'@tzres.dll,-451': u'Asia/Yerevan',
+      u'@tzres.dll,-452': u'Asia/Yerevan',
+      u'@tzres.dll,-460': u'Asia/Kabul',
+      u'@tzres.dll,-461': u'Asia/Kabul',
+      u'@tzres.dll,-462': u'Asia/Kabul',
+      u'@tzres.dll,-471': u'Asia/Yekaterinburg',
+      u'@tzres.dll,-472': u'Asia/Yekaterinburg',
+      u'@tzres.dll,-480': u'Asia/Karachi',
+      u'@tzres.dll,-481': u'Asia/Karachi',
+      u'@tzres.dll,-482': u'Asia/Karachi',
+      u'@tzres.dll,-490': u'Asia/Kolkata',
+      u'@tzres.dll,-491': u'Asia/Kolkata',
+      u'@tzres.dll,-492': u'Asia/Kolkata',
+      u'@tzres.dll,-500': u'Asia/Kathmandu',
+      u'@tzres.dll,-501': u'Asia/Kathmandu',
+      u'@tzres.dll,-502': u'Asia/Kathmandu',
+      u'@tzres.dll,-510': u'Asia/Dhaka',
+      u'@tzres.dll,-511': u'Asia/Aqtau',
+      u'@tzres.dll,-512': u'Asia/Aqtau',
+      u'@tzres.dll,-570': u'Asia/Chongqing',
+      u'@tzres.dll,-571': u'Asia/Chongqing',
+      u'@tzres.dll,-572': u'Asia/Chongqing',
+      u'@tzres.dll,-650': u'Australia/Darwin',
+      u'@tzres.dll,-651': u'Australia/Darwin',
+      u'@tzres.dll,-652': u'Australia/Darwin',
+      u'@tzres.dll,-660': u'Australia/Adelaide',
+      u'@tzres.dll,-661': u'Australia/Adelaide',
+      u'@tzres.dll,-662': u'Australia/Adelaide',
+      u'@tzres.dll,-670': u'Australia/Sydney',
+      u'@tzres.dll,-671': u'Australia/Sydney',
+      u'@tzres.dll,-672': u'Australia/Sydney',
+      u'@tzres.dll,-680': u'Australia/Brisbane',
+      u'@tzres.dll,-681': u'Australia/Brisbane',
+      u'@tzres.dll,-682': u'Australia/Brisbane',
+      u'@tzres.dll,-70': u'Canada/Newfoundland',
+      u'@tzres.dll,-71': u'Canada/Newfoundland',
+      u'@tzres.dll,-721': u'Pacific/Port_Moresby',
+      u'@tzres.dll,-722': u'Pacific/Port_Moresby',
+      u'@tzres.dll,-72': u'Canada/Newfoundland',
+      u'@tzres.dll,-731': u'Pacific/Fiji',
+      u'@tzres.dll,-732': u'Pacific/Fiji',
+      u'@tzres.dll,-80': u'Canada/Atlantic',
+      u'@tzres.dll,-81': u'Canada/Atlantic',
+      u'@tzres.dll,-82': u'Canada/Atlantic',
+      u'@tzres.dll,-840': u'America/Argentina/Buenos_Aires',
+      u'@tzres.dll,-841': u'America/Argentina/Buenos_Aires',
+      u'@tzres.dll,-842': u'America/Argentina/Buenos_Aires',
+      u'@tzres.dll,-880': u'UTC',
+      u'@tzres.dll,-930': u'UTC',
+      u'@tzres.dll,-931': u'UTC',
+      u'@tzres.dll,-932': u'UTC',
+      u'USEasternStandardTime': u'EST5EDT',
+      u'USMountainStandardTime': u'MST7MDT',
+      u'W.AustraliaStandardTime': u'Australia/Perth',
+      u'W.CentralAfricaStandardTime': u'Europe/Belgrade',
+      u'W.EuropeStandardTime': u'Europe/Belgrade',
   }
 
   def ParseKey(self, key):
     """Extract timezone information from the registry."""
-    value = key.GetValue('StandardName')
-    if value and type(value.data) == unicode:
+    value = key.GetValue(u'StandardName')
+    if value and isinstance(value.data, unicode):
       # Do a mapping to a value defined as in the Olson database.
-      return self.ZONE_LIST.get(value.data.replace(' ', ''), value.data)
+      return self.ZONE_LIST.get(value.data.replace(u' ', u''), value.data)
 
 
 class WindowsUsers(WindowsRegistryPreprocessPlugin):
   """Fetch information about user profiles."""
 
-  ATTRIBUTE = 'users'
+  ATTRIBUTE = u'users'
 
-  REG_FILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList'
+  REG_FILE = u'SOFTWARE'
+  REG_KEY = u'\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList'
 
   def ParseKey(self, key):
     """Extract current control set information."""
@@ -502,11 +500,11 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
     for sid in key.GetSubkeys():
       # TODO: as part of artifacts, create a proper object for this.
       user = {}
-      user['sid'] = sid.name
-      value = sid.GetValue('ProfileImagePath')
+      user[u'sid'] = sid.name
+      value = sid.GetValue(u'ProfileImagePath')
       if value:
-        user['path'] = value.data
-        user['name'] = utils.WinRegBasename(user['path'])
+        user[u'path'] = value.data
+        user[u'name'] = utils.WinRegBasename(user[u'path'])
 
       users.append(user)
 
@@ -516,23 +514,23 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
 class WindowsVersion(WindowsRegistryPreprocessPlugin):
   """Fetch information about the current Windows version."""
 
-  ATTRIBUTE = 'osversion'
+  ATTRIBUTE = u'osversion'
 
-  REGFILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
+  REGFILE = u'SOFTWARE'
+  REG_KEY = u'\\Microsoft\\Windows NT\\CurrentVersion'
 
   def ParseKey(self, key):
     """Extract the version information from the key."""
-    value = key.GetValue('ProductName')
+    value = key.GetValue(u'ProductName')
     if value:
       return u'{0:s}'.format(value.data)
 
 
 class WindowsWinDirPath(interface.PathPreprocessPlugin):
   """Get the system path."""
-  SUPPORTED_OS = ['Windows']
-  ATTRIBUTE = 'windir'
-  PATH = '/(Windows|WinNT|WINNT35|WTSRV)'
+  SUPPORTED_OS = [u'Windows']
+  ATTRIBUTE = u'windir'
+  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([

@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Mac OS X preprocess plug-ins."""
 
-import os
 import unittest
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.artifacts import knowledge_base
+from plaso.engine import knowledge_base
 from plaso.preprocessors import macosx
 from plaso.preprocessors import test_lib
 
@@ -112,11 +111,7 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    file_object = open(os.path.join(
-        self._TEST_DATA_PATH, u'com.apple.HIToolbox.plist'))
-    file_data = file_object.read()
-    file_object.close()
-
+    file_data = self._ReadTestFile([u'com.apple.HIToolbox.plist'])
     self._fake_file_system = self._BuildSingleFileFakeFileSystem(
         u'/Library/Preferences/com.apple.HIToolbox.plist',
         file_data)
@@ -164,11 +159,7 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    file_object = open(os.path.join(
-        self._TEST_DATA_PATH, u'com.apple.HIToolbox.plist'))
-    file_data = file_object.read()
-    file_object.close()
-
+    file_data = self._ReadTestFile([u'com.apple.HIToolbox.plist'])
     self._fake_file_system = self._BuildSingleFileFakeFileSystem(
         u'/private/var/db/dslocal/nodes/Default/users/nobody.plist',
         file_data)

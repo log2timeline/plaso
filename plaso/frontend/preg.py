@@ -11,7 +11,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 import pysmdev
 
-from plaso.artifacts import knowledge_base
+from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
 
