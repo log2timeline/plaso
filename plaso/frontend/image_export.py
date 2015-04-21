@@ -647,7 +647,7 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     # TODO: add support to handle multiple partitions.
     self._source_path_spec = self.GetSourcePathSpec()
 
-    searcher = self._GetSourceFileSystemSearcher(
+    file_system, searcher = self._GetSourceFileSystemSearcher(
         resolver_context=self._resolver_context)
 
     if self._knowledge_base is None:
@@ -664,6 +664,8 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
 
     for path_spec in searcher.Find(find_specs=find_specs):
       self._ExtractFile(file_saver, path_spec, destination_path)
+
+    file_system.Close()
 
     if self.process_vss and self.vss_stores:
       volume_path_spec = self._source_path_spec.parent
@@ -712,7 +714,8 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
                         must have its own resolver context.
 
     Returns:
-      The file system searcher object (instance of dfvfs.FileSystemSearcher).
+      A tuple of the file system (instance of dfvfs.FileSystem) and
+      the file system searcher object (instance of dfvfs.FileSystemSearcher).
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -729,8 +732,8 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     else:
       mount_point = self._source_path_spec.parent
 
-    # TODO: add explicit close of file_system.
-    return file_system_searcher.FileSystemSearcher(file_system, mount_point)
+    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
+    return file_system, searcher
 
   def _Preprocess(self, searcher):
     """Preprocesses the image.

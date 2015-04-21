@@ -524,14 +524,12 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       self._CleanUpAfterAbort()
       raise errors.UserAbort(u'Process source aborted.')
 
-    finally:
-      self._resolver_context.Empty()
-
   def GetSourceFileSystemSearcher(self):
     """Retrieves the file system searcher of the source.
 
     Returns:
-      The file system searcher object (instance of dfvfs.FileSystemSearcher).
+      A tuple of the file system (instance of dfvfs.FileSystem) and
+      the file system searcher object (instance of dfvfs.FileSystemSearcher)
     """
     return self._engine.GetSourceFileSystemSearcher(
         resolver_context=self._resolver_context)

@@ -92,11 +92,13 @@ class SingleProcessEngineTest(unittest.TestCase):
     self.assertFalse(test_engine.SourceIsFile())
     self.assertTrue(test_engine.SourceIsStorageMediaImage())
 
-    test_searcher = test_engine.GetSourceFileSystemSearcher(
+    test_file_system, test_searcher = test_engine.GetSourceFileSystemSearcher(
         resolver_context=resolver_context)
     self.assertNotEqual(test_searcher, None)
     self.assertIsInstance(
         test_searcher, file_system_searcher.FileSystemSearcher)
+
+    test_file_system.Close()
 
     test_engine.PreprocessSource('Windows')
 
