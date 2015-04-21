@@ -276,10 +276,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
 
-    # TODO: move profiler in separate object.
     extraction_worker.SetEnableProfiling(
         self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate)
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
 
     if self._process_archive_files:
       extraction_worker.SetProcessArchiveFiles(self._process_archive_files)
@@ -709,11 +709,13 @@ class MultiProcessingQueue(queue.Queue):
 
     # maxsize contains the maximum number of items allowed to be queued,
     # where 0 represents unlimited.
+
     # We need to check that we aren't asking for a bigger queue than the
     # platform supports, which requires access to this protected member.
     # pylint: disable=protected-access
     queue_max_length = multiprocessing._multiprocessing.SemLock.SEM_VALUE_MAX
     # pylint: enable=protected-access
+
     if maximum_number_of_queued_items > queue_max_length:
       logging.warn(
           u'Maximum queue size requested ({0:d}) is larger than system '
@@ -721,8 +723,8 @@ class MultiProcessingQueue(queue.Queue):
           u'size, '
           u'({1:d})'.format(maximum_number_of_queued_items, queue_max_length))
       maximum_number_of_queued_items = queue_max_length
-    self._queue = multiprocessing.Queue(
-        maxsize=maximum_number_of_queued_items)
+
+    self._queue = multiprocessing.Queue(maxsize=maximum_number_of_queued_items)
 
   def __len__(self):
     """Returns the estimated current number of items in the queue."""
