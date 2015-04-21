@@ -14,8 +14,8 @@ from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import context as analysis_context
 from plaso.analysis import interface as analysis_interface
-from plaso.artifacts import knowledge_base
 from plaso.cli import tools as cli_tools
+from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend

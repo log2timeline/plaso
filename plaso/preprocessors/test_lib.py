@@ -73,3 +73,37 @@ class PreprocessPluginTest(unittest.TestCase):
         link_data=linked_path)
 
     return file_system
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+
+  def _ReadTestFile(self, path_segments):
+    """Reads the data from a test file.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      Binary string containing the data of the test file or None.
+    """
+    path = self._GetTestFilePath(path_segments)
+
+    file_object = open(path)
+    try:
+      file_data = file_object.read()
+    except IOError:
+      return None
+    finally:
+      file_object.close()
+
+    return file_data

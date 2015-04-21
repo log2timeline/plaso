@@ -8,8 +8,8 @@ from dfvfs.helpers import file_system_searcher
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.artifacts import knowledge_base
 from plaso.engine import collector
+from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.lib import errors
 from plaso.preprocessors import interface as preprocess_interface

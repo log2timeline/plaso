@@ -8,7 +8,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
-from plaso.artifacts import knowledge_base
+from plaso.engine import knowledge_base
 from plaso.engine import single_process
 from plaso.engine import test_lib
 from plaso.engine import worker
