@@ -112,7 +112,8 @@ class BaseEngine(object):
                         must have its own resolver context.
 
     Returns:
-      The file system searcher object (instance of dfvfs.FileSystemSearcher).
+      A tuple of the file system (instance of dfvfs.FileSystem) and
+      the file system searcher object (instance of dfvfs.FileSystemSearcher).
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -129,8 +130,8 @@ class BaseEngine(object):
     else:
       mount_point = self._source_path_spec.parent
 
-    # TODO: add explicit close of file_system.
-    return file_system_searcher.FileSystemSearcher(file_system, mount_point)
+    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
+    return file_system, searcher
 
   def PreprocessSource(self, platform, resolver_context=None):
     """Preprocesses the source and fills the preprocessing object.
@@ -141,7 +142,7 @@ class BaseEngine(object):
                         The default is None. Note that every thread or process
                         must have its own resolver context.
     """
-    searcher = self.GetSourceFileSystemSearcher(
+    file_system, searcher = self.GetSourceFileSystemSearcher(
         resolver_context=resolver_context)
     if not platform:
       platform = preprocess_interface.GuessOS(searcher)
@@ -149,6 +150,8 @@ class BaseEngine(object):
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
         platform, searcher, self.knowledge_base)
+
+    file_system.Close()
 
   def SetEnableDebugOutput(self, enable_debug_output):
     """Enables or disables debug output.
@@ -220,7 +223,7 @@ class BaseEngine(object):
       path_spec = path_spec.parent
 
     # Note that source should be used for output purposes only.
-    self._source = getattr(path_spec, 'location', u'')
+    self._source = getattr(path_spec, u'location', u'')
     self._source_path_spec = source_path_spec
 
     self._source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
