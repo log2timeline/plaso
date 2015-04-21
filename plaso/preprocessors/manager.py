@@ -24,8 +24,8 @@ class PreprocessPluginsManager(object):
       A preprocess plugin objects that matches the platform and weight.
     """
     for plugin_class in cls._plugin_classes.itervalues():
-      plugin_supported_os = getattr(plugin_class, 'SUPPORTED_OS', [])
-      plugin_weight = getattr(plugin_class, 'WEIGHT', 0)
+      plugin_supported_os = getattr(plugin_class, u'SUPPORTED_OS', [])
+      plugin_weight = getattr(plugin_class, u'WEIGHT', 0)
       if platform in plugin_supported_os and weight == plugin_weight:
         yield plugin_class()
 
@@ -42,8 +42,8 @@ class PreprocessPluginsManager(object):
     """
     weights = {}
     for plugin_class in cls._plugin_classes.itervalues():
-      plugin_supported_os = getattr(plugin_class, 'SUPPORTED_OS', [])
-      plugin_weight = getattr(plugin_class, 'WEIGHT', 0)
+      plugin_supported_os = getattr(plugin_class, u'SUPPORTED_OS', [])
+      plugin_weight = getattr(plugin_class, u'WEIGHT', 0)
       if platform in plugin_supported_os:
         weights[plugin_weight] = 1
 
@@ -109,6 +109,8 @@ class PreprocessPluginsManager(object):
                       which contains information from the source data needed
                       for parsing.
     """
+    # TODO: bootstrap the artifact preprocessor.
+
     for weight in cls._GetWeights(platform):
       for plugin_object in cls._GetPluginsByWeight(platform, weight):
         try:

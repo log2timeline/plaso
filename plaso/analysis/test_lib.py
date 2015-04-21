@@ -9,7 +9,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analysis import context
-from plaso.artifacts import knowledge_base
+from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.lib import event

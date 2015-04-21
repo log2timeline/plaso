@@ -157,9 +157,9 @@ def GuessOS(searcher):
   """Returns a string representing what we think the underlying OS is.
 
   The available return strings are:
-    + Windows
-    + MacOSX
-    + Linux
+  * Linux
+  * MacOSX
+  * Windows
 
   Args:
     searcher: The file system searcher object (instance of

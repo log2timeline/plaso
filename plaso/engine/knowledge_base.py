@@ -84,6 +84,8 @@ class KnowledgeBase(object):
   def GetValue(self, identifier, default_value=None):
     """Retrieves a value by identifier.
 
+    If the identifier is a string it is case insensitive.
+
     Args:
       identifier: the value identifier.
       default_value: optional default value. The default is None.
@@ -91,6 +93,8 @@ class KnowledgeBase(object):
     Returns:
       The value or None if not available.
     """
+    if isinstance(identifier, basestring):
+      identifier = identifier.lower()
     return getattr(self._pre_obj, identifier, default_value)
 
   def SetDefaultCodepage(self, codepage):
@@ -114,8 +118,12 @@ class KnowledgeBase(object):
   def SetValue(self, identifier, value):
     """Sets a value by identifier.
 
+    If the identifier is a string it is case insensitive.
+
     Args:
       identifier: the value identifier.
       value: the value.
     """
+    if isinstance(identifier, basestring):
+      identifier = identifier.lower()
     setattr(self._pre_obj, identifier, value)

@@ -7,7 +7,7 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.artifacts import knowledge_base
+from plaso.engine import knowledge_base
 from plaso.preprocessors import linux
 from plaso.preprocessors import test_lib
 
