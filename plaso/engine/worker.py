@@ -9,14 +9,10 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-try:
-  from guppy import hpy
-except ImportError:
-  hpy = None
-
 import pysigscan
 
 from plaso.engine import collector
+from plaso.engine import profiler
 from plaso.engine import queue
 from plaso.lib import errors
 from plaso.hashers import manager as hashers_manager
@@ -78,10 +74,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     # Attributes for profiling.
     self._enable_profiling = False
-    self._heapy = None
+    self._profiler = None
     self._profiling_sample = 0
     self._profiling_sample_rate = 1000
-    self._profiling_sample_file = u'{0!s}.hpy'.format(self._identifier)
 
   def _ConsumeItem(self, path_spec):
     """Consumes an item callback for ConsumeItems.
@@ -315,30 +310,20 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   def _ProfilingStart(self):
     """Starts the profiling."""
-    self._heapy.setrelheap()
     self._profiling_sample = 0
-
-    try:
-      os.remove(self._profiling_sample_file)
-    except OSError:
-      pass
+    self._profiler.Start()
 
   def _ProfilingStop(self):
     """Stops the profiling."""
-    self._ProfilingWriteSample()
+    self._profiler.Sample(None)
 
   def _ProfilingUpdate(self):
     """Updates the profiling."""
     self._profiling_sample += 1
 
     if self._profiling_sample >= self._profiling_sample_rate:
-      self._ProfilingWriteSample()
+      self._profiler.Sample(None)
       self._profiling_sample = 0
-
-  def _ProfilingWriteSample(self):
-    """Writes a profiling sample to the sample file."""
-    heap = self._heapy.heap()
-    heap.dump(self._profiling_sample_file)
 
   def GetStatus(self):
     """Returns a status dictionary."""
@@ -539,18 +524,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """Enables or disables profiling.
 
     Args:
-      enable_debug_output: boolean value to indicate if the profiling
-                           should be enabled.
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
     """
-    if hpy:
-      self._enable_profiling = enable_profiling
-      self._profiling_sample_rate = profiling_sample_rate
+    self._enable_profiling = enable_profiling
+    self._profiling_sample_rate = profiling_sample_rate
 
-    if self._enable_profiling and not self._heapy:
-      self._heapy = hpy()
+    if self._enable_profiling and not self._profiler:
+      self._profiler = profiler.GuppyMemoryProfiler(self._identifier)
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.
@@ -594,4 +578,4 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   @classmethod
   def SupportsProfiling(cls):
     """Returns a boolean value to indicate if profiling is supported."""
-    return hpy is not None
+    return profiler.GuppyMemoryProfiler.IsSupported()
