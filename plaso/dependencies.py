@@ -43,6 +43,7 @@ PYTHON_DEPENDENCIES = [
     (u'hachoir_parser', u'__version__', u'1.3.4', None),
     (u'hachoir_metadata', u'__version__', u'1.3.3', None),
     (u'IPython', u'__version__', u'1.2.1', None),
+    (u'pefile', u'__version__', u'1.2.10-139', None),
     (u'psutil', u'__version__', u'1.2.1', None),
     (u'pyparsing', u'__version__', u'2.0.3', None),
     # TODO: determine the version of pytz.
@@ -253,8 +254,9 @@ def CheckPythonModule(
 
     # Split the version string and convert every digit into an integer.
     # A string compare of both version strings will yield an incorrect result.
-    module_version_map = map(int, module_version.split(u'.'))
-    minimum_version_map = map(int, minimum_version.split(u'.'))
+    split_regex = re.compile(r'\.|\-')
+    module_version_map = map(int, split_regex.split(module_version))
+    minimum_version_map = map(int, split_regex.split(minimum_version))
 
     if module_version_map < minimum_version_map:
       print (
@@ -263,7 +265,7 @@ def CheckPythonModule(
       return False
 
     if maximum_version:
-      maximum_version_map = map(int, maximum_version.split('.'))
+      maximum_version_map = map(int, split_regex.split(maximum_version))
       if module_version_map > maximum_version_map:
         print (
             u'[FAILURE]\t{0:s} version: {1:s} is too recent, {2:s} or earlier '
@@ -327,7 +329,7 @@ def CheckPytsk(module_name, minimum_version_libtsk, minimum_version_pytsk):
 
 
 def CheckDependencies(latest_version_check=False):
-  """Checks the availability of the depencies.
+  """Checks the availability of the dependencies.
 
   Args:
     latest_version_check: Optional boolean value to indicate if the project
