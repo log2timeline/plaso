@@ -41,7 +41,6 @@ def GetScripts():
       u'log2timeline.py',
       u'pinfo.py',
       u'plasm.py',
-      u'pprof.py',
       u'preg.py',
       u'pshell.py',
       u'psort.py'])
