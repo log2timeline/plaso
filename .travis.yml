@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 before_install:
-  - if test `uname -s` = 'Linux'; then sudo add-apt-repository ppa:gift/dev -y && sudo apt-get update -q && sudo apt-get install binplist ipython libbde-python libesedb-python libevt-python libevtx-python libewf-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libsigscan-python libsmdev-python libsmraw-python libtsk libvhdi-python libvmdk-python libvshadow-python python-bencode python-construct python-coverage python-coveralls python-dateutil python-dfvfs python-docopt python-dpkt python-hachoir-core python-hachoir-metadata python-hachoir-parser python-mock python-protobuf python-psutil python-pyparsing python-requests python-six python-yaml python-tz pytsk3; fi
+  - if test `uname -s` = 'Linux'; then sudo add-apt-repository ppa:gift/dev -y && sudo apt-get update -q && sudo apt-get install binplist ipython libbde-python libesedb-python libevt-python libevtx-python libewf-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libsigscan-python libsmdev-python libsmraw-python libtsk libvhdi-python libvmdk-python libvshadow-python python-artifacts python-bencode python-construct python-coverage python-coveralls python-dateutil python-dfvfs python-docopt python-dpkt python-hachoir-core python-hachoir-metadata python-hachoir-parser python-mock python-protobuf python-psutil python-pyparsing python-requests python-six python-yaml python-tz pytsk3; fi
   - sudo pip install ipython --upgrade
 script:
   - ./run_tests.py
