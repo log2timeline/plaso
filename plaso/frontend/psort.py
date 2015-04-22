@@ -7,13 +7,13 @@ import multiprocessing
 import logging
 import sys
 
-from plaso import analysis
 from plaso import filters
 from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
-from plaso.analysis import mediator as analysis_mediator
 from plaso.analysis import interface as analysis_interface
+from plaso.analysis import manager as analysis_manager
+from plaso.analysis import mediator as analysis_mediator
 from plaso.cli import tools as cli_tools
 from plaso.engine import knowledge_base
 from plaso.engine import queue
@@ -98,8 +98,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         name.strip().lower() for name in plugin_names.split(u',')])
 
     # Get a list of all available plugins.
-    analysis_plugins = set([
-        name.lower() for name, _, _ in analysis.ListAllPluginNames()])
+    analysis_plugins = (
+        analysis_manager.AnalysisPluginManager.ListAllPluginNames())
+    analysis_plugins = set([name.lower() for name, _, _ in analysis_plugins])
 
     # Get a list of the selected plugins (ignoring selections that did not
     # have an actual plugin behind it).
@@ -112,7 +113,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           u'Non-existing analysis plugins specified: {0:s}'.format(
               u' '.join(difference)))
 
-    plugins = analysis.LoadPlugins(plugins_to_load, None)
+    plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
+        plugins_to_load, None)
     for plugin in plugins:
       if plugin.ARGUMENTS:
         for parameter, config in plugin.ARGUMENTS:
@@ -145,11 +147,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Lists the analysis modules."""
     self.PrintHeader(u'Analysis Modules')
     format_length = 10
-    for name, _, _ in analysis.ListAllPluginNames():
+    analysis_plugins = (
+        analysis_manager.AnalysisPluginManager.ListAllPluginNames())
+
+    for name, _, _ in analysis_plugins:
       if len(name) > format_length:
         format_length = len(name)
 
-    for name, description, plugin_type in analysis.ListAllPluginNames():
+    for name, description, plugin_type in analysis_plugins:
       if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
         type_string = u'Annotation/tagging plugin'
       elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
@@ -378,8 +383,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
         knowledge_base_object = knowledge_base.KnowledgeBase()
 
-        analysis_plugins = analysis.LoadPlugins(
-            analysis_plugins_list, event_queues, options)
+        analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
+            analysis_plugins_list, event_queues, options=options)
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:
