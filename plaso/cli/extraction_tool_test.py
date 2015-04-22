@@ -8,7 +8,6 @@ import unittest
 from plaso.cli import extraction_tool
 from plaso.cli import test_lib
 from plaso.lib import errors
-from plaso.frontend import frontend
 
 
 class ExtractionToolTest(test_lib.CLIToolTestCase):
@@ -100,6 +99,17 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        expression.',
       u''])
 
+  _EXPECTED_INFORMATIONAL_OPTIONS = u'\n'.join([
+      u'usage: extraction_tool_test.py [-h] [-d]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  -h, --help   show this help message and exit',
+      (u'  -d, --debug  Enable debug mode. Intended for troubleshooting '
+       u'parsing issues.'),
+      u''])
+
   _EXPECTED_PERFOMANCE_OPTIONS = u'\n'.join([
       u'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
       u'                               [--queue_size QUEUE_SIZE]',
@@ -178,6 +188,18 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_OUTPUT_FILTER_OPTIONS)
 
+  def testAddInformationalOptions(self):
+    """Tests the AddInformationalOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog=u'extraction_tool_test.py',
+        description=u'Test argument parser.')
+
+    test_tool = extraction_tool.ExtractionTool()
+    test_tool.AddInformationalOptions(argument_parser)
+
+    output = argument_parser.format_help()
+    self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
+
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -221,14 +243,17 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     """Tests the ParseOptions function."""
     test_tool = extraction_tool.ExtractionTool()
 
-    options = frontend.Options()
+    options = test_lib.TestOptions()
 
+    # ParseOptions will raise if source is not set.
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     test_tool.ParseOptions(options)
+
+    # TODO: improve this test.
 
 
 if __name__ == '__main__':

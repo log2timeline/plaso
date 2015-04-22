@@ -34,6 +34,10 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     return output_data
 
 
+class TestOptions(object):
+  """Class to define test options."""
+
+
 class CLIToolTestCase(unittest.TestCase):
   """The unit test case for a CLI tool."""
 
