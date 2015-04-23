@@ -5,8 +5,8 @@ import re
 import urllib2
 
 
-# The tuple values are:
-# module_name, minimum_version
+# The dictionary values are:
+# module_name: minimum_version
 LIBYAL_DEPENDENCIES = {
     u'pybde': 20140531,
     u'pyesedb': 20140301,
