@@ -56,7 +56,7 @@ PYTHON_DEPENDENCIES = [
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_TEST_DEPENDENCIES = [
-    (u'mock', u'__version__', u'1.0.1', None)]
+    (u'mock', u'__version__', u'0.7.1', None)]
 
 
 def DownloadPageContent(download_url):
