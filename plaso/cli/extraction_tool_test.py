@@ -142,7 +142,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        The profiling sample rate (defaults to a '
        u'sample every'),
       u'                        1000 files).',
-      u'  --profiling_type TYPE',
+      u'  --profiling_type TYPE, --profiling-type TYPE',
       (u'                        The profiling type: "all", "memory", '
        u'"parsers" or'),
       u'                        "serializers".',
