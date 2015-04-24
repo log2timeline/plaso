@@ -12,7 +12,7 @@ import plaso.dependencies
 
 
 if __name__ == '__main__':
-  if not plaso.dependencies.CheckDependencies():
+  if not plaso.dependencies.CheckTestDependencies():
     sys.exit(1)
 
   test_suite = unittest.TestLoader().discover('.', pattern='*_test.py')
