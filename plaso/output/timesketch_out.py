@@ -2,9 +2,7 @@
 """An output module that saves events to Timesketch."""
 
 from collections import Counter
-from datetime import datetime
 import logging
-import sys
 import uuid
 
 from elasticsearch import exceptions as elastic_exceptions
@@ -89,7 +87,6 @@ class TimesketchOutputModule(interface.OutputModule):
     self._index_name = self._output_mediator.GetConfigurationValue(u'index')
     self._timeline_name = self._output_mediator.GetConfigurationValue(u'name')
     self._timeline_owner = self._output_mediator.GetConfigurationValue(u'owner')
-    self._timing_start = datetime.now()
 
     hostname = self._output_mediator.GetStoredHostname()
     if hostname:
@@ -186,11 +183,6 @@ class TimesketchOutputModule(interface.OutputModule):
     db_session.add(search_index)
     db_session.commit()
 
-    # Clean up stdout.
-    # TODO: an output module should not call sys.stdout directly.
-    sys.stdout.write(u'\n')
-    sys.stdout.flush()
-
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -209,19 +201,6 @@ class TimesketchOutputModule(interface.OutputModule):
     # Elasticsearch for indexing.
     if self._counter[u'events'] % self._flush_interval == 0:
       self._FlushEventsToElasticsearch()
-      # Show indexing progress.
-      timing_delta = datetime.now() - self._timing_start
-      events_per_second = 0
-      if timing_delta.seconds > 0:
-        events_per_second, _ = divmod(
-            self._counter[u'events'], timing_delta.seconds)
-
-      # TODO: an output module should not call sys.stdout directly.
-      sys.stdout.write((
-          u'[INFO] Insert data: {0:d} events inserted '
-          u'(~{1:d} events/s)\r').format(
-              self._counter[u'events'], events_per_second))
-      sys.stdout.flush()
 
   def WriteHeader(self):
     """Creates the Elasticsearch index with Timesketch specific settings."""

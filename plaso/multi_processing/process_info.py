@@ -95,6 +95,7 @@ class ProcessInfo(object):
     except psutil.NoSuchProcess:
       return
 
+  # TODO: Do we need this? get_io_counters() is not available on OSX at all.
   @property
   def io_counters(self):
     """Return back IO Counters for the process."""
