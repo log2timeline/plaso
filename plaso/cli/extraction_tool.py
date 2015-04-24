@@ -308,7 +308,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       profiling_types.append(u'memory')
 
     argument_group.add_argument(
-        u'--profiling_type', dest=u'profiling_type',
+        u'--profiling_type', u'--profiling-type', dest=u'profiling_type',
         choices=sorted(profiling_types), action=u'store',
         metavar=u'TYPE', default=None, help=(
             u'The profiling type: "all", "memory", "parsers" or '
