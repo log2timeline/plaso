@@ -417,6 +417,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
 
+      storage_writer.SetEnableProfiling(
+          self._enable_profiling,
+          profiling_type=self._profiling_type)
+
     try:
       self._engine.ProcessSource(
           self._collector, storage_writer,
@@ -513,6 +517,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
+
+      storage_writer.SetEnableProfiling(
+          self._enable_profiling,
+          profiling_type=self._profiling_type)
 
     try:
       self._engine.ProcessSource(

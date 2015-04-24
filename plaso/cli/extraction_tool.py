@@ -303,7 +303,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'The profiling sample rate (defaults to a sample every {0:d} '
             u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
 
-    profiling_types = [u'all', u'parsers']
+    profiling_types = [u'all', u'parsers', u'serializers']
     if engine.BaseEngine.SupportsMemoryProfiling():
       profiling_types.append(u'memory')
 
@@ -311,7 +311,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         u'--profiling_type', dest=u'profiling_type',
         choices=sorted(profiling_types), action=u'store',
         metavar=u'TYPE', default=None, help=(
-            u'The profiling type: \'all\', \'memory\' or \'parsers\'.'))
+            u'The profiling type: "all", "memory", "parsers" or '
+            u'"serializers".'))
 
   def AddStorageOptions(self, argument_group):
     """Adds the storage options to the argument group.
