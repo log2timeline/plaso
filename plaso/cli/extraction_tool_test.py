@@ -143,8 +143,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'sample every'),
       u'                        1000 files).',
       u'  --profiling_type TYPE',
-      (u'                        The profiling type: \'all\', \'memory\' or '
-       u'\'parsers\'.'),
+      (u'                        The profiling type: "all", "memory", '
+       u'"parsers" or'),
+      u'                        "serializers".',
       u''])
 
   _EXPECTED_STORAGE_OPTIONS = u'\n'.join([

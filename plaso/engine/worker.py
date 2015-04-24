@@ -197,7 +197,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     finally:
       if self._parsers_profiler:
-        self._parsers_profiler.StopTiming()
+        self._parsers_profiler.StopTiming(parser_object.NAME)
 
       self._parser_mediator.ResetFileEntry()
 
@@ -397,18 +397,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         file_entry.path_spec.comparable))
     return digests
 
-  def SetHashers(self, hasher_names_string):
-    """Initializes the hasher objects.
-
-    Args:
-      hasher_names_string: Comma separated string of names of
-                           hashers to enable.
-    """
-    names = hashers_manager.HashersManager.GetHasherNamesFromString(
-        hasher_names_string)
-    logging.debug('[SetHashers] Enabling hashers: {0:s}.'.format(names))
-    self._hasher_names = names
-
   def InitializeParserObjects(self, parser_filter_string=None):
     """Initializes the parser objects.
 
@@ -564,6 +552,18 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       filter_object: the filter object (instance of objectfilter.Filter).
     """
     self._parser_mediator.SetFilterObject(filter_object)
+
+  def SetHashers(self, hasher_names_string):
+    """Initializes the hasher objects.
+
+    Args:
+      hasher_names_string: Comma separated string of names of
+                           hashers to enable.
+    """
+    names = hashers_manager.HashersManager.GetHasherNamesFromString(
+        hasher_names_string)
+    logging.debug('[SetHashers] Enabling hashers: {0:s}.'.format(names))
+    self._hasher_names = names
 
   def SetMountPath(self, mount_path):
     """Sets the mount path.

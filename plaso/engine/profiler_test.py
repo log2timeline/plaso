@@ -7,12 +7,12 @@ import unittest
 from plaso.engine import profiler
 
 
-class ParsersProfilerTest(unittest.TestCase):
+class CPUTimeProfilerTest(unittest.TestCase):
   """Tests for the parser profiler."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    test_profiler = profiler.ParsersProfiler(u'test')
+    test_profiler = profiler.CPUTimeProfiler(u'test')
     self.assertNotEqual(test_profiler, None)
 
   # TODO: add more tests.
