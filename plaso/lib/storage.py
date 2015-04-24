@@ -91,6 +91,7 @@ import zipfile
 from google.protobuf import message
 import yaml
 
+from plaso.engine import profiler
 from plaso.engine import queue
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -261,6 +262,11 @@ class StorageFile(object):
     # Add information about the serializer used in the storage.
     if not read_only and not self._OpenStream('serializer.txt'):
       self._WriteStream('serializer.txt', self._event_serializer_format_string)
+
+    # Attributes for profiling.
+    self._enable_profiling = False
+    self._profiling_sample = 0
+    self._serializers_profiler = None
 
   def GetLastPreprocessObject(self):
     """Return the last pre-processing object from the storage file if possible.
@@ -703,6 +709,11 @@ class StorageFile(object):
     except KeyError:
       return
 
+  def _ProfilingStop(self):
+    """Stops the profiling."""
+    if self._serializers_profiler:
+      self._serializers_profiler.Write()
+
   def _ReadEventTag(self, file_object):
     """Reads an event tag from the storage file.
 
@@ -721,7 +732,16 @@ class StorageFile(object):
               proto_string_size))
 
     proto_string = file_object.read(proto_string_size)
-    return self._event_tag_serializer.ReadSerialized(proto_string)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'event_tag')
+
+    event_tag = self._event_tag_serializer.ReadSerialized(proto_string)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'event_tag')
+
+    return event_tag
 
   def _ReadEventTagByIdentifier(self, store_number, store_index, uuid):
     """Reads an event tag by identifier.
@@ -819,7 +839,13 @@ class StorageFile(object):
       end = self._first_file_number
     pre_obj.store_range = (self._first_file_number, end)
 
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'pre_obj')
+
     pre_obj_data = self._pre_obj_serializer.WriteSerialized(pre_obj)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'pre_obj')
 
     stream_data = ''.join([
         existing_stream_data,
@@ -849,6 +875,8 @@ class StorageFile(object):
         logging.info((
             u'[Storage] Closing the storage, number of events processed: '
             u'{0:d}').format(self._write_counter))
+
+    self._ProfilingStop()
 
   def GetGrouping(self):
     """Return a generator that reads all grouping information from storage.
@@ -962,11 +990,20 @@ class StorageFile(object):
             u'Protobuf size too large: {0:d}'.format(size))
 
       serialized_pre_obj = file_object.read(size)
+
+      if self._serializers_profiler:
+        self._serializers_profiler.StartTiming(u'pre_obj')
+
       try:
         info = self._pre_obj_serializer.ReadSerialized(serialized_pre_obj)
+
       except message.DecodeError:
         logging.error(u'Unable to parse preprocessing object, bailing out.')
         break
+
+      finally:
+        if self._serializers_profiler:
+          self._serializers_profiler.StopTiming(u'pre_obj')
 
       information.append(info)
 
@@ -1075,8 +1112,15 @@ class StorageFile(object):
     if not event_object_data:
       return
 
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'event_object')
+
     event_object = self._event_object_serializer.ReadSerialized(
         event_object_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'event_object')
+
     event_object.store_number = stream_number
     event_object.store_index = entry_index
 
@@ -1196,8 +1240,14 @@ class StorageFile(object):
     parser = attributes.get('parser', 'unknown_parser')
     self._count_parser[parser] += 1
 
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'event_object')
+
     event_object_data = self._event_object_serializer.WriteSerialized(
         event_object)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'event_object')
 
     # TODO: Re-think this approach with the re-design of the storage.
     # Check if the event object failed to serialize (none is returned).
@@ -1263,8 +1313,16 @@ class StorageFile(object):
           report_number = number + 1
 
     stream_name = 'plaso_report.{0:06}'.format(report_number)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'analysis_report')
+
     serialized_report_proto = self._analysis_report_serializer.WriteSerialized(
         analysis_report)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'analysis_report')
+
     self._WriteStream(stream_name, serialized_report_proto)
 
   def GetReports(self):
@@ -1281,6 +1339,21 @@ class StorageFile(object):
 
         report_string = file_object.read(self.MAX_REPORT_PROTOBUF_SIZE)
         yield self._analysis_report_serializer.ReadSerialized(report_string)
+
+  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
+      profiling_type: optional profiling type. The default is 'all'.
+    """
+    self._enable_profiling = enable_profiling
+
+    if self._enable_profiling:
+      if (profiling_type in [u'all', u'serializers'] and
+          not self._serializers_profiler):
+        self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
   def StoreGrouping(self, rows):
     """Store group information into the storage file.
@@ -1436,7 +1509,13 @@ class StorageFile(object):
         if hasattr(old_tag, 'color') and not hasattr(tag, 'color'):
           tag.color = old_tag.color
 
+      if self._serializers_profiler:
+        self._serializers_profiler.StartTiming(u'event_tag')
+
       serialized_event_tag = self._event_tag_serializer.WriteSerialized(tag)
+
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(u'event_tag')
 
       # TODO: move to write class function of _EventTagIndexValue.
       packed = (
@@ -1493,15 +1572,34 @@ class StorageFileWriter(queue.EventObjectQueueConsumer):
     self._serializer_format = serializer_format
     self._storage_file = None
 
+    # Attributes for profiling.
+    self._enable_profiling = False
+    self._profiling_type = u'all'
+
   def _ConsumeEventObject(self, event_object, **unused_kwargs):
     """Consumes an event object callback for ConsumeEventObjects."""
     self._storage_file.AddEventObject(event_object)
+
+  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
+      profiling_type: optional profiling type. The default is 'all'.
+    """
+    self._enable_profiling = enable_profiling
+    self._profiling_type = profiling_type
 
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
     self._storage_file = StorageFile(
         self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj,
         serializer_format=self._serializer_format)
+
+    self._storage_file.SetEnableProfiling(
+        self._enable_profiling, profiling_type=self._profiling_type)
+
     self.ConsumeEventObjects()
     self._storage_file.Close()
 
