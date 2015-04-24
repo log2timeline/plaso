@@ -122,6 +122,21 @@ class ParserTestCase(unittest.TestCase):
       new_mediator.parser_chain = parser_chain
     return new_mediator
 
+  def _GetShortMessage(self, message_string):
+    """Shortens a message string to a maximum of 80 character width.
+
+    Args:
+      message_string: the message string.
+
+    Returns:
+      The same short message string, if it is longer than 80 characters it will
+      be shortened to it's first 77 characters followed by a "...".
+    """
+    if len(message_string) > 80:
+      return u'{0:s}...'.format(message_string[0:77])
+
+    return message_string
+
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file relative to the test data directory.
 

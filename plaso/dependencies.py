@@ -53,6 +53,11 @@ PYTHON_DEPENDENCIES = [
     (u'sqlite3', u'sqlite_version', u'3.7.8', None),
     (u'yaml', u'__version__', u'3.10', None)]
 
+# The tuple values are:
+# module_name, version_attribute_name, minimum_version, maximum_version
+PYTHON_TEST_DEPENDENCIES = [
+    (u'mock', u'__version__', u'1.0.1', None)]
+
 
 def DownloadPageContent(download_url):
   """Downloads the page content.
@@ -358,6 +363,28 @@ def CheckDependencies(latest_version_check=False):
 
   print u''
   return check_result
+
+
+def CheckTestDependencies(latest_version_check=False):
+  """Checks the availability of the dependencies when running tests.
+
+  Args:
+    latest_version_check: Optional boolean value to indicate if the project
+                          site should be checked for the latest version.
+                          The default is False.
+
+  Returns:
+    True if the dependencies are available, False otherwise.
+  """
+  if not CheckDependencies(latest_version_check):
+    return False
+
+  for values in PYTHON_TEST_DEPENDENCIES:
+    if not CheckPythonModule(
+        values[0], values[1], values[2], maximum_version=values[3]):
+      return False
+
+  return True
 
 
 def GetInstallRequires():

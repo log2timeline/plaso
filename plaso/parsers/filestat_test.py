@@ -84,7 +84,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.gz')
     expected_msg = u'GZIP:{0:s}'.format(test_path)
-    expected_msg_short = test_path
+    expected_msg_short = self._GetShortMessage(test_path)
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testTarFile(self):
@@ -150,7 +150,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.tgz')
     expected_msg = u'GZIP:{0:s}'.format(test_path)
-    expected_msg_short = test_path
+    expected_msg_short = self._GetShortMessage(test_path)
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testNestedTSK(self):
