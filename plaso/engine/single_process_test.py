@@ -27,8 +27,6 @@ class SingleProcessQueueTest(unittest.TestCase):
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    self.assertEqual(len(test_queue), len(self._ITEMS))
-
     test_queue.SignalEndOfInput()
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()

@@ -47,6 +47,7 @@ class Foreman(object):
     self._processing_completed = False
     self._rpc_clients_per_pid = {}
     self._show_memory_usage = show_memory_usage
+    self._signalled_end_of_input = False
 
   def _CheckStatus(self, process_label):
     """Check status for a single process from the monitoring list.
@@ -213,16 +214,22 @@ class Foreman(object):
     # Note that self._monitored_process_labels can be altered in this loop
     # hence we need it to be sorted.
     processing_complete = True
-    for _, process_label in sorted(self._monitored_process_labels.items()):
-      if not self._CheckStatus(process_label):
-        processing_complete = False
+    if self._signalled_end_of_input:
+      logging.info(u'Waiting for storage.')
+    else:
+      for _, process_label in sorted(self._monitored_process_labels.items()):
+        if not self._CheckStatus(process_label):
+          processing_complete = False
 
     if not self._processing_completed:
-      if processing_complete:
+      if processing_complete and not self._signalled_end_of_input:
         logging.info(u'All extraction workers stopped.')
         self._event_queue_producer.SignalEndOfInput()
+        self._signalled_end_of_input = True
       return False
 
+    if self._processing_completed and processing_complete:
+      logging.info(u'Processing completed.')
     return processing_complete
 
   def GetLabelByPid(self, pid):

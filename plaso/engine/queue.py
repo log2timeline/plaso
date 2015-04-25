@@ -22,10 +22,6 @@ class Queue(object):
   """Class that implements the queue interface."""
 
   @abc.abstractmethod
-  def __len__(self):
-    """Returns the estimated current number of items in the queue."""
-
-  @abc.abstractmethod
   def IsEmpty(self):
     """Determines if the queue is empty."""
 
@@ -35,7 +31,7 @@ class Queue(object):
 
   @abc.abstractmethod
   def PopItem(self):
-    """Pops an item off the queue."""
+    """Pops an item off the queue or None on timeout."""
 
   def SignalEndOfInput(self):
     """Signals the queue no input remains."""
@@ -114,12 +110,22 @@ class EventObjectQueueConsumer(QueueConsumer):
         break
 
       if isinstance(item, QueueEndOfInput):
-        # Push the item back onto the queue to make sure all
-        # queue consumers are stopped.
-        self._queue.PushItem(item)
-        break
+        # Check if this is the last item in the queue.
+        try:
+          next_item = self._queue.PopItem()
+        except errors.QueueEmpty:
+          # Push the item back onto the queue to make sure all
+          # queue consumers are stopped.
+          self._queue.PushItem(item)
 
-      self._ConsumeEventObject(item, **kwargs)
+          break
+
+        self._queue.PushItem(item)
+        item = next_item
+
+      # Ignore empty items this can happen when the call to PopItem times out.
+      if item:
+        self._ConsumeEventObject(item, **kwargs)
 
     self._abort = False
 
@@ -147,12 +153,22 @@ class ItemQueueConsumer(QueueConsumer):
         break
 
       if isinstance(item, QueueEndOfInput):
-        # Push the item back onto the queue to make sure all
-        # queue consumers are stopped.
-        self._queue.PushItem(item)
-        break
+        # Check if this is the last item in the queue.
+        try:
+          next_item = self._queue.PopItem()
+        except errors.QueueEmpty:
+          # Push the item back onto the queue to make sure all
+          # queue consumers are stopped.
+          self._queue.PushItem(item)
 
-      self._ConsumeItem(item)
+          break
+
+        self._queue.PushItem(item)
+        item = next_item
+
+      # Ignore empty items this can happen when the call to PopItem times out.
+      if item:
+        self._ConsumeItem(item)
 
     self._abort = False
 
