@@ -20,12 +20,6 @@ class MultiProcessingQueueTest(unittest.TestCase):
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    try:
-      self.assertEqual(len(test_queue), len(self._ITEMS))
-    except NotImplementedError:
-      # On Mac OS X because of broken sem_getvalue()
-      return
-
     test_queue.SignalEndOfInput()
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
