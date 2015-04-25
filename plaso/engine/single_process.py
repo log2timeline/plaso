@@ -324,10 +324,6 @@ class SingleProcessQueue(queue.Queue):
     self._queue = collections.deque(
         maxlen=maximum_number_of_queued_items)
 
-  def __len__(self):
-    """Returns the estimated current number of items in the queue."""
-    return len(self._queue)
-
   def IsEmpty(self):
     """Determines if the queue is empty."""
     return len(self._queue) == 0
@@ -349,7 +345,7 @@ class SingleProcessQueue(queue.Queue):
       raise errors.QueueFull
 
   def PopItem(self):
-    """Pops an item off the queue.
+    """Pops an item off the queue or None on timeout.
 
     Raises:
       QueueEmpty: when the queue is empty.

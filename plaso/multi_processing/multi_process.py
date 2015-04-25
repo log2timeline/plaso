@@ -5,6 +5,7 @@ import ctypes
 import logging
 import multiprocessing
 import os
+import Queue
 import signal
 import sys
 import time
@@ -697,6 +698,8 @@ class MultiProcessStorageWriterProcess(multiprocessing.Process):
 class MultiProcessingQueue(queue.Queue):
   """Class that defines the multi-processing queue."""
 
+  _QUEUE_WAIT_TIMEOUT = 5
+
   def __init__(self, maximum_number_of_queued_items=0):
     """Initializes the multi-processing queue object.
 
@@ -724,20 +727,8 @@ class MultiProcessingQueue(queue.Queue):
           u'({1:d})'.format(maximum_number_of_queued_items, queue_max_length))
       maximum_number_of_queued_items = queue_max_length
 
+    # This queue appears not to be FIFO.
     self._queue = multiprocessing.Queue(maxsize=maximum_number_of_queued_items)
-
-  def __len__(self):
-    """Returns the estimated current number of items in the queue."""
-    size = 0
-    try:
-      size = self._queue.qsize()
-    except NotImplementedError:
-      logging.warning((
-          u'Returning queue length does not work on Mac OS X because of broken '
-          u'sem_getvalue()'))
-      raise
-
-    return size
 
   def IsEmpty(self):
     """Determines if the queue is empty."""
@@ -748,8 +739,13 @@ class MultiProcessingQueue(queue.Queue):
     self._queue.put(item)
 
   def PopItem(self):
-    """Pops an item off the queue."""
+    """Pops an item off the queue or None on timeout.
+
+    Raises:
+      QueueEmpty: when the queue is empty.
+    """
     try:
-      return self._queue.get()
-    except KeyboardInterrupt:
+      # We need a timeout otherwise the queue will block if empty.
+      return self._queue.get(timeout=self._QUEUE_WAIT_TIMEOUT)
+    except (KeyboardInterrupt, Queue.Empty):
       raise errors.QueueEmpty
