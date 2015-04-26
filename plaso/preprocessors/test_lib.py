@@ -98,7 +98,7 @@ class PreprocessPluginTest(unittest.TestCase):
     """
     path = self._GetTestFilePath(path_segments)
 
-    file_object = open(path)
+    file_object = open(path, 'rb')
     try:
       file_data = file_object.read()
     except IOError:
