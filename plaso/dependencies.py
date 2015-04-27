@@ -379,6 +379,7 @@ def CheckTestDependencies(latest_version_check=False):
   if not CheckDependencies(latest_version_check):
     return False
 
+  print u'Checking availability and versions of plaso test dependencies.'
   for values in PYTHON_TEST_DEPENDENCIES:
     if not CheckPythonModule(
         values[0], values[1], values[2], maximum_version=values[3]):

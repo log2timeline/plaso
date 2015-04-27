@@ -39,7 +39,7 @@ SED_SCRIPT="
 
 sed -i"~" -e "${SED_SCRIPT}" plaso/frontend/presets.py
 
-sed -i"~" '/hachoir_/,/^$/d' utils/check_dependencies.py
+sed -i"~" '/hachoir_/,/^$/d' plaso/dependencies.py
 
 exit ${EXIT_SUCCESS};
 
