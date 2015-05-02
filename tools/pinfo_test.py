@@ -12,20 +12,85 @@ from tools import pinfo
 class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
 
-  def testPrintStorageInformation(self):
-    """Tests the PrintStorageInformation function."""
-    # Make sure the test outputs UTF-8.
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    self._test_tool = pinfo.PinfoTool(output_writer=self._output_writer)
+
+  def testCompareStorageInformation(self):
+    """Tests the CompareStorageInformation function."""
+    test_file1 = self._GetTestFilePath([u'psort_test.out'])
+    test_file2 = self._GetTestFilePath([u'pinfo_test.out'])
 
     options = frontend.Options()
-    options.storage_file = self._GetTestFilePath([u'psort_test.out'])
+    options.compare_storage_file = test_file1
+    options.storage_file = test_file1
 
-    test_tool.ParseOptions(options)
+    self._test_tool.ParseOptions(options)
 
-    test_tool.PrintStorageInformation()
+    self.assertTrue(self._test_tool.CompareStorageInformation())
 
-    # TODO: clean up output so that u'...' is not generated.
+    output = self._output_writer.ReadOutput()
+    self.assertEqual(output, b'Storage files are identical.\n')
+
+    options = frontend.Options()
+    options.compare_storage_file = test_file1
+    options.storage_file = test_file2
+
+    self._test_tool.ParseOptions(options)
+
+    self.assertFalse(self._test_tool.CompareStorageInformation())
+
+  def testPrintStorageInformation(self):
+    """Tests the PrintStorageInformation function."""
+    test_file = self._GetTestFilePath([u'psort_test.out'])
+
+    options = frontend.Options()
+    options.storage_file = test_file
+
+    self._test_tool.ParseOptions(options)
+
+    self._test_tool.PrintStorageInformation()
+
+    expected_parsers = u', '.join(sorted([
+        u'asl_log',
+        u'bencode',
+        u'bsm_log',
+        u'filestat',
+        u'hachoir',
+        u'java_idx',
+        u'lnk',
+        u'mac_appfirewall_log',
+        u'mac_keychain',
+        u'mac_securityd',
+        u'mactime',
+        u'macwifi',
+        u'mcafee_protection',
+        u'msiecf',
+        u'olecf',
+        u'openxml',
+        u'opera_global',
+        u'opera_typed_history',
+        u'plist',
+        u'prefetch',
+        u'recycle_bin',
+        u'recycle_bin_info2',
+        u'selinux',
+        u'skydrive_log',
+        u'skydrive_log_error',
+        u'sqlite',
+        u'symantec_scanlog',
+        u'syslog',
+        u'utmp',
+        u'utmpx',
+        u'winevt',
+        u'winevtx',
+        u'winfirewall',
+        u'winjob',
+        u'winreg',
+        u'xchatlog',
+        u'xchatscrollback']))
+
     expected_output = (
         b'---------------------------------------------------------------------'
         b'-----------\n'
@@ -41,16 +106,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'\tos_detected = N/A\n'
         b'\tconfigured_zone = UTC\n'
         b'\tdebug = False\n'
-        b'\tparsers = [u\'sqlite\', u\'winfirewall\', u\'selinux\', '
-        b'u\'recycle_bin\', u\'filestat\', u\'syslog\', u\'lnk\', '
-        b'u\'xchatscrollback\', u\'symantec_scanlog\', u\'recycle_bin_info2\', '
-        b'u\'winevtx\', u\'plist\', u\'bsm_log\', u\'mac_keychain\', '
-        b'u\'mac_securityd\', u\'utmp\', u\'asl_log\', u\'opera_global\', '
-        b'u\'winjob\', u\'prefetch\', u\'winreg\', u\'msiecf\', u\'bencode\', '
-        b'u\'skydrive_log\', u\'openxml\', u\'utmpx\', u\'winevt\', '
-        b'u\'hachoir\', u\'opera_typed_history\', u\'mac_appfirewall_log\', '
-        b'u\'olecf\', u\'xchatlog\', u\'macwifi\', u\'mactime\', '
-        b'u\'java_idx\', u\'mcafee_protection\', u\'skydrive_log_error\']\n'
+        b'\tparsers = {1:s}\n'
         b'\tprotobuf_size = 300\n'
         b'\tvss parsing = False\n'
         b'\trecursive = False\n'
@@ -77,11 +133,15 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'\n'
         b'No reports stored.\n'
         b'-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+'
-        b'-+-+-+-+-+-+').format(options.storage_file.encode(u'utf-8'))
+        b'-+-+-+-+-+-+\n').format(
+            options.storage_file.encode(u'utf-8'),
+            expected_parsers.encode(u'utf-8'))
 
-    output = output_writer.ReadOutput()
+    output = self._output_writer.ReadOutput()
 
-    self.assertEqual(output, expected_output)
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
 
 if __name__ == '__main__':

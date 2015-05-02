@@ -62,7 +62,7 @@ class CLITool(object):
             u'Show this help message and exit.'))
 
     argument_group.add_argument(
-        u'-v', u'--version', dest=u'version', action=u'version',
+        u'-V', u'--version', dest=u'version', action=u'version',
         version=version_string, help=u'Show the current version.')
 
   def ParseOptions(self, unused_options):
