@@ -25,6 +25,23 @@ class AnalysisTool(tools.CLITool):
         input_reader=input_reader, output_writer=output_writer)
     self._storage_file_path = None
 
+  def _ParseStorageFileOptions(self, options):
+    """Parses the storage file options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._storage_file_path = getattr(options, u'storage_file', None)
+    if not self._storage_file_path:
+      raise errors.BadConfigOption(u'Missing storage file option.')
+
+    if not os.path.isfile(self._storage_file_path):
+      raise errors.BadConfigOption(
+          u'No such storage file: {0:s}.'.format(self._storage_file_path))
+
   def AddStorageFileOptions(self, argument_group):
     """Adds the storage file options to the argument group.
 
@@ -47,11 +64,4 @@ class AnalysisTool(tools.CLITool):
       BadConfigOption: if the options are invalid.
     """
     super(AnalysisTool, self).ParseOptions(options)
-
-    self._storage_file_path = getattr(options, u'storage_file', None)
-    if not self._storage_file_path:
-      raise errors.BadConfigOption(u'Missing storage file option.')
-
-    if not os.path.isfile(self._storage_file_path):
-      raise errors.BadConfigOption(
-          u'No such storage file {0:s}.'.format(self._storage_file_path))
+    self._ParseStorageFileOptions(options)
