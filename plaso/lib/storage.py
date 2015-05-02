@@ -1328,6 +1328,9 @@ class StorageFile(object):
   def GetReports(self):
     """Read in all stored analysis reports from storage and yield them.
 
+    Yields:
+      Analysis reports (instances of AnalysisReport).
+
     Raises:
       IOError: if the stream cannot be opened.
     """
