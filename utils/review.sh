@@ -1,20 +1,5 @@
 #!/bin/bash
-# A small script that submits a code for code review.
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Script that submits a code for code review.
 
 EXIT_SUCCESS=0;
 EXIT_MISSING_ARGS=2;
@@ -98,26 +83,6 @@ then
   fi
 fi
 
-MISSING_TESTS="";
-FILES=`git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | grep -v "_test.py$"`
-for CHANGED_FILE in ${FILES};
-do
-  TEST_FILE=`echo ${CHANGED_FILE} | sed -e 's/\.py//g'`
-  if ! test -f "${TEST_FILE}_test.py";
-  then
-    MISSING_TESTS="${MISSING_TESTS} + ${CHANGED_FILE}"
-  fi
-done
-
-if test -z "${MISSING_TESTS}";
-then
-  MISSING_TEST_FILES=".";
-else
-  MISSING_TEST_FILES="These files are missing unit tests:
-${MISSING_TESTS}
-  ";
-fi
-
 echo -n "Short description of code review request: ";
 read DESCRIPTION
 TEMP_FILE=`mktemp .tmp_plaso_code_review.XXXXXX`;
@@ -142,7 +107,7 @@ fi
 python utils/upload.py \
     --oauth2 ${BROWSER_PARAM} -y ${CACHE_PARAM} \
     -r ${REVIEWER} --cc log2timeline-dev@googlegroups.com \
-    -m "${MISSING_TEST_FILES}" -t "${DESCRIPTION}" \
+    -m "${DESCRIPTION}" -t "${DESCRIPTION}" \
     --send_mail | tee ${TEMP_FILE};
 
 CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;

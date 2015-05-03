@@ -61,7 +61,7 @@ class HasherTestCase(unittest.TestCase):
       hasher.Update(data)
       data = file_object.read(self._DEFAULT_READ_SIZE)
     file_object.close()
-    self.assertEquals(hasher.GetStringDigest(), digest)
+    self.assertEqual(hasher.GetStringDigest(), digest)
 
   def _AssertTestPathStringDigestMatch(self, hasher, path_segments, digest):
     """Check if a hasher returns a given result when it hashes a test file.
@@ -91,7 +91,7 @@ class HasherTestCase(unittest.TestCase):
       hasher.Update(data)
       data = file_object.read(self._DEFAULT_READ_SIZE)
     file_object.close()
-    self.assertEquals(hasher.GetBinaryDigest(), digest)
+    self.assertEqual(hasher.GetBinaryDigest(), digest)
 
   def _AssertTestPathBinaryDigestMatch(self, hasher, path_segments, digest):
     """Check if a hasher returns a given result when it hashes a test file.
