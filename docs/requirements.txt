@@ -1,0 +1,9 @@
+# This is required so that readthedocs installs napoleon and can read our docstrings.
+sphinxcontrib-napoleon
+# The protobuf library doesn't seem to mock properly for some reason.
+protobuf
+# Pyparsing doesn't mock very well, and it's easily pip installable.
+pyparsing
+# We have several parsers that create construct objects, and if we install
+# it correctly, the documentation looks better.
+construct

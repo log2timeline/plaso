@@ -25,15 +25,16 @@ The other files that make up the store are:
 
   + plaso_meta
 
-Simple text file using YAML for storing metadata information about the store.
-definition, example:
-  variable: value
-  a_list: [value, value, value]
+Simple text file using YAML for storing metadata information about the store.::
+
+  definition, example:
+    variable: value
+    a_list: [value, value, value]
 
 This can be used to filter out which proto files should be included
 in processing.
 
-  + plaso_index
++ plaso_index
 
 The index file contains an index to all the entries stored within
 the protobuf file, so that it can be easily seeked. The layout is:
@@ -1371,7 +1372,8 @@ class StorageFile(object):
 
     The object that is passed in needs to have an iterator implemented
     and has to implement the following attributes (optional names within
-    bracket):
+    bracket)::
+
       name - The name of the grouped event.
       [description] - More detailed description of the event.
       [category] - If this group of events falls into a specific category.

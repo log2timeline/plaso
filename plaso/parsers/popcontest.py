@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains Popularity Contest log file parser in plaso.
+"""This file contains the Popularity Contest log file parser in plaso.
 
-   Information updated 20 january 2014.
-   From Debian Package Popularity Contest
-   Avery Pennarun <apenwarr@debian.org>
+Information updated 20 january 2014.
+From Debian Package Popularity Contest
+Avery Pennarun <apenwarr@debian.org>
 
-   From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
-   '
+From  'http://www.unix.com/man-page/Linux/8/popularity-contest/':
+
     The  popularity-contest command gathers information about Debian pack-
     ages installed on the system, and prints the name of the most  recently
     used  executable  program  in that package as well as its last-accessed
@@ -26,11 +26,11 @@
     results  to  Debian package maintainers (only once a week) according to
     the settings in /etc/popularity-contest.conf and /usr/share/popularity-
     contest/default.conf.
-   '
 
-   From 'http://popcon.ubuntu.com/README':
-   '
-    The popularity-contest output looks like this:
+
+From 'http://popcon.ubuntu.com/README':
+
+The popularity-contest output looks like this:
 
     POPULARITY-CONTEST-0 TIME:914183330 ID:b92a5fc1809d8a95a12eb3a3c8445
     914183333 909868335 grep /bin/fgrep

@@ -1,54 +1,55 @@
 # -*- coding: utf-8 -*-
+# There's a backslash in the module docstring, so as not to confuse Sphinx.
+# pylint: disable=anomalous-backslash-in-string
 """This file contains XChat log file parser in plaso.
 
-   Information updated 24 July 2013.
+Information updated 24 July 2013.
 
-   The parser applies to XChat log files. Despite their apparent
-   simplicity it's not straightforward to manage every possible case.
-   XChat tool allows users to specify how timestamp will be
-   encoded (using the strftime function), by letting them to specify
-   additional separators. This parser will accept only the simplest
-   default English form of an XChat log file, as the following:
+The parser applies to XChat log files. Despite their apparent
+simplicity it's not straightforward to manage every possible case.
+XChat tool allows users to specify how timestamp will be
+encoded (using the strftime function), by letting them to specify
+additional separators. This parser will accept only the simplest
+default English form of an XChat log file, as the following::
 
-   **** BEGIN LOGGING AT Mon Dec 31 21:11:55 2001
+  **** BEGIN LOGGING AT Mon Dec 31 21:11:55 2001
+  dec 31 21:11:55 --> You are now talking on #gugle
+  dec 31 21:11:55 --- Topic for #gugle is plaso, nobody knows what it means
+  dec 31 21:11:55 Topic for #gugle set by Kristinn
+  dec 31 21:11:55 --- Joachim gives voice to fpi
+  dec 31 21:11:55 *   XChat here
+  dec 31 21:11:58 <fpi> ola plas-ing guys!
+  dec 31 21:12:00 <Kristinn> ftw!
 
-   dec 31 21:11:55 --> You are now talking on #gugle
-   dec 31 21:11:55 --- Topic for #gugle is plaso, nobody knows what it means
-   dec 31 21:11:55	Topic for #gugle set by Kristinn
-   dec 31 21:11:55 --- Joachim gives voice to fpi
-   dec 31 21:11:55 *   XChat here
-   dec 31 21:11:58 <fpi> ola plas-ing guys!
-   dec 31 21:12:00 <Kristinn> ftw!
+It could be managed the missing month/day case too, by extracting
+the month/day information from the header. But the parser logic
+would become intricate, since it would need to manage day transition,
+chat lines crossing the midnight. From there derives the last day of
+the year bug, since the parser will not manage that transition.
 
-   It could be managed the missing month/day case too, by extracting
-   the month/day information from the header. But the parser logic
-   would become intricate, since it would need to manage day transition,
-   chat lines crossing the midnight. From there derives the last day of
-   the year bug, since the parser will not manage that transition.
+Moreover the strftime is locale-dependant, so month names, footer and
+headers can change, even inside the same log file. Being said that, the
+following will be the main logic used to parse the log files (note that
+the first header *must be* '\*\*\*\* BEGIN ...' otherwise file will be skipped).
 
-   Moreover the strftime is locale-dependant, so month names, footer and
-   headers can change, even inside the same log file. Being said that, the
-   following will be the main logic used to parse the log files (note that
-   the first header *must be* '**** BEGIN ...' otherwise file will be skipped).
+1) Check for '\*\*\*\*'
+1.1) If 'BEGIN LOGGING AT' (English)
+1.1.1) Extract the YEAR
+1.1.2) Generate new event start logging
+1.1.3) set parsing = True
+1.2) If 'END LOGGING'
+1.2.1) If parsing, set parsing=False
+1.2.2) If not parsing, log debug
+1.2.3) Generate new event end logging
+1.3) If not BEGIN|END we are facing a different language
+and we don't now which language!
+If parsing is True, set parsing=False and log debug
+2) Not '\*\*\*\*' so we are parsing a line
+2.1) If parsing = True, try to parse line and generate event
+2.2) If parsing = False, skip until next good header is found
 
-   1) Check for '****'
-   1.1) If 'BEGIN LOGGING AT' (English)
-    1.1.1) Extract the YEAR
-    1.1.2) Generate new event start logging
-    1.1.3) set parsing = True
-   1.2) If 'END LOGGING'
-    1.2.1) If parsing, set parsing=False
-    1.2.2) If not parsing, log debug
-    1.2.3) Generate new event end logging
-   1.3) If not BEGIN|END we are facing a different language
-        and we don't now which language!
-        If parsing is True, set parsing=False and log debug
-   2) Not '****' so we are parsing a line
-   2.1) If parsing = True, try to parse line and generate event
-   2.2) If parsing = False, skip until next good header is found
-
-   References
-   http://xchat.org
+References
+http://xchat.org
 """
 
 import logging

@@ -23,7 +23,8 @@ class SQLiteCache(plugins.BasePluginCache):
     This function will take a SQL command, execute it and for
     each resulting row it will store a key in a dictionary.
 
-    An example:
+    An example::
+
       sql_results = A SQL result object after executing the
                     SQL command: 'SELECT foo, bla, bar FROM my_table'
       attribute_name = 'all_the_things'
@@ -31,11 +32,11 @@ class SQLiteCache(plugins.BasePluginCache):
       values = ['bla', 'bar']
 
     Results from running this against the database:
-      'first', 'stuff', 'things'
-      'second', 'another stuff', 'another thing'
+    'first', 'stuff', 'things'
+    'second', 'another stuff', 'another thing'
 
     This will result in a dict object being created in the
-    cache, called 'all_the_things' and it will contain the following value:
+    cache, called 'all_the_things' and it will contain the following value::
 
       all_the_things = {
           'first': ['stuff', 'things'],

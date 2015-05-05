@@ -1,36 +1,37 @@
 # -*- coding: utf-8 -*-
 """This file contains XChat scrollback log file parser in plaso.
 
-   Information updated 06 September 2013.
+Information updated 06 September 2013.
 
-   Besides the logging capability, the XChat IRC client has the option to
-   record the text for opened tabs. So, when rejoining a particular channel
-   and/or a particular conversation, XChat will display the last messages
-   exchanged. This artifact could be present, if not disabled, even if
-   normal logging is disabled.
+Besides the logging capability, the XChat IRC client has the option to
+record the text for opened tabs. So, when rejoining a particular channel
+and/or a particular conversation, XChat will display the last messages
+exchanged. This artifact could be present, if not disabled, even if
+normal logging is disabled.
 
-   From the XChat FAQ (http://xchatdata.net/Using/FAQ):
-   Q: 'How do I keep text from previous sessions from being displayed when
-       I join a channel?'
-   R: 'Starting in XChat 2.8.4, XChat implemented the Scrollback feature which
-       displays text from the last time you had a particular tab open.
-       To disable this setting for all channels, Go to Settings -> Preferences
-       -> Logging and uncheck Display scrollback from previous session.
-       In XChat 2.8.6, XChat implemented both Per Channel Logging, and
-       Per Channel Scrollbacks. If you are on 2.8.6 or newer, you can disable
-       loading scrollback for just one particular tab name by right clicking on
-       the tab name, selecting Settings, and then unchecking Reload scrollback'
+From the XChat FAQ (http://xchatdata.net/Using/FAQ):
 
-   The log file format differs from logging format, but it's quite simple
-   'T 1232315916 Python interface unloaded'
-   <T><space><decimal epoch><space><text><\n>
+Q: 'How do I keep text from previous sessions from being displayed when I
+join a channel?'
+R: 'Starting in XChat 2.8.4, XChat implemented the Scrollback feature which
+displays text from the last time you had a particular tab open.
+To disable this setting for all channels, Go to Settings -> Preferences
+-> Logging and uncheck Display scrollback from previous session.
+In XChat 2.8.6, XChat implemented both Per Channel Logging, and
+Per Channel Scrollbacks. If you are on 2.8.6 or newer, you can disable
+loading scrollback for just one particular tab name by right clicking on
+the tab name, selecting Settings, and then unchecking Reload scrollback'
 
-   The time reported in the log is Unix Epoch (from source code, time(0)).
-   The <text> part could contain some 'decorators' (bold, underline, colors
-   indication, etc.), so the parser should strip those control fields.
+The log file format differs from logging format, but it's quite simple
+'T 1232315916 Python interface unloaded'
+<T><space><decimal epoch><space><text><\n>
 
-   References
-   http://xchat.org
+The time reported in the log is Unix Epoch (from source code, time(0)).
+The <text> part could contain some 'decorators' (bold, underline, colors
+indication, etc.), so the parser should strip those control fields.
+
+References
+http://xchat.org
 """
 
 import logging

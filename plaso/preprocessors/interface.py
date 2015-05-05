@@ -17,16 +17,17 @@ class PreprocessPlugin(object):
   should define which operating system this plugin supports.
 
   The OS variable supports the following values:
-    + Windows
-    + Linux
-    + MacOSX
+
+  * Windows
+  * Linux
+  * MacOSX
 
   Since some plugins may require knowledge gained from
   other checks all plugins have a weight associated to it.
   The weight variable can have values from one to three:
-    + 1 - Requires no prior knowledge, can run immediately.
-    + 2 - Requires knowledge from plugins with weight 1.
-    + 3 - Requires knowledge from plugins with weight 2.
+  * 1 - Requires no prior knowledge, can run immediately.
+  * 2 - Requires knowledge from plugins with weight 1.
+  * 3 - Requires knowledge from plugins with weight 2.
 
   The default weight of 3 is assigned to plugins, so each
   plugin needs to overwrite that value if needed.
@@ -157,6 +158,7 @@ def GuessOS(searcher):
   """Returns a string representing what we think the underlying OS is.
 
   The available return strings are:
+
   * Linux
   * MacOSX
   * Windows
