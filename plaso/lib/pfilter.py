@@ -18,6 +18,8 @@ from plaso.lib import utils
 
 
 class DictObject(object):
+  # There's a backslash in the class docstring, so as not to confuse Sphinx.
+  # pylint: disable=anomalous-backslash-in-string
   """A simple object representing a dict object.
 
   To filter against an object that is stored as a dictionary the dict
@@ -25,14 +27,15 @@ class DictObject(object):
   and/or other symbols they are stripped out to make filtering work
   like it is another object.
 
-  Example dict:
+  Example dict::
+
     {'A value': 234,
      'this (my) key_': 'value',
      'random': True,
     }
 
   This object would then allow access to object.thismykey that would access
-  the key 'this (my) key_' inside the dict.
+  the key 'this (my) key\_' inside the dict.
   """
 
   def __init__(self, dict_object):
@@ -251,18 +254,18 @@ class DateCompareObject(object):
       ValueError: if the date string is invalid.
     """
     self.text = utils.GetUnicodeString(data)
-    if type(data) in (int, long):
+    if isinstance(data, int) or isinstance(data, long):
       self.data = data
-    elif type(data) == float:
+    elif isinstance(data, float):
       self.data = long(data)
-    elif type(data) in (str, unicode):
+    elif isinstance(data, str) or isinstance(data, unicode):
       try:
         self.data = timelib.Timestamp.FromTimeString(
             utils.GetUnicodeString(data))
       except ValueError as exception:
         raise ValueError(u'Wrongly formatted date string: {0:s} - {1:s}'.format(
             data, exception))
-    elif type(data) == datetime.datetime:
+    elif isinstance(data, datetime.datetime):
       self.data = timelib.Timestamp.FromPythonDatetime(data)
     elif isinstance(DateCompareObject, data):
       self.data = data.data

@@ -39,7 +39,8 @@ class PlsRecallEvent(event.EventObject):
 class PlsRecallParser(interface.SingleFileBaseParser):
   """Parse PL/SQL Recall files.
 
-  Parser is based on a:
+  Parser is based on a::
+
     TRecallRecord = packed record
       Sequence: Integer;
       TimeStamp: TDateTime;

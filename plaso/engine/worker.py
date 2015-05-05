@@ -403,10 +403,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     The parser_filter_string is a simple comma separated value string that
     denotes a list of parser names to include and/or exclude. Each entry
     can have the value of:
-      + Exact match of a list of parsers, or a preset (see
-        plaso/frontend/presets.py for a full list of available presets).
-      + A name of a single parser (case insensitive), eg. msiecfparser.
-      + A glob name for a single parser, eg: '*msie*' (case insensitive).
+
+    * Exact match of a list of parsers, or a preset (see
+      plaso/frontend/presets.py for a full list of available presets).
+    * A name of a single parser (case insensitive), eg. msiecfparser.
+    * A glob name for a single parser, eg: '*msie*' (case insensitive).
 
     Args:
       parser_filter_string: Optional parser filter string. The default is None.

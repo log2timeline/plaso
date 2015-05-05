@@ -76,3 +76,24 @@ linter()
 
   return ${EXIT_SUCCESS};
 }
+
+regenerate_docs()
+{
+    PLASO_PATH="./plaso/"
+    DOCS_DIR="./docs/"
+    echo "Attempting to update auto generated documentation."
+    # Check for sphinx-apidoc.
+    if hash sphinx-apidoc >/dev/null 2>&1 ;
+    then
+
+        # Regenerate the docs.
+        echo "sphinx-apidoc -f -o ${DOCS_DIR} ${PLASO_PATH}"
+        sphinx-apidoc -f -o "${DOCS_DIR}" "${PLASO_PATH}"
+        # Add the files to the CL
+        git add "${DOCS_DIR}"
+        echo "Docs updated."
+    else
+        echo "WARNING: Documentation not updated, sphinx-apidoc is not installed.";
+        return ${EXIT_FAILURE};
+    fi
+}

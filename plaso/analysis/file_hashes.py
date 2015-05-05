@@ -7,7 +7,7 @@ from plaso.lib import event
 
 
 class FileHashesPlugin(interface.AnalysisPlugin):
-  """A plugin for generate a list of file paths and corresponding hashes."""
+  """A plugin for generating a list of file paths and corresponding hashes."""
 
   NAME = 'file_hashes'
 
@@ -24,7 +24,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     self._paths_with_hashes = {}
 
   def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Analyzes an event_object and creates Windows Services as required.
+    """Analyzes an event_object and creates extracts hashes as required.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of

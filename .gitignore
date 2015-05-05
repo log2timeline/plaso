@@ -12,6 +12,7 @@
 /__pycache__
 /build/
 /dependencies/
+/docs/_build
 /dist/
 /plaso.egg-info
 

@@ -180,21 +180,21 @@ class EventObject(object):
 
     For two EventObject objects to be considered the same they need to
     have the following conditions:
-      + Have the same timestamp.
-      + Have the same data_type value.
-      + Have the same set of attributes.
-      + Compare all other attributes than those that are reserved, and
-      they all have to match.
+    * Have the same timestamp.
+    * Have the same data_type value.
+    * Have the same set of attributes.
+    * Compare all other attributes than those that are reserved, and
+    they all have to match.
 
     The following attributes are considered to be 'reserved' and not used
     for the comparison, so they may be different yet the EventObject is still
     considered to be equal:
-      + inode
-      + pathspec
-      + filename
-      + display_name
-      + store_number
-      + store_index
+    * inode
+    * pathspec
+    * filename
+    * display_name
+    * store_number
+    * store_index
 
     Args:
       event_object: The EventObject that is being compared to this one.
@@ -293,12 +293,12 @@ class EventTag(object):
 
   The EventTag object should have the following attributes:
   (optional attributes surrounded with brackets)
-    + store_number: An integer, pointing to the store the EventObject is.
-    + store_index: An index into the store where the EventObject is.
-    + event_uuid: An UUID value of the event this tag belongs to.
-    + [comment]: An arbitrary string containing comments about the event.
-    + [color]: A string containing color information.
-    + [tags]: A list of strings with tags, eg: 'Malware', 'Entry Point'.
+  * store_number: An integer, pointing to the store the EventObject is.
+  * store_index: An index into the store where the EventObject is.
+  * event_uuid: An UUID value of the event this tag belongs to.
+  * [comment]: An arbitrary string containing comments about the event.
+  * [color]: A string containing color information.
+  * [tags]: A list of strings with tags, eg: 'Malware', 'Entry Point'.
 
   The tag either needs to have an event_uuid defined or both the store_number
   and store_index to be valid (not both, if both defined the store_number and

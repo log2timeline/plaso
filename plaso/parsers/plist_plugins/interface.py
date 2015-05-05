@@ -190,7 +190,7 @@ def RecurseKey(recur_item, root='', depth=15):
     logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
     return
 
-  if type(recur_item) in (list, tuple):
+  if isinstance(recur_item, (list, tuple)):
     for recur in recur_item:
       for key in RecurseKey(recur, root, depth):
         yield key
@@ -224,9 +224,9 @@ def GetKeys(top_level, keys, depth=1):
   override the depth limit and use GetKeys to fetch from a deeper level.
 
   E.g.
-  Top_Level (root):                                               # depth = 0
-  |-- Key_Name_is_UUID_Generated_At_Install 1234-5678-8           # depth = 1
-  |  |-- Interesting_SubKey_with_value_to_Process: [Values, ...]  # depth = 2
+  Top_Level (root):                                             # depth = 0
+  -- Key_Name_is_UUID_Generated_At_Install 1234-5678-8          # depth = 1
+  ---- Interesting_SubKey_with_value_to_Process: [Values, ...]  # depth = 2
 
   Args:
     top_level: Plist in dictionary form.
