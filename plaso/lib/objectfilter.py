@@ -44,6 +44,7 @@ our fleet like this:
 
 The filter expression contains two subexpressions joined by an AND operator:
   "color is grey" and "doors >= 3"
+
 This means we want to search for objects matching these two subexpressions.
 Let's analyze the first one in depth "color is grey":
 
@@ -85,6 +86,7 @@ To filter a car based on the tyre brand, we would use a search path of
 Because the filter implementation provides the actual classes that perform
 handling of the search paths, operators, etc. customizing the behaviour of the
 filter is easy. Three basic filter implementations are given:
+
   BaseFilterImplementation: search path expansion is done on attribute names
   as provided (case-sensitive).
   LowercaseAttributeFilterImp: search path expansion is done on the lowercased
@@ -304,7 +306,7 @@ class Contains(GenericBinaryOperator):
   """Whether the right operand is contained in the value."""
 
   def Operation(self, x, y):
-    if type(x) in (str, unicode):
+    if isinstance(x, str) or isinstance(x, unicode):
       return y.lower() in x.lower()
 
     return y in x
@@ -394,40 +396,51 @@ class Context(Operator):
   Now imagine you have these two processes on a given system.
 
   Process1
-  +[0]__ImportedDlls
-        +[0]__Name: "notevil.dll"
-        |[0]__ImpFunctions
-        |     +[1]__Name: "CreateFileA"
-        |[0]__NumImpFunctions: 1
-        |
-        +[1]__Name: "alsonotevil.dll"
-        |[1]__ImpFunctions
-        |     +[0]__Name: "RegQueryValueEx"
-        |     +[1]__Name: "CreateFileA"
-        |[1]__NumImpFunctions: 2
+  * __ImportedDlls
+
+    * __Name: "notevil.dll"
+
+      * __ImpFunctions
+
+        * __Name: "CreateFileA"
+
+      * __NumImpFunctions: 1
+
+    * __Name: "alsonotevil.dll"
+
+      * __ImpFunctions
+
+        * __Name: "RegQueryValueEx"
+        * __Name: "CreateFileA"
+
+      * __NumImpFunctions: 2
 
   Process2
-  +[0]__ImportedDlls
-        +[0]__Name: "evil.dll"
-        |[0]__ImpFunctions
-        |     +[0]__Name: "RegQueryValueEx"
-        |[0]__NumImpFunctions: 1
+  * __ImportedDlls
+
+    * __Name: "evil.dll"
+
+      * __ImpFunctions
+
+        * __Name: "RegQueryValueEx"
+
+      * __NumImpFunctions: 1
 
   Both Process1 and Process2 match your query, as each of the indicators are
-  evaluated separatedly. While you wanted to express "find me processes that
+  evaluated separately. While you wanted to express "find me processes that
   have a DLL that has both one imported function and ReqQueryValueEx is in the
   list of imported functions", your indicator actually means "find processes
   that have at least a DLL with 1 imported functions and at least one DLL that
   imports the ReqQueryValueEx function".
 
   To write such an indicator you need to specify a context of ImportedDLLs for
-  these two clauses. Such that you convert your indicator to:
+  these two clauses. Such that you convert your indicator to::
 
-  Context("ImportedDLLs",
-          AndOperator(
-            Equal("ImpFunctions.Name", "RegQueryValueEx"),
-            Equal("NumImpFunctions", "1")
-          ))
+      Context("ImportedDLLs",
+              AndOperator(
+                Equal("ImpFunctions.Name", "RegQueryValueEx"),
+                Equal("NumImpFunctions", "1")
+              ))
 
   Context will execute the filter specified as the second parameter for each of
   the objects under "ImportedDLLs", thus applying the condition per DLL, not per

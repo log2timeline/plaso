@@ -66,6 +66,9 @@ fi
 # Source the common library.
 . utils/common.sh
 
+# Update auto-generated documentation.
+regenerate_docs
+
 # Check if we're on the master branch.
 BRANCH=`git branch | grep -e "^[*]" | sed "s/^[*] //"`;
 

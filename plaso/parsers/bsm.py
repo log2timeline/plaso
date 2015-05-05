@@ -25,7 +25,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # PascalString because the latter seems to break pickling on Windows.
 
 def _BsmTokenGetLength(context):
-  """Contruct context parser helper function to replace lambda."""
+  """Construct context parser helper function to replace lambda."""
   return context.length
 
 

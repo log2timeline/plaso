@@ -22,17 +22,17 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Skype History database file.
 
       The History file contains 24 events:
-          4 call events
-          4 transfers file events
-          1 sms events
-         15 chat events
+      4 call events
+      4 transfers file events
+      1 sms events
+      15 chat events
 
       Events used:
-        id = 16 -> SMS
-        id = 22 -> Call
-        id = 18 -> File
-        id =  1 -> Chat
-        id = 14 -> ChatRoom
+      id = 16 -> SMS
+      id = 22 -> Call
+      id = 18 -> File
+      id =  1 -> Chat
+      id = 14 -> ChatRoom
     """
     test_file = self._GetTestFilePath([u'skype_main.db'])
     cache = sqlite.SQLiteCache()

@@ -37,6 +37,7 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
       **unused_kwargs):
     """Collect the values under Outlook and return event for each one.
+
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).

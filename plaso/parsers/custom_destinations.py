@@ -54,8 +54,11 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
       u'file_footer',
       construct.ULInt32(u'signature'))
 
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a *.customDestinations-ms file-like object.
+    # There's a backslash in the class docstring, so as not to confuse Sphinx.
+    # pylint: disable=anomalous-backslash-in-string
+    """Parses a \*.customDestinations-ms file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -137,7 +140,7 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
       try:
         lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
       except RuntimeError as exception:
-        message = u'Unable to open LNK file with error'.format(exception)
+        message = u'Unable to open LNK file with error {0:s}'.format(exception)
         parser_mediator.ProduceParseError(message)
         return
 
