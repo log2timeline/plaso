@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The output mediator object."""
 
-import logging
-
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import eventdata
 
@@ -14,7 +12,7 @@ class OutputMediator(object):
 
   def __init__(
       self, formatter_mediator, storage_object, config=None,
-      fields_filter=None):
+      fields_filter=None, preferred_encoding=u'utf-8', timezone=pytz.UTC):
     """Initializes a output mediator object.
 
     Args:
@@ -27,14 +25,17 @@ class OutputMediator(object):
       fields_filter: optional filter object (instance of FilterObject) to
                      indicate which fields should be outputed. The default
                      is None.
+      preferred_encoding: optional preferred encoding. The default is "utf-8".
+      timezone: optional timezone. The default is UTC.
     """
     super(OutputMediator, self).__init__()
     self._config = config
     self._formatter_mediator = formatter_mediator
     self._hostnames = None
+    self._preferred_encoding = preferred_encoding
     self._preprocess_objects = None
     self._storage_object = storage_object
-    self._timezone = None
+    self._timezone = timezone
 
     self.fields_filter = fields_filter
 
@@ -70,23 +71,11 @@ class OutputMediator(object):
   @property
   def encoding(self):
     """The preferred encoding."""
-    return getattr(self._config, u'preferred_encoding', u'utf-8')
+    return self._preferred_encoding
 
   @property
   def timezone(self):
     """The timezone."""
-    if not self._timezone:
-      timezone_string = getattr(self._config, u'timezone', u'UTC')
-
-      try:
-        self._timezone = pytz.timezone(timezone_string)
-
-      except pytz.UnknownTimeZoneError:
-        logging.warning(
-            u'Unsupported timezone: {0:s} defaulting to: UTC'.format(
-                timezone_string))
-        self._timezone = pytz.UTC
-
     return self._timezone
 
   # TODO: solve this differently in a future refactor.

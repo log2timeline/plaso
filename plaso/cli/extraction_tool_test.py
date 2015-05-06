@@ -16,8 +16,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
       (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
        u'[--parsers PARSER_LIST]'),
-      (u'                               [-p] [--use_old_preprocess] '
-       u'[-z TIMEZONE]'),
+      u'                               [-p] [--use_old_preprocess]',
       u'',
       u'Test argument parser.',
       u'',
@@ -70,15 +69,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        This can be handy when parsing an image that '
        u'contains'),
       u'                        more than a single partition.',
-      u'  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE',
-      (u'                        Define the timezone of the IMAGE (not the '
-       u'output).'),
-      u'                        This is usually discovered automatically by',
-      (u'                        preprocessing but might need to be '
-       u'specifically set if'),
-      (u'                        preprocessing does not properly detect or to '
-       u'override'),
-      u'                        the detected time zone.',
       u''])
 
   _EXPECTED_OUTPUT_FILTER_OPTIONS = u'\n'.join([
@@ -97,17 +87,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        variable set in the preprocessing stage or '
        u'a regular'),
       u'                        expression.',
-      u''])
-
-  _EXPECTED_INFORMATIONAL_OPTIONS = u'\n'.join([
-      u'usage: extraction_tool_test.py [-h] [-d]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -h, --help   show this help message and exit',
-      (u'  -d, --debug  Enable debug mode. Intended for troubleshooting '
-       u'parsing issues.'),
       u''])
 
   _EXPECTED_PERFOMANCE_OPTIONS = u'\n'.join([
@@ -188,18 +167,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_OUTPUT_FILTER_OPTIONS)
-
-  def testAddInformationalOptions(self):
-    """Tests the AddInformationalOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py',
-        description=u'Test argument parser.')
-
-    test_tool = extraction_tool.ExtractionTool()
-    test_tool.AddInformationalOptions(argument_parser)
-
-    output = argument_parser.format_help()
-    self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
 
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""

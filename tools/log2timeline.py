@@ -62,13 +62,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._filter_expression = None
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
-    self._output = None
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
     self._status_view_mode = u'linear'
+    self._output = None
 
-    self.list_timezones = False
     self.list_parsers_and_plugins = False
+    self.list_timezones = False
 
   def _DebugPrintCollection(self):
     """Prints debug information about the collection."""
@@ -241,10 +241,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   def ListPluginInformation(self):
     """Lists all plugin and parser information."""
     plugin_list = self._front_end.GetPluginData()
-    return_string_pieces = []
-
-    return_string_pieces.append(
-        u'{:=^80}'.format(u' log2timeline/plaso information. '))
+    lines_of_text = [
+        u'{:=^80}'.format(u' log2timeline/plaso information. ')]
 
     for header, data in plugin_list.items():
       # TODO: Using the frontend utils here instead of "self.PrintHeader"
@@ -253,22 +251,27 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       # PrintHeader or something similar.
 
       # TODO: refactor usage of frontend utils away.
-      return_string_pieces.append(frontend_utils.FormatHeader(header))
+      lines_of_text.append(frontend_utils.FormatHeader(header))
       for entry_header, entry_data in sorted(data):
-        return_string_pieces.append(
+        lines_of_text.append(
             frontend_utils.FormatOutputString(entry_header, entry_data))
 
-    return_string_pieces.append(u'')
-    self._output_writer.Write(u'\n'.join(return_string_pieces))
+    lines_of_text.append(u'')
+    self._output_writer.Write(u'\n'.join(lines_of_text))
 
   def ListTimeZones(self):
     """Lists the time zones."""
-    self._output_writer.Write(u'=' * 40)
-    self._output_writer.Write(u'       ZONES')
-    self._output_writer.Write(u'-' * 40)
+    lines_of_text = [
+        u'=' * 40,
+        u'       ZONES',
+        u'-' * 40]
+
     for timezone in self._front_end.GetTimeZones():
-      self._output_writer.Write(u'  {0:s}'.format(timezone))
-    self._output_writer.Write(u'=' * 40)
+      lines_of_text.append(u'  {0:s}'.format(timezone))
+
+    lines_of_text.append(u'=' * 40)
+    lines_of_text.append(u'')
+    self._output_writer.Write(u'\n'.join(lines_of_text))
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -291,6 +294,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.AddExtractionOptions(extraction_group)
     self.AddFilterOptions(extraction_group)
     self.AddStorageMediaImageOptions(extraction_group)
+    self.AddTimezoneOption(extraction_group)
     self.AddVssProcessingOptions(extraction_group)
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
@@ -352,7 +356,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
-      self._output_writer.Write(u'')
+      self._output_writer.Write(u'\n')
       self._output_writer.Write(argument_parser.format_help())
       return False
 
@@ -373,7 +377,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     except errors.BadConfigOption as exception:
       logging.error(u'{0:s}'.format(exception))
 
-      self._output_writer.Write(u'')
+      self._output_writer.Write(u'\n')
       self._output_writer.Write(argument_parser.format_help())
 
       return False
@@ -389,6 +393,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    # Check the list options first otherwise required options will raise.
+    self._ParseTimezoneOption(options)
+
+    self.list_parsers_and_plugins = getattr(options, u'show_info', False)
+
+    if self.list_timezones or self.list_parsers_and_plugins:
+      return
+
     super(Log2TimelineTool, self).ParseOptions(options)
     self._ParseOutputOptions(options)
     self._ParseProcessingOptions(options)
@@ -397,10 +409,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
         u'<%(module)s> %(message)s')
 
-    debug = getattr(options, u'debug', False)
     log_file = getattr(options, u'log_file', None)
-
-    if debug:
+    if self._debug_mode:
       logging_level = logging.DEBUG
     else:
       logging_level = logging.INFO
@@ -419,13 +429,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output = getattr(options, u'output', None)
     if not self._output:
       raise errors.BadConfigOption(u'No output defined.')
-
-    # TODO: consider moving this into the extraction frontend.
-    timezone_string = getattr(options, u'timezone', None)
-    if timezone_string and timezone_string == u'list':
-      self.list_timezones = True
-
-    self.list_parsers_and_plugins = getattr(options, u'show_info', False)
 
     # TODO: where is this defined?
     self._operating_system = getattr(options, u'os', None)

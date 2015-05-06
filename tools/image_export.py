@@ -40,7 +40,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     super(ImageExportTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._data_location = None
     self._destination_path = None
     self._filter_file = None
     self._front_end = image_export.ImageExportFrontend()
@@ -88,13 +87,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
     argument_parser = argparse.ArgumentParser(
-        description=self.DESCRIPTION, epilog=self.EPILOG)
+        description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False)
 
     self.AddBasicOptions(argument_parser)
-
-    argument_parser.add_argument(
-        u'-d', u'--debug', dest=u'debug', action=u'store_true', default=False,
-        help=u'Turn on debugging information.')
+    self.AddInformationalOptions(argument_parser)
+    self.AddDataOptions(argument_parser)
 
     argument_parser.add_argument(
         u'-w', u'--write', action=u'store', dest=u'path', type=unicode,
@@ -107,10 +104,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             u'Full path to the file that contains the collection filter, '
             u'the file can use variables that are defined in preprocesing, '
             u'just like any other log2timeline/plaso collection filter.'))
-
-    argument_parser.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=unicode,
-        metavar=u'PATH', default=None, help=u'the location of the data files.')
 
     argument_parser.add_argument(
         u'--date-filter', u'--date_filter', action=u'append', type=unicode,
@@ -202,12 +195,19 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    # Check the list options first otherwise required options will raise.
+    signature_identifiers = getattr(options, u'signature_identifiers', None)
+    if signature_identifiers == u'list':
+      self.list_signature_identifiers = True
+
+    if self.list_signature_identifiers:
+      return
+
     super(ImageExportTool, self).ParseOptions(options)
 
     format_str = u'%(asctime)s [%(levelname)s] %(message)s'
 
-    debug = getattr(options, u'debug', False)
-    if debug:
+    if self._debug_mode:
       logging.basicConfig(level=logging.DEBUG, format=format_str)
     else:
       logging.basicConfig(level=logging.INFO, format=format_str)
@@ -226,24 +226,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         getattr(options, u'include_duplicates', False)):
       self._remove_duplicates = False
 
-    # TODO: move data location code to a location shared with psort.
-    data_location = getattr(options, u'data_location', None)
-    if not data_location:
-      # Determine if we are running from the source directory.
-      data_location = os.path.dirname(__file__)
-      data_location = os.path.dirname(data_location)
-      data_location = os.path.join(data_location, u'data')
-
-      if not os.path.exists(data_location):
-        # Otherwise determine if there is shared plaso data location.
-        data_location = os.path.join(sys.prefix, u'share', u'plaso')
-
-      if not os.path.exists(data_location):
-        logging.warning(u'Unable to automatically determine data location.')
-        data_location = None
-
-    self._data_location = data_location
-
     date_filters = getattr(options, u'date_filters', None)
     try:
       self._front_end.ParseDateFilters(date_filters)
@@ -256,15 +238,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     names_string = getattr(options, u'names_string', None)
     self._front_end.ParseNamesString(names_string)
 
+    if not self._data_location:
+      logging.warning(u'Unable to automatically determine data location.')
+
     signature_identifiers = getattr(options, u'signature_identifiers', None)
-    if signature_identifiers == u'list':
-      self.list_signature_identifiers = True
-    else:
-      try:
-        self._frontend.ParseSignatureIdentifiers(
-            self._data_location, signature_identifiers)
-      except (IOError, ValueError) as exception:
-        raise errors.BadConfigOption(exception)
+    try:
+      self._frontend.ParseSignatureIdentifiers(
+          self._data_location, signature_identifiers)
+    except (IOError, ValueError) as exception:
+      raise errors.BadConfigOption(exception)
 
     self.has_filters = self._frontend.HasFilters()
 

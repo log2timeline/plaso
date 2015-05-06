@@ -9,8 +9,6 @@ from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
 
-import pytz
-
 
 class ExtractionTool(storage_media_tool.StorageMediaTool):
   """Class that implements an extraction CLI tool."""
@@ -34,7 +32,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     super(ExtractionTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._buffer_size = 0
-    self._debug_mode = False
     self._enable_profiling = False
     self._filter_file = None
     self._filter_object = None
@@ -51,7 +48,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_PROTOBUF
     self._text_prepend = None
-    self._timezone = pytz.UTC
 
   def _ParseExtractionOptions(self, options):
     """Parses the extraction options.
@@ -71,10 +67,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     self._process_archive_files = getattr(options, u'scan_archives', False)
 
-    timezone_string = getattr(options, u'timezone', None)
-    if timezone_string and timezone_string != u'list':
-      self._timezone = pytz.timezone(timezone_string)
-
   def _ParseFilterOptions(self, options):
     """Parses the filter options.
 
@@ -90,17 +82,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
           u'No such collection filter file: {0:s}.'.format(filter_file))
 
     self._filter_file = filter_file
-
-  def _ParseInformationalOptions(self, options):
-    """Parses the informational options.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._debug_mode = getattr(options, u'debug', False)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -229,14 +210,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'the storage file is used. This can be handy when parsing an '
             u'image that contains more than a single partition.'))
 
-    argument_group.add_argument(
-        u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
-        type=unicode, default=u'UTC', help=(
-            u'Define the timezone of the IMAGE (not the output). This is '
-            u'usually discovered automatically by preprocessing but might '
-            u'need to be specifically set if preprocessing does not properly '
-            u'detect or to override the detected time zone.'))
-
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
 
@@ -251,19 +224,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'parse, one line per file path, setup is /path|file - where each '
             u'element can contain either a variable set in the preprocessing '
             u'stage or a regular expression.'))
-
-  def AddInformationalOptions(self, argument_group):
-    """Adds the informational options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        '-d', '--debug', dest='debug', action='store_true', default=False,
-        help=(
-            u'Enable debug mode. Intended for troubleshooting parsing '
-            u'issues.'))
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
@@ -340,7 +300,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     super(ExtractionTool, self).ParseOptions(options)
     self._ParseExtractionOptions(options)
     self._ParseFilterOptions(options)
-    self._ParseInformationalOptions(options)
     self._ParsePerformanceOptions(options)
     self._ParseProfilingOptions(options)
     self._ParseStorageOptions(options)

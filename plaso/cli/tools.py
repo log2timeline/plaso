@@ -4,9 +4,13 @@
 import abc
 import locale
 import logging
+import os
 import sys
 
 import plaso
+from plaso.lib import errors
+
+import pytz
 
 
 class CLITool(object):
@@ -42,10 +46,62 @@ class CLITool(object):
     if not output_writer:
       output_writer = StdoutOutputWriter(encoding=preferred_encoding)
 
+    self._data_location = None
+    self._debug_mode = False
     self._input_reader = input_reader
     self._output_writer = output_writer
+    self._timezone = pytz.UTC
 
+    self.list_timezones = False
     self.preferred_encoding = preferred_encoding
+
+  def _ParseDataLocationOption(self, options):
+    """Parses the data location option.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    data_location = getattr(options, u'data_location', None)
+    if not data_location:
+      # Determine if we are running from the source directory.
+      data_location = os.path.dirname(__file__)
+      data_location = os.path.dirname(data_location)
+      data_location = os.path.join(data_location, u'data')
+
+      if not os.path.exists(data_location):
+        # Otherwise determine if there is shared plaso data location.
+        data_location = os.path.join(sys.prefix, u'share', u'plaso')
+
+        if not os.path.exists(data_location):
+          data_location = None
+
+    self._data_location = data_location
+
+  def _ParseInformationalOptions(self, options):
+    """Parses the informational options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    self._debug_mode = getattr(options, u'debug', False)
+
+  def _ParseTimezoneOption(self, options):
+    """Parses the timezone options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    timezone_string = getattr(options, u'timezone', None)
+    if timezone_string and timezone_string == u'list':
+      self.list_timezones = True
+    else:
+      try:
+        self._timezone = pytz.timezone(timezone_string)
+      except pytz.UnknownTimeZoneError as exception:
+        raise errors.BadConfigOption(exception)
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
@@ -57,24 +113,58 @@ class CLITool(object):
     version_string = u'plaso - {0:s} version {1:s}'.format(
         self.NAME, plaso.GetVersion())
 
+    # We want a custom help message and not the default argparse one.
     argument_group.add_argument(
-        u'-h', u'--help', action=u'help', help=(
-            u'Show this help message and exit.'))
+        u'-h', u'--help', action=u'help',
+        help=u'show this help message and exit.')
 
     argument_group.add_argument(
         u'-V', u'--version', dest=u'version', action=u'version',
-        version=version_string, help=u'Show the current version.')
+        version=version_string, help=u'show the version information.')
 
-  def ParseOptions(self, unused_options):
+  def AddDataLocationOption(self, argument_group):
+    """Adds the data location option to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--data', action=u'store', dest=u'data_location', type=unicode,
+        metavar=u'PATH', default=None, help=u'the location of the data files.')
+
+  def AddInformationalOptions(self, argument_group):
+    """Adds the informational options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        '-d', '--debug', dest='debug', action='store_true', default=False,
+        help=u'enable debug information.')
+
+  def AddTimezoneOption(self, argument_group):
+    """Adds the timezone option to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
+        type=unicode, default=u'UTC', help=(
+            u'explicitly define the timezone. Typically the timezone is '
+            u'determined automatically where possible.'))
+
+  def ParseOptions(self, options):
     """Parses tool specific options.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
     """
-    return
+    self._ParseInformationalOptions(options)
+    self._ParseDataLocationOption(options)
 
   def PrintColumnValue(self, name, description, column_width=25):
     """Prints a value with a name and description aligned to the column width.

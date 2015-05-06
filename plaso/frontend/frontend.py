@@ -149,5 +149,40 @@ class Frontend(object):
     self._output_writer.Write(u'{0:s}\n'.format(u'-' * self._LINE_LENGTH))
 
 
+class TimeSlice(object):
+  """Class that defines a time slice.
+
+  The time slice is used to provide a context of events around an event
+  of interest.
+  """
+
+  def __init__(self, event_timestamp, duration=5):
+    """Initializes the time slice.
+
+    Args:
+      event_timestamp: event timestamp of the time slice or None.
+      duration: optional duration of the time slize in minutes.
+                The default is 5, which represent 2.5 minutes before
+                and 2.5 minutes after the event timestamp.
+    """
+    super(TimeSlice, self).__init__()
+    self.duration = duration
+    self.event_timestamp = event_timestamp
+
+  @property
+  def end_timestamp(self):
+    """The slice end timestamp or None."""
+    if not self.event_timestamp:
+      return
+    return self.event_timestamp + (self.duration * 60 * 1000000)
+
+  @property
+  def start_timestamp(self):
+    """The slice start timestamp or None."""
+    if not self.event_timestamp:
+      return
+    return self.event_timestamp - (self.duration * 60 * 1000000)
+
+
 class Options(object):
   """A simple configuration object."""
