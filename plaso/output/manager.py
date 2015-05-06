@@ -52,8 +52,23 @@ class OutputManager(object):
     return cls._output_classes[name]
 
   @classmethod
+  def GetOutputClasses(cls):
+    """Retrieves the available output classes.
+
+    Yields:
+      A tuple of output class name and type object.
+    """
+    for output_class in cls._output_classes.itervalues():
+      yield output_class.NAME, output_class
+
+  # TODO: deprecate in favor of GetOutputClasses.
+  @classmethod
   def GetOutputs(cls):
-    """Generate a list of all available output classes."""
+    """Retrieves the available output classes.
+
+    Yields:
+      A tuple of output class name and description.
+    """
     for output_class in cls._output_classes.itervalues():
       yield output_class.NAME, output_class.DESCRIPTION
 

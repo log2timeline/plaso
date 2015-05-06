@@ -13,17 +13,8 @@ from plaso.lib import errors
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the storage media tool object."""
 
-  _EXPECTED_OUTPUT_DEFAULT = u'\n'.join([
-      u'usage: storage_media_tool_test.py [-h]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -h, --help  show this help message and exit',
-      u''])
-
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [-h] [--partition PARTITION_NUMBER]',
+      u'usage: storage_media_tool_test.py [--partition PARTITION_NUMBER]',
       u'                                  [-o IMAGE_OFFSET]',
       u'                                  [--sector_size BYTES_PER_SECTOR]',
       u'                                  [--ob IMAGE_OFFSET_BYTES]',
@@ -31,7 +22,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  -h, --help            show this help message and exit',
       u'  --partition PARTITION_NUMBER',
       (u'                        Choose a partition number from a disk image. '
        u'This'),
@@ -59,13 +49,12 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = u'\n'.join([
-      (u'usage: storage_media_tool_test.py [-h] [--no_vss] '
+      (u'usage: storage_media_tool_test.py [--no_vss] '
        u'[--vss_stores VSS_STORES]'),
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  -h, --help            show this help message and exit',
       (u'  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots '
        u'(VSS). This'),
       (u'                        means that VSS information will not be '
@@ -89,10 +78,8 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the AddStorageMediaImageOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.')
-
-    output = argument_parser.format_help()
-    self.assertEqual(output, self._EXPECTED_OUTPUT_DEFAULT)
+        description=u'Test argument parser.',
+        add_help=False)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddStorageMediaImageOptions(argument_parser)
@@ -104,10 +91,8 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the AddVssProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.')
-
-    output = argument_parser.format_help()
-    self.assertEqual(output, self._EXPECTED_OUTPUT_DEFAULT)
+        description=u'Test argument parser.',
+        add_help=False)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddVssProcessingOptions(argument_parser)

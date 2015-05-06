@@ -151,10 +151,10 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
       test_front_end = psort.PsortFrontend()
       test_front_end.ParseOptions(options)
-      test_front_end.ProcessStorage(options)
+      test_front_end.ProcessStorage(options, [], u'text')
 
-      with open(temp_file_name, 'rb') as fh:
-        for line in fh:
+      with open(temp_file_name, 'rb') as file_object:
+        for line in file_object:
           lines.append(line)
 
     self.assertEqual(len(lines), 16)
