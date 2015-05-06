@@ -39,10 +39,10 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
 
     Returns:
       An event object queue consumer object (instance of
-      TestEventObjectQueueConsumer).
+      TestItemQueueConsumer).
     """
     event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
+    event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
 
@@ -51,6 +51,7 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
         knowledge_base_values=knowledge_base_values)
     esedb_file = self._OpenEseDbFile(path_segments)
     cache = esedb.EseDbCache()
+
     plugin_object.Process(parser_mediator, database=esedb_file, cache=cache)
 
     return event_queue_consumer

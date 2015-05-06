@@ -262,9 +262,6 @@ def ParseFile(file_entry):
   worker_object.InitializeParserObjects()
   worker_object.ParseFileEntry(file_entry)
 
-  collection_queue.SignalEndOfInput()
-  engine_object.SignalEndOfInputStorageQueue()
-
   results = []
   while True:
     try:

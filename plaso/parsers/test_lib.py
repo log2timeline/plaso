@@ -17,7 +17,7 @@ from plaso.lib import event
 from plaso.parsers import mediator
 
 
-class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
+class TestItemQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements a list event object queue consumer."""
 
   def __init__(self, event_queue):
@@ -26,11 +26,11 @@ class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     Args:
       event_queue: the event object queue (instance of Queue).
     """
-    super(TestEventObjectQueueConsumer, self).__init__(event_queue)
+    super(TestItemQueueConsumer, self).__init__(event_queue)
     self.event_objects = []
 
-  def _ConsumeEventObject(self, event_object, **unused_kwargs):
-    """Consumes an event object callback for ConsumeEventObjects."""
+  def _ConsumeItem(self, event_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems."""
     self.event_objects.append(event_object)
 
 
@@ -72,12 +72,12 @@ class ParserTestCase(unittest.TestCase):
 
     Args:
       event_queue_consumer: the event object queue consumer object (instance of
-                            TestEventObjectQueueConsumer).
+                            TestItemQueueConsumer).
 
     Returns:
       A list of event objects (instances of EventObject).
     """
-    event_queue_consumer.ConsumeEventObjects()
+    event_queue_consumer.ConsumeItems()
 
     event_objects = []
     for event_object in event_queue_consumer.event_objects:
@@ -175,7 +175,7 @@ class ParserTestCase(unittest.TestCase):
 
     Returns:
       An event object queue consumer object (instance of
-      TestEventObjectQueueConsumer).
+      TestItemQueueConsumer).
     """
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
@@ -194,10 +194,10 @@ class ParserTestCase(unittest.TestCase):
 
     Returns:
       An event object queue consumer object (instance of
-      TestEventObjectQueueConsumer).
+      TestItemQueueConsumer).
     """
     event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = TestEventObjectQueueConsumer(event_queue)
+    event_queue_consumer = TestItemQueueConsumer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
 

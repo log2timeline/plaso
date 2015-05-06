@@ -22,7 +22,7 @@ class TestQueueConsumer(queue.ItemQueueConsumer):
     super(TestQueueConsumer, self).__init__(test_queue)
     self.items = []
 
-  def _ConsumeItem(self, item):
+  def _ConsumeItem(self, item, **unused_kwargs):
     """Consumes an item callback for ConsumeItems."""
     self.items.append(item)
 

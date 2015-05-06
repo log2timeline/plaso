@@ -265,13 +265,8 @@ class BaseEngine(object):
   def SignalAbort(self):
     """Signals the engine to abort."""
     logging.warning(u'Signalled abort.')
-    self._event_queue_producer.SignalEndOfInput()
-    self._parse_error_queue_producer.SignalEndOfInput()
-
-  def SignalEndOfInputStorageQueue(self):
-    """Signals the storage queue no input remains."""
-    self._event_queue_producer.SignalEndOfInput()
-    self._parse_error_queue_producer.SignalEndOfInput()
+    self._event_queue_producer.SignalAbort()
+    self._parse_error_queue_producer.SignalAbort()
 
   def SourceIsDirectory(self):
     """Determines if the source is a directory.

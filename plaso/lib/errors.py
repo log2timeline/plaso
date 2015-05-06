@@ -33,6 +33,10 @@ class ProxyFailedToStart(Error):
   """Raised when unable to start a proxy."""
 
 
+class QueueAbort(Error):
+  """Class that implements a queue abort exception."""
+
+
 class QueueEmpty(Error):
   """Class that implements a queue empty exception."""
 

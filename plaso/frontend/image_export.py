@@ -549,7 +549,7 @@ class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
     self._file_saver = file_saver
     self._filter_collection = filter_collection
 
-  def _ConsumeItem(self, path_spec):
+  def _ConsumeItem(self, path_spec, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:

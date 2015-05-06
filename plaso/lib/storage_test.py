@@ -125,20 +125,23 @@ class StorageFileTest(unittest.TestCase):
     # have been queued up.
 
     # TODO: add upper queue limit.
-    test_queue = multi_process.MultiProcessingQueue()
+    # A timeout is used to prevent the multi processing queue to close and
+    # stop blocking the current process.
+    test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
     test_queue_producer = queue.ItemQueueProducer(test_queue)
     test_queue_producer.ProduceItems(self._event_objects)
-    test_queue_producer.SignalEndOfInput()
+
+    test_queue_producer.SignalAbort()
 
     with tempfile.NamedTemporaryFile() as temp_file:
-      storage_writer = storage.StorageFileWriter(test_queue, temp_file)
+      storage_writer = storage.FileStorageWriter(test_queue, temp_file)
       storage_writer.WriteEventObjects()
 
       z_file = zipfile.ZipFile(temp_file, 'r', zipfile.ZIP_DEFLATED)
 
       expected_z_filename_list = [
-          'plaso_index.000001', 'plaso_meta.000001', 'plaso_proto.000001',
-          'plaso_timestamps.000001', 'serializer.txt']
+          u'plaso_index.000001', u'plaso_meta.000001', u'plaso_proto.000001',
+          u'plaso_timestamps.000001', u'serializer.txt']
 
       z_filename_list = sorted(z_file.namelist())
       self.assertEqual(len(z_filename_list), 5)
@@ -212,10 +215,10 @@ class StorageFileTest(unittest.TestCase):
         timestamps.append(event_object.timestamp)
         if event_object.data_type == 'windows:registry:key_value':
           self.assertEqual(event_object.timestamp_desc,
-                            eventdata.EventTimestamp.WRITTEN_TIME)
+                           eventdata.EventTimestamp.WRITTEN_TIME)
         else:
           self.assertEqual(event_object.timestamp_desc,
-                            eventdata.EventTimestamp.WRITTEN_TIME)
+                           eventdata.EventTimestamp.WRITTEN_TIME)
 
       for tag in read_store.GetTagging():
         event_object = read_store.GetTaggedEvent(tag)

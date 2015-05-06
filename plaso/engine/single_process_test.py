@@ -18,7 +18,7 @@ from plaso.lib import errors
 class SingleProcessQueueTest(unittest.TestCase):
   """Tests the single process queue."""
 
-  _ITEMS = frozenset(['item1', 'item2', 'item3', 'item4'])
+  _ITEMS = frozenset([u'item1', u'item2', u'item3', u'item4'])
 
   def testPushPopItem(self):
     """Tests the PushItem and PopItem functions."""
@@ -27,7 +27,6 @@ class SingleProcessQueueTest(unittest.TestCase):
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    test_queue.SignalEndOfInput()
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
 
@@ -51,10 +50,10 @@ class SingleProcessQueueTest(unittest.TestCase):
       test_queue.PushItem(item)
 
     with self.assertRaises(errors.QueueFull):
-      test_queue.PushItem('item5')
+      test_queue.PushItem(u'item5')
 
     with self.assertRaises(errors.QueueFull):
-      test_queue.PushItem('item6')
+      test_queue.PushItem(u'item6')
 
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
@@ -98,7 +97,7 @@ class SingleProcessEngineTest(unittest.TestCase):
 
     test_file_system.Close()
 
-    test_engine.PreprocessSource('Windows')
+    test_engine.PreprocessSource(u'Windows')
 
     test_collector = test_engine.CreateCollector(
         False, vss_stores=None, filter_find_specs=None,

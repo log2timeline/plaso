@@ -9,7 +9,9 @@ import sys
 import time
 import textwrap
 
+import plaso
 from plaso.cli import extraction_tool
+from plaso.cli import tools as cli_tools
 from plaso.frontend import log2timeline
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -61,6 +63,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
     self._output = None
+    self._stdout_output_writer = isinstance(
+        self._output_writer, cli_tools.StdoutOutputWriter)
+    self._status_view_mode = u'linear'
+
     self.list_timezones = False
     self.list_parsers_and_plugins = False
 
@@ -111,6 +117,79 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._foreman_verbose = getattr(options, u'foreman_verbose', False)
 
     # TODO: workers.
+
+  def _PrintStatusUpdate(self, processing_status):
+    """Prints the processing status.
+
+    Args:
+      processing_status: the processsing status (instance of ProcessingStatus).
+    """
+    if self._stdout_output_writer:
+      # ANSI escape sequence to clear screen.
+      self._output_writer.Write(b'\033[2J')
+      # ANSI escape sequence to move cursor to top left.
+      self._output_writer.Write(b'\033[H')
+
+    self._output_writer.Write(
+        u'plaso - {0:s} version {1:s}\n'.format(
+            self.NAME, plaso.GetVersion()))
+    self._output_writer.Write(u'\n')
+
+    self.PrintOptions()
+
+    status_table = [u'\033[1mIdentifier\tPID\tStatus\t\tEvents\tFile\033[0m']
+    for extraction_worker_status in processing_status.extraction_workers:
+      if len(extraction_worker_status.status) < 8:
+        status = u'{0:s}\t'.format(extraction_worker_status.status)
+      else:
+        status = extraction_worker_status.status
+
+      number_of_events_delta = (
+          extraction_worker_status.number_of_events -
+          extraction_worker_status.last_number_of_events)
+
+      # TODO: shorten display name to fit in 80 chars and show the filename.
+      status_row = u'{0:s}\t{1:d}\t{2:s}\t{3:d} ({4:d})\t{5:s}'.format(
+          extraction_worker_status.identifier,
+          extraction_worker_status.pid, status,
+          extraction_worker_status.number_of_events, number_of_events_delta,
+          extraction_worker_status.display_name)
+
+      status_table.append(status_row)
+
+    status_table.append(u'')
+    self._output_writer.Write(u'\n'.join(status_table))
+    self._output_writer.Write(u'\n')
+
+    if processing_status.extraction_completed:
+      self._output_writer.Write(
+          u'All extraction workers completed - waiting for storage.\n')
+      self._output_writer.Write(u'\n')
+
+    if self._stdout_output_writer:
+      # We need to explicitly flush stdout to prevent partial status updates.
+      sys.stdout.flush()
+
+  def _PrintStatusUpdateStream(self, processing_status):
+    """Prints the processing status as a stream of output.
+
+    Args:
+      processing_status: the processsing status (instance of ProcessingStatus).
+    """
+    if processing_status.extraction_completed:
+      logging.info(u'All extraction workers completed - waiting for storage.')
+
+    else:
+      for extraction_worker_status in processing_status.extraction_workers:
+        logging.info((
+            u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
+            u'- running: {4!s} <{5:s}>').format(
+                extraction_worker_status.identifier,
+                extraction_worker_status.pid,
+                extraction_worker_status.number_of_events,
+                extraction_worker_status.display_name,
+                extraction_worker_status.is_running,
+                extraction_worker_status.status))
 
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
@@ -223,10 +302,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         help=u'Print out information about supported plugins and parsers.')
 
     info_group.add_argument(
-        u'--logfile', action=u'store', metavar=u'FILENAME', dest=u'logfile',
-        type=unicode, default=u'', help=(
+        u'--logfile', u'--log_file', u'--log-file', action=u'store',
+        metavar=u'FILENAME', dest=u'log_file', type=unicode, default=u'', help=(
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
+
+    info_group.add_argument(
+        u'--status_view', u'--status-view', dest=u'status_view_mode',
+        choices=['linear', 'window'], action=u'store',
+        metavar=u'TYPE', default=None, help=(
+            u'The processing status view mode: "linear" or "window". '
+            u'Note that the "window" mode is still experimental.'))
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
@@ -312,16 +398,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'<%(module)s> %(message)s')
 
     debug = getattr(options, u'debug', False)
-    logfile = getattr(options, u'logfile', None)
+    log_file = getattr(options, u'log_file', None)
 
     if debug:
       logging_level = logging.DEBUG
     else:
       logging_level = logging.INFO
 
-    if logfile:
+    if log_file:
       logging.basicConfig(
-          level=logging_level, format=format_string, filename=logfile)
+          level=logging_level, format=format_string, filename=log_file)
     else:
       logging.basicConfig(level=logging_level, format=format_string)
 
@@ -355,9 +441,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         raise errors.BadConfigOption(
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
+    self._status_view_mode = getattr(options, u'status_view_mode', u'linear')
+
   def PrintOptions(self):
     """Prints the options."""
-    self._output_writer.Write(u'\n')
     self._output_writer.Write(
         u'Source path\t\t\t\t: {0:s}\n'.format(self._source_path))
 
@@ -389,9 +476,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._output_writer.Write(u'\n')
 
-    # TODO: merge this into the output of PrintOptions.
-    self._DebugPrintCollection()
-
   def ProcessSource(self):
     """Processes the source.
 
@@ -415,14 +499,26 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         partition_offset=self._partition_offset, enable_vss=self._process_vss,
         vss_stores=self._vss_stores)
 
+    self._output_writer.Write(u'\n')
     self.PrintOptions()
 
+    # TODO: merge this into the output of PrintOptions.
+    self._DebugPrintCollection()
+
     logging.info(u'Processing started.')
+
+    if self._status_view_mode == u'linear':
+      status_update_callback = self._PrintStatusUpdateStream
+    elif self._status_view_mode == u'window':
+      status_update_callback = self._PrintStatusUpdate
+    else:
+      status_update_callback = None
 
     self._front_end.ProcessSource(
         filter_file=self._filter_file,
         parser_filter_string=self._parser_filter_string,
         hasher_names_string=self._hasher_names_string,
+        status_update_callback=status_update_callback,
         storage_serializer_format=self._storage_serializer_format,
         timezone=self._timezone)
 

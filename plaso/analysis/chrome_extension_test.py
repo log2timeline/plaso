@@ -95,7 +95,6 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     test_queue_producer = queue.ItemQueueProducer(event_queue)
     test_queue_producer.ProduceItems([
         self._CreateTestEventObject(path) for path in self.MAC_PATHS])
-    test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
     analysis_plugin = TestChromeExtensionPlugin(event_queue)
@@ -140,7 +139,6 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     test_queue_producer = queue.ItemQueueProducer(event_queue)
     test_queue_producer.ProduceItems([
         self._CreateTestEventObject(path) for path in self.WIN_PATHS])
-    test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
     analysis_plugin = TestChromeExtensionPlugin(event_queue)

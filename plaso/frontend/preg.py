@@ -52,7 +52,7 @@ class PregCache(object):
   shell_helper = None
 
 
-class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
+class PregItemQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements a list event object queue consumer."""
 
   def __init__(self, event_queue):
@@ -61,11 +61,11 @@ class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     Args:
       event_queue: the event object queue (instance of Queue).
     """
-    super(PregEventObjectQueueConsumer, self).__init__(event_queue)
+    super(PregItemQueueConsumer, self).__init__(event_queue)
     self.event_objects = []
 
-  def _ConsumeEventObject(self, event_object, **unused_kwargs):
-    """Consumes an event object callback for ConsumeEventObjects.
+  def _ConsumeItem(self, event_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -848,8 +848,7 @@ class PregHelper(object):
       print u'No new discovered hives.'
       return
 
-    # pylint: disable=unidiomatic-typecheck
-    if type(hives) in (list, tuple):
+    if isinstance(hives, (list, tuple)):
       for hive in hives:
         for name, collector in collectors:
           hive_helper = self.OpenHive(
@@ -1023,8 +1022,7 @@ class PregStorage(object):
     Args:
       hive_helpers: A list of hive objects (instance of PregHiveHelper)
     """
-    # pylint: disable=unidiomatic-typecheck
-    if type(hive_helpers) not in (list, tuple):
+    if not isinstance(hive_helpers, (list, tuple)):
       hive_helpers = [hive_helpers]
 
     self._hive_list.extend(hive_helpers)
@@ -1128,7 +1126,7 @@ def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
             reg_cache=hive_helper.reg_cache))
 
   event_queue = single_process.SingleProcessQueue()
-  event_queue_consumer = PregEventObjectQueueConsumer(event_queue)
+  event_queue_consumer = PregItemQueueConsumer(event_queue)
 
   # Build a parser mediator.
   parser_mediator = shell_helper.BuildParserMediator(event_queue)
@@ -1138,7 +1136,7 @@ def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
   for weight in plugins:
     for plugin in plugins[weight]:
       plugin.Process(parser_mediator, key=key)
-      event_queue_consumer.ConsumeEventObjects()
+      event_queue_consumer.ConsumeItems()
       if not event_queue_consumer.event_objects:
         continue
 

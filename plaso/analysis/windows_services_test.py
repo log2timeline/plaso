@@ -58,7 +58,6 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
               for service_event
               in self.SERVICE_EVENTS]
     test_queue_producer.ProduceItems(events)
-    test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
     analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)

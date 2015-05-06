@@ -12,6 +12,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import queue
+from plaso.lib import definitions
 from plaso.lib import errors
 
 
@@ -45,6 +46,9 @@ class Collector(queue.ItemQueueProducer):
     self._source_path = os.path.abspath(source_path)
     self._source_path_spec = source_path_spec
     self._vss_stores = None
+
+    # Attributes that contain the current status of the collector.
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
 
   def __enter__(self):
     """Enters a with statement."""
@@ -178,7 +182,6 @@ class Collector(queue.ItemQueueProducer):
 
     if not source_file_entry:
       logging.warning(u'No files to collect.')
-      self.SignalEndOfInput()
       return
 
     if (not source_file_entry.IsDirectory() and
@@ -187,6 +190,8 @@ class Collector(queue.ItemQueueProducer):
       raise errors.CollectorError(
           u'Source path: {0:s} not a device, file or directory.'.format(
               self._source_path))
+
+    self._status = definitions.PROCESSING_STATUS_RUNNING
 
     type_indicator = self._source_path_spec.type_indicator
 
@@ -211,7 +216,18 @@ class Collector(queue.ItemQueueProducer):
 
       file_system.Close()
 
-    self.SignalEndOfInput()
+    self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+  def GetStatus(self):
+    """Returns a dictionary containing the status."""
+    number_of_path_specs = (
+        self.number_of_produced_items +
+        self._fs_collector.number_of_produced_items)
+
+    return {
+        u'number_of_path_specs': number_of_path_specs,
+        u'processing_status': self._status,
+        u'type': u'collector'}
 
   def SetCollectDirectoryMetadata(self, collect_directory_metadata):
     """Sets the collect directory metadata flag.

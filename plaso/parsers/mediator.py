@@ -136,6 +136,10 @@ class ParserMediator(object):
     """Clear out attributes that should be added to all events."""
     self._extra_event_attributes = {}
 
+  def ClearParserChain(self):
+    """Clears the parser chain."""
+    self._parser_chain_components = []
+
   def GetDisplayName(self, file_entry=None):
     """Retrieves the display name for the file entry.
 
@@ -329,9 +333,8 @@ class ParserMediator(object):
     self.number_of_parse_errors = 0
 
   def ResetFileEntry(self):
-    """Resets the file entry and clears the parser chain."""
+    """Resets the file entry."""
     self._file_entry = None
-    self._parser_chain_components = []
 
   def SetFileEntry(self, file_entry):
     """Sets the current file entry and clears the parser chain.
@@ -340,7 +343,6 @@ class ParserMediator(object):
       file_entry: the file entry (instance of dfvfs.FileEntry).
     """
     self._file_entry = file_entry
-    self._parser_chain_components = []
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.

@@ -37,6 +37,8 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     # TODO: implement test.
 
+  # Note: this test takes multiple seconds to complete due to
+  # the behavior of the multi processing queue.
   def testProcessSource(self):
     """Tests the ProcessSource function."""
     test_front_end = extraction_frontend.ExtractionFrontend()

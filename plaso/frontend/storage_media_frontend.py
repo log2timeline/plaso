@@ -322,7 +322,7 @@ class StorageMediaFrontend(frontend.Frontend):
           u'Multiple stores can\nbe defined as: 1,3,5 (a list of comma '
           u'separated values). Ranges and lists can\nalso be combined '
           u'as: 1,3..5. The first store is 1. All stores can be defined as: '
-          u'\'all\'. If no stores are specified none will be processed.\n'
+          u'\'all\'.\nIf no stores are specified none will be processed.\n'
           u'You can abort with Ctrl^C.\n')
 
       selected_vss_stores = self._input_reader.Read()
