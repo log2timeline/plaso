@@ -313,8 +313,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     info_group.add_argument(
         u'--status_view', u'--status-view', dest=u'status_view_mode',
-        choices=['linear', 'window'], action=u'store',
-        metavar=u'TYPE', default=None, help=(
+        choices=[u'linear', u'window'], action=u'store',
+        metavar=u'TYPE', default=u'linear', help=(
             u'The processing status view mode: "linear" or "window". '
             u'Note that the "window" mode is still experimental.'))
 

@@ -603,4 +603,3 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def SignalAbort(self):
     """Signals the worker to abort."""
     self._parser_mediator.SignalAbort()
-    super(BaseEventExtractionWorker, self).SignalAbort()
