@@ -24,7 +24,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
 
     Returns:
       An event object queue consumer object (instance of
-      TestEventObjectQueueConsumer).
+      TestItemQueueConsumer).
     """
     file_entry = self._GetTestFileEntryFromPath(path_segments)
     file_object = file_entry.GetFileObject()
@@ -49,16 +49,17 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
 
     Returns:
       An event object queue consumer object (instance of
-      TestEventObjectQueueConsumer).
+      TestItemQueueConsumer).
     """
     event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
+    event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
 
     parser_mediator = self._GetParserMediator(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
+
     plugin_object.Process(
         parser_mediator, plist_name=plist_name, top_level=top_level_object)
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The multi-process processing engine."""
 
+import abc
 import ctypes
 import logging
 import multiprocessing
@@ -81,11 +82,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._storage_writer_process = None
 
     # TODO: turn into a process pool.
-    self._worker_processes = {}
-
-    # Attributes for the storage writer status RPC server.
-    self._storage_writer_status_rpc_port_number = 0
-    self._storage_writer_status_rpc_server = None
+    self._worker_processes = []
 
   def _AbortKill(self):
     """Abort processing by sending SIGKILL or equivalent."""
@@ -94,12 +91,11 @@ class MultiProcessEngine(engine.BaseEngine):
           self._collection_process.pid))
       SigKill(self._collection_process.pid)
 
-    if self._worker_processes:
-      for worker_name, worker_process in self._worker_processes.iteritems():
-        if worker_process.is_alive():
-          logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
-              worker_name, worker_process.pid))
-          SigKill(worker_process.pid)
+    for worker_process in self._worker_processes:
+      if worker_process.is_alive():
+        logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
+            worker_process.name, worker_process.pid))
+        SigKill(worker_process.pid)
 
     if self._storage_writer_process and self._storage_writer_process.is_alive():
       logging.warning(u'Killing storage process: {0:d}.'.format(
@@ -119,11 +115,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if self._worker_processes:
       logging.warning(u'Signaling worker processes to abort.')
-      for _, worker_process in self._worker_processes.iteritems():
+      for worker_process in self._worker_processes:
         worker_process.SignalAbort()
 
     logging.warning(u'Signaling storage process to abort.')
-    self._event_queue_producer.SignalEndOfInput()
+    self._event_queue_producer.SignalAbort()
     self._storage_writer_process.SignalAbort()
 
     if self._collection_process:
@@ -134,19 +130,18 @@ class MultiProcessEngine(engine.BaseEngine):
       self._collection_process.join(timeout=timeout)
       if self._collection_process.is_alive():
         logging.warning(
-            u'Waiting for collection process (PID: {0:s}) failed'.format(
+            u'Waiting for collection process (PID: {0:d}) failed'.format(
                 self._collection_process.pid))
 
-    if self._worker_processes:
-      for worker_name, worker_process in self._worker_processes.iteritems():
+    for worker_process in self._worker_processes:
+      logging.warning(
+          u'Waiting for worker: {0:s} process (PID: {1:d})'.format(
+              worker_process.name, worker_process.pid))
+      worker_process.join(timeout=timeout)
+      if worker_process.is_alive():
         logging.warning(
-            u'Waiting for worker: {0:s} process (PID: {1:d})'.format(
-                worker_name, worker_process.pid))
-        worker_process.join(timeout=timeout)
-        if worker_process.is_alive():
-          logging.warning(
-              u'Waiting for worker: {0:s} process (PID: {1:d}) failed'.format(
-                  worker_name, worker_process.pid))
+            u'Waiting for worker: {0:s} process (PID: {1:d}) failed'.format(
+                worker_process.name, worker_process.pid))
 
     if self._storage_writer_process:
       logging.warning(u'Waiting for storage process (PID: {0:d}).'.format(
@@ -154,7 +149,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._storage_writer_process.join(timeout=timeout)
       if self._storage_writer_process.is_alive():
         logging.warning(
-            u'Waiting for storage process (PID: {0:s}) failed'.format(
+            u'Waiting for storage process (PID: {0:d}) failed'.format(
                 self._storage_writer_process.pid))
 
   def _AbortTerminate(self):
@@ -164,59 +159,25 @@ class MultiProcessEngine(engine.BaseEngine):
           self._collection_process.pid))
       self._collection_process.terminate()
 
-    if self._worker_processes:
-      for worker_name, worker_process in self._worker_processes.iteritems():
-        if worker_process.is_alive():
-          logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
-              worker_name, worker_process.pid))
-          worker_process.terminate()
+    for worker_process in self._worker_processes:
+      if worker_process.is_alive():
+        logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
+            worker_process.name, worker_process.pid))
+        worker_process.terminate()
 
     if self._storage_writer_process and self._storage_writer_process.is_alive():
       logging.warning(u'Terminating storage process: {0:d}.'.format(
           self._storage_writer_process.pid))
       self._storage_writer_process.terminate()
 
-  def _SignalEndOfInput(self):
-    """Signals the engine the storage writer received an end of input signal."""
-    self._foreman_object.SignalEndOfProcessing()
-
-  def _StartStorageWriterStatusRPCServer(self):
-    """Starts the storage writer status RPC server."""
-    if self._storage_writer_status_rpc_server:
-      return
-
-    self._storage_writer_status_rpc_server = (
-        xmlrpc.XMLStorageWriterStatusRPCServer(self._SignalEndOfInput))
-
-    pid = os.getpid()
-    hostname = u'localhost'
-    port = rpc.GetProxyPortNumberFromPID(pid)
-
-    if not self._storage_writer_status_rpc_server.Start(hostname, port):
-      logging.error((
-          u'Unable to start storage writer status RPC server for engine '
-          u'(PID: {0:d})').format(pid))
-
-      self._storage_writer_status_rpc_server = None
-      return
-
-    self._storage_writer_status_rpc_port_number = port
-
-  def _StopStorageWriterStatusRPCServer(self):
-    """Stops the storage writer status RPC server."""
-    if self._storage_writer_status_rpc_server:
-      self._storage_writer_status_rpc_server.Stop()
-      self._storage_writer_status_rpc_server = None
-      self._storage_writer_status_rpc_port_number = 0
-
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
       resolver_context=None):
     """Creates a collector object.
 
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
+    The collector discovers all the files that need to be processed by
+    the workers. Once a file is discovered it is added to the process queue
+    as a path specification (instance of dfvfs.PathSpec).
 
     Args:
       include_directory_stat: Boolean value to indicate whether directory
@@ -297,29 +258,31 @@ class MultiProcessEngine(engine.BaseEngine):
     return extraction_worker
 
   def ProcessSource(
-      self, collector_object, storage_writer, parser_filter_string=None,
-      hasher_names_string=None, number_of_extraction_workers=0,
-      show_memory_usage=False):
+      self, collector_object, storage_writer, hasher_names_string=None,
+      number_of_extraction_workers=0, parser_filter_string=None,
+      status_update_callback=None, show_memory_usage=False):
     """Processes the source and extracts event objects.
 
     Args:
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
-      parser_filter_string: Optional parser filter string. The default is None.
       hasher_names_string: Optional comma separated string of names of
                            hashers to enable enable. The default is None.
       number_of_extraction_workers: Optional number of extraction worker
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
+      parser_filter_string: Optional parser filter string. The default is None.
+      status_update_callback: Optional callback function for status updates.
+                              The default is None.
       show_memory_usage: Optional boolean value to indicate memory information
                          should be included in logging. The default is False.
     """
     if number_of_extraction_workers < 1:
       # One worker for each "available" CPU (minus other processes).
       # The number here is derived from the fact that the engine starts up:
-      #   + A collection process.
-      #   + A storage process.
+      # * A collection process.
+      # * A storage process.
       #
       # If we want to utilize all CPUs on the system we therefore need to start
       # up workers that amounts to the total number of CPUs - the other
@@ -336,154 +299,105 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._foreman_object = foreman.Foreman(
         self._event_queue_producer, show_memory_usage=show_memory_usage)
-    self._StartStorageWriterStatusRPCServer()
 
     logging.info(u'Starting processes.')
     self._storage_writer_process = MultiProcessStorageWriterProcess(
-        storage_writer, self._storage_writer_status_rpc_port_number,
-        name='StorageWriter')
+        storage_writer, name=u'StorageWriter')
     self._storage_writer_process.start()
+    self._foreman_object.StartProcessMonitoring(self._storage_writer_process)
 
     for worker_number in range(number_of_extraction_workers):
       extraction_worker = self.CreateExtractionWorker(worker_number)
 
-      worker_name = u'Worker_{0:d}'.format(worker_number)
+      process_name = u'Worker_{0:d}'.format(worker_number)
 
       # TODO: Test to see if a process pool can be a better choice.
       worker_process = MultiProcessEventExtractionWorkerProcess(
           extraction_worker, parser_filter_string, hasher_names_string,
-          name=worker_name)
+          name=process_name)
       worker_process.start()
 
-      self._foreman_object.MonitorWorker(
-          pid=worker_process.pid, name=worker_name)
-      self._worker_processes[worker_name] = worker_process
+      self._foreman_object.StartProcessMonitoring(worker_process)
+      self._worker_processes.append(worker_process)
 
     self._collection_process = MultiProcessCollectionProcess(
-        collector_object, name='Collector')
+        collector_object, name=u'Collector')
     self._collection_process.start()
+    self._foreman_object.StartProcessMonitoring(self._collection_process)
 
     logging.debug(u'Processing started.')
 
     time.sleep(self._FOREMAN_CHECK_SLEEP)
     while not self._foreman_object.CheckStatus():
+      if status_update_callback:
+        status_update_callback(self._foreman_object.processing_status)
+
       time.sleep(self._FOREMAN_CHECK_SLEEP)
 
     logging.info(u'Processing stopped.')
 
-    self._StopProcesses()
+    # TODO: remove the processes from the foreman.
 
-  def _CheckWorkerProcess(self, worker_name, worker_process):
-    """Checks the worker process and terminates it if necessary.
+    self._StopProcesses(collector_object)
+
+  def _StopProcesses(self, collector_object):
+    """Stops the processes.
 
     Args:
-      worker_name: the string identifying the worker process.
-      worker_process: the worker process object (instance of
-                      EventExtractionWorkerProcess).
+      collector_object: A collector object (instance of Collector).
     """
-    force_termination = False
-
-    worker_process_label = self._foreman_object.GetLabelByPid(
-        worker_process.pid)
-
-    if worker_process.is_alive():
-      if not worker_process_label:
-        logging.warning((
-            u'Process {0:s} (PID: {1:d}) is not monitored by the foreman '
-            u'forcing termination.').format(worker_name, worker_process.pid))
-
-        force_termination = True
-
-      elif self._foreman_object.IsMonitored(worker_process_label):
-        self._foreman_object.CheckStatus(process_label=worker_process_label)
-        return
-
-      elif self._foreman_object.HasCompleted(worker_process_label):
-        logging.info(
-            u'Waiting for worker {0:s} (PID: {1:d}) to complete.'.format(
-                worker_name, worker_process.pid))
-
-        # The timeout here prevents the main process from blocking on
-        # a process it cannot join with.
-        worker_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
-        if worker_process.is_alive():
-          logging.warning((
-              u'Forcing termination of worker process: {0:s} '
-              u'(PID: {1:d})').format(worker_name, worker_process.pid))
-          force_termination = True
-
-    # TODO: determine if this gets called at all.
-    if (worker_process_label and
-        self._foreman_object.IsMonitored(worker_process_label)):
-      self._foreman_object.StopMonitoring(worker_process_label)
-
-    # Note that we explicitly must test against exitcode 0 here since
-    # process.exitcode will be None if there is no exitcode.
-    if force_termination or worker_process.exitcode != 0:
-      if worker_process.exitcode:
-        logging.warning((
-            u'Worker process: {0:s} (PID: {1:d}) exited with code: '
-            u'{2:d}.').format(
-                worker_name, worker_process.pid, worker_process.exitcode))
-
-      logging.warning(u'Terminating worker process: {0:s} (PID: {1:d})'.format(
-          worker_name, worker_process.pid))
-      worker_process.terminate()
-      time.sleep(self._PROCESS_TERMINATION_SLEEP)
-
-      if worker_process.is_alive():
-        logging.warning(u'Killing worker process: {0:s} (PID: {1:d})'.format(
-            worker_name, worker_process.pid))
-        SigKill(worker_process.pid)
-
-    else:
-      logging.info(u'Worker: {0:s} (PID: {1:d}) has completed.'.format(
-          worker_name, worker_process.pid))
-
-    # Remove the worker process from the list of active workers.
-    del self._worker_processes[worker_name]
-
-  def _StopProcesses(self):
-    """Stops the processes."""
-    logging.info(u'Waiting for collector.')
+    logging.info(u'Waiting for collector process.')
     self._collection_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
     if self._collection_process.is_alive():
       logging.warning((
-          u'Forcing termination of collector (PID: {0:d})').format(
+          u'Forcing termination of collector process (PID: {0:d})').format(
               self._collection_process.pid))
 
       self._collection_process.terminate()
 
-    logging.info(u'Collector stopped.')
+    logging.info(u'Collector process stopped.')
 
-    # Run through the running workers, one by one.
-    # This will go through a list of all active worker processes and check its
-    # status. If a worker has completed it will be removed from the list.
-    # The process will not wait longer than five seconds for each worker to
-    # complete, if longer time passes it will simply check it's status and
-    # move on. That ensures that worker process is monitored and status is
-    # updated.
-    while self._worker_processes:
-      # Note that self._worker_processes is altered in this loop hence we need
-      # it to be sorted.
-      for worker_name, worker_process in sorted(
-          self._worker_processes.items()):
-        self._CheckWorkerProcess(worker_name, worker_process)
+    # Remove the extraction worker processes from the foreman and wake them
+    # to make usre that they are not blocking waiting for new items.
+    for worker_process in self._worker_processes:
+      self._foreman_object.StopProcessMonitoring(worker_process)
+      collector_object.SignalAbort()
 
-    self._foreman_object = None
+    # Join or terminate the extraction worker processes.
+    for worker_process in self._worker_processes:
+      logging.info((
+          u'Waiting for extraction worker process: {0!s} '
+          u'(PID: {1:d}).').format(worker_process.name, worker_process.pid))
+      worker_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+      if worker_process.is_alive():
+        logging.warning((
+            u'Forcing termination of extraction worker process: {0!s} '
+            u'(PID: {1:d})').format(worker_process.name, worker_process.pid))
 
-    logging.info(u'Waiting for storage writer.')
+        worker_process.terminate()
+
+      logging.info(
+          u'Extraction worker process: {0!s} stopped.'.format(
+              worker_process.name))
+
+    # Remove the storage writer process from the foreman and wake it
+    # to make sure it is not blocking waiting for new items.
+    self._foreman_object.StopProcessMonitoring(self._storage_writer_process)
+    self._event_queue_producer.SignalAbort()
+    self._parse_error_queue_producer.SignalAbort()
+
+    logging.info(u'Waiting for storage writer process.')
     self._storage_writer_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
     if self._storage_writer_process.is_alive():
       logging.warning((
-          u'Forcing termination of storage writer (PID: {0:d})').format(
+          u'Forcing termination of storage writer process (PID: {0:d})').format(
               self._storage_writer_process.pid))
 
       self._storage_writer_process.terminate()
 
-    logging.info(u'Storage writer stopped.')
+    logging.info(u'Storage writer process stopped.')
 
-    self._StopStorageWriterStatusRPCServer()
+    self._foreman_object = None
 
   def SignalAbort(self):
     """Signals the engine to abort."""
@@ -500,68 +414,29 @@ class MultiProcessEngine(engine.BaseEngine):
     SigKill(os.getpid())
 
 
-class MultiProcessCollectionProcess(multiprocessing.Process):
-  """Class that defines a multi-processing collection process."""
+class MultiProcessBaseProcess(multiprocessing.Process):
+  """Class that defines the multi-processing process interface."""
 
-  def __init__(self, collector_object, **kwargs):
+  def __init__(self, **kwargs):
     """Initializes the process object.
 
     Args:
-      collector_object: A collector object (instance of Collector).
+      kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(MultiProcessCollectionProcess, self).__init__(**kwargs)
-    self._collector_object = collector_object
-
-  # This method part of the multiprocessing.Process interface hence its name
-  # is not following the style guide.
-  def run(self):
-    """The main loop."""
-    # Prevent the KeyboardInterrupt being raised inside the worker process.
-    # This will prevent a collection process to generate a traceback
-    # when interrupted.
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-    pid = os.getpid()
-
-    logging.info(u'Collector (PID: {0:d}) started'.format(pid))
-
-    self._collector_object.Collect()
-
-  def SignalAbort(self):
-    """Signals the process to abort."""
-    self._collector_object.SignalAbort()
-
-
-class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
-  """Class that defines a multi-processing event extraction worker process."""
-
-  def __init__(self, extraction_worker, parser_filter_string,
-               hasher_names_string, **kwargs):
-    """Initializes the process object.
-
-    Args:
-      extraction_worker: The extraction worker object (instance of
-                         MultiProcessEventExtractionWorker).
-      parser_filter_string: The parser filter string.
-      hasher_names_string: Optional comma separated string of names of
-                           hashers to enable enable. The default is None.
-    """
-    super(MultiProcessEventExtractionWorkerProcess, self).__init__(**kwargs)
-    self._extraction_worker = extraction_worker
-
-    # TODO: clean this up with the implementation of a task based
-    # multi-processing approach.
-    self._parser_filter_string = parser_filter_string
-    self._hasher_names_string = hasher_names_string
-
+    super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    # TODO: check if this can be replaced by self.pid or does this only apply
+    # to the parent process?
+    self._pid = None
     self._rpc_server = None
     self._status_is_running = False
 
+  @abc.abstractmethod
   def _GetStatus(self):
     """Returns a status dictionary."""
-    status = self._extraction_worker.GetStatus()
-    self._status_is_running = status.get(u'is_running', False)
-    return status
+
+  @abc.abstractmethod
+  def _Main(self):
+    """The process main loop."""
 
   def _StartProcessStatusRPCServer(self):
     """Starts the process status RPC server."""
@@ -570,21 +445,19 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
 
     self._rpc_server = xmlrpc.XMLProcessStatusRPCServer(self._GetStatus)
 
-    pid = os.getpid()
     hostname = u'localhost'
-    port = rpc.GetProxyPortNumberFromPID(pid)
+    port = rpc.GetProxyPortNumberFromPID(self._pid)
 
     if not self._rpc_server.Start(hostname, port):
       logging.error((
-          u'Unable to start a process status RPC server for worker: {0!s} '
-          u'(PID: {1:d})').format(self._name, pid))
+          u'Unable to start a process status RPC server for {0!s} '
+          u'(PID: {1:d})').format(self._name, self._pid))
 
       self._rpc_server = None
       return
 
     logging.debug(
-        u'Worker process: {0!s} process status RPC server started'.format(
-            self._name))
+        u'Process: {0!s} process status RPC server started'.format(self._name))
 
   def _StopProcessStatusRPCServer(self):
     """Stops the process status RPC server."""
@@ -605,90 +478,151 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     self._rpc_server = None
 
     logging.debug(
-        u'Worker process: {0!s} process status RPC server stopped'.format(
-            self._name))
+        u'Process: {0!s} process status RPC server stopped'.format(self._name))
+
+  @property
+  def name(self):
+    """The process name."""
+    return self._name
 
   # This method part of the multiprocessing.Process interface hence its name
   # is not following the style guide.
   def run(self):
-    """The main loop."""
-    # Prevent the KeyboardInterrupt being raised inside the worker process.
-    # This will prevent a worker process generating a traceback
-    # when interrupted.
+    """Runs the process."""
+    # Prevent the KeyboardInterrupt being raised inside the process.
+    # This will prevent a process to generate a traceback when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
+    self._pid = os.getpid()
+
+    # We need to set the is running statue explictily to True in case
+    # the process completes before the foreman is able to determine
+    # the status of the process, e.g. in the unit tests.
+    self._status_is_running = True
+
+    logging.debug(
+        u'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))
+
+    self._StartProcessStatusRPCServer()
+
+    self._Main()
+
+    self._StopProcessStatusRPCServer()
+
+    logging.debug(
+        u'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
+
+    self._status_is_running = False
+
+  @abc.abstractmethod
+  def SignalAbort(self):
+    """Signals the process to abort."""
+
+
+class MultiProcessCollectionProcess(MultiProcessBaseProcess):
+  """Class that defines a multi-processing collection process."""
+
+  def __init__(self, collector_object, **kwargs):
+    """Initializes the process object.
+
+    Args:
+      collector_object: A collector object (instance of Collector).
+      kwargs: keyword arguments to pass to multiprocessing.Process.
+    """
+    super(MultiProcessCollectionProcess, self).__init__(**kwargs)
+    self._collector = collector_object
+
+  def _GetStatus(self):
+    """Returns a status dictionary."""
+    status = self._collector.GetStatus()
+    self._status_is_running = status.get(u'is_running', False)
+    return status
+
+  def _Main(self):
+    """The main loop."""
+    logging.info(u'Collector (PID: {0:d}) started'.format(self._pid))
+    self._collector.Collect()
+    logging.info(u'Collector (PID: {0:d}) stopped'.format(self._pid))
+
+  def SignalAbort(self):
+    """Signals the process to abort."""
+    self._collector.SignalAbort()
+
+
+class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
+  """Class that defines a multi-processing event extraction worker process."""
+
+  def __init__(self, extraction_worker, parser_filter_string,
+               hasher_names_string, **kwargs):
+    """Initializes the process object.
+
+    Args:
+      extraction_worker: The extraction worker object (instance of
+                         MultiProcessEventExtractionWorker).
+      parser_filter_string: The parser filter string.
+      hasher_names_string: Optional comma separated string of names of
+                           hashers to enable enable. The default is None.
+      kwargs: keyword arguments to pass to multiprocessing.Process.
+    """
+    super(MultiProcessEventExtractionWorkerProcess, self).__init__(**kwargs)
+    self._extraction_worker = extraction_worker
+
+    # TODO: clean this up with the implementation of a task based
+    # multi-processing approach.
+    self._parser_filter_string = parser_filter_string
+    self._hasher_names_string = hasher_names_string
+
+  def _GetStatus(self):
+    """Returns a status dictionary."""
+    status = self._extraction_worker.GetStatus()
+    self._status_is_running = status.get(u'is_running', False)
+    return status
+
+  def _Main(self):
+    """The main loop."""
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
     self._extraction_worker.InitializeParserObjects(
         parser_filter_string=self._parser_filter_string)
+
     if self._hasher_names_string:
       self._extraction_worker.SetHashers(self._hasher_names_string)
 
-    logging.debug(u'Worker process: {0!s} started'.format(self._name))
-    self._StartProcessStatusRPCServer()
-
-    # We need to set this explictily to True if the workers complete
-    # before the foreman is able to determine the status of the worker
-    # e.g. in the unit tests.
-    self._status_is_running = True
-
-    logging.debug(u'Worker process: {0!s} extraction started'.format(
-        self._name))
+    logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) started'.format(
+        self._name, self._pid))
     self._extraction_worker.Run()
-    logging.debug(u'Worker process: {0!s} extraction stopped'.format(
-        self._name))
-
-    self._StopProcessStatusRPCServer()
-    logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
+    logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
+        self._name, self._pid))
 
   def SignalAbort(self):
     """Signals the process to abort."""
     self._extraction_worker.SignalAbort()
 
 
-class MultiProcessStorageWriterProcess(multiprocessing.Process):
+class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing storage writer process."""
 
-  def __init__(self, storage_writer, rpc_port_number, **kwargs):
+  def __init__(self, storage_writer, **kwargs):
     """Initializes the process object.
 
     Args:
       storage_writer: A storage writer object (instance of BaseStorageWriter).
-      rpc_port_number: An integer value containing the RPC end point port
-                       number or 0 if not set.
     """
     super(MultiProcessStorageWriterProcess, self).__init__(**kwargs)
-    self._rpc_port_number = rpc_port_number
     self._storage_writer = storage_writer
 
-  # This method part of the multiprocessing.Process interface hence its name
-  # is not following the style guide.
-  def run(self):
+  def _GetStatus(self):
+    """Returns a status dictionary."""
+    status = self._storage_writer.GetStatus()
+    self._status_is_running = status.get(u'is_running', False)
+    return status
+
+  def _Main(self):
     """The main loop."""
-    # Prevent the KeyboardInterrupt being raised inside the worker process.
-    # This will prevent a storage process to generate a traceback
-    # when interrupted.
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-    pid = os.getpid()
-
-    logging.info(u'Storage writer (PID: {0:d}) started.'.format(pid))
-
-    rpc_proxy_client = None
-    if self._rpc_port_number:
-      rpc_proxy_client = xmlrpc.XMLStorageWriterStatusRPCClient()
-      hostname = u'localhost'
-
-      if not rpc_proxy_client.Open(hostname, self._rpc_port_number):
-        logging.error(
-            u'Unable to setup a RPC client for the storage writer process')
-
+    logging.info(u'Storage writer (PID: {0:d}) started.'.format(self._pid))
     self._storage_writer.WriteEventObjects()
-
-    logging.info(u'Storage writer (PID: {0:d}) stopped.'.format(pid))
-    if rpc_proxy_client:
-      _ = rpc_proxy_client.CallFunction()
+    logging.info(u'Storage writer (PID: {0:d}) stopped.'.format(self._pid))
 
   def SignalAbort(self):
     """Signals the process to abort."""
@@ -698,17 +632,19 @@ class MultiProcessStorageWriterProcess(multiprocessing.Process):
 class MultiProcessingQueue(queue.Queue):
   """Class that defines the multi-processing queue."""
 
-  _QUEUE_WAIT_TIMEOUT = 5
-
-  def __init__(self, maximum_number_of_queued_items=0):
+  def __init__(self, maximum_number_of_queued_items=0, timeout=None):
     """Initializes the multi-processing queue object.
 
     Args:
       maximum_number_of_queued_items: The maximum number of queued items.
                                       The default is 0, which represents
                                       no limit.
+      timeout: Optional floating point number of seconds for the get to
+               time out. The default is None, which means the get will
+               block until a new item is put onto the queue.
     """
     super(MultiProcessingQueue, self).__init__()
+    self._timeout = timeout
 
     # maxsize contains the maximum number of items allowed to be queued,
     # where 0 represents unlimited.
@@ -745,7 +681,10 @@ class MultiProcessingQueue(queue.Queue):
       QueueEmpty: when the queue is empty.
     """
     try:
-      # We need a timeout otherwise the queue will block if empty.
-      return self._queue.get(timeout=self._QUEUE_WAIT_TIMEOUT)
-    except (KeyboardInterrupt, Queue.Empty):
+      # If no timeout is specified the queue will block if empty otherwise
+      # a Queue.Empty exception is raised.
+      return self._queue.get(timeout=self._timeout)
+    except KeyboardInterrupt:
+      raise errors.QueueClose
+    except Queue.Empty:
       raise errors.QueueEmpty

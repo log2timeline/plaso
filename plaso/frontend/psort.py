@@ -426,7 +426,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       if analysis_plugins:
         logging.info(u'Processing data from analysis plugins.')
         for event_queue_producer in event_queue_producers:
-          event_queue_producer.SignalEndOfInput()
+          event_queue_producer.SignalAbort()
 
         # Wait for all analysis plugins to complete.
         for number, analysis_process in enumerate(self._analysis_processes):
@@ -440,7 +440,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         logging.debug(u'All analysis plugins are now stopped.')
 
         # Close the output queue.
-        analysis_output_queue.SignalEndOfInput()
+        analysis_output_queue.SignalAbort()
 
         # Go over each output.
         analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
@@ -568,7 +568,7 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
     self.counter = collections.Counter()
     self.tags = []
 
-  def _ConsumeItem(self, analysis_report):
+  def _ConsumeItem(self, analysis_report, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:

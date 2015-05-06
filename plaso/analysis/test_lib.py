@@ -28,7 +28,7 @@ class TestAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
     super(TestAnalysisReportQueueConsumer, self).__init__(queue_object)
     self.analysis_reports = []
 
-  def _ConsumeItem(self, analysis_report):
+  def _ConsumeItem(self, analysis_report, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:
@@ -109,7 +109,6 @@ class AnalysisPluginTestCase(unittest.TestCase):
     parser_mediator.SetFileEntry(file_entry)
 
     parser_object.Parse(parser_mediator)
-    event_queue.SignalEndOfInput()
 
     return event_queue
 
@@ -138,7 +137,6 @@ class AnalysisPluginTestCase(unittest.TestCase):
         output_format=output_format)
 
     analysis_plugin.RunPlugin(analysis_mediator)
-    analysis_report_queue.SignalEndOfInput()
 
     return analysis_report_queue_consumer
 

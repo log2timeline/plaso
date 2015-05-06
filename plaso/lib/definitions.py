@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 """The definitions."""
 
-SERIALIZER_FORMAT_JSON = u'json'
-SERIALIZER_FORMAT_PROTOBUF = u'proto'
+OS_LINUX = u'Linux'
+OS_MACOSX = u'MacOSX'
+# TODO: keeping this compatible with the existing code for now.
+# Rename None to Unknown in the future.
+OS_UNKNOWN = u'None'
+OS_WINDOWS = u'Windows'
 
-SERIALIZER_FORMATS = frozenset([
-    SERIALIZER_FORMAT_JSON, SERIALIZER_FORMAT_PROTOBUF])
+PROCESSING_STATUS_COMPLETED = u'completed'
+PROCESSING_STATUS_INITIALIZED = u'initialized'
+PROCESSING_STATUS_RUNNING = u'running'
 
 RESERVED_VARIABLE_NAMES = frozenset([
     u'body',
@@ -33,9 +38,8 @@ RESERVED_VARIABLE_NAMES = frozenset([
     u'username',
     u'uuid'])
 
-OS_LINUX = u'Linux'
-OS_MACOSX = u'MacOSX'
-# TODO: keeping this compatible with the existing code for now.
-# Rename None to Unknown in the future.
-OS_UNKNOWN = u'None'
-OS_WINDOWS = u'Windows'
+SERIALIZER_FORMAT_JSON = u'json'
+SERIALIZER_FORMAT_PROTOBUF = u'proto'
+
+SERIALIZER_FORMATS = frozenset([
+    SERIALIZER_FORMAT_JSON, SERIALIZER_FORMAT_PROTOBUF])

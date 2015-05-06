@@ -47,7 +47,9 @@ class PlasmTest(test_lib.FrontendTestCase):
     pfilter.TimeRangeCache.ResetTimeConstraints()
 
     # TODO: add upper queue limit.
-    test_queue = multi_process.MultiProcessingQueue()
+    # We need to specify a timeout here to prevent the multi process queue
+    # blocking if the queue is empty.
+    test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
     test_queue_producer = queue.ItemQueueProducer(test_queue)
     test_queue_producer.ProduceItems([
         TestEvent(0),
@@ -55,9 +57,8 @@ class PlasmTest(test_lib.FrontendTestCase):
         TestEvent(2000000, '/tmp/whoaaaaa'),
         TestEvent(2500000, '/tmp/whoaaaaa'),
         TestEvent(5000000, '/tmp/whoaaaaa', 'dude')])
-    test_queue_producer.SignalEndOfInput()
 
-    storage_writer = storage.StorageFileWriter(
+    storage_writer = storage.FileStorageWriter(
         test_queue, self._storage_filename)
     storage_writer.WriteEventObjects()
 

@@ -50,7 +50,7 @@ class TestCollectorQueueConsumer(queue.ItemQueueConsumer):
     super(TestCollectorQueueConsumer, self).__init__(queue_object)
     self.path_specs = []
 
-  def _ConsumeItem(self, path_spec):
+  def _ConsumeItem(self, path_spec, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:
