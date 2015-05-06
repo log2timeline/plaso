@@ -44,6 +44,14 @@ plaso.engine.knowledge_base_test module
     :undoc-members:
     :show-inheritance:
 
+plaso.engine.processing_status module
+-------------------------------------
+
+.. automodule:: plaso.engine.processing_status
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.profiler module
 ----------------------------
 

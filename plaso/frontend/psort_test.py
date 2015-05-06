@@ -9,6 +9,7 @@ from plaso.cli import test_lib as cli_test_lib
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
+from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.frontend import test_lib
 from plaso.lib import event
@@ -136,6 +137,33 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         timestamp_list[0] >= self.first and timestamp_list[-1] <= self.last)
 
     storage_file.Close()
+
+  def testProcessStorage(self):
+    """Test the ProcessStorage function."""
+    options = frontend.Options()
+    options.storage_file = self._GetTestFilePath([u'psort_test.out'])
+    options.output_format = u'dynamic'
+
+    lines = []
+    with test_lib.TempDirectory() as temp_directory:
+      temp_file_name = os.path.join(temp_directory, u'output.txt')
+      options.write = temp_file_name
+
+      test_front_end = psort.PsortFrontend()
+      test_front_end.ParseOptions(options)
+      test_front_end.ProcessStorage(options)
+
+      with open(temp_file_name, 'rb') as fh:
+        for line in fh:
+          lines.append(line)
+
+    self.assertEqual(len(lines), 16)
+
+    expected_line = (
+        u'2015-12-31T17:54:32+00:00,Entry Written,LOG,Log File,[anacron  '
+        u'pid: 1234] : Another one just like this (124 job run),syslog,'
+        u'OS:syslog,-,6,1\n')
+    self.assertEquals(lines[13], expected_line)
 
   def testOutput(self):
     """Testing if psort can output data."""
