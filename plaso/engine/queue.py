@@ -14,8 +14,8 @@ import abc
 from plaso.lib import errors
 
 
-class QueueEndOfInput(object):
-  """Class that implements a queue end of input."""
+class QueueAbort(object):
+  """Class that implements a queue abort."""
 
 
 class Queue(object):
@@ -31,11 +31,11 @@ class Queue(object):
 
   @abc.abstractmethod
   def PopItem(self):
-    """Pops an item off the queue or None on timeout."""
+    """Pops an item off the queue or None on timeout.
 
-  def SignalEndOfInput(self):
-    """Signals the queue no input remains."""
-    self.PushItem(QueueEndOfInput())
+    Raises:
+      QueueEmpty: when the queue is empty.
+    """
 
 
 class QueueConsumer(object):
@@ -51,12 +51,7 @@ class QueueConsumer(object):
       queue_object: the queue object (instance of Queue).
     """
     super(QueueConsumer, self).__init__()
-    self._abort = False
     self._queue = queue_object
-
-  def SignalAbort(self):
-    """Signals the consumer to abort."""
-    self._abort = True
 
 
 class QueueProducer(object):
@@ -78,56 +73,7 @@ class QueueProducer(object):
   def SignalAbort(self):
     """Signals the producer to abort."""
     self._abort = True
-
-  def SignalEndOfInput(self):
-    """Signals the queue no input remains."""
-    self._queue.SignalEndOfInput()
-
-
-class EventObjectQueueConsumer(QueueConsumer):
-  """Class that implements the event object queue consumer.
-
-     The consumer subscribes to updates on the queue.
-  """
-
-  @abc.abstractmethod
-  def _ConsumeEventObject(self, event_object, **kwargs):
-    """Consumes an event object callback for ConsumeEventObjects."""
-
-  def ConsumeEventObjects(self, **kwargs):
-    """Consumes the event object that are pushed on the queue.
-
-       This function will issue a callback to _ConsumeEventObject for every
-       event object (instance of EventObject) consumed from the queue.
-
-    Args:
-      kwargs: keyword arguments to pass to the _ConsumeEventObject callback.
-    """
-    while not self._abort:
-      try:
-        item = self._queue.PopItem()
-      except errors.QueueEmpty:
-        break
-
-      if isinstance(item, QueueEndOfInput):
-        # Check if this is the last item in the queue.
-        try:
-          next_item = self._queue.PopItem()
-        except errors.QueueEmpty:
-          # Push the item back onto the queue to make sure all
-          # queue consumers are stopped.
-          self._queue.PushItem(item)
-
-          break
-
-        self._queue.PushItem(item)
-        item = next_item
-
-      # Ignore empty items this can happen when the call to PopItem times out.
-      if item:
-        self._ConsumeEventObject(item, **kwargs)
-
-    self._abort = False
+    self._queue.PushItem(QueueAbort())
 
 
 class ItemQueueConsumer(QueueConsumer):
@@ -136,41 +82,46 @@ class ItemQueueConsumer(QueueConsumer):
      The consumer subscribes to updates on the queue.
   """
 
+  def __init__(self, queue_object):
+    """Initializes the item queue consumer.
+
+    Args:
+      queue_object: the queue object (instance of Queue).
+    """
+    super(ItemQueueConsumer, self).__init__(queue_object)
+    self._number_of_consumed_items = 0
+
+  @property
+  def number_of_consumed_items(self):
+    """The number of consumed items."""
+    return self._number_of_consumed_items
+
   @abc.abstractmethod
-  def _ConsumeItem(self, item):
+  def _ConsumeItem(self, item, **kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:
       item: the item object.
+      kwargs: keyword arguments to pass to the _ConsumeItem callback.
     """
 
-  def ConsumeItems(self):
-    """Consumes the items that are pushed on the queue."""
-    while not self._abort:
+  def ConsumeItems(self, **kwargs):
+    """Consumes the items that are pushed on the queue.
+
+    Args:
+      kwargs: keyword arguments to pass to the _ConsumeItem callback.
+    """
+    while True:
       try:
         item = self._queue.PopItem()
-      except errors.QueueEmpty:
+      except (errors.QueueAbort, errors.QueueEmpty):
         break
 
-      if isinstance(item, QueueEndOfInput):
-        # Check if this is the last item in the queue.
-        try:
-          next_item = self._queue.PopItem()
-        except errors.QueueEmpty:
-          # Push the item back onto the queue to make sure all
-          # queue consumers are stopped.
-          self._queue.PushItem(item)
+      if isinstance(item, QueueAbort):
+        break
 
-          break
-
-        self._queue.PushItem(item)
-        item = next_item
-
-      # Ignore empty items this can happen when the call to PopItem times out.
-      if item:
-        self._ConsumeItem(item)
-
-    self._abort = False
+      self._number_of_consumed_items += 1
+      self._ConsumeItem(item, **kwargs)
 
 
 class ItemQueueProducer(QueueProducer):
@@ -178,6 +129,20 @@ class ItemQueueProducer(QueueProducer):
 
      The producer generates updates on the queue.
   """
+
+  def __init__(self, queue_object):
+    """Initializes the item queue producer.
+
+    Args:
+      queue_object: the queue object (instance of Queue).
+    """
+    super(ItemQueueProducer, self).__init__(queue_object)
+    self._number_of_produced_items = 0
+
+  @property
+  def number_of_produced_items(self):
+    """The number of produced items."""
+    return self._number_of_produced_items
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
@@ -190,6 +155,7 @@ class ItemQueueProducer(QueueProducer):
       item: the item object.
     """
     try:
+      self._number_of_produced_items += 1
       self._queue.PushItem(item)
     except errors.QueueFull:
       self._FlushQueue()

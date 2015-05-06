@@ -15,12 +15,13 @@ class MultiProcessingQueueTest(unittest.TestCase):
 
   def testPushPopItem(self):
     """Tests the PushItem and PopItem functions."""
-    test_queue = multi_process.MultiProcessingQueue()
+    # A timeout is used to prevent the multi processing queue to close and
+    # stop blocking the current process
+    test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
 
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    test_queue.SignalEndOfInput()
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
 

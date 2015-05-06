@@ -7,7 +7,7 @@ from plaso.engine import queue
 from plaso.lib import timelib
 
 
-class AnalysisPlugin(queue.EventObjectQueueConsumer):
+class AnalysisPlugin(queue.ItemQueueConsumer):
   """Class that implements the analysis plugin object interface."""
 
   # The URLS should contain a list of URLs with additional information about
@@ -60,15 +60,17 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     super(AnalysisPlugin, self).__init__(incoming_queue)
     self.plugin_type = self.TYPE_REPORT
 
-  def _ConsumeEventObject(self, event_object, analysis_mediator=None, **kwargs):
-    """Consumes an event object callback for ConsumeEventObjects.
+  def _ConsumeItem(self, item, analysis_mediator=None, **kwargs):
+    """Consumes an item callback for ConsumeItems.
 
     Args:
-      event_object: An event object (instance of EventObject).
+      item: the item object.
       analysis_mediator: The analysis mediator object (instance of
                          AnalysisMediator).
+      kwargs: keyword arguments to pass to the _ConsumeItem callback.
     """
-    self.ExamineEvent(analysis_mediator, event_object, **kwargs)
+    # TODO: rename to ExamineItem.
+    self.ExamineEvent(analysis_mediator, item, **kwargs)
 
   @property
   def plugin_name(self):
@@ -108,7 +110,7 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
       analysis_mediator: The analysis mediator object (instance of
                          AnalysisMediator).
     """
-    self.ConsumeEventObjects(analysis_mediator=analysis_mediator)
+    self.ConsumeItems(analysis_mediator=analysis_mediator)
 
     analysis_report = self.CompileReport(analysis_mediator)
 

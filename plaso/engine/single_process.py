@@ -174,16 +174,16 @@ class SingleProcessEngine(engine.BaseEngine):
     return extraction_worker
 
   def ProcessSource(
-      self, collector_object, storage_writer, parser_filter_string=None,
-      hasher_names_string=None):
+      self, collector_object, storage_writer, hasher_names_string=None,
+      parser_filter_string=None):
     """Processes the source and extracts event objects.
 
     Args:
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
-      parser_filter_string: Optional parser filter string. The default is None.
       hasher_names_string: Optional comma separated string of names of
                            hashers to enable. The default is None.
+      parser_filter_string: Optional parser filter string. The default is None.
     """
     extraction_worker = self.CreateExtractionWorker(0)
 
@@ -210,8 +210,6 @@ class SingleProcessEngine(engine.BaseEngine):
     logging.debug(u'Extraction worker started.')
     extraction_worker.Run()
     logging.debug(u'Extraction worker stopped.')
-
-    self._event_queue_producer.SignalEndOfInput()
 
     logging.debug(u'Storage writer started.')
     storage_writer.WriteEventObjects()
@@ -355,3 +353,5 @@ class SingleProcessQueue(queue.Queue):
       return self._queue.popleft()
     except IndexError:
       raise errors.QueueEmpty
+    except KeyboardInterrupt:
+      raise errors.QueueAbort

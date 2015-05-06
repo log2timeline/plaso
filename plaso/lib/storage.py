@@ -1554,7 +1554,46 @@ class StorageFile(object):
       del self._event_tag_index
 
 
-class StorageFileWriter(queue.EventObjectQueueConsumer):
+class StorageWriter(queue.ItemQueueConsumer):
+  """Class that defines the storage writer interface."""
+
+  # pylint: disable=abstract-method
+
+  def __init__(self, storage_queue):
+    """Initializes a storage writer object.
+
+    Args:
+      storage_queue: the storage queue (instance of Queue).
+    """
+    super(StorageWriter, self).__init__(storage_queue)
+
+    # Attributes that contain the current status of the storage writer.
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+
+    # Attributes for profiling.
+    self._enable_profiling = False
+    self._profiling_type = u'all'
+
+  def GetStatus(self):
+    """Returns a dictionary containing the status."""
+    return {
+        u'number_of_events': self.number_of_consumed_items,
+        u'processing_status': self._status,
+        u'type': u'storage_writer'}
+
+  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
+      profiling_type: optional profiling type. The default is 'all'.
+    """
+    self._enable_profiling = enable_profiling
+    self._profiling_type = profiling_type
+
+
+class FileStorageWriter(StorageWriter):
   """Class that implements a storage file writer object."""
 
   def __init__(
@@ -1570,34 +1609,21 @@ class StorageFileWriter(queue.EventObjectQueueConsumer):
       serializer_format: A string containing either "proto" or "json". Defaults
                          to proto.
     """
-    super(StorageFileWriter, self).__init__(storage_queue)
+    super(FileStorageWriter, self).__init__(storage_queue)
     self._buffer_size = buffer_size
     self._output_file = output_file
     self._pre_obj = pre_obj
     self._serializer_format = serializer_format
     self._storage_file = None
 
-    # Attributes for profiling.
-    self._enable_profiling = False
-    self._profiling_type = u'all'
-
-  def _ConsumeEventObject(self, event_object, **unused_kwargs):
-    """Consumes an event object callback for ConsumeEventObjects."""
+  def _ConsumeItem(self, event_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems."""
     self._storage_file.AddEventObject(event_object)
-
-  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if profiling should
-                        be enabled.
-      profiling_type: optional profiling type. The default is 'all'.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_type = profiling_type
 
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+
     self._storage_file = StorageFile(
         self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj,
         serializer_format=self._serializer_format)
@@ -1605,12 +1631,18 @@ class StorageFileWriter(queue.EventObjectQueueConsumer):
     self._storage_file.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)
 
-    self.ConsumeEventObjects()
+    self.ConsumeItems()
     self._storage_file.Close()
 
+    self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-class BypassStorageWriter(queue.EventObjectQueueConsumer):
-  """Watch a queue with EventObjects and send them directly to output."""
+
+class BypassStorageWriter(StorageWriter):
+  """Class that implements a bypass storage writer object.
+
+  The bypass storage writer allows to directly pass event objects to
+  an output module instead of writing them first to a file storage file.
+  """
 
   def __init__(
       self, storage_queue, output_file, output_module_string='l2tcsv',
@@ -1630,8 +1662,8 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
     self._pre_obj = pre_obj
     self._pre_obj.store_range = (1, 1)
 
-  def _ConsumeEventObject(self, event_object, **unused_kwargs):
-    """Consumes an event object callback for ConsumeEventObjects."""
+  def _ConsumeItem(self, event_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems."""
     # Set the store number and index to default values since they are not used.
     event_object.store_number = 1
     event_object.store_index = -1
@@ -1654,6 +1686,8 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
 
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+
     # TODO: Re-enable this when storage library has been split up.
     # Also update code to use NewOutputModule().
     # pylint: disable=pointless-string-statement
@@ -1667,6 +1701,8 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
         config=self._pre_obj)
 
     self._output_module.Start()
-    self.ConsumeEventObjects()
+    self.ConsumeItems()
     self._output_module.End()
     """
+
+    self._status = definitions.PROCESSING_STATUS_COMPLETED

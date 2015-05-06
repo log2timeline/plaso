@@ -17,13 +17,14 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
   """Test for the unique hashes analysis plugin."""
   EVENTS = [
       {u'path_spec': fake_path_spec.FakePathSpec(
-          u'/var/testing directory with space/file.txt'), u'test_hash': u'4'},
+          u'/var/testing directory with space/file.txt'),
+       u'test_hash': u'4'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'C:\\Windows\\a.file.txt'),
        u'test_hash': u'4'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/dfvfs'),
-          u'test_hash':u'4'},
+       u'test_hash':u'4'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/2hash_file'),
-          u'test_hash':u'4', u'alternate_test_hash': u'5'},
+       u'test_hash':u'4', u'alternate_test_hash': u'5'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/no_hash_file')}
   ]
 
@@ -54,7 +55,6 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
               for event_dict
               in self.EVENTS]
     test_queue_producer.ProduceItems(events)
-    test_queue_producer.SignalEndOfInput()
 
     # Initialize plugin.
     analysis_plugin = file_hashes.FileHashesPlugin(event_queue)

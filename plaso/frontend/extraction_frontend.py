@@ -98,8 +98,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       return
 
     if self._collector:
-      logging.warning(u'Stopping collector.')
-      self._collector.SignalEndOfInput()
+      self._collector.SignalAbort()
 
     if self._engine:
       self._engine.SignalAbort()
@@ -376,9 +375,9 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       pre_obj.zone = timezone
 
   def _ProcessSourceMultiProcessMode(
-      self, pre_obj, filter_find_specs=None, include_directory_stat=True,
-      number_of_worker_processes=0, parser_filter_string=None,
-      hasher_names_string=None,
+      self, pre_obj, filter_find_specs=None, hasher_names_string=None,
+      include_directory_stat=True, number_of_worker_processes=0,
+      parser_filter_string=None, status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Processes the source with multiple processes.
 
@@ -386,6 +385,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       pre_obj: the preprocess object (instance of PreprocessObject).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
+      hasher_names_string: optional comma separated string of names of
+                           hashers to enable. The default is None.
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected. The default
                               is True.
@@ -393,8 +394,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
                                   The default is 0 which represents deterimine
                                   automatically.
       parser_filter_string: optional parser filter string. The default is None.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
+      status_update_callback: Optional callback function for status updates.
+                              The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
     """
@@ -412,7 +413,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           self._engine.storage_queue, self._storage_file_path,
           output_module_string=self._output_module, pre_obj=pre_obj)
     else:
-      storage_writer = storage.StorageFileWriter(
+      storage_writer = storage.FileStorageWriter(
           self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
@@ -424,9 +425,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     try:
       self._engine.ProcessSource(
           self._collector, storage_writer,
-          parser_filter_string=parser_filter_string,
           hasher_names_string=hasher_names_string,
           number_of_extraction_workers=number_of_worker_processes,
+          parser_filter_string=parser_filter_string,
+          status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information)
 
     except KeyboardInterrupt:
@@ -434,21 +436,21 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       raise errors.UserAbort(u'Process source aborted.')
 
   def _ProcessSourceSingleProcessMode(
-      self, pre_obj, filter_find_specs=None, include_directory_stat=True,
-      parser_filter_string=None, hasher_names_string=None,
+      self, pre_obj, filter_find_specs=None, hasher_names_string=None,
+      include_directory_stat=True, parser_filter_string=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Processes the source in a single process.
 
     Args:
       pre_obj: the preprocess object (instance of PreprocessObject).
+      filter_find_specs: optional list of filter find specifications (instances
+                         of dfvfs.FindSpec). The default is None.
+      hasher_names_string: optional comma separated string of names of
+                           hashers to enable. The default is None.
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected. The default
                               is True.
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec). The default is None.
       parser_filter_string: optional parser filter string. The default is None.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
     """
@@ -457,9 +459,9 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     try:
       self._StartSingleThread(
           pre_obj, filter_find_specs=filter_find_specs,
+          hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
-          hasher_names_string=hasher_names_string,
           storage_serializer_format=storage_serializer_format)
 
     except Exception as exception:
@@ -472,8 +474,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         pdb.post_mortem()
 
   def _StartSingleThread(
-      self, pre_obj, filter_find_specs=None, include_directory_stat=True,
-      parser_filter_string=None, hasher_names_string=None,
+      self, pre_obj, filter_find_specs=None, hasher_names_string=None,
+      include_directory_stat=True, parser_filter_string=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Starts everything up in a single process.
 
@@ -494,12 +496,12 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       pre_obj: the preprocess object (instance of PreprocessObject).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
+      hasher_names_string: optional comma separated string of names of
+                           hashers to enable. The default is None.
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected. The default
                               is True.
       parser_filter_string: optional parser filter string. The default is None.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
     """
@@ -513,7 +515,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           self._engine.storage_queue, self._storage_file_path,
           output_module_string=self._output_module, pre_obj=pre_obj)
     else:
-      storage_writer = storage.StorageFileWriter(
+      storage_writer = storage.FileStorageWriter(
           self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
@@ -543,8 +545,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         resolver_context=self._resolver_context)
 
   def ProcessSource(
-      self, filter_file=None, parser_filter_string=None,
-      hasher_names_string=None,
+      self, filter_file=None, hasher_names_string=None,
+      parser_filter_string=None, status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
     """Processes the source.
@@ -552,9 +554,11 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     Args:
       filter_file: a path to a file that contains find specifications.
                    The default is None.
-      parser_filter_string: optional parser filter string. The default is None.
       hasher_names_string: optional comma separated string of names of
                            hashers to enable. The default is None.
+      parser_filter_string: optional parser filter string. The default is None.
+      status_update_callback: Optional callback function for status updates.
+                              The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
       timezone: optional preferred timezone. The default is UTC.
@@ -625,16 +629,17 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     if self._single_process_mode:
       self._ProcessSourceSingleProcessMode(
           pre_obj, filter_find_specs=filter_find_specs,
+          hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
-          hasher_names_string=hasher_names_string,
           storage_serializer_format=storage_serializer_format)
     else:
       self._ProcessSourceMultiProcessMode(
           pre_obj, filter_find_specs=filter_find_specs,
+          hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
-          hasher_names_string=hasher_names_string,
+          status_update_callback=status_update_callback,
           storage_serializer_format=storage_serializer_format)
 
   def SetEnableProfiling(
