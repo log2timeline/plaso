@@ -298,6 +298,7 @@ def Main():
   options = frontend.Options()
 
   # Set the default options.
+  # TODO: Refactor options out of this code.
   options.buffer_size = 0
   options.debug = False
   options.filename = '.'
@@ -324,7 +325,6 @@ def Main():
   front_end = pshell.PshellFrontend()
 
   try:
-    front_end.ParseOptions(options, source_option='filename')
     front_end.SetStorageFile(options.output)
   except errors.BadConfigOption as exception:
     logging.error(u'{0:s}'.format(exception))
