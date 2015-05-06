@@ -13,35 +13,21 @@ from plaso.lib import errors
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the analysis tool object."""
 
-  _EXPECTED_OUTPUT_DEFAULT = u'\n'.join([
-      u'usage: analysis_tool_test.py [-h]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -h, --help  show this help message and exit',
-      u''])
-
   _EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS = u'\n'.join([
-      u'usage: analysis_tool_test.py [-h] [STORAGE_FILE]',
+      u'usage: analysis_tool_test.py [STORAGE_FILE]',
       u'',
       u'Test argument parser.',
       u'',
       u'positional arguments:',
       u'  STORAGE_FILE  The path of the storage file.',
-      u'',
-      u'optional arguments:',
-      u'  -h, --help    show this help message and exit',
       u''])
 
   def testAddStorageFileOptions(self):
     """Tests the AddStorageFileOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'analysis_tool_test.py',
-        description=u'Test argument parser.')
-
-    output = argument_parser.format_help()
-    self.assertEqual(output, self._EXPECTED_OUTPUT_DEFAULT)
+        description=u'Test argument parser.',
+        add_help=False)
 
     test_tool = analysis_tool.AnalysisTool()
     test_tool.AddStorageFileOptions(argument_parser)

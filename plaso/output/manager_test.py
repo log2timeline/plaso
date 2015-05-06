@@ -63,8 +63,25 @@ class OutputManagerTest(unittest.TestCase):
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 
+  def testGetOutputClasses(self):
+    """Tests the GetOutputClasses function."""
+    manager.OutputManager.RegisterOutput(TestOutput)
+
+    names = []
+    output_classes = []
+
+    for name, output_class in manager.OutputManager.GetOutputClasses():
+      names.append(name)
+      output_classes.append(output_class)
+
+    self.assertIn(u'test_output', names)
+    self.assertIn(TestOutput, output_classes)
+
+    manager.OutputManager.DeregisterOutput(TestOutput)
+
+  # TODO: remove in favor of testGetOutputClasses.
   def testGetOutputs(self):
-    """Tests the GetOtputs function."""
+    """Tests the GetOutputs function."""
     manager.OutputManager.RegisterOutput(TestOutput)
 
     names = []

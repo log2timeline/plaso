@@ -2,16 +2,13 @@
 """The psort front-end."""
 
 import collections
-import datetime
 import multiprocessing
 import logging
 import sys
 
-from plaso import filters
 from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
-from plaso.analysis import interface as analysis_interface
 from plaso.analysis import manager as analysis_manager
 from plaso.analysis import mediator as analysis_mediator
 from plaso.cli import tools as cli_tools
@@ -20,7 +17,6 @@ from plaso.engine import queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
-from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
@@ -29,7 +25,6 @@ from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
-from plaso.winnt import language_ids
 
 import pytz
 
@@ -52,7 +47,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._output_file_object = None
     self._output_format = None
     self._preferred_language = u'en-US'
-    self._slice_size = 5
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
     """Appends an event object to an output buffer and queues.
@@ -80,206 +74,151 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     for event_queue in event_queues:
       event_queue.ProduceItem(event_object)
 
-  def AddAnalysisPluginOptions(self, argument_group, plugin_names):
-    """Adds the analysis plugin options to the argument group
+  def HasOutputClass(self, name):
+    """Determines if a specific output class is registered with the manager.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-      plugin_names: a string containing comma separated analysis plugin names.
-
-    Raises:
-      BadConfigOption: if non-existing analysis plugin names are specified.
-    """
-    if plugin_names == u'list':
-      return
-
-    plugin_list = set([
-        name.strip().lower() for name in plugin_names.split(u',')])
-
-    # Get a list of all available plugins.
-    analysis_plugins = (
-        analysis_manager.AnalysisPluginManager.ListAllPluginNames())
-    analysis_plugins = set([name.lower() for name, _, _ in analysis_plugins])
-
-    # Get a list of the selected plugins (ignoring selections that did not
-    # have an actual plugin behind it).
-    plugins_to_load = analysis_plugins.intersection(plugin_list)
-
-    # Check to see if we are trying to load plugins that do not exist.
-    difference = plugin_list.difference(analysis_plugins)
-    if difference:
-      raise errors.BadConfigOption(
-          u'Non-existing analysis plugins specified: {0:s}'.format(
-              u' '.join(difference)))
-
-    plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
-        plugins_to_load, None)
-    for plugin in plugins:
-      if plugin.ARGUMENTS:
-        for parameter, config in plugin.ARGUMENTS:
-          argument_group.add_argument(parameter, **config)
-
-  def AddOutputModuleOptions(self, argument_group, module_names):
-    """Adds the output module options to the argument group
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-      module_names: a string containing comma separated output module names.
-    """
-    if module_names == u'list':
-      return
-
-    modules_list = set([name.lower() for name in module_names])
-
-    manager = output_manager.OutputManager
-    for output_module_string, _ in manager.GetOutputs():
-      if not output_module_string.lower() in modules_list:
-        continue
-
-      output_module = manager.GetOutputClass(output_module_string)
-      if output_module.ARGUMENTS:
-        for parameter, config in output_module.ARGUMENTS:
-          argument_group.add_argument(parameter, **config)
-
-  def ListAnalysisPlugins(self):
-    """Lists the analysis modules."""
-    self.PrintHeader(u'Analysis Modules')
-    format_length = 10
-    analysis_plugins = (
-        analysis_manager.AnalysisPluginManager.ListAllPluginNames())
-
-    for name, _, _ in analysis_plugins:
-      if len(name) > format_length:
-        format_length = len(name)
-
-    for name, description, plugin_type in analysis_plugins:
-      if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
-        type_string = u'Annotation/tagging plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
-        type_string = u'Anomaly plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_REPORT:
-        type_string = u'Summary/Report plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_STATISTICS:
-        type_string = u'Statistics plugin'
-      else:
-        type_string = u'Unknown type'
-
-      description = u'{0:s} [{1:s}]'.format(description, type_string)
-      self.PrintColumnValue(name, description, format_length)
-    self.PrintSeparatorLine()
-
-  def ListLanguageIdentifiers(self):
-    """Lists the language identifiers."""
-    self.PrintHeader(u'Language identifiers')
-    self.PrintColumnValue(u'Identifier', u'Language')
-    for language_id, value_list in sorted(
-        language_ids.LANGUAGE_IDENTIFIERS.items()):
-      self.PrintColumnValue(language_id, value_list[1])
-
-  def ListOutputModules(self):
-    """Lists the output modules."""
-    self.PrintHeader(u'Output Modules')
-    manager = output_manager.OutputManager
-    for name, description in manager.GetOutputs():
-      self.PrintColumnValue(name, description, 10)
-    self.PrintSeparatorLine()
-
-  def ListTimeZones(self):
-    """Lists the timezones."""
-    self.PrintHeader(u'Zones')
-    max_length = 0
-    for zone in pytz.all_timezones:
-      if len(zone) > max_length:
-        max_length = len(zone)
-
-    self.PrintColumnValue(u'Timezone', u'UTC Offset', max_length)
-    for zone in pytz.all_timezones:
-      zone_obj = pytz.timezone(zone)
-      date_str = unicode(zone_obj.localize(datetime.datetime.utcnow()))
-      if u'+' in date_str:
-        _, _, diff = date_str.rpartition(u'+')
-        diff_string = u'+{0:s}'.format(diff)
-      else:
-        _, _, diff = date_str.rpartition(u'-')
-        diff_string = u'-{0:s}'.format(diff)
-      self.PrintColumnValue(zone, diff_string, max_length)
-    self.PrintSeparatorLine()
-
-  def ParseOptions(self, options):
-    """Parses the options and initializes the front-end.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(PsortFrontend, self).ParseOptions(options)
-
-    self._output_format = getattr(options, u'output_format', None)
-    if not self._output_format:
-      raise errors.BadConfigOption(u'Missing output format.')
-
-    if not output_manager.OutputManager.HasOutputClass(self._output_format):
-      raise errors.BadConfigOption(
-          u'Unsupported output format: {0:s}.'.format(self._output_format))
-
-    self._output_filename = getattr(options, u'write', None)
-
-    self._filter_expression = getattr(options, u'filter', None)
-    if self._filter_expression:
-      self._filter_object = filters.GetFilter(self._filter_expression)
-      if not self._filter_object:
-        raise errors.BadConfigOption(
-            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
-
-      # Check to see if we need to create a circular buffer.
-      if getattr(options, u'slicer', None):
-        self._slice_size = getattr(options, u'slice_size', 5)
-        self._filter_buffer = bufferlib.CircularBuffer(self._slice_size)
-
-    self._preferred_language = getattr(options, u'preferred_language', u'en-US')
-
-  def ProcessStorage(self, options):
-    """Open a storage file and processes the events within.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      name: The name of the output module.
 
     Returns:
-      A counter.
+      A boolean indicating if the output class is registered.
+    """
+    return output_manager.OutputManager.HasOutputClass(name)
+
+  def GetAnalysisPlugins(self):
+    """Retrieves the available analysis plugins.
+
+    Returns:
+      A sorted list of available plugin names and docstrings.
+    """
+    return analysis_manager.AnalysisPluginManager.ListAllPluginNames()
+
+  def GetOutputClasses(self):
+    """Retrieves the available output classes.
+
+    Returns:
+      An output module generator which yields tuples of output class names
+      and type object.
+    """
+    return output_manager.OutputManager.GetOutputClasses()
+
+  def GetTimeSlice(self, event_time_string, duration=5, timezone=pytz.UTC):
+    """Retrieves a time slice.
+
+    Args:
+      event_time_string: event time string of the time slice or None.
+      duration: optional duration of the time slize in minutes.
+                The default is 5, which represent 2.5 minutes before
+                and 2.5 minutes after the event timestamp.
+      timezone: optional timezone. The default is UTC.
+
+    Returns:
+      A time slice object (instance of TimeSlice).
+    """
+    if event_time_string:
+      event_timestamp = timelib.Timestamp.FromTimeString(
+          event_time_string, timezone=timezone)
+    else:
+      event_timestamp = None
+
+    return frontend.TimeSlice(event_timestamp, duration=duration)
+
+  def _ProcessAnalysisPlugins(
+      self, analysis_plugins, event_queue_producers, analysis_output_queue,
+      storage_file, counter, preferred_encoding=u'utf-8'):
+    """Runs the analysis plugins.
+
+    Args:
+      analysis_plugins: the analysis plugins.
+      event_queue_producers: a list of event queue producter objects
+                             (instances of ItemQueueProducer).
+      analysis_output_queue: the analysis output queue (instance of Queue).
+      storage_file: a storage file object (instance of StorageFile).
+      counter: a counter object (instance of collections.Counter).
+      preferred_encoding: optional preferred encoding. The default is "utf-8".
+    """
+    if not analysis_plugins:
+      return
+
+    logging.info(u'Processing data from analysis plugins.')
+    for event_queue_producer in event_queue_producers:
+      event_queue_producer.SignalEndOfInput()
+
+    # Wait for all analysis plugins to complete.
+    for number, analysis_process in enumerate(self._analysis_processes):
+      logging.debug(
+          u'Waiting for analysis plugin: {0:d} to complete.'.format(number))
+
+      if analysis_process.is_alive():
+        analysis_process.join(timeout=10)
+      else:
+        logging.warning(u'Plugin {0:d} already stopped.'.format(number))
+        analysis_process.terminate()
+
+    logging.debug(u'All analysis plugins are now stopped.')
+
+    # Close the output queue.
+    analysis_output_queue.SignalAbort()
+
+    # Go over each output.
+    analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
+        analysis_output_queue, storage_file, self._filter_expression,
+        preferred_encoding=preferred_encoding)
+
+    analysis_queue_consumer.ConsumeItems()
+
+    if analysis_queue_consumer.tags:
+      storage_file.StoreTagging(analysis_queue_consumer.tags)
+
+    # TODO: analysis_queue_consumer.anomalies:
+
+    for item, value in analysis_queue_consumer.counter.iteritems():
+      counter[item] = value
+
+  def ProcessStorage(
+      self, options, analysis_plugins, analysis_plugins_output_format,
+      deduplicate_events=True, preferred_encoding=u'utf-8', time_slice=None,
+      timezone=pytz.UTC, use_time_slicer=False):
+    """Processes a plaso storage file.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      analysis_plugins: the analysis plugins.
+      analysis_plugins_output_format: the analysis plugins output format.
+      deduplicate_events: optional boolean value to indicate if the event
+                          objects should be deduplicated. The default is True.
+      preferred_encoding: optional preferred encoding. The default is "utf-8".
+      time_slice: optional time slice object (instance of TimeSlice).
+                  The default is None.
+      timezone: optional timezone. The default is UTC.
+      use_time_slicer: optional boolean value to indicate the 'time slicer'
+                       should be used. The default is False. The 'time slicer'
+                       will provide a context of events around an event of
+                       interest.
+
+    Returns:
+      A counter (an instance of counter.Counter) that contains the analysis
+      plugin results or None.
 
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    counter = None
+    # TODO: remove this in psort options refactor.
+    self._output_format = getattr(options, u'output_format', None)
+    self._output_filename = getattr(options, u'write', None)
 
-    slice_option = getattr(options, u'slice', None)
-    if slice_option:
-      timezone = getattr(options, u'timezone', u'UTC')
-      if timezone == u'UTC':
-        zone = pytz.UTC
-      else:
-        zone = pytz.timezone(timezone)
+    if time_slice:
+      if time_slice.event_timestamp:
+        pfilter.TimeRangeCache.SetLowerTimestamp(time_slice.start_timestamp)
+        pfilter.TimeRangeCache.SetUpperTimestamp(time_slice.end_timestamp)
 
-      timestamp = timelib.Timestamp.FromTimeString(slice_option, timezone=zone)
+      elif use_time_slicer:
+        self._filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
-      # Convert number of minutes to microseconds.
-      range_operator = self._slice_size * 60 * 1000000
-
-      # Set the time range.
-      pfilter.TimeRangeCache.SetLowerTimestamp(timestamp - range_operator)
-      pfilter.TimeRangeCache.SetUpperTimestamp(timestamp + range_operator)
-
-    analysis_plugins = getattr(options, u'analysis_plugins', u'')
     if analysis_plugins:
       read_only = False
     else:
       read_only = True
-    analysis_plugins_output_format = getattr(
-        options, u'windows-services-output', u'text')
 
     try:
       storage_file = self.OpenStorageFile(read_only=read_only)
@@ -288,6 +227,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
               self._storage_file_path, exception))
 
+    counter = None
     with storage_file:
       storage_file.SetStoreLimit(self._filter_object)
 
@@ -300,7 +240,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         raise RuntimeError(exception)
 
       output_mediator_object = output_mediator.OutputMediator(
-          formatter_mediator, storage_file, config=options)
+          formatter_mediator, storage_file, config=options,
+          preferred_encoding=preferred_encoding, timezone=timezone)
 
       kwargs = {}
       # TODO: refactor this to use CLI argument helpers.
@@ -326,6 +267,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       if not output_module:
         raise RuntimeError(u'Missing output module.')
 
+      # TODO: allow for single processing.
+      # TODO: add upper queue limit.
+      analysis_output_queue = multi_process.MultiProcessingQueue()
+
       if analysis_plugins:
         logging.info(u'Starting analysis plugins.')
         # Within all preprocessing objects, try to get the last one that has
@@ -340,12 +285,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
         # Fill in the collection information.
         pre_obj.collection_information = {}
-        encoding = getattr(pre_obj, u'preferred_encoding', None)
-        if encoding:
+        if preferred_encoding:
           cmd_line = u' '.join(sys.argv)
           try:
             pre_obj.collection_information[u'cmd_line'] = cmd_line.decode(
-                encoding)
+                preferred_encoding)
           except UnicodeDecodeError:
             pass
         pre_obj.collection_information[u'file_processed'] = (
@@ -367,8 +311,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         storage_file._pre_obj = pre_obj
 
         # Start queues and load up plugins.
-        # TODO: add upper queue limit.
-        analysis_output_queue = multi_process.MultiProcessingQueue()
         event_queue_producers = []
         event_queues = []
         analysis_plugins_list = [
@@ -406,7 +348,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       else:
         event_queue_producers = []
 
-      deduplicate_events = getattr(options, u'dedup', True)
       output_buffer = output_interface.EventBuffer(
           output_module, deduplicate_events)
       with output_buffer:
@@ -419,43 +360,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         if hasattr(information, u'counter'):
           counter[u'Stored Events'] += information.counter[u'total']
 
+      # TODO: refactor to separate function.
       if not getattr(options, u'quiet', False):
         logging.info(u'Output processing is done.')
 
       # Get all reports and tags from analysis plugins.
-      if analysis_plugins:
-        logging.info(u'Processing data from analysis plugins.')
-        for event_queue_producer in event_queue_producers:
-          event_queue_producer.SignalAbort()
-
-        # Wait for all analysis plugins to complete.
-        for number, analysis_process in enumerate(self._analysis_processes):
-          logging.debug(
-              u'Waiting for analysis plugin: {0:d} to complete.'.format(number))
-          if analysis_process.is_alive():
-            analysis_process.join(10)
-          else:
-            logging.warning(u'Plugin {0:d} already stopped.'.format(number))
-            analysis_process.terminate()
-        logging.debug(u'All analysis plugins are now stopped.')
-
-        # Close the output queue.
-        analysis_output_queue.SignalAbort()
-
-        # Go over each output.
-        analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
-            analysis_output_queue, storage_file, self._filter_expression,
-            self.preferred_encoding)
-
-        analysis_queue_consumer.ConsumeItems()
-
-        if analysis_queue_consumer.tags:
-          storage_file.StoreTagging(analysis_queue_consumer.tags)
-
-        # TODO: analysis_queue_consumer.anomalies:
-
-        for item, value in analysis_queue_consumer.counter.iteritems():
-          counter[item] = value
+      self._ProcessAnalysisPlugins(
+          analysis_plugins, event_queue_producers, analysis_output_queue,
+          storage_file, counter, preferred_encoding=preferred_encoding)
 
     if self._output_file_object:
       self._output_file_object.close()
@@ -551,14 +463,15 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements an analysis report queue consumer for psort."""
 
   def __init__(
-      self, queue_object, storage_file, filter_string, preferred_encoding):
+      self, queue_object, storage_file, filter_string,
+      preferred_encoding=u'utf-8'):
     """Initializes the queue consumer.
 
     Args:
       queue_object: the queue object (instance of Queue).
       storage_file: the storage file (instance of StorageFile).
       filter_string: the filter string.
-      preferred_encoding: the preferred encoding.
+      preferred_encoding: optional preferred encoding. The default is "utf-8".
     """
     super(PsortAnalysisReportQueueConsumer, self).__init__(queue_object)
     self._filter_string = filter_string
