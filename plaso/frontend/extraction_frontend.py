@@ -138,12 +138,17 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         parser_filter_string = u'winxp'
       elif u'windows server 2003' in os_version:
         parser_filter_string = u'winxp'
+      elif u'windows' in os_version:
+        # Fallback for other Windows versions.
+        parser_filter_string = u'win7'
 
     if not parser_filter_string and os_guess:
       if os_guess == definitions.OS_LINUX:
         parser_filter_string = u'linux'
       elif os_guess == definitions.OS_MACOSX:
         parser_filter_string = u'macosx'
+      elif os_guess == definitions.OS_WINDOWS:
+        parser_filter_string = u'win7'
 
     return parser_filter_string
 
