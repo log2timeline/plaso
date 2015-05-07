@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the serializer object implementation using json."""
 
-import re
+import json
 import unittest
 
 from plaso.lib import event
@@ -15,44 +15,42 @@ from plaso.storage import collection
 class JsonEventObjectSerializerTest(unittest.TestCase):
   """Tests for the json event object serializer object."""
 
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._json_string = """{
-        "zero_integer": 0,
-        "my_dict": {
-            "a": "not b",
-            "c": 34,
-            "list": ["sf", 234], "an": [234, 32]},
-        "uuid": "5a78777006de4ddb8d7bbe12ab92ccf8",
-        "timestamp_desc": "Written",
-        "a_tuple": [
-            "some item",
-            [234, 52, 15],
-            {"a": "not a", "b": "not b"},
-            35],
-        "timestamp": 1234124,
-        "my_list": ["asf", 4234, 2, 54, "asf"],
-        "empty_string": "",
-        "data_type": "test:event2",
-        "null_value": null,
-        "unicode_string": "And I'm a unicorn.",
-        "integer": 34,
-        "string": "Normal string"}"""
-
-    # Collapse multiple spaces and new lines into a single space.
-    expression = re.compile(r'[ \n]+')
-    self._json_string = expression.sub(' ', self._json_string)
-    # Remove spaces after { and [ characters.
-    expression = re.compile(r'([{[])[ ]+')
-    self._json_string = expression.sub('\\1', self._json_string)
-    # Remove spaces before } and ] characters.
-    expression = re.compile(r'[ ]+([}\]])')
-    self._json_string = expression.sub('\\1', self._json_string)
+    # Do not use u'' or b'' we need native string objects here
+    # otherwise the strings will be formatted with a prefix and
+    # are not a valid JSON string.
+    self._json_dict = {
+        '__type__': 'EventObject',
+        'a_tuple': [
+            'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35],
+        'data_type': 'test:event2',
+        'empty_string': '',
+        'integer': 34,
+        'my_dict': {
+            'a': 'not b',
+            'an': [234, 32],
+            'c': 34,
+            'list': ['sf', 234]
+        },
+        'my_list': ['asf', 4234, 2, 54, 'asf'],
+        'string': 'Normal string',
+        'timestamp_desc': 'Written',
+        'timestamp': 1234124,
+        'uuid': '5a78777006de4ddb8d7bbe12ab92ccf8',
+        'unicode_string': 'And I am a unicorn.',
+        'zero_integer': 0
+    }
 
   def testReadSerialized(self):
     """Test the read serialized functionality."""
     serializer = json_serializer.JsonEventObjectSerializer
-    event_object = serializer.ReadSerialized(self._json_string)
+    json_string = u'{0!s}'.format(self._json_dict).replace(u'\'', u'"')
+    event_object = serializer.ReadSerialized(json_string)
 
     # An integer value containing 0 should get stored.
     self.assertTrue(hasattr(event_object, 'zero_integer'))
@@ -67,7 +65,7 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
     self.assertEqual(attribute_value, 'Normal string')
 
     attribute_value = getattr(event_object, 'unicode_string', u'')
-    self.assertEqual(attribute_value, u'And I\'m a unicorn.')
+    self.assertEqual(attribute_value, u'And I am a unicorn.')
 
     attribute_value = getattr(event_object, 'a_tuple', ())
     self.assertEqual(len(attribute_value), 4)
@@ -86,7 +84,7 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
     event_object.zero_integer = 0
     event_object.integer = 34
     event_object.string = 'Normal string'
-    event_object.unicode_string = u'And I\'m a unicorn.'
+    event_object.unicode_string = u'And I am a unicorn.'
     event_object.my_list = ['asf', 4234, 2, 54, 'asf']
     event_object.my_dict = {
         'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
@@ -94,11 +92,16 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
         'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
     event_object.null_value = None
 
-    serializer = json_serializer.JsonEventObjectSerializer
-    json_string = serializer.WriteSerialized(event_object)
-    self.assertEqual(sorted(json_string), sorted(self._json_string))
+    json_string = json_serializer.JsonEventObjectSerializer.WriteSerialized(
+        event_object)
 
-    event_object = serializer.ReadSerialized(json_string)
+    # We need to compare dicts since we cannot determine the order
+    # of values in the string.
+    json_dict = json.loads(json_string)
+    self.assertEqual(json_dict, self._json_dict)
+
+    event_object = json_serializer.JsonEventObjectSerializer.ReadSerialized(
+        json_string)
 
     # TODO: fix this.
     # An empty string should not get stored.
@@ -111,11 +114,24 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
 class JsonCollectionInformationSerializerTest(unittest.TestCase):
   """Tests serialization of the collection information object."""
 
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
   def setUp(self):
     """Set up the necessary objects."""
-    self._json_string = (
-        u'{"foo": "bar", "__COUNTERS__": {"foobar": {"stuff": 1245}}, '
-        u'"foo2": "randombar"}')
+    # Do not use u'' or b'' we need native string objects here
+    # otherwise the strings will be formatted with a prefix and
+    # are not a valid JSON string.
+    self._json_dict = {
+        '__COUNTERS__': {
+            'foobar': {
+                'stuff': 1245
+            }
+        },
+        'foo': 'bar',
+        'foo2': 'randombar'
+    }
 
     self._collection_information_object = collection.CollectionInformation()
     self._collection_information_object.AddCounter(u'foobar')
@@ -127,7 +143,8 @@ class JsonCollectionInformationSerializerTest(unittest.TestCase):
 
   def testReadSerialized(self):
     """Test the read serialized functionality."""
-    collection_object = self._serializer.ReadSerialized(self._json_string)
+    json_string = u'{0!s}'.format(self._json_dict).replace(u'\'', u'"')
+    collection_object = self._serializer.ReadSerialized(json_string)
 
     for key, value in collection_object.GetValueDict().iteritems():
       self.assertEqual(
@@ -144,7 +161,11 @@ class JsonCollectionInformationSerializerTest(unittest.TestCase):
     """Test the write serialized functionality."""
     json_string = self._serializer.WriteSerialized(
         self._collection_information_object)
-    self.assertEqual(json_string, self._json_string)
+
+    # We need to compare dicts since we cannot determine the order
+    # of values in the string.
+    json_dict = json.loads(json_string)
+    self.assertEqual(json_dict, self._json_dict)
 
 
 if __name__ == '__main__':

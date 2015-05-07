@@ -1,32 +1,276 @@
 # -*- coding: utf-8 -*-
 """The json serializer object implementation."""
 
-import logging
 import json
 
-from dfvfs.serializer import json_serializer as dfvfs_json_serializer
+from dfvfs.path import path_spec as dfvfs_path_spec
+from dfvfs.path import factory as dfvfs_path_spec_factory
 
 from plaso.lib import event
 from plaso.serializer import interface
 from plaso.storage import collection
 
 
-class _EventTypeJsonEncoder(json.JSONEncoder):
-  """A class that implements an event type object JSON encoder."""
+class _EventObjectJsonDecoder(json.JSONDecoder):
+  """A class that implements an event object JSON decoder."""
 
-  # pylint: disable=method-hidden
-  def default(self, object_instance):
-    """Returns a serialized version of an event type object.
+  _CLASS_TYPES = frozenset([u'EventObject', u'EventTag', u'PathSpec'])
+
+  def __init__(self, *args, **kargs):
+    """Initializes the path specification JSON decoder object."""
+    super(_EventObjectJsonDecoder, self).__init__(
+        *args, object_hook=self._ConvertDictToObject, **kargs)
+
+  def _ConvertDictToEventObject(self, json_dict):
+    """Converts a JSON dict into an event object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventObject'
+        'pathspec': { ... }
+        'tag': { ... }
+        ...
+    }
+
+    Here '__type__' indicates the object base type in this case this should
+    be 'EventObject'. The rest of the elements of the dictionary make up the
+    event object properties.
 
     Args:
-      object_instance: instance of an event type object.
-    """
-    # TODO: add support for the rest of the event type objects.
-    if isinstance(object_instance, event.EventTag):
-      return JsonEventTagSerializer.WriteSerialized(object_instance)
+      json_dict: a dictionary of the JSON serialized objects.
 
-    else:
-      return super(_EventTypeJsonEncoder, self).default(object_instance)
+    Returns:
+      An event object (instance of EventObject).
+    """
+    event_object = event.EventObject()
+
+    for key, value in json_dict.iteritems():
+      setattr(event_object, key, value)
+
+    return event_object
+
+  def _ConvertDictToEventTag(self, json_dict):
+    """Converts a JSON dict into an event tag object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventTag'
+        ...
+    }
+
+    Here '__type__' indicates the object base type in this case this should
+    be 'EventTag'. The rest of the elements of the dictionary make up the
+    event tag object properties.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      An event tag (instance of EventTag).
+    """
+    event_tag = event.EventTag()
+
+    for key, value in json_dict.iteritems():
+      setattr(event_tag, key, value)
+
+    return event_tag
+
+  def _ConvertDictToPathSpec(self, json_dict):
+    """Converts a JSON dict into a path specification object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'PathSpec'
+        'type_indicator': 'OS'
+        'parent': { ... }
+        ...
+    }
+
+    Here '__type__' indicates the object base type in this case this should
+    be 'PathSpec'. The rest of the elements of the dictionary make up the
+    path specification object properties.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      A path specification (instance of path.PathSpec).
+    """
+    type_indicator = json_dict.get(u'type_indicator', None)
+    if type_indicator:
+      del json_dict[u'type_indicator']
+
+    return dfvfs_path_spec_factory.Factory.NewPathSpec(
+        type_indicator, **json_dict)
+
+  def _ConvertDictToObject(self, json_dict):
+    """Converts a JSON dict into an object.
+
+    Note that json_dict is a dict of dicts and the _ConvertDictToObject
+    method will be called for every dict. That is how the deserialized
+    objects are created.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      A deserialized object which can be:
+        * a dictionary;
+        * an event object (instance of EventObject);
+        * an event tag (instance of EventTag);
+        * a path specification (instance of dfvfs.PathSpec).
+    """
+    # Use __type__ to indicate the object class type.
+    class_type = json_dict.get(u'__type__', None)
+
+    if class_type not in self._CLASS_TYPES:
+      # Dealing with a regular dict.
+      return json_dict
+
+    # Remove the class type from the JSON dict since we cannot pass it.
+    del json_dict[u'__type__']
+
+    if class_type == u'EventTag':
+      return self._ConvertDictToEventTag(json_dict)
+
+    # Since we would like the JSON as flat as possible we handle decoding
+    # a path specification.
+    if class_type == u'PathSpec':
+      return self._ConvertDictToPathSpec(json_dict)
+
+    return self._ConvertDictToEventObject(json_dict)
+
+
+class _EventObjectJsonEncoder(json.JSONEncoder):
+  """A class that implements an event object object JSON encoder."""
+
+  def _ConvertEventTagToDict(self, event_tag):
+    """Converts an event tag object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventTag'
+        ...
+    }
+
+    Here '__type__' indicates the object base type in this case 'EventTag'.
+    The rest of the elements of the dictionary make up the event tag object
+    attributes.
+
+    Args:
+      event_tag: an event tag object (instance of EventTag).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of EventTag.
+    """
+    if not isinstance(event_tag, event.EventTag):
+      raise TypeError
+
+    json_dict = {u'__type__': u'EventTag'}
+    for attribute_name, attribute_value in event_tag.__dict__.iteritems():
+      if attribute_value is None:
+        continue
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
+
+  def _ConvertPathSpecToDict(self, path_spec_object):
+    """Converts a path specification object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'PathSpec'
+        'type_indicator': 'OS'
+        'parent': { ... }
+        ...
+    }
+
+    Here '__type__' indicates the object base type in this case 'PathSpec'.
+    The rest of the elements of the dictionary make up the path specification
+    object properties. The supported property names are defined in
+    path_spec_factory.Factory.PROPERTY_NAMES. Note that this method is called
+    recursively for every path specification object and creates a dict of
+    dicts in the process.
+
+    Args:
+      path_spec_object: a path specification (instance of dfvfs.PathSpec).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of dfvfs.PathSpec.
+    """
+    if not isinstance(path_spec_object, dfvfs_path_spec.PathSpec):
+      raise TypeError
+
+    json_dict = {u'__type__': u'PathSpec'}
+    for property_name in dfvfs_path_spec_factory.Factory.PROPERTY_NAMES:
+      property_value = getattr(path_spec_object, property_name, None)
+      if property_value is not None:
+        json_dict[property_name] = property_value
+
+    if path_spec_object.HasParent():
+      json_dict[u'parent'] = self._ConvertPathSpecToDict(
+          path_spec_object.parent)
+
+    json_dict[u'type_indicator'] = path_spec_object.type_indicator
+    location = getattr(path_spec_object, u'location', None)
+    if location:
+      json_dict[u'location'] = location
+
+    return json_dict
+
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the json.JSONEncoder object interface.
+
+  # pylint: disable=method-hidden
+  def default(self, event_object):
+    """Converts an event object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventObject'
+        'pathspec': { ... }
+        'tag': { ... }
+        ...
+    }
+
+    Here '__type__' indicates the object base type in this case 'EventObject'.
+    The rest of the elements of the dictionary make up the event object
+    attributes.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of EventObject.
+    """
+    if not isinstance(event_object, event.EventObject):
+      raise TypeError
+
+    json_dict = {u'__type__': u'EventObject'}
+    for attribute_name in event_object.GetAttributes():
+      attribute_value = getattr(event_object, attribute_name, None)
+      if attribute_value is None:
+        continue
+
+      if attribute_name == u'pathspec':
+        attribute_value = self._ConvertPathSpecToDict(attribute_value)
+
+      elif attribute_name == u'tag':
+        attribute_value = self._ConvertEventTagToDict(attribute_value)
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
 
 
 class JsonAnalysisReportSerializer(interface.AnalysisReportSerializer):
@@ -72,19 +316,8 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
     Returns:
       An event object (instance of EventObject).
     """
-    event_object = event.EventObject()
-    json_attributes = json.loads(json_string)
-
-    for key, value in json_attributes.iteritems():
-      if key == 'tag':
-        value = JsonEventTagSerializer.ReadSerialized(value)
-      elif key == 'pathspec':
-        value = dfvfs_json_serializer.JsonPathSpecSerializer.ReadSerialized(
-            value)
-
-      setattr(event_object, key, value)
-
-    return event_object
+    json_decoder = _EventObjectJsonDecoder()
+    return json_decoder.decode(json_string)
 
   @classmethod
   def WriteSerialized(cls, event_object):
@@ -97,20 +330,7 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
       An object containing the serialized form or None if the event
       cannot be serialized.
     """
-    event_attributes = event_object.GetValues()
-
-    serializer = dfvfs_json_serializer.JsonPathSpecSerializer
-    if 'pathspec' in event_attributes:
-      event_attributes['pathspec'] = serializer.WriteSerialized(
-          event_attributes['pathspec'])
-
-    try:
-      return json.dumps(event_attributes, cls=_EventTypeJsonEncoder)
-    except UnicodeDecodeError as exception:
-      # TODO: Add better error handling so this can be traced to a parser or
-      # a plugin and to which file that caused it.
-      logging.error(u'Unable to serialize event with error: {0:s}'.format(
-          exception))
+    return json.dumps(event_object, cls=_EventObjectJsonEncoder)
 
 
 class JsonEventTagSerializer(interface.EventTagSerializer):

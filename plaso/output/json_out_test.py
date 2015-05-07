@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the JSON output class."""
 
+import json
 import os
 import sys
 import unittest
@@ -53,7 +54,7 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
     self._event_object = JsonTestEvent()
 
   def testWriteHeader(self):
-    """Tests the WriteHeader functions."""
+    """Tests the WriteHeader function."""
     expected_header = b'{'
 
     self._output_module.WriteHeader()
@@ -62,8 +63,8 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
     self.assertEqual(header, expected_header)
 
   def testWriteFooter(self):
-    """Tests the WriteFooter functions."""
-    expected_footer = b'"event_foo": "{}"}'
+    """Tests the WriteFooter function."""
+    expected_footer = b'}'
 
     self._output_module.WriteFooter()
 
@@ -81,29 +82,48 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
     if sys.platform.startswith(u'win'):
       expected_os_location = u'C:\\{0:s}'.format(
           os.path.join(u'cases', u'image.dd'))
-      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
-      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
-      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
     else:
       expected_os_location = u'{0:s}{1:s}'.format(
           os.path.sep, os.path.join(u'cases', u'image.dd'))
 
     expected_os_location = expected_os_location.encode(u'utf-8')
 
-    expected_event_body = (
-        b'"event_0": {{"username": "root", "display_name": "OS: '
-        b'/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
-        b'"timestamp": {1:d}, "hostname": "ubuntu", "text": '
-        b'"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
-        b'closed for user root)", "pathspec": "{{\\"type_indicator\\": '
-        b'\\"TSK\\", \\"inode\\": 15, \\"location\\": \\"/var/log/syslog.1\\", '
-        b'\\"parent\\": \\"{{\\\\\\"type_indicator\\\\\\": \\\\\\"OS\\\\\\", '
-        b'\\\\\\"location\\\\\\": \\\\\\"{2:s}\\\\\\"}}\\"}}", '
-        b'"inode": 12345678}},\n').format(
-            expected_uuid, expected_timestamp, expected_os_location)
-
+    # Do not use u'' or b'' we need native string objects here
+    # otherwise the strings will be formatted with a prefix and
+    # are not a valid JSON string.
+    expected_json_dict = {
+        'event_0': {
+            '__type__': 'EventObject',
+            'data_type': 'test:l2tjson',
+            'display_name': 'OS: /var/log/syslog.1',
+            'hostname': 'ubuntu',
+            'inode': 12345678,
+            'pathspec': {
+                '__type__': 'PathSpec',
+                'type_indicator': 'TSK',
+                'location': '/var/log/syslog.1',
+                'inode': 15,
+                'parent': {
+                    '__type__': 'PathSpec',
+                    'type_indicator': 'OS',
+                    'location': expected_os_location,
+                }
+            },
+            'text': (
+                'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+                'session\n closed for user root)'),
+            'timestamp': expected_timestamp,
+            'username': 'root',
+            'uuid': expected_uuid
+        }
+    }
     event_body = self._output_writer.ReadOutput()
-    self.assertEqual(event_body, expected_event_body)
+
+    # We need to compare dicts since we cannot determine the order
+    # of values in the string.
+    json_string = u'{{ {0:s} }}'.format(event_body)
+    json_dict = json.loads(json_string)
+    self.assertEqual(json_dict, expected_json_dict)
 
 
 if __name__ == '__main__':
