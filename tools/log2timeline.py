@@ -14,6 +14,7 @@ from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
 from plaso.frontend import log2timeline
 from plaso.frontend import utils as frontend_utils
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import pfilter
 
@@ -137,22 +138,21 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.PrintOptions()
 
-    status_table = [u'\033[1mIdentifier\tPID\tStatus\t\tEvents\tFile\033[0m']
+    status_table = [u'\033[1mIdentifier\tPID\tStatus\t\tEvents\t\tFile\033[0m']
     for extraction_worker_status in processing_status.extraction_workers:
-      if len(extraction_worker_status.status) < 8:
-        status = u'{0:s}\t'.format(extraction_worker_status.status)
-      else:
-        status = extraction_worker_status.status
+      status = extraction_worker_status.status
+      if status == definitions.PROCESSING_STATUS_RUNNING:
+        status = extraction_worker_status.process_status
 
-      number_of_events_delta = (
-          extraction_worker_status.number_of_events -
-          extraction_worker_status.last_number_of_events)
+      if len(status) < 8:
+        status = u'{0:s}\t'.format(status)
 
       # TODO: shorten display name to fit in 80 chars and show the filename.
       status_row = u'{0:s}\t{1:d}\t{2:s}\t{3:d} ({4:d})\t{5:s}'.format(
           extraction_worker_status.identifier,
           extraction_worker_status.pid, status,
-          extraction_worker_status.number_of_events, number_of_events_delta,
+          extraction_worker_status.number_of_events,
+          extraction_worker_status.number_of_events_delta,
           extraction_worker_status.display_name)
 
       status_table.append(status_row)
@@ -161,7 +161,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write(u'\n'.join(status_table))
     self._output_writer.Write(u'\n')
 
-    if processing_status.extraction_completed:
+    if processing_status.GetExtractionCompleted():
       self._output_writer.Write(
           u'All extraction workers completed - waiting for storage.\n')
       self._output_writer.Write(u'\n')
@@ -176,11 +176,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Args:
       processing_status: the processsing status (instance of ProcessingStatus).
     """
-    if processing_status.extraction_completed:
+    if processing_status.GetExtractionCompleted():
       logging.info(u'All extraction workers completed - waiting for storage.')
 
     else:
       for extraction_worker_status in processing_status.extraction_workers:
+        status = extraction_worker_status.status
         logging.info((
             u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
             u'- running: {4!s} <{5:s}>').format(
@@ -188,8 +189,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                 extraction_worker_status.pid,
                 extraction_worker_status.number_of_events,
                 extraction_worker_status.display_name,
-                extraction_worker_status.is_running,
-                extraction_worker_status.status))
+                status == definitions.PROCESSING_STATUS_RUNNING,
+                extraction_worker_status.process_status))
 
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
@@ -519,8 +520,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._front_end.ProcessSource(
         filter_file=self._filter_file,
-        parser_filter_string=self._parser_filter_string,
         hasher_names_string=self._hasher_names_string,
+        parser_filter_string=self._parser_filter_string,
+        single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         storage_serializer_format=self._storage_serializer_format,
         timezone=self._timezone)

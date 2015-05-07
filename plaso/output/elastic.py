@@ -2,11 +2,11 @@
 """An output module that saves data into an ElasticSearch database."""
 
 import logging
-import requests
 import sys
 import uuid
 
 try:
+  import requests
   import pyelasticsearch
 except ImportError:
   pyelasticsearch = None
