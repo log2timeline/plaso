@@ -20,6 +20,7 @@ from plaso import filters
 # TODO: remove after psort options refactor.
 from plaso.analysis import interface as analysis_interface
 from plaso.cli import analysis_tool
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -273,6 +274,11 @@ class PsortTool(analysis_tool.AnalysisTool):
     if module_names == u'list':
       return
 
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, u'output')
+
+    # TODO: Remove this once all output modules have been transitioned
+    # into the CLI argument helpers.
     modules_list = set([name.lower() for name in module_names])
 
     for name, output_class in self._front_end.GetOutputClasses():
