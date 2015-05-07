@@ -12,7 +12,7 @@ from plaso.parsers.plist_plugins import interface
 class DefaultPlugin(interface.PlistPlugin):
   """Basic plugin to extract keys with timestamps as values from plists."""
 
-  NAME = 'plist_default'
+  NAME = u'plist_default'
   DESCRIPTION = u'Parser for plist files.'
 
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):

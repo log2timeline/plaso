@@ -22,16 +22,35 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class MacUserPlugin(interface.PlistPlugin):
-  """Basic plugin to extract timestamp Mac user information."""
+  """Basic plugin to extract timestamp Mac user information.
 
-  NAME = 'plist_macuser'
+  Further details about the extracted fields.
+    name:
+      string with the system user.
+    uid:
+      user ID.
+    passwordpolicyoptions:
+      XML Plist structures with the timestamp.
+    passwordLastSetTime:
+      last time the password was changed.
+    lastLoginTimestamp:
+      last time the user was authenticated depending on the situation,
+      these timestamps are reset (0 value). It is translated by the
+      library as a 2001-01-01 00:00:00 (COCAO zero time representation).
+      If this happens, the event is not yield.
+    failedLoginTimestamp:
+      last time the user passwd was incorrectly(*).
+    failedLoginCount:
+      times of incorrect passwords.
+  """
+
+  NAME = u'macuser'
   DESCRIPTION = u'Parser for Mac OS X user plist files.'
 
   # The PLIST_PATH is dynamic, "user".plist is the name of the
   # Mac OS X user.
   PLIST_KEYS = frozenset([
-      'name', 'uid', 'home',
-      'passwordpolicyoptions', 'ShadowHashData'])
+      u'name', u'uid', u'home', u'passwordpolicyoptions', u'ShadowHashData'])
 
   _ROOT = u'/'
 
@@ -46,18 +65,6 @@ class MacUserPlugin(interface.PlistPlugin):
     super(MacUserPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
-  # Generated events:
-  # name: string with the system user.
-  # uid: user ID.
-  # passwordpolicyoptions: XML Plist structures with the timestamp.
-  #   passwordLastSetTime: last time the password was changed.
-  #   lastLoginTimestamp: last time the user was authenticated (*).
-  #   failedLoginTimestamp: last time the user passwd was incorrectly(*).
-  #   failedLoginCount: times of incorrect passwords.
-  #   (*): depending on the situation, these timestamps are reset (0 value).
-  #        It is translated by the library as a 2001-01-01 00:00:00 (COCAO
-  #        zero time representation). If this happens, the event is not yield.
-
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 
@@ -66,21 +73,21 @@ class MacUserPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    account = match['name'][0]
-    uid = match['uid'][0]
+    account = match[u'name'][0]
+    uid = match[u'uid'][0]
     cocoa_zero = (
         timelib.Timestamp.COCOA_TIME_TO_POSIX_BASE *
         timelib.Timestamp.MICRO_SECONDS_PER_SECOND)
     # INFO: binplist return a string with the Plist XML.
-    for policy in match['passwordpolicyoptions']:
+    for policy in match[u'passwordpolicyoptions']:
       xml_policy = ElementTree.fromstring(policy)
-      for dict_elements in xml_policy.iterfind('dict'):
+      for dict_elements in xml_policy.iterfind(u'dict'):
         key_values = [value.text for value in dict_elements.getchildren()]
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
 
-      if policy_dict.get('passwordLastSetTime', 0):
+      if policy_dict.get(u'passwordLastSetTime', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get('passwordLastSetTime', '0'))
+            policy_dict.get(u'passwordLastSetTime', '0'))
         if timestamp > cocoa_zero:
           # Extract the hash password information.
           # It is store in the attribute ShadowHasData which is
@@ -92,7 +99,7 @@ class MacUserPlugin(interface.PlistPlugin):
           # need the file offset and size of the ShadowHashData value data.
           resolver_context = context.Context()
           fake_file = fake_file_io.FakeFile(
-              resolver_context, match['ShadowHashData'][0])
+              resolver_context, match[u'ShadowHashData'][0])
           fake_file.open(path_spec=fake_path_spec.FakePathSpec(
               location=u'ShadowHashData'))
 
@@ -101,12 +108,12 @@ class MacUserPlugin(interface.PlistPlugin):
             top_level = plist_file.Parse()
           except binplist.FormatError:
             top_level = dict()
-          salted_hash = top_level.get('SALTED-SHA512-PBKDF2', None)
+          salted_hash = top_level.get(u'SALTED-SHA512-PBKDF2', None)
           if salted_hash:
             password_hash = u'$ml${0:d}${1:s}${2:s}'.format(
-                salted_hash['iterations'],
-                binascii.hexlify(salted_hash['salt']),
-                binascii.hexlify(salted_hash['entropy']))
+                salted_hash[u'iterations'],
+                binascii.hexlify(salted_hash[u'salt']),
+                binascii.hexlify(salted_hash[u'entropy']))
           else:
             password_hash = u'N/A'
           description = (
@@ -116,21 +123,21 @@ class MacUserPlugin(interface.PlistPlugin):
               self._ROOT, u'passwordLastSetTime', timestamp, description)
           parser_mediator.ProduceEvent(event_object)
 
-      if policy_dict.get('lastLoginTimestamp', 0):
+      if policy_dict.get(u'lastLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get('lastLoginTimestamp', '0'))
+            policy_dict.get(u'lastLoginTimestamp', '0'))
         description = u'Last login from {0:s} ({1!s})'.format(account, uid)
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'lastLoginTimestamp', timestamp, description)
           parser_mediator.ProduceEvent(event_object)
 
-      if policy_dict.get('failedLoginTimestamp', 0):
+      if policy_dict.get(u'failedLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get('failedLoginTimestamp', '0'))
+            policy_dict.get(u'failedLoginTimestamp', '0'))
         description = (
             u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
-                account, uid, policy_dict['failedLoginCount'])
+                account, uid, policy_dict[u'failedLoginCount'])
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'failedLoginTimestamp', timestamp, description)

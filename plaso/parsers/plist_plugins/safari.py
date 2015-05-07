@@ -13,6 +13,8 @@ from plaso.parsers.plist_plugins import interface
 class SafariHistoryEvent(time_events.TimestampEvent):
   """An EventObject for Safari history entries."""
 
+  DATA_TYPE = u'safari:history:visit'
+
   def __init__(self, timestamp, history_entry):
     """Initialize the event.
 
@@ -22,24 +24,23 @@ class SafariHistoryEvent(time_events.TimestampEvent):
     """
     super(SafariHistoryEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.LAST_VISITED_TIME)
-    self.data_type = 'safari:history:visit'
-    self.url = history_entry.get('', None)
-    self.title = history_entry.get('title', None)
-    display_title = history_entry.get('displayTitle', None)
+    self.url = history_entry.get(u'', None)
+    self.title = history_entry.get(u'title', None)
+    display_title = history_entry.get(u'displayTitle', None)
     if display_title != self.title:
       self.display_title = display_title
-    self.visit_count = history_entry.get('visitCount', None)
-    self.was_http_non_get = history_entry.get('lastVisitWasHTTPNonGet', None)
+    self.visit_count = history_entry.get(u'visitCount', None)
+    self.was_http_non_get = history_entry.get(u'lastVisitWasHTTPNonGet', None)
 
 
 class SafariHistoryPlugin(interface.PlistPlugin):
   """Plugin to extract Safari history timestamps."""
 
-  NAME = 'safari_history'
+  NAME = u'safari_history'
   DESCRIPTION = u'Parser for Safari history plist files.'
 
-  PLIST_PATH = 'History.plist'
-  PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
+  PLIST_PATH = u'History.plist'
+  PLIST_KEYS = frozenset([u'WebHistoryDates', u'WebHistoryFileVersion'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts Safari history items.
@@ -49,22 +50,22 @@ class SafariHistoryPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    if match.get('WebHistoryFileVersion', 0) != 1:
+    if match.get(u'WebHistoryFileVersion', 0) != 1:
       logging.warning(u'Unable to parse Safari version: {0:s}'.format(
-          match.get('WebHistoryFileVersion', 0)))
+          match.get(u'WebHistoryFileVersion', 0)))
       return
 
-    for history_entry in match.get('WebHistoryDates', {}):
+    for history_entry in match.get(u'WebHistoryDates', {}):
       try:
         time = timelib.Timestamp.FromCocoaTime(float(
-            history_entry.get('lastVisitedDate', 0)))
+            history_entry.get(u'lastVisitedDate', 0)))
       except ValueError:
         logging.warning(u'Unable to translate timestamp: {0:s}'.format(
-            history_entry.get('lastVisitedDate', 0)))
+            history_entry.get(u'lastVisitedDate', 0)))
         continue
 
       if not time:
-        logging.debug('No timestamp set, skipping record.')
+        logging.debug(u'No timestamp set, skipping record.')
         continue
 
       event_object = SafariHistoryEvent(time, history_entry)

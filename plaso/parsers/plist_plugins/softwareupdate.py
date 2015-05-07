@@ -10,20 +10,23 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class SoftwareUpdatePlugin(interface.PlistPlugin):
-  """Basic plugin to extract the Mac OS X update status."""
+  """Basic plugin to extract the Mac OS X update status.
 
-  NAME = 'plist_softwareupdate'
+  Further details about the extracted fields:
+    LastFullSuccessfulDate:
+      timestamp when Mac OS X was full update.
+    LastSuccessfulDate:
+      timestamp when Mac OS X was partially update.
+  """
+
+  NAME = u'maxos_software_update'
   DESCRIPTION = u'Parser for Mac OS X software update plist files.'
 
-  PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
+  PLIST_PATH = u'com.apple.SoftwareUpdate.plist'
   PLIST_KEYS = frozenset([
-      'LastFullSuccessfulDate', 'LastSuccessfulDate',
-      'LastAttemptSystemVersion', 'LastUpdatesAvailable',
-      'LastRecommendedUpdatesAvailable', 'RecommendedUpdates'])
-
-  # Generated events:
-  # LastFullSuccessfulDate: timestamp when Mac OS X was full update.
-  # LastSuccessfulDate: timestamp when Mac OS X was partially update.
+      u'LastFullSuccessfulDate', u'LastSuccessfulDate',
+      u'LastAttemptSystemVersion', u'LastUpdatesAvailable',
+      u'LastRecommendedUpdatesAvailable', u'RecommendedUpdates'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Mac OS X update entries.
@@ -33,26 +36,26 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    root = '/'
-    key = ''
-    version = match.get('LastAttemptSystemVersion', u'N/A')
-    pending = match['LastUpdatesAvailable']
+    root = u'/'
+    key = u''
+    version = match.get(u'LastAttemptSystemVersion', u'N/A')
+    pending = match[u'LastUpdatesAvailable']
 
     description = u'Last Mac OS X {0:s} full update.'.format(version)
     event_object = plist_event.PlistEvent(
-        root, key, match['LastFullSuccessfulDate'], description)
+        root, key, match[u'LastFullSuccessfulDate'], description)
     parser_mediator.ProduceEvent(event_object)
 
     if pending:
       software = []
-      for update in match['RecommendedUpdates']:
+      for update in match[u'RecommendedUpdates']:
         software.append(u'{0:s}({1:s})'.format(
-            update['Identifier'], update['Product Key']))
+            update[u'Identifier'], update[u'Product Key']))
       description = (
           u'Last Mac OS {0!s} partially update, pending {1!s}: {2:s}.').format(
               version, pending, u','.join(software))
       event_object = plist_event.PlistEvent(
-          root, key, match['LastSuccessfulDate'], description)
+          root, key, match[u'LastSuccessfulDate'], description)
       parser_mediator.ProduceEvent(event_object)
 
 
