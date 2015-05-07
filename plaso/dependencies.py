@@ -35,7 +35,7 @@ PYTHON_DEPENDENCIES = [
     (u'binplist', u'__version__', u'0.1.4', None),
     (u'construct', u'__version__', u'2.5.2', None),
     (u'dateutil', u'__version__', u'1.5', None),
-    (u'dfvfs', u'__version__', u'20150303', None),
+    (u'dfvfs', u'__version__', u'20150408', None),
     (u'dpkt', u'__version__', u'1.8', None),
     # The protobuf module does not appear to have version information.
     (u'google.protobuf', u'', u'', None),
@@ -158,8 +158,8 @@ def CheckLibyal(libyal_python_modules, latest_version_check=False):
   """Checks the availability of libyal libraries.
 
   Args:
-    libyal_python_modules: a dictionary of libyal python module name as
-                           the key and version as the value.
+    libyal_python_modules: a dictionary of libyal python module names (keys) and
+                           versions (values).
     latest_version_check: optional boolean value to indicate if the project
                           site should be checked for the latest version.
                           The default is False.
