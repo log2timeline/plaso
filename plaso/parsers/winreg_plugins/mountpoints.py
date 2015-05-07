@@ -9,10 +9,10 @@ from plaso.parsers.winreg_plugins import interface
 class MountPoints2Plugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
-  NAME = 'winreg_mountpoints2'
+  NAME = u'explorer_mountpoints2'
   DESCRIPTION = u'Parser for mount points Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
 
   REG_KEYS = [
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
@@ -40,11 +40,11 @@ class MountPoints2Plugin(interface.KeyPlugin):
       text_dict[u'Volume'] = name
 
       # Get the label if it exists.
-      label_value = subkey.GetValue('_LabelFromReg')
+      label_value = subkey.GetValue(u'_LabelFromReg')
       if label_value:
         text_dict[u'Label'] = label_value.data
 
-      if name.startswith('{'):
+      if name.startswith(u'{'):
         text_dict[u'Type'] = u'Volume'
 
       elif name.startswith('#'):

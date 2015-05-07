@@ -9,12 +9,12 @@ from plaso.parsers.winreg_plugins import interface
 class ServicesPlugin(interface.ValuePlugin):
   """Plug-in to format the Services and Drivers keys having Type and Start."""
 
-  NAME = 'winreg_services'
+  NAME = u'windows_services'
   DESCRIPTION = u'Parser for services and drivers Registry data.'
 
-  REG_VALUES = frozenset(['Type', 'Start'])
-  REG_TYPE = 'SYSTEM'
-  URLS = ['http://support.microsoft.com/kb/103000']
+  REG_VALUES = frozenset([u'Type', u'Start'])
+  REG_TYPE = u'SYSTEM'
+  URLS = [u'http://support.microsoft.com/kb/103000']
 
 
   def GetServiceDll(self, key):
@@ -47,14 +47,14 @@ class ServicesPlugin(interface.ValuePlugin):
     """
     text_dict = {}
 
-    service_type_value = key.GetValue('Type')
-    service_start_value = key.GetValue('Start')
+    service_type_value = key.GetValue(u'Type')
+    service_start_value = key.GetValue(u'Start')
 
     # Grab the ServiceDLL value if it exists.
     if service_type_value and service_start_value:
       service_dll = self.GetServiceDll(key)
       if service_dll:
-        text_dict['ServiceDll'] = service_dll
+        text_dict[u'ServiceDll'] = service_dll
 
       # Gather all the other string and integer values and insert as they are.
       for value in key.GetValues():

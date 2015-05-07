@@ -34,6 +34,8 @@ from IPython.core import magic
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 
+from plaso.cli import storage_media_tool
+from plaso.cli import tools as cli_tools
 from plaso.frontend import frontend
 from plaso.frontend import preg
 from plaso.frontend import utils as frontend_utils
@@ -146,10 +148,8 @@ def PluginCompleter(unused_self, event_object):
     plugins_list = plugin_cls(reg_cache=current_hive.reg_cache)
 
     plugin_name = plugins_list.plugin_name
-    if plugin_name.startswith('winreg'):
-      plugin_name = plugin_name[preg.PregFrontend.PLUGIN_UNIQUE_NAME_START:]
 
-    if plugin_name == 'default':
+    if plugin_name == 'winreg_default':
       continue
     ret_list.append(plugin_name)
 
@@ -420,9 +420,6 @@ class MyMagics(magic.Magics):
         plugin_name = items[1]
       else:
         plugin_name = items[0]
-
-    if not plugin_name.startswith('winreg'):
-      plugin_name = u'winreg_{0:s}'.format(plugin_name)
 
     hive_type = current_hive.type
     plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
@@ -713,8 +710,12 @@ def RunModeConsole(front_end, options):
 
 def Main():
   """Run the tool."""
-  output_writer = frontend.StdoutFrontendOutputWriter()
+  input_reader = cli_tools.StdinInputReader()
+  output_writer = cli_tools.StdoutOutputWriter()
+
   front_end = preg.PregFrontend(output_writer)
+  storage_media_frontend = storage_media_tool.StorageMediaTool(
+      input_reader, output_writer)
 
   epilog = textwrap.dedent("""
 
@@ -768,7 +769,7 @@ in a textual format.
       help=(u'If the Registry file is contained within a storage media image, '
             u'set this option to specify the path of image file.'))
 
-  front_end.AddImageOptions(image_options)
+  storage_media_frontend.AddStorageMediaImageOptions(image_options)
 
   info_options.add_argument(
       '-v', '--verbose', dest='verbose', action='store_true', default=False,
@@ -777,7 +778,7 @@ in a textual format.
   info_options.add_argument(
       '-h', '--help', action='help', help=u'Show this help message and exit.')
 
-  front_end.AddVssProcessingOptions(additional_data)
+  storage_media_frontend.AddVssProcessingOptions(additional_data)
 
   info_options.add_argument(
       '--info', dest='info', action='store_true', default=False,
@@ -810,7 +811,7 @@ in a textual format.
     return True
 
   try:
-    front_end.ParseOptions(options, source_option='image')
+    front_end.ParseOptions(options)
   except errors.BadConfigOption as exception:
     arg_parser.print_usage()
     print u''

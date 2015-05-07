@@ -12,7 +12,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OutlookSearchMRUPlugin(interface.KeyPlugin):
   """Windows Registry plugin parsing Outlook Search MRU keys."""
 
-  NAME = 'winreg_outlook_mru'
+  NAME = u'microsoft_outlook_mru'
   DESCRIPTION = u'Parser for Microsoft Outlook search MRU Registry data.'
 
   REG_KEYS = [
@@ -31,7 +31,7 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
   #   MS Outlook 2013 Search Catalog:
   #     '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -45,8 +45,6 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       registry_type: Optional Registry type string. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-
-
     """
     value_index = 0
     for value in key.GetValues():
@@ -61,7 +59,7 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
       text_dict = {}
-      text_dict[value.name] = '0x{0:08x}'.format(value.data)
+      text_dict[value.name] = u'0x{0:08x}'.format(value.data)
 
       if value_index == 0:
         timestamp = key.last_written_timestamp
@@ -71,7 +69,7 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': PST Paths')
+          source_append=u': PST Paths')
       parser_mediator.ProduceEvent(event_object)
 
       value_index += 1

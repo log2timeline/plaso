@@ -12,11 +12,11 @@ from plaso.parsers.winreg_plugins import interface
 class BagMRUPlugin(interface.KeyPlugin):
   """Class that defines a BagMRU Windows Registry plugin."""
 
-  NAME = 'winreg_bagmru'
+  NAME = u'bagmru'
   DESCRIPTION = u'Parser for BagMRU Registry data.'
 
   # TODO: remove REG_TYPE and use HKEY_CURRENT_USER instead.
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
 
   REG_KEYS = frozenset([
       u'\\Software\\Microsoft\\Windows\\Shell\\BagMRU',

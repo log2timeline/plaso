@@ -16,10 +16,10 @@ from plaso.winnt import known_folder_ids
 class UserAssistPlugin(interface.KeyPlugin):
   """Plugin that parses an UserAssist key."""
 
-  NAME = 'winreg_userassist'
+  NAME = u'userassist'
   DESCRIPTION = u'Parser for User Assist Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
   REG_KEYS = [
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
        u'\\UserAssist\\{{FA99DFC7-6AC2-453A-A5E2-5E2AFF4507BD}}'),
@@ -54,20 +54,20 @@ class UserAssistPlugin(interface.KeyPlugin):
 
   # UserAssist format version used in Windows 2000, XP, 2003, Vista.
   USERASSIST_V3_STRUCT = construct.Struct(
-      'userassist_entry',
+      u'userassist_entry',
       construct.Padding(4),
-      construct.ULInt32('count'),
-      construct.ULInt64('timestamp'))
+      construct.ULInt32(u'count'),
+      construct.ULInt64(u'timestamp'))
 
   # UserAssist format version used in Windows 2008, 7, 8.
   USERASSIST_V5_STRUCT = construct.Struct(
-      'userassist_entry',
+      u'userassist_entry',
       construct.Padding(4),
-      construct.ULInt32('count'),
-      construct.ULInt32('app_focus_count'),
-      construct.ULInt32('focus_duration'),
+      construct.ULInt32(u'count'),
+      construct.ULInt32(u'app_focus_count'),
+      construct.ULInt32(u'focus_duration'),
       construct.Padding(44),
-      construct.ULInt64('timestamp'),
+      construct.ULInt64(u'timestamp'),
       construct.Padding(4))
 
   def GetEntries(
@@ -146,8 +146,8 @@ class UserAssistPlugin(interface.KeyPlugin):
 
           else:
             parsed_data = self.USERASSIST_V3_STRUCT.parse(value.data)
-            filetime = parsed_data.get('timestamp', 0)
-            count = parsed_data.get('count', 0)
+            filetime = parsed_data.get(u'timestamp', 0)
+            count = parsed_data.get(u'count', 0)
 
             if count > 5:
               count -= 5
@@ -168,10 +168,10 @@ class UserAssistPlugin(interface.KeyPlugin):
           parsed_data = self.USERASSIST_V5_STRUCT.parse(value.data)
 
           userassist_entry_index += 1
-          count = parsed_data.get('count', None)
-          app_focus_count = parsed_data.get('app_focus_count', None)
-          focus_duration = parsed_data.get('focus_duration', None)
-          timestamp = parsed_data.get('timestamp', 0)
+          count = parsed_data.get(u'count', None)
+          app_focus_count = parsed_data.get(u'app_focus_count', None)
+          focus_duration = parsed_data.get(u'focus_duration', None)
+          timestamp = parsed_data.get(u'timestamp', 0)
 
           text_dict = {}
           text_dict[value_name] = (

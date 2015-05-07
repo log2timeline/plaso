@@ -12,10 +12,10 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class WinRegTimezonePlugin(interface.KeyPlugin):
   """Plug-in to collect information about the Windows timezone settings."""
 
-  NAME = 'winreg_timezone'
+  NAME = u'windows_timezone'
   DESCRIPTION = u'Parser for Windows timezone settings.'
 
-  REG_TYPE = 'SYSTEM'
+  REG_TYPE = u'SYSTEM'
   REG_KEYS = [u'\\{current_control_set}\\Control\\TimeZoneInformation']
   URLS = []
 
@@ -65,5 +65,4 @@ class WinRegTimezonePlugin(interface.KeyPlugin):
     parser_mediator.ProduceEvent(event_object)
 
 
-# Let's register the plugin.
 winreg.WinRegistryParser.RegisterPlugin(WinRegTimezonePlugin)

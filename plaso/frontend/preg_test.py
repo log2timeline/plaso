@@ -107,7 +107,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     shell_helper, output_writer = self._GetHelperAndOutputWriter()
 
     options = shell_helper.tool_options
-    options.regfile = self._GetTestFilePath(['NTUSER.DAT'])
+    options.regfile = self._GetTestFilePath([u'NTUSER.DAT'])
     options.verbose = False
 
     shell_helper.tool_front_end.ParseOptions(options)
@@ -126,7 +126,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     options = shell_helper.tool_options
     options.key = u'\\Microsoft\\Windows NT\\CurrentVersion'
-    options.regfile = self._GetTestFilePath(['SOFTWARE'])
+    options.regfile = self._GetTestFilePath([u'SOFTWARE'])
     options.verbose = False
 
     shell_helper.tool_front_end.ParseOptions(options)
@@ -140,7 +140,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     shell_helper, output_writer = self._GetHelperAndOutputWriter()
 
     options = shell_helper.tool_options
-    options.regfile = self._GetTestFilePath(['SOFTWARE'])
+    options.regfile = self._GetTestFilePath([u'SOFTWARE'])
 
     shell_helper.tool_front_end.ParseOptions(options)
     shell_helper.tool_front_end.RunModeRegistryFile(options, options.regfile)
@@ -154,18 +154,21 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     while line:
       line_count += 1
       line = line.lstrip()
-      if line.startswith('** Plugin'):
-        _, _, plugin_name = line.rpartition(':')
+      if line.startswith(u'** Plugin'):
+        _, _, plugin_name = line.rpartition(u':')
         plugins.add(plugin_name.strip())
-      if line.startswith('Key Path :'):
-        _, _, key_name = line.rpartition(':')
+      if line.startswith(u'Key Path :'):
+        _, _, key_name = line.rpartition(u':')
         registry_keys.add(key_name.strip())
       line = output_writer.GetLine()
 
     # Define the minimum set of plugins that need to be in the output.
+    # This information is gathered from the actual tool output, which
+    # for aesthetics reasons surrounds the text with **. The above processing
+    # then cuts of the first half of that, but leaves the second ** intact.
     expected_plugins = set([
-        u'winreg_run_software **', u'winreg_task_cache **', u'winreg_winver **',
-        u'winreg_msie_zone_software **', u'winreg_default **'])
+        u'windows_run_software **', u'windows_task_cache **',
+        u'windows_version **', u'msie_zone_software **', u'winreg_default **'])
 
     self.assertTrue(expected_plugins.issubset(plugins))
 

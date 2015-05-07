@@ -9,16 +9,16 @@ from plaso.parsers.winreg_plugins import interface
 class RunUserPlugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing user specific auto runs."""
 
-  NAME = 'winreg_run'
+  NAME = u'windows_run'
   DESCRIPTION = u'Parser for run and run once Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
 
   REG_KEYS = [
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce']
 
-  URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
+  URLS = [u'http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -53,9 +53,9 @@ class RunUserPlugin(interface.KeyPlugin):
 class RunSoftwarePlugin(RunUserPlugin):
   """Windows Registry plugin for parsing system wide auto runs."""
 
-  NAME = 'winreg_run_software'
+  NAME = u'windows_run_software'
 
-  REG_TYPE = 'SOFTWARE'
+  REG_TYPE = u'SOFTWARE'
 
   REG_KEYS = [
       u'\\Microsoft\\Windows\\CurrentVersion\\Run',

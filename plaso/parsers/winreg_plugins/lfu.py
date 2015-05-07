@@ -9,13 +9,13 @@ from plaso.parsers.winreg_plugins import interface
 class BootVerificationPlugin(interface.KeyPlugin):
   """Plug-in to collect the Boot Verification Key."""
 
-  NAME = 'winreg_boot_verify'
+  NAME = u'windows_boot_verify'
   DESCRIPTION = u'Parser for Boot Verification Registry data.'
 
-  REG_TYPE = 'SYSTEM'
+  REG_TYPE = u'SYSTEM'
   REG_KEYS = [u'\\{current_control_set}\\Control\\BootVerificationProgram']
 
-  URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
+  URLS = [u'http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -42,13 +42,13 @@ class BootVerificationPlugin(interface.KeyPlugin):
 class BootExecutePlugin(interface.KeyPlugin):
   """Plug-in to collect the BootExecute Value from the Session Manager key."""
 
-  NAME = 'winreg_boot_execute'
+  NAME = u'windows_boot_execute'
   DESCRIPTION = u'Parser for Boot Execution Registry data.'
 
-  REG_TYPE = 'SYSTEM'
+  REG_TYPE = u'SYSTEM'
   REG_KEYS = [u'\\{current_control_set}\\Control\\Session Manager']
 
-  URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
+  URLS = [u'http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -70,7 +70,7 @@ class BootExecutePlugin(interface.KeyPlugin):
     text_dict = {}
 
     for value in key.GetValues():
-      if value.name == 'BootExecute':
+      if value.name == u'BootExecute':
         # MSDN: claims that the data type of this value is REG_BINARY
         # although REG_MULTI_SZ is known to be used as well.
         if value.DataIsString():
@@ -87,7 +87,7 @@ class BootExecutePlugin(interface.KeyPlugin):
           parser_mediator.ProduceParseError(error_string)
 
         # TODO: why does this have a separate event object? Remove this.
-        value_dict = {'BootExecute': value_string}
+        value_dict = {u'BootExecute': value_string}
         event_object = windows_events.WindowsRegistryEvent(
             key.last_written_timestamp, key.path, value_dict, offset=key.offset,
             registry_type=registry_type, urls=self.URLS)

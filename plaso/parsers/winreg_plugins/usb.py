@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""File containing a Windows Registry plugin to parse the USB Device key."""
 
 import logging
 
@@ -14,11 +15,15 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class USBPlugin(interface.KeyPlugin):
   """USB Windows Registry plugin for last connection time."""
 
-  NAME = 'winreg_usb'
-  DESCRIPTION = u'Parser for USB storage Registry data.'
+  NAME = u'windows_usb_devices'
+  DESCRIPTION = u'Parser for USB device Registry entries.'
 
   REG_KEYS = [u'\\{current_control_set}\\Enum\\USB']
-  REG_TYPE = 'SYSTEM'
+  REG_TYPE = u'SYSTEM'
+
+  URLS = [
+      (u'https://msdn.microsoft.com/en-us/library/windows/hardware/'
+       u'jj649944%28v=vs.85%29.aspx')]
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -33,7 +38,7 @@ class USBPlugin(interface.KeyPlugin):
     """
     for subkey in key.GetSubkeys():
       text_dict = {}
-      text_dict['subkey_name'] = subkey.name
+      text_dict[u'subkey_name'] = subkey.name
 
       vendor_identification = None
       product_identification = None
@@ -48,18 +53,18 @@ class USBPlugin(interface.KeyPlugin):
                 subkey.name, exception))
 
       if vendor_identification and product_identification:
-        text_dict['vendor'] = vendor_identification
-        text_dict['product'] = product_identification
+        text_dict[u'vendor'] = vendor_identification
+        text_dict[u'product'] = product_identification
 
       for devicekey in subkey.GetSubkeys():
-        text_dict['serial'] = devicekey.name
+        text_dict[u'serial'] = devicekey.name
 
         # Last USB connection per USB device recorded in the Registry.
         event_object = windows_events.WindowsRegistryEvent(
             devicekey.last_written_timestamp, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
             registry_type=registry_type,
-            source_append=': USB Entries')
+            source_append=u': USB Entries')
         parser_mediator.ProduceEvent(event_object)
 
 
