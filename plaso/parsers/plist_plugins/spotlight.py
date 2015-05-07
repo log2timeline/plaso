@@ -40,10 +40,14 @@ class SpotlightPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    for search_text, data in match[u'UserShortcuts'].iteritems():
+    for search_text, data in match.get(u'UserShortcuts', {}).iteritems():
+      if not u'LAST_USED' in data:
+        continue
       description = (
           u'Spotlight term searched "{0:s}" associate to {1:s} '
-          u'({2:s})').format(search_text, data[u'DISPLAY_NAME'], data[u'PATH'])
+          u'({2:s})').format(
+              search_text, data.get(u'DISPLAY_NAME', u'<DISPLAY_NAME>'),
+              data.get(u'PATH', u'<PATH>'))
       event_object = plist_event.PlistEvent(
           u'/UserShortcuts', search_text, data[u'LAST_USED'], description)
       parser_mediator.ProduceEvent(event_object)
