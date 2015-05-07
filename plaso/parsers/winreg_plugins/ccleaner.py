@@ -13,11 +13,11 @@ __author__ = 'Marc Seguin (segumarc@gmail.com)'
 class CCleanerPlugin(interface.KeyPlugin):
   """Gathers the CCleaner Keys for NTUSER hive."""
 
-  NAME = 'winreg_ccleaner'
+  NAME = u'ccleaner'
   DESCRIPTION = u'Parser for CCleaner Registry data.'
 
   REG_KEYS = [u'\\Software\\Piriform\\CCleaner']
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
 
   URLS = [(u'http://cheeky4n6monkey.blogspot.com/2012/02/writing-ccleaner'
            u'-regripper-plugin-part_05.html')]

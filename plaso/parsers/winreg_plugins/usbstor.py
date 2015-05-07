@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""File containing a Windows Registry plugin to parse the USBStor key."""
 
 import logging
 
@@ -14,11 +15,13 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class USBStorPlugin(interface.KeyPlugin):
   """USBStor key plugin."""
 
-  NAME = 'winreg_usbstor'
-  DESCRIPTION = u'Parser for USB storage Registry data.'
+  NAME = u'windows_usbstor_devices'
+  DESCRIPTION = u'Parser for USB Plug And Play Manager USBStor Registry Key.'
 
   REG_KEYS = [u'\\{current_control_set}\\Enum\\USBSTOR']
-  REG_TYPE = 'SYSTEM'
+  REG_TYPE = u'SYSTEM'
+
+  URLS = [u'http://www.forensicswiki.org/wiki/USB_History_Viewing']
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',

@@ -76,12 +76,6 @@ class PregItemQueueConsumer(queue.ItemQueueConsumer):
 class PregFrontend(extraction_frontend.ExtractionFrontend):
   """Class that implements the preg front-end."""
 
-  # All Registry plugins start with "winreg_", thus the Preg library cuts that
-  # part of, both for display and matching. That way a plugin can be called by
-  # the second half of the name, eg: "userassist" instead of
-  # "winreg_userassist".
-  PLUGIN_UNIQUE_NAME_START = len('winreg_')
-
   # Define the different run modes.
   RUN_MODE_CONSOLE = 1
   RUN_MODE_REG_FILE = 2
@@ -92,7 +86,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     """Initializes the front-end object."""
     super(PregFrontend, self).__init__()
     self._key_path = None
-    # TODO: refactor.
+    # TODO: refactor this code much the same way as other tools, into:
+    #   a) tool
+    #   b) frontend
+    #   c) CLI
     self._output_writer = output_writer
     self._parse_restore_points = False
     self._verbose_output = False
@@ -108,14 +105,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     return_strings.append(frontend_utils.FormatHeader(u'Key Plugins'))
     for plugin_obj in all_plugins.GetAllKeyPlugins():
       return_strings.append(frontend_utils.FormatOutputString(
-          plugin_obj.NAME[self.PLUGIN_UNIQUE_NAME_START:],
-          plugin_obj.DESCRIPTION))
+          plugin_obj.NAME, plugin_obj.DESCRIPTION))
 
     return_strings.append(frontend_utils.FormatHeader(u'Value Plugins'))
     for plugin_obj in all_plugins.GetAllValuePlugins():
       return_strings.append(frontend_utils.FormatOutputString(
-          plugin_obj.NAME[self.PLUGIN_UNIQUE_NAME_START:],
-          plugin_obj.DESCRIPTION))
+          plugin_obj.NAME, plugin_obj.DESCRIPTION))
 
     return u'\n'.join(return_strings)
 
@@ -410,8 +405,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     keys = []
     if not hive_helper:
       return
-    for key_plugin_cls in self.plugins.GetAllKeyPlugins():
-      temp_obj = key_plugin_cls(reg_cache=hive_helper.reg_cache)
+    for key_plugin_class in self.plugins.GetAllKeyPlugins():
+      temp_obj = key_plugin_class(reg_cache=hive_helper.reg_cache)
       if temp_obj.REG_TYPE == hive_helper.type:
         temp_obj.ExpandKeys(parser_mediator)
         keys.extend(temp_obj.expanded_keys)
@@ -428,22 +423,45 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry plugins.
     """
-    key_plugin_names = []
-    for plugin in self.plugins.GetAllKeyPlugins():
-      temp_obj = plugin(None)
-      key_plugin_names.append(temp_obj.plugin_name)
+    key_plugin_names = [
+        plugin.NAME for plugin in self.plugins.GetAllKeyPlugins()]
 
     if not plugin_name:
       return key_plugin_names
 
     plugin_name = plugin_name.lower()
-    if not plugin_name.startswith('winreg'):
-      plugin_name = u'winreg_{0:s}'.format(plugin_name)
 
     plugins_to_run = []
     for key_plugin in key_plugin_names:
       if plugin_name in key_plugin.lower():
         plugins_to_run.append(key_plugin)
+
+    return plugins_to_run
+
+  def _GetRegistryPluginsFromRegistryType(self, hive_type):
+    """Retrieves the Windows Registry plugins based on a hive type.
+
+    Args:
+      hive_type: string containing the hive type.
+
+    Returns:
+      A list of Windows Registry plugins.
+    """
+    key_plugins = {}
+    for plugin in self.plugins.GetAllKeyPlugins():
+      key_plugins[plugin.NAME.lower()] = plugin.REG_TYPE.lower()
+
+    if not hive_type:
+      return key_plugins.values()
+
+    hive_type = hive_type.lower()
+
+    plugins_to_run = []
+    for key_plugin_name, key_plugin_type in key_plugins.iteritems():
+      if hive_type == key_plugin_type:
+        plugins_to_run.append(key_plugin_name)
+      elif key_plugin_type == 'any':
+        plugins_to_run.append(key_plugin_name)
 
     return plugins_to_run
 
@@ -457,14 +475,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry types.
     """
-    reg_cache = cache.WinRegistryCache()
     types = []
     for plugin in self._GetRegistryPlugins(plugin_name):
-      for key_plugin_cls in self.plugins.GetAllKeyPlugins():
-        temp_obj = key_plugin_cls(reg_cache=reg_cache)
-        if plugin is temp_obj.plugin_name:
-          if temp_obj.REG_TYPE not in types:
-            types.append(temp_obj.REG_TYPE)
+      for key_plugin_class in self.plugins.GetAllKeyPlugins():
+        if plugin == key_plugin_class.NAME:
+          if key_plugin_class.REG_TYPE not in types:
+            types.append(key_plugin_class.REG_TYPE)
           break
 
     return types
@@ -580,14 +596,11 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       if registry_types is None:
         registry_types = []
       for plugin_name in plugin_names:
-        if not plugin_name.startswith('winreg_'):
-          plugin_name = u'winreg_{0:s}'.format(plugin_name)
-
-        for plugin_cls in plugins_list.GetAllKeyPlugins():
-          if plugin_name == plugin_cls.NAME.lower():
+        for plugin_class in plugins_list.GetAllKeyPlugins():
+          if plugin_name == plugin_class.NAME.lower():
             # If a plugin is available for every Registry type
             # we need to make sure all Registry hives are included.
-            if plugin_cls.REG_TYPE == u'any':
+            if plugin_class.REG_TYPE == u'any':
               for available_type in PregHiveHelper.REG_TYPES.iterkeys():
                 if available_type is u'Unknown':
                   continue
@@ -595,8 +608,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
                 if available_type not in registry_types:
                   registry_types.append(available_type)
 
-            if plugin_cls.REG_TYPE not in registry_types:
-              registry_types.append(plugin_cls.REG_TYPE)
+            if plugin_class.REG_TYPE not in registry_types:
+              registry_types.append(plugin_class.REG_TYPE)
 
     # Find all the Registry paths we need to check.
     paths = []
@@ -724,7 +737,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         key_paths = self._GetRegistryKeysFromHive(hive_helper, parser_mediator)
         self._ExpandKeysRedirect(key_paths)
 
-        plugins_to_run = self._GetRegistryPlugins(hive_type)
+        plugins_to_run = self._GetRegistryPluginsFromRegistryType(hive_type)
         output_string = self.ParseHive(
             hive, hive_collectors, shell_helper, key_paths=key_paths,
             use_plugins=plugins_to_run, verbose=self._verbose_output)

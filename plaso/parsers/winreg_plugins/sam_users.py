@@ -16,11 +16,12 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class UsersPlugin(interface.KeyPlugin):
   """SAM Windows Registry plugin for Users Account information."""
 
-  NAME = 'winreg_sam_users'
+  NAME = u'windows_sam_users'
   DESCRIPTION = u'Parser for SAM Users and Names Registry keys.'
 
   REG_KEYS = [u'\\SAM\\Domains\\Account\\Users']
-  REG_TYPE = 'SAM'
+  REG_TYPE = u'SAM'
+
   F_VALUE_STRUCT = construct.Struct(
       'f_struct', construct.Padding(8), construct.ULInt64('last_login'),
       construct.Padding(8), construct.ULInt64('password_reset'),
@@ -44,7 +45,7 @@ class UsersPlugin(interface.KeyPlugin):
 
     name_dict = {}
 
-    name_key = key.GetSubkey('Names')
+    name_key = key.GetSubkey(u'Names')
     if not name_key:
       parser_mediator.ProduceParseError(u'Unable to locate Names key.')
       return
@@ -53,9 +54,9 @@ class UsersPlugin(interface.KeyPlugin):
 
     for subkey in key.GetSubkeys():
       text_dict = {}
-      if subkey.name == 'Names':
+      if subkey.name == u'Names':
         continue
-      text_dict['user_guid'] = subkey.name
+      text_dict[u'user_guid'] = subkey.name
       parsed_v_value = self._ParseVValue(subkey)
       if not parsed_v_value:
         parser_mediator.ProduceParseError(
@@ -65,13 +66,13 @@ class UsersPlugin(interface.KeyPlugin):
       full_name = parsed_v_value[1]
       comments = parsed_v_value[2]
       if username:
-        text_dict['username'] = username
+        text_dict[u'username'] = username
       if full_name:
-        text_dict['full_name'] = full_name
+        text_dict[u'full_name'] = full_name
       if comments:
-        text_dict['comments'] = comments
+        text_dict[u'comments'] = comments
       if name_dict:
-        account_create_time = name_dict.get(text_dict.get('username'), 0)
+        account_create_time = name_dict.get(text_dict.get(u'username'), 0)
       else:
         account_create_time = 0
 
@@ -79,8 +80,8 @@ class UsersPlugin(interface.KeyPlugin):
       last_login_time = timelib.Timestamp.FromFiletime(f_data.last_login)
       password_reset_time = timelib.Timestamp.FromFiletime(
           f_data.password_reset)
-      text_dict['account_rid'] = f_data.rid
-      text_dict['login_count'] = f_data.login_count
+      text_dict[u'account_rid'] = f_data.rid
+      text_dict[u'login_count'] = f_data.login_count
 
       if account_create_time > 0:
         event_object = windows_events.WindowsRegistryEvent(
@@ -119,7 +120,7 @@ class UsersPlugin(interface.KeyPlugin):
       comments: Comments data parsed with comments start and length values.
     """
 
-    v_value = key.GetValue('V')
+    v_value = key.GetValue(u'V')
     if not v_value:
       logging.error(u'Unable to locate V Value in key.')
       return
@@ -153,7 +154,7 @@ class UsersPlugin(interface.KeyPlugin):
       f_data: Construct parsed F value containing rid, login count,
               and timestamp information.
     """
-    f_value = key.GetValue('F')
+    f_value = key.GetValue(u'F')
     if not f_value:
       logging.error(u'Unable to locate F Value in key.')
       return

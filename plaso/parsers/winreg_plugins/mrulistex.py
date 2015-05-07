@@ -101,11 +101,11 @@ class MRUListExPluginMixin(object):
 class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a string MRUListEx."""
 
-  NAME = 'winreg_mrulistex_string'
+  NAME = u'mrulistex_string'
   DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
-  REG_TYPE = 'any'
-  REG_VALUES = frozenset(['MRUListEx', '0'])
+  REG_TYPE = u'any'
+  REG_VALUES = frozenset([u'MRUListEx', u'0'])
 
   URLS = [
       u'http://forensicartifacts.com/2011/02/recentdocs/',
@@ -195,10 +195,10 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
 class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a shell item list MRUListEx."""
 
-  NAME = 'winreg_mrulistex_shell_item_list'
+  NAME = u'mrulistex_shell_item_list'
   DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
   REG_KEYS = frozenset([
       # The regular expression indicated a file extension (.jpg) or '*'.
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
@@ -273,10 +273,10 @@ class MRUListExStringAndShellItemPlugin(
     interface.KeyPlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
-  NAME = 'winreg_mrulistex_string_and_shell_item'
+  NAME = u'mrulistex_string_and_shell_item'
   DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
   REG_KEYS = frozenset([
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs'])
 
@@ -375,10 +375,10 @@ class MRUListExStringAndShellItemListPlugin(
     interface.KeyPlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
-  NAME = 'winreg_mrulistex_string_and_shell_item_list'
+  NAME = u'mrulistex_string_and_shell_item_list'
   DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
   REG_KEYS = frozenset([
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
        u'LastVisitedPidlMRU')])

@@ -114,11 +114,11 @@ class MRUListPluginMixin(object):
 class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
   """Windows Registry plugin to parse a string MRUList."""
 
-  NAME = 'winreg_mrulist_string'
+  NAME = u'mrulist_string'
   DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
-  REG_TYPE = 'any'
-  REG_VALUES = frozenset(['MRUList', 'a'])
+  REG_TYPE = u'any'
+  REG_VALUES = frozenset([u'MRUList', u'a'])
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
   def _ParseMRUListEntryValue(
@@ -203,10 +203,10 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
 class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
   """Windows Registry plugin to parse a shell item list MRUList."""
 
-  NAME = 'winreg_mrulist_shell_item_list'
+  NAME = u'mrulist_shell_item_list'
   DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
   REG_KEYS = frozenset([
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
        u'DesktopStreamMRU')])

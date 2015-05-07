@@ -12,10 +12,10 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class TerminalServerClientPlugin(interface.KeyPlugin):
   """Windows Registry plugin for Terminal Server Client Connection keys."""
 
-  NAME = 'winreg_rdp'
+  NAME = u'mstsc_rdp'
   DESCRIPTION = u'Parser for Terminal Server Client Connection Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
   REG_KEYS = [
       u'\\Software\\Microsoft\\Terminal Server Client\\Servers',
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
@@ -41,22 +41,22 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
         username = u'None'
 
       text_dict = {}
-      text_dict['UsernameHint'] = username
+      text_dict[u'UsernameHint'] = username
 
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': RDP Connection')
+          source_append=u': RDP Connection')
       parser_mediator.ProduceEvent(event_object)
 
 
 class TerminalServerClientMRUPlugin(interface.KeyPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
-  NAME = 'winreg_rdp_mru'
+  NAME = u'mstsc_rdp_mru'
   DESCRIPTION = u'Parser for Terminal Server Client MRU Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
   REG_KEYS = [
       u'\\Software\\Microsoft\\Terminal Server Client\\Default',
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
@@ -89,7 +89,7 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       text_dict = {}
       text_dict[value.name] = value.data
 
-      if value.name == 'MRU0':
+      if value.name == u'MRU0':
         timestamp = key.last_written_timestamp
       else:
         timestamp = 0

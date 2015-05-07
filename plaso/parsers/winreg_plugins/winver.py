@@ -12,14 +12,14 @@ from plaso.parsers.winreg_plugins import interface
 class WinVerPlugin(interface.KeyPlugin):
   """Plug-in to collect information about the Windows version."""
 
-  NAME = 'winreg_winver'
+  NAME = u'windows_version'
   DESCRIPTION = u'Parser for Windows version Registry data.'
 
   REG_KEYS = [u'\\Microsoft\\Windows NT\\CurrentVersion']
-  REG_TYPE = 'SOFTWARE'
+  REG_TYPE = u'SOFTWARE'
   URLS = []
 
-  INT_STRUCT = construct.ULInt32('install')
+  INT_STRUCT = construct.ULInt32(u'install')
 
   # TODO: Refactor remove this function in a later CL.
   def GetValueString(self, key, value_name):
@@ -35,10 +35,10 @@ class WinVerPlugin(interface.KeyPlugin):
     value = key.GetValue(value_name)
 
     if not value:
-      return ''
+      return u''
 
     if not value.data or not value.DataIsString():
-      return ''
+      return u''
     return value.data
 
   def GetEntries(
@@ -55,12 +55,12 @@ class WinVerPlugin(interface.KeyPlugin):
                   The default is None.
     """
     text_dict = {}
-    text_dict[u'Owner'] = self.GetValueString(key, 'RegisteredOwner')
-    text_dict[u'sp'] = self.GetValueString(key, 'CSDBuildNumber')
-    text_dict[u'Product name'] = self.GetValueString(key, 'ProductName')
+    text_dict[u'Owner'] = self.GetValueString(key, u'RegisteredOwner')
+    text_dict[u'sp'] = self.GetValueString(key, u'CSDBuildNumber')
+    text_dict[u'Product name'] = self.GetValueString(key, u'ProductName')
     text_dict[u' Windows Version Information'] = u''
 
-    install_raw = key.GetValue('InstallDate').raw_data
+    install_raw = key.GetValue(u'InstallDate').raw_data
     # TODO: move this to a function in utils with a more descriptive name
     # e.g. CopyByteStreamToInt32BigEndian.
     try:
@@ -70,11 +70,11 @@ class WinVerPlugin(interface.KeyPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         timelib.Timestamp.FromPosixTime(install), key.path, text_dict,
-        usage='OS Install Time', offset=key.offset,
+        usage=u'OS Install Time', offset=key.offset,
         registry_type=registry_type, urls=self.URLS)
 
     event_object.prodname = text_dict[u'Product name']
-    event_object.source_long = 'SOFTWARE WinVersion key'
+    event_object.source_long = u'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:
       event_object.owner = text_dict[u'Owner']
     parser_mediator.ProduceEvent(event_object)
