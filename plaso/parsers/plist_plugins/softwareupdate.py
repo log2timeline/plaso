@@ -39,18 +39,23 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     root = u'/'
     key = u''
     version = match.get(u'LastAttemptSystemVersion', u'N/A')
-    pending = match[u'LastUpdatesAvailable']
+    pending = match.get(u'LastUpdatesAvailable', None)
 
     description = u'Last Mac OS X {0:s} full update.'.format(version)
-    event_object = plist_event.PlistEvent(
-        root, key, match[u'LastFullSuccessfulDate'], description)
-    parser_mediator.ProduceEvent(event_object)
+    if u'LastFullSuccessfulDate' in match and match[u'LastFullSuccessfulDate']:
+      event_object = plist_event.PlistEvent(
+          root, key, match[u'LastFullSuccessfulDate'], description)
+      parser_mediator.ProduceEvent(event_object)
 
-    if pending:
+    if pending and u'LastSuccessfulDate' in match:
       software = []
-      for update in match[u'RecommendedUpdates']:
+      for update in match.get(u'RecommendedUpdates', []):
         software.append(u'{0:s}({1:s})'.format(
-            update[u'Identifier'], update[u'Product Key']))
+            update.get(u'Identifier', u'<IDENTIFIER>'),
+            update.get(u'Product Key', u'<PRODUCT_KEY>')))
+      if not software:
+        return
+
       description = (
           u'Last Mac OS {0!s} partially update, pending {1!s}: {2:s}.').format(
               version, pending, u','.join(software))

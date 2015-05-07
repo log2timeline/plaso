@@ -52,6 +52,9 @@ class AppleAccountPlugin(interface.PlistPlugin):
     """
     root = u'/Accounts'
 
+    if not u'Accounts' in match:
+      return
+
     for name_account, account in match[u'Accounts'].iteritems():
       general_description = u'{0:s} ({1:s} {2:s})'.format(
           name_account, account.get(u'FirstName', u'<FirstName>'),
@@ -59,9 +62,10 @@ class AppleAccountPlugin(interface.PlistPlugin):
       key = name_account
       description = u'Configured Apple account {0:s}'.format(
           general_description)
-      event_object = plist_event.PlistEvent(
-          root, key, account[u'CreationDate'], description)
-      parser_mediator.ProduceEvent(event_object)
+      if u'CreationDate' in account:
+        event_object = plist_event.PlistEvent(
+            root, key, account[u'CreationDate'], description)
+        parser_mediator.ProduceEvent(event_object)
 
       if u'LastSuccessfulConnect' in account:
         description = u'Connected Apple account {0:s}'.format(

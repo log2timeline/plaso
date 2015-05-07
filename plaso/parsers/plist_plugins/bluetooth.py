@@ -41,12 +41,15 @@ class BluetoothPlugin(interface.PlistPlugin):
     """
     root = u'/DeviceCache'
 
-    for device, value in match[u'DeviceCache'].items():
+    if u'DeviceCache' not in match:
+      return
+
+    for device, value in match[u'DeviceCache'].iteritems():
       name = value.get(u'Name', u'')
       if name:
         name = u''.join((u'Name:', name))
 
-      if device in match[u'PairedDevices']:
+      if device in match.get(u'PairedDevices', []):
         desc = u'Paired:True {0:s}'.format(name)
         key = device
         if u'LastInquiryUpdate' in value:
@@ -54,21 +57,21 @@ class BluetoothPlugin(interface.PlistPlugin):
               root, key, value[u'LastInquiryUpdate'], desc)
           parser_mediator.ProduceEvent(event_object)
 
-      if value.get(u'LastInquiryUpdate'):
+      if value.get(u'LastInquiryUpdate', None):
         desc = u' '.join(filter(None, (u'Bluetooth Discovery', name)))
         key = u''.join((device, u'/LastInquiryUpdate'))
         event_object = plist_event.PlistEvent(
             root, key, value[u'LastInquiryUpdate'], desc)
         parser_mediator.ProduceEvent(event_object)
 
-      if value.get(u'LastNameUpdate'):
+      if value.get(u'LastNameUpdate', None):
         desc = u' '.join(filter(None, (u'Device Name Set', name)))
         key = u''.join((device, u'/LastNameUpdate'))
         event_object = plist_event.PlistEvent(
             root, key, value[u'LastNameUpdate'], desc)
         parser_mediator.ProduceEvent(event_object)
 
-      if value.get(u'LastServicesUpdate'):
+      if value.get(u'LastServicesUpdate', None):
         desc = desc = u' '.join(filter(None, (u'Services Updated', name)))
         key = ''.join((device, u'/LastServicesUpdate'))
         event_object = plist_event.PlistEvent(

@@ -55,6 +55,9 @@ class SafariHistoryPlugin(interface.PlistPlugin):
           match.get(u'WebHistoryFileVersion', 0)))
       return
 
+    if u'WebHistoryDates' not in match:
+      return
+
     for history_entry in match.get(u'WebHistoryDates', {}):
       try:
         time = timelib.Timestamp.FromCocoaTime(float(

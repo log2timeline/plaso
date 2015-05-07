@@ -5,6 +5,7 @@
 #       versions as well.
 
 import binascii
+import logging
 
 from binplist import binplist
 from dfvfs.file_io import fake_file_io
@@ -73,22 +74,38 @@ class MacUserPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
+    if u'name' not in match or u'uid' not in match:
+      return
+
     account = match[u'name'][0]
     uid = match[u'uid'][0]
     cocoa_zero = (
         timelib.Timestamp.COCOA_TIME_TO_POSIX_BASE *
         timelib.Timestamp.MICRO_SECONDS_PER_SECOND)
+
     # INFO: binplist return a string with the Plist XML.
-    for policy in match[u'passwordpolicyoptions']:
-      xml_policy = ElementTree.fromstring(policy)
+    for policy in match.get(u'passwordpolicyoptions', []):
+      try:
+        xml_policy = ElementTree.fromstring(policy)
+      except (ElementTree.ParseError, LookupError) as exception:
+        logging.error((
+            u'Unable to parse XML structure for an user policy, account: '
+            u'{0:s} and uid: {1!s}, with error: {2:s}').format(
+                account, uid, exception))
+        continue
+
       for dict_elements in xml_policy.iterfind(u'dict'):
         key_values = [value.text for value in dict_elements.getchildren()]
+        # Taking a list and converting it to a dict, using every other item
+        # as the key and the other one as the value.
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
 
       if policy_dict.get(u'passwordLastSetTime', 0):
         timestamp = timelib.Timestamp.FromTimeString(
             policy_dict.get(u'passwordLastSetTime', '0'))
-        if timestamp > cocoa_zero:
+        shadow_hash_data = match.get(u'ShadowHashData', None)
+        if timestamp > cocoa_zero and isinstance(
+            shadow_hash_data, (list, tuple)):
           # Extract the hash password information.
           # It is store in the attribute ShadowHasData which is
           # a binary plist data; However binplist only extract one
@@ -97,9 +114,11 @@ class MacUserPlugin(interface.PlistPlugin):
 
           # TODO: change this into a DataRange instead. For this we
           # need the file offset and size of the ShadowHashData value data.
+          shadow_hash_data = shadow_hash_data[0]
+
           resolver_context = context.Context()
           fake_file = fake_file_io.FakeFile(
-              resolver_context, match[u'ShadowHashData'][0])
+              resolver_context, shadow_hash_data)
           fake_file.open(path_spec=fake_path_spec.FakePathSpec(
               location=u'ShadowHashData'))
 
@@ -137,7 +156,7 @@ class MacUserPlugin(interface.PlistPlugin):
             policy_dict.get(u'failedLoginTimestamp', '0'))
         description = (
             u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
-                account, uid, policy_dict[u'failedLoginCount'])
+                account, uid, policy_dict.get(u'failedLoginCount', 0))
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'failedLoginTimestamp', timestamp, description)
