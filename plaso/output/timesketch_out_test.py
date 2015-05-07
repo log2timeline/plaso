@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Timesketch output class."""
 
-import sys
 import unittest
 
 from mock import Mock
@@ -15,21 +14,22 @@ from plaso.output import test_lib
 
 
 # Mock the imports if timesketch is not available.
-try:
-  from plaso.output import timesketch_out
-except ImportError:
+from plaso.output import timesketch_out
+
+# If timesketch is not available the timesketch attribute is set to None in the
+# output module.
+if timesketch_out.timesketch is None:
   timesketch_mock = Mock()
   timesketch_mock.create_app = MagicMock()
-  sys.modules[u'elasticsearch'] = Mock()
-  sys.modules[u'flask'] = MagicMock()
-  sys.modules[u'timesketch'] = timesketch_mock
-  sys.modules[u'timesketch.lib'] = Mock()
-  sys.modules[u'timesketch.lib.datastores'] = Mock()
-  sys.modules[u'timesketch.lib.datastores.elastic'] = Mock()
-  sys.modules[u'timesketch.models'] = Mock()
-  sys.modules[u'timesketch.models.sketch'] = Mock()
-  sys.modules[u'timesketch.models.user'] = Mock()
-  from plaso.output import timesketch_out
+
+  # Mock out all imports.
+  timesketch_out.timesketch = timesketch_mock
+  timesketch_out.elastic_exceptions = Mock()
+  timesketch_out.current_app = MagicMock()
+  timesketch_out.ElasticSearchDataStore = Mock()
+  timesketch_out.db_sessions = Mock()
+  timesketch_out.SearchIndex = Mock()
+  timesketch_out.User = Mock()
 
 
 class TimesketchTestConfig(object):

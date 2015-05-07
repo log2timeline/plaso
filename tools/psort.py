@@ -23,6 +23,7 @@ from plaso.cli import analysis_tool
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
+from plaso.output import manager as output_manager
 from plaso.lib import errors
 from plaso.winnt import language_ids
 
@@ -331,6 +332,15 @@ class PsortTool(analysis_tool.AnalysisTool):
       self.PrintColumnValue(name, output_class.DESCRIPTION, 10)
     self.PrintSeparatorLine()
 
+    # Assign to an attribute due to line length limitations.
+    disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses
+    if not disabled_classes():
+      return
+    self.PrintHeader(u'Disabled Output Modules')
+    for output_class in disabled_classes():
+      self.PrintColumnValue(output_class.NAME, output_class.DESCRIPTION, 10)
+    self.PrintSeparatorLine()
+
   def ListTimeZones(self):
     """Lists the timezones."""
     self.PrintHeader(u'Zones')
@@ -537,6 +547,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
   def ProcessStorage(self):
     """Processes a plaso storage."""
+    self._front_end.ParseOptions(self._options)
     try:
       self._ProcessStorage()
 

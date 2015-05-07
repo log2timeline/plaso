@@ -6,7 +6,10 @@ import requests
 import sys
 import uuid
 
-import pyelasticsearch
+try:
+  import pyelasticsearch
+except ImportError:
+  pyelasticsearch = None
 
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -186,4 +189,5 @@ class ElasticSearchOutputModule(interface.OutputModule):
     sys.stdout.flush()
 
 
-manager.OutputManager.RegisterOutput(ElasticSearchOutputModule)
+manager.OutputManager.RegisterOutput(
+    ElasticSearchOutputModule, disabled=pyelasticsearch is None)

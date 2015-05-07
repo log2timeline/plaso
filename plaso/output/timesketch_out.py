@@ -5,13 +5,16 @@ from collections import Counter
 import logging
 import uuid
 
-from elasticsearch import exceptions as elastic_exceptions
-from flask import current_app
-import timesketch
-from timesketch.lib.datastores.elastic import ElasticSearchDataStore
-from timesketch.models import db_session
-from timesketch.models.sketch import SearchIndex
-from timesketch.models.user import User
+try:
+  from elasticsearch import exceptions as elastic_exceptions
+  from flask import current_app
+  import timesketch
+  from timesketch.lib.datastores.elastic import ElasticSearchDataStore
+  from timesketch.models import db_session
+  from timesketch.models.sketch import SearchIndex
+  from timesketch.models.user import User
+except ImportError:
+  timesketch = None
 
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -230,4 +233,5 @@ class TimesketchOutputModule(interface.OutputModule):
     logging.info(u'Adding events to Timesketch..')
 
 
-manager.OutputManager.RegisterOutput(TimesketchOutputModule)
+manager.OutputManager.RegisterOutput(
+    TimesketchOutputModule, disabled=timesketch is None)
