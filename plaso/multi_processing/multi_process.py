@@ -360,7 +360,7 @@ class MultiProcessEngine(engine.BaseEngine):
     # Remove the extraction worker processes from the foreman and wake them
     # to make usre that they are not blocking waiting for new items.
     for worker_process in self._worker_processes:
-      self._foreman_object.StopProcessMonitoring(worker_process)
+      self._foreman_object.StopProcessMonitoring(worker_process.pid)
       collector_object.SignalAbort()
 
     # Join or terminate the extraction worker processes.
@@ -382,7 +382,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # Remove the storage writer process from the foreman and wake it
     # to make sure it is not blocking waiting for new items.
-    self._foreman_object.StopProcessMonitoring(self._storage_writer_process)
+    self._foreman_object.StopProcessMonitoring(self._storage_writer_process.pid)
     self._event_queue_producer.SignalAbort()
     self._parse_error_queue_producer.SignalAbort()
 
@@ -465,9 +465,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       return
 
     # Make sure the foreman gets one more status update so it knows
-    # the worker has completed.
-    time.sleep(0.5)
-    time_slept = 0.5
+    # the worker has completed. Hence we wait slightly longer than
+    # the foreman sleep time.
+    time.sleep(2.0)
+    time_slept = 2.0
     while self._status_is_running:
       time.sleep(0.5)
       time_slept += 0.5
@@ -626,7 +627,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    self._storage_writer.SignalAbort()
+    return
 
 
 class MultiProcessingQueue(queue.Queue):
