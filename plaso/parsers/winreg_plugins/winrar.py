@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for WinRAR for Plaso."""
+"""This file contains a Windows Registry plugin for WinRAR Registry key."""
 
 import re
 
@@ -15,10 +15,10 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
   # TODO: Create NTUSER.DAT test file with WinRAR data.
 
-  NAME = 'winreg_winrar'
+  NAME = u'winrar_mru'
   DESCRIPTION = u'Parser for WinRAR History Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
   REG_KEYS = [
       u'\\Software\\WinRAR\\DialogEditHistory\\ExtrPath',
       u'\\Software\\WinRAR\\DialogEditHistory\\ArcName',
@@ -46,7 +46,7 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      if value.name == '0':
+      if value.name == u'0':
         timestamp = key.last_written_timestamp
       else:
         timestamp = 0
@@ -59,7 +59,7 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': WinRAR History')
+          source_append=u': WinRAR History')
       parser_mediator.ProduceEvent(event_object)
 
 

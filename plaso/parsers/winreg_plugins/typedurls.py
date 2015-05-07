@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""File containing a Windows Registry plugin to parse the typed URL's key."""
 
 import re
 
@@ -13,10 +14,10 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class TypedURLsPlugin(interface.KeyPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
-  NAME = 'winreg_typed_urls'
-  DESCRIPTION = u'Parser for Internet Explorer typed URLs Registry data.'
+  NAME = u'windows_typed_urls'
+  DESCRIPTION = u'Parser for Explorer typed URLs Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
   REG_KEYS = [
       u'\\Software\\Microsoft\\Internet Explorer\\TypedURLs',
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths']
@@ -47,7 +48,7 @@ class TypedURLsPlugin(interface.KeyPlugin):
 
       # TODO: shouldn't this behavior be, put all the typed urls
       # into a single event object with the last written time of the key?
-      if value.name == 'url1':
+      if value.name == u'url1':
         timestamp = key.last_written_timestamp
       else:
         timestamp = 0

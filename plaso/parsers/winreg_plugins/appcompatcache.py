@@ -65,7 +65,7 @@ class AppCompatCacheCachedEntry(object):
 class AppCompatCachePlugin(interface.KeyPlugin):
   """Class that parses the Application Compatibility Cache Registry data."""
 
-  NAME = 'winreg_appcompatcache'
+  NAME = u'appcompatcache'
   DESCRIPTION = u'Parser for Application Compatibility Cache Registry data.'
 
   REG_KEYS = [

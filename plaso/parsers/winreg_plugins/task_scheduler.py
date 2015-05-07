@@ -14,7 +14,7 @@ from plaso.parsers.winreg_plugins import interface
 class TaskCacheEvent(time_events.FiletimeEvent):
   """Convenience class for a Task Cache event."""
 
-  DATA_TYPE = 'task_scheduler:task_cache:entry'
+  DATA_TYPE = u'task_scheduler:task_cache:entry'
 
   def __init__(
       self, timestamp, timestamp_description, task_name, task_identifier):
@@ -36,10 +36,10 @@ class TaskCacheEvent(time_events.FiletimeEvent):
 class TaskCachePlugin(interface.KeyPlugin):
   """Plugin that parses a Task Cache key."""
 
-  NAME = 'winreg_task_cache'
+  NAME = u'windows_task_cache'
   DESCRIPTION = u'Parser for Task Scheduler cache Registry data.'
 
-  REG_TYPE = 'SOFTWARE'
+  REG_TYPE = u'SOFTWARE'
   REG_KEYS = [
       u'\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache']
 

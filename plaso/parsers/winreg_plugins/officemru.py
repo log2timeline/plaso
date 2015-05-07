@@ -16,10 +16,10 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OfficeMRUPlugin(interface.KeyPlugin):
   """Plugin that parses Microsoft Office MRU keys."""
 
-  NAME = 'winreg_office_mru'
+  NAME = u'microsoft_office_mru'
   DESCRIPTION = u'Parser for Microsoft Office MRU Registry data.'
 
-  REG_TYPE = 'NTUSER'
+  REG_TYPE = u'NTUSER'
 
   REG_KEYS = [
       u'\\Software\\Microsoft\\Office\\14.0\\Word\\Place MRU',
@@ -74,14 +74,14 @@ class OfficeMRUPlugin(interface.KeyPlugin):
       try:
         filetime = int(values[0][0], 16)
       except ValueError:
-        logging.warning('Unable to convert filetime string to an integer.')
+        logging.warning(u'Unable to convert filetime string to an integer.')
         filetime = 0
 
       # TODO: why this behavior? Only the first Item is stored with its
       # timestamp. Shouldn't this be: Store all the Item # values with
       # their timestamp and store the entire MRU as one event with the
       # registry key last written time?
-      if value.name == 'Item 1':
+      if value.name == u'Item 1':
         timestamp = timelib.Timestamp.FromFiletime(filetime)
       else:
         timestamp = 0
@@ -92,7 +92,7 @@ class OfficeMRUPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': Microsoft Office MRU')
+          source_append=u': Microsoft Office MRU')
       parser_mediator.ProduceEvent(event_object)
 
 

@@ -15,12 +15,12 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class ShutdownPlugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing the last shutdown time of a system."""
 
-  NAME = 'winreg_shutdown'
+  NAME = u'windows_shutdown'
   DESCRIPTION = u'Parser for ShutdownTime Registry value.'
 
   REG_KEYS = [u'\\{current_control_set}\\Control\\Windows']
-  REG_TYPE = 'SYSTEM'
-  FILETIME_STRUCT = construct.ULInt64('filetime_timestamp')
+  REG_TYPE = u'SYSTEM'
+  FILETIME_STRUCT = construct.ULInt64(u'filetime_timestamp')
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -37,7 +37,7 @@ class ShutdownPlugin(interface.KeyPlugin):
     if not shutdown_value:
       return
     text_dict = {}
-    text_dict['Description'] = shutdown_value.name
+    text_dict[u'Description'] = shutdown_value.name
     try:
       filetime = self.FILETIME_STRUCT.parse(shutdown_value.data)
     except construct.FieldError as exception:
