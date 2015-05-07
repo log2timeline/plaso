@@ -551,7 +551,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
   def ProcessSource(
       self, filter_file=None, hasher_names_string=None,
-      parser_filter_string=None, status_update_callback=None,
+      parser_filter_string=None, single_process_mode=False,
+      status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
     """Processes the source.
@@ -562,7 +563,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       hasher_names_string: optional comma separated string of names of
                            hashers to enable. The default is None.
       parser_filter_string: optional parser filter string. The default is None.
-      status_update_callback: Optional callback function for status updates.
+      single_process_mode: optional boolean value to indicate if the front-end
+                           should run in single process mode. The default is
+                           False.
+      status_update_callback: optional callback function for status updates.
                               The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
@@ -582,6 +586,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     self._CheckStorageFile(self._storage_file_path)
 
+    self._single_process_mode = single_process_mode
     if self.SourceIsFile():
       # No need to multi process a single file source.
       self._single_process_mode = True
