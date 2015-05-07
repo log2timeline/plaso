@@ -27,20 +27,21 @@ class JsonOutputModule(interface.LinearOutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    self._WriteLine(u'"event_{0:d}": {1:s},\n'.format(
-        self._event_counter,
-        json_serializer.JsonEventObjectSerializer.WriteSerialized(
-            event_object)))
+    json_string = json_serializer.JsonEventObjectSerializer.WriteSerialized(
+        event_object)
+
+    if self._event_counter == 0:
+      self._WriteLine(u'"event_{0:d}": {1:s}\n'.format(
+          self._event_counter, json_string))
+    else:
+      self._WriteLine(u', "event_{0:d}": {1:s}\n'.format(
+          self._event_counter, json_string))
 
     self._event_counter += 1
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    # Adding a label for "event_foo" due to JSON expecting a label
-    # after a comma. The only way to provide that is to either know
-    # what the last event is going to be (which we don't) or to add
-    # a dummy event in the end that has no data in it.
-    self._WriteLine(u'"event_foo": "{}"}')
+    self._WriteLine(u'}')
 
   def WriteHeader(self):
     """Writes the header to the output."""
