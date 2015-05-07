@@ -5,7 +5,10 @@
 
 import logging
 
-import MySQLdb
+try:
+  import MySQLdb
+except ImportError:
+  MySQLdb = None
 
 from plaso import formatters
 from plaso.formatters import interface as formatters_interface
@@ -418,4 +421,5 @@ class MySQL4n6OutputModule(interface.OutputModule):
     return getattr(event_object.pathspec, 'vss_store_number', -1)
 
 
-manager.OutputManager.RegisterOutput(MySQL4n6OutputModule)
+manager.OutputManager.RegisterOutput(
+    MySQL4n6OutputModule, disabled=MySQLdb is None)
