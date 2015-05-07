@@ -40,17 +40,17 @@ class PlistPlugin(plugins.BasePlugin):
   GetEntries() - extract and format info from keys and yields event.PlistEvent.
   """
 
-  NAME = 'plist_plugin'
+  NAME = u'plist_plugin'
 
   # PLIST_PATH is a string for the filename this parser is designed to process.
   # This is expected to be overriden by the processing plugin.
   # Ex. 'com.apple.bluetooth.plist'
-  PLIST_PATH = 'any'
+  PLIST_PATH = u'any'
 
   # PLIST_KEYS is a list of keys required by a plugin.
   # This is expected to be overriden by the processing plugin.
   # Ex. frozenset(['DeviceCache', 'PairedDevices'])
-  PLIST_KEYS = frozenset(['any'])
+  PLIST_KEYS = frozenset([u'any'])
 
   # This is expected to be overriden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
@@ -196,7 +196,7 @@ def RecurseKey(recur_item, root='', depth=15):
         yield key
     return
 
-  if not hasattr(recur_item, 'iteritems'):
+  if not hasattr(recur_item, u'iteritems'):
     return
 
   for key, value in recur_item.iteritems():

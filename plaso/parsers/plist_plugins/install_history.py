@@ -12,13 +12,13 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class InstallHistoryPlugin(interface.PlistPlugin):
   """Plist plugin that extracts the installation history."""
 
-  NAME = 'plist_install_history'
+  NAME = u'macosx_install_history'
   DESCRIPTION = u'Parser for installation history plist files.'
 
-  PLIST_PATH = 'InstallHistory.plist'
+  PLIST_PATH = u'InstallHistory.plist'
   PLIST_KEYS = frozenset([
-      'date', 'displayName', 'displayVersion',
-      'processName', 'packageIdentifiers'])
+      u'date', u'displayName', u'displayVersion', u'processName',
+      u'packageIdentifiers'])
 
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
@@ -29,15 +29,15 @@ class InstallHistoryPlugin(interface.PlistPlugin):
     """
     for entry in top_level:
       packages = []
-      for package in entry.get('packageIdentifiers'):
+      for package in entry.get(u'packageIdentifiers'):
         packages.append(package)
       description = (
           u'Installation of [{0:s} {1:s}] using [{2:s}]. '
           u'Packages: {3:s}.').format(
-              entry.get('displayName'), entry.get('displayVersion'),
-              entry.get('processName'), u', '.join(packages))
+              entry.get(u'displayName'), entry.get(u'displayVersion'),
+              entry.get(u'processName'), u', '.join(packages))
       event_object = plist_event.PlistEvent(
-          u'/item', u'', entry.get('date'), description)
+          u'/item', u'', entry.get(u'date'), description)
       parser_mediator.ProduceEvent(event_object)
 
 

@@ -10,19 +10,27 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class SpotlightPlugin(interface.PlistPlugin):
-  """Basic plugin to extract Spotlight."""
+  """Basic plugin to extract information from Spotlight plist file.
 
-  NAME = 'plist_spotlight'
+  Further information about extracted fields:
+    name of the item:
+      search term.
+
+    PATH:
+      path of the program associated to the term.
+
+    LAST_USED:
+      last time when it was executed.
+
+    DISPLAY_NAME:
+      the display name of the program associated.
+  """
+
+  NAME = u'spotlight'
   DESCRIPTION = u'Parser for Spotlight plist files.'
 
-  PLIST_PATH = 'com.apple.spotlight.plist'
-  PLIST_KEYS = frozenset(['UserShortcuts'])
-
-  # Generated events:
-  # name of the item: searched term.
-  #   PATH: path of the program associated to the term.
-  #   LAST_USED: last time when it was executed.
-  #   DISPLAY_NAME: the display name of the program associated.
+  PLIST_PATH = u'com.apple.spotlight.plist'
+  PLIST_KEYS = frozenset([u'UserShortcuts'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
@@ -32,12 +40,12 @@ class SpotlightPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    for search_text, data in match['UserShortcuts'].iteritems():
+    for search_text, data in match[u'UserShortcuts'].iteritems():
       description = (
           u'Spotlight term searched "{0:s}" associate to {1:s} '
-          u'({2:s})').format(search_text, data['DISPLAY_NAME'], data['PATH'])
+          u'({2:s})').format(search_text, data[u'DISPLAY_NAME'], data[u'PATH'])
       event_object = plist_event.PlistEvent(
-          u'/UserShortcuts', search_text, data['LAST_USED'], description)
+          u'/UserShortcuts', search_text, data[u'LAST_USED'], description)
       parser_mediator.ProduceEvent(event_object)
 
 

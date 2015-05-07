@@ -12,24 +12,30 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class TimeMachinePlugin(interface.PlistPlugin):
-  """Basic plugin to extract time machine hardisk and the backups."""
+  """Basic plugin to extract time machine hardisk and the backups.
 
-  NAME = 'plist_timemachine'
+  Further details about the extracted fields:
+    DestinationID:
+      remote UUID hard disk where the backup is done.
+
+    BackupAlias:
+      structure that contains the extra information from the destinationID.
+
+    SnapshotDates:
+      list of the backup dates.
+  """
+
+  NAME = u'time_machine'
   DESCRIPTION = u'Parser for TimeMachine plist files.'
 
-  PLIST_PATH = 'com.apple.TimeMachine.plist'
-  PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
-
-  # Generated events:
-  # DestinationID: remote UUID hard disk where the backup is done.
-  # BackupAlias: structure that contains the extra information from the
-  #              destinationID.
-  # SnapshotDates: list of the backup dates.
+  PLIST_PATH = u'com.apple.TimeMachine.plist'
+  PLIST_KEYS = frozenset([u'Destinations', u'RootVolumeUUID'])
 
   TM_BACKUP_ALIAS = construct.Struct(
-      'tm_backup_alias',
+      u'tm_backup_alias',
       construct.Padding(10),
-      construct.PascalString('value', length_field=construct.UBInt8('length')))
+      construct.PascalString(
+          u'value', length_field=construct.UBInt8(u'length')))
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
@@ -39,21 +45,21 @@ class TimeMachinePlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    root = '/Destinations'
-    key = 'item/SnapshotDates'
+    root = u'/Destinations'
+    key = u'item/SnapshotDates'
 
     # For each TimeMachine devices.
-    for destination in match['Destinations']:
-      hd_uuid = destination['DestinationID']
+    for destination in match[u'Destinations']:
+      hd_uuid = destination[u'DestinationID']
       if not hd_uuid:
         hd_uuid = u'Unknown device'
-      alias = destination['BackupAlias']
+      alias = destination[u'BackupAlias']
       try:
         alias = self.TM_BACKUP_ALIAS.parse(alias).value
       except construct.FieldError:
         alias = u'Unknown alias'
       # For each Backup.
-      for timestamp in destination['SnapshotDates']:
+      for timestamp in destination[u'SnapshotDates']:
         description = u'TimeMachine Backup in {0:s} ({1:s})'.format(
             alias, hd_uuid)
         event_object = plist_event.PlistEvent(root, key, timestamp, description)

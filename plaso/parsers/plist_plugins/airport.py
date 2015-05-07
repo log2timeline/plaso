@@ -12,11 +12,11 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class AirportPlugin(interface.PlistPlugin):
   """Plist plugin that extracts WiFi information."""
 
-  NAME = 'plist_airport'
+  NAME = u'airport'
   DESCRIPTION = u'Parser for Airport plist files.'
 
-  PLIST_PATH = 'com.apple.airport.preferences.plist'
-  PLIST_KEYS = frozenset(['RememberedNetworks'])
+  PLIST_PATH = u'com.apple.airport.preferences.plist'
+  PLIST_KEYS = frozenset([u'RememberedNetworks'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Airport entries.
@@ -26,12 +26,14 @@ class AirportPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    for wifi in match['RememberedNetworks']:
+    for wifi in match[u'RememberedNetworks']:
       description = (
           u'[WiFi] Connected to network: <{0:s}> using security {1:s}').format(
-              wifi['SSIDString'], wifi['SecurityType'])
+              wifi.get(u'SSIDString', u'UNKNOWN_SSID'),
+              wifi.get(u'SecurityType', u'UNKNOWN_SECURITY_TYPE'))
       event_object = plist_event.PlistEvent(
-          u'/RememberedNetworks', u'item', wifi['LastConnected'], description)
+          u'/RememberedNetworks', u'item', wifi.get(u'LastConnected', 0),
+          description)
       parser_mediator.ProduceEvent(event_object)
 
 
