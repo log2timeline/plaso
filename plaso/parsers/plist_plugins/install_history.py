@@ -29,13 +29,19 @@ class InstallHistoryPlugin(interface.PlistPlugin):
     """
     for entry in top_level:
       packages = []
-      for package in entry.get(u'packageIdentifiers'):
+      for package in entry.get(u'packageIdentifiers', []):
         packages.append(package)
+
+      if not packages or not u'date' in entry:
+        continue
+
       description = (
           u'Installation of [{0:s} {1:s}] using [{2:s}]. '
           u'Packages: {3:s}.').format(
-              entry.get(u'displayName'), entry.get(u'displayVersion'),
-              entry.get(u'processName'), u', '.join(packages))
+              entry.get(u'displayName', u'<UNKNOWN>'),
+              entry.get(u'displayVersion', u'<DISPLAY_VERSION>'),
+              entry.get(u'processName', u'<PROCESS_NAME>'),
+              u', '.join(packages))
       event_object = plist_event.PlistEvent(
           u'/item', u'', entry.get(u'date'), description)
       parser_mediator.ProduceEvent(event_object)

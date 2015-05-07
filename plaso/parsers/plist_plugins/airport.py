@@ -26,6 +26,9 @@ class AirportPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
+    if u'RememberedNetworks' not in match:
+      return
+
     for wifi in match[u'RememberedNetworks']:
       description = (
           u'[WiFi] Connected to network: <{0:s}> using security {1:s}').format(

@@ -45,21 +45,26 @@ class TimeMachinePlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
+    if u'Destinations' not in match:
+      return
+
     root = u'/Destinations'
     key = u'item/SnapshotDates'
 
     # For each TimeMachine devices.
     for destination in match[u'Destinations']:
-      hd_uuid = destination[u'DestinationID']
+      hd_uuid = destination.get(u'DestinationID', None)
       if not hd_uuid:
         hd_uuid = u'Unknown device'
-      alias = destination[u'BackupAlias']
+
+      alias = destination.get(u'BackupAlias', u'<ALIAS>')
       try:
         alias = self.TM_BACKUP_ALIAS.parse(alias).value
       except construct.FieldError:
         alias = u'Unknown alias'
+
       # For each Backup.
-      for timestamp in destination[u'SnapshotDates']:
+      for timestamp in destination.get(u'SnapshotDates', []):
         description = u'TimeMachine Backup in {0:s} ({1:s})'.format(
             alias, hd_uuid)
         event_object = plist_event.PlistEvent(root, key, timestamp, description)
