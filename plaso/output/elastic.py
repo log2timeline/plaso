@@ -20,41 +20,6 @@ class ElasticSearchOutputModule(interface.OutputModule):
   NAME = u'elastic'
   DESCRIPTION = u'Saves the events into an ElasticSearch database.'
 
-  # Add configuration data for this output module.
-  ARGUMENTS = [
-      ('--case_name', {
-          'dest': 'case_name',
-          'type': unicode,
-          'help': 'Add a case name. This will be the name of the index in '
-                  'ElasticSearch.',
-          'action': 'store',
-          'default': ''}),
-      ('--document_type', {
-          'dest': 'document_type',
-          'type': unicode,
-          'help': 'Name of the document type. This is the name of the document '
-                  'type that will be used in ElasticSearch.',
-          'action': 'store',
-          'default': ''}),
-      ('--elastic_server_ip', {
-          'dest': 'elastic_server',
-          'type': unicode,
-          'help': (
-              'If the ElasticSearch database resides on a different server '
-              'than localhost this parameter needs to be passed in. This '
-              'should be the IP address or the hostname of the server.'),
-          'action': 'store',
-          'default': '127.0.0.1'}),
-      ('--elastic_port', {
-          'dest': 'elastic_port',
-          'type': int,
-          'help': (
-              'By default ElasticSearch uses the port number 9200, if the '
-              'database is listening on a different port this parameter '
-              'can be defined.'),
-          'action': 'store',
-          'default': 9200})]
-
   def __init__(self, output_mediator, **kwargs):
     """Initializes the output module object.
 
@@ -64,30 +29,9 @@ class ElasticSearchOutputModule(interface.OutputModule):
     super(ElasticSearchOutputModule, self).__init__(output_mediator, **kwargs)
     self._counter = 0
     self._data = []
-
-    elastic_host = self._output_mediator.GetConfigurationValue(
-        u'elastic_server', default_value=u'127.0.0.1')
-    elastic_port = self._output_mediator.GetConfigurationValue(
-        u'elastic_port', default_value=9200)
-    self._elastic_db = pyelasticsearch.ElasticSearch(
-        u'http://{0:s}:{1:d}'.format(elastic_host, elastic_port))
-
-    case_name = self._output_mediator.GetConfigurationValue(
-        u'case_name', default_value=u'')
-    document_type = self._output_mediator.GetConfigurationValue(
-        u'document_type', default_value=u'')
-
-    # case_name becomes the index name in Elastic.
-    if case_name:
-      self._index_name = case_name.lower()
-    else:
-      self._index_name = uuid.uuid4().hex
-
-    # Name of the doc_type that holds the plaso events.
-    if document_type:
-      self._doc_type = document_type.lower()
-    else:
-      self._doc_type = u'event'
+    self._doc_type = None
+    self._elastic_db = None
+    self._index_name = None
 
   def _EventToDict(self, event_object):
     """Returns a dict built from an event object.
@@ -156,6 +100,38 @@ class ElasticSearchOutputModule(interface.OutputModule):
     sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
         self._index_name))
     sys.stdout.flush()
+
+  def SetCaseName(self, case_name):
+    """Set the case name for the ElasticSearch database connection.
+
+    Args:
+      case_name: the case name, used for the name of the index in the database.
+    """
+    if case_name:
+      self._index_name = case_name.lower()
+    else:
+      self._index_name = uuid.uuid4().hex
+
+  def SetDocumentType(self, document_type):
+    """Set the document type for the ElasticSearch database connection.
+
+    Args:
+      document_type: the document type for the ElasticSearch database.
+    """
+    if document_type:
+      self._doc_type = document_type.lower()
+    else:
+      self._doc_type = u'event'
+
+  def SetElasticServer(self, elastic_host, elastic_port):
+    """Set the ElasticSearch connection.
+
+    Args:
+      elastic_host: the hostname or IP address of the ElasticSearch server.
+      elastic_port: the port number that the ElasticSearch is listening on.
+    """
+    self._elastic_db = pyelasticsearch.ElasticSearch(
+        u'http://{0:s}:{1:d}'.format(elastic_host, elastic_port))
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.

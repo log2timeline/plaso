@@ -12,11 +12,13 @@ from plaso import output   # pylint: disable=unused-import
 from plaso.analysis import manager as analysis_manager
 from plaso.analysis import mediator as analysis_mediator
 from plaso.cli import tools as cli_tools
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
+from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
@@ -266,6 +268,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       if not output_module:
         raise RuntimeError(u'Missing output module.')
+
+      # TODO: This should be done in tools/psort.py but requires
+      # a larger re-factor of this function.
+      try:
+        helpers_manager.ArgumentHelperManager.ParseOptions(
+            options, output_module)
+      except errors.BadConfigOption as exception:
+        raise RuntimeError(exception)
 
       # TODO: allow for single processing.
       # TODO: add upper queue limit.

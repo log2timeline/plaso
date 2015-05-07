@@ -1,6 +1,13 @@
 plaso.cli package
 =================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    plaso.cli.helpers
+
 Submodules
 ----------
 
