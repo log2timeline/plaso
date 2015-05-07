@@ -11,13 +11,23 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class AppleAccountPlugin(interface.PlistPlugin):
-  """Basic plugin to extract the apple account information."""
+  """Basic plugin to extract the apple account information.
 
-  NAME = 'plist_appleaccount'
+  Further details about fields within the key:
+    Accounts: account name.
+    FirstName: first name associated with the account.
+    LastName: family name associate with the account.
+    CreationDate: timestamp when the account was configured in the system.
+    LastSuccessfulConnect: last time when the account was connected.
+    ValidationDate: last time when the account was validated.
+  """
+
+  NAME = u'apple_id'
   DESCRIPTION = u'Parser for Apple account information plist files.'
 
   PLIST_PATH = u'com.apple.coreservices.appleidauthenticationinfo'
-  PLIST_KEYS = frozenset(['AuthCertificates', 'AccessorVersions', 'Accounts'])
+  PLIST_KEYS = frozenset(
+      [u'AuthCertificates', u'AccessorVersions', u'Accounts'])
 
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Check if it is a valid Apple account plist file name.
@@ -32,14 +42,6 @@ class AppleAccountPlugin(interface.PlistPlugin):
     super(AppleAccountPlugin, self).Process(
       parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
-  # Generated events:
-  # Accounts: account name.
-  # FirstName: first name associated with the account.
-  # LastName: family name associate with the account.
-  # CreationDate: timestamp when the account was configured in the system.
-  # LastSuccessfulConnect: last time when the account was connected.
-  # ValidationDate: last time when the account was validated.
-
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Apple Account entries.
 
@@ -48,31 +50,31 @@ class AppleAccountPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
-    root = '/Accounts'
+    root = u'/Accounts'
 
-    for name_account, account in match['Accounts'].iteritems():
+    for name_account, account in match[u'Accounts'].iteritems():
       general_description = u'{0:s} ({1:s} {2:s})'.format(
-          name_account, account.get('FirstName', '<FirstName>'),
-          account.get('LastName', '<LastName>'))
+          name_account, account.get(u'FirstName', u'<FirstName>'),
+          account.get(u'LastName', u'<LastName>'))
       key = name_account
       description = u'Configured Apple account {0:s}'.format(
           general_description)
       event_object = plist_event.PlistEvent(
-          root, key, account['CreationDate'], description)
+          root, key, account[u'CreationDate'], description)
       parser_mediator.ProduceEvent(event_object)
 
-      if 'LastSuccessfulConnect' in account:
+      if u'LastSuccessfulConnect' in account:
         description = u'Connected Apple account {0:s}'.format(
             general_description)
         event_object = plist_event.PlistEvent(
-            root, key, account['LastSuccessfulConnect'], description)
+            root, key, account[u'LastSuccessfulConnect'], description)
         parser_mediator.ProduceEvent(event_object)
 
-      if 'ValidationDate' in account:
+      if u'ValidationDate' in account:
         description = u'Last validation Apple account {0:s}'.format(
             general_description)
         event_object = plist_event.PlistEvent(
-            root, key, account['ValidationDate'], description)
+            root, key, account[u'ValidationDate'], description)
         parser_mediator.ProduceEvent(event_object)
 
 

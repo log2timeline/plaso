@@ -7,23 +7,29 @@ from plaso.parsers.plist_plugins import interface
 
 
 class BluetoothPlugin(interface.PlistPlugin):
-  """Basic plugin to extract interesting Bluetooth related keys."""
+  """Basic plugin to extract interesting Bluetooth related keys.
 
-  NAME = 'plist_bluetooth'
+  Additional details about the fields.
+
+  LastInquiryUpdate:
+    Device connected via Bluetooth Discovery. Updated
+    when a device is detected in discovery mode. E.g. BT headphone power
+    on. Pairing is not required for a device to be discovered and cached.
+
+  LastNameUpdate:
+    When the human name was last set. Usually done only once during
+    initial setup.
+
+  LastServicesUpdate:
+    Time set when device was polled to determine what it is. Usually
+    done at setup or manually requested via advanced menu.
+  """
+
+  NAME = u'macosx_bluetooth'
   DESCRIPTION = u'Parser for Bluetooth plist files.'
 
-  PLIST_PATH = 'com.apple.bluetooth.plist'
-  PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
-
-  # LastInquiryUpdate = Device connected via Bluetooth Discovery.  Updated
-  #   when a device is detected in discovery mode.  E.g. BT headphone power
-  #   on.  Pairing is not required for a device to be discovered and cached.
-  #
-  # LastNameUpdate = When the human name was last set.  Usually done only once
-  #   during initial setup.
-  #
-  # LastServicesUpdate = Time set when device was polled to determine what it
-  #   is.  Usually done at setup or manually requested via advanced menu.
+  PLIST_PATH = u'com.apple.bluetooth.plist'
+  PLIST_KEYS = frozenset([u'DeviceCache', u'PairedDevices'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant BT entries.
@@ -33,40 +39,40 @@ class BluetoothPlugin(interface.PlistPlugin):
       match: Optional dictionary containing extracted keys from PLIST_KEYS.
              The default is None.
     """
-    root = '/DeviceCache'
+    root = u'/DeviceCache'
 
-    for device, value in match['DeviceCache'].items():
-      name = value.get('Name', '')
+    for device, value in match[u'DeviceCache'].items():
+      name = value.get(u'Name', u'')
       if name:
-        name = u''.join(('Name:', name))
+        name = u''.join((u'Name:', name))
 
-      if device in match['PairedDevices']:
-        desc = 'Paired:True {0:s}'.format(name)
+      if device in match[u'PairedDevices']:
+        desc = u'Paired:True {0:s}'.format(name)
         key = device
-        if 'LastInquiryUpdate' in value:
+        if u'LastInquiryUpdate' in value:
           event_object = plist_event.PlistEvent(
-              root, key, value['LastInquiryUpdate'], desc)
+              root, key, value[u'LastInquiryUpdate'], desc)
           parser_mediator.ProduceEvent(event_object)
 
-      if value.get('LastInquiryUpdate'):
-        desc = u' '.join(filter(None, ('Bluetooth Discovery', name)))
-        key = u''.join((device, '/LastInquiryUpdate'))
+      if value.get(u'LastInquiryUpdate'):
+        desc = u' '.join(filter(None, (u'Bluetooth Discovery', name)))
+        key = u''.join((device, u'/LastInquiryUpdate'))
         event_object = plist_event.PlistEvent(
-            root, key, value['LastInquiryUpdate'], desc)
+            root, key, value[u'LastInquiryUpdate'], desc)
         parser_mediator.ProduceEvent(event_object)
 
-      if value.get('LastNameUpdate'):
-        desc = u' '.join(filter(None, ('Device Name Set', name)))
-        key = u''.join((device, '/LastNameUpdate'))
+      if value.get(u'LastNameUpdate'):
+        desc = u' '.join(filter(None, (u'Device Name Set', name)))
+        key = u''.join((device, u'/LastNameUpdate'))
         event_object = plist_event.PlistEvent(
-            root, key, value['LastNameUpdate'], desc)
+            root, key, value[u'LastNameUpdate'], desc)
         parser_mediator.ProduceEvent(event_object)
 
-      if value.get('LastServicesUpdate'):
-        desc = desc = u' '.join(filter(None, ('Services Updated', name)))
-        key = ''.join((device, '/LastServicesUpdate'))
+      if value.get(u'LastServicesUpdate'):
+        desc = desc = u' '.join(filter(None, (u'Services Updated', name)))
+        key = ''.join((device, u'/LastServicesUpdate'))
         event_object = plist_event.PlistEvent(
-            root, key, value['LastServicesUpdate'], desc)
+            root, key, value[u'LastServicesUpdate'], desc)
         parser_mediator.ProduceEvent(event_object)
 
 
