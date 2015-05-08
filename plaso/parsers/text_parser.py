@@ -87,12 +87,11 @@ class SlowLexicalTextParser(
     """
     self.line_ready = False
     for attr in self.attributes:
-      if attr[0] == 'i':
+      if attr.startswith(u'i'):
         self.attributes[attr] = 0
       else:
-        self.attributes[attr] = ''
+        self.attributes[attr] = u''
 
-  # TODO: this is a rough initial implementation to get this working.
   def CreateEvent(self, timestamp, offset, attributes):
     """Creates an event.
 
