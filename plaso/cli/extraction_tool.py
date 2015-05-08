@@ -283,8 +283,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """
     argument_group.add_argument(
         u'--serializer-format', u'--serializer_format', action=u'store',
-        dest=u'serializer_format', default=u'proto', metavar=u'FORMAT', help=(
-            u'By default the storage uses protobufs for serializing event '
+        dest=u'serializer_format', default=u'json', metavar=u'FORMAT', help=(
+            u'By default the storage uses JSON for serializing event '
             u'objects. This parameter can be used to change that behavior. '
             u'The choices are "proto" and "json".'))
 
