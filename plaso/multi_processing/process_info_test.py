@@ -31,10 +31,6 @@ class ProcessInfoTest(unittest.TestCase):
     self.assertNotEqual(process_info_object.command_line, None)
     self.assertNotEqual(process_info_object.cpu_percent, None)
     self.assertNotEqual(process_info_object.cpu_times, None)
-    # Testing on OSX fails because get_io_counters from psutils is not
-    # available on that platform.
-    # Ref: https://github.com/log2timeline/plaso/issues/175
-    # self.assertNotEqual(process_info_object.io_counters, None)
     self.assertNotEqual(process_info_object.memory_map, None)
     self.assertNotEqual(process_info_object.name, None)
     self.assertNotEqual(process_info_object.number_of_threads, 0)

@@ -134,11 +134,11 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'',
       u'optional arguments:',
       u'  --serializer-format FORMAT, --serializer_format FORMAT',
-      (u'                        By default the storage uses protobufs for '
-       u'serializing'),
-      (u'                        event objects. This parameter can be used to '
-       u'change'),
-      (u'                        that behavior. The choices are "proto" and '
+      (u'                        By default the storage uses JSON for '
+       u'serializing event'),
+      (u'                        objects. This parameter can be used to '
+       u'change that'),
+      (u'                        behavior. The choices are "proto" and '
        u'"json".'),
       u''])
 
