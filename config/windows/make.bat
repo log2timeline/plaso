@@ -9,7 +9,6 @@ C:\Python27\python.exe ..\pyinstaller\pyinstaller.py --onedir plaso\frontend\log
 C:\Python27\python.exe ..\pyinstaller\pyinstaller.py --onedir plaso\frontend\pinfo.py
 C:\Python27\python.exe ..\pyinstaller\pyinstaller.py --onedir plaso\frontend\plasm.py
 C:\Python27\python.exe ..\pyinstaller\pyinstaller.py --onedir plaso\frontend\preg.py
-C:\Python27\python.exe ..\pyinstaller\pyinstaller.py --onedir plaso\frontend\pshell.py
 C:\Python27\python.exe ..\pyinstaller\pyinstaller.py --onedir plaso\frontend\psort.py
 
 set PYTHONPATH=

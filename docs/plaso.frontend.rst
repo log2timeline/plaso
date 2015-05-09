@@ -116,14 +116,6 @@ plaso.frontend.presets module
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.pshell module
-----------------------------
-
-.. automodule:: plaso.frontend.pshell
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.frontend.psort module
 ---------------------------
 
