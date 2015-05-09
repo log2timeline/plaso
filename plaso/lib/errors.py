@@ -17,6 +17,10 @@ class CollectorError(Error):
   """Class that defines collector errors."""
 
 
+class ForemanAbort(Error):
+  """Class that defines a foreman initiated abort exception."""
+
+
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""
 

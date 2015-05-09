@@ -325,18 +325,19 @@ class MultiProcessEngine(engine.BaseEngine):
     self._collection_process.start()
     self._foreman_object.StartProcessMonitoring(self._collection_process)
 
-    logging.debug(u'Processing started.')
-
-    time.sleep(self._FOREMAN_CHECK_SLEEP)
-    while not self._foreman_object.CheckStatus():
-      if status_update_callback:
-        status_update_callback(self._foreman_object.processing_status)
+    try:
+      logging.debug(u'Processing started.')
 
       time.sleep(self._FOREMAN_CHECK_SLEEP)
+      while not self._foreman_object.CheckStatus():
+        if status_update_callback:
+          status_update_callback(self._foreman_object.processing_status)
 
-    logging.info(u'Processing stopped.')
+        time.sleep(self._FOREMAN_CHECK_SLEEP)
 
-    # TODO: remove the processes from the foreman.
+      logging.info(u'Processing stopped.')
+    except errors.ForemanAbort:
+      logging.info(u'Processing aborted - worker idle for too long.')
 
     self._StopProcesses(collector_object)
 
