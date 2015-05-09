@@ -17,5 +17,4 @@ xcopy /q /y /s dist\log2timeline\* dist\plaso
 xcopy /q /y /s dist\pinfo\* dist\plaso
 xcopy /q /y /s dist\plasm\* dist\plaso
 xcopy /q /y /s dist\preg\* dist\plaso
-xcopy /q /y /s dist\pshell\* dist\plaso
 xcopy /q /y /s dist\psort\* dist\plaso
