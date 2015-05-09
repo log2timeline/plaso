@@ -6,6 +6,7 @@ import logging
 
 from plaso.engine import processing_status
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.multi_processing import process_info
 from plaso.multi_processing import rpc
 from plaso.multi_processing import xmlrpc
@@ -211,6 +212,9 @@ class Foreman(object):
 
     Returns:
       A boolean indicating whether processing is complete.
+
+    Raises:
+      ForemanAbort: when all the worker are idle.
     """
     for process_label in self._monitored_process_labels.values():
       self._CheckStatus(process_label)
@@ -221,7 +225,7 @@ class Foreman(object):
 
     elif self.processing_status.WorkersIdle():
       logging.warning(u'Workers are idle.')
-      # TODO: raise an abort exception.
+      raise errors.ForemanAbort
 
     return processing_completed
 
