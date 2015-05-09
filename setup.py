@@ -42,7 +42,6 @@ def GetScripts():
       u'pinfo.py',
       u'plasm.py',
       u'preg.py',
-      u'pshell.py',
       u'psort.py'])
 
   for filename in script_filenames:
