@@ -20,20 +20,20 @@ from plaso.preprocessors import manager as preprocess_manager
 class BaseEngine(object):
   """Class that defines the processing engine base."""
 
-  def __init__(self, collection_queue, storage_queue, parse_error_queue):
+  def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
     """Initialize the engine object.
 
     Args:
-      collection_queue: the collection queue object (instance of Queue).
-      storage_queue: the storage queue object (instance of Queue).
+      path_spec_queue: the path specification queue object (instance of Queue).
+      event_object_queue: the event object queue object (instance of Queue).
       parse_error_queue: the parser error queue object (instance of Queue).
     """
-    self._collection_queue = collection_queue
     self._enable_debug_output = False
     self._enable_profiling = False
-    self._event_queue_producer = queue.ItemQueueProducer(storage_queue)
+    self._event_queue_producer = queue.ItemQueueProducer(event_object_queue)
     self._filter_object = None
     self._mount_path = None
+    self._path_spec_queue = path_spec_queue
     self._parse_error_queue = parse_error_queue
     self._parse_error_queue_producer = queue.ItemQueueProducer(
         parse_error_queue)
@@ -45,8 +45,8 @@ class BaseEngine(object):
     self._source_file_entry = None
     self._text_prepend = None
 
+    self.event_object_queue = event_object_queue
     self.knowledge_base = knowledge_base.KnowledgeBase()
-    self.storage_queue = storage_queue
 
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
@@ -79,7 +79,7 @@ class BaseEngine(object):
       raise RuntimeError(u'Missing source.')
 
     collector_object = collector.Collector(
-        self._collection_queue, self._source, self._source_path_spec,
+        self._path_spec_queue, self._source, self._source_path_spec,
         resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)

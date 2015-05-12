@@ -20,7 +20,7 @@ class Collector(queue.ItemQueueProducer):
   """Class that implements a collector object."""
 
   def __init__(
-      self, process_queue, source_path, source_path_spec,
+      self, path_spec_queue, source_path, source_path_spec,
       resolver_context=None):
     """Initializes the collector object.
 
@@ -29,8 +29,10 @@ class Collector(queue.ItemQueueProducer):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
+      path_spec_queue: The path specification queue (instance of Queue).
+                       This queue contains the path specifications (instances
+                       of dfvfs.PathSpec) of the file entries that need
+                       to be processed.
       source_path: Path of the source file or directory.
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
@@ -38,9 +40,9 @@ class Collector(queue.ItemQueueProducer):
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
-    super(Collector, self).__init__(process_queue)
+    super(Collector, self).__init__(path_spec_queue)
     self._filter_find_specs = None
-    self._fs_collector = FileSystemCollector(process_queue)
+    self._fs_collector = FileSystemCollector(path_spec_queue)
     self._resolver_context = resolver_context
     # TODO: remove the need to pass source_path
     self._source_path = os.path.abspath(source_path)
@@ -259,15 +261,15 @@ class Collector(queue.ItemQueueProducer):
     self._vss_stores = vss_stores
 
   def SignalAbort(self):
-    """Signals the producer to abort."""
-    super(Collector, self).SignalAbort()
+    """Signals the collector to abort."""
     self._fs_collector.SignalAbort()
+    super(Collector, self).SignalAbort()
 
 
 class FileSystemCollector(queue.ItemQueueProducer):
   """Class that implements a file system collector object."""
 
-  def __init__(self, process_queue):
+  def __init__(self, path_spec_queue):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -275,10 +277,12 @@ class FileSystemCollector(queue.ItemQueueProducer):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
+      path_spec_queue: The path specification queue (instance of Queue).
+                       This queue contains the path specifications (instances
+                       of dfvfs.PathSpec) of the file entries that need
+                       to be processed.
     """
-    super(FileSystemCollector, self).__init__(process_queue)
+    super(FileSystemCollector, self).__init__(path_spec_queue)
     self._collect_directory_metadata = True
     self._duplicate_file_check = False
     self._hashlist = {}

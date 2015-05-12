@@ -159,8 +159,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     logging.debug(u'All analysis plugins are now stopped.')
 
+    # TODO: fix this.
     # Close the output queue.
-    analysis_output_queue.SignalAbort()
+    # analysis_output_queue.SignalAbort()
 
     # Go over each output.
     analysis_queue_consumer = PsortAnalysisReportQueueConsumer(

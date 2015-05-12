@@ -12,8 +12,6 @@ from plaso.frontend import extraction_frontend
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 
-import pytz
-
 
 class LoggingFilter(logging.Filter):
   """Class that implements basic filtering of log events for plaso.
@@ -26,7 +24,7 @@ class LoggingFilter(logging.Filter):
 
   def filter(self, record):
     """Filter messages sent to the logging infrastructure."""
-    if record.module == 'binplist' and record.levelno == logging.DEBUG:
+    if record.module == u'binplist' and record.levelno == logging.DEBUG:
       return False
 
     return True
@@ -94,9 +92,3 @@ class Log2TimelineFrontend(extraction_frontend.ExtractionFrontend):
       return_dict[u'Filters'].append((filter_obj.filter_name, doc_string))
 
     return return_dict
-
-  def GetTimeZones(self):
-    """Returns a generator of the names of all the supported time zones."""
-    yield 'local'
-    for zone in pytz.all_timezones:
-      yield zone

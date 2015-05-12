@@ -51,7 +51,9 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE',
       (u'                        explicitly define the timezone. Typically '
        u'the timezone'),
-      u'                        is determined automatically where possible.',
+      (u'                        is determined automatically where possible. '
+       u'Use "-z'),
+      u'                        list" to see a list of available timezones.',
       u''])
 
   def testAddBasicOptions(self):

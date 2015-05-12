@@ -114,15 +114,15 @@ class CollectorTest(CollectorTestCase):
       path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
 
-      test_collection_queue = single_process.SingleProcessQueue()
+      test_path_spec_queue = single_process.SingleProcessQueue()
       resolver_context = context.Context()
       test_collector = collector.Collector(
-          test_collection_queue, dirname, path_spec,
+          test_path_spec_queue, dirname, path_spec,
           resolver_context=resolver_context)
       test_collector.Collect()
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
-          test_collection_queue)
+          test_path_spec_queue)
       test_collector_queue_consumer.ConsumeItems()
 
       self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 4)
@@ -141,10 +141,10 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/AUTHORS\n')
       temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
 
-    test_collection_queue = single_process.SingleProcessQueue()
+    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, dirname, path_spec,
+        test_path_spec_queue, dirname, path_spec,
         resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
@@ -153,7 +153,7 @@ class CollectorTest(CollectorTestCase):
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_collection_queue)
+        test_path_spec_queue)
     test_collector_queue_consumer.ConsumeItems()
 
     try:
@@ -215,15 +215,15 @@ class CollectorTest(CollectorTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    test_collection_queue = single_process.SingleProcessQueue()
+    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, test_file, path_spec,
+        test_path_spec_queue, test_file, path_spec,
         resolver_context=resolver_context)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_collection_queue)
+        test_path_spec_queue)
     test_collector_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 3)
@@ -245,10 +245,10 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/a_directory/another.+\n')
       temp_file.write('/passwords.txt\n')
 
-    test_collection_queue = single_process.SingleProcessQueue()
+    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, test_file, path_spec,
+        test_path_spec_queue, test_file, path_spec,
         resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
@@ -257,7 +257,7 @@ class CollectorTest(CollectorTestCase):
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_collection_queue)
+        test_path_spec_queue)
     test_collector_queue_consumer.ConsumeItems()
 
     try:
