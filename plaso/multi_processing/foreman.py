@@ -240,6 +240,17 @@ class Foreman(object):
     """
     return self._monitored_process_labels.get(pid, None)
 
+  def IsMonitored(self, pid):
+    """Determines if the foreman is monitoring a certain process.
+
+    Args:
+      pid: The process ID (PID).
+
+    Returns:
+      A boolean indicating if the process is being monitored.
+    """
+    return pid in self._processes_per_pid
+
   def StartProcessMonitoring(self, process):
     """Starts monitoring a processes by adding it to the monitor list.
 

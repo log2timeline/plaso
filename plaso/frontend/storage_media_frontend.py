@@ -281,7 +281,7 @@ class StorageMediaFrontend(frontend.Frontend):
         pass
 
     if vss_stores:
-      if len(vss_stores) == 1 and vss_stores[0] == u'all':
+      if vss_stores == [u'all']:
         # We need to set the stores to cover all vss stores.
         vss_stores = range(1, volume_system.number_of_volumes + 1)
 
@@ -322,7 +322,7 @@ class StorageMediaFrontend(frontend.Frontend):
           u'Multiple stores can\nbe defined as: 1,3,5 (a list of comma '
           u'separated values). Ranges and lists can\nalso be combined '
           u'as: 1,3..5. The first store is 1. All stores can be defined as: '
-          u'\'all\'.\nIf no stores are specified none will be processed.\n'
+          u'"all".\nIf no stores are specified none will be processed.\n'
           u'You can abort with Ctrl^C.\n')
 
       selected_vss_stores = self._input_reader.Read()
@@ -336,6 +336,10 @@ class StorageMediaFrontend(frontend.Frontend):
             selected_vss_stores)
       except errors.BadConfigOption:
         selected_vss_stores = []
+
+      if selected_vss_stores == [u'all']:
+        # We need to set the stores to cover all vss stores.
+        selected_vss_stores = range(1, volume_system.number_of_volumes + 1)
 
       if not set(selected_vss_stores).difference(normalized_volume_identifiers):
         break

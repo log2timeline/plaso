@@ -2,6 +2,7 @@
 """The CLI tools classes."""
 
 import abc
+import datetime
 import locale
 import logging
 import os
@@ -155,7 +156,35 @@ class CLITool(object):
         u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
         type=unicode, default=u'UTC', help=(
             u'explicitly define the timezone. Typically the timezone is '
-            u'determined automatically where possible.'))
+            u'determined automatically where possible. Use "-z list" to '
+            u'see a list of available timezones.'))
+
+  def ListTimeZones(self):
+    """Lists the timezones."""
+    self.PrintHeader(u'Zones')
+    max_length = 0
+    for timezone_name in pytz.all_timezones:
+      if len(timezone_name) > max_length:
+        max_length = len(timezone_name)
+
+    utc_date_time = datetime.datetime.utcnow()
+
+    self.PrintColumnValue(u'Timezone', u'UTC Offset', max_length)
+    for timezone_name in pytz.all_timezones:
+      local_timezone = pytz.timezone(timezone_name)
+
+      local_date_string = u'{0!s}'.format(
+          local_timezone.localize(utc_date_time))
+      if u'+' in local_date_string:
+        _, _, diff = local_date_string.rpartition(u'+')
+        diff_string = u'+{0:s}'.format(diff)
+      else:
+        _, _, diff = local_date_string.rpartition(u'-')
+        diff_string = u'-{0:s}'.format(diff)
+
+      self.PrintColumnValue(timezone_name, diff_string, max_length)
+
+    self.PrintSeparatorLine()
 
   def ParseOptions(self, options):
     """Parses tool specific options.

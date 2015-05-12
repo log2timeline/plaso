@@ -15,6 +15,7 @@ class CollectorStatus(object):
     self.identifier = None
     self.last_running_time = 0
     self.number_of_path_specs = 0
+    self.number_of_path_specs_delta = 0
     self.pid = None
     self.status = None
 
@@ -31,6 +32,7 @@ class ExtractionWorkerStatus(object):
     self.number_of_events = 0
     self.number_of_events_delta = 0
     self.number_of_path_specs = 0
+    self.number_of_path_specs_delta = 0
     self.pid = None
     self.process_status = None
     self.status = None
@@ -128,8 +130,12 @@ class ProcessingStatus(object):
     if not self._collector:
       self._collector = CollectorStatus()
 
+    number_of_path_specs_delta = (
+        number_of_path_specs - self._collector.number_of_path_specs)
+
     self._collector.identifier = identifier
     self._collector.number_of_path_specs = number_of_path_specs
+    self._collector.number_of_path_specs_delta = number_of_path_specs_delta
     self._collector.pid = pid
     self._collector.status = status
 
@@ -162,17 +168,21 @@ class ProcessingStatus(object):
 
     number_of_events_delta = (
         number_of_events - extraction_worker_status.number_of_events)
+    number_of_path_specs_delta = (
+        number_of_path_specs - extraction_worker_status.number_of_path_specs)
 
     extraction_worker_status.display_name = display_name
     extraction_worker_status.identifier = identifier
     extraction_worker_status.number_of_events = number_of_events
     extraction_worker_status.number_of_events_delta = number_of_events_delta
     extraction_worker_status.number_of_path_specs = number_of_path_specs
+    extraction_worker_status.number_of_path_specs_delta = (
+        number_of_path_specs_delta)
     extraction_worker_status.pid = pid
     extraction_worker_status.process_status = process_status
     extraction_worker_status.status = status
 
-    if number_of_events_delta > 0:
+    if number_of_events_delta > 0 or number_of_path_specs_delta > 0:
       timestamp = time.time()
       extraction_worker_status.last_running_time = timestamp
       self._last_running_time = timestamp
@@ -199,6 +209,7 @@ class ProcessingStatus(object):
   def WorkersRunning(self):
     """Determines if the workers are running."""
     for extraction_worker_status in self._extraction_workers.itervalues():
-      if extraction_worker_status.number_of_events_delta > 0:
+      if (extraction_worker_status.number_of_events_delta > 0 or
+          extraction_worker_status.number_of_path_specs_delta > 0):
         return True
     return False

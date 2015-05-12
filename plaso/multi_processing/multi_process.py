@@ -51,8 +51,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
   _FOREMAN_CHECK_SLEEP = 1.5
 
-  _PROCESS_ABORT_TIMEOUT = 2
-  _PROCESS_JOIN_TIMEOUT = 5
+  _PROCESS_ABORT_TIMEOUT = 2.0
+  _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_TERMINATION_SLEEP = 0.5
 
   _WORKER_PROCESSES_MINIMUM = 2
@@ -66,15 +66,15 @@ class MultiProcessEngine(engine.BaseEngine):
                                       The default is 0, which represents
                                       no limit.
     """
-    collection_queue = MultiProcessingQueue(
+    path_spec_queue = MultiProcessingQueue(
         maximum_number_of_queued_items=maximum_number_of_queued_items)
-    storage_queue = MultiProcessingQueue(
+    event_object_queue = MultiProcessingQueue(
         maximum_number_of_queued_items=maximum_number_of_queued_items)
     parse_error_queue = MultiProcessingQueue(
         maximum_number_of_queued_items=maximum_number_of_queued_items)
 
     super(MultiProcessEngine, self).__init__(
-        collection_queue, storage_queue, parse_error_queue)
+        path_spec_queue, event_object_queue, parse_error_queue)
 
     self._collection_process = None
     self._foreman_object = None
@@ -106,68 +106,55 @@ class MultiProcessEngine(engine.BaseEngine):
     """Abort in a normal way.
 
     Args:
-      timeout: The process join timeout. The default is None meaning
-               no timeout.
+      timeout: The process join timeout. The default is None meaning no timeout.
     """
-    if self._collection_process:
-      logging.warning(u'Signaling collection process to abort.')
-      self._collection_process.SignalAbort()
-
-    if self._worker_processes:
-      logging.warning(u'Signaling worker processes to abort.')
-      for worker_process in self._worker_processes:
-        worker_process.SignalAbort()
-
-    logging.warning(u'Signaling storage process to abort.')
-    self._event_queue_producer.SignalAbort()
-    self._storage_writer_process.SignalAbort()
-
-    if self._collection_process:
-      logging.warning(u'Waiting for collection process (PID: {0:d}).'.format(
-          self._collection_process.pid))
-      # TODO: it looks like xmlrpclib.ServerProxy is not allowing the
-      # collection process to close.
+    if self._collection_process and self._collection_process.is_alive():
+      pid = self._collection_process.pid
+      logging.info(u'Waiting for collector process (PID: {0:d}).'.format(pid))
       self._collection_process.join(timeout=timeout)
-      if self._collection_process.is_alive():
-        logging.warning(
-            u'Waiting for collection process (PID: {0:d}) failed'.format(
-                self._collection_process.pid))
+      if not self._collection_process.is_alive():
+        logging.info(u'Collector process (PID: {0:d}) stopped.'.format(pid))
 
     for worker_process in self._worker_processes:
-      logging.warning(
-          u'Waiting for worker: {0:s} process (PID: {1:d})'.format(
-              worker_process.name, worker_process.pid))
-      worker_process.join(timeout=timeout)
       if worker_process.is_alive():
-        logging.warning(
-            u'Waiting for worker: {0:s} process (PID: {1:d}) failed'.format(
-                worker_process.name, worker_process.pid))
+        pid = worker_process.pid
+        logging.info((
+            u'Waiting for extraction worker process: {0!s} '
+            u'(PID: {1:d}).').format(worker_process.name, pid))
 
-    if self._storage_writer_process:
-      logging.warning(u'Waiting for storage process (PID: {0:d}).'.format(
-          self._collection_process.pid))
+        worker_process.join(timeout=timeout)
+        if not worker_process.is_alive():
+          logging.info(
+              u'Extraction worker process: {0!s} (PID: {1:d} stopped.'.format(
+                  worker_process.name, pid))
+
+    if self._storage_writer_process and self._storage_writer_process.is_alive():
+      pid = self._storage_writer_process.pid
+      logging.info(
+          u'Waiting for storage writer process (PID: {0:d}).'.format(pid))
       self._storage_writer_process.join(timeout=timeout)
-      if self._storage_writer_process.is_alive():
-        logging.warning(
-            u'Waiting for storage process (PID: {0:d}) failed'.format(
-                self._storage_writer_process.pid))
+      if not self._storage_writer_process.is_alive():
+        logging.info(
+            u'Storage writer process stopped (PID: {0:d}).'.format(pid))
 
   def _AbortTerminate(self):
     """Abort processing by sending SIGTERM or equivalent."""
     if self._collection_process and self._collection_process.is_alive():
-      logging.warning(u'Terminating collection process: {0:d}.'.format(
+      logging.warning(u'Terminating collection process: (PID: {0:d}).'.format(
           self._collection_process.pid))
       self._collection_process.terminate()
 
     for worker_process in self._worker_processes:
       if worker_process.is_alive():
-        logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
-            worker_process.name, worker_process.pid))
+        logging.warning(
+            u'Terminating worker: {0:s} process: (PID: {1:d})'.format(
+                worker_process.name, worker_process.pid))
         worker_process.terminate()
 
     if self._storage_writer_process and self._storage_writer_process.is_alive():
-      logging.warning(u'Terminating storage process: {0:d}.'.format(
-          self._storage_writer_process.pid))
+      logging.warning(
+          u'Terminating storage writer process: (PID: {0:d}).'.format(
+              self._storage_writer_process.pid))
       self._storage_writer_process.terminate()
 
   def CreateCollector(
@@ -201,7 +188,7 @@ class MultiProcessEngine(engine.BaseEngine):
       raise RuntimeError(u'Missing source.')
 
     collector_object = collector.Collector(
-        self._collection_queue, self._source, self._source_path_spec,
+        self._path_spec_queue, self._source, self._source_path_spec,
         resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)
@@ -232,7 +219,7 @@ class MultiProcessEngine(engine.BaseEngine):
     resolver_context = context.Context()
 
     extraction_worker = worker.BaseEventExtractionWorker(
-        worker_number, self._collection_queue, self._event_queue_producer,
+        worker_number, self._path_spec_queue, self._event_queue_producer,
         self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
@@ -302,7 +289,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     logging.info(u'Starting processes.')
     self._storage_writer_process = MultiProcessStorageWriterProcess(
-        storage_writer, name=u'StorageWriter')
+        self.event_object_queue, self._parse_error_queue, storage_writer,
+        name=u'StorageWriter')
     self._storage_writer_process.start()
     self._foreman_object.StartProcessMonitoring(self._storage_writer_process)
 
@@ -313,15 +301,16 @@ class MultiProcessEngine(engine.BaseEngine):
 
       # TODO: Test to see if a process pool can be a better choice.
       worker_process = MultiProcessEventExtractionWorkerProcess(
-          extraction_worker, parser_filter_string, hasher_names_string,
-          name=process_name)
+          self._path_spec_queue, self.event_object_queue,
+          self._parse_error_queue, extraction_worker, parser_filter_string,
+          hasher_names_string, name=process_name)
       worker_process.start()
 
       self._foreman_object.StartProcessMonitoring(worker_process)
       self._worker_processes.append(worker_process)
 
     self._collection_process = MultiProcessCollectionProcess(
-        collector_object, name=u'Collector')
+        self._path_spec_queue, collector_object, name=u'Collector')
     self._collection_process.start()
     self._foreman_object.StartProcessMonitoring(self._collection_process)
 
@@ -335,88 +324,93 @@ class MultiProcessEngine(engine.BaseEngine):
 
         time.sleep(self._FOREMAN_CHECK_SLEEP)
 
-      logging.info(u'Processing stopped.')
+      logging.debug(u'Processing stopped.')
     except errors.ForemanAbort:
-      logging.info(u'Processing aborted - worker idle for too long.')
+      logging.warning(u'Processing aborted - workers idle for too long.')
 
-    self._StopProcesses(collector_object)
+    self._StopProcesses()
 
-  def _StopProcesses(self, collector_object):
-    """Stops the processes.
+  def _StopProcessMonitoring(self):
+    """Stops monitoring the processes."""
+    if not self._foreman_object:
+      return
 
-    Args:
-      collector_object: A collector object (instance of Collector).
-    """
-    logging.info(u'Waiting for collector process.')
-    self._collection_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
-    if self._collection_process.is_alive():
-      logging.warning((
-          u'Forcing termination of collector process (PID: {0:d})').format(
-              self._collection_process.pid))
+    if self._foreman_object.IsMonitored(self._collection_process.pid):
+      self._foreman_object.StopProcessMonitoring(self._collection_process.pid)
 
-      self._collection_process.terminate()
-
-    logging.info(u'Collector process stopped.')
-
-    # Remove the extraction worker processes from the foreman and wake them
-    # to make usre that they are not blocking waiting for new items.
     for worker_process in self._worker_processes:
       self._foreman_object.StopProcessMonitoring(worker_process.pid)
-      collector_object.SignalAbort()
 
-    # Join or terminate the extraction worker processes.
-    for worker_process in self._worker_processes:
-      logging.info((
-          u'Waiting for extraction worker process: {0!s} '
-          u'(PID: {1:d}).').format(worker_process.name, worker_process.pid))
-      worker_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
-      if worker_process.is_alive():
-        logging.warning((
-            u'Forcing termination of extraction worker process: {0!s} '
-            u'(PID: {1:d})').format(worker_process.name, worker_process.pid))
-
-        worker_process.terminate()
-
-      logging.info(
-          u'Extraction worker process: {0!s} stopped.'.format(
-              worker_process.name))
-
-    # Remove the storage writer process from the foreman and wake it
-    # to make sure it is not blocking waiting for new items.
     self._foreman_object.StopProcessMonitoring(self._storage_writer_process.pid)
-    self._event_queue_producer.SignalAbort()
-    self._parse_error_queue_producer.SignalAbort()
-
-    logging.info(u'Waiting for storage writer process.')
-    self._storage_writer_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
-    if self._storage_writer_process.is_alive():
-      logging.warning((
-          u'Forcing termination of storage writer process (PID: {0:d})').format(
-              self._storage_writer_process.pid))
-
-      self._storage_writer_process.terminate()
-
-    logging.info(u'Storage writer process stopped.')
 
     self._foreman_object = None
 
+  def _StopProcesses(self):
+    """Stops the processes."""
+    self._StopProcessMonitoring()
+
+    # Note that multiprocessing.Queue is very sensitive regarding
+    # blocking on either a get or a put so we have to make sure
+    # to do the exact amount of signaling QueueAbort, meaning for
+    # every consumer once.
+
+    # Wake the processes to make sure that they are not blocking
+    # waiting for new items.
+    for _ in self._worker_processes:
+      self._path_spec_queue.PushItem(queue.QueueAbort())
+
+    self.event_object_queue.PushItem(queue.QueueAbort())
+    # TODO: enable this when the parse error queue consumer is operational.
+    # self._parse_error_queue.PushItem(queue.QueueAbort())
+
+    # Try terminating the processes in the normal way.
+    self._AbortNormal(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+    # Check if the processes are still alive and terminate them if necessary.
+    self._AbortTerminate()
+    self._AbortNormal(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+    self._path_spec_queue.Close()
+    self.event_object_queue.Close()
+    self._parse_error_queue.Close()
+
   def SignalAbort(self):
     """Signals the engine to abort."""
+    self._StopProcessMonitoring()
+
     super(MultiProcessEngine, self).SignalAbort()
 
     try:
-      self._AbortNormal(timeout=self._PROCESS_ABORT_TIMEOUT)
+      # Signal all the processes to abort.
       self._AbortTerminate()
+
+      # Wake the processes to make sure that they are not blocking
+      # waiting for new items.
+      for _ in self._worker_processes:
+        self._path_spec_queue.PushItem(queue.QueueAbort())
+
+      self.event_object_queue.PushItem(queue.QueueAbort())
+      # TODO: enable this when the parse error queue consumer is operational.
+      # self._parse_error_queue.PushItem(queue.QueueAbort())
+
+      self._AbortNormal(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+      self._path_spec_queue.Close(abort=True)
+      self.event_object_queue.Close(abort=True)
+      self._parse_error_queue.Close(abort=True)
+
     except KeyboardInterrupt:
       self._AbortKill()
 
-    # TODO: remove the need for this.
-    # Sometimes the main process will be unresponsive.
-    SigKill(os.getpid())
+      # The abort kill can leave the main process unresponsive
+      # due to incorrecly finalized IPC.
+      SigKill(os.getpid())
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
   """Class that defines the multi-processing process interface."""
+
+  _PROCESS_JOIN_TIMEOUT = 5.0
 
   def __init__(self, **kwargs):
     """Initializes the process object.
@@ -438,6 +432,15 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   @abc.abstractmethod
   def _Main(self):
     """The process main loop."""
+
+  def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
+    """Signal handler for the SIGTERM signal.
+
+    Args:
+      signal_number: Numeric representation of the signal.
+      stack_frame: The current stack frame (instance of frame object) or None.
+    """
+    self.SignalAbort()
 
   def _StartProcessStatusRPCServer(self):
     """Starts the process status RPC server."""
@@ -473,7 +476,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     while self._status_is_running:
       time.sleep(0.5)
       time_slept += 0.5
-      if time_slept >= 5.0:
+      if time_slept >= self._PROCESS_JOIN_TIMEOUT:
         break
 
     self._rpc_server.Stop()
@@ -494,6 +497,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # Prevent the KeyboardInterrupt being raised inside the process.
     # This will prevent a process to generate a traceback when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    # A SIGTERM signal handler is necessary to make sure IPC is cleaned up
+    # correctly on terminate.
+    signal.signal(signal.SIGTERM, self._SigTermHandler)
 
     self._pid = os.getpid()
 
@@ -524,15 +531,19 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 class MultiProcessCollectionProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing collection process."""
 
-  def __init__(self, collector_object, **kwargs):
+  def __init__(self, path_spec_queue, collector_object, **kwargs):
     """Initializes the process object.
 
     Args:
+      path_spec_queue: the path specification queue object (instance of
+                       MultiProcessingQueue).
       collector_object: A collector object (instance of Collector).
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessCollectionProcess, self).__init__(**kwargs)
+    self._abort = False
     self._collector = collector_object
+    self._path_spec_queue = path_spec_queue
 
   def _GetStatus(self):
     """Returns a status dictionary."""
@@ -543,31 +554,47 @@ class MultiProcessCollectionProcess(MultiProcessBaseProcess):
   def _Main(self):
     """The main loop."""
     logging.info(u'Collector (PID: {0:d}) started'.format(self._pid))
+
     self._collector.Collect()
+
+    # If not aborted we wait for the queue thread here, which signifies
+    # the queue is truly empty.
+    self._path_spec_queue.Close(abort=self._abort)
+
     logging.info(u'Collector (PID: {0:d}) stopped'.format(self._pid))
 
   def SignalAbort(self):
     """Signals the process to abort."""
+    self._abort = True
     self._collector.SignalAbort()
 
 
 class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing event extraction worker process."""
 
-  def __init__(self, extraction_worker, parser_filter_string,
-               hasher_names_string, **kwargs):
+  def __init__(
+      self, path_spec_queue, event_object_queue, parse_error_queue,
+      extraction_worker, parser_filter_string, hasher_names_string, **kwargs):
     """Initializes the process object.
 
     Args:
+      path_spec_queue: the path specification queue object (instance of
+                       MultiProcessingQueue).
+      event_object_queue: the event object queue object (instance of
+                          MultiProcessingQueue).
+      parse_error_queue: the parser error queue object (instance of Queue).
       extraction_worker: The extraction worker object (instance of
                          MultiProcessEventExtractionWorker).
       parser_filter_string: The parser filter string.
-      hasher_names_string: Optional comma separated string of names of
-                           hashers to enable enable. The default is None.
+      hasher_names_string: The hasher names string.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessEventExtractionWorkerProcess, self).__init__(**kwargs)
+    self._abort = False
     self._extraction_worker = extraction_worker
+    self._event_object_queue = event_object_queue
+    self._parse_error_queue = parse_error_queue
+    self._path_spec_queue = path_spec_queue
 
     # TODO: clean this up with the implementation of a task based
     # multi-processing approach.
@@ -593,25 +620,41 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
+
     self._extraction_worker.Run()
+
+    # Since the worker can generate path specification we have to make sure
+    # to close this queue as well.
+    self._path_spec_queue.Close(abort=self._abort)
+    self._event_object_queue.Close(abort=self._abort)
+    self._parse_error_queue.Close(abort=self._abort)
+
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
   def SignalAbort(self):
     """Signals the process to abort."""
+    self._abort = True
     self._extraction_worker.SignalAbort()
+    self._path_spec_queue.Empty()
 
 
 class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing storage writer process."""
 
-  def __init__(self, storage_writer, **kwargs):
+  def __init__(
+      self, event_object_queue, parse_error_queue, storage_writer, **kwargs):
     """Initializes the process object.
 
     Args:
+      event_object_queue: the event object queue object (instance of
+                          MultiProcessingQueue).
+      parse_error_queue: the parser error queue object (instance of Queue).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
     """
     super(MultiProcessStorageWriterProcess, self).__init__(**kwargs)
+    self._event_object_queue = event_object_queue
+    self._parse_error_queue = parse_error_queue
     self._storage_writer = storage_writer
 
   def _GetStatus(self):
@@ -623,12 +666,19 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
   def _Main(self):
     """The main loop."""
     logging.info(u'Storage writer (PID: {0:d}) started.'.format(self._pid))
+
     self._storage_writer.WriteEventObjects()
+
+    # The parser error queue is not yet emptied by the storage writer
+    # however if we leave it filled the worker processes will not terminate.
+    self._parse_error_queue.Empty()
+
     logging.info(u'Storage writer (PID: {0:d}) stopped.'.format(self._pid))
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    return
+    self._storage_writer.SignalAbort()
+    self._event_object_queue.Empty()
 
 
 class MultiProcessingQueue(queue.Queue):
@@ -658,15 +708,38 @@ class MultiProcessingQueue(queue.Queue):
     # pylint: enable=protected-access
 
     if maximum_number_of_queued_items > queue_max_length:
-      logging.warn(
-          u'Maximum queue size requested ({0:d}) is larger than system '
-          u'supported maximum size. Setting queue size to maximum supported '
-          u'size, '
-          u'({1:d})'.format(maximum_number_of_queued_items, queue_max_length))
+      logging.warning((
+          u'Requested maximum queue size: {0:d} is larger than the maximum '
+          u'size supported by the system. Defaulting to: {1:d}').format(
+              maximum_number_of_queued_items, queue_max_length))
       maximum_number_of_queued_items = queue_max_length
 
     # This queue appears not to be FIFO.
     self._queue = multiprocessing.Queue(maxsize=maximum_number_of_queued_items)
+
+  def Close(self, abort=False):
+    """Closes the queue.
+
+    Args:
+      abort: boolean to indicate the close is issued on abort.
+
+    This needs to be called from any process or thread putting items onto
+    the queue.
+    """
+    if abort:
+      # Prevent join_thread() from blocking.
+      self._queue.cancel_join_thread()
+
+    self._queue.close()
+    self._queue.join_thread()
+
+  def Empty(self):
+    """Empties the queue."""
+    try:
+      while True:
+        self._queue.get(False)
+    except Queue.Empty:
+      pass
 
   def IsEmpty(self):
     """Determines if the queue is empty."""
@@ -687,6 +760,10 @@ class MultiProcessingQueue(queue.Queue):
       # a Queue.Empty exception is raised.
       return self._queue.get(timeout=self._timeout)
     except KeyboardInterrupt:
+      raise errors.QueueClose
+    # If close() is called on the multiprocessing.Queue while it is blocking
+    # on get() it will raise IOError.
+    except IOError:
       raise errors.QueueClose
     except Queue.Empty:
       raise errors.QueueEmpty

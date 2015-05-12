@@ -158,11 +158,11 @@ class StorageMediaTool(tools.CLITool):
         u'--vss_stores', u'--vss-stores', dest=u'vss_stores', action=u'store',
         type=str, default=None, help=(
             u'Define Volume Shadow Snapshots (VSS) (or stores that need to be '
-            u'processed. A range of stores can be defined as: \'3..5\'. '
-            u'Multiple stores can be defined as: \'1,3,5\' (a list of comma '
+            u'processed. A range of stores can be defined as: "3..5". '
+            u'Multiple stores can be defined as: "1,3,5" (a list of comma '
             u'separated values). Ranges and lists can also be combined as: '
-            u'\'1,3..5\'. The first store is 1. All stores can be defined as: '
-            u'\'all\'.'))
+            u'"1,3..5". The first store is 1. All stores can be defined as: '
+            u'"all".'))
 
   def ParseOptions(self, options):
     """Parses tool specific options.

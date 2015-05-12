@@ -51,7 +51,12 @@ class QueueConsumer(object):
       queue_object: the queue object (instance of Queue).
     """
     super(QueueConsumer, self).__init__()
+    self._abort = False
     self._queue = queue_object
+
+  def SignalAbort(self):
+    """Signals the consumer to abort."""
+    self._abort = True
 
 
 class QueueProducer(object):
@@ -73,7 +78,6 @@ class QueueProducer(object):
   def SignalAbort(self):
     """Signals the producer to abort."""
     self._abort = True
-    self._queue.PushItem(QueueAbort())
 
 
 class ItemQueueConsumer(QueueConsumer):
@@ -111,10 +115,10 @@ class ItemQueueConsumer(QueueConsumer):
     Args:
       kwargs: keyword arguments to pass to the _ConsumeItem callback.
     """
-    while True:
+    while not self._abort:
       try:
         item = self._queue.PopItem()
-      except (errors.QueueAbort, errors.QueueEmpty):
+      except (errors.QueueClose, errors.QueueEmpty):
         break
 
       if isinstance(item, QueueAbort):
@@ -157,6 +161,7 @@ class ItemQueueProducer(QueueProducer):
     try:
       self._number_of_produced_items += 1
       self._queue.PushItem(item)
+
     except errors.QueueFull:
       self._FlushQueue()
 

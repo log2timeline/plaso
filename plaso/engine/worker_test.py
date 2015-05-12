@@ -20,12 +20,12 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
   def testExtractionWorker(self):
     """Tests the extraction worker functionality."""
-    collection_queue = single_process.SingleProcessQueue()
-    storage_queue = single_process.SingleProcessQueue()
+    path_spec_queue = single_process.SingleProcessQueue()
+    event_object_queue = single_process.SingleProcessQueue()
     parse_error_queue = single_process.SingleProcessQueue()
 
     event_queue_producer = single_process.SingleProcessItemQueueProducer(
-        storage_queue)
+        event_object_queue)
     parse_error_queue_producer = single_process.SingleProcessItemQueueProducer(
         parse_error_queue)
 
@@ -38,7 +38,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     resolver_context = context.Context()
 
     extraction_worker = worker.BaseEventExtractionWorker(
-        0, collection_queue, event_queue_producer, parse_error_queue_producer,
+        0, path_spec_queue, event_queue_producer, parse_error_queue_producer,
         parser_mediator, resolver_context=resolver_context)
 
     self.assertNotEqual(extraction_worker, None)
@@ -50,10 +50,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 16)
@@ -63,10 +63,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 16)
@@ -75,10 +75,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 15)
@@ -91,10 +91,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=path_spec)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 13)
@@ -106,10 +106,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 3)
@@ -121,10 +121,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 16)
@@ -139,10 +139,10 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=path_spec)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 13)
@@ -154,21 +154,21 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
-    collection_queue.PushItem(path_spec)
+    path_spec_queue.PushItem(path_spec)
     extraction_worker.Run()
 
-    test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
+    test_queue_consumer = test_lib.TestQueueConsumer(event_object_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, 17)
 
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
-    collection_queue = single_process.SingleProcessQueue()
-    storage_queue = single_process.SingleProcessQueue()
+    path_spec_queue = single_process.SingleProcessQueue()
+    event_object_queue = single_process.SingleProcessQueue()
     parse_error_queue = single_process.SingleProcessQueue()
     event_queue_producer = single_process.SingleProcessItemQueueProducer(
-        storage_queue)
+        event_object_queue)
     parse_error_queue_producer = single_process.SingleProcessItemQueueProducer(
         parse_error_queue)
 
@@ -181,7 +181,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     resolver_context = context.Context()
 
     extraction_worker = worker.BaseEventExtractionWorker(
-        0, collection_queue, event_queue_producer, parse_error_queue_producer,
+        0, path_spec_queue, event_queue_producer, parse_error_queue_producer,
         parser_mediator, resolver_context=resolver_context)
 
     # We're going to check that the worker set up its internal state correctly.

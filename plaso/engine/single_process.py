@@ -19,7 +19,7 @@ class SingleProcessCollector(collector.Collector):
   """Class that implements a single process collector object."""
 
   def __init__(
-      self, process_queue, source_path, source_path_spec,
+      self, path_spec_queue, source_path, source_path_spec,
       resolver_context=None):
     """Initializes the collector object.
 
@@ -28,8 +28,10 @@ class SingleProcessCollector(collector.Collector):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
+      path_spec_queue: The path specification queue (instance of Queue).
+                       This queue contains the path specifications (instances
+                       of dfvfs.PathSpec) of the file entries that need
+                       to be processed.
       source_path: Path of the source file or directory.
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
@@ -38,11 +40,11 @@ class SingleProcessCollector(collector.Collector):
                         The default is None.
     """
     super(SingleProcessCollector, self).__init__(
-        process_queue, source_path, source_path_spec,
+        path_spec_queue, source_path, source_path_spec,
         resolver_context=resolver_context)
 
     self._extraction_worker = None
-    self._fs_collector = SingleProcessFileSystemCollector(process_queue)
+    self._fs_collector = SingleProcessFileSystemCollector(path_spec_queue)
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
@@ -74,17 +76,18 @@ class SingleProcessEngine(engine.BaseEngine):
                                       The default is 0, which represents
                                       no limit.
     """
-    collection_queue = SingleProcessQueue(
+    path_spec_queue = SingleProcessQueue(
         maximum_number_of_queued_items=maximum_number_of_queued_items)
-    storage_queue = SingleProcessQueue(
+    event_object_queue = SingleProcessQueue(
         maximum_number_of_queued_items=maximum_number_of_queued_items)
     parse_error_queue = SingleProcessQueue(
         maximum_number_of_queued_items=maximum_number_of_queued_items)
 
     super(SingleProcessEngine, self).__init__(
-        collection_queue, storage_queue, parse_error_queue)
+        path_spec_queue, event_object_queue, parse_error_queue)
 
-    self._event_queue_producer = SingleProcessItemQueueProducer(storage_queue)
+    self._event_queue_producer = SingleProcessItemQueueProducer(
+        event_object_queue)
     self._parse_error_queue_producer = SingleProcessItemQueueProducer(
         parse_error_queue)
 
@@ -119,7 +122,7 @@ class SingleProcessEngine(engine.BaseEngine):
       raise RuntimeError(u'Missing source.')
 
     collector_object = SingleProcessCollector(
-        self._collection_queue, self._source, self._source_path_spec,
+        self._path_spec_queue, self._source, self._source_path_spec,
         resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)
@@ -148,7 +151,7 @@ class SingleProcessEngine(engine.BaseEngine):
     resolver_context = context.Context()
 
     extraction_worker = SingleProcessEventExtractionWorker(
-        worker_number, self._collection_queue, self._event_queue_producer,
+        worker_number, self._path_spec_queue, self._event_queue_producer,
         self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
@@ -237,7 +240,7 @@ class SingleProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
 class SingleProcessFileSystemCollector(collector.FileSystemCollector):
   """Class that implements a single process file system collector object."""
 
-  def __init__(self, process_queue):
+  def __init__(self, path_spec_queue):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -245,10 +248,12 @@ class SingleProcessFileSystemCollector(collector.FileSystemCollector):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
+      path_spec_queue: The path specification queue (instance of Queue).
+                       This queue contains the path specifications (instances
+                       of dfvfs.PathSpec) of the file entries that need
+                       to be processed.
     """
-    super(SingleProcessFileSystemCollector, self).__init__(process_queue)
+    super(SingleProcessFileSystemCollector, self).__init__(path_spec_queue)
 
     self._extraction_worker = None
 
@@ -346,6 +351,7 @@ class SingleProcessQueue(queue.Queue):
     """Pops an item off the queue or None on timeout.
 
     Raises:
+      QueueClose: on user abort.
       QueueEmpty: when the queue is empty.
     """
     try:
@@ -354,4 +360,4 @@ class SingleProcessQueue(queue.Queue):
     except IndexError:
       raise errors.QueueEmpty
     except KeyboardInterrupt:
-      raise errors.QueueAbort
+      raise errors.QueueClose

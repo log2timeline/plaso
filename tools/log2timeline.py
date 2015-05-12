@@ -147,12 +147,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       if len(status) < 8:
         status = u'{0:s}\t'.format(status)
 
-      # TODO: shorten display name to fit in 80 chars and show the filename.
-      status_row = u'{0:s}\t{1:d}\t{2:s}\t{3:d} ({4:d})\t{5:s}'.format(
-          extraction_worker_status.identifier,
-          extraction_worker_status.pid, status,
+      events = u'{0:d} ({1:d})'.format(
           extraction_worker_status.number_of_events,
-          extraction_worker_status.number_of_events_delta,
+          extraction_worker_status.number_of_events_delta)
+
+      if len(events) < 8:
+        events = u'{0:s}\t'.format(events)
+
+      # TODO: shorten display name to fit in 80 chars and show the filename.
+      status_row = u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
+          extraction_worker_status.identifier,
+          extraction_worker_status.pid, status, events,
           extraction_worker_status.display_name)
 
       status_table.append(status_row)
@@ -257,20 +262,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         lines_of_text.append(
             frontend_utils.FormatOutputString(entry_header, entry_data))
 
-    lines_of_text.append(u'')
-    self._output_writer.Write(u'\n'.join(lines_of_text))
-
-  def ListTimeZones(self):
-    """Lists the time zones."""
-    lines_of_text = [
-        u'=' * 40,
-        u'       ZONES',
-        u'-' * 40]
-
-    for timezone in self._front_end.GetTimeZones():
-      lines_of_text.append(u'  {0:s}'.format(timezone))
-
-    lines_of_text.append(u'=' * 40)
     lines_of_text.append(u'')
     self._output_writer.Write(u'\n'.join(lines_of_text))
 
@@ -544,12 +535,12 @@ def Main():
   # sys.argv = u_argv
 
   have_list_option = False
-  if tool.list_timezones:
-    tool.ListTimeZones()
-    have_list_option = True
-
   if tool.list_parsers_and_plugins:
     tool.ListPluginInformation()
+    have_list_option = True
+
+  if tool.list_timezones:
+    tool.ListTimeZones()
     have_list_option = True
 
   if have_list_option:
