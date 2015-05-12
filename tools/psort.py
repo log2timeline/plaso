@@ -9,7 +9,6 @@ See additional details here: http://plaso.kiddaland.net/usage/psort
 """
 
 import argparse
-import datetime
 import multiprocessing
 import logging
 import pdb
@@ -26,8 +25,6 @@ from plaso.frontend import utils as frontend_utils
 from plaso.output import manager as output_manager
 from plaso.lib import errors
 from plaso.winnt import language_ids
-
-import pytz
 
 
 class PsortTool(analysis_tool.AnalysisTool):
@@ -341,27 +338,6 @@ class PsortTool(analysis_tool.AnalysisTool):
       self.PrintColumnValue(output_class.NAME, output_class.DESCRIPTION, 10)
     self.PrintSeparatorLine()
 
-  def ListTimeZones(self):
-    """Lists the timezones."""
-    self.PrintHeader(u'Zones')
-    max_length = 0
-    for zone in pytz.all_timezones:
-      if len(zone) > max_length:
-        max_length = len(zone)
-
-    self.PrintColumnValue(u'Timezone', u'UTC Offset', max_length)
-    for zone in pytz.all_timezones:
-      zone_obj = pytz.timezone(zone)
-      date_str = unicode(zone_obj.localize(datetime.datetime.utcnow()))
-      if u'+' in date_str:
-        _, _, diff = date_str.rpartition(u'+')
-        diff_string = u'+{0:s}'.format(diff)
-      else:
-        _, _, diff = date_str.rpartition(u'-')
-        diff_string = u'-{0:s}'.format(diff)
-      self.PrintColumnValue(zone, diff_string, max_length)
-    self.PrintSeparatorLine()
-
   def ParseArguments(self):
     """Parses the command line arguments.
 
@@ -418,11 +394,7 @@ class PsortTool(analysis_tool.AnalysisTool):
         u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
         help=u'Output filename, defaults to stdout.')
 
-    output_group.add_argument(
-        u'-z', u'--zone', metavar=u'TIMEZONE', dest=u'timezone', default=u'UTC',
-        type=unicode, help=(
-            u'The timezone in which to represent the date and time values. '
-            u'Use "-z list" to see a list of available timezones.'))
+    self.AddTimezoneOption(output_group)
 
     # TODO: refactor how arguments is used in a more argparse way.
     arguments = sys.argv[1:]

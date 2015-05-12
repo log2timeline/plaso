@@ -28,8 +28,6 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     self.assertIn(u'Plugins', plugin_info)
     self.assertIsNotNone(plugin_info[u'Plugins'])
 
-  # TODO: add GetTimeZones test.
-
 
 if __name__ == '__main__':
   unittest.main()

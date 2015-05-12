@@ -6,7 +6,8 @@ import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.lib import event
+# TODO: disabled as long nothing is listening on the parse error queue.
+# from plaso.lib import event
 from plaso.lib import utils
 
 
@@ -319,13 +320,14 @@ class ParserMediator(object):
     logging.error(u'Error in {0:s} while parsing file {1:s}: {2:s}'.format(
         self.GetParserChain(), self.GetDisplayName(), message))
 
-    if self._parse_error_queue_producer:
-      path_spec = self._file_entry.path_spec
-      parser_chain = self.GetParserChain()
-      parse_error = event.ParseError(
-          parser_chain, message, path_spec=path_spec)
-      self._parse_error_queue_producer.ProduceItem(parse_error)
-      self.number_of_parse_errors += 1
+    # TODO: disabled as long nothing is listening on the parse error queue.
+    # if self._parse_error_queue_producer:
+    #   path_spec = self._file_entry.path_spec
+    #   parser_chain = self.GetParserChain()
+    #   parse_error = event.ParseError(
+    #       parser_chain, message, path_spec=path_spec)
+    #   self._parse_error_queue_producer.ProduceItem(parse_error)
+    #   self.number_of_parse_errors += 1
 
   def ResetCounters(self):
     """Resets the counters."""

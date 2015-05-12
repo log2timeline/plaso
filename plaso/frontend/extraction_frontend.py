@@ -415,11 +415,11 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     if self._output_module:
       storage_writer = storage.BypassStorageWriter(
-          self._engine.storage_queue, self._storage_file_path,
+          self._engine.event_object_queue, self._storage_file_path,
           output_module_string=self._output_module, pre_obj=pre_obj)
     else:
       storage_writer = storage.FileStorageWriter(
-          self._engine.storage_queue, self._storage_file_path,
+          self._engine.event_object_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
 
@@ -517,11 +517,11 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     if self._output_module:
       storage_writer = storage.BypassStorageWriter(
-          self._engine.storage_queue, self._storage_file_path,
+          self._engine.event_object_queue, self._storage_file_path,
           output_module_string=self._output_module, pre_obj=pre_obj)
     else:
       storage_writer = storage.FileStorageWriter(
-          self._engine.storage_queue, self._storage_file_path,
+          self._engine.event_object_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
 

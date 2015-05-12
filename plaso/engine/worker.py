@@ -34,14 +34,16 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   DEFAULT_HASH_READ_SIZE = 4096
 
   def __init__(
-      self, identifier, process_queue, event_queue_producer,
+      self, identifier, path_spec_queue, event_queue_producer,
       parse_error_queue_producer, parser_mediator, resolver_context=None):
     """Initializes the event extraction worker object.
 
     Args:
       identifier: The identifier, usually an incrementing integer.
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
+      path_spec_queue: The path specification queue (instance of Queue).
+                       This queue contains the path specifications (instances
+                       of dfvfs.PathSpec) of the file entries that need
+                       to be processed.
       event_queue_producer: The event object queue producer (instance of
                             ItemQueueProducer).
       parse_error_queue_producer: The parse error queue producer (instance of
@@ -50,7 +52,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
-    super(BaseEventExtractionWorker, self).__init__(process_queue)
+    super(BaseEventExtractionWorker, self).__init__(path_spec_queue)
     self._enable_debug_output = False
     self._identifier = identifier
     self._identifier_string = u'Worker_{0:d}'.format(identifier)
@@ -252,6 +254,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
               archive_path_spec, resolver_context=self._resolver_context)
 
           try:
+            # TODO: make sure to handle the abort here.
+
             # TODO: change this to pass the archive file path spec to
             # the collector process and have the collector implement a maximum
             # path spec "depth" to prevent ZIP bombs and equiv.
@@ -571,7 +575,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     names = hashers_manager.HashersManager.GetHasherNamesFromString(
         hasher_names_string)
-    logging.debug('[SetHashers] Enabling hashers: {0:s}.'.format(names))
+    logging.debug(u'[SetHashers] Enabling hashers: {0:s}.'.format(names))
     self._hasher_names = names
 
   def SetMountPath(self, mount_path):
@@ -603,3 +607,4 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def SignalAbort(self):
     """Signals the worker to abort."""
     self._parser_mediator.SignalAbort()
+    super(BaseEventExtractionWorker, self).SignalAbort()

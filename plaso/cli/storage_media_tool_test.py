@@ -65,13 +65,13 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
        u'stores that'),
       (u'                        need to be processed. A range of stores can '
        u'be defined'),
-      (u'                        as: \'3..5\'. Multiple stores can be defined '
-       u'as: \'1,3,5\''),
+      (u'                        as: "3..5". Multiple stores can be defined '
+       u'as: "1,3,5"'),
       (u'                        (a list of comma separated values). Ranges '
        u'and lists'),
-      (u'                        can also be combined as: \'1,3..5\'. The '
+      (u'                        can also be combined as: "1,3..5". The '
        u'first store is'),
-      u'                        1. All stores can be defined as: \'all\'.',
+      u'                        1. All stores can be defined as: "all".',
       u''])
 
   def testAddStorageMediaImageOptions(self):

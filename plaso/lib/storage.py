@@ -1559,13 +1559,13 @@ class StorageWriter(queue.ItemQueueConsumer):
 
   # pylint: disable=abstract-method
 
-  def __init__(self, storage_queue):
+  def __init__(self, event_object_queue):
     """Initializes a storage writer object.
 
     Args:
-      storage_queue: the storage queue (instance of Queue).
+      event_object_queue: the event object queue (instance of Queue).
     """
-    super(StorageWriter, self).__init__(storage_queue)
+    super(StorageWriter, self).__init__(event_object_queue)
 
     # Attributes that contain the current status of the storage writer.
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
@@ -1597,19 +1597,19 @@ class FileStorageWriter(StorageWriter):
   """Class that implements a storage file writer object."""
 
   def __init__(
-      self, storage_queue, output_file, buffer_size=0, pre_obj=None,
+      self, event_object_queue, output_file, buffer_size=0, pre_obj=None,
       serializer_format='proto'):
     """Initializes the storage file writer.
 
     Args:
-      storage_queue: the storage queue (instance of Queue).
+      event_object_queue: the event object queue (instance of Queue).
       output_file: The path to the output file.
       buffer_size: The estimated size of a protobuf file.
       pre_obj: A preprocessing object (instance of PreprocessObject).
       serializer_format: A string containing either "proto" or "json". Defaults
                          to proto.
     """
-    super(FileStorageWriter, self).__init__(storage_queue)
+    super(FileStorageWriter, self).__init__(event_object_queue)
     self._buffer_size = buffer_size
     self._output_file = output_file
     self._pre_obj = pre_obj
@@ -1645,17 +1645,17 @@ class BypassStorageWriter(StorageWriter):
   """
 
   def __init__(
-      self, storage_queue, output_file, output_module_string='l2tcsv',
+      self, event_object_queue, output_file, output_module_string=u'l2tcsv',
       pre_obj=None):
     """Initializes the bypass storage writer.
 
     Args:
-      storage_queue: the storage queue (instance of Queue).
+      event_object_queue: the event object queue (instance of Queue).
       output_file: The path to the output file.
       output_module_string: The output module string.
       pre_obj: A preprocessing object (instance of PreprocessObject).
     """
-    super(BypassStorageWriter, self).__init__(storage_queue)
+    super(BypassStorageWriter, self).__init__(event_object_queue)
     self._output_file = output_file
     self._output_module = None
     self._output_module_string = output_module_string
