@@ -17,7 +17,7 @@ class NativePythonOutputModule(interface.LinearOutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    self._file_object.filehandle.WriteLine(event_object.GetString())
+    self._WriteLine(event_object.GetString())
 
 
 manager.OutputManager.RegisterOutput(NativePythonOutputModule)
