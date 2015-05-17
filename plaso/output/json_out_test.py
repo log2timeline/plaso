@@ -75,46 +75,45 @@ class JsonOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteEventBody function."""
     self._output_module.WriteEventBody(self._event_object)
 
-    expected_uuid = self._event_object.uuid.encode(u'utf-8')
+    # The dict comparison is very picky on Windows hence we
+    # have to make sure the UUID is a Unicode string.
+    expected_uuid = u'{0:s}'.format(self._event_object.uuid)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-06-27 18:17:01')
 
     if sys.platform.startswith(u'win'):
-      expected_os_location = u'C:\\{0:s}'.format(
-          os.path.join(u'cases', u'image.dd'))
+      # The dict comparison is very picky on Windows hence we
+      # have to make sure the drive letter is in the same case.
+      expected_os_location = os.path.abspath(u'\\{0:s}'.format(
+          os.path.join(u'cases', u'image.dd')))
     else:
       expected_os_location = u'{0:s}{1:s}'.format(
           os.path.sep, os.path.join(u'cases', u'image.dd'))
 
-    expected_os_location = expected_os_location.encode(u'utf-8')
-
-    # Do not use u'' or b'' we need native string objects here
-    # otherwise the strings will be formatted with a prefix and
-    # are not a valid JSON string.
     expected_json_dict = {
-        'event_0': {
-            '__type__': 'EventObject',
-            'data_type': 'test:l2tjson',
-            'display_name': 'OS: /var/log/syslog.1',
-            'hostname': 'ubuntu',
+        u'event_0': {
+            u'__type__': u'EventObject',
+            u'data_type': u'test:l2tjson',
+            u'display_name': u'OS: /var/log/syslog.1',
+            u'hostname': u'ubuntu',
             'inode': 12345678,
             'pathspec': {
-                '__type__': 'PathSpec',
-                'type_indicator': 'TSK',
-                'location': '/var/log/syslog.1',
-                'inode': 15,
-                'parent': {
-                    '__type__': 'PathSpec',
-                    'type_indicator': 'OS',
-                    'location': expected_os_location,
+                u'__type__': u'PathSpec',
+                u'type_indicator': u'TSK',
+                u'location': u'/var/log/syslog.1',
+                u'inode': 15,
+                u'parent': {
+                    u'__type__': u'PathSpec',
+                    u'type_indicator': u'OS',
+                    u'location': expected_os_location,
                 }
             },
-            'text': (
-                'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
-                'session\n closed for user root)'),
-            'timestamp': expected_timestamp,
-            'username': 'root',
-            'uuid': expected_uuid
+            u'text': (
+                u'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+                u'session\n closed for user root)'),
+            u'timestamp': expected_timestamp,
+            u'username': u'root',
+            u'uuid': expected_uuid
         }
     }
     event_body = self._output_writer.ReadOutput()
