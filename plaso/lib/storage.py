@@ -807,7 +807,7 @@ class StorageFile(object):
     """
     if serializer_format == definitions.SERIALIZER_FORMAT_JSON:
       self._event_object_serializer = (
-          json_serializer.JsonEventObjectSerializer)
+          json_serializer.JSONEventObjectSerializer)
       self._event_serializer_format_string = u'json'
 
     elif serializer_format == definitions.SERIALIZER_FORMAT_PROTOBUF:
@@ -828,7 +828,7 @@ class StorageFile(object):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    existing_stream_data = self._ReadStream('information.dump')
+    existing_stream_data = self._ReadStream(u'information.dump')
 
     # Store information about store range for this particular
     # preprocessing object. This will determine which stores

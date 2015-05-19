@@ -113,32 +113,6 @@ class EventTagSerializer(object):
     """
 
 
-class PathFilterSerializer(object):
-  """Class that implements the path filter serializer interface."""
-
-  @abc.abstractmethod
-  def ReadSerialized(cls, serialized):
-    """Reads a path filter from serialized form.
-
-    Args:
-      serialized: an object containing the serialized form.
-
-    Returns:
-      A path filter (instance of PathFilter).
-    """
-
-  @abc.abstractmethod
-  def WriteSerialized(cls, path_filter):
-    """Writes a path filter to serialized form.
-
-    Args:
-      path_filter: a path filter (instance of PathFilter).
-
-    Returns:
-      An object containing the serialized form.
-    """
-
-
 class PreprocessObjectSerializer(object):
   """Class that implements the preprocessing object serializer interface."""
 

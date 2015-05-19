@@ -17,13 +17,13 @@ from plaso.output import json_out
 from plaso.output import test_lib
 
 
-class JsonTestEvent(event.EventObject):
+class JSONTestEvent(event.EventObject):
   """Simplified EventObject for testing."""
   DATA_TYPE = 'test:l2tjson'
 
   def __init__(self):
     """Initialize event with data."""
-    super(JsonTestEvent, self).__init__()
+    super(JSONTestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'
     self.display_name = u'OS: /var/log/syslog.1'
@@ -42,16 +42,16 @@ class JsonTestEvent(event.EventObject):
         parent=os_path_spec)
 
 
-class JsonOutputTest(test_lib.OutputModuleTestCase):
+class JSONOutputTest(test_lib.OutputModuleTestCase):
   """Tests for the JSON outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = json_out.JsonOutputModule(
+    self._output_module = json_out.JSONOutputModule(
         output_mediator, output_writer=self._output_writer)
-    self._event_object = JsonTestEvent()
+    self._event_object = JSONTestEvent()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""

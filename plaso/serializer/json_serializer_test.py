@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the serializer object implementation using json."""
+"""Tests for the serializer object implementation using JSON."""
 
+import collections
 import json
 import unittest
 
@@ -9,15 +10,61 @@ from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
 
+import pytz
+
 # TODO: add tests for the non implemented serializer objects when implemented.
 
 
-class JsonEventObjectSerializerTest(unittest.TestCase):
-  """Tests for the json event object serializer object."""
+class JSONSerializerTestCase(unittest.TestCase):
+  """Tests for a JSON serializer object."""
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
   maxDiff = None
+
+  def _TestReadSerialized(self, serializer_object, json_dict):
+    """Tests the ReadSerialized function.
+
+    Args:
+      serializer_object: the JSON serializer object.
+      json_dict: the JSON dict.
+
+    Returns:
+      The unserialized object.
+    """
+    # We use json.dumps to make sure the dict does not serialize into
+    # an invalid JSON string e.g. one that contains string prefixes
+    # like b'' or u''.
+    json_string = json.dumps(json_dict)
+    unserialized_object = serializer_object.ReadSerialized(json_string)
+
+    self.assertNotEqual(unserialized_object, None)
+    return unserialized_object
+
+  def _TestWriteSerialized(
+      self, serializer_object, unserialized_object, expected_json_dict):
+    """Tests the WriteSerialized function.
+
+    Args:
+      serializer_object: the JSON serializer object.
+      unserialized_object: the unserialized object.
+      expected_json_dict: the expected JSON dict.
+
+    Returns:
+      The serialized JSON string.
+    """
+    json_string = serializer_object.WriteSerialized(unserialized_object)
+
+    # We use json.loads here to compare dicts since we cannot pre-determine
+    # the actual order of values in the JSON string.
+    json_dict = json.loads(json_string)
+    self.assertEqual(json_dict, expected_json_dict)
+
+    return json_string
+
+
+class JSONEventObjectSerializerTest(JSONSerializerTestCase):
+  """Tests for the JSON event object serializer object."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -43,14 +90,12 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
         u'zero_integer': 0
     }
 
+    self._serializer = json_serializer.JSONEventObjectSerializer
+
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
-    # We use json.dumps to make sure the dict does not serialize into
-    # an invalid JSON string e.g. one that contains string prefixes
-    # like b'' or u''.
-    json_string = json.dumps(self._json_dict)
-    event_object = json_serializer.JsonEventObjectSerializer.ReadSerialized(
-        json_string)
+    """Tests the ReadSerialized function."""
+    event_object = self._TestReadSerialized(
+        self._serializer, self._json_dict)
 
     # An integer value containing 0 should get stored.
     self.assertTrue(hasattr(event_object, u'zero_integer'))
@@ -71,12 +116,12 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
     self.assertEqual(len(attribute_value), 4)
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
+    """Tests the WriteSerialized function."""
     event_object = event.EventObject()
 
-    event_object.data_type = 'test:event2'
+    event_object.data_type = u'test:event2'
     event_object.timestamp = 1234124
-    event_object.timestamp_desc = 'Written'
+    event_object.timestamp_desc = u'Written'
     # Prevent the event object for generating its own UUID.
     event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
@@ -92,31 +137,121 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
         u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35)
     event_object.null_value = None
 
-    json_string = json_serializer.JsonEventObjectSerializer.WriteSerialized(
-        event_object)
+    json_string = self._TestWriteSerialized(
+        self._serializer, event_object, self._json_dict)
 
-    # We use json.loads here to compare dicts since we cannot pre-determine
-    # the actual order of values in the JSON string.
-    json_dict = json.loads(json_string)
-    self.assertEqual(json_dict, self._json_dict)
-
-    event_object = json_serializer.JsonEventObjectSerializer.ReadSerialized(
-        json_string)
+    event_object = self._serializer.ReadSerialized(json_string)
 
     # TODO: fix this.
     # An empty string should not get stored.
-    # self.assertFalse(hasattr(event_object, 'empty_string'))
+    # self.assertFalse(hasattr(event_object, u'empty_string'))
 
     # A None (or Null) value should not get stored.
-    # self.assertFalse(hasattr(event_object, 'null_value'))
+    # self.assertFalse(hasattr(event_object, u'null_value'))
 
 
-class JsonCollectionInformationSerializerTest(unittest.TestCase):
-  """Tests serialization of the collection information object."""
+class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
+  """Tests for the JSON preprocessing object serializer object."""
 
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
+  def setUp(self):
+    """Set up the necessary objects."""
+    parsers = [
+        u'esedb', u'chrome_preferences', u'winfirewall', u'android_app_usage',
+        u'selinux', u'recycle_bin', u'pls_recall', u'filestat', u'sqlite',
+        u'cups_ipp', u'winiis', u'lnk', u'rplog', u'symantec_scanlog',
+        u'recycle_bin_info2', u'winevtx', u'plist', u'bsm_log', u'mac_keychain',
+        u'pcap', u'mac_securityd', u'utmp', u'pe', u'asl_log', u'opera_global',
+        u'custom_destinations', u'chrome_cache', u'popularity_contest',
+        u'prefetch', u'winreg', u'msiecf', u'bencode', u'skydrive_log',
+        u'openxml', u'xchatscrollback', u'utmpx', u'binary_cookies', u'syslog',
+        u'hachoir', u'opera_typed_history', u'winevt', u'mac_appfirewall_log',
+        u'winjob', u'olecf', u'xchatlog', u'macwifi', u'mactime', u'java_idx',
+        u'firefox_cache', u'mcafee_protection', u'skydrive_log_error']
+
+    collection_information = {
+        u'cmd_line': (
+            u'/usr/bin/log2timeline.py pinfo_test.out tsk_volume_system.raw'),
+        u'configured_zone': u'UTC',
+        u'debug': False,
+        u'file_processed': u'/tmp/tsk_volume_system.raw',
+        u'image_offset': 180224,
+        u'method': u'imaged processed',
+        u'os_detected': u'N/A',
+        u'output_file': u'pinfo_test.out',
+        u'parser_selection': u'(no list set)',
+        u'parsers': parsers,
+        u'preferred_encoding': u'utf-8',
+        u'preprocess': True,
+        u'protobuf_size': 0,
+        u'recursive': False,
+        u'runtime': u'multi process mode',
+        u'time_of_run': 1430290411000000,
+        u'version': u'1.2.1_20150424',
+        u'vss parsing': False,
+        u'workers': 0
+    }
+
+    stores = {
+        u'Number': 1,
+        u'Store 1': {
+            u'count': 3,
+            u'data_type': [u'fs:stat'],
+            u'parsers': [u'filestat'],
+            u'range': [1387891912000000, 1387891912000000],
+            u'type_count': [[u'fs:stat', 3]],
+            u'version': 1
+        }
+    }
+
+    self._json_dict = {
+        u'__type__': u'PreprocessObject',
+        u'collection_information': collection_information,
+        u'counter': {
+            u'__type__': u'collections.Counter',
+            u'filestat': 3,
+            u'total': 3
+        },
+        u'guessed_os': u'None',
+        u'plugin_counter': {
+            u'__type__': u'collections.Counter',
+        },
+        u'store_range': [1, 1],
+        u'stores': stores,
+        u'zone': {
+            u'__type__': u'timezone',
+            u'zone': u'UTC'
+        }
+    }
+
+    counter = collections.Counter()
+    counter[u'filestat'] = 3
+    counter[u'total'] = 3
+
+    plugin_counter = collections.Counter()
+
+    self._preprocess_object = event.PreprocessObject()
+    self._preprocess_object.collection_information = collection_information
+    self._preprocess_object.counter = counter
+    self._preprocess_object.guessed_os = u'None'
+    self._preprocess_object.plugin_counter = plugin_counter
+    self._preprocess_object.store_range = (1, 1)
+    self._preprocess_object.stores = stores
+    self._preprocess_object.zone = pytz.UTC
+
+    self._serializer = json_serializer.JSONPreprocessObjectSerializer
+
+  def testReadSerialized(self):
+    """Tests the ReadSerialized function."""
+    self._TestReadSerialized(self._serializer, self._json_dict)
+
+  def testWriteSerialized(self):
+    """Tests the WriteSerialized function."""
+    self._TestWriteSerialized(
+        self._serializer, self._preprocess_object, self._json_dict)
+
+
+class JSONCollectionInformationSerializerTest(JSONSerializerTestCase):
+  """Tests for the JSON preprocessing collection information object."""
 
   def setUp(self):
     """Set up the necessary objects."""
@@ -136,15 +271,13 @@ class JsonCollectionInformationSerializerTest(unittest.TestCase):
         u'foobar', u'stuff', value=1245)
     self._collection_information_object.SetValue(u'foo', u'bar')
     self._collection_information_object.SetValue(u'foo2', u'randombar')
-    self._serializer = json_serializer.JsonCollectionInformationObjectSerializer
+
+    self._serializer = json_serializer.JSONCollectionInformationObjectSerializer
 
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
-    # We use json.dumps to make sure the dict does not serialize into
-    # an invalid JSON string e.g. one that contains string prefixes
-    # like b'' or u''.
-    json_string = json.dumps(self._json_dict)
-    collection_object = self._serializer.ReadSerialized(json_string)
+    """Tests the ReadSerialized function."""
+    collection_object = self._TestReadSerialized(
+        self._serializer, self._json_dict)
 
     for key, value in collection_object.GetValueDict().iteritems():
       self.assertEqual(
@@ -158,14 +291,9 @@ class JsonCollectionInformationSerializerTest(unittest.TestCase):
         self.assertEqual(value, compare_counter[key])
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
-    json_string = self._serializer.WriteSerialized(
-        self._collection_information_object)
-
-    # We use json.loads here to compare dicts since we cannot pre-determine
-    # the actual order of values in the JSON string.
-    json_dict = json.loads(json_string)
-    self.assertEqual(json_dict, self._json_dict)
+    """Tests the WriteSerialized function."""
+    self._TestWriteSerialized(
+        self._serializer, self._collection_information_object, self._json_dict)
 
 
 if __name__ == '__main__':
