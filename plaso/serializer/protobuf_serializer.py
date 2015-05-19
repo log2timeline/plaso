@@ -211,9 +211,8 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
     Returns:
       An analysis report (instance of AnalysisReport).
     """
-    # TODO: implement.
-    plugin_name = u'INVALID'
-    analysis_report = event.AnalysisReport(plugin_name)
+    # Plugin name is set as one of the attributes.
+    analysis_report = event.AnalysisReport(u'')
 
     for proto_attribute, value in proto.ListFields():
       # TODO: replace by ReadSerializedDictObject, need tests first.
