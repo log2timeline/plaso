@@ -54,18 +54,63 @@ class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    # TODO: add an analysis report test.
-    pass
+    self._report_dict = {
+        u'dude': [
+            [u'Google Keep - notes and lists',
+             u'hmjkmjkepdijhoojdojkdfohbdgmmhki']
+        ],
+        u'frank': [
+            [u'YouTube', u'blpcfgokakmgnkcojhhkbfbldkacnbeo'],
+            [u'Google Play Music', u'icppfcnhkcmnfdhfhphakoifcfokfdhg']
+        ]
+    }
+
+    self._report_text = (
+        u' == USER: dude ==\n'
+        u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]\n'
+        u'\n'
+        u' == USER: frank ==\n'
+        u'  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]\n'
+        u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
+        u'\n')
+
+    attribute_serializer = protobuf_serializer.ProtobufEventAttributeSerializer
+
+    proto = plaso_storage_pb2.AnalysisReport()
+
+    dict_proto = plaso_storage_pb2.Dict()
+    for key, value in iter(self._report_dict.items()):
+      sub_proto = dict_proto.attributes.add()
+      attribute_serializer.WriteSerializedObject(sub_proto, key, value)
+    proto.report_dict.MergeFrom(dict_proto)
+
+    # TODO: add report_array, _anomalies and _tags tests.
+
+    proto.plugin_name = u'chrome_extension_test'
+    proto.text = self._report_text
+    proto.time_compiled = 1431978243000000
+
+    self._proto_string = proto.SerializeToString()
+    self._serializer = protobuf_serializer.ProtobufAnalysisReportSerializer
 
   def testReadSerialized(self):
     """Tests the ReadSerialized function."""
-    # TODO: add an analysis report test.
-    pass
+    analysis_report = self._serializer.ReadSerialized(self._proto_string)
+
+    self.assertEqual(analysis_report.plugin_name, u'chrome_extension_test')
+    self.assertEqual(analysis_report.report_dict, self._report_dict)
+    self.assertEqual(analysis_report.text, self._report_text)
+    self.assertEqual(analysis_report.time_compiled, 1431978243000000)
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
-    # TODO: add an analysis report test.
-    pass
+    analysis_report = event.AnalysisReport(u'chrome_extension_test')
+
+    analysis_report.report_dict = self._report_dict
+    analysis_report.text = self._report_text
+    analysis_report.time_compiled = 1431978243000000
+    self._TestWriteSerialized(
+        self._serializer, analysis_report, self._proto_string)
 
 
 class ProtobufEventObjectSerializerTest(ProtobufSerializerTestCase):
@@ -312,16 +357,6 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
     self._proto_object = proto
     self._proto_string = proto.SerializeToString()
 
-    self._preprocess_object = event.PreprocessObject()
-    self._preprocess_object.collection_information = (
-        self._collection_information)
-    self._preprocess_object.counter = self._counter
-    self._preprocess_object.guessed_os = u'None'
-    self._preprocess_object.plugin_counter = self._plugin_counter
-    self._preprocess_object.store_range = (1, 1)
-    self._preprocess_object.stores = self._stores
-    self._preprocess_object.zone = pytz.UTC
-
     self._serializer = protobuf_serializer.ProtobufPreprocessObjectSerializer
 
   def testReadSerialized(self):
@@ -339,8 +374,17 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
+    preprocess_object = event.PreprocessObject()
+    preprocess_object.collection_information = self._collection_information
+    preprocess_object.counter = self._counter
+    preprocess_object.guessed_os = u'None'
+    preprocess_object.plugin_counter = self._plugin_counter
+    preprocess_object.store_range = (1, 1)
+    preprocess_object.stores = self._stores
+    preprocess_object.zone = pytz.UTC
+
     self._TestWriteSerialized(
-        self._serializer, self._preprocess_object, self._proto_string)
+        self._serializer, preprocess_object, self._proto_string)
 
 
 class ProtobufCollectionInformationObjectSerializerTest(

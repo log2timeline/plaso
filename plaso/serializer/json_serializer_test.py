@@ -63,6 +63,61 @@ class JSONSerializerTestCase(unittest.TestCase):
     return json_string
 
 
+class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
+  """Tests for the JSON analysis report serializer object."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    # TODO: preserve the tuples in the report dict.
+    self._report_dict = {
+        u'dude': [
+            [u'Google Keep - notes and lists',
+             u'hmjkmjkepdijhoojdojkdfohbdgmmhki']
+        ],
+        u'frank': [
+            [u'YouTube', u'blpcfgokakmgnkcojhhkbfbldkacnbeo'],
+            [u'Google Play Music', u'icppfcnhkcmnfdhfhphakoifcfokfdhg']
+        ]
+    }
+
+    self._report_text = (
+        u' == USER: dude ==\n'
+        u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]\n'
+        u'\n'
+        u' == USER: frank ==\n'
+        u'  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]\n'
+        u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
+        u'\n')
+
+    # TODO: add report_array, _anomalies and _tags tests.
+
+    self._json_dict = {
+        u'__type__': u'AnalysisReport',
+        u'_anomalies': [],
+        u'_tags': [],
+        u'plugin_name': u'chrome_extension_test',
+        u'report_dict': self._report_dict,
+        u'text': self._report_text,
+        u'time_compiled': 1431978243000000}
+
+    self._serializer = json_serializer.JSONAnalysisReportSerializer
+
+  def testReadSerialized(self):
+    """Tests the ReadSerialized function."""
+    self._TestReadSerialized(self._serializer, self._json_dict)
+
+  def testWriteSerialized(self):
+    """Tests the WriteSerialized function."""
+    analysis_report = event.AnalysisReport(u'chrome_extension_test')
+
+    analysis_report.report_dict = self._report_dict
+    analysis_report.text = self._report_text
+    analysis_report.time_compiled = 1431978243000000
+
+    self._TestWriteSerialized(
+        self._serializer, analysis_report, self._json_dict)
+
+
 class JSONEventObjectSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON event object serializer object."""
 
@@ -94,8 +149,7 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
 
   def testReadSerialized(self):
     """Tests the ReadSerialized function."""
-    event_object = self._TestReadSerialized(
-        self._serializer, self._json_dict)
+    event_object = self._TestReadSerialized(self._serializer, self._json_dict)
 
     # An integer value containing 0 should get stored.
     self.assertTrue(hasattr(event_object, u'zero_integer'))
@@ -168,7 +222,7 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
         u'winjob', u'olecf', u'xchatlog', u'macwifi', u'mactime', u'java_idx',
         u'firefox_cache', u'mcafee_protection', u'skydrive_log_error']
 
-    collection_information = {
+    self._collection_information = {
         u'cmd_line': (
             u'/usr/bin/log2timeline.py pinfo_test.out tsk_volume_system.raw'),
         u'configured_zone': u'UTC',
@@ -191,7 +245,7 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
         u'workers': 0
     }
 
-    stores = {
+    self._stores = {
         u'Number': 1,
         u'Store 1': {
             u'count': 3,
@@ -205,7 +259,7 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
 
     self._json_dict = {
         u'__type__': u'PreprocessObject',
-        u'collection_information': collection_information,
+        u'collection_information': self._collection_information,
         u'counter': {
             u'__type__': u'collections.Counter',
             u'filestat': 3,
@@ -215,28 +269,23 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
         u'plugin_counter': {
             u'__type__': u'collections.Counter',
         },
-        u'store_range': [1, 1],
-        u'stores': stores,
+        u'store_range': {
+            u'__type__': u'range',
+            u'end': 1,
+            u'start': 1
+        },
+        u'stores': self._stores,
         u'zone': {
             u'__type__': u'timezone',
             u'zone': u'UTC'
         }
     }
 
-    counter = collections.Counter()
-    counter[u'filestat'] = 3
-    counter[u'total'] = 3
+    self._counter = collections.Counter()
+    self._counter[u'filestat'] = 3
+    self._counter[u'total'] = 3
 
-    plugin_counter = collections.Counter()
-
-    self._preprocess_object = event.PreprocessObject()
-    self._preprocess_object.collection_information = collection_information
-    self._preprocess_object.counter = counter
-    self._preprocess_object.guessed_os = u'None'
-    self._preprocess_object.plugin_counter = plugin_counter
-    self._preprocess_object.store_range = (1, 1)
-    self._preprocess_object.stores = stores
-    self._preprocess_object.zone = pytz.UTC
+    self._plugin_counter = collections.Counter()
 
     self._serializer = json_serializer.JSONPreprocessObjectSerializer
 
@@ -246,8 +295,17 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
+    preprocess_object = event.PreprocessObject()
+    preprocess_object.collection_information = self._collection_information
+    preprocess_object.counter = self._counter
+    preprocess_object.guessed_os = u'None'
+    preprocess_object.plugin_counter = self._plugin_counter
+    preprocess_object.store_range = (1, 1)
+    preprocess_object.stores = self._stores
+    preprocess_object.zone = pytz.UTC
+
     self._TestWriteSerialized(
-        self._serializer, self._preprocess_object, self._json_dict)
+        self._serializer, preprocess_object, self._json_dict)
 
 
 class JSONCollectionInformationSerializerTest(JSONSerializerTestCase):
