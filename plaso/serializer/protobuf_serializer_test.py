@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the serializer object implementation using protobuf."""
 
+import collections
 import unittest
 
 from plaso.lib import event
@@ -9,8 +10,46 @@ from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 from plaso.storage import collection
 
+import pytz
 
-class ProtobufAnalysisReportSerializerTest(unittest.TestCase):
+
+class ProtobufSerializerTestCase(unittest.TestCase):
+  """Tests for a protobuf serializer object."""
+
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
+  def _DebugWriteSerialized(
+      self, serializer, unserialized_object, expected_proto_object):
+    """Debug the write serialized functionality.
+
+    Args:
+      serializer_object: the protobuf serializer object.
+      unserialized_object: the unserialized object.
+      expected_proto_object: the expected protobuf object.
+    """
+    proto_object = serializer.WriteSerializedObject(unserialized_object)
+
+    # We turn the proto objects into string for a better diff.
+    expected_proto_object_string = u'{0!s}'.format(expected_proto_object)
+    proto_object_string = u'{0!s}'.format(proto_object)
+    self.assertEqual(proto_object_string, expected_proto_object_string)
+
+  def _TestWriteSerialized(
+      self, serializer, unserialized_object, expected_proto_string):
+    """Tests the write serialized functionality.
+
+    Args:
+      serializer_object: the protobuf serializer object.
+      unserialized_object: the unserialized object.
+      expected_proto_string: the expected protobuf string.
+    """
+    proto_string = serializer.WriteSerialized(unserialized_object)
+    self.assertEqual(proto_string, expected_proto_string)
+
+
+class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf analysis report serializer object."""
 
   def setUp(self):
@@ -19,119 +58,123 @@ class ProtobufAnalysisReportSerializerTest(unittest.TestCase):
     pass
 
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
+    """Tests the ReadSerialized function."""
     # TODO: add an analysis report test.
     pass
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
+    """Tests the WriteSerialized function."""
     # TODO: add an analysis report test.
     pass
 
 
-class ProtobufEventObjectSerializerTest(unittest.TestCase):
+class ProtobufEventObjectSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf event object serializer object."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     proto = plaso_storage_pb2.EventObject()
 
-    proto.data_type = 'test:event2'
+    proto.data_type = u'test:event2'
     proto.timestamp = 1234124
-    proto.timestamp_desc = 'Written'
+    proto.timestamp_desc = u'Written'
 
-    serializer = protobuf_serializer.ProtobufEventAttributeSerializer
+    attribute_serializer = protobuf_serializer.ProtobufEventAttributeSerializer
 
     proto_attribute = proto.attributes.add()
-    serializer.WriteSerializedObject(proto_attribute, 'zero_integer', 0)
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'zero_integer', 0)
 
     proto_attribute = proto.attributes.add()
     dict_object = {
-        'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
-    serializer.WriteSerializedObject(proto_attribute, 'my_dict', dict_object)
+        u'a': u'not b', u'c': 34, u'list': [u'sf', 234], u'an': [234, 32]}
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'my_dict', dict_object)
 
     proto_attribute = proto.attributes.add()
     tuple_object = (
-        'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
-    serializer.WriteSerializedObject(proto_attribute, 'a_tuple', tuple_object)
+        u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35)
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'a_tuple', tuple_object)
 
     proto_attribute = proto.attributes.add()
-    list_object = ['asf', 4234, 2, 54, 'asf']
-    serializer.WriteSerializedObject(proto_attribute, 'my_list', list_object)
+    list_object = [u'asf', 4234, 2, 54, u'asf']
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'my_list', list_object)
 
     proto_attribute = proto.attributes.add()
-    serializer.WriteSerializedObject(
-        proto_attribute, 'unicode_string', u'And I\'m a unicorn.')
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'unicode_string', u'And I\'m a unicorn.')
 
     proto_attribute = proto.attributes.add()
-    serializer.WriteSerializedObject(proto_attribute, 'integer', 34)
+    attribute_serializer.WriteSerializedObject(proto_attribute, u'integer', 34)
 
     proto_attribute = proto.attributes.add()
-    serializer.WriteSerializedObject(proto_attribute, 'string', 'Normal string')
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'string', u'Normal string')
 
-    proto.uuid = '5a78777006de4ddb8d7bbe12ab92ccf8'
+    proto.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
     self._proto_string = proto.SerializeToString()
+    self._serializer = protobuf_serializer.ProtobufEventObjectSerializer
 
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
-    serializer = protobuf_serializer.ProtobufEventObjectSerializer
-    event_object = serializer.ReadSerialized(self._proto_string)
+    """Tests the ReadSerialized function."""
+    event_object = self._serializer.ReadSerialized(self._proto_string)
 
     # An integer value containing 0 should get stored.
-    self.assertTrue(hasattr(event_object, 'zero_integer'))
+    self.assertTrue(hasattr(event_object, u'zero_integer'))
 
-    attribute_value = getattr(event_object, 'integer', 0)
+    attribute_value = getattr(event_object, u'integer', 0)
     self.assertEqual(attribute_value, 34)
 
-    attribute_value = getattr(event_object, 'my_list', [])
+    attribute_value = getattr(event_object, u'my_list', [])
     self.assertEqual(len(attribute_value), 5)
 
-    attribute_value = getattr(event_object, 'string', '')
-    self.assertEqual(attribute_value, 'Normal string')
+    attribute_value = getattr(event_object, u'string', u'')
+    self.assertEqual(attribute_value, u'Normal string')
 
-    attribute_value = getattr(event_object, 'unicode_string', u'')
+    attribute_value = getattr(event_object, u'unicode_string', u'')
     self.assertEqual(attribute_value, u'And I\'m a unicorn.')
 
-    attribute_value = getattr(event_object, 'a_tuple', ())
+    attribute_value = getattr(event_object, u'a_tuple', ())
     self.assertEqual(len(attribute_value), 4)
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
+    """Tests the WriteSerialized function."""
     event_object = event.EventObject()
 
-    event_object.data_type = 'test:event2'
+    event_object.data_type = u'test:event2'
     event_object.timestamp = 1234124
-    event_object.timestamp_desc = 'Written'
+    event_object.timestamp_desc = u'Written'
     # Prevent the event object for generating its own UUID.
-    event_object.uuid = '5a78777006de4ddb8d7bbe12ab92ccf8'
+    event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
     event_object.empty_string = u''
     event_object.zero_integer = 0
     event_object.integer = 34
-    event_object.string = 'Normal string'
+    event_object.string = u'Normal string'
     event_object.unicode_string = u'And I\'m a unicorn.'
-    event_object.my_list = ['asf', 4234, 2, 54, 'asf']
+    event_object.my_list = [u'asf', 4234, 2, 54, u'asf']
     event_object.my_dict = {
-        'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
+        u'a': u'not b', u'c': 34, u'list': [u'sf', 234], u'an': [234, 32]}
     event_object.a_tuple = (
-        'some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
+        u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35)
     event_object.null_value = None
 
-    serializer = protobuf_serializer.ProtobufEventObjectSerializer
-    proto_string = serializer.WriteSerialized(event_object)
+    proto_string = self._serializer.WriteSerialized(event_object)
     self.assertEqual(proto_string, self._proto_string)
 
-    event_object = serializer.ReadSerialized(proto_string)
+    event_object = self._serializer.ReadSerialized(proto_string)
 
     # An empty string should not get stored.
-    self.assertFalse(hasattr(event_object, 'empty_string'))
+    self.assertFalse(hasattr(event_object, u'empty_string'))
 
     # A None (or Null) value should not get stored.
-    self.assertFalse(hasattr(event_object, 'null_value'))
+    self.assertFalse(hasattr(event_object, u'null_value'))
 
 
-class ProtobufEventTagSerializerTest(unittest.TestCase):
+class ProtobufEventTagSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf event tag serializer object."""
 
   def setUp(self):
@@ -147,11 +190,11 @@ class ProtobufEventTagSerializerTest(unittest.TestCase):
     proto_tag.value = u'Common'
 
     self._proto_string = proto.SerializeToString()
+    self._serializer = protobuf_serializer.ProtobufEventTagSerializer
 
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
-    serializer = protobuf_serializer.ProtobufEventTagSerializer
-    event_tag = serializer.ReadSerialized(self._proto_string)
+    """Tests the ReadSerialized function."""
+    event_tag = self._serializer.ReadSerialized(self._proto_string)
 
     self.assertEqual(event_tag.color, u'Red')
     self.assertEqual(event_tag.comment, u'My first comment.')
@@ -160,7 +203,7 @@ class ProtobufEventTagSerializerTest(unittest.TestCase):
     self.assertEqual(event_tag.tags, [u'Malware', u'Common'])
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
+    """Tests the WriteSerialized function."""
     event_tag = event.EventTag()
 
     event_tag.store_number = 234
@@ -169,31 +212,139 @@ class ProtobufEventTagSerializerTest(unittest.TestCase):
     event_tag.color = u'Red'
     event_tag.tags = [u'Malware', u'Common']
 
-    serializer = protobuf_serializer.ProtobufEventTagSerializer
-    proto_string = serializer.WriteSerialized(event_tag)
-    self.assertEqual(proto_string, self._proto_string)
+    self._TestWriteSerialized(self._serializer, event_tag, self._proto_string)
 
 
-class ProtobufPreprocessObjectSerializerTest(unittest.TestCase):
+class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf preprocess object serializer object."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    # TODO: add a preprocess object test.
-    pass
+    parsers = [
+        u'esedb', u'chrome_preferences', u'winfirewall', u'android_app_usage',
+        u'selinux', u'recycle_bin', u'pls_recall', u'filestat', u'sqlite',
+        u'cups_ipp', u'winiis', u'lnk', u'rplog', u'symantec_scanlog',
+        u'recycle_bin_info2', u'winevtx', u'plist', u'bsm_log', u'mac_keychain',
+        u'pcap', u'mac_securityd', u'utmp', u'pe', u'asl_log', u'opera_global',
+        u'custom_destinations', u'chrome_cache', u'popularity_contest',
+        u'prefetch', u'winreg', u'msiecf', u'bencode', u'skydrive_log',
+        u'openxml', u'xchatscrollback', u'utmpx', u'binary_cookies', u'syslog',
+        u'hachoir', u'opera_typed_history', u'winevt', u'mac_appfirewall_log',
+        u'winjob', u'olecf', u'xchatlog', u'macwifi', u'mactime', u'java_idx',
+        u'firefox_cache', u'mcafee_protection', u'skydrive_log_error']
+
+    self._collection_information = {
+        u'cmd_line': (
+            u'/usr/bin/log2timeline.py pinfo_test.out tsk_volume_system.raw'),
+        u'configured_zone': u'UTC',
+        u'debug': False,
+        u'file_processed': u'/tmp/tsk_volume_system.raw',
+        u'image_offset': 180224,
+        u'method': u'imaged processed',
+        u'os_detected': u'N/A',
+        u'output_file': u'pinfo_test.out',
+        u'parser_selection': u'(no list set)',
+        u'parsers': parsers,
+        u'preferred_encoding': u'utf-8',
+        u'preprocess': True,
+        u'protobuf_size': 0,
+        u'recursive': False,
+        u'runtime': u'multi process mode',
+        u'time_of_run': 1430290411000000,
+        u'version': u'1.2.1_20150424',
+        u'vss parsing': False,
+        u'workers': 0
+    }
+
+    self._stores = {
+        u'Number': 1,
+        u'Store 1': {
+            u'count': 3,
+            u'data_type': [u'fs:stat'],
+            u'parsers': [u'filestat'],
+            u'range': [1387891912000000, 1387891912000000],
+            u'type_count': [[u'fs:stat', 3]],
+            u'version': 1
+        }
+    }
+
+    self._counter = collections.Counter()
+    self._counter[u'filestat'] = 3
+    self._counter[u'total'] = 3
+
+    self._plugin_counter = collections.Counter()
+
+    attribute_serializer = protobuf_serializer.ProtobufEventAttributeSerializer
+
+    # Warning the order in which the attributes are added to the protobuf
+    # matters for the test.
+    proto = plaso_storage_pb2.PreProcess()
+
+    attribute_serializer.WriteSerializedDictObject(
+        proto, u'collection_information', self._collection_information)
+
+    attribute_serializer.WriteSerializedDictObject(
+        proto, u'counter', self._counter)
+
+    proto_attribute = proto.attributes.add()
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'guessed_os', u'None')
+
+    attribute_serializer.WriteSerializedDictObject(
+        proto, u'plugin_counter', self._plugin_counter)
+
+    # Add the store_range attribute.
+    range_proto = plaso_storage_pb2.Array()
+    range_start = range_proto.values.add()
+    range_start.integer = 1
+    range_end = range_proto.values.add()
+    range_end.integer = 1
+    proto.store_range.MergeFrom(range_proto)
+
+    proto_attribute = proto.attributes.add()
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'zone', u'{0!s}'.format(pytz.UTC))
+
+    proto_attribute = proto.attributes.add()
+    attribute_serializer.WriteSerializedObject(
+        proto_attribute, u'stores', self._stores)
+
+    self._proto_object = proto
+    self._proto_string = proto.SerializeToString()
+
+    self._preprocess_object = event.PreprocessObject()
+    self._preprocess_object.collection_information = (
+        self._collection_information)
+    self._preprocess_object.counter = self._counter
+    self._preprocess_object.guessed_os = u'None'
+    self._preprocess_object.plugin_counter = self._plugin_counter
+    self._preprocess_object.store_range = (1, 1)
+    self._preprocess_object.stores = self._stores
+    self._preprocess_object.zone = pytz.UTC
+
+    self._serializer = protobuf_serializer.ProtobufPreprocessObjectSerializer
 
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
-    # TODO: add a preprocess object test.
-    pass
+    """Tests the ReadSerialized function."""
+    preprocess_object = self._serializer.ReadSerialized(self._proto_string)
+
+    self.assertEqual(
+        preprocess_object.collection_information, self._collection_information)
+    self.assertEqual(preprocess_object.counter, self._counter)
+    self.assertEqual(preprocess_object.guessed_os, u'None')
+    self.assertEqual(preprocess_object.plugin_counter, self._plugin_counter)
+    self.assertEqual(preprocess_object.store_range, (1, 1))
+    self.assertEqual(preprocess_object.stores, self._stores)
+    self.assertEqual(preprocess_object.zone, pytz.UTC)
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
-    # TODO: add a preprocess object test.
-    pass
+    """Tests the WriteSerialized function."""
+    self._TestWriteSerialized(
+        self._serializer, self._preprocess_object, self._proto_string)
 
 
-class ProtobufCollectionInformationObjectSerializerTest(unittest.TestCase):
+class ProtobufCollectionInformationObjectSerializerTest(
+    ProtobufSerializerTestCase):
   """Tests for the collection information object protobuf serializer."""
 
   def setUp(self):
@@ -217,7 +368,7 @@ class ProtobufCollectionInformationObjectSerializerTest(unittest.TestCase):
     self._serializer = module.ProtobufCollectionInformationObjectSerializer
 
   def testReadSerialized(self):
-    """Test the read serialized functionality."""
+    """Tests the ReadSerialized function."""
     collection_object = self._serializer.ReadSerialized(self._proto_string)
 
     for identifier, counter in collection_object.GetCounters():
@@ -229,9 +380,9 @@ class ProtobufCollectionInformationObjectSerializerTest(unittest.TestCase):
       self.assertEqual(value, self._collection_object.GetValue(identifier))
 
   def testWriteSerialized(self):
-    """Test the write serialized functionality."""
-    proto_string = self._serializer.WriteSerialized(self._collection_object)
-    self.assertEqual(proto_string, self._proto_string)
+    """Tests the WriteSerialized function."""
+    self._TestWriteSerialized(
+        self._serializer, self._collection_object, self._proto_string)
 
     proto = self._serializer.WriteSerializedObject(self._collection_object)
     attribute_serializer = protobuf_serializer.ProtobufEventAttributeSerializer

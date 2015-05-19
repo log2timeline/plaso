@@ -6,7 +6,7 @@ from plaso.output import manager
 from plaso.serializer import json_serializer
 
 
-class JsonOutputModule(interface.LinearOutputModule):
+class JSONOutputModule(interface.LinearOutputModule):
   """Output module for the JSON format."""
 
   NAME = u'json'
@@ -18,7 +18,7 @@ class JsonOutputModule(interface.LinearOutputModule):
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(JsonOutputModule, self).__init__(output_mediator, **kwargs)
+    super(JSONOutputModule, self).__init__(output_mediator, **kwargs)
     self._event_counter = 0
 
   def WriteEventBody(self, event_object):
@@ -27,7 +27,7 @@ class JsonOutputModule(interface.LinearOutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    json_string = json_serializer.JsonEventObjectSerializer.WriteSerialized(
+    json_string = json_serializer.JSONEventObjectSerializer.WriteSerialized(
         event_object)
 
     if self._event_counter == 0:
@@ -49,4 +49,4 @@ class JsonOutputModule(interface.LinearOutputModule):
     self._event_counter = 0
 
 
-manager.OutputManager.RegisterOutput(JsonOutputModule)
+manager.OutputManager.RegisterOutput(JSONOutputModule)

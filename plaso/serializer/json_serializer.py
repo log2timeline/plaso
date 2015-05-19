@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The json serializer object implementation."""
 
+import collections
 import json
 
 from dfvfs.path import path_spec as dfvfs_path_spec
@@ -10,15 +11,17 @@ from plaso.lib import event
 from plaso.serializer import interface
 from plaso.storage import collection
 
+import pytz
 
-class _EventObjectJsonDecoder(json.JSONDecoder):
+
+class _EventObjectJSONDecoder(json.JSONDecoder):
   """A class that implements an event object JSON decoder."""
 
   _CLASS_TYPES = frozenset([u'EventObject', u'EventTag', u'PathSpec'])
 
   def __init__(self, *args, **kargs):
-    """Initializes the path specification JSON decoder object."""
-    super(_EventObjectJsonDecoder, self).__init__(
+    """Initializes the JSON decoder object."""
+    super(_EventObjectJSONDecoder, self).__init__(
         *args, object_hook=self._ConvertDictToObject, **kargs)
 
   def _ConvertDictToEventObject(self, json_dict):
@@ -32,7 +35,7 @@ class _EventObjectJsonDecoder(json.JSONDecoder):
         ...
     }
 
-    Here '__type__' indicates the object base type in this case this should
+    Here '__type__' indicates the object base type. In this case this should
     be 'EventObject'. The rest of the elements of the dictionary make up the
     event object properties.
 
@@ -44,7 +47,7 @@ class _EventObjectJsonDecoder(json.JSONDecoder):
     """
     event_object = event.EventObject()
 
-    for key, value in json_dict.iteritems():
+    for key, value in iter(json_dict.items()):
       setattr(event_object, key, value)
 
     return event_object
@@ -58,7 +61,7 @@ class _EventObjectJsonDecoder(json.JSONDecoder):
         ...
     }
 
-    Here '__type__' indicates the object base type in this case this should
+    Here '__type__' indicates the object base type. In this case this should
     be 'EventTag'. The rest of the elements of the dictionary make up the
     event tag object properties.
 
@@ -70,7 +73,7 @@ class _EventObjectJsonDecoder(json.JSONDecoder):
     """
     event_tag = event.EventTag()
 
-    for key, value in json_dict.iteritems():
+    for key, value in iter(json_dict.items()):
       setattr(event_tag, key, value)
 
     return event_tag
@@ -86,7 +89,7 @@ class _EventObjectJsonDecoder(json.JSONDecoder):
         ...
     }
 
-    Here '__type__' indicates the object base type in this case this should
+    Here '__type__' indicates the object base type. In this case this should
     be 'PathSpec'. The rest of the elements of the dictionary make up the
     path specification object properties.
 
@@ -141,8 +144,113 @@ class _EventObjectJsonDecoder(json.JSONDecoder):
     return self._ConvertDictToEventObject(json_dict)
 
 
-class _EventObjectJsonEncoder(json.JSONEncoder):
-  """A class that implements an event object object JSON encoder."""
+class _PreprocessObjectJSONDecoder(json.JSONDecoder):
+  """A class that implements a preprocessing object JSON decoder."""
+
+  _CLASS_TYPES = frozenset([
+      u'collections.Counter', u'PreprocessObject', u'timezone'])
+
+  def __init__(self, *args, **kargs):
+    """Initializes the JSON decoder object."""
+    super(_PreprocessObjectJSONDecoder, self).__init__(
+        *args, object_hook=self._ConvertDictToObject, **kargs)
+
+  def _ConvertDictToCollectionsCounter(self, json_dict):
+    """Converts a JSON dict into a collections counter object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'collections.Counter'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case this should
+    be 'collections.Counter'. The rest of the elements of the dictionary make up
+    the preprocessing object properties.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      A collections counter object (instance of collections.Counter).
+    """
+    collections_counter = collections.Counter()
+
+    for key, value in iter(json_dict.items()):
+      setattr(collections_counter, key, value)
+
+    return collections_counter
+
+  def _ConvertDictToPreprocessObject(self, json_dict):
+    """Converts a JSON dict into a preprocessing object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'PreprocessObject'
+        'collection_information': { ... }
+        'counter': { ... }
+        'plugin_counter': { ... }
+        'store_range': { ... }
+        'stores': { ... }
+        'zone': { ... }
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case this should
+    be 'PreprocessObject'. The rest of the elements of the dictionary make up
+    the preprocessing object properties.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      A preprocessing object (instance of PreprocessObject).
+    """
+    preprocessing_object = event.PreprocessObject()
+
+    for key, value in iter(json_dict.items()):
+      setattr(preprocessing_object, key, value)
+
+    return preprocessing_object
+
+  def _ConvertDictToObject(self, json_dict):
+    """Converts a JSON dict into an object.
+
+    Note that json_dict is a dict of dicts and the _ConvertDictToObject
+    method will be called for every dict. That is how the deserialized
+    objects are created.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      A deserialized object which can be:
+        * a collections counter (instance of collections.Counter);
+        * a dictionary;
+        * a preprocessing object (instance of PreprocessObject);
+        * a pytz timezone object.
+    """
+    # Use __type__ to indicate the object class type.
+    class_type = json_dict.get(u'__type__', None)
+
+    if class_type not in self._CLASS_TYPES:
+      # Dealing with a regular dict.
+      return json_dict
+
+    # Remove the class type from the JSON dict since we cannot pass it.
+    del json_dict[u'__type__']
+
+    if class_type == u'collections.Counter':
+      return self._ConvertDictToCollectionsCounter(json_dict)
+
+    elif class_type == u'timezone':
+      return pytz.timezone(json_dict.get(u'zone', u'UTC'))
+
+    return self._ConvertDictToPreprocessObject(json_dict)
+
+
+class _EventObjectJSONEncoder(json.JSONEncoder):
+  """A class that implements an event object JSON encoder."""
 
   def _ConvertEventTagToDict(self, event_tag):
     """Converts an event tag object into a JSON dictionary.
@@ -153,7 +261,7 @@ class _EventObjectJsonEncoder(json.JSONEncoder):
         ...
     }
 
-    Here '__type__' indicates the object base type in this case 'EventTag'.
+    Here '__type__' indicates the object base type. In this case 'EventTag'.
     The rest of the elements of the dictionary make up the event tag object
     attributes.
 
@@ -170,7 +278,7 @@ class _EventObjectJsonEncoder(json.JSONEncoder):
       raise TypeError
 
     json_dict = {u'__type__': u'EventTag'}
-    for attribute_name, attribute_value in event_tag.__dict__.iteritems():
+    for attribute_name, attribute_value in iter(event_tag.__dict__.items()):
       if attribute_value is None:
         continue
 
@@ -189,7 +297,7 @@ class _EventObjectJsonEncoder(json.JSONEncoder):
         ...
     }
 
-    Here '__type__' indicates the object base type in this case 'PathSpec'.
+    Here '__type__' indicates the object base type. In this case 'PathSpec'.
     The rest of the elements of the dictionary make up the path specification
     object properties. The supported property names are defined in
     path_spec_factory.Factory.PROPERTY_NAMES. Note that this method is called
@@ -240,7 +348,7 @@ class _EventObjectJsonEncoder(json.JSONEncoder):
         ...
     }
 
-    Here '__type__' indicates the object base type in this case 'EventObject'.
+    Here '__type__' indicates the object base type. In this case 'EventObject'.
     The rest of the elements of the dictionary make up the event object
     attributes.
 
@@ -273,7 +381,101 @@ class _EventObjectJsonEncoder(json.JSONEncoder):
     return json_dict
 
 
-class JsonAnalysisReportSerializer(interface.AnalysisReportSerializer):
+class _PreprocessObjectJSONEncoder(json.JSONEncoder):
+  """A class that implements a preprocessing object JSON encoder."""
+
+  def _ConvertCollectionsCounterToDict(self, collections_counter):
+    """Converts a collections counter object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'collections.Counter'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case
+    'collections.Counter'. The rest of the elements of the dictionary make up
+    the collections counter object attributes.
+
+    Args:
+      collections_counter: a collections counter object (instance of
+                           collections.Counter).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of collections.Counter.
+    """
+    if not isinstance(collections_counter, collections.Counter):
+      raise TypeError
+
+    json_dict = {u'__type__': u'collections.Counter'}
+    for attribute_name, attribute_value in iter(collections_counter.items()):
+      if attribute_value is None:
+        continue
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
+
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the json.JSONEncoder object interface.
+
+  # pylint: disable=method-hidden
+  def default(self, preprocessing_object):
+    """Converts a preprocessing object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'PreprocessObject'
+        'collection_information': { ... }
+        'counter': { ... }
+        'plugin_counter': { ... }
+        'store_range': { ... }
+        'stores': { ... }
+        'zone': { ... }
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case
+    'PreprocessObject'. The rest of the elements of the dictionary
+    make up the preprocessing object attributes.
+
+    Args:
+      preprocessing_object: an preprocessing object (instance of
+                            PreprocessObject).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of PreprocessObject.
+    """
+    if not isinstance(preprocessing_object, event.PreprocessObject):
+      raise TypeError
+
+    json_dict = {u'__type__': u'PreprocessObject'}
+    for attribute_name in iter(preprocessing_object.__dict__.keys()):
+      attribute_value = getattr(preprocessing_object, attribute_name, None)
+      if attribute_value is None:
+        continue
+
+      if attribute_name in [u'counter', u'plugin_counter']:
+        attribute_value = self._ConvertCollectionsCounterToDict(attribute_value)
+
+      elif attribute_name == u'zone':
+        attribute_value = {
+            u'__type__': u'timezone',
+            u'zone': u'{0!s}'.format(attribute_value)
+        }
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
+
+
+class JSONAnalysisReportSerializer(interface.AnalysisReportSerializer):
   """Class that implements the json analysis report serializer."""
 
   @classmethod
@@ -303,7 +505,7 @@ class JsonAnalysisReportSerializer(interface.AnalysisReportSerializer):
     pass
 
 
-class JsonEventObjectSerializer(interface.EventObjectSerializer):
+class JSONEventObjectSerializer(interface.EventObjectSerializer):
   """Class that implements the json event object serializer."""
 
   @classmethod
@@ -316,7 +518,7 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
     Returns:
       An event object (instance of EventObject).
     """
-    json_decoder = _EventObjectJsonDecoder()
+    json_decoder = _EventObjectJSONDecoder()
     return json_decoder.decode(json_string)
 
   @classmethod
@@ -330,10 +532,10 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
       An object containing the serialized form or None if the event
       cannot be serialized.
     """
-    return json.dumps(event_object, cls=_EventObjectJsonEncoder)
+    return json.dumps(event_object, cls=_EventObjectJSONEncoder)
 
 
-class JsonEventTagSerializer(interface.EventTagSerializer):
+class JSONEventTagSerializer(interface.EventTagSerializer):
   """Class that implements the json event tag serializer."""
 
   @classmethod
@@ -353,7 +555,7 @@ class JsonEventTagSerializer(interface.EventTagSerializer):
 
     json_attributes = json.loads(json_string)
 
-    for key, value in json_attributes.iteritems():
+    for key, value in iter(json_attributes.items()):
       setattr(event_tag, key, value)
 
     return event_tag
@@ -377,37 +579,7 @@ class JsonEventTagSerializer(interface.EventTagSerializer):
     return json.dumps(event_tag.__dict__)
 
 
-class JsonPathFilterSerializer(interface.PathFilterSerializer):
-  """Class that implements the json path filter serializer."""
-
-  @classmethod
-  def ReadSerialized(cls, serialized):
-    """Reads a path filter from serialized form.
-
-    Args:
-      serialized: a JSON string containing the serialized form.
-
-    Returns:
-      A path filter (instance of PathFilter).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def WriteSerialized(cls, path_filter):
-    """Writes a path filter to serialized form.
-
-    Args:
-      path_filter: a path filter (instance of PathFilter).
-
-    Returns:
-      A JSON string containing the serialized form.
-    """
-    # TODO: implement.
-    pass
-
-
-class JsonPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
+class JSONPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
   """Class that implements the json preprocessing object serializer."""
 
   @classmethod
@@ -420,8 +592,8 @@ class JsonPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     Returns:
       A preprocessing object (instance of PreprocessObject).
     """
-    # TODO: implement.
-    pass
+    json_decoder = _PreprocessObjectJSONDecoder()
+    return json_decoder.decode(json_string)
 
   @classmethod
   def WriteSerialized(cls, pre_obj):
@@ -433,11 +605,10 @@ class JsonPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     Returns:
       A JSON string containing the serialized form.
     """
-    # TODO: implement.
-    pass
+    return json.dumps(pre_obj, cls=_PreprocessObjectJSONEncoder)
 
 
-class JsonCollectionInformationObjectSerializer(
+class JSONCollectionInformationObjectSerializer(
     interface.CollectionInformationObjectSerializer):
   """Class that implements the collection information serializer interface."""
 
@@ -454,9 +625,9 @@ class JsonCollectionInformationObjectSerializer(
     json_dict = json.loads(serialized)
     collection_information_object = collection.CollectionInformation()
 
-    for key, value in json_dict.iteritems():
+    for key, value in iter(json_dict.items()):
       if key == collection_information_object.RESERVED_COUNTER_KEYWORD:
-        for identifier, value_dict in value.iteritems():
+        for identifier, value_dict in iter(value.items()):
           collection_information_object.AddCounterDict(identifier, value_dict)
       else:
         collection_information_object.SetValue(key, value)
