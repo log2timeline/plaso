@@ -221,11 +221,13 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     return result
 
-  def _FormatCollectionInformation(self, lines_of_text, storage_information):
+  def _FormatCollectionInformation(
+      self, lines_of_text, storage_file, storage_information):
     """Formats the collection information.
 
     Args:
       lines_of_text: A list containing the lines of text.
+      storage_file: The storage file (instance of StorageFile).
       storage_information: The storage information object (instance of
                             PreprocessObject).
     """
@@ -243,6 +245,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     lines_of_text.append(u'Storage file:\t\t{0:s}'.format(
         self._storage_file_path))
+    lines_of_text.append(u'Serialization format:\t{0:s}'.format(
+        storage_file.serialization_format))
     lines_of_text.append(u'Source processed:\t{0:s}'.format(filename))
     lines_of_text.append(u'Time of processing:\t{0:s}'.format(time_of_run))
 
@@ -351,7 +355,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
     printer_object = pprint.PrettyPrinter(indent=self._INDENTATION_LEVEL)
     lines_of_text = []
 
-    self._FormatCollectionInformation(lines_of_text, storage_information)
+    self._FormatCollectionInformation(
+        lines_of_text, storage_file, storage_information)
 
     counter_information = getattr(storage_information, u'counter', None)
     self._FormatCounterInformation(

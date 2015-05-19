@@ -113,21 +113,21 @@ class _EventTagIndexValue(object):
   """Class that defines the event tag index value."""
 
   TAG_STORE_STRUCT = construct.Struct(
-      'tag_store',
-      construct.ULInt32('store_number'),
-      construct.ULInt32('store_index'))
+      u'tag_store',
+      construct.ULInt32(u'store_number'),
+      construct.ULInt32(u'store_index'))
 
   TAG_UUID_STRUCT = construct.Struct(
-      'tag_uuid',
-      construct.PascalString('event_uuid'))
+      u'tag_uuid',
+      construct.PascalString(u'event_uuid'))
 
   TAG_INDEX_STRUCT = construct.Struct(
-      'tag_index',
-      construct.Byte('type'),
-      construct.ULInt32('offset'),
+      u'tag_index',
+      construct.Byte(u'type'),
+      construct.ULInt32(u'offset'),
       construct.IfThenElse(
-          'tag',
-          lambda ctx: ctx['type'] == 1,
+          u'tag',
+          lambda ctx: ctx[u'type'] == 1,
           TAG_STORE_STRUCT,
           TAG_UUID_STRUCT))
 
@@ -165,21 +165,21 @@ class _EventTagIndexValue(object):
     except (construct.FieldError, AttributeError):
       return None
 
-    tag_type = tag_index_struct.get('type', cls.TAG_TYPE_UNDEFINED)
+    tag_type = tag_index_struct.get(u'type', cls.TAG_TYPE_UNDEFINED)
     if tag_type not in [cls.TAG_TYPE_NUMERIC, cls.TAG_TYPE_UUID]:
-      logging.warning('Unsupported tag type: {0:d}'.format(tag_type))
+      logging.warning(u'Unsupported tag type: {0:d}'.format(tag_type))
       return None
 
     tag_entry = tag_index_struct.get('tag', {})
     if tag_type == cls.TAG_TYPE_NUMERIC:
-      tag_identifier = '{}:{}'.format(
-          tag_entry.get('store_number', 0),
-          tag_entry.get('store_index', 0))
+      tag_identifier = u'{0:d}:{1:d}'.format(
+          tag_entry.get(u'store_number', 0),
+          tag_entry.get(u'store_index', 0))
 
     else:
-      tag_identifier = tag_entry.get('event_uuid', '0')
+      tag_identifier = tag_entry.get(u'event_uuid', '0')
 
-    store_offset = tag_index_struct.get('offset')
+    store_offset = tag_index_struct.get(u'offset')
     return _EventTagIndexValue(
         tag_identifier, store_number=store_number, store_offset=store_offset)
 
@@ -202,11 +202,11 @@ class StorageFile(object):
   STORAGE_VERSION = 1
 
   # Define structs.
-  INTEGER = construct.ULInt32('integer')
+  INTEGER = construct.ULInt32(u'integer')
 
   source_short_map = {}
   for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
-      'SourceShort'].values:
+      u'SourceShort'].values:
     source_short_map[value.name] = value.number
 
   def __init__(
@@ -261,32 +261,18 @@ class StorageFile(object):
     self._Open(read_only)
 
     # Add information about the serializer used in the storage.
-    if not read_only and not self._OpenStream('serializer.txt'):
-      self._WriteStream('serializer.txt', self._event_serializer_format_string)
+    if not read_only and not self._OpenStream(u'serializer.txt'):
+      self._WriteStream(u'serializer.txt', self._event_serializer_format_string)
 
     # Attributes for profiling.
     self._enable_profiling = False
     self._profiling_sample = 0
     self._serializers_profiler = None
 
-  def GetLastPreprocessObject(self):
-    """Return the last pre-processing object from the storage file if possible.
-
-    Returns:
-      The last stored pre-processing object (instance of
-      event.PreprocessObject). If not found nor stored it return None.
-    """
-    if self._pre_obj:
-      return self._pre_obj
-
-    list_of_pre_objs = self.GetStorageInformation()
-    if not list_of_pre_objs:
-      return
-
-    # We want the last saved pre-processing object.
-    pre_obj = list_of_pre_objs[-1]
-    if pre_obj:
-      return pre_obj
+  @property
+  def serialization_format(self):
+    """The serialization format."""
+    return self._event_serializer_format_string
 
   def _Open(self, read_only=False):
     """Opens the storage file.
@@ -315,7 +301,7 @@ class StorageFile(object):
     self._read_only = read_only
 
     # Read the serializer string (if available).
-    serializer = self._ReadStream('serializer.txt')
+    serializer = self._ReadStream(u'serializer.txt')
     if serializer:
       self._SetEventObjectSerializer(serializer)
 
@@ -326,15 +312,15 @@ class StorageFile(object):
       if self._pre_obj:
         self._pre_obj.counter = collections.Counter()
         self._pre_obj.plugin_counter = collections.Counter()
-        if hasattr(self._pre_obj, 'collection_information'):
-          cmd_line = ' '.join(sys.argv)
-          encoding = getattr(self._pre_obj, 'preferred_encoding', None)
+        if hasattr(self._pre_obj, u'collection_information'):
+          cmd_line = u' '.join(sys.argv)
+          encoding = getattr(self._pre_obj, u'preferred_encoding', None)
           if encoding:
             try:
               cmd_line = cmd_line.decode(encoding)
             except UnicodeDecodeError:
               pass
-          self._pre_obj.collection_information['cmd_line'] = cmd_line
+          self._pre_obj.collection_information[u'cmd_line'] = cmd_line
 
       # Start up a counter for modules in buffer.
       self._count_data_type = collections.Counter()
@@ -342,8 +328,8 @@ class StorageFile(object):
 
       # Need to get the last number in the list.
       for stream_name in self._GetStreamNames():
-        if stream_name.startswith('plaso_meta.'):
-          _, _, file_number = stream_name.partition('.')
+        if stream_name.startswith(u'plaso_meta.'):
+          _, _, file_number = stream_name.partition(u'.')
 
           try:
             file_number = int(file_number, 10)
@@ -372,14 +358,14 @@ class StorageFile(object):
     self._event_tag_index = {}
 
     for stream_name in self._GetStreamNames():
-      if not stream_name.startswith('plaso_tag_index.'):
+      if not stream_name.startswith(u'plaso_tag_index.'):
         continue
 
       file_object = self._OpenStream(stream_name, 'r')
       if file_object is None:
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
-      _, _, store_number = stream_name.rpartition('.')
+      _, _, store_number = stream_name.rpartition(u'.')
       # TODO: catch exception.
       store_number = int(store_number, 10)
 
@@ -397,16 +383,17 @@ class StorageFile(object):
       return
 
     yaml_dict = {
-        'range': (self._buffer_first_timestamp, self._buffer_last_timestamp),
-        'version': self.STORAGE_VERSION,
-        'data_type': list(self._count_data_type.viewkeys()),
-        'parsers': list(self._count_parser.viewkeys()),
-        'count': len(self._buffer),
-        'type_count': self._count_data_type.most_common()}
+        u'range': (self._buffer_first_timestamp, self._buffer_last_timestamp),
+        u'version': self.STORAGE_VERSION,
+        u'data_type': list(self._count_data_type.viewkeys()),
+        u'parsers': list(self._count_parser.viewkeys()),
+        u'count': len(self._buffer),
+        u'type_count': self._count_data_type.most_common()}
     self._count_data_type = collections.Counter()
     self._count_parser = collections.Counter()
 
-    stream_name = 'plaso_meta.{0:06d}'.format(self._file_number)
+    stream_name = u'plaso_meta.{0:06d}'.format(self._file_number)
+    # TODO: why have YAML serialization here?
     self._WriteStream(stream_name, yaml.safe_dump(yaml_dict))
 
     ofs = 0
@@ -438,14 +425,14 @@ class StorageFile(object):
       ofs += len(packed)
       proto_str.append(packed)
 
-    stream_name = 'plaso_index.{0:06d}'.format(self._file_number)
-    self._WriteStream(stream_name, ''.join(index_str))
+    stream_name = u'plaso_index.{0:06d}'.format(self._file_number)
+    self._WriteStream(stream_name, b''.join(index_str))
 
-    stream_name = 'plaso_proto.{0:06d}'.format(self._file_number)
-    self._WriteStream(stream_name, ''.join(proto_str))
+    stream_name = u'plaso_proto.{0:06d}'.format(self._file_number)
+    self._WriteStream(stream_name, b''.join(proto_str))
 
-    stream_name = 'plaso_timestamps.{0:06d}'.format(self._file_number)
-    self._WriteStream(stream_name, ''.join(timestamp_str))
+    stream_name = u'plaso_timestamps.{0:06d}'.format(self._file_number)
+    self._WriteStream(stream_name, b''.join(timestamp_str))
 
     self._file_number += 1
     self._buffer_size = 0
@@ -468,7 +455,7 @@ class StorageFile(object):
       self._BuildTagIndex()
 
     # Try looking up event tag by numeric identifier.
-    tag_identifier = '{0:d}:{1:d}'.format(store_number, store_index)
+    tag_identifier = u'{0:d}:{1:d}'.format(store_number, store_index)
     tag_index_value = self._event_tag_index.get(tag_identifier, None)
 
     # Try looking up event tag by UUID.
@@ -535,7 +522,7 @@ class StorageFile(object):
       # entry into the storage file. That way we'll get to the right place in
       # the file and can start reading protobufs from the right location.
 
-      stream_name = 'plaso_timestamps.{0:06d}'.format(stream_number)
+      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
 
       if stream_name in self._GetStreamNames():
         timestamp_file_object = self._OpenStream(stream_name, 'r')
@@ -609,7 +596,7 @@ class StorageFile(object):
       IOError: if the stream cannot be opened.
     """
     if stream_number not in self._proto_streams:
-      stream_name = 'plaso_proto.{0:06d}'.format(stream_number)
+      stream_name = u'plaso_proto.{0:06d}'.format(stream_number)
 
       file_object = self._OpenStream(stream_name, 'r')
       if file_object is None:
@@ -644,7 +631,7 @@ class StorageFile(object):
       del self._proto_streams[stream_number]
       previous_file_object.close()
 
-    stream_name = 'plaso_proto.{0:06d}'.format(stream_number)
+    stream_name = u'plaso_proto.{0:06d}'.format(stream_number)
     file_object = self._OpenStream(stream_name, 'r')
     if file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -677,7 +664,7 @@ class StorageFile(object):
     # TODO: once cached use the last entry index to determine if the stream
     # file object should be re-opened.
 
-    stream_name = 'plaso_index.{0:06d}'.format(stream_number)
+    stream_name = u'plaso_index.{0:06d}'.format(stream_number)
     index_file_object = self._OpenStream(stream_name, 'r')
     if index_file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -763,7 +750,7 @@ class StorageFile(object):
     if tag_index_value is None:
       return
 
-    stream_name = 'plaso_tagging.{0:06d}'.format(tag_index_value.store_number)
+    stream_name = u'plaso_tagging.{0:06d}'.format(tag_index_value.store_number)
     tag_file_object = self._OpenStream(stream_name, 'r')
     if tag_file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -794,7 +781,7 @@ class StorageFile(object):
 
       file_object.close()
 
-    return ''.join(data_segments)
+    return b''.join(data_segments)
 
   def _SetEventObjectSerializer(self, serializer_format):
     """Set the serializer for the event object.
@@ -848,11 +835,11 @@ class StorageFile(object):
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'pre_obj')
 
-    stream_data = ''.join([
+    stream_data = b''.join([
         existing_stream_data,
         struct.pack('<I', len(pre_obj_data)), pre_obj_data])
 
-    self._WriteStream('information.dump', stream_data)
+    self._WriteStream(u'information.dump', stream_data)
 
   def _WriteStream(self, stream_name, stream_data):
     """Write the data to a stream.
@@ -889,7 +876,7 @@ class StorageFile(object):
       return
 
     for stream_name in self._GetStreamNames():
-      if stream_name.startswith('plaso_grouping.'):
+      if stream_name.startswith(u'plaso_grouping.'):
         file_object = self._OpenStream(stream_name, 'r')
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -898,6 +885,25 @@ class StorageFile(object):
         while group_entry:
           yield group_entry
           group_entry = self._GetEventGroupProto(file_object)
+
+  def GetLastPreprocessObject(self):
+    """Return the last pre-processing object from the storage file if possible.
+
+    Returns:
+      The last stored pre-processing object (instance of
+      event.PreprocessObject). If not found nor stored it return None.
+    """
+    if self._pre_obj:
+      return self._pre_obj
+
+    list_of_pre_objs = self.GetStorageInformation()
+    if not list_of_pre_objs:
+      return
+
+    # We want the last saved pre-processing object.
+    pre_obj = list_of_pre_objs[-1]
+    if pre_obj:
+      return pre_obj
 
   def GetNumberOfEvents(self):
     """Retrieves the number of event objects in a storage file."""
@@ -934,7 +940,7 @@ class StorageFile(object):
       IOError: if the stream cannot be opened.
     """
     for stream_name in self._GetStreamNames():
-      if stream_name.startswith('plaso_tagging.'):
+      if stream_name.startswith(u'plaso_tagging.'):
         file_object = self._OpenStream(stream_name, 'r')
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -975,7 +981,7 @@ class StorageFile(object):
     """
     information = []
 
-    file_object = self._OpenStream('information.dump', 'r')
+    file_object = self._OpenStream(u'information.dump', 'r')
     if file_object is None:
       return information
 
@@ -1010,9 +1016,9 @@ class StorageFile(object):
 
     stores = list(self.GetProtoNumbers())
     information[-1].stores = {}
-    information[-1].stores['Number'] = len(stores)
+    information[-1].stores[u'Number'] = len(stores)
     for store_number in stores:
-      store_identifier = 'Store {0:d}'.format(store_number)
+      store_identifier = u'Store {0:d}'.format(store_number)
       information[-1].stores[store_identifier] = self.ReadMeta(store_number)
 
     return information
@@ -1028,7 +1034,7 @@ class StorageFile(object):
 
     for number in self.GetProtoNumbers():
       # TODO: Read more criteria from here.
-      first, last = self.ReadMeta(number).get('range', (0, limit.MAX_INT64))
+      first, last = self.ReadMeta(number).get(u'range', (0, limit.MAX_INT64))
       if last < first:
         logging.error(
             u'last: {0:d} first: {1:d} container: {2:d} (last < first)'.format(
@@ -1053,9 +1059,9 @@ class StorageFile(object):
       self._bound_first, self._bound_last = (
           pfilter.TimeRangeCache.GetTimeRange())
 
-    if not hasattr(self, '_merge_buffer'):
+    if not hasattr(self, u'_merge_buffer'):
       self._merge_buffer = []
-      number_range = getattr(self, 'store_range', list(self.GetProtoNumbers()))
+      number_range = getattr(self, u'store_range', list(self.GetProtoNumbers()))
       for store_number in number_range:
         event_object = self.GetEventObject(store_number)
         if not event_object:
@@ -1174,7 +1180,7 @@ class StorageFile(object):
     """Return all available protobuf numbers."""
     numbers = []
     for name in self._GetStreamNames():
-      if 'plaso_proto' in name:
+      if u'plaso_proto' in name:
         _, num = name.split('.')
         numbers.append(int(num))
 
@@ -1194,7 +1200,7 @@ class StorageFile(object):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    stream_name = 'plaso_meta.{0:06d}'.format(number)
+    stream_name = u'plaso_meta.{0:06d}'.format(number)
     file_object = self._OpenStream(stream_name, 'r')
     if file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -1231,14 +1237,14 @@ class StorageFile(object):
     attributes = event_object.GetValues()
     # Add values to counters.
     if self._pre_obj:
-      self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[attributes.get('parser', 'N/A')] += 1
-      if 'plugin' in attributes:
-        self._pre_obj.plugin_counter[attributes.get('plugin', 'N/A')] += 1
+      self._pre_obj.counter[u'total'] += 1
+      self._pre_obj.counter[attributes.get(u'parser', u'N/A')] += 1
+      if u'plugin' in attributes:
+        self._pre_obj.plugin_counter[attributes.get(u'plugin', u'N/A')] += 1
 
     # Add to temporary counter.
     self._count_data_type[event_object.data_type] += 1
-    parser = attributes.get('parser', 'unknown_parser')
+    parser = attributes.get(u'parser', u'unknown_parser')
     self._count_parser[parser] += 1
 
     if self._serializers_profiler:
@@ -1276,21 +1282,21 @@ class StorageFile(object):
   def HasTagging(self):
     """Return a bool indicating whether or not a Tag file is stored."""
     for name in self._GetStreamNames():
-      if 'plaso_tagging.' in name:
+      if u'plaso_tagging.' in name:
         return True
     return False
 
   def HasGrouping(self):
     """Return a bool indicating whether or not a Group file is stored."""
     for name in self._GetStreamNames():
-      if 'plaso_grouping.' in name:
+      if u'plaso_grouping.' in name:
         return True
     return False
 
   def HasReports(self):
     """Return a bool indicating whether or not a Report file is stored."""
     for name in self._GetStreamNames():
-      if 'plaso_report.' in name:
+      if u'plaso_report.' in name:
         return True
 
     return False
@@ -1303,7 +1309,7 @@ class StorageFile(object):
     """
     report_number = 1
     for name in self._GetStreamNames():
-      if 'plaso_report.' in name:
+      if u'plaso_report.' in name:
         _, _, number_string = name.partition('.')
         try:
           number = int(number_string, 10)
@@ -1313,7 +1319,7 @@ class StorageFile(object):
         if number >= report_number:
           report_number = number + 1
 
-    stream_name = 'plaso_report.{0:06}'.format(report_number)
+    stream_name = u'plaso_report.{0:06}'.format(report_number)
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'analysis_report')
@@ -1336,7 +1342,7 @@ class StorageFile(object):
       IOError: if the stream cannot be opened.
     """
     for stream_name in self._GetStreamNames():
-      if stream_name.startswith('plaso_report.'):
+      if stream_name.startswith(u'plaso_report.'):
         file_object = self._OpenStream(stream_name, 'r')
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -1391,7 +1397,7 @@ class StorageFile(object):
     group_number = 1
     if self.HasGrouping():
       for name in self._GetStreamNames():
-        if 'plaso_grouping.' in name:
+        if u'plaso_grouping.' in name:
           _, number = name.split('.')
           if int(number) >= group_number:
             group_number = int(number) + 1
@@ -1401,11 +1407,11 @@ class StorageFile(object):
     for row in rows:
       group = plaso_storage_pb2.EventGroup()
       group.name = row.name
-      if hasattr(row, 'description'):
+      if hasattr(row, u'description'):
         group.description = utils.GetUnicodeString(row.description)
-      if hasattr(row, 'category'):
+      if hasattr(row, u'category'):
         group.category = utils.GetUnicodeString(row.category)
-      if hasattr(row, 'color'):
+      if hasattr(row, u'color'):
         group.color = utils.GetUnicodeString(row.color)
 
       for number, index in row.events:
@@ -1413,9 +1419,9 @@ class StorageFile(object):
         evt.store_number = int(number)
         evt.store_index = int(index)
 
-      if hasattr(row, 'first_timestamp'):
+      if hasattr(row, u'first_timestamp'):
         group.first_timestamp = int(row.first_timestamp)
-      if hasattr(row, 'last_timestamp'):
+      if hasattr(row, u'last_timestamp'):
         group.last_timestamp = int(row.last_timestamp)
 
       # TODO: implement event grouping.
@@ -1429,8 +1435,8 @@ class StorageFile(object):
         logging.warning(u'Grouping has outgrown buffer size.')
       group_packed.append(packed)
 
-    stream_name = 'plaso_grouping.{0:06d}'.format(group_number)
-    self._WriteStream(stream_name, ''.join(group_packed))
+    stream_name = u'plaso_grouping.{0:06d}'.format(group_number)
+    self._WriteStream(stream_name, b''.join(group_packed))
 
   def StoreTagging(self, tags):
     """Store tag information into the storage file.
@@ -1452,18 +1458,18 @@ class StorageFile(object):
     if not self._pre_obj:
       self._pre_obj = event.PreprocessObject()
 
-    if not hasattr(self._pre_obj, 'collection_information'):
+    if not hasattr(self._pre_obj, u'collection_information'):
       self._pre_obj.collection_information = {}
 
-    self._pre_obj.collection_information['Action'] = 'Adding tags to storage.'
-    self._pre_obj.collection_information['time_of_run'] = (
+    self._pre_obj.collection_information[u'Action'] = u'Adding tags to storage.'
+    self._pre_obj.collection_information[u'time_of_run'] = (
         timelib.Timestamp.GetNow())
-    if not hasattr(self._pre_obj, 'counter'):
+    if not hasattr(self._pre_obj, u'counter'):
       self._pre_obj.counter = collections.Counter()
 
     tag_number = 1
     for name in self._GetStreamNames():
-      if 'plaso_tagging.' in name:
+      if u'plaso_tagging.' in name:
         _, number = name.split('.')
         if int(number) >= tag_number:
           tag_number = int(number) + 1
@@ -1474,8 +1480,8 @@ class StorageFile(object):
     tag_index = []
     size = 0
     for tag in tags:
-      self._pre_obj.counter['Total Tags'] += 1
-      if hasattr(tag, 'tags'):
+      self._pre_obj.counter[u'Total Tags'] += 1
+      if hasattr(tag, u'tags'):
         for tag_entry in tag.tags:
           self._pre_obj.counter[tag_entry] += 1
 
@@ -1487,7 +1493,7 @@ class StorageFile(object):
       # This particular event has already been tagged on a previous occasion,
       # we need to make sure we are appending to that particular tag.
       if tag_index_value is not None:
-        stream_name = 'plaso_tagging.{0:06d}'.format(
+        stream_name = u'plaso_tagging.{0:06d}'.format(
             tag_index_value.store_number)
 
         tag_file_object = self._OpenStream(stream_name, 'r')
@@ -1502,16 +1508,16 @@ class StorageFile(object):
 
         # TODO: move the append functionality into EventTag.
         # Maybe name the function extend or update?
-        if hasattr(old_tag, 'tags'):
+        if hasattr(old_tag, u'tags'):
           tag.tags.extend(old_tag.tags)
 
-        if hasattr(old_tag, 'comment'):
-          if hasattr(tag, 'comment'):
+        if hasattr(old_tag, u'comment'):
+          if hasattr(tag, u'comment'):
             tag.comment += old_tag.comment
           else:
             tag.comment = old_tag.comment
 
-        if hasattr(old_tag, 'color') and not hasattr(tag, 'color'):
+        if hasattr(old_tag, u'color') and not hasattr(tag, u'color'):
           tag.color = old_tag.color
 
       if self._serializers_profiler:
@@ -1526,24 +1532,24 @@ class StorageFile(object):
       packed = (
           struct.pack('<I', len(serialized_event_tag)) + serialized_event_tag)
       ofs = struct.pack('<I', size)
-      if getattr(tag, 'store_number', 0):
+      if getattr(tag, u'store_number', 0):
         struct_string = (
-            construct.Byte('type').build(1) + ofs +
+            construct.Byte(u'type').build(1) + ofs +
             _EventTagIndexValue.TAG_STORE_STRUCT.build(tag))
       else:
         struct_string = (
-            construct.Byte('type').build(2) + ofs +
+            construct.Byte(u'type').build(2) + ofs +
             _EventTagIndexValue.TAG_UUID_STRUCT.build(tag))
 
       tag_index.append(struct_string)
       size += len(packed)
       tag_packed.append(packed)
 
-    stream_name = 'plaso_tag_index.{0:06d}'.format(tag_number)
-    self._WriteStream(stream_name, ''.join(tag_index))
+    stream_name = u'plaso_tag_index.{0:06d}'.format(tag_number)
+    self._WriteStream(stream_name, b''.join(tag_index))
 
-    stream_name = 'plaso_tagging.{0:06d}'.format(tag_number)
-    self._WriteStream(stream_name, ''.join(tag_packed))
+    stream_name = u'plaso_tagging.{0:06d}'.format(tag_number)
+    self._WriteStream(stream_name, b''.join(tag_packed))
 
     # TODO: Update the tags that have changed in the index instead
     # of flushing the index.
@@ -1598,7 +1604,7 @@ class FileStorageWriter(StorageWriter):
 
   def __init__(
       self, event_object_queue, output_file, buffer_size=0, pre_obj=None,
-      serializer_format='proto'):
+      serializer_format=u'proto'):
     """Initializes the storage file writer.
 
     Args:
