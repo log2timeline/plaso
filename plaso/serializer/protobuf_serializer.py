@@ -32,7 +32,7 @@ class ProtobufEventAttributeSerializer(object):
     """
     attribute_name = u''
     try:
-      if proto_attribute.HasField('key'):
+      if proto_attribute.HasField(u'key'):
         attribute_name = proto_attribute.key
     except ValueError:
       pass
@@ -41,16 +41,16 @@ class ProtobufEventAttributeSerializer(object):
         plaso_storage_pb2.Attribute, plaso_storage_pb2.Value)):
       raise RuntimeError(u'Unsupported protobuf type.')
 
-    if proto_attribute.HasField('string'):
+    if proto_attribute.HasField(u'string'):
       return attribute_name, proto_attribute.string
 
-    elif proto_attribute.HasField('integer'):
+    elif proto_attribute.HasField(u'integer'):
       return attribute_name, proto_attribute.integer
 
-    elif proto_attribute.HasField('boolean'):
+    elif proto_attribute.HasField(u'boolean'):
       return attribute_name, proto_attribute.boolean
 
-    elif proto_attribute.HasField('dict'):
+    elif proto_attribute.HasField(u'dict'):
       attribute_value = {}
 
       for proto_dict in proto_attribute.dict.attributes:
@@ -58,7 +58,7 @@ class ProtobufEventAttributeSerializer(object):
         attribute_value[dict_key] = dict_value
       return attribute_name, attribute_value
 
-    elif proto_attribute.HasField('array'):
+    elif proto_attribute.HasField(u'array'):
       attribute_value = []
 
       for proto_array in proto_attribute.array.values:
@@ -66,13 +66,13 @@ class ProtobufEventAttributeSerializer(object):
         attribute_value.append(list_value)
       return attribute_name, attribute_value
 
-    elif proto_attribute.HasField('data'):
+    elif proto_attribute.HasField(u'data'):
       return attribute_name, proto_attribute.data
 
-    elif proto_attribute.HasField('float'):
+    elif proto_attribute.HasField(u'float'):
       return attribute_name, proto_attribute.float
 
-    elif proto_attribute.HasField('none'):
+    elif proto_attribute.HasField(u'none'):
       return attribute_name, None
 
     else:
@@ -133,7 +133,7 @@ class ProtobufEventAttributeSerializer(object):
     if attribute_name:
       proto_attribute.key = attribute_name
 
-    if isinstance(attribute_value, (str, unicode)):
+    if isinstance(attribute_value, basestring):
       proto_attribute.string = utils.GetUnicodeString(attribute_value)
 
     elif isinstance(attribute_value, bool):
@@ -144,10 +144,10 @@ class ProtobufEventAttributeSerializer(object):
       proto_attribute.integer = attribute_value
 
     elif isinstance(attribute_value, dict):
-      cls.WriteSerializedDictObject(proto_attribute, 'dict', attribute_value)
+      cls.WriteSerializedDictObject(proto_attribute, u'dict', attribute_value)
 
     elif isinstance(attribute_value, (list, tuple)):
-      cls.WriteSerializedListObject(proto_attribute, 'array', attribute_value)
+      cls.WriteSerializedListObject(proto_attribute, u'array', attribute_value)
 
     elif isinstance(attribute_value, float):
       proto_attribute.float = attribute_value
@@ -170,7 +170,7 @@ class ProtobufEventAttributeSerializer(object):
     """
     dict_proto = plaso_storage_pb2.Dict()
 
-    for dict_key, dict_value in dict_object.items():
+    for dict_key, dict_value in iter(dict_object.items()):
       dict_proto_add = dict_proto.attributes.add()
       cls.WriteSerializedObject(dict_proto_add, dict_key, dict_value)
 
@@ -191,7 +191,7 @@ class ProtobufEventAttributeSerializer(object):
 
     for list_value in list_object:
       list_proto_add = list_proto.values.add()
-      cls.WriteSerializedObject(list_proto_add, '', list_value)
+      cls.WriteSerializedObject(list_proto_add, u'', list_value)
 
     list_attribute = getattr(proto_attribute, attribute_name)
     list_attribute.MergeFrom(list_proto)
@@ -211,13 +211,15 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
     Returns:
       An analysis report (instance of AnalysisReport).
     """
-    analysis_report = event.AnalysisReport()
+    # TODO: implement.
+    plugin_name = u'INVALID'
+    analysis_report = event.AnalysisReport(plugin_name)
 
     for proto_attribute, value in proto.ListFields():
       # TODO: replace by ReadSerializedDictObject, need tests first.
       # dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
       #     proto.report_dict)
-      if proto_attribute.name == 'report_dict':
+      if proto_attribute.name == u'report_dict':
         new_value = {}
         for proto_dict in proto.report_dict.attributes:
           dict_key, dict_value = (
@@ -228,7 +230,7 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
       # TODO: replace by ReadSerializedListObject, need tests first.
       # list_object = ProtobufEventAttributeSerializer.ReadSerializedListObject(
       #     proto.report_array)
-      elif proto_attribute.name == 'report_array':
+      elif proto_attribute.name == u'report_array':
         new_value = []
 
         for proto_array in proto.report_array.values:
@@ -269,31 +271,32 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
       plaso_storage_pb2.AnalysisReport).
     """
     proto = plaso_storage_pb2.AnalysisReport()
-    proto.time_compiled = getattr(analysis_report, 'time_compiled', 0)
-    plugin_name = getattr(analysis_report, 'plugin_name', None)
+    proto.time_compiled = getattr(analysis_report, u'time_compiled', 0)
+    plugin_name = getattr(analysis_report, u'plugin_name', None)
 
     if plugin_name:
       proto.plugin_name = plugin_name
 
-    proto.text = getattr(analysis_report, 'text', 'N/A')
+    proto.text = getattr(analysis_report, u'text', u'N/A')
 
-    for image in getattr(analysis_report, 'images', []):
+    for image in getattr(analysis_report, u'images', []):
       proto.images.append(image)
 
-    if hasattr(analysis_report, 'report_dict'):
+    if hasattr(analysis_report, u'report_dict'):
       dict_proto = plaso_storage_pb2.Dict()
-      for key, value in getattr(analysis_report, 'report_dict', {}).iteritems():
+      dict_object = getattr(analysis_report, u'report_dict', {})
+      for key, value in iter(dict_object.items()):
         sub_proto = dict_proto.attributes.add()
         ProtobufEventAttributeSerializer.WriteSerializedObject(
             sub_proto, key, value)
       proto.report_dict.MergeFrom(dict_proto)
 
-    if hasattr(analysis_report, 'report_array'):
+    if hasattr(analysis_report, u'report_array'):
       list_proto = plaso_storage_pb2.Array()
-      for value in getattr(analysis_report, 'report_array', []):
+      for value in getattr(analysis_report, u'report_array', []):
         sub_proto = list_proto.values.add()
         ProtobufEventAttributeSerializer.WriteSerializedObject(
-            sub_proto, '', value)
+            sub_proto, u'', value)
 
       proto.report_array.MergeFrom(list_proto)
 
@@ -323,11 +326,11 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
   _SOURCE_SHORT_FROM_PROTO_MAP = {}
   _SOURCE_SHORT_TO_PROTO_MAP = {}
   for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
-      'SourceShort'].values:
+      u'SourceShort'].values:
     _SOURCE_SHORT_FROM_PROTO_MAP[value.number] = value.name
     _SOURCE_SHORT_TO_PROTO_MAP[value.name] = value.number
   _SOURCE_SHORT_FROM_PROTO_MAP.setdefault(6)
-  _SOURCE_SHORT_TO_PROTO_MAP.setdefault('LOG')
+  _SOURCE_SHORT_TO_PROTO_MAP.setdefault(u'LOG')
 
   _path_spec_serializer = dfvfs_protobuf_serializer.ProtobufPathSpecSerializer
 
@@ -346,18 +349,18 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
     event_object.data_type = proto.data_type
 
     for proto_attribute, value in proto.ListFields():
-      if proto_attribute.name == 'source_short':
+      if proto_attribute.name == u'source_short':
         event_object.source_short = cls._SOURCE_SHORT_FROM_PROTO_MAP[value]
 
-      elif proto_attribute.name == 'pathspec':
+      elif proto_attribute.name == u'pathspec':
         event_object.pathspec = (
             cls._path_spec_serializer.ReadSerialized(proto.pathspec))
 
-      elif proto_attribute.name == 'tag':
+      elif proto_attribute.name == u'tag':
         event_object.tag = ProtobufEventTagSerializer.ReadSerializedObject(
             proto.tag)
 
-      elif proto_attribute.name == 'attributes':
+      elif proto_attribute.name == u'attributes':
         continue
 
       else:
@@ -381,7 +384,7 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
     dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
         proto)
 
-    for attribute, value in dict_object.iteritems():
+    for attribute, value in iter(dict_object.items()):
       setattr(event_object, attribute, value)
 
     return event_object
@@ -414,21 +417,21 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
     """
     proto = plaso_storage_pb2.EventObject()
 
-    proto.data_type = getattr(event_object, 'data_type', 'event')
+    proto.data_type = getattr(event_object, u'data_type', u'event')
 
     for attribute_name in event_object.GetAttributes():
-      if attribute_name == 'source_short':
+      if attribute_name == u'source_short':
         proto.source_short = cls._SOURCE_SHORT_TO_PROTO_MAP[
             event_object.source_short]
 
-      elif attribute_name == 'pathspec':
+      elif attribute_name == u'pathspec':
         attribute_value = getattr(event_object, attribute_name, None)
         if attribute_value:
           attribute_value = cls._path_spec_serializer.WriteSerialized(
               attribute_value)
           setattr(proto, attribute_name, attribute_value)
 
-      elif attribute_name == 'tag':
+      elif attribute_name == u'tag':
         attribute_value = getattr(event_object, attribute_name, None)
         if attribute_value:
           event_tag_proto = ProtobufEventTagSerializer.WriteSerializedObject(
@@ -441,7 +444,7 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
         if attribute_value is None:
           continue
 
-        if isinstance(attribute_value, (str, unicode)):
+        if isinstance(attribute_value, basestring):
           attribute_value = utils.GetUnicodeString(attribute_value)
           if not attribute_value:
             continue
@@ -458,8 +461,8 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
           try:
             setattr(proto, attribute_name, attribute_value)
           except ValueError as exception:
-            path_spec = getattr(event_object, 'pathspec', None)
-            path = getattr(path_spec, 'location', u'')
+            path_spec = getattr(event_object, u'pathspec', None)
+            path = getattr(path_spec, u'location', u'')
             logging.error((
                 u'Unable to save value for: {0:s} [{1:s}] with error: {2:s} '
                 u'coming from file: {3:s}').format(
@@ -520,7 +523,7 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     event_tag = event.EventTag()
 
     for proto_attribute, attribute_value in proto.ListFields():
-      if proto_attribute.name == 'tags':
+      if proto_attribute.name == u'tags':
         event_tag.tags = []
         for proto_tag in proto.tags:
           event_tag.tags.append(proto_tag.value)
@@ -562,7 +565,8 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     for attribute_name in event_tag.__dict__:
       attribute_value = getattr(event_tag, attribute_name, None)
 
-      if attribute_name == 'tags' and type(attribute_value) in (tuple, list):
+      if (attribute_name == u'tags' and
+          isinstance(attribute_value, (tuple, list))):
         for tag_string in attribute_value:
           proto_tag_add = proto.tags.add()
           proto_tag_add.value = tag_string
@@ -570,11 +574,11 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
       elif attribute_value is not None:
         setattr(proto, attribute_name, attribute_value)
 
-    comment = getattr(event_tag, 'comment', '')
+    comment = getattr(event_tag, u'comment', u'')
     if comment:
       proto.comment = comment
 
-    color = getattr(event_tag, 'color', '')
+    color = getattr(event_tag, u'color', u'')
     if color:
       proto.color = color
 
@@ -619,29 +623,29 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     for attribute in proto.attributes:
       key, value = ProtobufEventAttributeSerializer.ReadSerializedObject(
           attribute)
-      if key == 'zone':
+      if key == u'zone':
         pre_obj.SetTimezone(value)
       else:
         setattr(pre_obj, key, value)
 
-    if proto.HasField('counter'):
+    if proto.HasField(u'counter'):
       dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
           proto.counter)
       pre_obj.SetCounterValues(dict_object)
 
-    if proto.HasField('plugin_counter'):
+    if proto.HasField(u'plugin_counter'):
       dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
           proto.plugin_counter)
       pre_obj.SetPluginCounterValues(dict_object)
 
-    if proto.HasField('store_range'):
+    if proto.HasField(u'store_range'):
       range_list = []
       for value in proto.store_range.values:
-        if value.HasField('integer'):
+        if value.HasField(u'integer'):
           range_list.append(value.integer)
       pre_obj.store_range = (range_list[0], range_list[-1])
 
-    if proto.HasField('collection_information'):
+    if proto.HasField(u'collection_information'):
       dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
           proto.collection_information)
       pre_obj.SetCollectionInformationValues(dict_object)
@@ -676,30 +680,34 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     """
     proto = plaso_storage_pb2.PreProcess()
 
-    for attribute, value in pre_obj.__dict__.items():
-      if attribute == 'collection_information':
-        zone = value.get('configured_zone', '')
-        if zone and hasattr(zone, 'zone'):
-          value['configured_zone'] = zone.zone
+    for attribute, value in iter(pre_obj.__dict__.items()):
+      if attribute == u'collection_information':
+        zone = value.get(u'configured_zone', u'')
+        if zone and hasattr(zone, u'zone'):
+          value[u'configured_zone'] = zone.zone
         ProtobufEventAttributeSerializer.WriteSerializedDictObject(
-            proto, 'collection_information', value)
-      elif attribute == 'counter':
+            proto, u'collection_information', value)
+
+      elif attribute == u'counter':
         value_dict = dict(value.items())
         ProtobufEventAttributeSerializer.WriteSerializedDictObject(
-            proto, 'counter', value_dict)
-      elif attribute == 'plugin_counter':
+            proto, u'counter', value_dict)
+
+      elif attribute == u'plugin_counter':
         value_dict = dict(value.items())
         ProtobufEventAttributeSerializer.WriteSerializedDictObject(
-            proto, 'plugin_counter', value_dict)
-      elif attribute == 'store_range':
+            proto, u'plugin_counter', value_dict)
+
+      elif attribute == u'store_range':
         range_proto = plaso_storage_pb2.Array()
         range_start = range_proto.values.add()
         range_start.integer = int(value[0])
         range_end = range_proto.values.add()
         range_end.integer = int(value[-1])
         proto.store_range.MergeFrom(range_proto)
+
       else:
-        if attribute == 'zone':
+        if attribute == u'zone':
           value = value.zone
         if isinstance(value, (bool, int, float, long)) or value:
           proto_attribute = proto.attributes.add()
@@ -736,7 +744,7 @@ class ProtobufCollectionInformationObjectSerializer(
       if key == collection_information_object.RESERVED_COUNTER_KEYWORD:
         _, counter_dict = ProtobufEventAttributeSerializer.ReadSerializedObject(
             attribute)
-        for identifier, value_dict in counter_dict.iteritems():
+        for identifier, value_dict in iter(counter_dict.items()):
           collection_information_object.AddCounterDict(identifier, value_dict)
       else:
         _, value = ProtobufEventAttributeSerializer.ReadSerializedObject(
@@ -785,10 +793,11 @@ class ProtobufCollectionInformationObjectSerializer(
 
     proto = plaso_storage_pb2.Dict()
 
-    for key, value in collection_information_object.GetValueDict().iteritems():
+    dict_object = collection_information_object.GetValueDict()
+    for key, value in iter(dict_object. items()):
       attribute = proto.attributes.add()
-      if 'zone' in key and not isinstance(value, basestring):
-        value = getattr(value, 'zone', unicode(value))
+      if u'zone' in key and not isinstance(value, basestring):
+        value = getattr(value, u'zone', u'{0!s}'.format(value))
 
       ProtobufEventAttributeSerializer.WriteSerializedObject(
           attribute, key, value)

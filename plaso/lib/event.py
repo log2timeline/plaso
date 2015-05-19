@@ -41,12 +41,12 @@ class AnalysisReport(object):
     string_list = []
     string_list.append(u'Report generated from: {0:s}'.format(self.plugin_name))
 
-    time_compiled = getattr(self, 'time_compiled', 0)
+    time_compiled = getattr(self, u'time_compiled', 0)
     if time_compiled:
       time_compiled = timelib.Timestamp.CopyToIsoFormat(time_compiled)
       string_list.append(u'Generated on: {0:s}'.format(time_compiled))
 
-    filter_string = getattr(self, 'filter_string', '')
+    filter_string = getattr(self, u'filter_string', u'')
     if filter_string:
       string_list.append(u'Filter String: {0:s}'.format(filter_string))
 
@@ -108,14 +108,14 @@ class EventObject(object):
   # This is a convenience variable to define event object as
   # simple value objects. Its runtime equivalent data_type
   # should be used in code logic.
-  DATA_TYPE = ''
+  DATA_TYPE = u''
 
   # This is a reserved variable just used for comparison operation and defines
   # attributes that should not be used during evaluation of whether two
   # EventObjects are the same.
   COMPARE_EXCLUDE = frozenset([
-      'timestamp', 'inode', 'pathspec', 'filename', 'uuid',
-      'data_type', 'display_name', 'store_number', 'store_index', 'tag'])
+      u'timestamp', u'inode', u'pathspec', u'filename', u'uuid',
+      u'data_type', u'display_name', u'store_number', u'store_index', u'tag'])
 
   def __init__(self):
     """Initializes the event object."""
@@ -138,7 +138,7 @@ class EventObject(object):
 
     # TODO: Review this (after 1.1.0 release). Is there a better/more clean
     # method of removing the timestamp description field out of the fields list?
-    parser = getattr(self, 'parser', u'')
+    parser = getattr(self, u'parser', u'')
     if parser == u'filestat':
       # We don't want to compare the timestamp description field when comparing
       # filestat events. This is done to be able to join together FILE events
@@ -146,7 +146,7 @@ class EventObject(object):
       # event that has for instance the same timestamp for mtime and atime,
       # joining it together into a single event).
       try:
-        timestamp_desc_index = fields.index('timestamp_desc')
+        timestamp_desc_index = fields.index(u'timestamp_desc')
         del fields[timestamp_desc_index]
       except ValueError:
         pass
@@ -163,11 +163,11 @@ class EventObject(object):
         attributes.append(value)
     identity = basic + [x for pair in zip(fields, attributes) for x in pair]
 
-    if parser == 'filestat':
-      inode = getattr(self, 'inode', 'a')
-      if inode == 'a':
-        inode = '_' + str(uuid.uuid4())
-      identity.append('inode')
+    if parser == u'filestat':
+      inode = getattr(self, u'inode', u'a')
+      if inode == u'a':
+        inode = u'_' + str(uuid.uuid4())
+      identity.append(u'inode')
       identity.append(inode)
 
     return u'|'.join(map(unicode, identity))
@@ -226,10 +226,10 @@ class EventObject(object):
 
     # If we are dealing with the stat parser the inode number is the one
     # attribute that really matters, unlike others.
-    if 'filestat' in getattr(self, 'parser', ''):
+    if u'filestat' in getattr(self, u'parser', u''):
       return utils.GetUnicodeString(getattr(
-          self, 'inode', 'a')) == utils.GetUnicodeString(getattr(
-              event_object, 'inode', 'b'))
+          self, u'inode', u'a')) == utils.GetUnicodeString(getattr(
+              event_object, u'inode', u'b'))
 
     return True
 
@@ -250,7 +250,7 @@ class EventObject(object):
 
   def __str__(self):
     """Return a string object of the EventObject."""
-    return unicode(self).encode('utf-8')
+    return unicode(self).encode(u'utf-8')
 
   def __unicode__(self):
     """Print a human readable string from the EventObject."""
@@ -260,7 +260,7 @@ class EventObject(object):
     out_write.append(u'[Timestamp]:\n  {0:s}'.format(
         timelib.Timestamp.CopyToIsoFormat(self.timestamp)))
 
-    if hasattr(self, 'pathspec'):
+    if hasattr(self, u'pathspec'):
       pathspec_string = self.pathspec.comparable
       out_write.append(u'[Pathspec]:\n  {0:s}\n'.format(
           pathspec_string.replace('\n', '\n  ')))
@@ -271,14 +271,14 @@ class EventObject(object):
 
     for attr_key, attr_value in sorted(self.GetValues().items()):
       if attr_key in definitions.RESERVED_VARIABLE_NAMES:
-        if attr_key == 'pathspec':
+        if attr_key == u'pathspec':
           continue
         else:
           out_write.append(
-              u'  {{{key}}} {value}'.format(key=attr_key, value=attr_value))
+              u'  {{{key!s}}} {value!s}'.format(key=attr_key, value=attr_value))
       else:
         out_additional.append(
-            u'  {{{key}}} {value}'.format(key=attr_key, value=attr_value))
+            u'  {{{key!s}}} {value!s}'.format(key=attr_key, value=attr_value))
 
     out_write.append(u'\n')
     out_additional.append(u'')
@@ -310,39 +310,39 @@ class EventTag(object):
   def string_key(self):
     """Return a string index key for this tag."""
     if not self.IsValidForSerialization():
-      return ''
+      return u''
 
-    uuid_string = getattr(self, 'event_uuid', None)
+    uuid_string = getattr(self, u'event_uuid', None)
     if uuid_string:
       return uuid_string
 
-    return u'{}:{}'.format(self.store_number, self.store_index)
+    return u'{0:d}:{1:d}'.format(self.store_number, self.store_index)
 
   def GetString(self):
     """Retrieves a string representation of the event."""
     ret = []
     ret.append(u'-' * 50)
-    if getattr(self, 'store_number', 0):
+    if getattr(self, u'store_number', 0):
       ret.append(u'{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
-          'Store', self.store_number, self.store_index))
+          u'Store', self.store_number, self.store_index))
     else:
-      ret.append(u'{0:>7}:\n\tUUID: {1}'.format('Store', self.event_uuid))
-    if hasattr(self, 'comment'):
-      ret.append(u'{:>7}: {}'.format('Comment', self.comment))
-    if hasattr(self, 'color'):
-      ret.append(u'{:>7}: {}'.format('Color', self.color))
-    if hasattr(self, 'tags'):
-      ret.append(u'{:>7}: {}'.format('Tags', u','.join(self.tags)))
+      ret.append(u'{0:>7}:\n\tUUID: {1}'.format(u'Store', self.event_uuid))
+    if hasattr(self, u'comment'):
+      ret.append(u'{:>7}: {}'.format(u'Comment', self.comment))
+    if hasattr(self, u'color'):
+      ret.append(u'{:>7}: {}'.format(u'Color', self.color))
+    if hasattr(self, u'tags'):
+      ret.append(u'{:>7}: {}'.format(u'Tags', u','.join(self.tags)))
 
     return u'\n'.join(ret)
 
   def IsValidForSerialization(self):
     """Return whether or not this is a valid tag object."""
-    if getattr(self, 'event_uuid', None):
+    if getattr(self, u'event_uuid', None):
       return True
 
-    if getattr(self, 'store_number', 0) and getattr(
-        self, 'store_index', -1) >= 0:
+    if getattr(self, u'store_number', 0) and getattr(
+        self, u'store_index', -1) >= 0:
       return True
 
     return False
@@ -365,16 +365,16 @@ class PreprocessObject(object):
     if self._user_ids_to_names:
       return self._user_ids_to_names
 
-    for user in getattr(self, 'users', []):
-      if 'sid' in user:
-        user_id = user.get('sid', u'')
-      elif 'uid' in user:
-        user_id = user.get('uid', u'')
+    for user in getattr(self, u'users', []):
+      if u'sid' in user:
+        user_id = user.get(u'sid', u'')
+      elif u'uid' in user:
+        user_id = user.get(u'uid', u'')
       else:
         user_id = u''
 
       if user_id:
-        self._user_ids_to_names[user_id] = user.get('name', user_id)
+        self._user_ids_to_names[user_id] = user.get(u'name', user_id)
 
     return self._user_ids_to_names
 
@@ -389,7 +389,7 @@ class PreprocessObject(object):
     """
     user_ids_to_names = self.GetUserMappings()
 
-    return user_ids_to_names.get(user_id, '-')
+    return user_ids_to_names.get(user_id, u'-')
 
   # TODO: change to property with getter and setter.
   def SetTimezone(self, timezone_identifier):
@@ -415,9 +415,9 @@ class PreprocessObject(object):
     """
     self.collection_information = dict(dict_object)
 
-    if 'configure_zone' in self.collection_information:
-      self.collection_information['configure_zone'] = pytz.timezone(
-          self.collection_information['configure_zone'])
+    if u'configure_zone' in self.collection_information:
+      self.collection_information[u'configure_zone'] = pytz.timezone(
+          self.collection_information[u'configure_zone'])
 
   def SetCounterValues(self, dict_object):
     """Sets the counter values.
@@ -448,4 +448,4 @@ class PreprocessObject(object):
 #   path_spec: Optional path specification of the file entry (instance of
 #              dfvfs.PathSpec). The default is None.
 ParseError = collections.namedtuple(
-    'ParseError', 'name description path_spec')
+    u'ParseError', u'name description path_spec')
