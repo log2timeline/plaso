@@ -98,6 +98,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'---------------------------------------------------------------------'
         b'-----------\n'
         b'Storage file:\t\t{0:s}\n'
+        b'Serialization format:\tproto\n'
         b'Source processed:\tsyslog\nTime of processing:\t'
         b'2014-02-15T04:33:16+00:00\n'
         b'\n'
