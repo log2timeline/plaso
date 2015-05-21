@@ -308,7 +308,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     if self._operating_system:
       collection_information[u'os_detected'] = self._operating_system
     else:
-      collection_information[u'os_detected'] = 'N/A'
+      collection_information[u'os_detected'] = u'N/A'
 
     # TODO: processing settings:
     collection_information[u'protobuf_size'] = self._buffer_size
@@ -598,8 +598,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     pre_obj = self._PreprocessSource()
 
+    self._operating_system = getattr(pre_obj, u'guessed_os', None)
+
     if not parser_filter_string:
-      guessed_os = getattr(pre_obj, u'guessed_os', u'')
+      guessed_os = self._operating_system
       os_version = getattr(pre_obj, u'osversion', u'')
       parser_filter_string = self._GetParserFilterPreset(
           os_guess=guessed_os, os_version=os_version)
