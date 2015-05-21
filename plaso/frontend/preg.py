@@ -573,8 +573,24 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       searchers = [(u'', None)]
       return registry_types, searchers
 
+    source_path = getattr(options, u'image', None)
+    if not source_path:
+      raise errors.BadConfigOption(u'No image location set.')
+
+    partition_number = getattr(options, u'partition_number', None)
+    partition_offset = getattr(options, u'image_offset', None)
+    vss_stores = getattr(options, u'vss_stores', None)
+
+    if vss_stores:
+      enable_vss = True
+    else:
+      enable_vss = False
+
     try:
-      self.ScanSource(options)
+      self.ScanSource(
+          source_path, partition_number=partition_number,
+          partition_offset=partition_offset, enable_vss=enable_vss,
+          vss_stores=vss_stores)
     except errors.SourceScannerError as exception:
       raise errors.BadConfigOption((
           u'Unable to scan for a supported filesystem with error: {0:s}\n'
