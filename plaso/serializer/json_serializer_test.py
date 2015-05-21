@@ -12,8 +12,6 @@ from plaso.storage import collection
 
 import pytz
 
-# TODO: add tests for the non implemented serializer objects when implemented.
-
 
 class JSONSerializerTestCase(unittest.TestCase):
   """Tests for a JSON serializer object."""
@@ -209,7 +207,7 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
 
   def setUp(self):
     """Set up the necessary objects."""
-    parsers = [
+    self._parsers = [
         u'esedb', u'chrome_preferences', u'winfirewall', u'android_app_usage',
         u'selinux', u'recycle_bin', u'pls_recall', u'filestat', u'sqlite',
         u'cups_ipp', u'winiis', u'lnk', u'rplog', u'symantec_scanlog',
@@ -221,29 +219,6 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
         u'hachoir', u'opera_typed_history', u'winevt', u'mac_appfirewall_log',
         u'winjob', u'olecf', u'xchatlog', u'macwifi', u'mactime', u'java_idx',
         u'firefox_cache', u'mcafee_protection', u'skydrive_log_error']
-
-    self._collection_information = {
-        u'cmd_line': (
-            u'/usr/bin/log2timeline.py pinfo_test.out tsk_volume_system.raw'),
-        u'configured_zone': u'UTC',
-        u'debug': False,
-        u'file_processed': u'/tmp/tsk_volume_system.raw',
-        u'image_offset': 180224,
-        u'method': u'imaged processed',
-        u'os_detected': u'N/A',
-        u'output_file': u'pinfo_test.out',
-        u'parser_selection': u'(no list set)',
-        u'parsers': parsers,
-        u'preferred_encoding': u'utf-8',
-        u'preprocess': True,
-        u'protobuf_size': 0,
-        u'recursive': False,
-        u'runtime': u'multi process mode',
-        u'time_of_run': 1430290411000000,
-        u'version': u'1.2.1_20150424',
-        u'vss parsing': False,
-        u'workers': 0
-    }
 
     self._stores = {
         u'Number': 1,
@@ -259,7 +234,32 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
 
     self._json_dict = {
         u'__type__': u'PreprocessObject',
-        u'collection_information': self._collection_information,
+        u'collection_information': {
+            u'cmd_line': (
+                u'/usr/bin/log2timeline.py pinfo_test.out '
+                u'tsk_volume_system.raw'),
+            u'configured_zone': {
+                u'__type__': u'timezone',
+                u'zone': u'UTC'
+            },
+            u'debug': False,
+            u'file_processed': u'/tmp/tsk_volume_system.raw',
+            u'image_offset': 180224,
+            u'method': u'imaged processed',
+            u'os_detected': u'N/A',
+            u'output_file': u'pinfo_test.out',
+            u'parser_selection': u'(no list set)',
+            u'parsers': self._parsers,
+            u'preferred_encoding': u'utf-8',
+            u'preprocess': True,
+            u'protobuf_size': 0,
+            u'recursive': False,
+            u'runtime': u'multi process mode',
+            u'time_of_run': 1430290411000000,
+            u'version': u'1.2.1_20150424',
+            u'vss parsing': False,
+            u'workers': 0
+        },
         u'counter': {
             u'__type__': u'collections.Counter',
             u'filestat': 3,
@@ -296,7 +296,29 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
     preprocess_object = event.PreprocessObject()
-    preprocess_object.collection_information = self._collection_information
+    preprocess_object.collection_information = {
+        u'cmd_line': (
+            u'/usr/bin/log2timeline.py pinfo_test.out tsk_volume_system.raw'),
+        u'configured_zone': pytz.UTC,
+        u'debug': False,
+        u'file_processed': u'/tmp/tsk_volume_system.raw',
+        u'image_offset': 180224,
+        u'method': u'imaged processed',
+        u'os_detected': u'N/A',
+        u'output_file': u'pinfo_test.out',
+        u'parser_selection': u'(no list set)',
+        u'parsers': self._parsers,
+        u'preferred_encoding': u'utf-8',
+        u'preprocess': True,
+        u'protobuf_size': 0,
+        u'recursive': False,
+        u'runtime': u'multi process mode',
+        u'time_of_run': 1430290411000000,
+        u'version': u'1.2.1_20150424',
+        u'vss parsing': False,
+        u'workers': 0
+    }
+
     preprocess_object.counter = self._counter
     preprocess_object.guessed_os = u'None'
     preprocess_object.plugin_counter = self._plugin_counter
