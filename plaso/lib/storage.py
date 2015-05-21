@@ -238,7 +238,6 @@ class StorageFile(object):
     self._buffer_last_timestamp = 0
     self._buffer_size = 0
     self._event_object_serializer = None
-    self._event_serializer_format_string = u''
     self._event_tag_index = None
     self._file_open = False
     self._file_number = 1
@@ -248,21 +247,16 @@ class StorageFile(object):
     self._pre_obj = pre_obj
     self._proto_streams = {}
     self._read_only = None
+    self._serializer_format_string = u''
     self._write_counter = 0
 
-    self._analysis_report_serializer = (
-        protobuf_serializer.ProtobufAnalysisReportSerializer)
-    self._event_tag_serializer = (
-        protobuf_serializer.ProtobufEventTagSerializer)
-    self._pre_obj_serializer = (
-        protobuf_serializer.ProtobufPreprocessObjectSerializer)
-    self._SetEventObjectSerializer(serializer_format)
+    self._SetSerializerFormat(serializer_format)
 
     self._Open(read_only)
 
     # Add information about the serializer used in the storage.
     if not read_only and not self._OpenStream(u'serializer.txt'):
-      self._WriteStream(u'serializer.txt', self._event_serializer_format_string)
+      self._WriteStream(u'serializer.txt', self._serializer_format_string)
 
     # Attributes for profiling.
     self._enable_profiling = False
@@ -272,7 +266,7 @@ class StorageFile(object):
   @property
   def serialization_format(self):
     """The serialization format."""
-    return self._event_serializer_format_string
+    return self._serializer_format_string
 
   def _Open(self, read_only=False):
     """Opens the storage file.
@@ -303,7 +297,7 @@ class StorageFile(object):
     # Read the serializer string (if available).
     serializer = self._ReadStream(u'serializer.txt')
     if serializer:
-      self._SetEventObjectSerializer(serializer)
+      self._SetSerializerFormat(serializer)
 
     if not self._read_only:
       logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
@@ -783,8 +777,8 @@ class StorageFile(object):
 
     return b''.join(data_segments)
 
-  def _SetEventObjectSerializer(self, serializer_format):
-    """Set the serializer for the event object.
+  def _SetSerializerFormat(self, serializer_format):
+    """Set the serializer format.
 
     Args:
       serializer_format: The storage serializer format.
@@ -793,14 +787,28 @@ class StorageFile(object):
       ValueError: if the serializer format is not suported.
     """
     if serializer_format == definitions.SERIALIZER_FORMAT_JSON:
+      self._serializer_format_string = u'json'
+
+      self._analysis_report_serializer = (
+          json_serializer.JSONAnalysisReportSerializer)
       self._event_object_serializer = (
           json_serializer.JSONEventObjectSerializer)
-      self._event_serializer_format_string = u'json'
+      self._event_tag_serializer = (
+          json_serializer.JSONEventTagSerializer)
+      self._pre_obj_serializer = (
+          json_serializer.JSONPreprocessObjectSerializer)
 
     elif serializer_format == definitions.SERIALIZER_FORMAT_PROTOBUF:
+      self._serializer_format_string = u'proto'
+
+      self._analysis_report_serializer = (
+          protobuf_serializer.ProtobufAnalysisReportSerializer)
       self._event_object_serializer = (
           protobuf_serializer.ProtobufEventObjectSerializer)
-      self._event_serializer_format_string = u'proto'
+      self._event_tag_serializer = (
+          protobuf_serializer.ProtobufEventTagSerializer)
+      self._pre_obj_serializer = (
+          protobuf_serializer.ProtobufPreprocessObjectSerializer)
 
     else:
       raise ValueError(

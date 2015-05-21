@@ -503,6 +503,30 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
 class _PreprocessObjectJSONEncoder(json.JSONEncoder):
   """A class that implements a preprocessing object JSON encoder."""
 
+  def _ConvertCollectionInformationToDict(self, collection_information):
+    """Converts a collection information dictionary into a JSON dictionary.
+
+    Args:
+      collection_information: a collection information dictionary.
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+    """
+    json_dict = {}
+    for attribute_name, attribute_value in iter(collection_information.items()):
+      if attribute_value is None:
+        continue
+
+      if attribute_name == u'configured_zone':
+        attribute_value = {
+            u'__type__': u'timezone',
+            u'zone': u'{0!s}'.format(attribute_value)
+        }
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
+
   def _ConvertCollectionsCounterToDict(self, collections_counter):
     """Converts a collections counter object into a JSON dictionary.
 
@@ -580,7 +604,11 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
       if attribute_value is None:
         continue
 
-      if attribute_name in [u'counter', u'plugin_counter']:
+      if attribute_name == u'collection_information':
+        attribute_value = self._ConvertCollectionInformationToDict(
+            attribute_value)
+
+      elif attribute_name in [u'counter', u'plugin_counter']:
         attribute_value = self._ConvertCollectionsCounterToDict(attribute_value)
 
       elif attribute_name == u'store_range':
