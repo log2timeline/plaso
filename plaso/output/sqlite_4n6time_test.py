@@ -1,28 +1,28 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the MySQL4n6 output class."""
+"""Tests for the 4n6time SQLite output class."""
 
-import sys
+import os
 import unittest
 
-from mock import Mock
+import sqlite3
 
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import test_lib
-
-sys.modules[u'MySQLdb'] = Mock()
-from plaso.output import mysql_4n6
+from plaso.output import sqlite_4n6time
 
 
-class MySQL4n6TestEvent(event.EventObject):
+class sqliteTestEvent(event.EventObject):
   """Simplified EventObject for testing."""
+
   DATA_TYPE = u'syslog:line'
 
   def __init__(self, event_timestamp):
     """Initialize event with data."""
-    super(MySQL4n6TestEvent, self).__init__()
+
+    super(sqliteTestEvent, self).__init__()
 
     self.timestamp = event_timestamp
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
@@ -38,21 +38,22 @@ class MySQL4n6TestEvent(event.EventObject):
     self.store_index = 1
 
 
-class MySQL4n6OutputModuleTest(test_lib.OutputModuleTestCase):
-  """Tests for the MySQL4n6 output class."""
+class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
+  """Tests for the sqlite output class."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
     plaso_timestamp = timelib.Timestamp()
     self._event_timestamp = plaso_timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')
-    self._event_object = MySQL4n6TestEvent(self._event_timestamp)
-    output_mediator = self._CreateOutputMediator()
-    self._MySQL4n6_output = mysql_4n6.MySQL4n6OutputModule(
-        output_mediator)
+    self._event_object = sqliteTestEvent(self._event_timestamp)
 
-  def testGetSanitizedEventValues(self):
-    """Tests the _GetSanitizedEventValues function."""
+  def testOutput(self):
+    """Tests for the sqlite output."""
+
+    def dict_from_row(row):
+      return dict(zip(row.keys(), row))
+
     expected_dict = {
         u'type': u'Content Modification Time',
         u'host': u'ubuntu',
@@ -65,8 +66,7 @@ class MySQL4n6OutputModuleTest(test_lib.OutputModuleTestCase):
         u'extra': (
             u'my_number: 123  some_additional_foo: True  text: '
             u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-            u'session closed for user root) '
-        ),
+            u'session closed for user root) '),
         u'color': u'',
         u'tag': u'',
         u'timezone': u'UTC',
@@ -76,9 +76,9 @@ class MySQL4n6OutputModuleTest(test_lib.OutputModuleTestCase):
         u'event_identifier': u'-',
         u'store_number': 1,
         u'format': u'-',
-        u'URL': u'-',
+        u'url': u'-',
         u'store_index': 1,
-        u'record_number': 0,
+        u'record_number': u'0',
         u'MACB': u'M...',
         u'computer_name': u'-',
         u'offset': 0,
@@ -88,10 +88,21 @@ class MySQL4n6OutputModuleTest(test_lib.OutputModuleTestCase):
         u'vss_store_number': -1,
         u'user': u'-'
     }
-    event_dict = self._MySQL4n6_output._GetSanitizedEventValues(
-        self._event_object)
-    self.assertIsInstance(event_dict, dict)
-    self.assertDictContainsSubset(expected_dict, event_dict)
+    with test_lib.TempDirectory() as dirname:
+      temp_file = os.path.join(dirname, u'sqlite_4n6.out')
+      output_mediator = self._CreateOutputMediator(storage_object=temp_file)
+      self._sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
+          output_mediator, filename=temp_file)
+
+      self._sqlite_output.Open()
+      self._sqlite_output.WriteEventBody(self._event_object)
+      self._sqlite_output.Close()
+      self.conn = sqlite3.connect(temp_file)
+      self.conn.row_factory = sqlite3.Row
+
+      res = self.conn.execute(u'SELECT * from log2timeline')
+      row_dict = dict_from_row(res.fetchone())
+      self.assertDictContainsSubset(expected_dict, row_dict)
 
 
 if __name__ == '__main__':
