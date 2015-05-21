@@ -113,6 +113,22 @@ class Collector(queue.ItemQueueProducer):
     else:
       logging.debug(u'Collection from image COMPLETED.')
 
+  def _ProcessPartitions(self, root_path_spec, find_specs=None):
+    """Processes the sub entries partitions of the given root_path_spec.
+
+    Args:
+      root_path_spec: The path specification of the directory containing
+                      volumes. (instances of dfvfs.path.PathSpec)
+      find_specs: Optional list of find specifications (instances of
+                  dfvfs.FindSpec). The default is None.
+    """
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(
+        self._source_path_spec, resolver_context=self._resolver_context)
+    file_entry = file_system.GetFileEntryByPathSpec(root_path_spec)
+
+    for partition_file_entry in file_entry.sub_file_entries:
+      self._ProcessImage(partition_file_entry.path_spec, find_specs=find_specs)
+
   def _ProcessVSS(self, volume_path_spec, find_specs=None):
     """Processes a VSS volume within a storage media image.
 
@@ -198,8 +214,13 @@ class Collector(queue.ItemQueueProducer):
     type_indicator = self._source_path_spec.type_indicator
 
     if not path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      self._ProcessImage(
-          self._source_path_spec.parent, find_specs=self._filter_find_specs)
+      if (type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION
+          and source_file_entry.IsRoot()):
+        self._ProcessPartitions(
+            self._source_path_spec, find_specs=self._filter_find_specs)
+      else:
+        self._ProcessImage(
+            self._source_path_spec.parent, find_specs=self._filter_find_specs)
 
     elif source_file_entry.IsFile():
       self.ProduceItem(self._source_path_spec)

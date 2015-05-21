@@ -31,6 +31,7 @@ class StorageMediaFrontend(frontend.Frontend):
 
     super(StorageMediaFrontend, self).__init__(input_reader, output_writer)
     self._resolver_context = context.Context()
+    self._run_all_partitions = False
     self._scan_context = source_scanner.SourceScannerContext()
     self._source_path = None
     self._source_scanner = source_scanner.SourceScanner()
@@ -108,12 +109,14 @@ class StorageMediaFrontend(frontend.Frontend):
     while True:
       self._output_writer.Write(
           u'Please specify the identifier of the partition that should '
-          u'be processed:\nNote that you can abort with Ctrl^C.\n')
+          u'be processed or \'all\' to process all partitions:\n'
+          u'Note that you can abort with Ctrl^C.\n')
 
       selected_volume_identifier = self._input_reader.Read()
       selected_volume_identifier = selected_volume_identifier.strip()
 
-      if selected_volume_identifier in volume_identifiers:
+      if (selected_volume_identifier in volume_identifiers
+          or selected_volume_identifier == u'all'):
         break
 
       self._output_writer.Write(
@@ -159,6 +162,12 @@ class StorageMediaFrontend(frontend.Frontend):
       logging.info(u'No supported partitions found.')
       return
 
+    # If we want to do all partitions, set scan node to be first partition
+    # and then set flag to tell ScanSource() that we have a directory.
+    if partition_number == u'all':
+      self._run_all_partitions = True
+      return scan_context.last_scan_node
+
     if partition_number is not None and partition_number > 0:
       # Plaso uses partition numbers starting with 1 while dfvfs expects
       # the volume index to start with 0.
@@ -201,6 +210,10 @@ class StorageMediaFrontend(frontend.Frontend):
             volume_system, volume_identifiers)
       except KeyboardInterrupt:
         raise errors.UserAbort(u'File system scan aborted.')
+
+      if selected_volume_identifier == u'all':
+        self._run_all_partitions = True
+        return scan_context.last_scan_node
 
       volume = volume_system.GetVolumeByIdentifier(selected_volume_identifier)
       if not volume:
@@ -491,9 +504,13 @@ class StorageMediaFrontend(frontend.Frontend):
         if not scan_node:
           break
         self._scan_context.last_scan_node = scan_node
-
         self.partition_offset = getattr(
             scan_node.path_spec, u'start_offset', 0)
+        # If we want to run all partitions set as directory and break.
+        if self._run_all_partitions:
+          self._scan_context.source_type = (
+              self._scan_context.SOURCE_TYPE_DIRECTORY)
+          break
 
       elif self._scan_context.last_scan_node.type_indicator in [
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:

@@ -44,8 +44,11 @@ class StorageMediaTool(tools.CLITool):
       BadConfigOption: if the options are invalid.
     """
     self._partition_number = getattr(options, u'partition_number', None)
-    if (self._partition_number is not None and
-        isinstance(self._partition_number, basestring)):
+    if self._partition_number not in [None, u'all']:
+      if not isinstance(self._partition_number, basestring):
+        raise errors.BadConfigOption(
+            u'Invalid partition number {0!s}.'.format(
+                self._partition_number))
       try:
         self._partition_number = int(self._partition_number, 10)
       except ValueError:
@@ -113,7 +116,7 @@ class StorageMediaTool(tools.CLITool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--partition', dest=u'partition_number', action=u'store', type=int,
+        u'--partition', dest=u'partition_number', action=u'store', type=str,
         default=None, help=(
             u'Choose a partition number from a disk image. This partition '
             u'number should correspond to the partion number on the disk '
