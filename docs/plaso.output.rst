@@ -108,10 +108,18 @@ plaso.output.mediator_test module
     :undoc-members:
     :show-inheritance:
 
-plaso.output.mysql_4n6 module
------------------------------
+plaso.output.mysql_4n6time module
+---------------------------------
 
-.. automodule:: plaso.output.mysql_4n6
+.. automodule:: plaso.output.mysql_4n6time
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.output.mysql_4n6time_test module
+--------------------------------------
+
+.. automodule:: plaso.output.mysql_4n6time_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -140,10 +148,26 @@ plaso.output.rawpy module
     :undoc-members:
     :show-inheritance:
 
-plaso.output.sqlite_4n6 module
-------------------------------
+plaso.output.shared_4n6time module
+----------------------------------
 
-.. automodule:: plaso.output.sqlite_4n6
+.. automodule:: plaso.output.shared_4n6time
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.output.sqlite_4n6time module
+----------------------------------
+
+.. automodule:: plaso.output.sqlite_4n6time
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.output.sqlite_4n6time_test module
+---------------------------------------
+
+.. automodule:: plaso.output.sqlite_4n6time_test
     :members:
     :undoc-members:
     :show-inheritance:
