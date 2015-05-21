@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Output related functions and classes for testing."""
 
+import shutil
+import tempfile
 import unittest
 
 from plaso.formatters import mediator as formatters_mediator
@@ -9,6 +11,24 @@ from plaso.output import mediator
 
 class TestConfig(object):
   """Test config value object."""
+
+
+class TempDirectory(object):
+  """A self cleaning temporary directory."""
+
+  def __init__(self):
+    """Initializes the temporary directory."""
+    super(TempDirectory, self).__init__()
+    self.name = u''
+
+  def __enter__(self):
+    """Make this work with the 'with' statement."""
+    self.name = tempfile.mkdtemp()
+    return self.name
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make this work with the 'with' statement."""
+    shutil.rmtree(self.name, True)
 
 
 class OutputModuleTestCase(unittest.TestCase):

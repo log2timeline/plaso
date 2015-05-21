@@ -248,7 +248,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       kwargs = {}
       # TODO: refactor this to use CLI argument helpers.
-      if self._output_format in [u'pstorage', u'sql4n6']:
+      if self._output_format == u'4n6time_sqlite':
+        kwargs[u'filename'] = self._output_filename
+      elif self._output_format == u'pstorage':
         kwargs[u'filehandle'] = self._output_filename
       elif self._output_format not in [u'elastic', u'timesketch']:
         if self._output_filename:
