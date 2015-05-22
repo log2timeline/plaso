@@ -58,7 +58,7 @@ class SlowLexicalTextParser(
     """Constructor for the SlowLexicalTextParser.
 
     Args:
-      local_zone: A boolean value that determines if the entries
+      local_zone: a boolean value that determines if the entries
                   in the log file are stored in the local time
                   zone of the computer that stored it or in a fixed
                   timezone, like UTC.
@@ -68,13 +68,13 @@ class SlowLexicalTextParser(
     interface.SingleFileBaseParser.__init__(self)
     self.line_ready = False
     self.attributes = {
-        'body': '',
-        'iyear': 0,
-        'imonth': 0,
-        'iday': 0,
-        'time': '',
-        'hostname': '',
-        'username': '',
+        u'body': u'',
+        u'iyear': 0,
+        u'imonth': 0,
+        u'iday': 0,
+        u'time': u'',
+        u'hostname': u'',
+        u'username': u'',
     }
     self.local_zone = local_zone
     self.file_entry = None
@@ -100,10 +100,10 @@ class SlowLexicalTextParser(
        type is TextEvent.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
+      timestamp: the timestamp time value. The timestamp contains the
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      offset: The offset of the event.
-      attributes: A dictionary that contains the event's attributes.
+      offset: the offset of the event.
+      attributes: a dictionary that contains the event's attributes.
 
     Returns:
       An event object (instance of TextEvent).
@@ -111,12 +111,23 @@ class SlowLexicalTextParser(
     return text_events.TextEvent(timestamp, offset, attributes)
 
   def ParseIncomplete(self, match=None, **unused_kwargs):
-    """Indication that we've got a partial line to match against.
+    """Parse a partial line match and append to the body attribute.
 
     Args:
-      match: The regular expression match object.
+      match: optional regular expression match object (instance of SRE_Match).
+             The default is None.
     """
-    self.attributes['body'] += match.group(0)
+    if not match:
+      return
+
+    try:
+      self.attributes[u'body'] += match.group(0)
+    except UnicodeDecodeError:
+      # TODO: Support other encodings than UTF-8 here, read from the
+      # knowledge base or parse from the file itself.
+      self.attributes[u'body'] += u'{0:s}'.format(
+          match.group(0).decode(u'utf-8', errors=u'ignore'))
+
     self.line_ready = True
 
   def ParseMessage(self, **unused_kwargs):
@@ -127,8 +138,8 @@ class SlowLexicalTextParser(
     """Parses a text file-like object using a lexer.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -222,22 +233,23 @@ class SlowLexicalTextParser(
     """Return a string with combined values from the lexer.
 
     Args:
-      match: The regular expression match object.
+      match: optional regular expression match object (instance of SRE_Match).
+             The default is None.
 
     Returns:
       A string that combines the values that are so far
       saved from the lexer.
     """
     try:
-      self.attributes['body'] += match.group(1).strip('\n')
+      self.attributes[u'body'] += match.group(1).strip('\n')
     except IndexError:
-      self.attributes['body'] += match.group(0).strip('\n')
+      self.attributes[u'body'] += match.group(0).strip('\n')
 
   def PrintLine(self):
     """"Return a string with combined values from the lexer."""
-    year = getattr(self.attributes, 'iyear', None)
-    month = getattr(self.attributes, 'imonth', None)
-    day = getattr(self.attributes, 'iday', None)
+    year = getattr(self.attributes, u'iyear', None)
+    month = getattr(self.attributes, u'imonth', None)
+    day = getattr(self.attributes, u'iday', None)
 
     if None in [year, month, day]:
       date_string = u'[DATE NOT SET]'
@@ -251,11 +263,11 @@ class SlowLexicalTextParser(
       except ValueError:
         date_string = u'[DATE INVALID]'
 
-    time_string = getattr(self.attributes, 'time', u'[TIME NOT SET]')
-    hostname_string = getattr(self.attributes, 'hostname', u'HOSTNAME NOT SET')
+    time_string = getattr(self.attributes, u'time', u'[TIME NOT SET]')
+    hostname_string = getattr(self.attributes, u'hostname', u'HOSTNAME NOT SET')
     reporter_string = getattr(
-        self.attributes, 'reporter', u'[REPORTER NOT SET]')
-    body_string = getattr(self.attributes, 'body', u'[BODY NOT SET]')
+        self.attributes, u'reporter', u'[REPORTER NOT SET]')
+    body_string = getattr(self.attributes, u'body', u'[BODY NOT SET]')
 
     # TODO: this is a work in progress. The reason for the try-catch is that
     # the text parser is handed a non-text file and must deal with converting
@@ -273,17 +285,17 @@ class SlowLexicalTextParser(
     """Return an event object extracted from the current line.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
     """
-    if not self.attributes['time']:
+    if not self.attributes[u'time']:
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse timestamp, time not set.')
 
-    if not self.attributes['iyear']:
+    if not self.attributes[u'iyear']:
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse timestamp, year not set.')
 
-    times = self.attributes['time'].split(':')
+    times = self.attributes[u'time'].split(u':')
     if self.local_zone:
       timezone = parser_mediator.timezone
     else:
@@ -302,8 +314,8 @@ class SlowLexicalTextParser(
         us = 0
 
       timestamp = timelib.Timestamp.FromTimeParts(
-          int(self.attributes['iyear']), self.attributes['imonth'],
-          self.attributes['iday'], int(times[0]), int(times[1]),
+          int(self.attributes[u'iyear']), self.attributes[u'imonth'],
+          self.attributes[u'iday'], int(times[0]), int(times[1]),
           int(sec), microseconds=int(us), timezone=timezone)
 
     except ValueError as exception:
@@ -312,7 +324,7 @@ class SlowLexicalTextParser(
               self.PrintLine(), exception))
 
     event_object = self.CreateEvent(
-        timestamp, getattr(self, 'entry_offset', 0), self.attributes)
+        timestamp, getattr(self, u'entry_offset', 0), self.attributes)
     parser_mediator.ProduceEvent(event_object)
 
 
@@ -323,9 +335,10 @@ class SlowLexicalTextParser(
        called by the corresponding lexer state.
 
     Args:
-      match: The regular expression match object.
+      match: optional regular expression match object (instance of SRE_Match).
+             The default is None.
     """
-    self.attributes['iday'] = int(match.group(1))
+    self.attributes[u'iday'] = int(match.group(1))
   def SetMonth(self, match=None, **unused_kwargs):
     """Parses the month.
 
@@ -333,18 +346,20 @@ class SlowLexicalTextParser(
        called by the corresponding lexer state.
 
     Args:
-      match: The regular expression match object.
+      match: optional regular expression match object (instance of SRE_Match).
+             The default is None.
     """
-    self.attributes['imonth'] = int(
+    self.attributes[u'imonth'] = int(
         timelib.MONTH_DICT.get(match.group(1).lower(), 1))
 
   def SetTime(self, match=None, **unused_kwargs):
     """Set the time attribute.
 
     Args:
-      match: The regular expression match object.
+      match: optional regular expression match object (instance of SRE_Match).
+             The default is None.
     """
-    self.attributes['time'] = match.group(1)
+    self.attributes[u'time'] = match.group(1)
 
   def SetYear(self, match=None, **unused_kwargs):
     """Parses the year.
@@ -353,9 +368,10 @@ class SlowLexicalTextParser(
        called by the corresponding lexer state.
 
     Args:
-      match: The regular expression match object.
+      match: optional regular expression match object (instance of SRE_Match).
+             The default is None.
     """
-    self.attributes['iyear'] = int(match.group(1))
+    self.attributes[u'iyear'] = int(match.group(1))
 
 
 class TextCSVParser(interface.SingleFileBaseParser):
@@ -385,8 +401,8 @@ class TextCSVParser(interface.SingleFileBaseParser):
     """Return a bool indicating whether or not this is the correct parser.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: A single row from the CSV file.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      row: a single row from the CSV file.
 
     Returns:
       True if this is the correct parser, False otherwise.
@@ -397,9 +413,9 @@ class TextCSVParser(interface.SingleFileBaseParser):
     """Parse a line of the log file and extract event objects.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row_offset: The offset of the row.
-      row: A dictionary containing all the fields as denoted in the
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      row_offset: the offset of the row.
+      row: a dictionary containing all the fields as denoted in the
            COLUMNS class list.
     """
     event_object = event.EventObject()
@@ -412,8 +428,8 @@ class TextCSVParser(interface.SingleFileBaseParser):
     """Parses a CSV text file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -476,8 +492,8 @@ def PyParseRangeCheck(lower_bound, upper_bound):
   in setParseAction with the upper and lower bound set as parameters.
 
   Args:
-    lower_bound: An integer representing the lower bound of the range.
-    upper_bound: An integer representing the upper bound of the range.
+    lower_bound: an integer representing the lower bound of the range.
+    upper_bound: an integer representing the upper bound of the range.
 
   Returns:
     A callback method that can be used by pyparsing setParseAction.
@@ -515,8 +531,8 @@ def PyParseIntCast(unused_string, unused_location, tokens):
   them all to an integer value.
 
   Args:
-    unused_string: The original parsed string.
-    unused_location: The location within the string where the match was made.
+    unused_string: the original parsed string.
+    unused_location: the location within the string where the match was made.
     tokens: A list of extracted tokens (where the string to be converted is
     stored).
   """
@@ -548,9 +564,9 @@ def PyParseJoinList(unused_string, unused_location, tokens):
   token.
 
   Args:
-    unused_string: The original parsed string.
-    unused_location: The location within the string where the match was made.
-    tokens: A list of extracted tokens. This is the list that should be joined
+    unused_string: the original parsed string.
+    unused_location: the location within the string where the match was made.
+    tokens: a list of extracted tokens. This is the list that should be joined
     together and stored as a single token.
   """
   join_list = []
@@ -658,13 +674,13 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     """Read a single line from a text file and return it back.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      text_file_object: A text file object (instance of dfvfs.TextFile).
-      max_len: If defined determines the maximum number of bytes a single line
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      text_file_object: a text file object (instance of dfvfs.TextFile).
+      max_len: if defined determines the maximum number of bytes a single line
                can take.
-      quiet: If True then a decode warning is not displayed.
-      depth: A threshold of how many newlines we can encounter before bailing
+      quiet: if True then a decode warning is not displayed.
+      depth: a threshold of how many newlines we can encounter before bailing
              out.
 
     Returns:
@@ -708,8 +724,8 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     """Parses a text file-like object using a pyparsing definition.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -784,10 +800,10 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     and produces an EventObject if possible from that structure.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      key: an identification string indicating the name of the parsed
            structure.
-      structure: A pyparsing.ParseResults object from a line in the
+      structure: a pyparsing.ParseResults object from a line in the
                  log file.
 
     Returns:
@@ -802,8 +818,8 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     that the file is the correct one for this particular parser.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      line: a single line from the text file.
 
     Returns:
       True if this is the correct parser, False otherwise.
@@ -954,8 +970,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     """Parses a text file-like object using a pyparsing definition.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
