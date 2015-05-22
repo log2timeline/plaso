@@ -92,7 +92,7 @@ class StorageMediaFrontend(frontend.Frontend):
         u'The following partitions were found:\n'
         u'Identifier\tOffset (in bytes)\tSize (in bytes)\n')
 
-    for volume_identifier in volume_identifiers:
+    for volume_identifier in sorted(volume_identifiers):
       volume = volume_system.GetVolumeByIdentifier(volume_identifier)
       if not volume:
         raise errors.FileSystemScannerError(

@@ -98,7 +98,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    packages=find_packages('.', exclude=[u'tools']),
+    packages=find_packages('.', exclude=[u'tests', u'tools']),
     package_dir={
         'plaso': 'plaso',
     },
