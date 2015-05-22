@@ -654,6 +654,16 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           status_update_callback=status_update_callback,
           storage_serializer_format=storage_serializer_format)
 
+  def SetDebugMode(self, enable_debug=False):
+    """Enables or disables debug mode.
+
+    Args:
+      enable_debug: optional boolean value to indicate whether
+                    debugging mode should be enabled. The default
+                    is False.
+    """
+    self._debug_mode = enable_debug
+
   def SetEnableProfiling(
       self, enable_profiling, profiling_sample_rate=1000,
       profiling_type=u'all'):

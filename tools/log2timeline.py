@@ -482,6 +482,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                           file system.
       UserAbort: if the user initiated an abort.
     """
+    self._front_end.SetDebugMode(self._debug_mode)
     self._front_end.SetEnableProfiling(
         self._enable_profiling,
         profiling_sample_rate=self._profiling_sample_rate,
