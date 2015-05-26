@@ -61,6 +61,8 @@ class StorageMediaFrontendTests(test_lib.FrontendTestCase):
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEqual(test_front_end.partition_offset, 180224)
 
+    test_front_end = storage_media_frontend.StorageMediaFrontend()
+
     test_front_end.ScanSource(source_path, partition_number=2)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEqual(path_spec, None)
@@ -84,6 +86,8 @@ class StorageMediaFrontendTests(test_lib.FrontendTestCase):
     self.assertEqual(test_front_end.partition_offset, 0)
     self.assertEqual(test_front_end.vss_stores, [1, 2])
 
+    test_front_end = storage_media_frontend.StorageMediaFrontend()
+
     test_front_end.ScanSource(source_path, enable_vss=True, vss_stores=[1])
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEqual(path_spec, None)
@@ -91,6 +95,8 @@ class StorageMediaFrontendTests(test_lib.FrontendTestCase):
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEqual(test_front_end.partition_offset, 0)
     self.assertEqual(test_front_end.vss_stores, [1])
+
+    test_front_end = storage_media_frontend.StorageMediaFrontend()
 
     test_front_end.ScanSource(source_path, enable_vss=True, vss_stores=[u'all'])
     path_spec = test_front_end.GetSourcePathSpec()
