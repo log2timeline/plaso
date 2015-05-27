@@ -119,3 +119,4 @@ class AnalysisPlugin(queue.ItemQueueConsumer):
       analysis_report.time_compiled = timelib.Timestamp.GetNow()
       analysis_mediator.ProduceAnalysisReport(
           analysis_report, plugin_name=self.plugin_name)
+    analysis_mediator.ReportingComplete()

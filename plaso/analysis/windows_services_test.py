@@ -134,8 +134,9 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
     # Run the analysis plugin.
     analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
+    analysis_plugin.SetOutputFormat(u'yaml')
     analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base, output_format=u'yaml')
+        analysis_plugin, knowledge_base)
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 

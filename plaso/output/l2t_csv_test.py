@@ -87,7 +87,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
-    # Ensure that the only commas returned are the 16 delimeters.
+    # Ensure that the only commas returned are the 16 delimiters.
     self.assertEqual(event_body.count(b','), 16)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
