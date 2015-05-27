@@ -112,16 +112,13 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
     return event_queue
 
-  # TODO: create output format definitions.
-  def _RunAnalysisPlugin(
-      self, analysis_plugin, knowledge_base_object, output_format=u'text'):
+  def _RunAnalysisPlugin(self, analysis_plugin, knowledge_base_object):
     """Analyzes an event object queue using the plugin object.
 
     Args:
       analysis_plugin: the analysis plugin object (instance of AnalysisPlugin).
       knowledge_base_object: the knowledge base object (instance of
                              KnowledgeBase).
-      output_format: Optional output format. The default is 'text'.
 
     Returns:
       An event object queue object (instance of Queue).
@@ -133,8 +130,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
         analysis_report_queue)
 
     analysis_mediator = mediator.AnalysisMediator(
-        analysis_report_queue_producer, knowledge_base_object,
-        output_format=output_format)
+        analysis_report_queue_producer, knowledge_base_object)
 
     analysis_plugin.RunPlugin(analysis_mediator)
 

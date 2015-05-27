@@ -13,7 +13,11 @@ import pytz
 
 
 class AnalysisReport(object):
-  """Class that defines an analysis report."""
+  """Class that defines an analysis report.
+
+  Attributes:
+    plugin_name: The name of the plugin that generated the report.
+  """
 
   def __init__(self, plugin_name):
     """Initializes the analysis report.
@@ -59,6 +63,15 @@ class AnalysisReport(object):
   def GetTags(self):
     """Retrieves the list of event tags that are attached to the report."""
     return self._tags
+
+  def SetTags(self, tags):
+    """Sets the list of event tags that relate to the report.
+
+    Args:
+      tags: A list of event tags (instances of EventTag) that belong to the
+            report.
+    """
+    self._tags = tags
 
   # TODO: rename text to body?
   def SetText(self, lines_of_text):

@@ -361,3 +361,10 @@ class SingleProcessQueue(queue.Queue):
       raise errors.QueueEmpty
     except KeyboardInterrupt:
       raise errors.QueueClose
+
+  def Close(self):
+    """Closes this queue, indicating that no further items will be added to it.
+
+    This method has no effect on for the single process queue, but is included
+    for compatibility with the Multiprocessing queue."""
+    pass

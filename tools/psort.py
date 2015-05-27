@@ -74,9 +74,24 @@ class PsortTool(analysis_tool.AnalysisTool):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    self._analysis_plugins = getattr(options, u'analysis_plugins', u'')
-    self._analysis_plugins_output_format = getattr(
-        options, u'windows-services-output', u'text')
+    # Get a list of all available plugins.
+    analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
+    analysis_plugin_names = set([
+        name.lower() for name, _, _ in analysis_plugin_info])
+    analysis_plugin_string = getattr(options, u'analysis_plugins', u'')
+    if analysis_plugin_string == u'':
+      return
+    requested_plugin_names = set([
+        name.strip().lower() for name in analysis_plugin_string.split(u',')])
+
+    # Check to see if we are trying to load plugins that do not exist.
+    difference = requested_plugin_names.difference(analysis_plugin_names)
+    if difference:
+      raise errors.BadConfigOption(
+          u'Non-existing analysis plugins specified: {0:s}'.format(
+              u' '.join(difference)))
+
+    self._analysis_plugins = analysis_plugin_string
 
   def _ParseFilterOptions(self, options):
     """Parses the filter options.
@@ -142,7 +157,6 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     counter = self._front_end.ProcessStorage(
         self._options, self._analysis_plugins,
-        self._analysis_plugins_output_format,
         deduplicate_events=self._deduplicate_events,
         preferred_encoding=self.preferred_encoding,
         time_slice=time_slice, timezone=self._timezone,
@@ -168,29 +182,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     if plugin_names == u'list':
       return
 
-    plugin_list = set([
-        name.strip().lower() for name in plugin_names.split(u',')])
-
-    # Get a list of all available plugins.
-    analysis_plugins = self._front_end.GetAnalysisPlugins()
-    analysis_plugins = set([name.lower() for name, _, _ in analysis_plugins])
-
-    # Get a list of the selected plugins (ignoring selections that did not
-    # have an actual plugin behind it).
-    plugins_to_load = analysis_plugins.intersection(plugin_list)
-
-    # Check to see if we are trying to load plugins that do not exist.
-    difference = plugin_list.difference(analysis_plugins)
-    if difference:
-      raise errors.BadConfigOption(
-          u'Non-existing analysis plugins specified: {0:s}'.format(
-              u' '.join(difference)))
-
-    plugins = self._front_end.LoadPlugins(plugins_to_load, None)
-    for plugin in plugins:
-      if plugin.ARGUMENTS:
-        for parameter, config in plugin.ARGUMENTS:
-          argument_group.add_argument(parameter, **config)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, u'analysis')
 
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
@@ -291,14 +284,14 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Lists the analysis modules."""
     self.PrintHeader(u'Analysis Plugins')
     format_length = 10
-    analysis_plugins = self._front_end.GetAnalysisPlugins()
+    analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
 
-    for name, _, _ in analysis_plugins:
+    for name, _, _ in analysis_plugin_info:
       if len(name) > format_length:
         format_length = len(name)
 
     # TODO: refactor to use type object (class) and add GetTypeString method.
-    for name, description, plugin_type in analysis_plugins:
+    for name, description, plugin_type in analysis_plugin_info:
       if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
         type_string = u'Annotation/tagging plugin'
       elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
@@ -421,7 +414,11 @@ class PsortTool(analysis_tool.AnalysisTool):
       argument_index = arguments.index(u'--analysis') + 1
 
       # Get the names of the analysis plugins that should be loaded.
-      plugin_names = arguments[argument_index]
+      if len(arguments) > argument_index:
+        plugin_names = arguments[argument_index]
+      else:
+        plugin_names = u'list'
+
       if plugin_names == u'list':
         self.list_analysis_plugins = True
       else:

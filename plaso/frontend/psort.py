@@ -34,6 +34,10 @@ import pytz
 class PsortFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
 
+  # The amount of time to wait for analysis plugins to compile their reports,
+  # in seconds.
+  MAX_ANALYSIS_PLUGIN_REPORT_WAIT = 60
+
   def __init__(self):
     """Initializes the front-end object."""
     input_reader = frontend.StdinFrontendInputReader()
@@ -41,7 +45,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     super(PsortFrontend, self).__init__(input_reader, output_writer)
 
-    self._analysis_processes = []
+    self._analysis_process_info = []
     self._filter_buffer = None
     self._filter_expression = None
     self._filter_object = None
@@ -87,13 +91,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     return output_manager.OutputManager.HasOutputClass(name)
 
-  def GetAnalysisPlugins(self):
-    """Retrieves the available analysis plugins.
+  def GetAnalysisPluginInfo(self):
+    """Retrieves information about the registered analysis plugins.
 
     Returns:
-      A sorted list of available plugin names and docstrings.
+      A sorted list of tuples containing the name, docstring and type of each
+      analysis plugin.
     """
-    return analysis_manager.AnalysisPluginManager.ListAllPluginNames()
+    return analysis_manager.AnalysisPluginManager.GetAllPluginInformation()
 
   def GetOutputClasses(self):
     """Retrieves the available output classes.
@@ -109,7 +114,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     Args:
       event_time_string: event time string of the time slice or None.
-      duration: optional duration of the time slize in minutes.
+      duration: optional duration of the time slice in minutes.
                 The default is 5, which represent 2.5 minutes before
                 and 2.5 minutes after the event timestamp.
       timezone: optional timezone. The default is UTC.
@@ -126,14 +131,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return frontend.TimeSlice(event_timestamp, duration=duration)
 
   def _ProcessAnalysisPlugins(
-      self, analysis_plugins, event_queue_producers, analysis_output_queue,
-      storage_file, counter, preferred_encoding=u'utf-8'):
+      self, analysis_plugins, analysis_output_queue, storage_file, counter,
+      preferred_encoding=u'utf-8'):
     """Runs the analysis plugins.
 
     Args:
       analysis_plugins: the analysis plugins.
-      event_queue_producers: a list of event queue producter objects
-                             (instances of ItemQueueProducer).
       analysis_output_queue: the analysis output queue (instance of Queue).
       storage_file: a storage file object (instance of StorageFile).
       counter: a counter object (instance of collections.Counter).
@@ -143,25 +146,24 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       return
 
     logging.info(u'Processing data from analysis plugins.')
-    for event_queue_producer in event_queue_producers:
-      event_queue_producer.SignalEndOfInput()
 
     # Wait for all analysis plugins to complete.
-    for number, analysis_process in enumerate(self._analysis_processes):
-      logging.debug(
-          u'Waiting for analysis plugin: {0:d} to complete.'.format(number))
-
-      if analysis_process.is_alive():
-        analysis_process.join(timeout=10)
+    for analysis_process_info in self._analysis_process_info:
+      name = analysis_process_info.plugin_name
+      completion_event = analysis_process_info.completion_event
+      process = analysis_process_info.process
+      logging.info(
+          u'Waiting for analysis plugin: {0:s} to complete.'.format(name))
+      if completion_event.wait(self.MAX_ANALYSIS_PLUGIN_REPORT_WAIT):
+        logging.info(u'Plugin {0:s} has completed.'.format(name))
       else:
-        logging.warning(u'Plugin {0:d} already stopped.'.format(number))
-        analysis_process.terminate()
+        logging.warning(
+            u'Analysis process {0:s} failed to compile its report in a '
+            u'reasonable time. No report will be displayed or stored.'.format(
+                name))
+        process.Terminate()
 
-    logging.debug(u'All analysis plugins are now stopped.')
-
-    # TODO: fix this.
-    # Close the output queue.
-    # analysis_output_queue.SignalAbort()
+    logging.info(u'All analysis plugins are now completed.')
 
     # Go over each output.
     analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
@@ -179,15 +181,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       counter[item] = value
 
   def ProcessStorage(
-      self, options, analysis_plugins, analysis_plugins_output_format,
-      deduplicate_events=True, preferred_encoding=u'utf-8', time_slice=None,
+      self, options, analysis_plugins, deduplicate_events=True,
+      preferred_encoding=u'utf-8', time_slice=None,
       timezone=pytz.UTC, use_time_slicer=False):
     """Processes a plaso storage file.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
       analysis_plugins: the analysis plugins.
-      analysis_plugins_output_format: the analysis plugins output format.
       deduplicate_events: optional boolean value to indicate if the event
                           objects should be deduplicated. The default is True.
       preferred_encoding: optional preferred encoding. The default is "utf-8".
@@ -282,7 +283,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       # TODO: allow for single processing.
       # TODO: add upper queue limit.
-      analysis_output_queue = multi_process.MultiProcessingQueue()
+      analysis_output_queue = multi_process.MultiProcessingQueue(timeout=5)
 
       if analysis_plugins:
         logging.info(u'Starting analysis plugins.')
@@ -331,7 +332,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
         for _ in xrange(0, len(analysis_plugins_list)):
           # TODO: add upper queue limit.
-          analysis_plugin_queue = multi_process.MultiProcessingQueue()
+          analysis_plugin_queue = multi_process.MultiProcessingQueue(timeout=5)
           event_queues.append(analysis_plugin_queue)
           event_queue_producers.append(
               queue.ItemQueueProducer(event_queues[-1]))
@@ -339,21 +340,31 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         knowledge_base_object = knowledge_base.KnowledgeBase()
 
         analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
-            analysis_plugins_list, event_queues, options=options)
+            analysis_plugins_list, event_queues)
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:
+          # TODO: This should be done in tools/psort.py but requires
+          # a larger re-factor of this function.
+          # Set up the plugin based on the options.
+          helpers_manager.ArgumentHelperManager.ParseOptions(
+              options, analysis_plugin)
+
           analysis_report_queue_producer = queue.ItemQueueProducer(
               analysis_output_queue)
 
+          completion_event = multiprocessing.Event()
           analysis_mediator_object = analysis_mediator.AnalysisMediator(
               analysis_report_queue_producer, knowledge_base_object,
-              output_format=analysis_plugins_output_format)
+              data_location=self._data_location,
+              completion_event=completion_event)
           analysis_process = multiprocessing.Process(
               name=u'Analysis {0:s}'.format(analysis_plugin.plugin_name),
               target=analysis_plugin.RunPlugin,
               args=(analysis_mediator_object,))
-          self._analysis_processes.append(analysis_process)
+          process_info = PsortAnalysisProcess(
+              completion_event, analysis_plugin.plugin_name, analysis_process)
+          self._analysis_process_info.append(process_info)
 
           analysis_process.start()
           logging.info(
@@ -379,8 +390,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       # Get all reports and tags from analysis plugins.
       self._ProcessAnalysisPlugins(
-          analysis_plugins, event_queue_producers, analysis_output_queue,
-          storage_file, counter, preferred_encoding=preferred_encoding)
+          analysis_plugins, analysis_output_queue, storage_file, counter,
+        preferred_encoding=preferred_encoding)
 
     if self._output_file_object:
       self._output_file_object.close()
@@ -460,6 +471,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       event_object = storage_file.GetSortedEntry()
 
+    for analysis_queue in analysis_queues:
+      analysis_queue.Close()
     if output_buffer.duplicate_counter:
       counter[u'Duplicate Removals'] = output_buffer.duplicate_counter
 
@@ -468,10 +481,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return counter
 
 
-# TODO: Function: _ConsumeItem is not defined, inspect if we need to define it
-# or change the interface so that is not an abstract method.
-# TODO: Remove this after dfVFS integration.
-# pylint: disable=abstract-method
 class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements an analysis report queue consumer for psort."""
 
@@ -524,3 +533,21 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
           u'The report is stored inside the storage file and can be '
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')
+
+
+class PsortAnalysisProcess(object):
+  """A class to contain information about a running analysis process.
+
+  Attributes:
+      completion_event: An optional Event object (instance of
+                        Multiprocessing.Event, Queue.Event or similar) that will
+                        be set when the analysis plugin is complete.
+    plugin_name: The name of the plugin running in the process.
+    process: The process (instance of Multiprocessing.Process) that
+             encapsulates the analysis process.
+  """
+  def __init__(self, completion_event, plugin_name, process):
+    super(PsortAnalysisProcess, self).__init__()
+    self.completion_event = completion_event
+    self.plugin_name = plugin_name
+    self.process = process

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the analysis plugin manager class."""
 
-from plaso.analysis import interface
 from plaso.lib import errors
 
 
@@ -14,7 +13,7 @@ class AnalysisPluginManager(object):
   def DeregisterPlugin(cls, plugin_class):
     """Deregisters an analysis plugin class.
 
-    The anlysis plugin classes are identified based on their lower case name.
+    The analysis plugin classes are identified by their lower case name.
 
     Args:
       plugin_class: the class object of the analysis plugin.
@@ -41,7 +40,7 @@ class AnalysisPluginManager(object):
       yield plugin_name, plugin_class
 
   @classmethod
-  def ListAllPluginNames(cls, show_all=True):
+  def GetAllPluginInformation(cls, show_all=True):
     """Retrieves a list of the registered analysis plugins.
 
     Args:
@@ -49,10 +48,12 @@ class AnalysisPluginManager(object):
                 plugin names. The default is True.
 
     Returns:
-      A sorted lists of available plugin names and their docstrings.
+      A sorted list of tuples containing the name, docstring and type of each
+      analysis plugin.
     """
     results = []
-    for cls_obj in interface.AnalysisPlugin.classes.itervalues():
+    for cls_obj in cls._plugin_classes.itervalues():
+      # TODO: Use a specific description variable, not the docstring.
       doc_string, _, _ = cls_obj.__doc__.partition(u'\n')
 
       obj = cls_obj(None)
@@ -61,9 +62,8 @@ class AnalysisPluginManager(object):
 
     return sorted(results)
 
-  # TODO: refactor options out of function.
   @classmethod
-  def LoadPlugins(cls, plugin_names, incoming_queues, options=None):
+  def LoadPlugins(cls, plugin_names, incoming_queues):
     """Yield analysis plugins for a given list of plugin names.
 
     Given a list of plugin names this method finds the analysis
@@ -74,8 +74,6 @@ class AnalysisPluginManager(object):
                     should be a list of strings.
       incoming_queues: A list of queues (instances of QueueInterface) that
                        the plugin uses to read in incoming events to analyse.
-      options: Optional command line arguments (instance of
-               argparse.Namespace). The default is None.
 
     Yields:
       Analysis plugin objects (instances of AnalysisPlugin).
@@ -89,7 +87,7 @@ class AnalysisPluginManager(object):
     except AttributeError:
       raise errors.BadConfigOption(u'Plugin names should be a list of strings.')
 
-    for plugin_object in interface.AnalysisPlugin.classes.itervalues():
+    for plugin_object in iter(cls._plugin_classes.values()):
       plugin_name = plugin_object.NAME.lower()
 
       if plugin_name in plugin_names_lower:
@@ -100,7 +98,7 @@ class AnalysisPluginManager(object):
         except (TypeError, IndexError):
           incoming_queue = None
 
-        yield plugin_object(incoming_queue, options)
+        yield plugin_object(incoming_queue)
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):

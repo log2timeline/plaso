@@ -24,8 +24,7 @@ class FirefoxOldCacheTest(test_lib.ParserTestCase):
     self._parser = firefox_cache.FirefoxOldCacheParser()
 
   def VerifyMajorMinor(self, events):
-    """Verify that valid Firefox cahce version is extracted."""
-
+    """Verify that valid Firefox cache version is extracted."""
     for event_object in events:
       self.assertEquals(event_object.major, 1)
       self.assertEquals(event_object.minor, 19)

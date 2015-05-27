@@ -91,7 +91,7 @@ class ArgumentHelperManager(object):
     """
     helper_name = helper_class.NAME.lower()
     if helper_name in cls._helper_classes:
-      raise KeyError((u'Helper class already set for name: {0:s}.').format(
+      raise KeyError(u'Helper class already set for name: {0:s}.'.format(
           helper_class.NAME))
 
     cls._helper_classes[helper_name] = helper_class
