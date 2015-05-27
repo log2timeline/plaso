@@ -17,7 +17,7 @@ class PEFormatException(Exception):
 
 class PETimeEvent(time_events.PosixTimeEvent):
   """Parent class for events extracted by the PE parser."""
-  DATA_TYPE = 'pe'
+  DATA_TYPE = u'pe'
   TIMESTAMP_TYPE = None
 
   def __init__(self, timestamp, pe_type, section_names, imphash):
@@ -40,13 +40,13 @@ class PETimeEvent(time_events.PosixTimeEvent):
 
 class PECompilationEvent(PETimeEvent):
   """Convenience class for PE compile time events."""
-  DATA_TYPE = 'pe:compilation:compilation_time'
+  DATA_TYPE = u'pe:compilation:compilation_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.CREATION_TIME
 
 
 class PEImportModificationEvent(PETimeEvent):
   """Convenience class for PE import directory events."""
-  DATA_TYPE = 'pe:import:import_time'
+  DATA_TYPE = u'pe:import:import_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.MODIFICATION_TIME
 
   def __init__(self, timestamp, pe_type, section_names, imphash, dll_name):
@@ -69,7 +69,7 @@ class PEImportModificationEvent(PETimeEvent):
 
 class PEDelayImportModificationEvent(PETimeEvent):
   """Convenience class for PE delay import directory events."""
-  DATA_TYPE = 'pe:delay_import:import_time'
+  DATA_TYPE = u'pe:delay_import:import_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.MODIFICATION_TIME
 
   def __init__(self, timestamp, pe_type, section_names, imphash, dll_name):
@@ -92,20 +92,20 @@ class PEDelayImportModificationEvent(PETimeEvent):
 
 class PEResourceCreationEvent(PETimeEvent):
   """Convenience class for PE resource creation events."""
-  DATA_TYPE = 'pe:resource:creation_time'
+  DATA_TYPE = u'pe:resource:creation_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.CREATION_TIME
 
 
 class PELoadConfigModificationEvent(PETimeEvent):
   """Convenience class for PE resource creation events."""
-  DATA_TYPE = 'pe:load_config:modification_time'
+  DATA_TYPE = u'pe:load_config:modification_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.MODIFICATION_TIME
 
 
 class PEParser(interface.SingleFileBaseParser):
   """Parser for Portable Executable (PE) files."""
   _INITIAL_FILE_OFFSET = None
-  NAME = 'pe'
+  NAME = u'pe'
   DESCRIPTION = u'Parser for Portable Executable (PE) files.'
 
   @classmethod
@@ -127,7 +127,11 @@ class PEParser(interface.SingleFileBaseParser):
     """
     section_names = []
     for section in pefile_object.sections:
-      section_names.append(getattr(section, u'Name', None))
+      section_name = getattr(section, u'Name', b'')
+      # Ensure the name is encoded correctly.
+      section_name = u'{0:s}'.format(section_name.encode(u'unicode_escape'))
+      section_names.append(section_name)
+
     return section_names
 
   def _GetImportTimestamps(self, pefile_object):
