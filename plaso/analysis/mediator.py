@@ -5,10 +5,9 @@
 class AnalysisMediator(object):
   """Class that implements the analysis plugin mediator."""
 
-  # TODO: create output format definitions.
   def __init__(
       self, analysis_report_queue_producer, knowledge_base,
-      output_format=u'text'):
+      data_location=None, completion_event=None):
     """Initializes an analysis plugin mediator object.
 
     Args:
@@ -17,19 +16,19 @@ class AnalysisMediator(object):
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for analysis.
-      output_format: Optional output format. The default is 'text'.
+      data_location: A string containing location of the Plaso data files.
+      completion_event: An optional event object (instance of
+                        Multiprocessing.Event, Queue.Event or similar) that will
+                        be set when the analysis plugin is complete.
     """
     super(AnalysisMediator, self).__init__()
     self._analysis_report_queue_producer = analysis_report_queue_producer
+    self._completion_event = completion_event
+    self._data_location = data_location
     self._knowledge_base = knowledge_base
-    self._output_format = output_format
 
     self.number_of_produced_analysis_reports = 0
 
-  @property
-  def output_format(self):
-    """The output format."""
-    return self._output_format
 
   @property
   def users(self):
@@ -52,6 +51,11 @@ class AnalysisMediator(object):
     # mediator.
     return file_path
 
+  @property
+  def data_location(self):
+    """Retrieves the path to the Plaso data files as a string."""
+    return self._data_location
+
   def GetDisplayName(self, path_spec):
     """Retrieves the display name for the path spec.
 
@@ -64,6 +68,11 @@ class AnalysisMediator(object):
     relative_path = self.GetRelativePath(path_spec)
 
     return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+
+  @property
+  def platform(self):
+    """Retrieves platform information for the image being processed."""
+    return self._knowledge_base.platform
 
   def GetPathSegmentSeparator(self, path):
     """Given a path give back the path separator as a best guess.
@@ -189,3 +198,13 @@ class AnalysisMediator(object):
 
     self._analysis_report_queue_producer.ProduceItem(analysis_report)
     self.number_of_produced_analysis_reports += 1
+
+  def ReportingComplete(self):
+    """Called by an analysis plugin to signal that it has generated its report.
+
+    This method signals to report consumers that no further reports will be
+    produced by the analysis plugin.
+    """
+    self._analysis_report_queue_producer.Close()
+    if self._completion_event:
+      self._completion_event.set()

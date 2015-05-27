@@ -9,7 +9,7 @@ class WinRegistryKeyPathExpander(object):
     """Initialize the path expander object.
 
     Args:
-      reg_cache: Optional Registry objects cache (insance of WinRegistryCache).
+      reg_cache: Optional Registry objects cache (instance of WinRegistryCache).
     """
     super(WinRegistryKeyPathExpander, self).__init__()
     self._reg_cache = reg_cache

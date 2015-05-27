@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""File containing a Windows Registry plugin to parse the typed URL's key."""
+"""File containing a Windows Registry plugin to parse the typed URLs key."""
 
 import re
 

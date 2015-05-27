@@ -13,7 +13,7 @@ class WindowsService(yaml.YAMLObject):
   """Class to represent a Windows Service."""
   # This is used for comparison operations and defines attributes that should
   # not be used during evaluation of whether two services are the same.
-  COMPARE_EXCLUDE = frozenset(['sources'])
+  COMPARE_EXCLUDE = frozenset([u'sources'])
 
   KEY_PATH_SEPARATOR = u'\\'
 
@@ -69,11 +69,11 @@ class WindowsService(yaml.YAMLObject):
     """
     _, _, name = service_event.keyname.rpartition(
         WindowsService.KEY_PATH_SEPARATOR)
-    service_type = service_event.regvalue.get('Type')
-    image_path = service_event.regvalue.get('ImagePath')
-    start_type = service_event.regvalue.get('Start')
-    service_dll = service_event.regvalue.get('ServiceDll', u'')
-    object_name = service_event.regvalue.get('ObjectName', u'')
+    service_type = service_event.regvalue.get(u'Type')
+    image_path = service_event.regvalue.get(u'ImagePath')
+    start_type = service_event.regvalue.get(u'Start')
+    service_dll = service_event.regvalue.get(u'ServiceDll', u'')
+    object_name = service_event.regvalue.get(u'ObjectName', u'')
     if service_event.pathspec:
       source = (service_event.pathspec.location, service_event.keyname)
     else:
@@ -85,12 +85,16 @@ class WindowsService(yaml.YAMLObject):
 
   def HumanReadableType(self):
     """Return a human readable string describing the type value."""
-    return human_readable_service_enums.SERVICE_ENUMS['Type'].get(
+    if isinstance(self.service_type, basestring):
+      return self.service_type
+    return human_readable_service_enums.SERVICE_ENUMS[u'Type'].get(
         self.service_type, u'{0:d}'.format(self.service_type))
 
   def HumanReadableStartType(self):
     """Return a human readable string describing the start_type value."""
-    return human_readable_service_enums.SERVICE_ENUMS['Start'].get(
+    if isinstance(self.start_type, basestring):
+      return self.start_type
+    return human_readable_service_enums.SERVICE_ENUMS[u'Start'].get(
         self.start_type, u'{0:d}'.format(self.start_type))
 
   def __eq__(self, other_service):
@@ -163,22 +167,11 @@ class WindowsServiceCollection(object):
 class WindowsServicesPlugin(interface.AnalysisPlugin):
   """Provides a single list of for Windows services found in the Registry."""
 
-  NAME = 'windows_services'
+  NAME = u'windows_services'
 
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  # TODO: move this into a CLI argument helper, however this could
-  # be turned into a more generic analysis plugin setting in the process.
-  ARGUMENTS = [
-      ('--windows-services-output', {
-          'dest': 'windows-services-output',
-          'type': unicode,
-          'help': 'Specify how the results should be displayed. Options are '
-                  'text and yaml.',
-          'action': 'store',
-          'default': u'text',
-          'choices': [u'text', u'yaml']}),]
 
   def __init__(self, incoming_queue):
     """Initializes the Windows Services plugin
@@ -189,6 +182,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     super(WindowsServicesPlugin, self).__init__(incoming_queue)
     self._service_collection = WindowsServiceCollection()
     self.plugin_type = interface.AnalysisPlugin.TYPE_REPORT
+    self._output_format = u'text'
 
   def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
     """Analyzes an event_object and creates Windows Services as required.
@@ -201,12 +195,21 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
       event_object: The event object (instance of EventObject) to examine.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
-    if getattr(event_object, 'data_type', None) != 'windows:registry:service':
+    if getattr(event_object, u'data_type', None) != u'windows:registry:service':
       return
     else:
       # Create and store the service.
       service = WindowsService.FromEvent(event_object)
       self._service_collection.AddService(service)
+
+  def SetOutputFormat(self, output_format):
+    """Sets the output format of the generated report.
+
+    Args:
+      output_format: The format the the plugin should used to produce its
+                     output, as a string.
+    """
+    self._output_format = output_format
 
   def _FormatServiceText(self, service):
     """Produces a human readable multi-line string representing the service.
@@ -238,12 +241,12 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     """
     report = event.AnalysisReport(self.NAME)
 
-    if analysis_mediator.output_format == u'yaml':
+    if self._output_format == u'yaml':
       lines_of_text = []
       lines_of_text.append(
           yaml.safe_dump_all(self._service_collection.services))
     else:
-      lines_of_text = ['Listing Windows Services']
+      lines_of_text = [u'Listing Windows Services']
       for service in self._service_collection.services:
         lines_of_text.append(self._FormatServiceText(service))
         # Separate services with a blank line.

@@ -30,7 +30,7 @@ LIBYAL_DEPENDENCIES = {
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_DEPENDENCIES = [
     (u'artifacts', u'__version__', u'20150409', None),
-    # The bencode module does not appear to have no version information.
+    # The bencode module does not appear to have version information.
     (u'bencode', u'', u'', None),
     (u'binplist', u'__version__', u'0.1.4', None),
     (u'construct', u'__version__', u'2.5.2', None),

@@ -37,6 +37,10 @@ class Queue(object):
       QueueEmpty: when the queue is empty.
     """
 
+  @abc.abstractmethod
+  def Close(self):
+    """Closes the queue."""
+
 
 class QueueConsumer(object):
   """Class that implements the queue consumer interface.
@@ -173,3 +177,10 @@ class ItemQueueProducer(QueueProducer):
     """
     for item in items:
       self.ProduceItem(item)
+
+  def Close(self):
+    """Closes the queue backing this producer.
+
+    The closing of the queue indicates the produce will not produce any more
+    items."""
+    self._queue.Close()

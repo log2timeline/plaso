@@ -36,6 +36,14 @@ plaso.cli.helpers.manager_test module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.windows_services_analysis module
+--------------------------------------------------
+
+.. automodule:: plaso.cli.helpers.windows_services_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
