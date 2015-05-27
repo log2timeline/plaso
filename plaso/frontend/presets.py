@@ -2,48 +2,53 @@
 """Helper file for filtering out parsers."""
 
 categories = {
-    'win_gen': [
-        'bencode', 'esedb', 'filestat', 'google_drive', 'java_idx', 'lnk',
-        'mcafee_protection', 'olecf', 'openxml', 'prefetch',
-        'skydrive_log_error', 'skydrive_log', 'skype',
-        'symantec_scanlog', 'webhist', 'winfirewall', 'winjob',
-        'winreg'],
-    'winxp': [
-        'recycle_bin_info2', 'win_gen', 'winevt'],
-    'winxp_slow': [
-        'hachoir', 'winxp'],
-    'win7': [
-        'recycle_bin', 'custom_destinations', 'esedb_file_history',
-        'olecf_automatic_destinations', 'win_gen', 'winevtx'],
-    'win7_slow': [
-        'hachoir', 'win7'],
-    'webhist': [
-        'binary_cookies', 'chrome_cache', 'chrome_cookies',
-        'chrome_extension_activity', 'chrome_history', 'chrome_preferences',
-        'firefox_cache', 'firefox_cookies', 'firefox_downloads',
-        'firefox_history', 'java_idx', 'msie_webcache', 'msiecf',
-        'opera_global', 'opera_typed_history', 'safari_history'],
-    'linux': [
-        'bencode', 'filestat', 'google_drive', 'java_idx', 'olecf', 'openxml',
-        'pls_recall', 'popularity_contest', 'selinux', 'skype', 'syslog',
-        'utmp', 'webhist', 'xchatlog', 'xchatscrollback', 'zeitgeist'],
-    'macosx': [
-        'appusage', 'asl_log', 'bencode', 'bsm_log', 'cups_ipp', 'filestat',
-        'google_drive', 'java_idx', 'ls_quarantine', 'mac_appfirewall_log',
-        'mac_document_versions', 'mac_keychain', 'mac_securityd',
-        'mackeeper_cache', 'macwifi', 'olecf', 'openxml', 'plist', 'skype',
-        'utmpx', 'webhist'],
+    u'win_gen': [
+        u'bencode', u'esedb', u'filestat', u'google_drive', u'java_idx', u'lnk',
+        u'mcafee_protection', u'olecf', u'openxml', u'pe', u'prefetch',
+        u'skydrive_log_error', u'skydrive_log', u'skype',
+        u'symantec_scanlog', u'webhist', u'winfirewall', u'winjob',
+        u'winreg'],
+    u'winxp': [
+        u'recycle_bin_info2', u'win_gen', u'winevt'],
+    u'winxp_slow': [
+        u'hachoir', u'winxp'],
+    u'win7': [
+        u'recycle_bin', u'custom_destinations', u'esedb_file_history',
+        u'olecf_automatic_destinations', u'win_gen', u'winevtx'],
+    u'win7_slow': [
+        u'hachoir', u'win7'],
+    u'webhist': [
+        u'binary_cookies', u'chrome_cache', u'chrome_cookies',
+        u'chrome_extension_activity', u'chrome_history', u'chrome_preferences',
+        u'firefox_cache', u'firefox_cookies', u'firefox_downloads',
+        u'firefox_history', u'java_idx', u'msie_webcache', u'msiecf',
+        u'opera_global', u'opera_typed_history', u'safari_history'],
+    u'linux': [
+        u'bencode', u'filestat', u'google_drive', u'java_idx', u'olecf',
+        u'openxml', u'pls_recall', u'popularity_contest', u'selinux', u'skype',
+        u'syslog', u'utmp', u'webhist', u'xchatlog', u'xchatscrollback',
+        u'zeitgeist'],
+    u'macosx': [
+        u'appusage', u'asl_log', u'bencode', u'bsm_log', u'cups_ipp',
+        u'filestat', u'google_drive', u'java_idx', u'ls_quarantine',
+        u'mac_appfirewall_log', u'mac_document_versions', u'mac_keychain',
+        u'mac_securityd', u'mackeeper_cache', u'macwifi', u'olecf', u'openxml',
+        u'plist', u'skype', u'utmpx', u'webhist'],
     # TODO: Once syslog parser has been rewritten to be faster than the current
     # one it's moved out of the default parsers for Mac OS X and into the "slow"
     # mode.
-    'macosx_slow': ['macosx', 'syslog'],
-    'android': [
-        'android_app_usage', 'android_calls', 'android_sms'],
-}
+    u'macosx_slow': [u'macosx', u'syslog'],
+    u'android': [
+        u'android_app_usage', u'android_calls', u'android_sms'],
+  }
 
 
 def GetParsersFromCategory(category):
-  """Return a list of parsers from a parser category."""
+  """Return a list of parsers from a parser category.
+
+  Args:
+    category: One of the parser categories.
+  """
   return_list = []
   if category not in categories:
     return return_list
