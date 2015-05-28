@@ -170,7 +170,7 @@ class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
     """
     if max_line_length:
       title_raw = text_file_object.readline(max_line_length)
-      if len(title_raw) == max_line_length and not title_raw.endswith(u'\n'):
+      if len(title_raw) == max_line_length and not title_raw.endswith(b'\n'):
         return None, None, None, None
       if not utils.IsText(title_raw):
         raise errors.NotAText(u'Title line is not a text.')
