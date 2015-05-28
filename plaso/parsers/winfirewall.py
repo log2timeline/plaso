@@ -172,7 +172,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.
-    if line == u'#Version: 1.5':
+    if line == b'#Version: 1.5':
       return True
 
     return False

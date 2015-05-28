@@ -82,7 +82,7 @@ class SQLiteDatabase(object):
   """A simple wrapper for opening up a SQLite database."""
 
   # Magic value for a SQLite database.
-  MAGIC = u'SQLite format 3'
+  MAGIC = b'SQLite format 3'
 
   _READ_BUFFER_SIZE = 65536
 

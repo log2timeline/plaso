@@ -697,7 +697,7 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
       return
 
     # If line is empty, skip it and go on.
-    if line in [u'\n', u'\r\n']:
+    if line in [b'\n', b'\r\n']:
       # Max 40 new lines in a row before we bail out.
       if depth == 40:
         return u''

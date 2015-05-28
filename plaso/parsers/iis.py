@@ -48,7 +48,7 @@ class IISEventObject(time_events.TimestampEvent):
           save_value = int(value, 10)
         except ValueError:
           save_value = value
-      setattr(self, key, save_value)
+        setattr(self, key, save_value)
 
 
 class WinIISParser(text_parser.PyparsingSingleLineTextParser):
@@ -127,7 +127,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       (u'logline', LOG_LINE_6_0)]
 
   # Define a signature value for the log file.
-  SIGNATURE = u'#Software: Microsoft Internet Information Services'
+  SIGNATURE = b'#Software: Microsoft Internet Information Services'
 
   def __init__(self):
     """Initializes a parser object."""
