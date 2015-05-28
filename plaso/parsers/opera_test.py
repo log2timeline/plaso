@@ -19,7 +19,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['typed_history.xml'])
+    test_file = self._GetTestFilePath([u'typed_history.xml'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -28,9 +28,9 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 23:45:27')
+        u'2013-11-11 23:45:27')
     self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.entry_selection, 'Filled from autocomplete.')
+    self.assertEqual(event_object.entry_selection, u'Filled from autocomplete.')
 
     expected_string = u'plaso.kiddaland.net (Filled from autocomplete.)'
 
@@ -39,9 +39,9 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
     event_object = event_objects[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:46:07')
+        u'2013-11-11 22:46:07')
     self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.entry_selection, 'Manually typed.')
+    self.assertEqual(event_object.entry_selection, u'Manually typed.')
 
     expected_string = u'theonion.com (Manually typed.)'
 
@@ -57,7 +57,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
   def testParseFile(self):
     """Read a history file and run a few tests."""
-    test_file = self._GetTestFilePath(['global_history.dat'])
+    test_file = self._GetTestFilePath([u'global_history.dat'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -66,7 +66,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
     event_object = event_objects[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:45:46')
+        u'2013-11-11 22:45:46')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -82,13 +82,13 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
     event_object = event_objects[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:45:55')
+        u'2013-11-11 22:45:55')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[16]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:46:16')
+        u'2013-11-11 22:46:16')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_title = (

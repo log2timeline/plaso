@@ -13,13 +13,13 @@ from plaso.parsers.shared import shell_items
 
 
 if pylnk.get_version() < '20141026':
-  raise ImportWarning('WinLnkParser requires at least pylnk 20141026.')
+  raise ImportWarning(u'WinLnkParser requires at least pylnk 20141026.')
 
 
 class WinLnkLinkEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows Shortcut (LNK) link event."""
 
-  DATA_TYPE = 'windows:lnk:link'
+  DATA_TYPE = u'windows:lnk:link'
 
   def __init__(self, timestamp, timestamp_description, lnk_file, link_target):
     """Initializes the event object.

@@ -16,7 +16,7 @@ from plaso.parsers import manager
 class RestorePointInfoEvent(time_events.FiletimeEvent):
   """Class that defines a Windows Restore Point information event."""
 
-  DATA_TYPE = 'windows:restore_point:info'
+  DATA_TYPE = u'windows:restore_point:info'
 
   def __init__(
       self, timestamp, restore_point_event_type, restore_point_type,
@@ -52,8 +52,8 @@ class RestorePointLogParser(interface.BaseParser):
       construct.ULInt32(u'restore_point_type'),
       construct.ULInt64(u'sequence_number'),
       construct.RepeatUntil(
-          lambda obj, ctx: obj == '\x00\x00',
-          construct.Field('description', 2)))
+          lambda obj, ctx: obj == b'\x00\x00',
+          construct.Field(u'description', 2)))
 
   _FILE_FOOTER_STRUCT = construct.Struct(
       u'file_footer',

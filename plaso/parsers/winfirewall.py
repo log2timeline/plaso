@@ -21,7 +21,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     http://technet.microsoft.com/en-us/library/cc758040(v=ws.10).aspx
   """
 
-  NAME = 'winfirewall'
+  NAME = u'winfirewall'
   DESCRIPTION = u'Parser for Windows Firewall Log files.'
 
   # TODO: Add support for custom field names. Currently this parser only
@@ -30,8 +30,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   #   tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
 
   # Define common structures.
-  BLANK = pyparsing.Literal('-')
-  WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
+  BLANK = pyparsing.Literal(u'-')
+  WORD = pyparsing.Word(pyparsing.alphanums + u'-') | BLANK
   INT = pyparsing.Word(pyparsing.nums, min=1) | BLANK
   IP = (
       text_parser.PyparsingConstants.IPV4_ADDRESS |
@@ -40,24 +40,24 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   # Define how a log line should look like.
   LOG_LINE = (
-      text_parser.PyparsingConstants.DATE.setResultsName('date') +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
-      WORD.setResultsName('action') + WORD.setResultsName('protocol') +
-      IP.setResultsName('source_ip') + IP.setResultsName('dest_ip') +
-      PORT.setResultsName('source_port') + INT.setResultsName('dest_port') +
-      INT.setResultsName('size') + WORD.setResultsName('flags') +
-      INT.setResultsName('tcp_seq') + INT.setResultsName('tcp_ack') +
-      INT.setResultsName('tcp_win') + INT.setResultsName('icmp_type') +
-      INT.setResultsName('icmp_code') + WORD.setResultsName('info') +
-      WORD.setResultsName('path'))
+      text_parser.PyparsingConstants.DATE.setResultsName(u'date') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      WORD.setResultsName(u'action') + WORD.setResultsName(u'protocol') +
+      IP.setResultsName(u'source_ip') + IP.setResultsName(u'dest_ip') +
+      PORT.setResultsName(u'source_port') + INT.setResultsName(u'dest_port') +
+      INT.setResultsName(u'size') + WORD.setResultsName(u'flags') +
+      INT.setResultsName(u'tcp_seq') + INT.setResultsName(u'tcp_ack') +
+      INT.setResultsName(u'tcp_win') + INT.setResultsName(u'icmp_type') +
+      INT.setResultsName(u'icmp_code') + WORD.setResultsName(u'info') +
+      WORD.setResultsName(u'path'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
-      ('logline', LOG_LINE),
+      (u'comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
+      (u'logline', LOG_LINE),
   ]
 
-  DATA_TYPE = 'windows:firewall:log_entry'
+  DATA_TYPE = u'windows:firewall:log_entry'
 
   def __init__(self):
     """Initializes a parser object."""
@@ -74,13 +74,13 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
                  log file.
     """
     comment = structure[1]
-    if comment.startswith('Version'):
-      _, _, self.version = comment.partition(':')
-    elif comment.startswith('Software'):
-      _, _, self.software = comment.partition(':')
-    elif comment.startswith('Time'):
-      _, _, time_format = comment.partition(':')
-      if 'local' in time_format.lower():
+    if comment.startswith(u'Version'):
+      _, _, self.version = comment.partition(u':')
+    elif comment.startswith(u'Software'):
+      _, _, self.software = comment.partition(u':')
+    elif comment.startswith(u'Time'):
+      _, _, time_format = comment.partition(u':')
+      if u'local' in time_format.lower():
         self.use_local_zone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
@@ -96,8 +96,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     log_dict = structure.asDict()
 
-    date = log_dict.get('date', None)
-    time = log_dict.get('time', None)
+    date = log_dict.get(u'date', None)
+    time = log_dict.get(u'time', None)
 
     if not (date and time):
       logging.warning(u'Unable to extract timestamp from Winfirewall logline.')
@@ -123,7 +123,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     for key, value in log_dict.items():
       if key in (u'time', u'date'):
         continue
-      if value == '-':
+      if value == u'-':
         continue
 
       if isinstance(value, pyparsing.ParseResults):
@@ -152,9 +152,9 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'comment':
+    if key == u'comment':
       self._ParseCommentRecord(structure)
-    elif key == 'logline':
+    elif key == u'logline':
       return self._ParseLogLine(parser_mediator, structure)
     else:
       logging.warning(
@@ -172,7 +172,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.
-    if line == '#Version: 1.5':
+    if line == u'#Version: 1.5':
       return True
 
     return False

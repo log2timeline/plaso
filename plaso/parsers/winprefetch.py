@@ -19,7 +19,7 @@ from plaso.parsers import manager
 class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
   """Class that defines a Windows Prefetch execution event."""
 
-  DATA_TYPE = 'windows:prefetch:execution'
+  DATA_TYPE = u'windows:prefetch:execution'
 
   def __init__(
       self, timestamp, timestamp_description, file_header, file_information,

@@ -20,7 +20,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
   def testParseFile(self):
     """Tests parsing a default profile Preferences file."""
-    test_file = self._GetTestFilePath(['Preferences'])
+    test_file = self._GetTestFilePath([u'Preferences'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 

@@ -19,7 +19,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['chrome_cache', 'index'])
+    test_file = self._GetTestFilePath([u'chrome_cache', u'index'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -28,7 +28,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-04-30 16:44:36.226091')
+        u'2014-04-30 16:44:36.226091')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_original_url = (

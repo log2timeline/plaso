@@ -16,7 +16,7 @@ from plaso.parsers import text_parser
 class MactimeEvent(time_events.PosixTimeEvent):
   """Convenience class for a mactime-based event."""
 
-  DATA_TYPE = 'fs:mactime:line'
+  DATA_TYPE = u'fs:mactime:line'
 
   def __init__(self, posix_time, usage, row_offset, data):
     """Initializes a mactime-based event object.
@@ -29,10 +29,10 @@ class MactimeEvent(time_events.PosixTimeEvent):
     """
     super(MactimeEvent, self).__init__(posix_time, usage)
     self.offset = row_offset
-    self.user_sid = unicode(data.get('uid', u''))
-    self.user_gid = data.get('gid', None)
-    self.md5 = data.get('md5', None)
-    self.filename = data.get('name', 'N/A')
+    self.user_sid = unicode(data.get(u'uid', u''))
+    self.user_gid = data.get(u'gid', None)
+    self.md5 = data.get(u'md5', None)
+    self.filename = data.get(u'name', u'N/A')
     # Check if the filename field is not a string, eg in the instances where a
     # filename only conists of numbers. In that case the self.filename field
     # becomes an integer value instead of a string value. That causes issues
@@ -40,13 +40,13 @@ class MactimeEvent(time_events.PosixTimeEvent):
     if not isinstance(self.filename, basestring):
       self.filename = unicode(self.filename)
 
-    self.mode_as_string = data.get('mode_as_string', None)
-    self.size = data.get('size', None)
+    self.mode_as_string = data.get(u'mode_as_string', None)
+    self.size = data.get(u'size', None)
 
-    inode_number = data.get('inode', 0)
+    inode_number = data.get(u'inode', 0)
     if isinstance(inode_number, basestring):
-      if '-' in inode_number:
-        inode_number, _, _ = inode_number.partition('-')
+      if u'-' in inode_number:
+        inode_number, _, _ = inode_number.partition(u'-')
 
       try:
         inode_number = int(inode_number, 10)
@@ -59,21 +59,21 @@ class MactimeEvent(time_events.PosixTimeEvent):
 class MactimeParser(text_parser.TextCSVParser):
   """Parses SleuthKit's mactime bodyfiles."""
 
-  NAME = 'mactime'
+  NAME = u'mactime'
   DESCRIPTION = u'Parser for SleuthKit\'s mactime bodyfiles.'
 
   COLUMNS = [
-      'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
-      'atime', 'mtime', 'ctime', 'crtime']
-  VALUE_SEPARATOR = '|'
+      u'md5', u'name', u'inode', u'mode_as_string', u'uid', u'gid', u'size',
+      u'atime', u'mtime', u'ctime', u'crtime']
+  VALUE_SEPARATOR = b'|'
 
-  MD5_RE = re.compile('^[0-9a-fA-F]+$')
+  MD5_RE = re.compile(r'^[0-9a-fA-F]+$')
 
   _TIMESTAMP_DESC_MAP = {
-      'atime': eventdata.EventTimestamp.ACCESS_TIME,
-      'crtime': eventdata.EventTimestamp.CREATION_TIME,
-      'ctime': eventdata.EventTimestamp.CHANGE_TIME,
-      'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
+      u'atime': eventdata.EventTimestamp.ACCESS_TIME,
+      u'crtime': eventdata.EventTimestamp.CREATION_TIME,
+      u'ctime': eventdata.EventTimestamp.CHANGE_TIME,
+      u'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
   }
 
   def VerifyRow(self, unused_parser_mediator, row):
@@ -86,7 +86,7 @@ class MactimeParser(text_parser.TextCSVParser):
     Returns:
       True if this is the correct parser, False otherwise.
     """
-    if not self.MD5_RE.match(row['md5']):
+    if not self.MD5_RE.match(row[u'md5']):
       return False
 
     try:
@@ -94,7 +94,7 @@ class MactimeParser(text_parser.TextCSVParser):
       # and then back to string so it can be compared, if the value is
       # not a string representation of an integer, eg: '12a' then this
       # conversion will fail and we return a False value.
-      if str(int(row.get('size', '0'), 10)) != row.get('size', None):
+      if str(int(row.get(u'size', u'0'), 10)) != row.get(u'size', None):
         return False
     except ValueError:
       return False

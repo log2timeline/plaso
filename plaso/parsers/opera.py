@@ -21,7 +21,7 @@ from plaso.parsers import manager
 class OperaTypedHistoryEvent(event.EventObject):
   """An EventObject for an Opera typed history entry."""
 
-  DATA_TYPE = 'opera:history:typed_entry'
+  DATA_TYPE = u'opera:history:typed_entry'
 
   def __init__(self, last_typed_time, url, entry_type):
     """A constructor for the typed history event.
@@ -38,10 +38,10 @@ class OperaTypedHistoryEvent(event.EventObject):
     self.url = url
     self.entry_type = entry_type
 
-    if entry_type == 'selected':
-      self.entry_selection = 'Filled from autocomplete.'
-    elif entry_type == 'text':
-      self.entry_selection = 'Manually typed.'
+    if entry_type == u'selected':
+      self.entry_selection = u'Filled from autocomplete.'
+    elif entry_type == u'text':
+      self.entry_selection = u'Manually typed.'
 
     self.timestamp = timelib.Timestamp.FromTimeString(last_typed_time)
     self.timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
@@ -50,7 +50,7 @@ class OperaTypedHistoryEvent(event.EventObject):
 class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
   """An EventObject for an Opera global history entry."""
 
-  DATA_TYPE = 'opera:history:entry'
+  DATA_TYPE = u'opera:history:entry'
 
   def __init__(self, timestamp, url, title, popularity_index):
     """Initialize the event object."""
@@ -64,9 +64,9 @@ class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
     self.popularity_index = popularity_index
 
     if popularity_index < 0:
-      self.description = 'First and Only Visit'
+      self.description = u'First and Only Visit'
     else:
-      self.description = 'Last Visit'
+      self.description = u'Last Visit'
 
 
 class OperaTypedHistoryParser(interface.SingleFileBaseParser):
@@ -74,7 +74,7 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'opera_typed_history'
+  NAME = u'opera_typed_history'
   DESCRIPTION = u'Parser for Opera typed_history.xml files.'
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -95,7 +95,7 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
     # b) the right XML.
     first_line = text_file_object.readline(90)
 
-    if not first_line.startswith('<?xml version="1.0'):
+    if not first_line.startswith(u'<?xml version="1.0'):
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
 
@@ -105,7 +105,7 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
     # which denotes a typed_history.xml file.
     second_line = text_file_object.readline(50).strip()
 
-    if second_line != '<typed_history>':
+    if second_line != u'<typed_history>':
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 
@@ -117,10 +117,10 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
 
 
 
-    for history_item in xml.iterfind('typed_history_item'):
-      content = history_item.get('content', '')
-      last_typed = history_item.get('last_typed', '')
-      entry_type = history_item.get('type', '')
+    for history_item in xml.iterfind(u'typed_history_item'):
+      content = history_item.get(u'content', u'')
+      last_typed = history_item.get(u'last_typed', u'')
+      entry_type = history_item.get(u'type', u'')
 
       event_object = OperaTypedHistoryEvent(last_typed, content, entry_type)
       parser_mediator.ProduceEvent(event_object)
@@ -129,10 +129,10 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
 class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
   """Parses the Opera global_history.dat file."""
 
-  NAME = 'opera_global'
+  NAME = u'opera_global'
   DESCRIPTION = u'Parser for Opera global_history.dat files.'
 
-  _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
+  _SUPPORTED_URL_SCHEMES = frozenset([u'file', u'http', u'https', u'ftp'])
 
   def _IsValidUrl(self, url):
     """A simple test to see if an URL is considered valid."""
@@ -166,7 +166,7 @@ class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
     """
     if max_line_length:
       title_raw = text_file_object.readline(max_line_length)
-      if len(title_raw) == max_line_length and not title_raw.endswith('\n'):
+      if len(title_raw) == max_line_length and not title_raw.endswith(u'\n'):
         return None, None, None, None
       if not utils.IsText(title_raw):
         raise errors.NotAText(u'Title line is not a text.')
@@ -190,7 +190,7 @@ class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
     except ValueError:
       if len(timestamp_line) > 30:
         timestamp_line = timestamp_line[0:30]
-      logging.debug(u'Unable to read in timestamp [{!r}]'.format(
+      logging.debug(u'Unable to read in timestamp [{0!r}]'.format(
           timestamp_line))
       return None, None, None, None
 
@@ -198,7 +198,7 @@ class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
       popularity_index = int(popularity_line, 10)
     except ValueError:
       try:
-        logging.debug(u'Unable to read in popularity index[{}]'.format(
+        logging.debug(u'Unable to read in popularity index[{0:s}]'.format(
             popularity_line))
       except UnicodeDecodeError:
         logging.debug(
@@ -208,10 +208,10 @@ class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
 
     # Try to get the data into unicode.
     try:
-      title_unicode = title.decode('utf-8')
+      title_unicode = title.decode(u'utf-8')
     except UnicodeDecodeError:
-      partial_title = title.decode('utf-8', 'ignore')
-      title_unicode = u'Warning: partial line, starts with: {}'.format(
+      partial_title = title.decode(u'utf-8', u'ignore')
+      title_unicode = u'Warning: partial line, starts with: {0:s}'.format(
           partial_title)
 
     return title_unicode, url, timestamp, popularity_index

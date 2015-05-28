@@ -22,7 +22,7 @@ from plaso.parsers import manager
 class JavaIDXEvent(time_events.TimestampEvent):
   """Convenience class for a Java IDX cache file download event."""
 
-  DATA_TYPE = 'java:download:idx'
+  DATA_TYPE = u'java:download:idx'
 
   def __init__(
       self, timestamp, timestamp_description, idx_version, url, ip_address):
@@ -56,59 +56,59 @@ class JavaIDXParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'java_idx'
+  NAME = u'java_idx'
   DESCRIPTION = u'Parser for Java WebStart Cache IDX files.'
 
   IDX_SHORT_STRUCT = construct.Struct(
-      'magic',
-      construct.UBInt8('busy'),
-      construct.UBInt8('incomplete'),
-      construct.UBInt32('idx_version'))
+      u'magic',
+      construct.UBInt8(u'busy'),
+      construct.UBInt8(u'incomplete'),
+      construct.UBInt32(u'idx_version'))
 
   IDX_602_STRUCT = construct.Struct(
-      'IDX_602_Full',
-      construct.UBInt16('null_space'),
-      construct.UBInt8('shortcut'),
-      construct.UBInt32('content_length'),
-      construct.UBInt64('last_modified_date'),
-      construct.UBInt64('expiration_date'),
+      u'IDX_602_Full',
+      construct.UBInt16(u'null_space'),
+      construct.UBInt8(u'shortcut'),
+      construct.UBInt32(u'content_length'),
+      construct.UBInt64(u'last_modified_date'),
+      construct.UBInt64(u'expiration_date'),
       construct.PascalString(
-          'version_string', length_field=construct.UBInt16('length')),
+          u'version_string', length_field=construct.UBInt16(u'length')),
       construct.PascalString(
-          'url', length_field=construct.UBInt16('length')),
+          u'url', length_field=construct.UBInt16(u'length')),
       construct.PascalString(
-          'namespace', length_field=construct.UBInt16('length')),
-      construct.UBInt32('FieldCount'))
+          u'namespace', length_field=construct.UBInt16(u'length')),
+      construct.UBInt32(u'FieldCount'))
 
   IDX_605_SECTION_ONE_STRUCT = construct.Struct(
-      'IDX_605_Section1',
-      construct.UBInt8('shortcut'),
-      construct.UBInt32('content_length'),
-      construct.UBInt64('last_modified_date'),
-      construct.UBInt64('expiration_date'),
-      construct.UBInt64('validation_date'),
-      construct.UBInt8('signed'),
-      construct.UBInt32('sec2len'),
-      construct.UBInt32('sec3len'),
-      construct.UBInt32('sec4len'))
+      u'IDX_605_Section1',
+      construct.UBInt8(u'shortcut'),
+      construct.UBInt32(u'content_length'),
+      construct.UBInt64(u'last_modified_date'),
+      construct.UBInt64(u'expiration_date'),
+      construct.UBInt64(u'validation_date'),
+      construct.UBInt8(u'signed'),
+      construct.UBInt32(u'sec2len'),
+      construct.UBInt32(u'sec3len'),
+      construct.UBInt32(u'sec4len'))
 
   IDX_605_SECTION_TWO_STRUCT = construct.Struct(
-      'IDX_605_Section2',
+      u'IDX_605_Section2',
       construct.PascalString(
-          'version', length_field=construct.UBInt16('length')),
+          u'version', length_field=construct.UBInt16(u'length')),
       construct.PascalString(
-          'url', length_field=construct.UBInt16('length')),
+          u'url', length_field=construct.UBInt16(u'length')),
       construct.PascalString(
-          'namespec', length_field=construct.UBInt16('length')),
+          u'namespec', length_field=construct.UBInt16(u'length')),
       construct.PascalString(
-          'ip_address', length_field=construct.UBInt16('length')),
-      construct.UBInt32('FieldCount'))
+          u'ip_address', length_field=construct.UBInt16(u'length')),
+      construct.UBInt32(u'FieldCount'))
 
   # Java uses Pascal-style strings, but with a 2-byte length field.
   JAVA_READUTF_STRING = construct.Struct(
-      'Java.ReadUTF',
+      u'Java.ReadUTF',
       construct.PascalString(
-          'string', length_field=construct.UBInt16('length')))
+          u'string', length_field=construct.UBInt16(u'length')))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
@@ -146,7 +146,7 @@ class JavaIDXParser(interface.SingleFileBaseParser):
       section_one = self.IDX_602_STRUCT.parse_stream(file_object)
       last_modified_date = section_one.last_modified_date
       url = section_one.url
-      ip_address = 'Unknown'
+      ip_address = u'Unknown'
       http_header_count = section_one.FieldCount
     elif magic.idx_version in [603, 604, 605]:
 
@@ -165,8 +165,8 @@ class JavaIDXParser(interface.SingleFileBaseParser):
         ip_address = section_two.ip_address
         http_header_count = section_two.FieldCount
       else:
-        url = 'Unknown'
-        ip_address = 'Unknown'
+        url = u'Unknown'
+        ip_address = u'Unknown'
         http_header_count = 0
 
     # File offset is now just prior to HTTP headers. Make sure there
@@ -175,7 +175,7 @@ class JavaIDXParser(interface.SingleFileBaseParser):
     for field in range(0, http_header_count):
       field = self.JAVA_READUTF_STRING.parse_stream(file_object)
       value = self.JAVA_READUTF_STRING.parse_stream(file_object)
-      if field.string == 'date':
+      if field.string == u'date':
         # Time string "should" be in UTC or have an associated time zone
         # information in the string itself. If that is not the case then
         # there is no reliable method for plaso to determine the proper
@@ -191,16 +191,16 @@ class JavaIDXParser(interface.SingleFileBaseParser):
         last_modified_date)
     # TODO: Move the timestamp description fields into eventdata.
     event_object = JavaIDXEvent(
-        last_modified_timestamp, 'File Hosted Date', magic.idx_version, url,
+        last_modified_timestamp, u'File Hosted Date', magic.idx_version, url,
         ip_address)
     parser_mediator.ProduceEvent(event_object)
 
     if section_one:
-      expiration_date = section_one.get('expiration_date', None)
+      expiration_date = section_one.get(u'expiration_date', None)
       if expiration_date:
         expiration_timestamp = timelib.Timestamp.FromJavaTime(expiration_date)
         event_object = JavaIDXEvent(
-            expiration_timestamp, 'File Expiration Date', magic.idx_version,
+            expiration_timestamp, u'File Expiration Date', magic.idx_version,
             url, ip_address)
         parser_mediator.ProduceEvent(event_object)
 

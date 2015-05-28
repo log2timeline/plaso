@@ -14,33 +14,33 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 class SymantecEvent(text_events.TextEvent):
   """Convenience class for a Symantec line event."""
-  DATA_TYPE = 'av:symantec:scanlog'
+  DATA_TYPE = u'av:symantec:scanlog'
 
 
 class SymantecParser(text_parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
-  NAME = 'symantec_scanlog'
+  NAME = u'symantec_scanlog'
   DESCRIPTION = u'Parser for Symantec Anti-Virus log files.'
 
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
   COLUMNS = [
-      'time', 'event', 'cat', 'logger', 'computer', 'user',
-      'virus', 'file', 'action1', 'action2', 'action0', 'virustype',
-      'flags', 'description', 'scanid', 'new_ext', 'groupid',
-      'event_data', 'vbin_id', 'virus_id', 'quarfwd_status',
-      'access', 'snd_status', 'compressed', 'depth', 'still_infected',
-      'definfo', 'defseqnumber', 'cleaninfo', 'deleteinfo',
-      'backup_id', 'parent', 'guid', 'clientgroup', 'address',
-      'domainname', 'ntdomain', 'macaddr', 'version:',
-      'remote_machine', 'remote_machine_ip', 'action1_status',
-      'action2_status', 'license_feature_name', 'license_feature_ver',
-      'license_serial_num', 'license_fulfillment_id', 'license_start_dt',
-      'license_expiration_dt', 'license_lifecycle', 'license_seats_total',
-      'license_seats', 'err_code', 'license_seats_delta', 'status',
-      'domain_guid', 'log_session_guid', 'vbin_session_id',
-      'login_domain', 'extra']
+      u'time', u'event', u'cat', u'logger', u'computer', u'user',
+      u'virus', u'file', u'action1', u'action2', u'action0', u'virustype',
+      u'flags', u'description', u'scanid', u'new_ext', u'groupid',
+      u'event_data', u'vbin_id', u'virus_id', u'quarfwd_status',
+      u'access', u'snd_status', u'compressed', u'depth', u'still_infected',
+      u'definfo', u'defseqnumber', u'cleaninfo', u'deleteinfo',
+      u'backup_id', u'parent', u'guid', u'clientgroup', u'address',
+      u'domainname', u'ntdomain', u'macaddr', u'version:',
+      u'remote_machine', u'remote_machine_ip', u'action1_status',
+      u'action2_status', u'license_feature_name', u'license_feature_ver',
+      u'license_serial_num', u'license_fulfillment_id', u'license_start_dt',
+      u'license_expiration_dt', u'license_lifecycle', u'license_seats_total',
+      u'license_seats', u'err_code', u'license_seats_delta', u'status',
+      u'domain_guid', u'log_session_guid', u'vbin_session_id',
+      u'login_domain', u'extra']
 
   def _GetTimestamp(self, timestamp_raw, timezone=pytz.UTC):
     """Return a 64-bit signed timestamp value in micro seconds since Epoch.
@@ -64,7 +64,7 @@ class SymantecParser(text_parser.TextCSVParser):
     Returns:
       A plaso timestamp value, micro seconds since Epoch in UTC.
     """
-    if timestamp_raw == '':
+    if timestamp_raw == u'':
       return 0
 
     year, month, day, hours, minutes, seconds = (
@@ -85,7 +85,7 @@ class SymantecParser(text_parser.TextCSVParser):
       True if this is the correct parser, False otherwise.
     """
     try:
-      timestamp = self._GetTimestamp(row['time'], parser_mediator.timezone)
+      timestamp = self._GetTimestamp(row[u'time'], parser_mediator.timezone)
     except (TypeError, ValueError):
       return False
 
@@ -94,16 +94,16 @@ class SymantecParser(text_parser.TextCSVParser):
 
     # Check few entries.
     try:
-      my_event = int(row['event'])
-    except TypeError:
+      my_event = int(row[u'event'])
+    except (TypeError, ValueError):
       return False
 
     if my_event < 1 or my_event > 77:
       return False
 
     try:
-      category = int(row['cat'])
-    except TypeError:
+      category = int(row[u'cat'])
+    except (TypeError, ValueError):
       return False
 
     if category < 1 or category > 4:
@@ -120,7 +120,7 @@ class SymantecParser(text_parser.TextCSVParser):
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
     """
-    timestamp = self._GetTimestamp(row['time'], parser_mediator.timezone)
+    timestamp = self._GetTimestamp(row[u'time'], parser_mediator.timezone)
 
     # TODO: Create new dict object that only contains valuable attributes.
     event_object = SymantecEvent(timestamp, row_offset, row)

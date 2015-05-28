@@ -19,15 +19,15 @@ from plaso.parsers import text_parser
 
 class TestTextEvent(text_events.TextEvent):
   """Test text event."""
-  DATA_TYPE = 'test:parser:text'
+  DATA_TYPE = u'test:parser:text'
 
 
 class TestTextEventFormatter(formatters_interface.EventFormatter):
   """Test text event formatter."""
-  DATA_TYPE = 'test:parser:text'
+  DATA_TYPE = u'test:parser:text'
   FORMAT_STRING = u'{body}'
 
-  SOURCE_LONG = 'Test Text Parser'
+  SOURCE_LONG = u'Test Text Parser'
 
 
 class TestTextParser(text_parser.SlowLexicalTextParser):
@@ -36,26 +36,25 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
   To be able to achieve that one function has to be implemented, the ParseDate
   one.
   """
-  NAME = 'test_text'
+  NAME = u'test_text'
 
   tokens = [
-      lexer.Token('INITIAL',
-                  r'^([\d\/]+) ', 'SetDate', 'TIME'),
-      lexer.Token('TIME', r'([0-9:\.]+) ', 'SetTime', 'STRING_HOST'),
-      lexer.Token('STRING_HOST', r'([^\-]+)- ', 'ParseStringHost', 'STRING'),
-      lexer.Token('STRING', '([^\n]+)', 'ParseString', ''),
-      lexer.Token('STRING', '\n', 'ParseMessage', 'INITIAL')]
+      lexer.Token(u'INITIAL', r'^([\d\/]+) ', u'SetDate', u'TIME'),
+      lexer.Token(u'TIME', r'([0-9:\.]+) ', u'SetTime', u'STRING_HOST'),
+      lexer.Token(u'STRING_HOST', r'([^\-]+)- ', u'ParseStringHost', u'STRING'),
+      lexer.Token(u'STRING', r'([^\n]+)', u'ParseString', u''),
+      lexer.Token(u'STRING', r'\n', u'ParseMessage', u'INITIAL')]
 
   def ParseStringHost(self, match, **_):
-    user, host = match.group(1).split(':')
-    self.attributes['hostname'] = host
-    self.attributes['username'] = user
+    user, host = match.group(1).split(u':')
+    self.attributes[u'hostname'] = host
+    self.attributes[u'username'] = user
 
   def SetDate(self, match, **_):
-    month, day, year = match.group(1).split('/')
-    self.attributes['imonth'] = int(month)
-    self.attributes['iyear'] = int(year)
-    self.attributes['iday'] = int(day)
+    month, day, year = match.group(1).split(u'/')
+    self.attributes[u'imonth'] = int(month)
+    self.attributes[u'iyear'] = int(year)
+    self.attributes[u'iday'] = int(day)
 
   def Scan(self, unused_file_entry):
     pass
@@ -100,9 +99,9 @@ class TextParserTest(test_lib.ParserTestCase):
         u'2011-01-01 05:23:15')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEqual(msg1, 'first line.')
-    self.assertEqual(event_object.hostname, 'myhost')
-    self.assertEqual(event_object.username, 'myuser')
+    self.assertEqual(msg1, u'first line.')
+    self.assertEqual(event_object.hostname, u'myhost')
+    self.assertEqual(event_object.username, u'myuser')
 
     event_object = event_objects[1]
 
@@ -113,9 +112,9 @@ class TextParserTest(test_lib.ParserTestCase):
         u'1991-12-24 19:58:06')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEqual(msg2, 'second line.')
-    self.assertEqual(event_object.hostname, 'myhost')
-    self.assertEqual(event_object.username, 'myuser')
+    self.assertEqual(msg2, u'second line.')
+    self.assertEqual(event_object.hostname, u'myhost')
+    self.assertEqual(event_object.username, u'myuser')
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         TestTextEventFormatter)
@@ -134,42 +133,42 @@ class PyParserTest(test_lib.ParserTestCase):
 
   def testPyConstantIPv4(self):
     """Run few tests to make sure the constants are working."""
-    self.assertTrue(self._CheckIPv4('123.51.234.52'))
-    self.assertTrue(self._CheckIPv4('255.254.23.1'))
-    self.assertTrue(self._CheckIPv4('1.1.34.2'))
-    self.assertFalse(self._CheckIPv4('1.1.34.258'))
-    self.assertFalse(self._CheckIPv4('a.1.34.258'))
-    self.assertFalse(self._CheckIPv4('.34.258'))
-    self.assertFalse(self._CheckIPv4('34.258'))
-    self.assertFalse(self._CheckIPv4('10.52.34.258'))
+    self.assertTrue(self._CheckIPv4(u'123.51.234.52'))
+    self.assertTrue(self._CheckIPv4(u'255.254.23.1'))
+    self.assertTrue(self._CheckIPv4(u'1.1.34.2'))
+    self.assertFalse(self._CheckIPv4(u'1.1.34.258'))
+    self.assertFalse(self._CheckIPv4(u'a.1.34.258'))
+    self.assertFalse(self._CheckIPv4(u'.34.258'))
+    self.assertFalse(self._CheckIPv4(u'34.258'))
+    self.assertFalse(self._CheckIPv4(u'10.52.34.258'))
 
   def testPyConstantOctet(self):
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString('526')
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'526')
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString('1026')
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'1026')
 
     with self.assertRaises(pyparsing.ParseException):
       text_parser.PyparsingConstants.IPV4_OCTET.parseString(
-          'a9', parseAll=True)
+          u'a9', parseAll=True)
 
   def testPyConstantOthers(self):
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString('MMo')
+      text_parser.PyparsingConstants.MONTH.parseString(u'MMo')
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString('M')
+      text_parser.PyparsingConstants.MONTH.parseString(u'M')
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString('March', parseAll=True)
+      text_parser.PyparsingConstants.MONTH.parseString(u'March', parseAll=True)
 
-    self.assertTrue(text_parser.PyparsingConstants.MONTH.parseString('Jan'))
+    self.assertTrue(text_parser.PyparsingConstants.MONTH.parseString(u'Jan'))
 
-    line = '# This is a comment.'
+    line = u'# This is a comment.'
     parsed_line = text_parser.PyparsingConstants.COMMENT_LINE_HASH.parseString(
         line)
-    self.assertEqual(parsed_line[-1], 'This is a comment.')
+    self.assertEqual(parsed_line[-1], u'This is a comment.')
     self.assertEqual(len(parsed_line), 2)
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
   unittest.main()

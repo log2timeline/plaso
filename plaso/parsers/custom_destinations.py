@@ -20,14 +20,15 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'custom_destinations'
+  NAME = u'custom_destinations'
   DESCRIPTION = u'Parser for *.customDestinations-ms files.'
 
   # We cannot use the parser registry here since winlnk could be disabled.
   # TODO: see if there is a more elegant solution for this.
   _WINLNK_PARSER = winlnk.WinLnkParser()
 
-  _LNK_GUID = '\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46'
+  _LNK_GUID = (
+      b'\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46')
 
   _FILE_HEADER = construct.Struct(
       u'file_header',

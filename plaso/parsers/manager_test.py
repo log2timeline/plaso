@@ -12,7 +12,7 @@ from plaso.parsers import plugins
 class TestParser(interface.BaseParser):
   """Test parser."""
 
-  NAME = 'test_parser'
+  NAME = u'test_parser'
   DESCRIPTION = u'Test parser.'
 
   def Parse(self, unused_parser_mediator, **kwargs):
@@ -27,7 +27,7 @@ class TestParser(interface.BaseParser):
 class TestParserWithPlugins(interface.BasePluginsParser):
   """Test parser with plugins."""
 
-  NAME = 'test_parser_with_plugins'
+  NAME = u'test_parser_with_plugins'
   DESCRIPTION = u'Test parser with plugins.'
 
   _plugin_classes = {}
@@ -45,7 +45,7 @@ class TestParserWithPlugins(interface.BasePluginsParser):
 class TestPlugin(plugins.BasePlugin):
   """Test plugin."""
 
-  NAME = 'test_plugin'
+  NAME = u'test_plugin'
   DESCRIPTION = u'Test plugin.'
 
   # pylint: disable=unused-argument
@@ -106,21 +106,21 @@ class ParsersManagerTest(unittest.TestCase):
     manager.ParsersManager.RegisterParser(TestParser)
 
     includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-        'test_parser')
+        u'test_parser')
 
-    self.assertEqual(includes, ['test_parser'])
+    self.assertEqual(includes, [u'test_parser'])
     self.assertEqual(excludes, [])
 
     includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-        '-test_parser')
+        u'-test_parser')
 
     self.assertEqual(includes, [])
-    self.assertEqual(excludes, ['test_parser'])
+    self.assertEqual(excludes, [u'test_parser'])
 
     includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-        'test_parser_with_plugins')
+        u'test_parser_with_plugins')
 
-    self.assertEqual(includes, ['test_parser_with_plugins', 'test_plugin'])
+    self.assertEqual(includes, [u'test_parser_with_plugins', u'test_plugin'])
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)

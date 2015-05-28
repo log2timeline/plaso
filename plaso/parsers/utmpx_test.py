@@ -19,7 +19,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['utmpx_mac'])
+    test_file = self._GetTestFilePath([u'utmpx_mac'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -27,7 +27,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-13 17:52:34')
+        u'2013-11-13 17:52:34')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg_short = u'User: N/A'
@@ -39,7 +39,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-13 17:52:41.736713')
+        u'2013-11-13 17:52:41.736713')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.user, u'moxilo')
@@ -58,7 +58,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     event_object = event_objects[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-14 04:32:56.641464')
+        u'2013-11-14 04:32:56.641464')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.user, u'moxilo')

@@ -32,7 +32,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def _PluginNameToParserChain(self, plugin_name):
     """Generate the correct parser chain for a given plugin."""
-    return 'winreg/{0:s}'.format(plugin_name)
+    return u'winreg/{0:s}'.format(plugin_name)
 
   def testNtuserParsing(self):
     """Parse a NTUSER.dat file and check few items."""
@@ -46,7 +46,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
     # The _registry_type member is created dynamically by invoking
     # the _GetParserChains function.
-    registry_type = getattr(self._parser, u'_registry_type', '')
+    registry_type = getattr(self._parser, u'_registry_type', u'')
     self.assertEqual(registry_type, u'NTUSER')
 
     expected_chain = self._PluginNameToParserChain(u'userassist')
@@ -66,13 +66,14 @@ class WinRegTest(test_lib.ParserTestCase):
 
     # The _registry_type member is created dynamically by invoking
     # the _GetParserChains function.
-    registry_type = getattr(self._parser, u'_registry_type', '')
+    registry_type = getattr(self._parser, u'_registry_type', u'')
     self.assertEqual(registry_type, u'SYSTEM')
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
     plugin_names = [
-        u'windows_usbstor_devices', 'windows_boot_execute', 'windows_services']
+        u'windows_usbstor_devices', u'windows_boot_execute',
+        u'windows_services']
     for plugin in plugin_names:
       expected_chain = self._PluginNameToParserChain(plugin)
       self.assertTrue(

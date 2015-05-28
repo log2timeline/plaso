@@ -32,7 +32,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class KeychainInternetRecordEvent(event.EventObject):
   """Convenience class for an keychain internet record event."""
 
-  DATA_TYPE = 'mac:keychain:internet'
+  DATA_TYPE = u'mac:keychain:internet'
 
   def __init__(
       self, timestamp, timestamp_desc, entry_name, account_name,
@@ -66,7 +66,7 @@ class KeychainInternetRecordEvent(event.EventObject):
 
 class KeychainApplicationRecordEvent(event.EventObject):
   """Convenience class for an keychain application password record event."""
-  DATA_TYPE = 'mac:keychain:application'
+  DATA_TYPE = u'mac:keychain:application'
 
   def __init__(
       self, timestamp, timestamp_desc, entry_name,
@@ -97,7 +97,7 @@ class KeychainParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'mac_keychain'
+  NAME = u'mac_keychain'
   DESCRIPTION = u'Parser for Mac OS X Keychain files.'
 
   KEYCHAIN_MAGIC_HEADER = b'kych'
@@ -109,74 +109,74 @@ class KeychainParser(interface.SingleFileBaseParser):
 
   # DB HEADER.
   KEYCHAIN_DB_HEADER = construct.Struct(
-      'db_header',
-      construct.String('magic', 4),
-      construct.UBInt16('major_version'),
-      construct.UBInt16('minor_version'),
-      construct.UBInt32('header_size'),
-      construct.UBInt32('schema_offset'),
+      u'db_header',
+      construct.String(u'magic', 4),
+      construct.UBInt16(u'major_version'),
+      construct.UBInt16(u'minor_version'),
+      construct.UBInt32(u'header_size'),
+      construct.UBInt32(u'schema_offset'),
       construct.Padding(4))
 
   # DB SCHEMA.
   KEYCHAIN_DB_SCHEMA = construct.Struct(
-      'db_schema',
-      construct.UBInt32('size'),
-      construct.UBInt32('number_of_tables'))
+      u'db_schema',
+      construct.UBInt32(u'size'),
+      construct.UBInt32(u'number_of_tables'))
   # For each number_of_tables, the schema has a TABLE_OFFSET with the
   # offset starting in the DB_SCHEMA.
-  TABLE_OFFSET = construct.UBInt32('table_offset')
+  TABLE_OFFSET = construct.UBInt32(u'table_offset')
 
   TABLE_HEADER = construct.Struct(
-      'table_header',
-      construct.UBInt32('table_size'),
-      construct.UBInt32('record_type'),
-      construct.UBInt32('number_of_records'),
-      construct.UBInt32('first_record'),
-      construct.UBInt32('index_offset'),
+      u'table_header',
+      construct.UBInt32(u'table_size'),
+      construct.UBInt32(u'record_type'),
+      construct.UBInt32(u'number_of_records'),
+      construct.UBInt32(u'first_record'),
+      construct.UBInt32(u'index_offset'),
       construct.Padding(4),
-      construct.UBInt32('recordnumbercount'))
+      construct.UBInt32(u'recordnumbercount'))
 
   RECORD_HEADER = construct.Struct(
-      'record_header',
-      construct.UBInt32('entry_length'),
+      u'record_header',
+      construct.UBInt32(u'entry_length'),
       construct.Padding(12),
-      construct.UBInt32('ssgp_length'),
+      construct.UBInt32(u'ssgp_length'),
       construct.Padding(4),
-      construct.UBInt32('creation_time'),
-      construct.UBInt32('last_mod_time'),
-      construct.UBInt32('text_description'),
+      construct.UBInt32(u'creation_time'),
+      construct.UBInt32(u'last_mod_time'),
+      construct.UBInt32(u'text_description'),
       construct.Padding(4),
-      construct.UBInt32('comments'),
+      construct.UBInt32(u'comments'),
       construct.Padding(8),
-      construct.UBInt32('entry_name'),
+      construct.UBInt32(u'entry_name'),
       construct.Padding(20),
-      construct.UBInt32('account_name'),
+      construct.UBInt32(u'account_name'),
       construct.Padding(4))
   RECORD_HEADER_APP = construct.Struct(
-      'record_entry_app',
+      u'record_entry_app',
       RECORD_HEADER,
       construct.Padding(4))
   RECORD_HEADER_INET = construct.Struct(
-      'record_entry_inet',
+      u'record_entry_inet',
       RECORD_HEADER,
-      construct.UBInt32('where'),
-      construct.UBInt32('protocol'),
-      construct.UBInt32('type'),
+      construct.UBInt32(u'where'),
+      construct.UBInt32(u'protocol'),
+      construct.UBInt32(u'type'),
       construct.Padding(4),
-      construct.UBInt32('url'))
+      construct.UBInt32(u'url'))
 
   TEXT = construct.PascalString(
-      'text', length_field=construct.UBInt32('length'))
+      u'text', length_field=construct.UBInt32(u'length'))
   TIME = construct.Struct(
-      'timestamp',
-      construct.String('year', 4),
-      construct.String('month', 2),
-      construct.String('day', 2),
-      construct.String('hour', 2),
-      construct.String('minute', 2),
-      construct.String('second', 2),
+      u'timestamp',
+      construct.String(u'year', 4),
+      construct.String(u'month', 2),
+      construct.String(u'day', 2),
+      construct.String(u'hour', 2),
+      construct.String(u'minute', 2),
+      construct.String(u'second', 2),
       construct.Padding(2))
-  TYPE_TEXT = construct.String('type', 4)
+  TYPE_TEXT = construct.String(u'type', 4)
 
   # TODO: add more protocols.
   _PROTOCOL_TRANSLATION_DICT = {

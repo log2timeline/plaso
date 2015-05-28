@@ -24,7 +24,7 @@ __author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
 class IISEventObject(time_events.TimestampEvent):
   """Convenience class to handle the IIS event object."""
 
-  DATA_TYPE = 'iis:log:line'
+  DATA_TYPE = u'iis:log:line'
 
   def __init__(self, timestamp, structure):
     """Initializes the IIS event object.
@@ -37,11 +37,11 @@ class IISEventObject(time_events.TimestampEvent):
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
 
     for key, value in structure.iteritems():
-      if key in ('time', 'date'):
+      if key in [u'time', u'date']:
         continue
       if value == u'-':
         continue
-      if type(value) is pyparsing.ParseResults:
+      if isinstance(value, pyparsing.ParseResults):
         setattr(self, key, u''.join(value))
       else:
         try:
@@ -54,7 +54,7 @@ class IISEventObject(time_events.TimestampEvent):
 class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   """Parses a Microsoft IIS log file."""
 
-  NAME = 'winiis'
+  NAME = u'winiis'
   DESCRIPTION = u'Parser for Microsoft IIS log files.'
 
   # Common Fields (6.0: date time s-sitename s-ip cs-method cs-uri-stem
@@ -76,56 +76,58 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
   # Define how a log line should look like for version 6.0.
   LOG_LINE_6_0 = (
-      text_parser.PyparsingConstants.DATE.setResultsName('date') +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
-      WORD.setResultsName('s_sitename') + IP.setResultsName('dest_ip') +
-      WORD.setResultsName('http_method') + URI.setResultsName('cs_uri_stem') +
-      URI.setResultsName('cs_uri_query') + PORT.setResultsName('dest_port') +
-      WORD.setResultsName('cs_username') + IP.setResultsName('source_ip') +
-      URI.setResultsName('user_agent') + INT.setResultsName('sc_status') +
-      INT.setResultsName('sc_substatus') +
-      INT.setResultsName('sc_win32_status'))
+      text_parser.PyparsingConstants.DATE.setResultsName(u'date') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      WORD.setResultsName(u's_sitename') + IP.setResultsName(u'dest_ip') +
+      WORD.setResultsName(u'http_method') + URI.setResultsName(u'cs_uri_stem') +
+      URI.setResultsName(u'cs_uri_query') + PORT.setResultsName(u'dest_port') +
+      WORD.setResultsName(u'cs_username') + IP.setResultsName(u'source_ip') +
+      URI.setResultsName(u'user_agent') + INT.setResultsName(u'sc_status') +
+      INT.setResultsName(u'sc_substatus') +
+      INT.setResultsName(u'sc_win32_status'))
 
   _LOG_LINE_STRUCTURES = {}
 
   # Common fields. Set results name with underscores, not hyphens because regex
   # will not pick them up.
-  _LOG_LINE_STRUCTURES['date'] = (
-      text_parser.PyparsingConstants.DATE.setResultsName('date'))
-  _LOG_LINE_STRUCTURES['time'] = (
-      text_parser.PyparsingConstants.TIME.setResultsName('time'))
-  _LOG_LINE_STRUCTURES['s-sitename'] = WORD.setResultsName('s_sitename')
-  _LOG_LINE_STRUCTURES['s-ip'] = IP.setResultsName('dest_ip')
-  _LOG_LINE_STRUCTURES['cs-method'] = WORD.setResultsName('http_method')
-  _LOG_LINE_STRUCTURES['cs-uri-stem'] = URI.setResultsName('requested_uri_stem')
-  _LOG_LINE_STRUCTURES['cs-uri-query'] = URI.setResultsName('cs_uri_query')
-  _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
-  _LOG_LINE_STRUCTURES['cs-username'] = WORD.setResultsName('cs_username')
-  _LOG_LINE_STRUCTURES['c-ip'] = IP.setResultsName('source_ip')
-  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = URI.setResultsName('user_agent')
-  _LOG_LINE_STRUCTURES['sc-status'] = INT.setResultsName('http_status')
-  _LOG_LINE_STRUCTURES['sc-substatus'] = INT.setResultsName('sc_substatus')
-  _LOG_LINE_STRUCTURES['sc-win32-status'] = (
-      INT.setResultsName('sc_win32_status'))
+  _LOG_LINE_STRUCTURES[u'date'] = (
+      text_parser.PyparsingConstants.DATE.setResultsName(u'date'))
+  _LOG_LINE_STRUCTURES[u'time'] = (
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time'))
+  _LOG_LINE_STRUCTURES[u's-sitename'] = WORD.setResultsName(u's_sitename')
+  _LOG_LINE_STRUCTURES[u's-ip'] = IP.setResultsName(u'dest_ip')
+  _LOG_LINE_STRUCTURES[u'cs-method'] = WORD.setResultsName(u'http_method')
+  _LOG_LINE_STRUCTURES[u'cs-uri-stem'] = URI.setResultsName(
+      u'requested_uri_stem')
+  _LOG_LINE_STRUCTURES[u'cs-uri-query'] = URI.setResultsName(u'cs_uri_query')
+  _LOG_LINE_STRUCTURES[u's-port'] = PORT.setResultsName(u'dest_port')
+  _LOG_LINE_STRUCTURES[u'cs-username'] = WORD.setResultsName(u'cs_username')
+  _LOG_LINE_STRUCTURES[u'c-ip'] = IP.setResultsName(u'source_ip')
+  _LOG_LINE_STRUCTURES[u'cs(User-Agent)'] = URI.setResultsName(u'user_agent')
+  _LOG_LINE_STRUCTURES[u'sc-status'] = INT.setResultsName(u'http_status')
+  _LOG_LINE_STRUCTURES[u'sc-substatus'] = INT.setResultsName(u'sc_substatus')
+  _LOG_LINE_STRUCTURES[u'sc-win32-status'] = (
+      INT.setResultsName(u'sc_win32_status'))
 
   # Less common fields.
-  _LOG_LINE_STRUCTURES['s-computername'] = URI.setResultsName('s_computername')
-  _LOG_LINE_STRUCTURES['sc-bytes'] = INT.setResultsName('sent_bytes')
-  _LOG_LINE_STRUCTURES['cs-bytes'] = INT.setResultsName('received_bytes')
-  _LOG_LINE_STRUCTURES['time-taken'] = INT.setResultsName('time_taken')
-  _LOG_LINE_STRUCTURES['cs-version'] = WORD.setResultsName('protocol_version')
-  _LOG_LINE_STRUCTURES['cs-host'] = WORD.setResultsName('cs_host')
-  _LOG_LINE_STRUCTURES['cs(Cookie)'] = URI.setResultsName('cs_cookie')
-  _LOG_LINE_STRUCTURES['cs(Referrer)'] = URI.setResultsName('cs_referrer')
+  _LOG_LINE_STRUCTURES[u's-computername'] = URI.setResultsName(
+      u's_computername')
+  _LOG_LINE_STRUCTURES[u'sc-bytes'] = INT.setResultsName(u'sent_bytes')
+  _LOG_LINE_STRUCTURES[u'cs-bytes'] = INT.setResultsName(u'received_bytes')
+  _LOG_LINE_STRUCTURES[u'time-taken'] = INT.setResultsName(u'time_taken')
+  _LOG_LINE_STRUCTURES[u'cs-version'] = WORD.setResultsName(u'protocol_version')
+  _LOG_LINE_STRUCTURES[u'cs-host'] = WORD.setResultsName(u'cs_host')
+  _LOG_LINE_STRUCTURES[u'cs(Cookie)'] = URI.setResultsName(u'cs_cookie')
+  _LOG_LINE_STRUCTURES[u'cs(Referrer)'] = URI.setResultsName(u'cs_referrer')
 
   # Define the available log line structures. Default to the IIS v. 6.0
   # common format.
   LINE_STRUCTURES = [
-      ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
-      ('logline', LOG_LINE_6_0)]
+      (u'comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
+      (u'logline', LOG_LINE_6_0)]
 
   # Define a signature value for the log file.
-  SIGNATURE = '#Software: Microsoft Internet Information Services'
+  SIGNATURE = u'#Software: Microsoft Internet Information Services'
 
   def __init__(self):
     """Initializes a parser object."""
@@ -163,9 +165,9 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'comment':
+    if key == u'comment':
       self._ParseCommentRecord(structure)
-    elif key == 'logline':
+    elif key == u'logline':
       return self._ParseLogLine(structure)
     else:
       logging.warning(
@@ -190,12 +192,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
         log_line += self._LOG_LINE_STRUCTURES.get(member, self.URI)
       # TODO: self._line_structures is a work-around and this needs
       # a structural fix.
-      self._line_structures[1] = ('logline', log_line)
+      self._line_structures[1] = (u'logline', log_line)
 
   def _ParseLogLine(self, structure):
     """Parse a single log line and return an EventObject."""
-    date = structure.get('date', None)
-    time = structure.get('time', None)
+    date = structure.get(u'date', None)
+    time = structure.get(u'time', None)
 
     if not (date and time):
       logging.warning((

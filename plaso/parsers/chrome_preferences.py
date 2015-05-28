@@ -15,7 +15,7 @@ from plaso.parsers import manager
 class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
   """Convenience class for Chrome Extension events."""
 
-  DATA_TYPE = 'chrome:preferences:extension_installation'
+  DATA_TYPE = u'chrome:preferences:extension_installation'
 
   def __init__(self, timestamp, extension_id, extension_name, path):
     """Initialize the event."""
@@ -29,11 +29,11 @@ class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
 class ChromePreferencesParser(interface.SingleFileBaseParser):
   """Parses Chrome Preferences files."""
 
-  NAME = 'chrome_preferences'
+  NAME = u'chrome_preferences'
 
   DESCRIPTION = u'Parser for Chrome Preferences files.'
 
-  REQUIRED_KEYS = frozenset(('browser', 'extensions'))
+  REQUIRED_KEYS = frozenset([u'browser', u'extensions'])
 
   def _ExtractExtensionInstallationEvents(self, settings_dict):
     """Extract extension installation events.
@@ -85,14 +85,14 @@ class ChromePreferencesParser(interface.SingleFileBaseParser):
     try:
       json_dict = json.load(file_object)
     except ValueError as exception:
-      raise errors.UnableToParseFile(
-           u'[{0:s}] Unable to parse file {1:s} as '
-           u'JSON: {2:s}'.format(
+      raise errors.UnableToParseFile((
+          u'[{0:s}] Unable to parse file {1:s} as '
+          u'JSON: {2:s}').format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
     except IOError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.UnableToParseFile((
           u'[{0:s}] Unable to open file {1:s} for parsing as'
-          u'JSON: {2:s}'.format(
+          u'JSON: {2:s}').format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     # Third pass to verify the file has the correct keys in it for Preferences

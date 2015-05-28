@@ -20,8 +20,8 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
-    knowledge_base_values = {'year': 2013}
-    test_file = self._GetTestFilePath(['appfirewall.log'])
+    knowledge_base_values = {u'year': 2013}
+    test_file = self._GetTestFilePath([u'appfirewall.log'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -31,7 +31,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-02 04:07:35')
+        u'2013-11-02 04:07:35')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'socketfilterfw[112]')
@@ -55,7 +55,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[9]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-03 13:25:15')
+        u'2013-11-03 13:25:15')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'socketfilterfw[87]')
@@ -90,12 +90,12 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
     # Year changes.
     event_object = event_objects[45]
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-31 23:59:23')
+        u'2013-12-31 23:59:23')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[46]
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-01 01:13:23')
+        u'2014-01-01 01:13:23')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
 

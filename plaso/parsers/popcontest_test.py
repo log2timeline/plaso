@@ -22,7 +22,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['popcontest1.log'])
+    test_file = self._GetTestFilePath([u'popcontest1.log'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 

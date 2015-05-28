@@ -20,7 +20,7 @@ class IDXTest(test_lib.ParserTestCase):
 
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
-    test_file = self._GetTestFilePath(['java_602.idx'])
+    test_file = self._GetTestFilePath([u'java_602.idx'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -60,7 +60,7 @@ class IDXTest(test_lib.ParserTestCase):
 
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
-    test_file = self._GetTestFilePath(['java.idx'])
+    test_file = self._GetTestFilePath([u'java.idx'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -71,7 +71,7 @@ class IDXTest(test_lib.ParserTestCase):
     idx_version_expected = 605
     self.assertEqual(event_object.idx_version, idx_version_expected)
 
-    ip_address_expected = '10.7.119.10'
+    ip_address_expected = u'10.7.119.10'
     self.assertEqual(event_object.ip_address, ip_address_expected)
 
     url_expected = (
@@ -79,7 +79,7 @@ class IDXTest(test_lib.ParserTestCase):
         u'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
     self.assertEqual(event_object.url, url_expected)
 
-    description_expected = 'File Hosted Date'
+    description_expected = u'File Hosted Date'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(

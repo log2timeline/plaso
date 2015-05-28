@@ -29,7 +29,7 @@ class PlistParser(interface.SingleFileBasePluginsParser):
   implemented.
   """
 
-  NAME = 'plist'
+  NAME = u'plist'
   DESCRIPTION = u'Parser for binary and text plist files.'
 
   _plugin_classes = {}
@@ -39,7 +39,7 @@ class PlistParser(interface.SingleFileBasePluginsParser):
     super(PlistParser, self).__init__()
     self._plugins = PlistParser.GetPluginObjects()
 
-  def GetTopLevel(self, file_object, file_name=''):
+  def GetTopLevel(self, file_object, file_name=u''):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:

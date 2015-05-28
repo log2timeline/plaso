@@ -20,7 +20,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class UtmpEvent(event.EventObject):
   """Convenience class for an UTMP event."""
 
-  DATA_TYPE = 'linux:utmp:event'
+  DATA_TYPE = u'linux:utmp:event'
 
   def __init__(
       self, timestamp, microsecond, user, computer_name,
@@ -59,41 +59,41 @@ class UtmpParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'utmp'
+  NAME = u'utmp'
   DESCRIPTION = u'Parser for Linux/Unix UTMP files.'
 
   LINUX_UTMP_ENTRY = construct.Struct(
-      'utmp_linux',
-      construct.ULInt32('type'),
-      construct.ULInt32('pid'),
-      construct.String('terminal', 32),
-      construct.ULInt32('terminal_id'),
-      construct.String('username', 32),
-      construct.String('hostname', 256),
-      construct.ULInt16('termination'),
-      construct.ULInt16('exit'),
-      construct.ULInt32('session'),
-      construct.ULInt32('timestamp'),
-      construct.ULInt32('microsecond'),
-      construct.ULInt32('address_a'),
-      construct.ULInt32('address_b'),
-      construct.ULInt32('address_c'),
-      construct.ULInt32('address_d'),
+      u'utmp_linux',
+      construct.ULInt32(u'type'),
+      construct.ULInt32(u'pid'),
+      construct.String(u'terminal', 32),
+      construct.ULInt32(u'terminal_id'),
+      construct.String(u'username', 32),
+      construct.String(u'hostname', 256),
+      construct.ULInt16(u'termination'),
+      construct.ULInt16(u'exit'),
+      construct.ULInt32(u'session'),
+      construct.ULInt32(u'timestamp'),
+      construct.ULInt32(u'microsecond'),
+      construct.ULInt32(u'address_a'),
+      construct.ULInt32(u'address_b'),
+      construct.ULInt32(u'address_c'),
+      construct.ULInt32(u'address_d'),
       construct.Padding(20))
 
   LINUX_UTMP_ENTRY_SIZE = LINUX_UTMP_ENTRY.sizeof()
 
   STATUS_TYPE = {
-      0: 'EMPTY',
-      1: 'RUN_LVL',
-      2: 'BOOT_TIME',
-      3: 'NEW_TIME',
-      4: 'OLD_TIME',
-      5: 'INIT_PROCESS',
-      6: 'LOGIN_PROCESS',
-      7: 'USER_PROCESS',
-      8: 'DEAD_PROCESS',
-      9: 'ACCOUNTING'}
+      0: u'EMPTY',
+      1: u'RUN_LVL',
+      2: u'BOOT_TIME',
+      3: u'NEW_TIME',
+      4: u'OLD_TIME',
+      5: u'INIT_PROCESS',
+      6: u'LOGIN_PROCESS',
+      7: u'USER_PROCESS',
+      8: u'DEAD_PROCESS',
+      9: u'ACCOUNTING'}
 
   # Set a default test value for few fields, this is supposed to be a text
   # that is highly unlikely to be seen in a terminal field, or a username field.
@@ -197,7 +197,7 @@ class UtmpParser(interface.SingleFileBaseParser):
 
     user = self._GetTextFromNullTerminatedString(entry.username)
     terminal = self._GetTextFromNullTerminatedString(entry.terminal)
-    if terminal == '~':
+    if terminal == u'~':
       terminal = u'system boot'
     computer_name = self._GetTextFromNullTerminatedString(entry.hostname)
     if computer_name == u'N/A' or computer_name == u':0':
@@ -207,8 +207,8 @@ class UtmpParser(interface.SingleFileBaseParser):
     if not entry.address_b:
       try:
         ip_address = socket.inet_ntoa(
-            construct.ULInt32('int').build(entry.address_a))
-        if ip_address == '0.0.0.0':
+            construct.ULInt32(u'int').build(entry.address_a))
+        if ip_address == u'0.0.0.0':
           ip_address = u'localhost'
       except (IOError, construct.FieldError, socket.error):
         ip_address = u'N/A'
@@ -232,13 +232,13 @@ class UtmpParser(interface.SingleFileBaseParser):
       A decoded UTF-8 string or if unable to decode, the supplied default
       string.
     """
-    text, _, _ = null_terminated_string.partition('\x00')
+    text, _, _ = null_terminated_string.partition(b'\x00')
     try:
-      text = text.decode('utf-8')
+      text = text.decode(u'utf-8')
     except UnicodeDecodeError:
       logging.warning(
           u'[UTMP] Decode UTF8 failed, the message string may be cut short.')
-      text = text.decode('utf-8', 'ignore')
+      text = text.decode(u'utf-8', u'ignore')
     if not text:
       return default_string
     return text
