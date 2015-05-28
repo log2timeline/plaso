@@ -20,7 +20,7 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['Document.doc'])
+    test_file = self._GetTestFilePath([u'Document.doc'])
     event_queue_consumer = self._ParseOleCfFileWithPlugin(
         test_file, self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

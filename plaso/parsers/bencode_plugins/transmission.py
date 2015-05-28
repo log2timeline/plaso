@@ -10,7 +10,7 @@ from plaso.parsers.bencode_plugins import interface
 class TransmissionEvent(time_events.PosixTimeEvent):
   """Convenience class for a Transmission BitTorrent activity event."""
 
-  DATA_TYPE = 'p2p:bittorrent:transmission'
+  DATA_TYPE = u'p2p:bittorrent:transmission'
 
   def __init__(self, timestamp, timestamp_description, destination, seedtime):
     """Initializes the event.
@@ -23,18 +23,19 @@ class TransmissionEvent(time_events.PosixTimeEvent):
     """
     super(TransmissionEvent, self).__init__(timestamp, timestamp_description)
     self.destination = destination
-    self.seedtime = seedtime // 60  # Convert seconds to minutes.
+    # Convert seconds to minutes.
+    self.seedtime, _ = divmod(seedtime, 60)
 
 
 class TransmissionPlugin(interface.BencodePlugin):
   """Parse Transmission BitTorrent activity file for current torrents."""
 
-  NAME = 'bencode_transmission'
+  NAME = u'bencode_transmission'
   DESCRIPTION = u'Parser for Transmission bencoded files.'
 
   BENCODE_KEYS = frozenset([
-      'activity-date', 'done-date', 'added-date', 'destination',
-      'seeding-time-seconds'])
+      u'activity-date', u'done-date', u'added-date', u'destination',
+      u'seeding-time-seconds'])
 
   def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
@@ -51,25 +52,25 @@ class TransmissionPlugin(interface.BencodePlugin):
       data: Optional bencode data in dictionary form. The default is None.
     """
     # Place the obtained values into the event.
-    destination = data.get('destination', None)
-    seeding_time = data.get('seeding-time-seconds', None)
+    destination = data.get(u'destination', None)
+    seeding_time = data.get(u'seeding-time-seconds', None)
 
     # Create timeline events based on extracted values.
-    if data.get('added-date', 0):
+    if data.get(u'added-date', 0):
       event_object = TransmissionEvent(
-          data.get('added-date'), eventdata.EventTimestamp.ADDED_TIME,
+          data.get(u'added-date'), eventdata.EventTimestamp.ADDED_TIME,
           destination, seeding_time)
       parser_mediator.ProduceEvent(event_object)
 
-    if data.get('done-date', 0):
+    if data.get(u'done-date', 0):
       event_object = TransmissionEvent(
-          data.get('done-date'), eventdata.EventTimestamp.FILE_DOWNLOADED,
+          data.get(u'done-date'), eventdata.EventTimestamp.FILE_DOWNLOADED,
           destination, seeding_time)
       parser_mediator.ProduceEvent(event_object)
 
-    if data.get('activity-date', None):
+    if data.get(u'activity-date', None):
       event_object = TransmissionEvent(
-          data.get('activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
+          data.get(u'activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
           destination, seeding_time)
       parser_mediator.ProduceEvent(event_object)
 

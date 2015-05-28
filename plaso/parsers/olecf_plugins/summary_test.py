@@ -16,7 +16,7 @@ class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._summary_plugin = summary.SummaryInfoOlecfPlugin()
-    self._test_file = self._GetTestFilePath(['Document.doc'])
+    self._test_file = self._GetTestFilePath([u'Document.doc'])
 
   def testProcess(self):
     """Tests the Process function on a SummaryInformation stream."""
@@ -73,7 +73,7 @@ class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._document_summary_plugin = summary.DocumentSummaryOlecfPlugin()
-    self._test_file = self._GetTestFilePath(['Document.doc'])
+    self._test_file = self._GetTestFilePath([u'Document.doc'])
 
   def testProcess(self):
     """Tests the Process function on a DocumentSummaryInformation stream."""

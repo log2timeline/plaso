@@ -18,7 +18,7 @@ from plaso.parsers.olecf_plugins import interface
 class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
   """Convenience class for an .automaticDestinations-ms DestList entry event."""
 
-  DATA_TYPE = 'olecf:dest_list:entry'
+  DATA_TYPE = u'olecf:dest_list:entry'
 
   def __init__(
       self, timestamp, timestamp_description, entry_offset, dest_list_entry):
@@ -38,7 +38,7 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
     self.entry_number = dest_list_entry.entry_number
 
     self.hostname = binary.ByteStreamCopyToString(
-        dest_list_entry.hostname, codepage='ascii')
+        dest_list_entry.hostname, codepage=u'ascii')
     self.path = binary.Ut16StreamCopyToString(dest_list_entry.path)
     self.pin_status = dest_list_entry.pin_status
 
@@ -55,7 +55,7 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
 class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
-  NAME = 'olecf_automatic_destinations'
+  NAME = u'olecf_automatic_destinations'
   DESCRIPTION = u'Parser for *.automaticDestinations-ms OLECF files.'
 
   REQUIRED_ITEMS = frozenset([u'DestList'])
@@ -67,14 +67,14 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   _WINLNK_PARSER = winlnk.WinLnkParser()
 
   _DEST_LIST_STREAM_HEADER = construct.Struct(
-      'dest_list_stream_header',
-      construct.ULInt32('unknown1'),
-      construct.ULInt32('number_of_entries'),
-      construct.ULInt32('number_of_pinned_entries'),
-      construct.LFloat32('unknown2'),
-      construct.ULInt32('last_entry_number'),
+      u'dest_list_stream_header',
+      construct.ULInt32(u'unknown1'),
+      construct.ULInt32(u'number_of_entries'),
+      construct.ULInt32(u'number_of_pinned_entries'),
+      construct.LFloat32(u'unknown2'),
+      construct.ULInt32(u'last_entry_number'),
       construct.Padding(4),
-      construct.ULInt32('last_revision_number'),
+      construct.ULInt32(u'last_revision_number'),
       construct.Padding(4))
 
   _DEST_LIST_STREAM_HEADER_SIZE = _DEST_LIST_STREAM_HEADER.sizeof()
@@ -83,20 +83,20 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   # end-of-string characters exposed. Instead the strings are read as
   # binary strings and converted using ReadUtf16().
   _DEST_LIST_STREAM_ENTRY = construct.Struct(
-      'dest_list_stream_entry',
-      construct.ULInt64('unknown1'),
-      construct.Array(16, construct.Byte('droid_volume_identifier')),
-      construct.Array(16, construct.Byte('droid_file_identifier')),
-      construct.Array(16, construct.Byte('birth_droid_volume_identifier')),
-      construct.Array(16, construct.Byte('birth_droid_file_identifier')),
-      construct.String('hostname', 16),
-      construct.ULInt32('entry_number'),
-      construct.ULInt32('unknown2'),
-      construct.LFloat32('unknown3'),
-      construct.ULInt64('last_modification_time'),
-      construct.ULInt32('pin_status'),
-      construct.ULInt16('path_size'),
-      construct.String('path', lambda ctx: ctx.path_size * 2))
+      u'dest_list_stream_entry',
+      construct.ULInt64(u'unknown1'),
+      construct.Array(16, construct.Byte(u'droid_volume_identifier')),
+      construct.Array(16, construct.Byte(u'droid_file_identifier')),
+      construct.Array(16, construct.Byte(u'birth_droid_volume_identifier')),
+      construct.Array(16, construct.Byte(u'birth_droid_file_identifier')),
+      construct.String(u'hostname', 16),
+      construct.ULInt32(u'entry_number'),
+      construct.ULInt32(u'unknown2'),
+      construct.LFloat32(u'unknown3'),
+      construct.ULInt64(u'last_modification_time'),
+      construct.ULInt32(u'pin_status'),
+      construct.ULInt16(u'path_size'),
+      construct.String(u'path', lambda ctx: ctx.path_size * 2))
 
   def ParseDestList(self, parser_mediator, olecf_item):
     """Parses the DestList OLECF item.

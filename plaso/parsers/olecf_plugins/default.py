@@ -10,7 +10,7 @@ from plaso.parsers.olecf_plugins import interface
 class OleCfItemEvent(time_events.FiletimeEvent):
   """Convenience class for an OLECF item event."""
 
-  DATA_TYPE = 'olecf:item'
+  DATA_TYPE = u'olecf:item'
 
   def __init__(self, timestamp, usage, olecf_item):
     """Initializes the event.
@@ -35,7 +35,7 @@ class OleCfItemEvent(time_events.FiletimeEvent):
 class DefaultOleCFPlugin(interface.OlecfPlugin):
   """Class to define the default OLECF file plugin."""
 
-  NAME = 'olecf_default'
+  NAME = u'olecf_default'
   DESCRIPTION = u'Parser for a generic OLECF item.'
 
   def _ParseItem(self, parser_mediator, olecf_item):

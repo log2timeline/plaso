@@ -16,7 +16,7 @@ from plaso.parsers.esedb_plugins import interface
 class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Containers table event."""
 
-  DATA_TYPE = 'msie:webcache:containers'
+  DATA_TYPE = u'msie:webcache:containers'
 
   def __init__(self, timestamp, usage, record_values):
     """Initializes the event.
@@ -37,7 +37,7 @@ class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
 class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Container table event."""
 
-  DATA_TYPE = 'msie:webcache:container'
+  DATA_TYPE = u'msie:webcache:container'
 
   def __init__(self, timestamp, usage, record_values):
     """Initializes the event.
@@ -62,7 +62,7 @@ class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
     self.access_count = record_values.get(u'AccessCount', 0)
     self.sync_count = record_values.get(u'SyncCount', 0)
 
-    self.cached_filename = record_values.get('Filename', u'')
+    self.cached_filename = record_values.get(u'Filename', u'')
     self.file_extension = record_values.get(u'FileExtension', u'')
     self.cached_file_size = record_values.get(u'FileSize', 0)
 
@@ -80,7 +80,7 @@ class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
 class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache LeakFiles table event."""
 
-  DATA_TYPE = 'msie:webcache:leak_file'
+  DATA_TYPE = u'msie:webcache:leak_file'
 
   def __init__(self, timestamp, usage, record_values):
     """Initializes the event.
@@ -99,7 +99,7 @@ class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
 class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Partitions table event."""
 
-  DATA_TYPE = 'msie:webcache:partitions'
+  DATA_TYPE = u'msie:webcache:partitions'
 
   def __init__(self, timestamp, usage, record_values):
     """Initializes the event.
@@ -120,7 +120,7 @@ class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
 class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
   """Parses a MSIE WebCache ESE database file."""
 
-  NAME = 'msie_webcache'
+  NAME = u'msie_webcache'
   DESCRIPTION = u'Parser for MSIE WebCache ESE database files.'
 
   # TODO: add support for AppCache_#, AppCacheEntry_#, DependencyEntry_#

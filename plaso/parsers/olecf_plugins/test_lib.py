@@ -10,7 +10,7 @@ from plaso.parsers import test_lib
 class OleCfPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for OLE CF based plugins."""
 
-  def _OpenOleCfFile(self, path, codepage='cp1252'):
+  def _OpenOleCfFile(self, path, codepage=u'cp1252'):
     """Opens an OLE compound file and returns back a pyolecf.file object.
 
     Args:
