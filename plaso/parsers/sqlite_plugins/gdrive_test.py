@@ -37,7 +37,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     local_entries = []
     cloud_entries = []
     for event_object in event_objects:
-      if event_object.data_type == 'gdrive:snapshot:local_entry':
+      if event_object.data_type == u'gdrive:snapshot:local_entry':
         local_entries.append(event_object)
       else:
         cloud_entries.append(event_object)

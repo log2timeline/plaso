@@ -13,13 +13,13 @@ from plaso.parsers.sqlite_plugins import interface
 # Check SQlite version, bail out early if too old.
 if sqlite3.sqlite_version_info < (3, 7, 8):
   raise ImportWarning(
-      'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
+      u'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
 
 
 class FirefoxPlacesBookmarkAnnotation(time_events.TimestampEvent):
   """Convenience class for a Firefox bookmark annotation event."""
 
-  DATA_TYPE = 'firefox:places:bookmark_annotation'
+  DATA_TYPE = u'firefox:places:bookmark_annotation'
 
   def __init__(self, timestamp, usage, row_id, title, url, content):
     """Initializes the event object.
@@ -44,7 +44,7 @@ class FirefoxPlacesBookmarkAnnotation(time_events.TimestampEvent):
 class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
   """Convenience class for a Firefox bookmark folder event."""
 
-  DATA_TYPE = 'firefox:places:bookmark_folder'
+  DATA_TYPE = u'firefox:places:bookmark_folder'
 
   def __init__(self, timestamp, usage, row_id, title):
     """Initializes the event object.
@@ -65,15 +65,15 @@ class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
 class FirefoxPlacesBookmark(time_events.TimestampEvent):
   """Convenience class for a Firefox bookmark event."""
 
-  DATA_TYPE = 'firefox:places:bookmark'
+  DATA_TYPE = u'firefox:places:bookmark'
 
   # TODO: move to formatter.
   _TYPES = {
-      1: 'URL',
-      2: 'Folder',
-      3: 'Separator',
+      1: u'URL',
+      2: u'Folder',
+      3: u'Separator',
   }
-  _TYPES.setdefault('N/A')
+  _TYPES.setdefault(u'N/A')
 
   def __init__(
       self, timestamp, usage, row_id, bookmark_type, title, url, places_title,
@@ -105,7 +105,7 @@ class FirefoxPlacesBookmark(time_events.TimestampEvent):
 class FirefoxPlacesPageVisitedEvent(event.EventObject):
   """Convenience class for a Firefox page visited event."""
 
-  DATA_TYPE = 'firefox:places:page_visited'
+  DATA_TYPE = u'firefox:places:page_visited'
 
   def __init__(self, timestamp, row_id, url, title, hostname, visit_count,
                visit_type, extra):
@@ -140,7 +140,7 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
 class FirefoxDownload(time_events.TimestampEvent):
   """Convenience class for a Firefox download event."""
 
-  DATA_TYPE = 'firefox:downloads:download'
+  DATA_TYPE = u'firefox:downloads:download'
 
   def __init__(self, timestamp, usage, row_id, name, url, referrer, full_path,
                temporary_location, received_bytes, total_bytes, mime_type):
@@ -179,45 +179,46 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
      places.sqlite.
   """
 
-  NAME = 'firefox_history'
+  NAME = u'firefox_history'
   DESCRIPTION = u'Parser for Firefox history SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '
-        'moz_places.visit_count, moz_historyvisits.visit_date, '
-        'moz_historyvisits.from_visit, moz_places.rev_host, '
-        'moz_places.hidden, moz_places.typed, moz_historyvisits.visit_type '
-        'FROM moz_places, moz_historyvisits '
-        'WHERE moz_places.id = moz_historyvisits.place_id'),
-       'ParsePageVisitedRow'),
-      (('SELECT moz_bookmarks.type, moz_bookmarks.title AS bookmark_title, '
-        'moz_bookmarks.dateAdded, moz_bookmarks.lastModified, '
-        'moz_places.url, moz_places.title AS places_title, '
-        'moz_places.rev_host, moz_places.visit_count, moz_bookmarks.id '
-        'FROM moz_places, moz_bookmarks WHERE moz_bookmarks.fk = moz_places.id '
-        'AND moz_bookmarks.type <> 3'),
-       'ParseBookmarkRow'),
-      (('SELECT moz_items_annos.content, moz_items_annos.dateAdded, '
-        'moz_items_annos.lastModified, moz_bookmarks.title, '
-        'moz_places.url, moz_places.rev_host, moz_items_annos.id '
-        'FROM moz_items_annos, moz_bookmarks, moz_places '
-        'WHERE moz_items_annos.item_id = moz_bookmarks.id '
-        'AND moz_bookmarks.fk = moz_places.id'),
-       'ParseBookmarkAnnotationRow'),
-      (('SELECT moz_bookmarks.id, moz_bookmarks.title,'
-        'moz_bookmarks.dateAdded, moz_bookmarks.lastModified '
-        'FROM moz_bookmarks WHERE moz_bookmarks.type = 2'),
-       'ParseBookmarkFolderRow')]
+      ((u'SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '
+        u'moz_places.visit_count, moz_historyvisits.visit_date, '
+        u'moz_historyvisits.from_visit, moz_places.rev_host, '
+        u'moz_places.hidden, moz_places.typed, moz_historyvisits.visit_type '
+        u'FROM moz_places, moz_historyvisits '
+        u'WHERE moz_places.id = moz_historyvisits.place_id'),
+       u'ParsePageVisitedRow'),
+      ((u'SELECT moz_bookmarks.type, moz_bookmarks.title AS bookmark_title, '
+        u'moz_bookmarks.dateAdded, moz_bookmarks.lastModified, '
+        u'moz_places.url, moz_places.title AS places_title, '
+        u'moz_places.rev_host, moz_places.visit_count, moz_bookmarks.id '
+        u'FROM moz_places, moz_bookmarks '
+        u'WHERE moz_bookmarks.fk = moz_places.id AND moz_bookmarks.type <> 3'),
+       u'ParseBookmarkRow'),
+      ((u'SELECT moz_items_annos.content, moz_items_annos.dateAdded, '
+        u'moz_items_annos.lastModified, moz_bookmarks.title, '
+        u'moz_places.url, moz_places.rev_host, moz_items_annos.id '
+        u'FROM moz_items_annos, moz_bookmarks, moz_places '
+        u'WHERE moz_items_annos.item_id = moz_bookmarks.id '
+        u'AND moz_bookmarks.fk = moz_places.id'),
+       u'ParseBookmarkAnnotationRow'),
+      ((u'SELECT moz_bookmarks.id, moz_bookmarks.title,'
+        u'moz_bookmarks.dateAdded, moz_bookmarks.lastModified '
+        u'FROM moz_bookmarks WHERE moz_bookmarks.type = 2'),
+       u'ParseBookmarkFolderRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
-      'moz_places', 'moz_historyvisits', 'moz_bookmarks', 'moz_items_annos'])
+      u'moz_places', u'moz_historyvisits', u'moz_bookmarks',
+      u'moz_items_annos'])
 
   # Cache queries.
   URL_CACHE_QUERY = (
-      'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
-      'moz_historyvisits h WHERE p.id = h.place_id')
+      u'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
+      u'moz_historyvisits h WHERE p.id = h.place_id')
 
   def ParseBookmarkAnnotationRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -228,6 +229,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     if row['dateAdded']:
       event_object = FirefoxPlacesBookmarkAnnotation(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
@@ -249,8 +253,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     if not row['title']:
-      title = 'N/A'
+      title = u'N/A'
     else:
       title = row['title']
 
@@ -279,7 +286,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       event_object = FirefoxPlacesBookmark(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
           row['id'], row['type'], row['bookmark_title'], row['url'],
-          row['places_title'], getattr(row, 'rev_host', 'N/A'),
+          row['places_title'], getattr(row, u'rev_host', u'N/A'),
           row['visit_count'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
@@ -287,7 +294,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       event_object = FirefoxPlacesBookmark(
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], row['type'], row['bookmark_title'], row['url'],
-          row['places_title'], getattr(row, 'rev_host', 'N/A'),
+          row['places_title'], getattr(row, u'rev_host', u'N/A'),
           row['visit_count'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
@@ -303,19 +310,22 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       cache: A cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     # TODO: make extra conditional formatting.
     extras = []
     if row['from_visit']:
       extras.append(u'visited from: {0}'.format(
           self._GetUrl(row['from_visit'], cache, database)))
 
-    if row['hidden'] == '1':
-      extras.append('(url hidden)')
+    if row['hidden'] == u'1':
+      extras.append(u'(url hidden)')
 
-    if row['typed'] == '1':
-      extras.append('(directly typed)')
+    if row['typed'] == u'1':
+      extras.append(u'(directly typed)')
     else:
-      extras.append('(URL not typed directly)')
+      extras.append(u'(URL not typed directly)')
 
     if row['visit_date']:
       event_object = FirefoxPlacesPageVisitedEvent(
@@ -339,7 +349,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       Reversed string without a leading dot.
     """
     if not hostname:
-      return ''
+      return u''
 
     if len(hostname) > 1:
       if hostname[-1] == '.':
@@ -350,13 +360,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
   def _GetUrl(self, url_id, cache, database):
     """Return an URL from a reference to an entry in the from_visit table."""
-    url_cache_results = cache.GetResults('url')
+    url_cache_results = cache.GetResults(u'url')
     if not url_cache_results:
       cursor = database.cursor
       result_set = cursor.execute(self.URL_CACHE_QUERY)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'rev_host'))
-      url_cache_results = cache.GetResults('url')
+      url_cache_results = cache.GetResults(u'url')
 
     url, reverse_host = url_cache_results.get(url_id, [u'', u''])
 
@@ -374,21 +387,21 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
      downloads.sqlite.
   """
 
-  NAME = 'firefox_downloads'
+  NAME = u'firefox_downloads'
   DESCRIPTION = u'Parser for Firefox downloads SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT moz_downloads.id, moz_downloads.name, moz_downloads.source, '
-        'moz_downloads.target, moz_downloads.tempPath, '
-        'moz_downloads.startTime, moz_downloads.endTime, moz_downloads.state, '
-        'moz_downloads.referrer, moz_downloads.currBytes, '
-        'moz_downloads.maxBytes, moz_downloads.mimeType '
-        'FROM moz_downloads'),
-       'ParseDownloadsRow')]
+      ((u'SELECT moz_downloads.id, moz_downloads.name, moz_downloads.source, '
+        u'moz_downloads.target, moz_downloads.tempPath, '
+        u'moz_downloads.startTime, moz_downloads.endTime, moz_downloads.state, '
+        u'moz_downloads.referrer, moz_downloads.currBytes, '
+        u'moz_downloads.maxBytes, moz_downloads.mimeType '
+        u'FROM moz_downloads'),
+       u'ParseDownloadsRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset(['moz_downloads'])
+  REQUIRED_TABLES = frozenset([u'moz_downloads'])
 
   def ParseDownloadsRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -399,20 +412,25 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     if row['startTime']:
       event_object = FirefoxDownload(
-          row['startTime'], eventdata.EventTimestamp.START_TIME,
-          row['id'], row['name'], row['source'], row['referrer'], row['target'],
-          row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+          row['startTime'], eventdata.EventTimestamp.START_TIME, row['id'],
+          row['name'], row['source'], row['referrer'], row['target'],
+          row['tempPath'], row['currBytes'], row['maxBytes'],
+          row['mimeType'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['endTime']:
       event_object = FirefoxDownload(
-          row['endTime'], eventdata.EventTimestamp.END_TIME,
-          row['id'], row['name'], row['source'], row['referrer'], row['target'],
-          row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+          row['endTime'], eventdata.EventTimestamp.END_TIME, row['id'],
+          row['name'], row['source'], row['referrer'], row['target'],
+          row['tempPath'], row['currBytes'], row['maxBytes'],
+          row['mimeType'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
 
-sqlite.SQLiteParser.RegisterPlugins(
-    [FirefoxHistoryPlugin, FirefoxDownloadsPlugin])
+sqlite.SQLiteParser.RegisterPlugins([
+    FirefoxHistoryPlugin, FirefoxDownloadsPlugin])

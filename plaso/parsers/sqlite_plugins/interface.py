@@ -12,7 +12,7 @@ from plaso.parsers import plugins
 class SQLitePlugin(plugins.BasePlugin):
   """A SQLite plugin for Plaso."""
 
-  NAME = 'sqlite'
+  NAME = u'sqlite'
   DESCRIPTION = u'Parser for SQLite database files.'
 
   # Queries to be executed.

@@ -74,7 +74,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
         event_object.timestamp_desc, u'Cookie Expires')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        U'2013-11-29 21:56:04')
+        u'2013-11-29 21:56:04')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.url, u'http://pubmatic.com/')

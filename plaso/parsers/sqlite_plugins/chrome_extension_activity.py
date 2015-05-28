@@ -13,7 +13,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 class ChromeExtensionActivityEvent(time_events.WebKitTimeEvent):
   """Convenience class for a Chrome Extension Activity event."""
-  DATA_TYPE = 'chrome:extension_activity:activity_log'
+  DATA_TYPE = u'chrome:extension_activity:activity_log'
 
   def __init__(self, row):
     """Initializes the event object.
@@ -21,6 +21,9 @@ class ChromeExtensionActivityEvent(time_events.WebKitTimeEvent):
     Args:
       row: The row resulting from the query (instance of sqlite3.Row).
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     # TODO: change the timestamp usage from unknown to something else.
     super(ChromeExtensionActivityEvent, self).__init__(
         row['time'], eventdata.EventTimestamp.UNKNOWN)
@@ -39,18 +42,18 @@ class ChromeExtensionActivityEvent(time_events.WebKitTimeEvent):
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
   """Plugin to parse Chrome extension activity database files."""
 
-  NAME = 'chrome_extension_activity'
+  NAME = u'chrome_extension_activity'
   DESCRIPTION = u'Parser for Chrome extension activity SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT time, extension_id, action_type, api_name, args, page_url, '
-        'page_title, arg_url, other, activity_id '
-        'FROM activitylog_uncompressed ORDER BY time'),
-       'ParseActivityLogUncompressedRow')]
+      ((u'SELECT time, extension_id, action_type, api_name, args, page_url, '
+        u'page_title, arg_url, other, activity_id '
+        u'FROM activitylog_uncompressed ORDER BY time'),
+       u'ParseActivityLogUncompressedRow')]
 
   REQUIRED_TABLES = frozenset([
-      'activitylog_compressed', 'string_ids', 'url_ids'])
+      u'activitylog_compressed', u'string_ids', u'url_ids'])
 
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, row, query=None,

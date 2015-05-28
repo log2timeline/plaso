@@ -14,7 +14,7 @@ __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 class SkypeChatEvent(time_events.PosixTimeEvent):
   """Convenience class for a Skype event."""
 
-  DATA_TYPE = 'skype:event:chat'
+  DATA_TYPE = u'skype:event:chat'
 
   def __init__(self, row, to_account):
     """Build a Skype Event from a single row.
@@ -25,8 +25,11 @@ class SkypeChatEvent(time_events.PosixTimeEvent):
       to_account: A string containing the accounts (excluding the
                   author) of the conversation.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     super(SkypeChatEvent, self).__init__(
-        row['timestamp'], 'Chat from Skype', self.DATA_TYPE)
+        row['timestamp'], u'Chat from Skype', self.DATA_TYPE)
 
     self.title = row['title']
     self.text = row['body_xml']
@@ -38,7 +41,7 @@ class SkypeChatEvent(time_events.PosixTimeEvent):
 class SkypeAccountEvent(time_events.PosixTimeEvent):
   """Convenience class for account information."""
 
-  DATA_TYPE = 'skype:event:account'
+  DATA_TYPE = u'skype:event:account'
 
   def __init__(
       self, timestamp, usage, identifier, full_name, display_name, email,
@@ -70,7 +73,7 @@ class SkypeAccountEvent(time_events.PosixTimeEvent):
 class SkypeSMSEvent(time_events.PosixTimeEvent):
   """Convenience EventObject for SMS."""
 
-  DATA_TYPE = 'skype:event:sms'
+  DATA_TYPE = u'skype:event:sms'
 
   def __init__(self, row, dst_number):
     """Read the information related with the SMS.
@@ -82,8 +85,11 @@ class SkypeSMSEvent(time_events.PosixTimeEvent):
           row['msg_sms']: text send to this sms.
         dst_number: phone number where the user send the sms.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     super(SkypeSMSEvent, self).__init__(
-        row['time_sms'], 'SMS from Skype', self.DATA_TYPE)
+        row['time_sms'], u'SMS from Skype', self.DATA_TYPE)
 
     self.number = dst_number
     self.text = row['msg_sms']
@@ -92,7 +98,7 @@ class SkypeSMSEvent(time_events.PosixTimeEvent):
 class SkypeCallEvent(time_events.PosixTimeEvent):
   """Convenience EventObject for the calls."""
 
-  DATA_TYPE = 'skype:event:call'
+  DATA_TYPE = u'skype:event:call'
 
   def __init__(self, timestamp, call_type, user_start_call,
                source, destination, video_conference):
@@ -109,7 +115,7 @@ class SkypeCallEvent(time_events.PosixTimeEvent):
     """
 
     super(SkypeCallEvent, self).__init__(
-        timestamp, 'Call from Skype', self.DATA_TYPE)
+        timestamp, u'Call from Skype', self.DATA_TYPE)
 
     self.call_type = call_type
     self.user_start_call = user_start_call
@@ -121,7 +127,7 @@ class SkypeCallEvent(time_events.PosixTimeEvent):
 class SkypeTransferFileEvent(time_events.PosixTimeEvent):
   """Evaluate the action of send a file."""
 
-  DATA_TYPE = 'skype:event:transferfile'
+  DATA_TYPE = u'skype:event:transferfile'
 
   def __init__(self, row, timestamp, action_type, source, destination):
     """Actions related with sending files.
@@ -136,9 +142,11 @@ class SkypeTransferFileEvent(time_events.PosixTimeEvent):
         source: The account that sent the file.
         destination: The account that received the file.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
 
     super(SkypeTransferFileEvent, self).__init__(
-        timestamp, 'File transfer from Skype', self.DATA_TYPE)
+        timestamp, u'File transfer from Skype', self.DATA_TYPE)
 
     self.offset = row['id']
     self.action_type = action_type
@@ -146,6 +154,7 @@ class SkypeTransferFileEvent(time_events.PosixTimeEvent):
     self.destination = destination
     self.transferred_filepath = row['filepath']
     self.transferred_filename = row['filename']
+
     try:
       self.transferred_filesize = int(row['filesize'])
     except ValueError:
@@ -157,7 +166,7 @@ class SkypeTransferFileEvent(time_events.PosixTimeEvent):
 class SkypePlugin(interface.SQLitePlugin):
   """SQLite plugin for Skype main.db SQlite database file."""
 
-  NAME = 'skype'
+  NAME = u'skype'
   DESCRIPTION = u'Parser for Skype SQLite database files.'
 
   # Queries for building cache.
@@ -170,29 +179,29 @@ class SkypePlugin(interface.SQLitePlugin):
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT c.id, c.participants, c.friendlyname AS title, '
-        'm.author AS author, m.from_dispname AS from_displayname, '
-        'm.body_xml, m.timestamp, c.dialog_partner FROM Chats c, Messages m '
-        'WHERE c.name = m.chatname'), 'ParseChat'),
-      (('SELECT id, fullname, given_displayname, emails, '
-        'country, profile_timestamp, authreq_timestamp, '
-        'lastonline_timestamp, mood_timestamp, sent_authrequest_time, '
-        'lastused_timestamp FROM Accounts'), 'ParseAccountInformation'),
-      (('SELECT id, target_numbers AS dstnum_sms, timestamp AS time_sms, '
-        'body AS msg_sms FROM SMSes'), 'ParseSMS'),
-      (('SELECT id, partner_handle, partner_dispname, offer_send_list, '
-        'starttime, accepttime, finishtime, filepath, filename, filesize, '
-        'status, parent_id, pk_id FROM Transfers'), 'ParseFileTransfer'),
-      (('SELECT c.id, cm.guid, c.is_incoming, '
-        'cm.call_db_id, cm.videostatus, c.begin_timestamp AS try_call, '
-        'cm.start_timestamp AS accept_call, cm.call_duration '
-        'FROM Calls c, CallMembers cm '
-        'WHERE c.id = cm.call_db_id;'), 'ParseCall')]
+      ((u'SELECT c.id, c.participants, c.friendlyname AS title, '
+        u'm.author AS author, m.from_dispname AS from_displayname, '
+        u'm.body_xml, m.timestamp, c.dialog_partner FROM Chats c, Messages m '
+        u'WHERE c.name = m.chatname'), u'ParseChat'),
+      ((u'SELECT id, fullname, given_displayname, emails, '
+        u'country, profile_timestamp, authreq_timestamp, '
+        u'lastonline_timestamp, mood_timestamp, sent_authrequest_time, '
+        u'lastused_timestamp FROM Accounts'), u'ParseAccountInformation'),
+      ((u'SELECT id, target_numbers AS dstnum_sms, timestamp AS time_sms, '
+        u'body AS msg_sms FROM SMSes'), u'ParseSMS'),
+      ((u'SELECT id, partner_handle, partner_dispname, offer_send_list, '
+        u'starttime, accepttime, finishtime, filepath, filename, filesize, '
+        u'status, parent_id, pk_id FROM Transfers'), u'ParseFileTransfer'),
+      ((u'SELECT c.id, cm.guid, c.is_incoming, '
+        u'cm.call_db_id, cm.videostatus, c.begin_timestamp AS try_call, '
+        u'cm.start_timestamp AS accept_call, cm.call_duration '
+        u'FROM Calls c, CallMembers cm '
+        u'WHERE c.id = cm.call_db_id;'), u'ParseCall')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
-      'Chats', 'Accounts', 'Conversations', 'Contacts', 'SMSes', 'Transfers',
-      'CallMembers', 'Calls'])
+      u'Chats', u'Accounts', u'Conversations', u'Contacts', u'SMSes',
+      u'Transfers', u'CallMembers', u'Calls'])
 
   def ParseAccountInformation(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -203,6 +212,9 @@ class SkypePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     if row['profile_timestamp']:
       event_object = SkypeAccountEvent(
           row['profile_timestamp'], u'Profile Changed', row['id'],
@@ -253,7 +265,10 @@ class SkypePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
-    to_account = ''
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
+    to_account = u''
     accounts = []
     participants = row['participants'].split(' ')
     for participant in participants:
@@ -278,7 +293,10 @@ class SkypePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
-    dst_number = row['dstnum_sms'].replace(' ', '')
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
+    dst_number = row['dstnum_sms'].replace(u' ', u'')
 
     event_object = SkypeSMSEvent(row, dst_number)
     parser_mediator.ProduceEvent(event_object, query=query)
@@ -291,10 +309,13 @@ class SkypePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     try:
       aux = row['guid']
       if aux:
-        aux_list = aux.split('-')
+        aux_list = aux.split(u'-')
         src_aux = aux_list[0]
         dst_aux = aux_list[1]
       else:
@@ -304,7 +325,7 @@ class SkypePlugin(interface.SQLitePlugin):
       src_aux = u'Unknown [{0:s}]'.format(row['guid'])
       dst_aux = u'Unknown [{0:s}]'.format(row['guid'])
 
-    if row['is_incoming'] == '0':
+    if row['is_incoming'] == u'0':
       user_start_call = True
       source = src_aux
       if row['ip_address']:
@@ -316,27 +337,27 @@ class SkypePlugin(interface.SQLitePlugin):
       source = src_aux
       destination = dst_aux
 
-    if row['videostatus'] == '3':
+    if row['videostatus'] == u'3':
       video_conference = True
     else:
       video_conference = False
 
     event_object = SkypeCallEvent(
-        row['try_call'], 'WAITING', user_start_call, source, destination,
+        row['try_call'], u'WAITING', user_start_call, source, destination,
         video_conference)
     parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['accept_call']:
       event_object = SkypeCallEvent(
-          row['accept_call'], 'ACCEPTED', user_start_call, source, destination,
-          video_conference)
+          row['accept_call'], u'ACCEPTED', user_start_call, source,
+          destination, video_conference)
       parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['call_duration']:
         try:
           timestamp = int(row['accept_call']) + int(row['call_duration'])
           event_object = SkypeCallEvent(
-              timestamp, 'FINISHED', user_start_call, source, destination,
+              timestamp, u'FINISHED', user_start_call, source, destination,
               video_conference)
           parser_mediator.ProduceEvent(event_object, query=query)
 
@@ -360,21 +381,30 @@ class SkypePlugin(interface.SQLitePlugin):
       cache: a cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
     """
-    source_dict = cache.GetResults('source')
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
+    source_dict = cache.GetResults(u'source')
     if not source_dict:
       cursor = database.cursor
       results = cursor.execute(self.QUERY_SOURCE_FROM_TRANSFER)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'source', 'pk_id', ('skypeid', 'skypename'))
-      source_dict = cache.GetResults('source')
+      source_dict = cache.GetResults(u'source')
 
-    dest_dict = cache.GetResults('destination')
+    dest_dict = cache.GetResults(u'destination')
     if not dest_dict:
       cursor = database.cursor
       results = cursor.execute(self.QUERY_DEST_FROM_TRANSFER)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'destination', 'parent_id', ('skypeid', 'skypename'))
-      dest_dict = cache.GetResults('destination')
+      dest_dict = cache.GetResults(u'destination')
 
     source = u'Unknown'
     destination = u'Unknown'
@@ -397,22 +427,22 @@ class SkypePlugin(interface.SQLitePlugin):
     if row['status'] == 8:
       if row['starttime']:
         event_object = SkypeTransferFileEvent(
-            row, row['starttime'], 'GETSOLICITUDE', source, destination)
+            row, row['starttime'], u'GETSOLICITUDE', source, destination)
         parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['accepttime']:
         event_object = SkypeTransferFileEvent(
-            row, row['accepttime'], 'ACCEPTED', source, destination)
+            row, row['accepttime'], u'ACCEPTED', source, destination)
         parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['finishtime']:
         event_object = SkypeTransferFileEvent(
-            row, row['finishtime'], 'FINISHED', source, destination)
+            row, row['finishtime'], u'FINISHED', source, destination)
         parser_mediator.ProduceEvent(event_object, query=query)
 
     elif row['status'] == 2 and row['starttime']:
       event_object = SkypeTransferFileEvent(
-          row, row['starttime'], 'SENDSOLICITUDE', source, destination)
+          row, row['starttime'], u'SENDSOLICITUDE', source, destination)
       parser_mediator.ProduceEvent(event_object, query=query)
 
 

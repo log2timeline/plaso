@@ -12,7 +12,7 @@ from plaso.parsers.sqlite_plugins import interface
 class AndroidCallEvent(time_events.JavaTimeEvent):
   """Convenience class for an Android Call History event."""
 
-  DATA_TYPE = 'android:event:call'
+  DATA_TYPE = u'android:event:call'
 
   def __init__(
       self, java_time, usage, identifier, number, name, duration, call_type):
@@ -37,13 +37,13 @@ class AndroidCallEvent(time_events.JavaTimeEvent):
 class AndroidCallPlugin(interface.SQLitePlugin):
   """Parse Android contacts2 database."""
 
-  NAME = 'android_calls'
+  NAME = u'android_calls'
   DESCRIPTION = u'Parser for Android calls SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ('SELECT _id AS id, date, number, name, duration, type FROM calls',
-       'ParseCallsRow')]
+      (u'SELECT _id AS id, date, number, name, duration, type FROM calls',
+       u'ParseCallsRow')]
 
   CALL_TYPE = {
       1: u'INCOMING',
@@ -58,7 +58,9 @@ class AndroidCallPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
-    # Extract and lookup the call type.
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     call_type = self.CALL_TYPE.get(row['type'], u'UNKNOWN')
 
     event_object = AndroidCallEvent(
