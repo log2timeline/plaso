@@ -759,7 +759,7 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
 
     logging.info(u'Preprocess done, saving files from image.')
 
-  def _ReadSpecificationFile(self, path):
+  def ReadSpecificationFile(self, path):
     """Reads the format specification file.
 
     Args:
@@ -914,7 +914,7 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
           u'No such format specification file: {0:s}'.format(path))
 
     try:
-      specification_store = self._ReadSpecificationFile(path)
+      specification_store = self.ReadSpecificationFile(path)
     except IOError as exception:
       raise IOError((
           u'Unable to read format specification file: {0:s} with error: '
