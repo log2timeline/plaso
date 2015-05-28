@@ -41,7 +41,7 @@ class OfficeMRUPlugin(interface.KeyPlugin):
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one.
 

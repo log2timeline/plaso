@@ -25,7 +25,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-      self._plugin, winreg_key, file_entry=self._file_entry)
+        self._plugin, winreg_key, file_entry=self._file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)
@@ -37,7 +37,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-28 21:32:44.937675')
+        u'2011-08-28 21:32:44.937675')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
@@ -165,7 +165,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-28 21:32:44.937675')
+        u'2011-08-28 21:32:44.937675')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
@@ -300,7 +300,7 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-16 21:12:40.145514')
+        u'2011-09-16 21:12:40.145514')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
@@ -347,7 +347,7 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-16 21:12:40.145514')
+        u'2011-09-16 21:12:40.145514')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'

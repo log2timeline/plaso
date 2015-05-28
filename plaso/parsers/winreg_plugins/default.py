@@ -16,10 +16,10 @@ class DefaultPlugin(interface.KeyPlugin):
   when the registry key was last modified.
   """
 
-  NAME = 'winreg_default'
+  NAME = u'winreg_default'
   DESCRIPTION = u'Parser for Registry data.'
 
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
   REG_KEYS = []
 
   # This is a special case, plugins normally never overwrite the priority.
@@ -28,7 +28,7 @@ class DefaultPlugin(interface.KeyPlugin):
   WEIGHT = 3
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Returns an event object based on a Registry key name and values.
 
@@ -46,7 +46,7 @@ class DefaultPlugin(interface.KeyPlugin):
     else:
       for value in key.GetValues():
         if not value.name:
-          value_name = '(default)'
+          value_name = u'(default)'
         else:
           value_name = u'{0:s}'.format(value.name)
 
@@ -61,7 +61,7 @@ class DefaultPlugin(interface.KeyPlugin):
           value_string = u'[{0:s}] {1:d}'.format(
               value.data_type_string, value.data)
         elif value.DataIsMultiString():
-          if type(value.data) not in (list, tuple):
+          if not isinstance(value.data, (list, tuple)):
             value_string = u'[{0:s}]'.format(value.data_type_string)
             # TODO: Add a flag or some sort of an anomaly alert.
           else:
@@ -82,7 +82,8 @@ class DefaultPlugin(interface.KeyPlugin):
   # overwrite the Process function to make sure it is called when no other
   # plugin is available.
 
-  def Process(self, parser_mediator, key=None, registry_type=None, **kwargs):
+  def Process(
+      self, parser_mediator, key=None, registry_type=None, **kwargs):
     """Process the key and return a generator to extract event objects.
 
     Args:
@@ -91,7 +92,8 @@ class DefaultPlugin(interface.KeyPlugin):
            The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
-    self.GetEntries(parser_mediator, key=key, registry_type=registry_type,)
+    self.GetEntries(
+        parser_mediator, key=key, registry_type=registry_type, **kwargs)
 
 
 winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

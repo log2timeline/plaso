@@ -24,8 +24,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        ('C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-         'username@example.com.ost'), '\xcf\x2b\x37\x00',
+        (u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+         u'username@example.com.ost'), b'\xcf\x2b\x37\x00',
         winreg_test_lib.TestRegValue.REG_DWORD, offset=1892))
 
     winreg_key = winreg_test_lib.TestRegKey(
@@ -74,8 +74,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #     values = []
 #
 #     values.append(winreg_test_lib.TestRegValue(
-#         ('C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-#          'username@example.com.ost'), '\x94\x01\x00\x00\x00\x00',
+#         (u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+#          u'username@example.com.ost'), b'\x94\x01\x00\x00\x00\x00',
 #         winreg_test_lib.TestRegValue.REG_BINARY, offset=827))
 #
 #     winreg_key = winreg_test_lib.TestRegKey(

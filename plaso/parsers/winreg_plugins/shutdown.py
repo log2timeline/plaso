@@ -23,7 +23,7 @@ class ShutdownPlugin(interface.KeyPlugin):
   FILETIME_STRUCT = construct.ULInt64(u'filetime_timestamp')
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect ShutdownTime value under Windows and produce an event object.
 
@@ -33,7 +33,7 @@ class ShutdownPlugin(interface.KeyPlugin):
           The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
-    shutdown_value = key.GetValue('ShutdownTime')
+    shutdown_value = key.GetValue(u'ShutdownTime')
     if not shutdown_value:
       return
     text_dict = {}

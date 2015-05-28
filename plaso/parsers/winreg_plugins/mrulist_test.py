@@ -24,16 +24,16 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'MRUList', 'acb'.encode('utf_16_le'),
+        u'MRUList', u'acb'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=123))
     values.append(winreg_test_lib.TestRegValue(
-        'a', 'Some random text here'.encode('utf_16_le'),
+        u'a', u'Some random text here'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
     values.append(winreg_test_lib.TestRegValue(
-        'b', 'c:/evil.exe'.encode('utf_16_le'),
+        u'b', u'c:/evil.exe'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
     values.append(winreg_test_lib.TestRegValue(
-        'c', 'C:/looks_legit.exe'.encode('utf_16_le'),
+        u'c', u'C:/looks_legit.exe'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1001))
 
     timestamp = timelib.Timestamp.CopyFromString(
@@ -82,7 +82,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'DesktopStreamMRU')
     values = []
 
-    data = ''.join(map(chr, [
+    data = b''.join(map(chr, [
         0x14, 0x00, 0x1f, 0x00, 0xe0, 0x4f, 0xd0, 0x20, 0xea, 0x3a, 0x69, 0x10,
         0xa2, 0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, 0x9d, 0x19, 0x00, 0x23, 0x43,
         0x3a, 0x5c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -98,10 +98,10 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         0x6b, 0x74, 0x6f, 0x70, 0x00, 0x00, 0x00, 0x00]))
 
     values.append(winreg_test_lib.TestRegValue(
-        'MRUList', 'a'.encode('utf_16_le'),
+        u'MRUList', u'a'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=123))
     values.append(winreg_test_lib.TestRegValue(
-        'a', data, winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
+        u'a', data, winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
 
     timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')

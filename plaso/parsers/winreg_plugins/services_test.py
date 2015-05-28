@@ -24,24 +24,24 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     values = []
     values.append(winreg_test_lib.TestRegValue(
-        'Type', '\x02\x00\x00\x00', 4, 123))
+        u'Type', b'\x02\x00\x00\x00', 4, 123))
     values.append(winreg_test_lib.TestRegValue(
-        'Start', '\x02\x00\x00\x00', 4, 127))
+        u'Start', b'\x02\x00\x00\x00', 4, 127))
     values.append(winreg_test_lib.TestRegValue(
-        'ErrorControl', '\x01\x00\x00\x00', 4, 131))
+        u'ErrorControl', b'\x01\x00\x00\x00', 4, 131))
     values.append(winreg_test_lib.TestRegValue(
-        'Group', 'Pnp Filter'.encode('utf_16_le'), 1, 140))
+        u'Group', u'Pnp Filter'.encode(u'utf_16_le'), 1, 140))
     values.append(winreg_test_lib.TestRegValue(
-        'DisplayName', 'Test Driver'.encode('utf_16_le'), 1, 160))
+        u'DisplayName', u'Test Driver'.encode(u'utf_16_le'), 1, 160))
     values.append(winreg_test_lib.TestRegValue(
-        'DriverPackageId',
-        'testdriver.inf_x86_neutral_dd39b6b0a45226c4'.encode('utf_16_le'), 1,
+        u'DriverPackageId',
+        u'testdriver.inf_x86_neutral_dd39b6b0a45226c4'.encode(u'utf_16_le'), 1,
         180))
     values.append(winreg_test_lib.TestRegValue(
-        'ImagePath', 'C:\\Dell\\testdriver.sys'.encode('utf_16_le'), 1, 200))
+        u'ImagePath', u'C:\\Dell\\testdriver.sys'.encode(u'utf_16_le'), 1, 200))
 
     timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-28 09:23:49.002031')
+        u'2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
@@ -57,7 +57,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-28 09:23:49.002031')
+        u'2012-08-28 09:23:49.002031')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -78,7 +78,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
-    test_file_entry = self._GetTestFileEntryFromPath(['SYSTEM'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\services'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
 
@@ -96,11 +96,11 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
       event_objects.extend(sub_event_objects)
 
-      if winreg_subkey.name == 'BITS':
+      if winreg_subkey.name == u'BITS':
         bits_event_objects = sub_event_objects
-      elif winreg_subkey.name == 'McTaskManager':
+      elif winreg_subkey.name == u'McTaskManager':
         mc_task_manager_event_objects = sub_event_objects
-      elif winreg_subkey.name == 'RdpVideoMiniport':
+      elif winreg_subkey.name == u'RdpVideoMiniport':
         rdp_video_miniport_event_objects = sub_event_objects
 
     self.assertEqual(len(event_objects), 416)
@@ -116,7 +116,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-06 20:43:27.639075')
+        u'2012-04-06 20:43:27.639075')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'Type', 0x20)
@@ -130,7 +130,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = mc_task_manager_event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-16 20:49:16.877415')
+        u'2011-09-16 20:49:16.877415')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'DisplayName', u'McAfee Task Manager')
@@ -142,7 +142,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = rdp_video_miniport_event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-17 13:37:59.347157')
+        u'2011-09-17 13:37:59.347157')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'Start', 3)

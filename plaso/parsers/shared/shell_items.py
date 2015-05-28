@@ -16,7 +16,7 @@ if pyfwsi.get_version() < '20140714':
 class ShellItemsParser(object):
   """Parses for Windows NT shell items."""
 
-  NAME = 'shell_items'
+  NAME = u'shell_items'
 
   def __init__(self, origin):
     """Initializes the parser.

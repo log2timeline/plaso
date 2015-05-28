@@ -26,16 +26,16 @@ class ServicesPlugin(interface.ValuePlugin):
     Args:
       key: A Windows Registry key (instance of WinRegKey).
     """
-    parameters_key = key.GetSubkey('Parameters')
+    parameters_key = key.GetSubkey(u'Parameters')
     if parameters_key:
-      service_dll = parameters_key.GetValue('ServiceDll')
+      service_dll = parameters_key.GetValue(u'ServiceDll')
       if service_dll:
         return service_dll.data
     else:
       return None
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 

@@ -19,7 +19,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    knowledge_base_values = {'current_control_set': u'ControlSet001'}
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -35,7 +35,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[9]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-04 01:46:37.932964')
+        u'2012-04-04 01:46:37.932964')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)

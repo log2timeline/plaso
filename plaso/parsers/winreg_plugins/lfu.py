@@ -18,7 +18,7 @@ class BootVerificationPlugin(interface.KeyPlugin):
   URLS = [u'http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Gather the BootVerification key values and return one event for all.
 
@@ -51,7 +51,7 @@ class BootExecutePlugin(interface.KeyPlugin):
   URLS = [u'http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 

@@ -22,8 +22,8 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    knowledge_base_values = {'current_control_set': u'ControlSet001'}
-    test_file_entry = self._GetTestFileEntryFromPath(['SYSTEM'])
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\Windows'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(

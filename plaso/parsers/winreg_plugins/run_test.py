@@ -19,7 +19,7 @@ class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
     key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -56,7 +56,7 @@ class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
     key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -93,7 +93,7 @@ class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Run'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -132,7 +132,7 @@ class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(

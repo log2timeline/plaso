@@ -71,7 +71,7 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Parses a UserAssist Registry key.
 
@@ -81,8 +81,8 @@ class UserAssistPlugin(interface.KeyPlugin):
            The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
-    version_value = key.GetValue('Version')
-    count_subkey = key.GetSubkey('Count')
+    version_value = key.GetValue(u'Version')
+    count_subkey = key.GetSubkey(u'Count')
 
     if not version_value:
       parser_mediator.ProduceParseError(u'Missing version value')
@@ -98,7 +98,7 @@ class UserAssistPlugin(interface.KeyPlugin):
 
       for value in count_subkey.GetValues():
         try:
-          value_name = value.name.decode('rot-13')
+          value_name = value.name.decode(u'rot-13')
         except UnicodeEncodeError as exception:
           logging.debug((
               u'Unable to decode UserAssist string: {0:s} with error: {1:s}.\n'
@@ -109,7 +109,7 @@ class UserAssistPlugin(interface.KeyPlugin):
           for char in value.name:
             if ord(char) < 128:
               try:
-                characters.append(char.decode('rot-13'))
+                characters.append(char.decode(u'rot-13'))
               except UnicodeEncodeError:
                 characters.append(char)
             else:
@@ -128,7 +128,7 @@ class UserAssistPlugin(interface.KeyPlugin):
 
           value_name = u'\\'.join(path_segments)
           # Check if we might need to substitute values.
-          if '%' in value_name:
+          if u'%' in value_name:
             # TODO: deprecate direct use of pre_obj.
             value_name = environ_expand.ExpandWindowsEnvironmentVariables(
                 value_name, parser_mediator.knowledge_base.pre_obj)
