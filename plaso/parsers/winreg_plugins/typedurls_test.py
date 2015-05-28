@@ -22,7 +22,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = u'\\Software\\Microsoft\\Internet Explorer\\TypedURLs'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -39,7 +39,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-12 21:23:53.307749')
+        u'2012-03-12 21:23:53.307749')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'url1'
@@ -60,7 +60,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths')
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -78,7 +78,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 07:58:15.811625')
+        u'2010-11-10 07:58:15.811625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'url1'

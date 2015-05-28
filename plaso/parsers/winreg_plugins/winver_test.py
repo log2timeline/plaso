@@ -24,13 +24,14 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'ProductName', 'MyTestOS'.encode('utf_16_le'), 1, 123))
+        u'ProductName', u'MyTestOS'.encode(u'utf_16_le'), 1, 123))
     values.append(winreg_test_lib.TestRegValue(
-        'CSDBuildNumber', '5'.encode('utf_16_le'), 1, 1892))
+        u'CSDBuildNumber', u'5'.encode(u'utf_16_le'), 1, 1892))
     values.append(winreg_test_lib.TestRegValue(
-        'RegisteredOwner', 'A Concerned Citizen'.encode('utf_16_le'), 1, 612))
+        u'RegisteredOwner', u'A Concerned Citizen'.encode(u'utf_16_le'),
+        1, 612))
     values.append(winreg_test_lib.TestRegValue(
-        'InstallDate', '\x13\x1aAP', 3, 1001))
+        u'InstallDate', b'\x13\x1aAP', 3, 1001))
 
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, 1346445929000000, values, 153)
@@ -47,7 +48,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-31 20:09:55')
+        u'2012-08-31 20:09:55')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Note that the double spaces here are intentional.
@@ -64,6 +65,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
     # TODO: Write a test for a non-synthetic key
+
 
 if __name__ == '__main__':
   unittest.main()

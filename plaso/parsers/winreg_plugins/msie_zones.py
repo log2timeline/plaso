@@ -144,7 +144,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
   }
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
@@ -169,7 +169,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
     else:
       for value in key.GetValues():
         if not value.name:
-          value_name = '(default)'
+          value_name = u'(default)'
         else:
           value_name = u'{0:s}'.format(value.name)
 
@@ -220,11 +220,11 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
           if value.name in self.KNOWN_PERMISSIONS_VALUE_NAMES:
             value_string = self.CONTROL_VALUES_PERMISSIONS.get(
                 value.data, u'UNKNOWN')
-          elif value.name == '1A00':
+          elif value.name == u'1A00':
             value_string = self.CONTROL_VALUES_1A00.get(value.data, u'UNKNOWN')
-          elif value.name == '1C00':
+          elif value.name == u'1C00':
             value_string = self.CONTROL_VALUES_1C00.get(value.data, u'UNKNOWN')
-          elif value.name == '1E05':
+          elif value.name == u'1E05':
             value_string = self.CONTROL_VALUES_SAFETY.get(
                 value.data, u'UNKNOWN')
           else:
@@ -233,10 +233,10 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
-        if len(value.name) == 4 and value.name != 'Icon':
-          value_description = self.FEATURE_CONTROLS.get(value.name, 'UNKNOWN')
+        if len(value.name) == 4 and value.name != u'Icon':
+          value_description = self.FEATURE_CONTROLS.get(value.name, u'UNKNOWN')
         else:
-          value_description = self.FEATURE_CONTROLS.get(value.name, '')
+          value_description = self.FEATURE_CONTROLS.get(value.name, u'')
 
         if value_description:
           feature_control = u'[{0:s}] {1:s}'.format(

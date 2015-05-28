@@ -24,11 +24,11 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'UsernameHint', 'DOMAIN\\username'.encode('utf_16_le'),
+        u'UsernameHint', u'DOMAIN\\username'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-28 09:23:49.002031')
+        u'2012-08-28 09:23:49.002031')
 
     server_key_path = (
         u'\\Software\\Microsoft\\Terminal Server Client\\Servers\\myserver.com')
@@ -71,14 +71,14 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'MRU0', '192.168.16.60'.encode('utf_16_le'),
+        u'MRU0', u'192.168.16.60'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
     values.append(winreg_test_lib.TestRegValue(
-        'MRU1', 'computer.domain.com'.encode('utf_16_le'),
+        u'MRU1', u'computer.domain.com'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, 612))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-28 09:23:49.002031')
+        u'2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, expected_timestamp, values, 1456)
 

@@ -20,50 +20,50 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessMock(self):
     """Tests the Process function on created key."""
-    knowledge_base_values = {'current_control_set': u'ControlSet001'}
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     key_path = u'\\ControlSet001\\Control\\TimeZoneInformation'
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'ActiveTimeBias', '\xFF\xFF\xFF\xC4',
+        u'ActiveTimeBias', b'\xff\xff\xff\xc4',
         winreg_test_lib.TestRegValue.REG_DWORD_BIG_ENDIAN))
 
     values.append(winreg_test_lib.TestRegValue(
-        'Bias', '\xFF\xFF\xFF\xC4',
+        u'Bias', b'\xff\xff\xff\xc4',
         winreg_test_lib.TestRegValue.REG_DWORD_BIG_ENDIAN))
 
     values.append(winreg_test_lib.TestRegValue(
-        'DaylightBias', '\xFF\xFF\xFF\xC4',
+        u'DaylightBias', b'\xff\xff\xff\xc4',
         winreg_test_lib.TestRegValue.REG_DWORD_BIG_ENDIAN))
 
     values.append(winreg_test_lib.TestRegValue(
-        'DaylightName', '@tzres.dll,-321'.encode('utf_16_le'),
+        u'DaylightName', u'@tzres.dll,-321'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ))
 
+    binary_data = (
+        b'\x00\x00\x03\x00\x05\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00')
     values.append(winreg_test_lib.TestRegValue(
-        'DaylightStart', '\x00\x00\x03\x00\x05\x00\x02\x00'
-        '\x00\x00\x00\x00\x00\x00\x00\x00',
-        winreg_test_lib.TestRegValue.REG_BINARY))
+        u'DaylightStart', binary_data, winreg_test_lib.TestRegValue.REG_BINARY))
 
     values.append(winreg_test_lib.TestRegValue(
-        'DynamicDaylightTimeDisabled', '\x00\x00\x00\x00',
+        u'DynamicDaylightTimeDisabled', b'\x00\x00\x00\x00',
         winreg_test_lib.TestRegValue.REG_DWORD_BIG_ENDIAN))
 
     values.append(winreg_test_lib.TestRegValue(
-        'StandardBias', '\x00\x00\x00\x00',
+        u'StandardBias', b'\x00\x00\x00\x00',
         winreg_test_lib.TestRegValue.REG_DWORD_BIG_ENDIAN))
 
     values.append(winreg_test_lib.TestRegValue(
-        'StandardName', '@tzres.dll,-322'.encode('utf_16_le'),
+        u'StandardName', u'@tzres.dll,-322'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ))
 
+    binary_data = (
+        b'\x00\x00\x0A\x00\x05\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00')
     values.append(winreg_test_lib.TestRegValue(
-        'StandardStart', '\x00\x00\x0A\x00\x05\x00\x03\x00'
-        '\x00\x00\x00\x00\x00\x00\x00\x00',
-        winreg_test_lib.TestRegValue.REG_BINARY))
+        u'StandardStart', binary_data, winreg_test_lib.TestRegValue.REG_BINARY))
 
     values.append(winreg_test_lib.TestRegValue(
-        'TimeZoneKeyName', 'W. Europe Standard Time'.encode('utf_16_le'),
+        u'TimeZoneKeyName', u'W. Europe Standard Time'.encode(u'utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ))
 
     # expr `date -u -d "2013-01-30 10:47:57" +"%s%N"` \/ 1000
@@ -77,7 +77,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(event_objects), 1)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-01-30 10:47:57.000000')
+        u'2013-01-30 10:47:57.000000')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
@@ -102,8 +102,8 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
-    knowledge_base_values = {'current_control_set': u'ControlSet001'}
-    test_file = self._GetTestFilePath(['SYSTEM'])
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    test_file = self._GetTestFilePath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\TimeZoneInformation'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
 
@@ -114,7 +114,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(event_objects), 1)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-11 07:00:00.000642')
+        u'2012-03-11 07:00:00.000642')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (

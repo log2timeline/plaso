@@ -21,7 +21,7 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect Values in Servers and return event for each one.
 
@@ -32,7 +32,7 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       registry_type: Optional Registry type string. The default is None.
     """
     for subkey in key.GetSubkeys():
-      username_value = subkey.GetValue('UsernameHint')
+      username_value = subkey.GetValue(u'UsernameHint')
 
       if (username_value and username_value.data and
           username_value.DataIsString()):
@@ -62,7 +62,7 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect MRU Values and return event for each one.
 

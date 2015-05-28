@@ -34,7 +34,7 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
   REG_TYPE = u'NTUSER'
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect the values under Outlook and return event for each one.
 

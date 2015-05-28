@@ -21,7 +21,7 @@ class RunUserPlugin(interface.KeyPlugin):
   URLS = [u'http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect the Values under the Run Key and return an event for each one.
 

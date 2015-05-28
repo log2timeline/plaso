@@ -47,10 +47,10 @@ class TaskCachePlugin(interface.KeyPlugin):
       u'https://code.google.com/p/winreg-kb/wiki/TaskSchedulerKeys']
 
   _DYNAMIC_INFO_STRUCT = construct.Struct(
-      'dynamic_info_record',
-      construct.ULInt32('version'),
-      construct.ULInt64('last_registered_time'),
-      construct.ULInt64('launch_time'),
+      u'dynamic_info_record',
+      construct.ULInt32(u'version'),
+      construct.ULInt64(u'last_registered_time'),
+      construct.ULInt64(u'launch_time'),
       construct.Padding(8))
 
   _DYNAMIC_INFO_STRUCT_SIZE = _DYNAMIC_INFO_STRUCT.sizeof()
@@ -74,7 +74,7 @@ class TaskCachePlugin(interface.KeyPlugin):
         yield value_key, id_value
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Parses a Task Cache Registry key.
 

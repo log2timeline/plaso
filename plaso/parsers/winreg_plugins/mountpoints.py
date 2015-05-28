@@ -21,7 +21,7 @@ class MountPoints2Plugin(interface.KeyPlugin):
   URLS = [u'http://support.microsoft.com/kb/932463']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Retrieves information from the MountPoints2 registry key.
 
@@ -47,10 +47,10 @@ class MountPoints2Plugin(interface.KeyPlugin):
       if name.startswith(u'{'):
         text_dict[u'Type'] = u'Volume'
 
-      elif name.startswith('#'):
+      elif name.startswith(u'#'):
         # The format is: ##Server_Name#Share_Name.
         text_dict[u'Type'] = u'Remote Drive'
-        server_name, _, share_name = name[2:].partition('#')
+        server_name, _, share_name = name[2:].partition(u'#')
         text_dict[u'Remote_Server'] = server_name
         text_dict[u'Share_Name'] = u'\\{0:s}'.format(
             share_name.replace(u'#', u'\\'))

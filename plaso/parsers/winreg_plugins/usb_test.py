@@ -46,8 +46,11 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'product', u'PID_0002')
 
     expected_msg = (
-        r'[\ControlSet001\Enum\USB] product: PID_0002 serial: 6&2ab01149&0&2 '
-        r'subkey_name: VID_0E0F&PID_0002 vendor: VID_0E0F')
+        u'[\\ControlSet001\\Enum\\USB] '
+        u'product: PID_0002 '
+        u'serial: 6&2ab01149&0&2 '
+        u'subkey_name: VID_0E0F&PID_0002 '
+        u'vendor: VID_0E0F')
 
     # Match UTC timestamp.
     time = long(timelib.Timestamp.CopyFromString(

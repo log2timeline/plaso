@@ -39,7 +39,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       A Windows Registry key (instance of WinRegKey).
     """
     registry = winregistry.WinRegistry(winregistry.WinRegistry.BACKEND_PYREGF)
-    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+    winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
     return winreg_file.GetKeyByPath(key_path)
 
   def _ParseKeyWithPlugin(
@@ -99,6 +99,6 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       identifier: the identifier of the 'regvalue' attribute.
       expected_value: the expected value of the 'regvalue' attribute.
     """
-    self.assertTrue(hasattr(event_object, 'regvalue'))
+    self.assertTrue(hasattr(event_object, u'regvalue'))
     self.assertIn(identifier, event_object.regvalue)
     self.assertEqual(event_object.regvalue[identifier], expected_value)

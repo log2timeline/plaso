@@ -39,7 +39,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-13 10:03:14')
+        u'2013-07-13 10:03:14')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'UpdateKey'

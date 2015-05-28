@@ -22,7 +22,8 @@ from plaso.parsers.winreg_plugins import interface
 class MRUListExPluginMixin(object):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 
-  _MRULISTEX_STRUCT = construct.Range(1, 500, construct.ULInt32('entry_number'))
+  _MRULISTEX_STRUCT = construct.Range(
+      1, 500, construct.ULInt32(u'entry_number'))
 
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
@@ -51,7 +52,7 @@ class MRUListExPluginMixin(object):
       A MRUListEx value generator, which returns the MRU index number
       and entry value.
     """
-    mru_list_value = key.GetValue('MRUListEx')
+    mru_list_value = key.GetValue(u'MRUListEx')
 
     # The key exists but does not contain a value named "MRUListEx".
     if not mru_list_value:
@@ -67,7 +68,7 @@ class MRUListExPluginMixin(object):
     return enumerate(mru_list)
 
   def _ParseMRUListExKey(
-      self, parser_mediator, key, registry_type=None, codepage='cp1252'):
+      self, parser_mediator, key, registry_type=None, codepage=u'cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
@@ -112,9 +113,9 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
       u'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
   _STRING_STRUCT = construct.Struct(
-      'string_and_shell_item',
+      u'string_and_shell_item',
       construct.RepeatUntil(
-          lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)))
+          lambda obj, ctx: obj == b'\x00\x00', construct.Field(u'string', 2)))
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, **unused_kwargs):
@@ -148,7 +149,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
       utf16_stream = binary.ByteStreamCopyToUtf16Stream(value.data)
 
       try:
-        value_string = utf16_stream.decode('utf-16-le')
+        value_string = utf16_stream.decode(u'utf-16-le')
       except UnicodeDecodeError as exception:
         value_string = binary.HexifyBuffer(utf16_stream)
         logging.warning((
@@ -159,7 +160,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
@@ -173,7 +174,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
     self._ParseMRUListExKey(
         parser_mediator, key, registry_type=registry_type, codepage=codepage)
 
-  def Process(self, parser_mediator, key=None, codepage='cp1252', **kwargs):
+  def Process(self, parser_mediator, key=None, codepage=u'cp1252', **kwargs):
     """Determine if we can process this Registry key or not.
 
     Args:
@@ -206,7 +207,7 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StreamMRU'])
 
   def _ParseMRUListExEntryValue(
-      self, parser_mediator, key, entry_index, entry_number, codepage='cp1252',
+      self, parser_mediator, key, entry_index, entry_number, codepage=u'cp1252',
       **unused_kwargs):
     """Parses the MRUListEx entry value.
 
@@ -245,7 +246,7 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
@@ -281,13 +282,13 @@ class MRUListExStringAndShellItemPlugin(
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs'])
 
   _STRING_AND_SHELL_ITEM_STRUCT = construct.Struct(
-      'string_and_shell_item',
+      u'string_and_shell_item',
       construct.RepeatUntil(
-          lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)),
-      construct.Anchor('shell_item'))
+          lambda obj, ctx: obj == b'\x00\x00', construct.Field(u'string', 2)),
+      construct.Anchor(u'shell_item'))
 
   def _ParseMRUListExEntryValue(
-      self, parser_mediator, key, entry_index, entry_number, codepage='cp1252',
+      self, parser_mediator, key, entry_index, entry_number, codepage=u'cp1252',
       **unused_kwargs):
     """Parses the MRUListEx entry value.
 
@@ -348,7 +349,7 @@ class MRUListExStringAndShellItemPlugin(
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
@@ -384,13 +385,13 @@ class MRUListExStringAndShellItemListPlugin(
        u'LastVisitedPidlMRU')])
 
   _STRING_AND_SHELL_ITEM_LIST_STRUCT = construct.Struct(
-      'string_and_shell_item',
+      u'string_and_shell_item',
       construct.RepeatUntil(
-          lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)),
-      construct.Anchor('shell_item_list'))
+          lambda obj, ctx: obj == b'\x00\x00', construct.Field(u'string', 2)),
+      construct.Anchor(u'shell_item_list'))
 
   def _ParseMRUListExEntryValue(
-      self, parser_mediator, key, entry_index, entry_number, codepage='cp1252',
+      self, parser_mediator, key, entry_index, entry_number, codepage=u'cp1252',
       **unused_kwargs):
     """Parses the MRUListEx entry value.
 
@@ -451,7 +452,7 @@ class MRUListExStringAndShellItemListPlugin(
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
