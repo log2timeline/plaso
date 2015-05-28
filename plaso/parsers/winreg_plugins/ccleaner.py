@@ -23,7 +23,7 @@ class CCleanerPlugin(interface.KeyPlugin):
            u'-regripper-plugin-part_05.html')]
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Extracts event objects from a CCleaner Registry key.
 
@@ -47,7 +47,7 @@ class CCleanerPlugin(interface.KeyPlugin):
             timestamp, key.path, text_dict, offset=key.offset,
             registry_type=registry_type)
 
-      elif value.name == '0':
+      elif value.name == u'0':
         event_object = windows_events.WindowsRegistryEvent(
             key.timestamp, key.path, text_dict, offset=key.offset,
             registry_type=registry_type)

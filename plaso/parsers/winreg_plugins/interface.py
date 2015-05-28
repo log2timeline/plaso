@@ -13,11 +13,11 @@ class RegistryPlugin(plugins.BasePlugin):
 
   __abstract = True
 
-  NAME = 'winreg'
+  NAME = u'winreg'
   DESCRIPTION = u'Parser for Registry data.'
 
   # Indicate the type of hive this plugin belongs to (eg. NTUSER, SOFTWARE).
-  REG_TYPE = 'any'
+  REG_TYPE = u'any'
 
   # URLS should contain a list of URLs with additional information about this
   # key or value.
@@ -44,7 +44,7 @@ class RegistryPlugin(plugins.BasePlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extracts event objects from the Windows Registry key.
 
@@ -70,8 +70,8 @@ class RegistryPlugin(plugins.BasePlugin):
     if key is None:
       raise ValueError(u'Key is not set.')
 
-    del kwargs['registry_type']
-    del kwargs['codepage']
+    del kwargs[u'registry_type']
+    del kwargs[u'codepage']
 
     # This will raise if unhandled keyword arguments are passed.
     super(RegistryPlugin, self).Process(parser_mediator)
@@ -128,17 +128,17 @@ class KeyPlugin(RegistryPlugin):
       # Special case of Wow6432 Windows Registry redirection.
       # URL: http://msdn.microsoft.com/en-us/library/windows/desktop/\
       # ms724072%28v=vs.85%29.aspx
-      if expanded_key.startswith('\\Software'):
-        _, first, second = expanded_key.partition('\\Software')
+      if expanded_key.startswith(u'\\Software'):
+        _, first, second = expanded_key.partition(u'\\Software')
         self.expanded_keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(
             first, second))
 
-      if self.REG_TYPE == 'SOFTWARE' or self.REG_TYPE == 'any':
+      if self.REG_TYPE in [u'any', u'SOFTWARE']:
         self.expanded_keys.append(u'\\Wow6432Node{0:s}'.format(expanded_key))
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extracts event objects from the Windows Registry key.
 
@@ -153,7 +153,7 @@ class KeyPlugin(RegistryPlugin):
     """
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Processes a Windows Registry key.
 
@@ -167,12 +167,13 @@ class KeyPlugin(RegistryPlugin):
     if self.expanded_keys is None:
       self.ExpandKeys(parser_mediator)
 
-    super(KeyPlugin, self).Process(parser_mediator, key=key,
-                                   registry_type=registry_type,
-                                   codepage=codepage)
+    super(KeyPlugin, self).Process(
+        parser_mediator, key=key, registry_type=registry_type,
+        codepage=codepage)
 
     if key and key.path in self.expanded_keys:
-      self.GetEntries(parser_mediator, key=key, registry_type=registry_type)
+      self.GetEntries(
+          parser_mediator, key=key, registry_type=registry_type, **kwargs)
 
 
 class ValuePlugin(RegistryPlugin):
@@ -187,7 +188,7 @@ class ValuePlugin(RegistryPlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extracts event objects from the Windows Registry key.
 
@@ -202,7 +203,7 @@ class ValuePlugin(RegistryPlugin):
     """
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Processes a Windows Registry value.
 
@@ -213,13 +214,12 @@ class ValuePlugin(RegistryPlugin):
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-
-    super(ValuePlugin, self).Process(parser_mediator, key=key,
-                                     registry_type=registry_type,
-                                     codepage=codepage)
-
-    values = frozenset([val.name for val in key.GetValues()])
-    if self.REG_VALUES.issubset(values):
-      self.GetEntries(
+    super(ValuePlugin, self).Process(
         parser_mediator, key=key, registry_type=registry_type,
         codepage=codepage)
+
+    values = frozenset([value.name for value in key.GetValues()])
+    if self.REG_VALUES.issubset(values):
+      self.GetEntries(
+          parser_mediator, key=key, registry_type=registry_type,
+          codepage=codepage, **kwargs)

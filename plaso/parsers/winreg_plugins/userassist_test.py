@@ -19,7 +19,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{75048700-EF1F-11D0-9888-006097DEACF9}')
@@ -38,7 +38,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:11:22.811067')
+        u'2009-08-04 15:11:22.811067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
@@ -54,7 +54,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
 
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
@@ -75,7 +75,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 07:49:37.078067')
+        u'2010-11-10 07:49:37.078067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'Microsoft.Windows.GettingStarted'

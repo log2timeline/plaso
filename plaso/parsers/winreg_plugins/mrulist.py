@@ -22,7 +22,7 @@ from plaso.parsers.winreg_plugins import interface
 class MRUListPluginMixin(object):
   """Class for common MRUList Windows Registry plugin functionality."""
 
-  _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16('entry_letter'))
+  _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16(u'entry_letter'))
 
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
@@ -56,7 +56,7 @@ class MRUListPluginMixin(object):
       A MRUList value generator, which returns the MRU index number
       and entry value.
     """
-    mru_list_value = key.GetValue('MRUList')
+    mru_list_value = key.GetValue(u'MRUList')
 
     # The key exists but does not contain a value named "MRUList".
     if not mru_list_value:
@@ -73,7 +73,7 @@ class MRUListPluginMixin(object):
 
   def _ParseMRUListKey(
       self, parser_mediator, key, registry_type=None, file_entry=None,
-      parser_chain=None, codepage='cp1252'):
+      parser_chain=None, codepage=u'cp1252'):
     """Extract event objects from a MRUList Registry key.
 
     Args:
@@ -153,7 +153,7 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
       utf16_stream = binary.ByteStreamCopyToUtf16Stream(value.data)
 
       try:
-        value_string = utf16_stream.decode('utf-16-le')
+        value_string = utf16_stream.decode(u'utf-16-le')
       except UnicodeDecodeError as exception:
         value_string = binary.HexifyBuffer(utf16_stream)
         logging.warning((
@@ -164,7 +164,7 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extracts event objects from a MRU list.
 
@@ -179,7 +179,7 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
         parser_mediator, key, registry_type=registry_type, codepage=codepage)
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Determine if we can process this Registry key or not.
 
@@ -214,7 +214,7 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
   URLS = [u'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
   def _ParseMRUListEntryValue(
-      self, parser_mediator, key, entry_index, entry_letter, codepage='cp1252',
+      self, parser_mediator, key, entry_index, entry_letter, codepage=u'cp1252',
       file_entry=None, parser_chain=None, **unused_kwargs):
     """Parses the MRUList entry value.
 
@@ -257,7 +257,7 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Extract event objects from a Registry key containing a MRUList value.
 

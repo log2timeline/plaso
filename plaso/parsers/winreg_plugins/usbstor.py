@@ -24,7 +24,7 @@ class USBStorPlugin(interface.KeyPlugin):
   URLS = [u'http://www.forensicswiki.org/wiki/USB_History_Viewing']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Collect Values under USBStor and return an event object for each one.
 

@@ -36,11 +36,11 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-23 17:10:14.960960')
+        u'2011-08-23 17:10:14.960960')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue = event_object.regvalue
-    self.assertEqual(regvalue.get('Share_Name'), r'\home\nfury')
+    self.assertEqual(regvalue.get(u'Share_Name'), u'\\home\\nfury')
 
     expected_string = (
         u'[{0:s}] Label: Home Drive Remote_Server: controller Share_Name: '

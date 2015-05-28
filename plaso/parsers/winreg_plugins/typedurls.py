@@ -25,7 +25,7 @@ class TypedURLsPlugin(interface.KeyPlugin):
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Collect typed URLs values.
 

@@ -23,15 +23,18 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\Software\\WinRAR\\ArcHistory'
 
     values = []
+
+    binary_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
+        u'utf_16_le')
     values.append(winreg_test_lib.TestRegValue(
-        '0', 'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode('utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
+        u'0', binary_data, winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
+
+    binary_data = u'C:\\Downloads\\plaso-static.rar'.encode(u'utf_16_le')
     values.append(winreg_test_lib.TestRegValue(
-        '1', 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=612))
+        u'1', binary_data, winreg_test_lib.TestRegValue.REG_SZ, offset=612))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-28 09:23:49.002031')
+        u'2012-08-28 09:23:49.002031')
 
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, expected_timestamp, values, offset=1456)

@@ -26,16 +26,16 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 
     # The order is: 201
     values.append(winreg_test_lib.TestRegValue(
-        'MRUListEx', '\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00',
+        u'MRUListEx', b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00',
         winreg_interface.WinRegValue.REG_BINARY, 123))
     values.append(winreg_test_lib.TestRegValue(
-        '0', 'Some random text here'.encode('utf_16_le'),
+        u'0', u'Some random text here'.encode(u'utf_16_le'),
         winreg_interface.WinRegValue.REG_SZ, 1892))
     values.append(winreg_test_lib.TestRegValue(
-        '1', 'c:\\evil.exe'.encode('utf_16_le'),
+        u'1', u'c:\\evil.exe'.encode(u'utf_16_le'),
         winreg_interface.WinRegValue.REG_BINARY, 612))
     values.append(winreg_test_lib.TestRegValue(
-        '2', 'C:\\looks_legit.exe'.encode('utf_16_le'),
+        u'2', u'C:\\looks_legit.exe'.encode(u'utf_16_le'),
         winreg_interface.WinRegValue.REG_SZ, 1001))
 
     winreg_key = winreg_test_lib.TestRegKey(
@@ -54,7 +54,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-28 09:23:49.002031')
+        u'2012-08-28 09:23:49.002031')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -78,7 +78,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'OpenSavePidlMRU')
@@ -98,7 +98,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-28 22:48:28.159308')
+        u'2011-08-28 22:48:28.159308')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -119,7 +119,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-08 22:16:02')
+        u'2012-03-08 22:16:02')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -147,7 +147,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs')
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -166,7 +166,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:52:39.113741')
+        u'2012-04-01 13:52:39.113741')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -228,7 +228,7 @@ class TestMRUListExStringAndShellItemListPlugin(
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'LastVisitedPidlMRU')
@@ -248,7 +248,7 @@ class TestMRUListExStringAndShellItemListPlugin(
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:52:38.966290')
+        u'2012-04-01 13:52:38.966290')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (

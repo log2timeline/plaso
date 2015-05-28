@@ -23,16 +23,22 @@ class UsersPlugin(interface.KeyPlugin):
   REG_TYPE = u'SAM'
 
   F_VALUE_STRUCT = construct.Struct(
-      'f_struct', construct.Padding(8), construct.ULInt64('last_login'),
-      construct.Padding(8), construct.ULInt64('password_reset'),
-      construct.Padding(16), construct.ULInt16('rid'), construct.Padding(16),
-      construct.ULInt8('login_count'))
+      u'f_struct',
+      construct.Padding(8),
+      construct.ULInt64(u'last_login'),
+      construct.Padding(8),
+      construct.ULInt64(u'password_reset'),
+      construct.Padding(16),
+      construct.ULInt16(u'rid'),
+      construct.Padding(16),
+      construct.ULInt8(u'login_count'))
   V_VALUE_HEADER = construct.Struct(
-      'v_header', construct.Array(11, construct.ULInt32('values')))
+      u'v_header',
+      construct.Array(11, construct.ULInt32(u'values')))
   V_VALUE_HEADER_SIZE = 0xCC
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect data from Users and Names and produce event objects.
 

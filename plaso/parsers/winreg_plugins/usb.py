@@ -26,7 +26,7 @@ class USBPlugin(interface.KeyPlugin):
        u'jj649944%28v=vs.85%29.aspx')]
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **kwargs):
     """Collect SubKeys under USB and produce an event object for each one.
 

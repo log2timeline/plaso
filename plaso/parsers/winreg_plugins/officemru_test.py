@@ -22,7 +22,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = u'\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -39,7 +39,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-13 18:27:15.083')
+        u'2012-03-13 18:27:15.083')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'Item 1'

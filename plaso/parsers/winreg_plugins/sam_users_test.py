@@ -22,7 +22,7 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['SAM'])
+    test_file = self._GetTestFilePath([u'SAM'])
     key_path = u'\\SAM\\Domains\\Account\\Users'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(

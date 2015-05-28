@@ -23,13 +23,13 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
     values = []
     values.append(winreg_test_lib.TestRegValue(
-        'MRUList', 'acb'.encode('utf_16_le'), 1, 123))
+        u'MRUList', u'acb'.encode(u'utf_16_le'), 1, 123))
     values.append(winreg_test_lib.TestRegValue(
-        'a', 'Some random text here'.encode('utf_16_le'), 1, 1892))
+        u'a', u'Some random text here'.encode(u'utf_16_le'), 1, 1892))
     values.append(winreg_test_lib.TestRegValue(
-        'b', 'c:/evil.exe'.encode('utf_16_le'), 3, 612))
+        u'b', u'c:/evil.exe'.encode(u'utf_16_le'), 3, 612))
     values.append(winreg_test_lib.TestRegValue(
-        'c', 'C:/looks_legit.exe'.encode('utf_16_le'), 1, 1001))
+        u'c', u'C:/looks_legit.exe'.encode(u'utf_16_le'), 1, 1001))
 
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, 1346145829002031, values, 1456)

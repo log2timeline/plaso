@@ -18,7 +18,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     registry_cache = cache.WinRegistryCache()
-    registry_cache.attributes['current_control_set'] = 'ControlSet001'
+    registry_cache.attributes[u'current_control_set'] = u'ControlSet001'
     self._plugin = lfu.BootExecutePlugin(reg_cache=registry_cache)
 
   def testProcess(self):
@@ -27,25 +27,26 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'BootExecute', 'autocheck autochk *\x00'.encode('utf_16_le'), 7, 123))
+        u'BootExecute', u'autocheck autochk *\x00'.encode(u'utf_16_le'),
+        7, 123))
     values.append(winreg_test_lib.TestRegValue(
-        'CriticalSectionTimeout', '2592000'.encode('utf_16_le'), 1, 153))
+        u'CriticalSectionTimeout', u'2592000'.encode(u'utf_16_le'), 1, 153))
     values.append(winreg_test_lib.TestRegValue(
-        'ExcludeFromKnownDlls', '\x00'.encode('utf_16_le'), 7, 163))
+        u'ExcludeFromKnownDlls', u'\x00'.encode(u'utf_16_le'), 7, 163))
     values.append(winreg_test_lib.TestRegValue(
-        'GlobalFlag', '0'.encode('utf_16_le'), 1, 173))
+        u'GlobalFlag', u'0'.encode(u'utf_16_le'), 1, 173))
     values.append(winreg_test_lib.TestRegValue(
-        'HeapDeCommitFreeBlockThreshold', '0'.encode('utf_16_le'), 1, 183))
+        u'HeapDeCommitFreeBlockThreshold', u'0'.encode(u'utf_16_le'), 1, 183))
     values.append(winreg_test_lib.TestRegValue(
-        'HeapDeCommitTotalFreeThreshold', '0'.encode('utf_16_le'), 1, 203))
+        u'HeapDeCommitTotalFreeThreshold', u'0'.encode(u'utf_16_le'), 1, 203))
     values.append(winreg_test_lib.TestRegValue(
-        'HeapSegmentCommit', '0'.encode('utf_16_le'), 1, 213))
+        u'HeapSegmentCommit', u'0'.encode(u'utf_16_le'), 1, 213))
     values.append(winreg_test_lib.TestRegValue(
-        'HeapSegmentReserve', '0'.encode('utf_16_le'), 1, 223))
+        u'HeapSegmentReserve', u'0'.encode(u'utf_16_le'), 1, 223))
     values.append(winreg_test_lib.TestRegValue(
-        'NumberOfInitialSessions', '2'.encode('utf_16_le'), 1, 243))
+        u'NumberOfInitialSessions', u'2'.encode(u'utf_16_le'), 1, 243))
 
-    timestamp = timelib.Timestamp.CopyFromString('2012-08-31 20:45:29')
+    timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:45:29')
     winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -60,7 +61,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-31 20:45:29')
+        u'2012-08-31 20:45:29')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_string = (
@@ -93,7 +94,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     registry_cache = cache.WinRegistryCache()
-    registry_cache.attributes['current_control_set'] = 'ControlSet001'
+    registry_cache.attributes[u'current_control_set'] = u'ControlSet001'
     self._plugin = lfu.BootVerificationPlugin(reg_cache=registry_cache)
 
   def testProcess(self):
@@ -102,11 +103,11 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     values = []
 
     values.append(winreg_test_lib.TestRegValue(
-        'ImagePath',
-        'C:\\WINDOWS\\system32\\googleupdater.exe'.encode('utf_16_le'), 1,
-        123))
+        u'ImagePath',
+        u'C:\\WINDOWS\\system32\\googleupdater.exe'.encode(u'utf_16_le'),
+        1, 123))
 
-    timestamp = timelib.Timestamp.CopyFromString('2012-08-31 20:45:29')
+    timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:45:29')
     winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -121,7 +122,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-31 20:45:29')
+        u'2012-08-31 20:45:29')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (

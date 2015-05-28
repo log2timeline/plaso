@@ -42,7 +42,7 @@ class WinRegTimezonePlugin(interface.KeyPlugin):
       return value.data
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Collect values and return an event.
 

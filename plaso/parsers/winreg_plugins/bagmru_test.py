@@ -37,7 +37,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:19:16.997750')
+        u'2009-08-04 15:19:16.997750')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -53,7 +53,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:19:10.669625')
+        u'2009-08-04 15:19:10.669625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -69,7 +69,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     event_object = event_objects[14]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:19:16.997750')
+        u'2009-08-04 15:19:16.997750')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The winreg_formatter will add a space after the key path even when there

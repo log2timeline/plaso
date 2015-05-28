@@ -19,7 +19,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['SOFTWARE-RunTests'])
+    test_file = self._GetTestFilePath([u'SOFTWARE-RunTests'])
     key_path = (
         u'\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache')
     winreg_key = self._GetKeyFromFile(test_file, key_path)
@@ -35,7 +35,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 04:53:25.811618')
+        u'2009-07-14 04:53:25.811618')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'Task: SynchronizeTime'
@@ -52,7 +52,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 05:08:50.811626')
+        u'2009-07-14 05:08:50.811626')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'Task: SynchronizeTime'

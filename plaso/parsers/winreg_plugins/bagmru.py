@@ -36,7 +36,7 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, text_dict,
-      value_strings, parent_path_segments, codepage='cp1252', **unused_kwargs):
+      value_strings, parent_path_segments, codepage=u'cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -127,7 +127,7 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   def _ParseSubKey(
       self, parser_mediator, key, parent_path_segments, registry_type=None,
-      codepage='cp1252'):
+      codepage=u'cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
@@ -181,7 +181,7 @@ class BagMRUPlugin(interface.KeyPlugin):
       _ = parent_path_segments.pop()
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
       **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
