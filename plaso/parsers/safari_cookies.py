@@ -19,7 +19,7 @@ from plaso.parsers.cookie_plugins import interface as cookie_interface
 class BinaryCookieEvent(time_events.CocoaTimeEvent):
   """A convenience class for a binary cookie event."""
 
-  DATA_TYPE = 'safari:cookie:entry'
+  DATA_TYPE = u'safari:cookie:entry'
 
   def __init__(self, timestamp, timestamp_desc, flags, url, value, name, path):
     """Initialize the binary cookie.
@@ -44,34 +44,34 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
 class BinaryCookieParser(interface.SingleFileBaseParser):
   """Parser for Safari Binary Cookie files."""
 
-  NAME = 'binary_cookies'
+  NAME = u'binary_cookies'
   DESCRIPTION = u'Parser for Safari Binary Cookie files.'
 
   COOKIE_HEADER = construct.Struct(
-      'binary_cookie_header',
-      construct.UBInt32('pages'),
-      construct.Array(lambda ctx: ctx.pages, construct.UBInt32('page_sizes')))
+      u'binary_cookie_header',
+      construct.UBInt32(u'pages'),
+      construct.Array(lambda ctx: ctx.pages, construct.UBInt32(u'page_sizes')))
 
   COOKIE_DATA = construct.Struct(
-      'binary_cookie_data',
-      construct.ULInt32('size'),
-      construct.Bytes('unknown_1', 4),
-      construct.ULInt32('flags'),
-      construct.Bytes('unknown_2', 4),
-      construct.ULInt32('url_offset'),
-      construct.ULInt32('name_offset'),
-      construct.ULInt32('path_offset'),
-      construct.ULInt32('value_offset'),
-      construct.Bytes('end_of_cookie', 8),
-      construct.LFloat64('expiration_date'),
-      construct.LFloat64('creation_date'))
+      u'binary_cookie_data',
+      construct.ULInt32(u'size'),
+      construct.Bytes(u'unknown_1', 4),
+      construct.ULInt32(u'flags'),
+      construct.Bytes(u'unknown_2', 4),
+      construct.ULInt32(u'url_offset'),
+      construct.ULInt32(u'name_offset'),
+      construct.ULInt32(u'path_offset'),
+      construct.ULInt32(u'value_offset'),
+      construct.Bytes(u'end_of_cookie', 8),
+      construct.LFloat64(u'expiration_date'),
+      construct.LFloat64(u'creation_date'))
 
   PAGE_DATA = construct.Struct(
-      'page_data',
-      construct.Bytes('header', 4),
-      construct.ULInt32('number_of_cookies'),
+      u'page_data',
+      construct.Bytes(u'header', 4),
+      construct.ULInt32(u'number_of_cookies'),
       construct.Array(
-          lambda ctx: ctx.number_of_cookies, construct.ULInt32('offsets')))
+          lambda ctx: ctx.number_of_cookies, construct.ULInt32(u'offsets')))
 
   # Cookie flags.
   COOKIE_FLAG_NONE = 0
@@ -126,7 +126,7 @@ class BinaryCookieParser(interface.SingleFileBaseParser):
         value = offset_dict.get(offsets[current_offset])
         # Read the data.
         data_all = page_data[start + page_offset:end + page_offset]
-        data, _, _ = data_all.partition('\x00')
+        data, _, _ = data_all.partition(b'\x00')
         data_dict[value] = data
 
       url = data_dict.get(u'url')

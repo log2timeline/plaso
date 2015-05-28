@@ -14,7 +14,7 @@ from plaso.parsers import manager
 class WinRecycleEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows Recycle Bin event object."""
 
-  DATA_TYPE = 'windows:metadata:deleted_item'
+  DATA_TYPE = u'windows:metadata:deleted_item'
 
   def __init__(
       self, filename_string, filename_utf, record_information, record_size,
@@ -48,7 +48,7 @@ class WinRecycleEvent(time_events.FiletimeEvent):
       try:
         short_filename = filename_string.decode(encoding)
       except UnicodeDecodeError:
-        short_filename = filename_string.decode(encoding, errors='ignore')
+        short_filename = filename_string.decode(encoding, errors=u'ignore')
     elif filename_string:
       short_filename = repr(filename_string)
     else:
@@ -65,7 +65,7 @@ class WinRecycleEvent(time_events.FiletimeEvent):
 class WinRecycleBinParser(interface.SingleFileBaseParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
-  NAME = 'recycle_bin'
+  NAME = u'recycle_bin'
   DESCRIPTION = u'Parser for Windows $Recycle.Bin $I files.'
 
   # Define a list of all structs needed.
@@ -101,7 +101,7 @@ class WinRecycleBinParser(interface.SingleFileBaseParser):
 
     # We may have to rely on filenames since this header is very generic.
     # TODO: Rethink this and potentially make a better test.
-    if not file_entry.name.startswith('$I'):
+    if not file_entry.name.startswith(u'$I'):
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, filename doesn\'t start with $I.')
 
@@ -115,11 +115,11 @@ class WinRecycleBinParser(interface.SingleFileBaseParser):
 class WinRecyclerInfo2Parser(interface.SingleFileBaseParser):
   """Parses the Windows Recycler INFO2 file."""
 
-  NAME = 'recycle_bin_info2'
+  NAME = u'recycle_bin_info2'
   DESCRIPTION = u'Parser for Windows Recycler INFO2 files.'
 
   # Define a list of all structs used.
-  INT32_LE = construct.ULInt32('my_int')
+  INT32_LE = construct.ULInt32(u'my_int')
 
   FILE_HEADER_STRUCT = construct.Struct(
       u'file_header',

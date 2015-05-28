@@ -24,8 +24,8 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    knowledge_base_values = {'zone': pytz.timezone('Europe/Rome')}
-    test_file = self._GetTestFilePath(['xchat.log'])
+    knowledge_base_values = {u'zone': pytz.timezone(u'Europe/Rome')}
+    test_file = self._GetTestFilePath([u'xchat.log'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

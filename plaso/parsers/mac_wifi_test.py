@@ -19,7 +19,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    knowledge_base_values = {'year': 2013}
+    knowledge_base_values = {u'year': 2013}
     test_file = self._GetTestFilePath([u'wifi.log'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)

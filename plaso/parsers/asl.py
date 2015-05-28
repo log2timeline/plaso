@@ -21,7 +21,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class AslEvent(event.EventObject):
   """Convenience class for an asl event."""
 
-  DATA_TYPE = 'mac:asl:event'
+  DATA_TYPE = u'mac:asl:event'
 
   def __init__(
       self, timestamp, record_position, message_id,
@@ -69,24 +69,24 @@ class AslParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'asl_log'
+  NAME = u'asl_log'
   DESCRIPTION = u'Parser for ASL log files.'
 
-  ASL_MAGIC = 'ASL DB\x00\x00\x00\x00\x00\x00'
+  ASL_MAGIC = b'ASL DB\x00\x00\x00\x00\x00\x00'
 
-  # If not right assigned, the value is "-1".
-  ASL_NO_RIGHTS = 'ffffffff'
+  # If not right assigned, the value is "-1" as a 32-bit integer.
+  ASL_NO_RIGHTS = 0xffffffff
 
   # Priority level (criticality)
   ASL_MESSAGE_PRIORITY = {
-      0 : 'EMERGENCY',
-      1 : 'ALERT',
-      2 : 'CRITICAL',
-      3 : 'ERROR',
-      4 : 'WARNING',
-      5 : 'NOTICE',
-      6 : 'INFO',
-      7 : 'DEBUG'}
+      0 : u'EMERGENCY',
+      1 : u'ALERT',
+      2 : u'CRITICAL',
+      3 : u'ERROR',
+      4 : u'WARNING',
+      5 : u'NOTICE',
+      6 : u'INFO',
+      7 : u'DEBUG'}
 
   # ASL File header.
   # magic: magic number that identify ASL files.
@@ -95,13 +95,13 @@ class AslParser(interface.SingleFileBaseParser):
   # timestamp: epoch time when the first entry was written.
   # last_offset: last record in the file.
   ASL_HEADER_STRUCT = construct.Struct(
-      'asl_header_struct',
-      construct.String('magic', 12),
-      construct.UBInt32('version'),
-      construct.UBInt64('offset'),
-      construct.UBInt64('timestamp'),
-      construct.UBInt32('cache_size'),
-      construct.UBInt64('last_offset'),
+      u'asl_header_struct',
+      construct.String(u'magic', 12),
+      construct.UBInt32(u'version'),
+      construct.UBInt64(u'offset'),
+      construct.UBInt64(u'timestamp'),
+      construct.UBInt32(u'cache_size'),
+      construct.UBInt64(u'last_offset'),
       construct.Padding(36))
 
   # The record structure is:
@@ -121,21 +121,21 @@ class AslParser(interface.SingleFileBaseParser):
   #           Only root and this user can read the entry.
   # read_gid: the same than read_uid, but for the group.
   ASL_RECORD_STRUCT = construct.Struct(
-      'asl_record_struct',
+      u'asl_record_struct',
       construct.Padding(2),
-      construct.UBInt32('tam_entry'),
-      construct.UBInt64('next_offset'),
-      construct.UBInt64('asl_message_id'),
-      construct.UBInt64('timestamp'),
-      construct.UBInt32('nanosec'),
-      construct.UBInt16('level'),
-      construct.UBInt16('flags'),
-      construct.UBInt32('pid'),
-      construct.UBInt32('uid'),
-      construct.UBInt32('gid'),
-      construct.UBInt32('read_uid'),
-      construct.UBInt32('read_gid'),
-      construct.UBInt64('ref_pid'))
+      construct.UBInt32(u'tam_entry'),
+      construct.UBInt64(u'next_offset'),
+      construct.UBInt64(u'asl_message_id'),
+      construct.UBInt64(u'timestamp'),
+      construct.UBInt32(u'nanosec'),
+      construct.UBInt16(u'level'),
+      construct.UBInt16(u'flags'),
+      construct.UBInt32(u'pid'),
+      construct.UBInt32(u'uid'),
+      construct.UBInt32(u'gid'),
+      construct.UBInt32(u'read_uid'),
+      construct.UBInt32(u'read_gid'),
+      construct.UBInt64(u'ref_pid'))
 
   ASL_RECORD_STRUCT_SIZE = ASL_RECORD_STRUCT.sizeof()
 
@@ -148,7 +148,7 @@ class AslParser(interface.SingleFileBaseParser):
   # If the field is a String, we use this structure to decode each
   # integer byte in the corresponding character (ASCII Char).
   ASL_OCTET_STRING = construct.ExprAdapter(
-      construct.Octet('string'),
+      construct.Octet(u'string'),
       encoder=lambda obj, ctx: ord(obj),
       decoder=lambda obj, ctx: chr(obj))
 
@@ -156,27 +156,26 @@ class AslParser(interface.SingleFileBaseParser):
   # is a String (1000) = 8, then the next nibble has the number of
   # characters. The last 7 bytes are the number of bytes.
   ASL_STRING = construct.BitStruct(
-      'string',
-      construct.Flag('type'),
-      construct.Bits('filler', 3),
+      u'string',
+      construct.Flag(u'type'),
+      construct.Bits(u'filler', 3),
       construct.If(
           lambda ctx: ctx.type,
-          construct.Nibble('string_length')),
+          construct.Nibble(u'string_length')),
       construct.If(
           lambda ctx: ctx.type,
           construct.Array(7, ASL_OCTET_STRING)))
 
   # 8-byte pointer to a byte position in the file.
-  ASL_POINTER = construct.UBInt64('pointer')
+  ASL_POINTER = construct.UBInt64(u'pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
   # [2 bytes padding][4 bytes length of String][String].
   ASL_RECORD_DYN_VALUE = construct.Struct(
-      'asl_record_dyn_value',
+      u'asl_record_dyn_value',
       construct.Padding(2),
       construct.PascalString(
-          'value',
-          length_field=construct.UBInt32('length')))
+          u'value', length_field=construct.UBInt32(u'length')))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an ALS file-like object.
@@ -290,7 +289,7 @@ class AslParser(interface.SingleFileBaseParser):
       try:
         # Try to read as a String.
         field = self.ASL_STRING.parse(raw_field)
-        values.append(''.join(field.string[0:field.string_length]))
+        values.append(b''.join(field.string[0:field.string_length]))
         # Go to parse the next extra field.
         tam_fields -= 8
         continue
@@ -312,7 +311,7 @@ class AslParser(interface.SingleFileBaseParser):
         if pos >= 0:
           try:
             values.append((self.ASL_RECORD_DYN_VALUE.parse(
-                dynamic_part[pos:])).value.partition('\x00')[0])
+                dynamic_part[pos:])).value.partition(b'\x00')[0])
           except (IOError, construct.FieldError) as exception:
             logging.warning(
                 u'Unable to parse ASL event with error: {0:s}'.format(
@@ -327,7 +326,7 @@ class AslParser(interface.SingleFileBaseParser):
             file_object.seek(field - main_position, os.SEEK_CUR)
             try:
               values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
-                  file_object)).value.partition('\x00')[0])
+                  file_object)).value.partition(b'\x00')[0])
             except (IOError, construct.FieldError):
               logging.warning((
                   u'The pointer at {0:d} (0x{0:x}) points to invalid '
@@ -338,7 +337,7 @@ class AslParser(interface.SingleFileBaseParser):
           else:
             _ = file_object.read(field - main_position)
             values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
-                file_object)).value.partition('\x00')[0])
+                file_object)).value.partition(b'\x00')[0])
             # Come back to the position in the entry.
             file_object.seek(main_position - file_object.tell(), os.SEEK_CUR)
       # Next extra field: 8 bytes more.
@@ -356,14 +355,14 @@ class AslParser(interface.SingleFileBaseParser):
     level = u'{0} ({1})'.format(
         self.ASL_MESSAGE_PRIORITY[record_header.level], record_header.level)
     # If the value is -1 (FFFFFFFF), it can be read by everyone.
-    if record_header.read_uid != int(self.ASL_NO_RIGHTS, 16):
+    if record_header.read_uid != self.ASL_NO_RIGHTS:
       read_uid = record_header.read_uid
     else:
-      read_uid = 'ALL'
-    if record_header.read_gid != int(self.ASL_NO_RIGHTS, 16):
+      read_uid = u'ALL'
+    if record_header.read_gid != self.ASL_NO_RIGHTS:
       read_gid = record_header.read_gid
     else:
-      read_gid = 'ALL'
+      read_gid = u'ALL'
 
     # Parsing the dynamic values (text or pointers to position with text).
     # The first four are always the host, sender, facility, and message.
@@ -374,12 +373,12 @@ class AslParser(interface.SingleFileBaseParser):
 
     # If the entry has an extra fields, they works as a pairs:
     # The first is the name of the field and the second the value.
-    extra_information = ''
+    extra_information = u''
     if len(values) > 4:
       values = values[4:]
       for index in xrange(0, len(values) // 2):
-        extra_information += (u'[{0}: {1}]'.format(
-            values[index * 2], values[(index * 2) + 1]))
+        extra_information += u'[{0!s}: {1!s}]'.format(
+            values[index * 2], values[(index * 2) + 1])
 
     # Return the event and the offset for the next entry.
     return AslEvent(

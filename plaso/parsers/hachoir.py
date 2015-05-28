@@ -29,7 +29,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class HachoirEvent(time_events.TimestampEvent):
   """Process timestamps from Hachoir Events."""
 
-  DATA_TYPE = 'metadata:hachoir'
+  DATA_TYPE = u'metadata:hachoir'
 
   def __init__(self, dt_timestamp, usage, attributes):
     """An EventObject created from a Hachoir entry.
@@ -47,7 +47,7 @@ class HachoirEvent(time_events.TimestampEvent):
 class HachoirParser(interface.SingleFileBaseParser):
   """Class to parse meta data from files using Hachoir."""
 
-  NAME = 'hachoir'
+  NAME = u'hachoir'
   DESCRIPTION = u'Parser that wraps Hachoir.'
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -72,7 +72,7 @@ class HachoirParser(interface.SingleFileBaseParser):
     if not fstream:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_name, 'Not fstream'))
+              self.NAME, file_name, u'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
@@ -84,7 +84,7 @@ class HachoirParser(interface.SingleFileBaseParser):
     if not doc_parser:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_name, 'Not parser'))
+              self.NAME, file_name, u'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
@@ -108,7 +108,7 @@ class HachoirParser(interface.SingleFileBaseParser):
     attributes = {}
     extracted_events = []
     for meta in metatext:
-      if not meta.startswith('-'):
+      if not meta.startswith(u'-'):
         continue
 
       if len(meta) < 3:
@@ -117,7 +117,7 @@ class HachoirParser(interface.SingleFileBaseParser):
       key, _, value = meta[2:].partition(': ')
 
       key2, _, value2 = value.partition(': ')
-      if key2 == 'LastPrinted' and value2 != 'False':
+      if key2 == u'LastPrinted' and value2 != u'False':
         date_object = timelib.Timestamp.FromTimeString(
             value2, timezone=parser_mediator.timezone)
         if isinstance(date_object, datetime.datetime):
@@ -142,7 +142,7 @@ class HachoirParser(interface.SingleFileBaseParser):
     if not extracted_events:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_name, 'No events discovered'))
+              self.NAME, file_name, u'No events discovered'))
 
     for date, key in extracted_events:
       event_object = HachoirEvent(date, key, attributes)

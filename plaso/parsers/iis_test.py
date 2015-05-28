@@ -56,7 +56,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         u'2013-07-30 00:00:05')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.http_method, 'GET')
+    self.assertEqual(event_object.http_method, u'GET')
     self.assertEqual(event_object.http_status, 200)
     self.assertEqual(
         event_object.requested_uri_stem, u'/some/image/path/something.jpg')

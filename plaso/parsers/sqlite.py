@@ -75,7 +75,7 @@ class SQLiteDatabase(object):
   """A simple wrapper for opening up a SQLite database."""
 
   # Magic value for a SQLite database.
-  MAGIC = 'SQLite format 3'
+  MAGIC = u'SQLite format 3'
 
   _READ_BUFFER_SIZE = 65536
 
@@ -90,7 +90,7 @@ class SQLiteDatabase(object):
     self._file_entry = file_entry
     self._open = False
     self._tables = []
-    self._temp_file_name = ''
+    self._temp_file_name = u''
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
@@ -133,7 +133,7 @@ class SQLiteDatabase(object):
 
     self._tables = []
     self._database = None
-    self._temp_file_name = ''
+    self._temp_file_name = u''
     self._open = False
 
   def Open(self):
@@ -193,7 +193,7 @@ class SQLiteDatabase(object):
     # the list of required tables.
     try:
       sql_results = self._cursor.execute(
-          'SELECT name FROM sqlite_master WHERE type="table"')
+          u'SELECT name FROM sqlite_master WHERE type="table"')
     except sqlite3.DatabaseError as exception:
       file_object.close()
       logging.debug(
@@ -213,7 +213,7 @@ class SQLiteParser(interface.BasePluginsParser):
   """A SQLite parser for Plaso."""
 
   # Name of the parser, which enables all plugins by default.
-  NAME = 'sqlite'
+  NAME = u'sqlite'
   DESCRIPTION = u'Parser for SQLite database files.'
 
   _plugin_classes = {}

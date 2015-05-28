@@ -38,12 +38,12 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertEqual(12, len(set(timestamps)))
 
     expected_roots = frozenset([
-        '/DeviceCache/00-0d-fd-00-00-00',
-        '/DeviceCache/44-00-00-00-00-00',
-        '/DeviceCache/44-00-00-00-00-01',
-        '/DeviceCache/44-00-00-00-00-02',
-        '/DeviceCache/44-00-00-00-00-03',
-        '/DeviceCache/44-00-00-00-00-04'])
+        u'/DeviceCache/00-0d-fd-00-00-00',
+        u'/DeviceCache/44-00-00-00-00-00',
+        u'/DeviceCache/44-00-00-00-00-01',
+        u'/DeviceCache/44-00-00-00-00-02',
+        u'/DeviceCache/44-00-00-00-00-03',
+        u'/DeviceCache/44-00-00-00-00-04'])
     self.assertTrue(expected_roots == set(roots))
     self.assertEqual(6, len(set(roots)))
 

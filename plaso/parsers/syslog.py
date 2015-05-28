@@ -14,34 +14,35 @@ from plaso.parsers import text_parser
 
 class SyslogLineEvent(text_events.TextEvent):
   """Convenience class for a syslog line event."""
-  DATA_TYPE = 'syslog:line'
+  DATA_TYPE = u'syslog:line'
 
 
 class SyslogParser(text_parser.SlowLexicalTextParser):
   """Parse text based syslog files."""
 
-  NAME = 'syslog'
+  NAME = u'syslog'
   DESCRIPTION = u'Parser for syslog files.'
 
   # TODO: can we change this similar to SQLite where create an
   # event specific object for different lines using a callback function.
   # Define the tokens that make up the structure of a syslog file.
   tokens = [
-      lexer.Token('INITIAL',
-                  '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ',
-                  'SetMonth', 'DAY'),
-      lexer.Token('DAY', r'\s?(\d{1,2})\s+', 'SetDay', 'TIME'),
-      lexer.Token('TIME', r'([0-9:\.]+) ', 'SetTime', 'STRING_HOST'),
-      lexer.Token('STRING_HOST', r'^--(-)', 'ParseHostname', 'STRING'),
-      lexer.Token('STRING_HOST', r'([^\s]+) ', 'ParseHostname', 'STRING_PID'),
-      lexer.Token('STRING_PID', r'([^\:\n]+)', 'ParsePid', 'STRING'),
-      lexer.Token('STRING', r'([^\n]+)', 'ParseString', ''),
-      lexer.Token('STRING', r'\n\t', None, ''),
-      lexer.Token('STRING', r'\t', None, ''),
-      lexer.Token('STRING', r'\n', 'ParseMessage', 'INITIAL'),
-      lexer.Token('.', '([^\n]+)\n', 'ParseIncomplete', 'INITIAL'),
-      lexer.Token('.', '\n[^\t]', 'ParseIncomplete', 'INITIAL'),
-      lexer.Token('S[.]+', '(.+)', 'ParseString', ''),
+      lexer.Token(
+          u'INITIAL', u'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ',
+          u'SetMonth', u'DAY'),
+      lexer.Token(u'DAY', r'\s?(\d{1,2})\s+', u'SetDay', u'TIME'),
+      lexer.Token(u'TIME', r'([0-9:\.]+) ', u'SetTime', u'STRING_HOST'),
+      lexer.Token(u'STRING_HOST', r'^--(-)', u'ParseHostname', u'STRING'),
+      lexer.Token(
+          u'STRING_HOST', r'([^\s]+) ', u'ParseHostname', u'STRING_PID'),
+      lexer.Token(u'STRING_PID', r'([^\:\n]+)', u'ParsePid', u'STRING'),
+      lexer.Token(u'STRING', r'([^\n]+)', u'ParseString', u''),
+      lexer.Token(u'STRING', r'\n\t', None, u''),
+      lexer.Token(u'STRING', r'\t', None, u''),
+      lexer.Token(u'STRING', r'\n', u'ParseMessage', u'INITIAL'),
+      lexer.Token(u'.', r'([^\n]+)\n', u'ParseIncomplete', u'INITIAL'),
+      lexer.Token(u'.', r'\n[^\t]', u'ParseIncomplete', u'INITIAL'),
+      lexer.Token(u'S[.]+', r'(.+)', u'ParseString', u''),
       ]
 
   def __init__(self):
@@ -52,14 +53,14 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     self._last_month = 0
 
     # Set some additional attributes.
-    self.attributes['reporter'] = ''
-    self.attributes['pid'] = ''
+    self.attributes[u'reporter'] = u''
+    self.attributes[u'pid'] = u''
 
   def _GetYear(self, stat, timezone):
     """Retrieves the year either from the input file or from the settings."""
-    time = getattr(stat, 'crtime', 0)
+    time = getattr(stat, u'crtime', 0)
     if not time:
-      time = getattr(stat, 'ctime', 0)
+      time = getattr(stat, u'ctime', 0)
 
     if not time:
       current_year = timelib.GetCurrentYear()
@@ -105,13 +106,13 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
         # TODO: Make this sensible, not have the year permanent.
         self._year_use = 2012
 
-    month_compare = int(self.attributes['imonth'])
+    month_compare = int(self.attributes[u'imonth'])
     if month_compare and self._last_month > month_compare:
       self._year_use += 1
 
-    self._last_month = int(self.attributes['imonth'])
+    self._last_month = int(self.attributes[u'imonth'])
 
-    self.attributes['iyear'] = self._year_use
+    self.attributes[u'iyear'] = self._year_use
 
     super(SyslogParser, self).ParseLine(parser_mediator)
 
@@ -124,7 +125,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     Args:
       match: The regular expression match object.
     """
-    self.attributes['hostname'] = match.group(1)
+    self.attributes[u'hostname'] = match.group(1)
 
   def ParsePid(self, match=None, **unused_kwargs):
     """Parses the process identifier (PID).
@@ -139,18 +140,18 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     # fully cover all variations of the various PID stages.
     line = match.group(1)
     if line[-1] == ']':
-      splits = line.split('[')
+      splits = line.split(u'[')
       if len(splits) == 2:
-        self.attributes['reporter'], pid = splits
+        self.attributes[u'reporter'], pid = splits
       else:
         pid = splits[-1]
-        self.attributes['reporter'] = '['.join(splits[:-1])
+        self.attributes[u'reporter'] = u'['.join(splits[:-1])
       try:
-        self.attributes['pid'] = int(pid[:-1])
+        self.attributes[u'pid'] = int(pid[:-1])
       except ValueError:
-        self.attributes['pid'] = 0
+        self.attributes[u'pid'] = 0
     else:
-      self.attributes['reporter'] = line
+      self.attributes[u'reporter'] = line
 
   def ParseString(self, match=None, **unused_kwargs):
     """Parses a (body text) string.
@@ -161,11 +162,11 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     Args:
       match: The regular expression match object.
     """
-    self.attributes['body'] += utils.GetUnicodeString(match.group(1))
+    self.attributes[u'body'] += utils.GetUnicodeString(match.group(1))
 
   def PrintLine(self):
     """Prints a log line."""
-    self.attributes['iyear'] = 2012
+    self.attributes[u'iyear'] = 2012
     return super(SyslogParser, self).PrintLine()
 
   # TODO: this is a rough initial implementation to get this working.

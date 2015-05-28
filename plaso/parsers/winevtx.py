@@ -13,12 +13,12 @@ from plaso.parsers import manager
 
 
 if pyevtx.get_version() < '20141112':
-  raise ImportWarning('WinEvtxParser requires at least pyevtx 20141112.')
+  raise ImportWarning(u'WinEvtxParser requires at least pyevtx 20141112.')
 
 
 class WinEvtxRecordEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows XML EventLog (EVTX) record event."""
-  DATA_TYPE = 'windows:evtx:record'
+  DATA_TYPE = u'windows:evtx:record'
 
   def __init__(self, evtx_record, recovered=False):
     """Initializes the event.
@@ -90,7 +90,7 @@ class WinEvtxParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'winevtx'
+  NAME = u'winevtx'
   DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):

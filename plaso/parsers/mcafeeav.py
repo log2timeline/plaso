@@ -14,7 +14,7 @@ from plaso.parsers import text_parser
 
 class McafeeAVEvent(text_events.TextEvent):
   """Convenience class for McAfee AV Log events """
-  DATA_TYPE = 'av:mcafee:accessprotectionlog'
+  DATA_TYPE = u'av:mcafee:accessprotectionlog'
 
   def __init__(self, timestamp, offset, attributes):
     """Initializes a McAfee AV Log Event.
@@ -25,22 +25,22 @@ class McafeeAVEvent(text_events.TextEvent):
       offset: The offset of the attributes.
       attributes: Dict of elements from the AV log line.
     """
-    del attributes['time']
-    del attributes['date']
+    del attributes[u'time']
+    del attributes[u'date']
     super(McafeeAVEvent, self).__init__(timestamp, offset, attributes)
-    self.full_path = attributes['filename']
+    self.full_path = attributes[u'filename']
 
 
 class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
-  NAME = 'mcafee_protection'
+  NAME = u'mcafee_protection'
   DESCRIPTION = u'Parser for McAfee AV Access Protection log files.'
 
-  VALUE_SEPARATOR = '\t'
+  VALUE_SEPARATOR = b'\t'
   # Define the columns of the McAfee AV Access Protection Log.
-  COLUMNS = ['date', 'time', 'status', 'username', 'filename',
-             'trigger_location', 'rule', 'action']
+  COLUMNS = [u'date', u'time', u'status', u'username', u'filename',
+             u'trigger_location', u'rule', u'action']
 
   def _GetTimestamp(self, date, time, timezone):
     """Return a 64-bit signed timestamp in microseconds since Epoch.
@@ -59,7 +59,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     """
 
     if not (date and time):
-      logging.warning('Unable to extract timestamp from McAfee AV logline.')
+      logging.warning(u'Unable to extract timestamp from McAfee AV logline.')
       return
 
     # TODO: Figure out how McAfee sets Day First and use that here.
@@ -83,19 +83,19 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # This file can have a UTF-8 byte-order-marker at the beginning of
     # the first row.
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
-    if row['date'][0:3] == '\xef\xbb\xbf':
-      row['date'] = row['date'][3:]
+    if row[u'date'][0:3] == b'\xef\xbb\xbf':
+      row[u'date'] = row[u'date'][3:]
 
     # Check the date format!
     # If it doesn't pass, then this isn't a McAfee AV Access Protection Log
     try:
-      self._GetTimestamp(row['date'], row['time'], parser_mediator.timezone)
+      self._GetTimestamp(row[u'date'], row[u'time'], parser_mediator.timezone)
     except (TypeError, ValueError):
       return False
 
     # Use the presence of these strings as a backup or in case of partial file.
-    if (not 'Access Protection' in row['status'] and
-        not 'Would be blocked' in row['status']):
+    if (not u'Access Protection' in row[u'status'] and
+        not u'Would be blocked' in row[u'status']):
       return False
 
     return True
@@ -110,7 +110,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
            COLUMNS class list.
     """
     timestamp = self._GetTimestamp(
-        row['date'], row['time'], parser_mediator.timezone)
+        row[u'date'], row[u'time'], parser_mediator.timezone)
     event_object = McafeeAVEvent(timestamp, row_offset, row)
     parser_mediator.ProduceEvent(event_object)
 

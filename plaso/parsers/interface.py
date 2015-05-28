@@ -14,7 +14,7 @@ from plaso.parsers import manager
 class BaseParser(object):
   """Class that implements the parser object interface."""
 
-  NAME = 'base_parser'
+  NAME = u'base_parser'
   DESCRIPTION = u''
 
   @classmethod
@@ -77,7 +77,7 @@ class BaseParser(object):
 class BasePluginsParser(BaseParser):
   """Class that implements the parser with plugins object interface."""
 
-  NAME = 'base_plugin_parser'
+  NAME = u'base_plugin_parser'
   DESCRIPTION = u''
 
   # Every child class should define its own _plugin_classes dict.

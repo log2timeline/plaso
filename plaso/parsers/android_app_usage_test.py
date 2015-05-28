@@ -34,7 +34,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
         event_object.component,
-        'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
+        u'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
 
     expected_msg = (
         u'Package: '
@@ -52,7 +52,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-09-27 19:45:55.675000')
     self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.package, 'com.google.android.gsf.login')
+    self.assertEqual(event_object.package, u'com.google.android.gsf.login')
 
     expected_msg = (
         u'Package: '

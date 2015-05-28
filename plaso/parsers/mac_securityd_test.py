@@ -19,8 +19,8 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""
-    knowledge_base_values = {'year': 2013}
-    test_file = self._GetTestFilePath(['security.log'])
+    knowledge_base_values = {u'year': 2013}
+    test_file = self._GetTestFilePath([u'security.log'])
     events = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(events)
@@ -39,7 +39,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-02-26 19:11:56')
+        u'2013-02-26 19:11:56')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
@@ -57,7 +57,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-26 19:11:57')
+        u'2013-12-26 19:11:57')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
@@ -70,7 +70,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-26 19:11:58')
+        u'2013-12-26 19:11:58')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
@@ -83,7 +83,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-26 19:11:59')
+        u'2013-12-26 19:11:59')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
@@ -96,7 +96,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-06 19:11:01')
+        u'2013-12-06 19:11:01')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
@@ -110,7 +110,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[5]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-06 19:11:02')
+        u'2013-12-06 19:11:02')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
@@ -124,13 +124,13 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     event_object = event_objects[6]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-31 23:59:59')
+        u'2013-12-31 23:59:59')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-03-01 00:00:01')
+        u'2014-03-01 00:00:01')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Repeated line.

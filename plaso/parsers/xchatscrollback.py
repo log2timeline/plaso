@@ -50,7 +50,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 class XChatScrollbackEvent(time_events.PosixTimeEvent):
   """Convenience class for a XChat Scrollback line event."""
-  DATA_TYPE = 'xchat:scrollback:line'
+  DATA_TYPE = u'xchat:scrollback:line'
 
   def __init__(self, timestamp, offset, nickname, text):
     """Initializes the event object.
@@ -71,21 +71,21 @@ class XChatScrollbackEvent(time_events.PosixTimeEvent):
 class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat scrollback log files."""
 
-  NAME = 'xchatscrollback'
+  NAME = u'xchatscrollback'
   DESCRIPTION = u'Parser for XChat scrollback log files.'
 
-  ENCODING = 'UTF-8'
+  ENCODING = u'UTF-8'
 
   # Define how a log line should look like.
   LOG_LINE = (
       pyparsing.Literal(u'T').suppress() +
-      pyparsing.Word(pyparsing.nums).setResultsName('epoch') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text'))
+      pyparsing.Word(pyparsing.nums).setResultsName(u'epoch') +
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'text'))
   LOG_LINE.parseWithTabs()
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', LOG_LINE),
+      (u'logline', LOG_LINE),
   ]
 
   # Define for the stripping phase.
@@ -96,9 +96,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   # Define the structure for parsing <text> and get <nickname> and <text>
   MSG_NICK_START = pyparsing.Literal(u'<')
   MSG_NICK_END = pyparsing.Literal(u'>')
-  MSG_NICK = pyparsing.SkipTo(MSG_NICK_END).setResultsName('nickname')
+  MSG_NICK = pyparsing.SkipTo(MSG_NICK_END).setResultsName(u'nickname')
   MSG_ENTRY_NICK = pyparsing.Optional(MSG_NICK_START + MSG_NICK + MSG_NICK_END)
-  MSG_ENTRY_TEXT = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text')
+  MSG_ENTRY_TEXT = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'text')
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
@@ -149,7 +149,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key != 'logline':
+    if key != u'logline':
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
       return

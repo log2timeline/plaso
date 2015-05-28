@@ -19,7 +19,7 @@ class AslParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['applesystemlog.asl'])
+    test_file = self._GetTestFilePath([u'applesystemlog.asl'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -28,7 +28,7 @@ class AslParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-25 09:45:35.705481')
+        u'2013-11-25 09:45:35.705481')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.record_position, 442)
@@ -40,7 +40,7 @@ class AslParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.user_sid, u'205')
     self.assertEqual(event_object.group_id, 205)
     self.assertEqual(event_object.read_uid, 205)
-    self.assertEqual(event_object.read_gid, 'ALL')
+    self.assertEqual(event_object.read_gid, u'ALL')
     self.assertEqual(event_object.level, u'WARNING (4)')
 
     expected_message = (

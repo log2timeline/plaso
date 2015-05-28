@@ -97,7 +97,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class PopularityContestSessionEvent(time_events.PosixTimeEvent):
   """Convenience class for a Popularity Contest start/end event."""
 
-  DATA_TYPE = 'popularity_contest:session:event'
+  DATA_TYPE = u'popularity_contest:session:event'
 
   def __init__(self, timestamp, session, status, hostid=None, details=None):
     """Initializes the event object.
@@ -120,7 +120,7 @@ class PopularityContestSessionEvent(time_events.PosixTimeEvent):
 class PopularityContestEvent(time_events.PosixTimeEvent):
   """Convenience class for a Popularity Contest line event."""
 
-  DATA_TYPE = 'popularity_contest:log:event'
+  DATA_TYPE = u'popularity_contest:log:event'
 
   def __init__(self, timestamp, ctime, package, mru, tag=None):
     """Initializes the event object.
@@ -144,35 +144,35 @@ class PopularityContestEvent(time_events.PosixTimeEvent):
 class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   """Parse popularity contest log files."""
 
-  NAME = 'popularity_contest'
+  NAME = u'popularity_contest'
   DESCRIPTION = u'Parser for popularity contest log files.'
 
-  EPOCH = text_parser.PyparsingConstants.INTEGER.setResultsName('epoch')
-  PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName('package')
-  MRU = pyparsing.Word(pyparsing.printables).setResultsName('mru')
-  TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
+  EPOCH = text_parser.PyparsingConstants.INTEGER.setResultsName(u'epoch')
+  PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName(u'package')
+  MRU = pyparsing.Word(pyparsing.printables).setResultsName(u'mru')
+  TAG = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(u'tag')
 
   HEADER = (
       pyparsing.Literal(u'POPULARITY-CONTEST-').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
+      text_parser.PyparsingConstants.INTEGER.setResultsName(u'session') +
       pyparsing.Literal(u'TIME:').suppress() + EPOCH +
-      pyparsing.Literal('ID:').suppress() +
-      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('details'))
+      pyparsing.Literal(u'ID:').suppress() +
+      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName(u'id') +
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'details'))
 
   FOOTER = (
       pyparsing.Literal(u'END-POPULARITY-CONTEST-').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
+      text_parser.PyparsingConstants.INTEGER.setResultsName(u'session') +
       pyparsing.Literal(u'TIME:').suppress() + EPOCH)
 
   LOG_LINE = (
-      EPOCH.setResultsName('atime') + EPOCH.setResultsName('ctime') +
+      EPOCH.setResultsName(u'atime') + EPOCH.setResultsName(u'ctime') +
       (PACKAGE + TAG | PACKAGE + MRU + pyparsing.Optional(TAG)))
 
   LINE_STRUCTURES = [
-      ('logline', LOG_LINE),
-      ('header', HEADER),
-      ('footer', FOOTER),
+      (u'logline', LOG_LINE),
+      (u'header', HEADER),
+      (u'footer', FOOTER),
   ]
 
   def VerifyStructure(self, parser_mediator, line):
@@ -210,16 +210,16 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: Add anomaly objects for abnormal timestamps, such as when the log
     # timestamp is greater than the session start.
-    if key == 'logline':
+    if key == u'logline':
       return self._ParseLogLine(structure)
-    elif key == 'header':
+    elif key == u'header':
       if not structure.epoch:
         logging.debug(u'PopularityContestParser, header with invalid epoch.')
         return
       return PopularityContestSessionEvent(
           structure.epoch, unicode(structure.session), u'start', structure.id,
           structure.details)
-    elif key == 'footer':
+    elif key == u'footer':
       if not structure.epoch:
         logging.debug(u'PopularityContestParser, footer with invalid epoch.')
         return

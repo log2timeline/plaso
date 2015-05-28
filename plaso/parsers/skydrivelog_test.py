@@ -22,24 +22,24 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['skydrive.log'])
+    test_file = self._GetTestFilePath([u'skydrive.log'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 18)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:22:28.999')
+        u'2013-08-01 21:22:28.999')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:22:29.702')
+        u'2013-08-01 21:22:29.702')
     self.assertEqual(event_objects[1].timestamp, expected_timestamp)
     self.assertEqual(event_objects[2].timestamp, expected_timestamp)
     self.assertEqual(event_objects[3].timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:22:58.344')
+        u'2013-08-01 21:22:58.344')
     self.assertEqual(event_objects[4].timestamp, expected_timestamp)
     self.assertEqual(event_objects[5].timestamp, expected_timestamp)
 

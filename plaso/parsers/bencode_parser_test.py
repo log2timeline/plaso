@@ -22,7 +22,7 @@ class BencodeTest(test_lib.ParserTestCase):
   # TODO: Move this to bencode_plugins/transmission_test.py
   def testTransmissionPlugin(self):
     """Read Transmission activity files and make few tests."""
-    test_file = self._GetTestFilePath(['bencode_transmission'])
+    test_file = self._GetTestFilePath([u'bencode_transmission'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -56,7 +56,7 @@ class BencodeTest(test_lib.ParserTestCase):
 
   def testUTorrentPlugin(self):
     """Parse a uTorrent resume.dat file and make a few tests."""
-    test_file = self._GetTestFilePath(['bencode_utorrent'])
+    test_file = self._GetTestFilePath([u'bencode_utorrent'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 

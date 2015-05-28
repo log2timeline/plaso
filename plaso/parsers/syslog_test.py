@@ -19,7 +19,7 @@ class SyslogUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    knowledge_base_values = {'year': 2012}
+    knowledge_base_values = {u'year': 2012}
     test_file = self._GetTestFilePath([u'syslog'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
@@ -30,7 +30,7 @@ class SyslogUnitTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-01-22 07:52:33')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
-    self.assertEqual(event_objects[0].hostname, 'myhostname.myhost.com')
+    self.assertEqual(event_objects[0].hostname, u'myhostname.myhost.com')
 
     expected_string = (
         u'[client, pid: 30840] : INFO No new content.')
@@ -38,11 +38,11 @@ class SyslogUnitTest(test_lib.ParserTestCase):
         event_objects[0], expected_string, expected_string)
 
     expected_msg = (
-        '[aprocess, pid: 101001] : This is a multi-line message that screws up'
-        'many syslog parsers.')
+        u'[aprocess, pid: 101001] : This is a multi-line message that screws up'
+        u'many syslog parsers.')
     expected_msg_short = (
-        '[aprocess, pid: 101001] : This is a multi-line message that screws up'
-        'many sys...')
+        u'[aprocess, pid: 101001] : This is a multi-line message that screws up'
+        u'many sys...')
     self._TestGetMessageStrings(
         event_objects[11], expected_msg, expected_msg_short)
 

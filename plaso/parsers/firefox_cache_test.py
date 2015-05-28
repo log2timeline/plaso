@@ -199,12 +199,12 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     self.assertEquals(
         event_objects[0].timestamp,
-        timelib.Timestamp.CopyFromString('2015-05-02 15:35:31'))
+        timelib.Timestamp.CopyFromString(u'2015-05-02 15:35:31'))
 
     expected_last_modified = (
-        timelib.Timestamp.CopyFromString('2015-05-02 15:35:31'))
+        timelib.Timestamp.CopyFromString(u'2015-05-02 15:35:31'))
     expected_expire_time = (
-        timelib.Timestamp.CopyFromString('2016-05-01 15:35:31'))
+        timelib.Timestamp.CopyFromString(u'2016-05-01 15:35:31'))
 
     self.assertEquals(event_objects[1].timestamp, expected_last_modified)
     self.assertEquals(event_objects[2].timestamp, expected_expire_time)
@@ -221,9 +221,9 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseInvalidCache2Entry(self):
     """Test file with valid filename and invalid content."""
 
-    test_file = self._GetTestFilePath(
-        [u'firefox_cache', u'cache2',
-         u'C966EB70794E44E7E3E8A260106D0C72439AF65B'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'cache2',
+        u'C966EB70794E44E7E3E8A260106D0C72439AF65B'])
 
     with self.assertRaises(errors.UnableToParseFile):
       _ = self._ParseFile(self._parser, test_file)

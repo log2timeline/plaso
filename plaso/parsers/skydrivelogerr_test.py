@@ -30,15 +30,15 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 19)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-25 16:03:23.291')
+        u'2013-07-25 16:03:23.291')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-25 16:03:24.649')
+        u'2013-07-25 16:03:24.649')
     self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:27:44.124')
+        u'2013-08-01 21:27:44.124')
     self.assertEqual(event_objects[18].timestamp, expected_timestamp)
 
     expected_detail = (
@@ -56,15 +56,15 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
 
     expected_string = (
         u'[AUTH authapi.cpp(280)] Sign in failed : '
-        'DRX_E_AUTH_NO_VALID_CREDENTIALS')
+        u'DRX_E_AUTH_NO_VALID_CREDENTIALS')
     expected_string_short = u'Sign in failed : DRX_E_AUTH_NO_VALID_CREDENTIALS'
     self._TestGetMessageStrings(
         event_objects[1], expected_string, expected_string_short)
 
     expected_string = (
         u'[WNS absconn.cpp(177)] Received data from server '
-        '(dwID=0x0;dwSize=0x3e;pbData=PNG 9 CON 48  <ping-response>'
-        '<wait>44</wait></ping-response>)')
+        u'(dwID=0x0;dwSize=0x3e;pbData=PNG 9 CON 48  <ping-response>'
+        u'<wait>44</wait></ping-response>)')
     expected_string_short = u'Received data from server'
     self._TestGetMessageStrings(
         event_objects[18], expected_string, expected_string_short)

@@ -19,7 +19,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class MacAppFirewallLogEvent(time_events.TimestampEvent):
   """Convenience class for a Mac Wifi log line event."""
 
-  DATA_TYPE = 'mac:asl:appfirewall:line'
+  DATA_TYPE = u'mac:asl:appfirewall:line'
 
   def __init__(self, timestamp, structure, process_name, action):
     """Initializes the event object.
@@ -46,7 +46,7 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on appfirewall.log file."""
 
-  NAME = 'mac_appfirewall_log'
+  NAME = u'mac_appfirewall_log'
   DESCRIPTION = u'Parser for appfirewall.log files.'
 
   ENCODING = u'utf-8'
@@ -58,32 +58,32 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   #          '<Info>: Dropbox: Allow (in:0 out:2)'
   # INFO: process_name is going to have a white space at the beginning.
   FIREWALL_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
-      pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
-      pyparsing.Word(pyparsing.printables).setResultsName('agent') +
+      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      pyparsing.Word(pyparsing.printables).setResultsName(u'computer_name') +
+      pyparsing.Word(pyparsing.printables).setResultsName(u'agent') +
       pyparsing.Literal(u'<').suppress() +
-      pyparsing.CharsNotIn(u'>').setResultsName('status') +
+      pyparsing.CharsNotIn(u'>').setResultsName(u'status') +
       pyparsing.Literal(u'>:').suppress() +
-      pyparsing.CharsNotIn(u':').setResultsName('process_name') +
+      pyparsing.CharsNotIn(u':').setResultsName(u'process_name') +
       pyparsing.Literal(u':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('action'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'action'))
 
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
   REPEATED_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
+      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
       pyparsing.Literal(u'---').suppress() +
-      pyparsing.CharsNotIn(u'---').setResultsName('process_name') +
+      pyparsing.CharsNotIn(u'---').setResultsName(u'process_name') +
       pyparsing.Literal(u'---').suppress())
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', FIREWALL_LINE),
-      ('repeated', REPEATED_LINE)]
+      (u'logline', FIREWALL_LINE),
+      (u'repeated', REPEATED_LINE)]
 
   def __init__(self):
     """Initializes a parser object."""
@@ -107,8 +107,8 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException:
       logging.debug(u'Not a Mac AppFirewall log file')
       return False
-    if (line.action != 'creating /var/log/appfirewall.log' or
-        line.status != 'Error'):
+    if (line.action != u'creating /var/log/appfirewall.log' or
+        line.status != u'Error'):
       return False
     return True
 
@@ -125,7 +125,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'logline' or key == 'repeated':
+    if key in [u'logline', u'repeated']:
       return self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(
@@ -172,18 +172,18 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but using the timestmap from the actual entry.
-    if key == 'logline':
+    if key == u'logline':
       self.previous_structure = structure
     else:
       structure = self.previous_structure
 
     # Pyparsing reads in RAW, but the text is in UTF8.
     try:
-      action = structure.action.decode('utf-8')
+      action = structure.action.decode(u'utf-8')
     except UnicodeDecodeError:
       logging.warning(
           u'Decode UTF8 failed, the message string may be cut short.')
-      action = structure.action.decode('utf-8', 'ignore')
+      action = structure.action.decode(u'utf-8', u'ignore')
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces
     # that need to be removed.
     process_name = structure.process_name.strip()
@@ -218,9 +218,9 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   def _GetYear(self, stat, timezone):
     """Retrieves the year either from the input file or from the settings."""
-    time = getattr(stat, 'crtime', 0)
+    time = getattr(stat, u'crtime', 0)
     if not time:
-      time = getattr(stat, 'ctime', 0)
+      time = getattr(stat, u'ctime', 0)
 
     if not time:
       logging.error(
