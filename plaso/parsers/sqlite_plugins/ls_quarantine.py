@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 class LsQuarantineEvent(time_events.CocoaTimeEvent):
   """Convenience class for a Mac OS X launch services quarantine event."""
-  DATA_TYPE = 'macosx:lsquarantine'
+  DATA_TYPE = u'macosx:lsquarantine'
 
   # TODO: describe more clearly what the data value contains.
   def __init__(self, cocoa_time, url, user_agent, data):
@@ -37,18 +37,18 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
          QuarantineEvents.com.apple.LaunchServices
   """
 
-  NAME = 'ls_quarantine'
+  NAME = u'ls_quarantine'
   DESCRIPTION = u'Parser for LS quarantine events SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
-        'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
-        'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-        'ORDER BY Time'), 'ParseLSQuarantineRow')]
+      ((u'SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
+        u'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
+        u'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
+        u'ORDER BY Time'), u'ParseLSQuarantineRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
+  REQUIRED_TABLES = frozenset([u'LSQuarantineEvent'])
 
   def ParseLSQuarantineRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -59,6 +59,9 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     event_object = LsQuarantineEvent(
         row['Time'], row['URL'], row['Agent'], row['Data'])
     parser_mediator.ProduceEvent(event_object, query=query)

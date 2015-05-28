@@ -17,7 +17,7 @@ class SQLiteCache(plugins.BasePluginCache):
   """A cache storing query results for SQLite plugins."""
 
   def CacheQueryResults(
-      self, sql_results, attribute_name, key_name, values):
+      self, sql_results, attribute_name, key_name, column_names):
     """Build a dict object based on a SQL command.
 
     This function will take a SQL command, execute it and for
@@ -29,7 +29,7 @@ class SQLiteCache(plugins.BasePluginCache):
                     SQL command: 'SELECT foo, bla, bar FROM my_table'
       attribute_name = 'all_the_things'
       key_name = 'foo'
-      values = ['bla', 'bar']
+      column_names = ['bla', 'bar']
 
     Results from running this against the database:
     'first', 'stuff', 'things'
@@ -50,23 +50,30 @@ class SQLiteCache(plugins.BasePluginCache):
                       dict attribute.
       key_name: The name of the result field that should be used
                 as a key in the resulting dict that is created.
-      values: A list of result fields that are stored as values
-              to the dict. If this list has only one value in it
-              the value will be stored directly, otherwise the value
-              will be a list containing the extracted results based
-              on the names provided in this list.
+      column_names: A list of column names that are stored as values
+                    to the dict. If this list has only one value in it
+                    the value will be stored directly, otherwise the value
+                    will be a list containing the extracted results based
+                    on the names provided in this list.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     setattr(self, attribute_name, {})
     attribute = getattr(self, attribute_name)
 
+
     row = sql_results.fetchone()
     while row:
-      if len(values) == 1:
-        attribute[row[key_name]] = row[values[0]]
+      key_value = row[key_name]
+
+      if len(column_names) == 1:
+        attribute[key_value] = row[column_names[0]]
       else:
-        attribute[row[key_name]] = []
-        for value in values:
-          attribute[row[key_name]].append(row[value])
+        attribute[key_value] = []
+        for column_name in column_names:
+          column_value = row[column_name]
+          attribute[key_value].append(column_value)
 
       row = sql_results.fetchone()
 

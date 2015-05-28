@@ -14,7 +14,7 @@ from plaso.parsers.sqlite_plugins import interface
 class ChromeCookieEvent(time_events.WebKitTimeEvent):
   """Convenience class for a Chrome Cookie event."""
 
-  DATA_TYPE = 'chrome:cookie:entry'
+  DATA_TYPE = u'chrome:cookie:entry'
 
   def __init__(
       self, timestamp, usage, hostname, cookie_name, value, path, secure,
@@ -57,17 +57,17 @@ class ChromeCookieEvent(time_events.WebKitTimeEvent):
 class ChromeCookiePlugin(interface.SQLitePlugin):
   """Parse Chrome Cookies file."""
 
-  NAME = 'chrome_cookies'
+  NAME = u'chrome_cookies'
   DESCRIPTION = u'Parser for Chrome cookies SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
-        'secure, httponly, last_access_utc, has_expires, persistent '
-        'FROM cookies'), 'ParseCookieRow')]
+      ((u'SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        u'secure, httponly, last_access_utc, has_expires, persistent '
+        u'FROM cookies'), u'ParseCookieRow')]
 
   # The required tables common to Archived History and History.
-  REQUIRED_TABLES = frozenset(['cookies', 'meta'])
+  REQUIRED_TABLES = frozenset([u'cookies', u'meta'])
 
   # Point to few sources for URL information.
   URLS = [
@@ -79,11 +79,11 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
   # Taken from:
   #   http://www.dfinews.com/sites/dfinews.com/files/u739/Tab2Cookies020312.jpg
   GA_UTMZ_TRANSLATION = {
-      'utmcsr': 'Last source used to access.',
-      'utmccn': 'Ad campaign information.',
-      'utmcmd': 'Last type of visit.',
-      'utmctr': 'Keywords used to find site.',
-      'utmcct': 'Path to the page of referring link.'}
+      u'utmcsr': u'Last source used to access.',
+      u'utmccn': u'Ad campaign information.',
+      u'utmcmd': u'Last type of visit.',
+      u'utmctr': u'Keywords used to find site.',
+      u'utmcct': u'Path to the page of referring link.'}
 
   def __init__(self):
     """Initializes a plugin object."""
@@ -98,21 +98,24 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     event_object = ChromeCookieEvent(
         row['creation_utc'], eventdata.EventTimestamp.CREATION_TIME,
-        row['host_key'], row['name'], row['value'], row['path'], row['secure'],
-        row['httponly'], row['persistent'])
+        row['host_key'], row['name'], row['value'], row['path'],
+        row['secure'], row['httponly'], row['persistent'])
     parser_mediator.ProduceEvent(event_object, query=query)
 
     event_object = ChromeCookieEvent(
         row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME,
-        row['host_key'], row['name'], row['value'], row['path'], row['secure'],
-        row['httponly'], row['persistent'])
+        row['host_key'], row['name'], row['value'], row['path'],
+        row['secure'], row['httponly'], row['persistent'])
     parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['has_expires']:
       event_object = ChromeCookieEvent(
-          row['expires_utc'], 'Cookie Expires',
+          row['expires_utc'], u'Cookie Expires',
           row['host_key'], row['name'], row['value'], row['path'],
           row['secure'], row['httponly'], row['persistent'])
       parser_mediator.ProduceEvent(event_object, query=query)
@@ -129,8 +132,8 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     for cookie_plugin in self._cookie_plugins:
       try:
         cookie_plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=row['name'], cookie_data=row['value'],
-            url=url)
+            parser_mediator, cookie_name=row['name'],
+            cookie_data=row['value'], url=url)
       except errors.WrongPlugin:
         pass
 

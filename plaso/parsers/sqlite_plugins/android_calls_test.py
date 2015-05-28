@@ -34,7 +34,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp_desc, u'Call Started')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-06 21:17:16.690')
+        u'2013-11-06 21:17:16.690')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-06 21:17:16.690')

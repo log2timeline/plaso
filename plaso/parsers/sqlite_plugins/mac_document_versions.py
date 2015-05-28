@@ -13,7 +13,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class MacDocumentVersionsEvent(time_events.PosixTimeEvent):
   """Convenience class for a entry from the Document Versions database."""
 
-  DATA_TYPE = 'mac:document_versions:file'
+  DATA_TYPE = u'mac:document_versions:file'
 
   def __init__(self, posix_time, name, path, version_path, last_time, user_sid):
     """Initializes the event object.
@@ -40,7 +40,7 @@ class MacDocumentVersionsEvent(time_events.PosixTimeEvent):
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   """Parse the Mac OS X Document Versions SQLite database.."""
 
-  NAME = 'mac_document_versions'
+  NAME = u'mac_document_versions'
   DESCRIPTION = u'Parser for document revisions SQLite database files.'
 
   # Define the needed queries.
@@ -50,14 +50,14 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   # version_path: path where the version is stored.
   # version_time: the timestamp when the version was created.
   QUERIES = [
-      (('SELECT f.file_name AS name, f.file_path AS path, '
-        'f.file_last_seen AS last_time, g.generation_path AS version_path, '
-        'g.generation_add_time AS version_time FROM files f, generations g '
-        'WHERE f.file_storage_id = g.generation_storage_id;'),
-       'DocumentVersionsRow')]
+      ((u'SELECT f.file_name AS name, f.file_path AS path, '
+        u'f.file_last_seen AS last_time, g.generation_path AS version_path, '
+        u'g.generation_add_time AS version_time FROM files f, generations g '
+        u'WHERE f.file_storage_id = g.generation_storage_id;'),
+       u'DocumentVersionsRow')]
 
   # The required tables for the query.
-  REQUIRED_TABLES = frozenset(['files', 'generations'])
+  REQUIRED_TABLES = frozenset([u'files', u'generations'])
 
   # The SQL field path is the relative path from DocumentRevisions.
   # For this reason the Path to the program has to be added at the beginning.
@@ -72,6 +72,9 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     # version_path = "PerUser/UserID/xx/client_id/version_file"
     # where PerUser and UserID are a real directories.
     paths = row['version_path'].split(u'/')

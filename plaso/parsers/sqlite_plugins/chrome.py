@@ -15,7 +15,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 class ChromeHistoryFileDownloadedEvent(time_events.TimestampEvent):
   """Convenience class for a Chrome History file downloaded event."""
-  DATA_TYPE = 'chrome:history:file_downloaded'
+  DATA_TYPE = u'chrome:history:file_downloaded'
 
   def __init__(
       self, timestamp, row_id, url, full_path, received_bytes, total_bytes):
@@ -41,7 +41,7 @@ class ChromeHistoryFileDownloadedEvent(time_events.TimestampEvent):
 
 class ChromeHistoryPageVisitedEvent(time_events.WebKitTimeEvent):
   """Convenience class for a Chrome History page visited event."""
-  DATA_TYPE = 'chrome:history:page_visited'
+  DATA_TYPE = u'chrome:history:page_visited'
 
   # TODO: refactor extra to be conditional arguments.
   def __init__(
@@ -77,33 +77,33 @@ class ChromeHistoryPageVisitedEvent(time_events.WebKitTimeEvent):
 class ChromeHistoryPlugin(interface.SQLitePlugin):
   """Parse Chrome Archived History and History files."""
 
-  NAME = 'chrome_history'
+  NAME = u'chrome_history'
   DESCRIPTION = u'Parser for Chrome history SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
-        'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
-        'visit_time, visits.from_visit, visits.transition, visits.id '
-        'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
-        'BY visits.visit_time'), 'ParseLastVisitedRow'),
-      (('SELECT downloads.id AS id, downloads.start_time,'
-        'downloads.target_path, downloads_url_chains.url, '
-        'downloads.received_bytes, downloads.total_bytes FROM downloads,'
-        ' downloads_url_chains WHERE downloads.id = '
-        'downloads_url_chains.id'), 'ParseNewFileDownloadedRow'),
-      (('SELECT id, full_path, url, start_time, received_bytes, '
-        'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
+      ((u'SELECT urls.id, urls.url, urls.title, urls.visit_count, '
+        u'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
+        u'visit_time, visits.from_visit, visits.transition, visits.id '
+        u'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
+        u'BY visits.visit_time'), u'ParseLastVisitedRow'),
+      ((u'SELECT downloads.id AS id, downloads.start_time,'
+        u'downloads.target_path, downloads_url_chains.url, '
+        u'downloads.received_bytes, downloads.total_bytes FROM downloads,'
+        u' downloads_url_chains WHERE downloads.id = '
+        u'downloads_url_chains.id'), u'ParseNewFileDownloadedRow'),
+      ((u'SELECT id, full_path, url, start_time, received_bytes, '
+        u'total_bytes,state FROM downloads'), u'ParseFileDownloadedRow')]
 
   # The required tables common to Archived History and History.
   REQUIRED_TABLES = frozenset([
-      'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
+      u'keyword_search_terms', u'meta', u'urls', u'visits', u'visit_source'])
 
   # Queries for cache building.
   URL_CACHE_QUERY = (
-      'SELECT visits.id AS id, urls.url, urls.title FROM '
-      'visits, urls WHERE urls.id = visits.url')
-  SYNC_CACHE_QUERY = 'SELECT id, source FROM visit_source'
+      u'SELECT visits.id AS id, urls.url, urls.title FROM '
+      u'visits, urls WHERE urls.id = visits.url')
+  SYNC_CACHE_QUERY = u'SELECT id, source FROM visit_source'
 
   # The following definition for values can be found here:
   # http://src.chromium.org/svn/trunk/src/content/public/common/ \
@@ -159,14 +159,14 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
   def _GetHostname(self, hostname):
     """Return a hostname from a full URL."""
-    if hostname.startswith('http') or hostname.startswith('ftp'):
-      _, _, uri = hostname.partition('//')
-      hostname, _, _ = uri.partition('/')
+    if hostname.startswith(u'http') or hostname.startswith(u'ftp'):
+      _, _, uri = hostname.partition(u'//')
+      hostname, _, _ = uri.partition(u'/')
 
       return hostname
 
-    if hostname.startswith('about') or hostname.startswith('chrome'):
-      site, _, _ = hostname.partition('/')
+    if hostname.startswith(u'about') or hostname.startswith(u'chrome'):
+      site, _, _ = hostname.partition(u'/')
       return site
 
     return hostname
@@ -176,13 +176,16 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if not url:
       return u''
 
-    url_cache_results = cache.GetResults('url')
+    url_cache_results = cache.GetResults(u'url')
     if not url_cache_results:
       cursor = database.cursor
       result_set = cursor.execute(self.URL_CACHE_QUERY)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'title'))
-      url_cache_results = cache.GetResults('url')
+      url_cache_results = cache.GetResults(u'url')
 
     reference_url, reference_title = url_cache_results.get(url, [u'', u''])
 
@@ -205,13 +208,16 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if not visit_id:
       return
 
-    sync_cache_results = cache.GetResults('sync')
+    sync_cache_results = cache.GetResults(u'sync')
     if not sync_cache_results:
       cursor = database.cursor
       result_set = cursor.execute(self.SYNC_CACHE_QUERY)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           result_set, 'sync', 'id', ('source',))
-      sync_cache_results = cache.GetResults('sync')
+      sync_cache_results = cache.GetResults(u'sync')
 
     results = sync_cache_results.get(visit_id, None)
     if results is None:
@@ -228,6 +234,9 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     timestamp = timelib.Timestamp.FromPosixTime(row['start_time'])
     event_object = ChromeHistoryFileDownloadedEvent(
         timestamp, row['id'], row['url'], row['full_path'],
@@ -243,6 +252,9 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     timestamp = timelib.Timestamp.FromWebKitTime(row['start_time'])
     event_object = ChromeHistoryFileDownloadedEvent(
         timestamp, row['id'], row['url'], row['target_path'],
@@ -263,15 +275,18 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       database: Optional database object (instance of SQLiteDatabase).
                 The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     extras = []
 
     transition_nr = row['transition'] & self.CORE_MASK
-    page_transition = self.PAGE_TRANSITION.get(transition_nr, '')
+    page_transition = self.PAGE_TRANSITION.get(transition_nr, u'')
     if page_transition:
       extras.append(u'Type: [{0:s} - {1:s}]'.format(
-          page_transition, self.TRANSITION_LONGER.get(transition_nr, '')))
+          page_transition, self.TRANSITION_LONGER.get(transition_nr, u'')))
 
-    if row['hidden'] == '1':
+    if row['hidden'] == u'1':
       extras.append(u'(url hidden)')
 
     # TODO: move to formatter.

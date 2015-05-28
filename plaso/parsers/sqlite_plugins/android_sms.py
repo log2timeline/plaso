@@ -13,7 +13,7 @@ from plaso.parsers.sqlite_plugins import interface
 class AndroidSmsEvent(time_events.JavaTimeEvent):
   """Convenience class for an Android SMS event."""
 
-  DATA_TYPE = 'android:messaging:sms'
+  DATA_TYPE = u'android:messaging:sms'
 
   def __init__(self, java_time, identifier, address, sms_read, sms_type, body):
     """Initializes the event object.
@@ -38,16 +38,16 @@ class AndroidSmsEvent(time_events.JavaTimeEvent):
 class AndroidSmsPlugin(interface.SQLitePlugin):
   """Parse Android SMS database."""
 
-  NAME = 'android_sms'
+  NAME = u'android_sms'
   DESCRIPTION = u'Parser for Android text messages SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ('SELECT _id AS id, address, date, read, type, body FROM sms',
-       'ParseSmsRow')]
+      (u'SELECT _id AS id, address, date, read, type, body FROM sms',
+       u'ParseSmsRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset(['sms'])
+  REQUIRED_TABLES = frozenset([u'sms'])
 
   SMS_TYPE = {
       1: u'RECEIVED',
@@ -64,12 +64,15 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
-    # Extract and lookup the SMS type and read status.
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     sms_type = self.SMS_TYPE.get(row['type'], u'UNKNOWN')
     sms_read = self.SMS_READ.get(row['read'], u'UNKNOWN')
 
     event_object = AndroidSmsEvent(
-        row['date'], row['id'], row['address'], sms_read, sms_type, row['body'])
+        row['date'], row['id'], row['address'], sms_read, sms_type,
+        row['body'])
     parser_mediator.ProduceEvent(event_object, query=query)
 
 
