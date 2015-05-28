@@ -62,7 +62,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           u'No such format specification file: {0:s}'.format(path))
 
     try:
-      specification_store = self._ReadSpecificationFile(path)
+      specification_store = self._front_end.ReadSpecificationFile(path)
     except IOError as exception:
       raise errors.BadConfigOption((
           u'Unable to read format specification file: {0:s} with error: '
@@ -91,7 +91,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
-    self.AddDataOptions(argument_parser)
+    self.AddDataLocationOption(argument_parser)
 
     argument_parser.add_argument(
         u'-w', u'--write', action=u'store', dest=u'path', type=unicode,
@@ -102,7 +102,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         u'-f', u'--filter', action=u'store', dest=u'filter', type=unicode,
         metavar=u'FILTER_FILE', help=(
             u'Full path to the file that contains the collection filter, '
-            u'the file can use variables that are defined in preprocesing, '
+            u'the file can use variables that are defined in preprocessing, '
             u'just like any other log2timeline/plaso collection filter.'))
 
     argument_parser.add_argument(
@@ -195,6 +195,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    # TODO: Refactor to avoid this hack.
+    # This means we parse the data location twice, (the other time is in
+    # CLITool.ParseOptions) but it's required to get the signatures to be
+    # listed.
+    self._ParseDataLocationOption(options)
     # Check the list options first otherwise required options will raise.
     signature_identifiers = getattr(options, u'signature_identifiers', None)
     if signature_identifiers == u'list':
@@ -243,12 +248,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     signature_identifiers = getattr(options, u'signature_identifiers', None)
     try:
-      self._frontend.ParseSignatureIdentifiers(
+      self._front_end.ParseSignatureIdentifiers(
           self._data_location, signature_identifiers)
     except (IOError, ValueError) as exception:
       raise errors.BadConfigOption(exception)
 
-    self.has_filters = self._frontend.HasFilters()
+    self.has_filters = self._front_end.HasFilters()
 
   def PrintFilterCollection(self):
     """Prints the filter collection."""
