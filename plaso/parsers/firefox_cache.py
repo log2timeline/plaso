@@ -20,7 +20,7 @@ __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
 class FirefoxCacheEvent(time_events.PosixTimeEvent):
   """Convenience class for a Firefox cache record event."""
 
-  DATA_TYPE = 'firefox:cache:record'
+  DATA_TYPE = u'firefox:cache:record'
 
   def __init__(
       self, timestamp_type, timestamp, version, metadata, request_method, url,
@@ -107,7 +107,7 @@ class FirefoxCacheParser(interface.BaseParser):
     request_method = header_parts[1]
 
     if request_method not in self.REQUEST_METHODS:
-      safe_headers = headers.decode('ascii', errors='replace')
+      safe_headers = headers.decode(u'ascii', errors=u'replace')
       logging.debug((
           u'[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
           u'headers: \'{4:s}\'').format(
@@ -133,7 +133,7 @@ class FirefoxCacheParser(interface.BaseParser):
     response_code = response_head_text_parts[0]
 
     if not response_code.startswith(u'HTTP'):
-      safe_headers = headers.decode('ascii', errors='replace')
+      safe_headers = headers.decode(u'ascii', errors=u'replace')
       logging.debug((
           u'[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
           u'Response headers: \'{3:s}\'.').format(
@@ -234,7 +234,7 @@ class FirefoxCacheParser(interface.BaseParser):
 class FirefoxOldCacheParser(FirefoxCacheParser):
   """Extract cached records from Firefox < 32."""
 
-  NAME = 'firefox_old_cache'
+  NAME = u'firefox_old_cache'
 
   CACHE_VERSION = 1
 
@@ -248,20 +248,20 @@ class FirefoxOldCacheParser(FirefoxCacheParser):
   MIN_BLOCK_SIZE = 256
 
   OLD_CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      'record_header',
-      construct.UBInt16('major'),
-      construct.UBInt16('minor'),
-      construct.UBInt32('location'),
-      construct.UBInt32('fetch_count'),
-      construct.UBInt32('last_fetched'),
-      construct.UBInt32('last_modified'),
-      construct.UBInt32('expire_time'),
-      construct.UBInt32('data_size'),
-      construct.UBInt32('request_size'),
-      construct.UBInt32('info_size'))
+      u'record_header',
+      construct.UBInt16(u'major'),
+      construct.UBInt16(u'minor'),
+      construct.UBInt32(u'location'),
+      construct.UBInt32(u'fetch_count'),
+      construct.UBInt32(u'last_fetched'),
+      construct.UBInt32(u'last_modified'),
+      construct.UBInt32(u'expire_time'),
+      construct.UBInt32(u'data_size'),
+      construct.UBInt32(u'request_size'),
+      construct.UBInt32(u'info_size'))
 
   ALTERNATIVE_CACHE_NAME = (
-      pyparsing.Word(pyparsing.hexnums, exact=5) + pyparsing.Word('m', exact=1)
+      pyparsing.Word(pyparsing.hexnums, exact=5) + pyparsing.Word(u'm', exact=1)
       + pyparsing.Word(pyparsing.nums, exact=2))
 
   FIREFOX_CACHE_CONFIG = collections.namedtuple(
@@ -374,7 +374,7 @@ class FirefoxOldCacheParser(FirefoxCacheParser):
       # instead contain data only.
       self.ALTERNATIVE_CACHE_NAME.parseString(file_entry.name)
     except pyparsing.ParseException:
-      if not file_entry.name.startswith('_CACHE_00'):
+      if not file_entry.name.startswith(u'_CACHE_00'):
         file_object.close()
         raise errors.UnableToParseFile(u'Not a Firefox cache1 file.')
 
@@ -401,5 +401,5 @@ class FirefoxOldCacheParser(FirefoxCacheParser):
     file_object.close()
 
 
-manager.ParsersManager.RegisterParsers(
-    [FirefoxCacheParser, FirefoxOldCacheParser])
+manager.ParsersManager.RegisterParsers([
+    FirefoxCacheParser, FirefoxOldCacheParser])

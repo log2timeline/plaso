@@ -42,7 +42,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class CupsIppEvent(event.EventObject):
   """Convenience class for an cups ipp event."""
 
-  DATA_TYPE = 'cups:ipp:event'
+  DATA_TYPE = u'cups:ipp:event'
 
   def __init__(
       self, timestamp, timestamp_desc, data_dict):
@@ -68,17 +68,17 @@ class CupsIppEvent(event.EventObject):
     self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
     self.timestamp_desc = timestamp_desc
     # TODO: Find a better solution than to have join for each attribute.
-    self.user = self._ListToString(data_dict.get('user', None))
-    self.owner = self._ListToString(data_dict.get('owner', None))
+    self.user = self._ListToString(data_dict.get(u'user', None))
+    self.owner = self._ListToString(data_dict.get(u'owner', None))
     self.computer_name = self._ListToString(data_dict.get(
-        'computer_name', None))
-    self.printer_id = self._ListToString(data_dict.get('printer_id', None))
-    self.uri = self._ListToString(data_dict.get('uri', None))
-    self.job_id = self._ListToString(data_dict.get('job_id', None))
-    self.job_name = self._ListToString(data_dict.get('job_name', None))
-    self.copies = data_dict.get('copies', 0)[0]
-    self.application = self._ListToString(data_dict.get('application', None))
-    self.doc_type = self._ListToString(data_dict.get('doc_type', None))
+        u'computer_name', None))
+    self.printer_id = self._ListToString(data_dict.get(u'printer_id', None))
+    self.uri = self._ListToString(data_dict.get(u'uri', None))
+    self.job_id = self._ListToString(data_dict.get(u'job_id', None))
+    self.job_name = self._ListToString(data_dict.get(u'job_name', None))
+    self.copies = data_dict.get(u'copies', 0)[0]
+    self.application = self._ListToString(data_dict.get(u'application', None))
+    self.doc_type = self._ListToString(data_dict.get(u'doc_type', None))
     self.data_dict = data_dict
 
   def _ListToString(self, values):
@@ -97,7 +97,7 @@ class CupsIppEvent(event.EventObject):
     if values is None:
       return
 
-    if type(values) not in (list, tuple):
+    if not isinstance(values, (list, tuple)):
       return
 
     for index, value in enumerate(values):
@@ -114,7 +114,7 @@ class CupsIppEvent(event.EventObject):
 class CupsIppParser(interface.SingleFileBaseParser):
   """Parser for CUPS IPP files. """
 
-  NAME = 'cups_ipp'
+  NAME = u'cups_ipp'
   DESCRIPTION = u'Parser for CUPS IPP files.'
 
   # INFO:
@@ -144,11 +144,11 @@ class CupsIppParser(interface.SingleFileBaseParser):
 
   # CUPS IPP File header.
   CUPS_IPP_HEADER = construct.Struct(
-      'cups_ipp_header_struct',
-      construct.UBInt8('major_version'),
-      construct.UBInt8('minor_version'),
-      construct.UBInt16('operation_id'),
-      construct.UBInt32('request_id'))
+      u'cups_ipp_header_struct',
+      construct.UBInt8(u'major_version'),
+      construct.UBInt8(u'minor_version'),
+      construct.UBInt16(u'operation_id'),
+      construct.UBInt32(u'request_id'))
 
   # Group ID that indicates the end of the IPP Control file.
   GROUP_END = 3
@@ -162,37 +162,37 @@ class CupsIppParser(interface.SingleFileBaseParser):
   TYPE_BOOL = 34
 
   # Type of values that can be extracted.
-  INTEGER_8 = construct.UBInt8('integer')
-  INTEGER_32 = construct.UBInt32('integer')
+  INTEGER_8 = construct.UBInt8(u'integer')
+  INTEGER_32 = construct.UBInt32(u'integer')
   TEXT = construct.PascalString(
-      'text',
-      length_field=construct.UBInt8('length'))
+      u'text',
+      length_field=construct.UBInt8(u'length'))
   BOOLEAN = construct.Struct(
-      'boolean_value',
+      u'boolean_value',
       construct.Padding(1),
       INTEGER_8)
   INTEGER = construct.Struct(
-      'integer_value',
+      u'integer_value',
       construct.Padding(1),
       INTEGER_32)
 
   # Name of the pair.
   PAIR_NAME = construct.Struct(
-      'pair_name',
+      u'pair_name',
       TEXT,
       construct.Padding(1))
 
   # Specific CUPS IPP to generic name.
   NAME_PAIR_TRANSLATION = {
-      'printer-uri': u'uri',
-      'job-uuid': u'job_id',
-      'DestinationPrinterID': u'printer_id',
-      'job-originating-user-name': u'user',
-      'job-name': u'job_name',
-      'document-format': u'doc_type',
-      'job-originating-host-name': u'computer_name',
-      'com.apple.print.JobInfo.PMApplicationName': u'application',
-      'com.apple.print.JobInfo.PMJobOwner': u'owner'}
+      u'printer-uri': u'uri',
+      u'job-uuid': u'job_id',
+      u'DestinationPrinterID': u'printer_id',
+      u'job-originating-user-name': u'user',
+      u'job-name': u'job_name',
+      u'document-format': u'doc_type',
+      u'job-originating-host-name': u'computer_name',
+      u'com.apple.print.JobInfo.PMApplicationName': u'application',
+      u'com.apple.print.JobInfo.PMJobOwner': u'owner'}
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a CUPS IPP file-like object.
@@ -234,19 +234,19 @@ class CupsIppParser(interface.SingleFileBaseParser):
 
     if u'time-at-creation' in data_dict:
       event_object = CupsIppEvent(
-          data_dict['time-at-creation'][0],
+          data_dict[u'time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
     if u'time-at-processing' in data_dict:
       event_object = CupsIppEvent(
-          data_dict['time-at-processing'][0],
+          data_dict[u'time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
     if u'time-at-completed' in data_dict:
       event_object = CupsIppEvent(
-          data_dict['time-at-completed'][0],
+          data_dict[u'time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 

@@ -12,7 +12,7 @@ from plaso.parsers import manager
 class FileStatEvent(time_events.TimestampEvent):
   """File system stat event."""
 
-  DATA_TYPE = 'fs:stat'
+  DATA_TYPE = u'fs:stat'
 
   def __init__(self, timestamp, usage, allocated, size, fs_type):
     """Initializes the event.
@@ -35,7 +35,7 @@ class FileStatEvent(time_events.TimestampEvent):
 class FileStatParser(interface.BaseParser):
   """Class that defines a file system stat object parser."""
 
-  NAME = 'filestat'
+  NAME = u'filestat'
   DESCRIPTION = u'Parser for file system stat information.'
 
   _TIME_ATTRIBUTES = frozenset([

@@ -19,8 +19,8 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
-    knowledge_base_values = {'guessed_os': 'MacOSX'}
-    test_file = self._GetTestFilePath(['apple.bsm'])
+    knowledge_base_values = {u'guessed_os': u'MacOSX'}
+    test_file = self._GetTestFilePath([u'apple.bsm'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -29,7 +29,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    self.assertEqual(event_object.data_type, 'mac:bsm:event')
+    self.assertEqual(event_object.data_type, u'mac:bsm:event')
 
     expected_msg = (
         u'Type: audit crash recovery (45029) '
@@ -126,8 +126,8 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
-    knowledge_base_values = {'guessed_os': 'openbsm'}
-    test_file = self._GetTestFilePath(['openbsm.bsm'])
+    knowledge_base_values = {u'guessed_os': u'openbsm'}
+    test_file = self._GetTestFilePath([u'openbsm.bsm'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

@@ -21,7 +21,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 class UtmpxMacOsXEvent(event.EventObject):
   """Convenience class for an event utmpx."""
-  DATA_TYPE = 'mac:utmpx:event'
+  DATA_TYPE = u'mac:utmpx:event'
 
   def __init__(self, timestamp, user, terminal, status, computer_name):
     """Initializes the event object.
@@ -45,23 +45,23 @@ class UtmpxMacOsXEvent(event.EventObject):
 class UtmpxParser(interface.SingleFileBaseParser):
   """Parser for UTMPX files."""
 
-  NAME = 'utmpx'
+  NAME = u'utmpx'
   DESCRIPTION = u'Parser for UTMPX files.'
 
   # INFO: Type is suppose to be a short (2 bytes),
   # however if we analyze the file it is always
   # byte follow by 3 bytes with \x00 value.
   MAC_UTMPX_ENTRY = construct.Struct(
-      'utmpx_mac',
-      construct.String('user', 256),
-      construct.ULInt32('id'),
-      construct.String('tty_name', 32),
-      construct.ULInt32('pid'),
-      construct.ULInt16('status_type'),
-      construct.ULInt16('unknown'),
-      construct.ULInt32('timestamp'),
-      construct.ULInt32('microsecond'),
-      construct.String('hostname', 256),
+      u'utmpx_mac',
+      construct.String(u'user', 256),
+      construct.ULInt32(u'id'),
+      construct.String(u'tty_name', 32),
+      construct.ULInt32(u'pid'),
+      construct.ULInt16(u'status_type'),
+      construct.ULInt16(u'unknown'),
+      construct.ULInt32(u'timestamp'),
+      construct.ULInt32(u'microsecond'),
+      construct.String(u'hostname', 256),
       construct.Padding(64))
 
   MAC_UTMPX_ENTRY_SIZE = MAC_UTMPX_ENTRY.sizeof()
@@ -134,7 +134,7 @@ class UtmpxParser(interface.SingleFileBaseParser):
       header = self.MAC_UTMPX_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError):
       return False
-    user, _, _ = header.user.partition('\x00')
+    user, _, _ = header.user.partition(b'\x00')
 
     # The UTMPX_ENTRY structure will often successfully compile on various
     # structures, such as binary plist files, and thus we need to do some
@@ -148,12 +148,12 @@ class UtmpxParser(interface.SingleFileBaseParser):
 
     if user != u'utmpx-1.00':
       return False
-    if self.MAC_STATUS_TYPE[header.status_type] != 'SIGNATURE':
+    if self.MAC_STATUS_TYPE[header.status_type] != u'SIGNATURE':
       return False
     if header.timestamp != 0 or header.microsecond != 0 or header.pid != 0:
       return False
-    tty_name, _, _ = header.tty_name.partition('\x00')
-    hostname, _, _ = header.hostname.partition('\x00')
+    tty_name, _, _ = header.tty_name.partition(b'\x00')
+    hostname, _, _ = header.hostname.partition(b'\x00')
     if tty_name or hostname:
       return False
 

@@ -15,7 +15,7 @@ from plaso.parsers import manager
 class WinEvtRecordEvent(time_events.PosixTimeEvent):
   """Convenience class for a Windows EventLog (EVT) record event."""
 
-  DATA_TYPE = 'windows:evt:record'
+  DATA_TYPE = u'windows:evt:record'
 
   def __init__(
       self, timestamp, timestamp_description, evt_record, recovered=False):
@@ -72,7 +72,7 @@ class WinEvtParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'winevt'
+  NAME = u'winevt'
   DESCRIPTION = u'Parser for Windows EventLog (EVT) files.'
 
   def _ParseRecord(self, parser_mediator, evt_record, recovered=False):

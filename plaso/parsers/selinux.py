@@ -40,20 +40,20 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 class SELinuxLineEvent(text_events.TextEvent):
   """Convenience class for a SELinux log line event."""
-  DATA_TYPE = 'selinux:line'
+  DATA_TYPE = u'selinux:line'
 
 
 class SELinuxParser(text_parser.SlowLexicalTextParser):
   """Parse SELinux audit log files."""
 
-  NAME = 'selinux'
+  NAME = u'selinux'
   DESCRIPTION = u'Parser for SELinux audit log files.'
 
   PID_RE = re.compile(r'pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [
       # Skipping empty lines, both EOLs are considered here and in other states.
-      lexer.Token('INITIAL', r'^\r?\n', '', ''),
+      lexer.Token(u'INITIAL', r'^\r?\n', '', ''),
       # FSM entry point ('type=anything msg=audit'), critical to recognize a
       # SELinux audit file and used to retrieve the audit type. From there two
       # next states are possible: TIME or failure, since TIME state is required.
@@ -62,25 +62,25 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       #   type=SYSCALL msg=audit(...): ...
       #   type=UNKNOWN[1323] msg=audit(...): ...
       lexer.Token(
-          'INITIAL', r'^type=([\w]+(\[[0-9]+\])?)[ \t]+msg=audit', 'ParseType',
-          'TIMESTAMP'),
+          u'INITIAL', r'^type=([\w]+(\[[0-9]+\])?)[ \t]+msg=audit',
+          u'ParseType', u'TIMESTAMP'),
       lexer.Token(
-          'TIMESTAMP', r'\(([0-9]+)\.([0-9]+):([0-9]*)\):', 'ParseTime',
-          'STRING'),
+          u'TIMESTAMP', r'\(([0-9]+)\.([0-9]+):([0-9]*)\):', u'ParseTime',
+          u'STRING'),
       # Get the log entry description and stay in the same state.
-      lexer.Token('STRING', r'[ \t]*([^\r\n]+)', 'ParseString', ''),
+      lexer.Token(u'STRING', r'[ \t]*([^\r\n]+)', u'ParseString', u''),
       # Entry parsed. Note that an empty description is managed and it will not
       # raise a parsing failure.
-      lexer.Token('STRING', r'[ \t]*\r?\n', 'ParseMessage', 'INITIAL'),
+      lexer.Token(u'STRING', r'[ \t]*\r?\n', u'ParseMessage', u'INITIAL'),
       # The entry is not formatted as expected, so the parsing failed.
-      lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
+      lexer.Token(u'.', r'([^\r\n]+)\r?\n', u'ParseFailed', u'INITIAL')
   ]
 
   def __init__(self):
     """Initializes a parser object."""
     # Set local_zone to false, since timestamps are UTC.
     super(SELinuxParser, self).__init__(local_zone=False)
-    self.attributes = {u'audit_type': '', u'pid': '', u'body': ''}
+    self.attributes = {u'audit_type': u'', u'pid': u'', u'body': u''}
     self.timestamp = 0
 
   def ParseType(self, match=None, **unused_kwargs):

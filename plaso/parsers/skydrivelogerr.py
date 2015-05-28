@@ -17,7 +17,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 class SkyDriveLogErrorEvent(time_events.TimestampEvent):
   """Convenience class for a SkyDrive error log line event."""
-  DATA_TYPE = 'skydrive:error:line'
+  DATA_TYPE = u'skydrive:error:line'
 
   def __init__(self, timestamp, module, source_code, text, detail):
     """Initializes the event object.
@@ -40,10 +40,10 @@ class SkyDriveLogErrorEvent(time_events.TimestampEvent):
 class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
   """Parse SkyDrive error log files."""
 
-  NAME = 'skydrive_log_error'
+  NAME = u'skydrive_log_error'
   DESCRIPTION = u'Parser for OneDrive (or SkyDrive) error log files.'
 
-  ENCODING = 'utf-8'
+  ENCODING = u'utf-8'
 
   # Common SDE (SkyDriveError) structures.
   INTEGER_CAST = text_parser.PyParseIntCast
@@ -57,22 +57,22 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
 
   # Header line timestamp (2013-07-25-160323.291).
   SDE_HEADER_TIMESTAMP = pyparsing.Group(
-      text_parser.PyparsingConstants.DATE.setResultsName('date') + HYPHEN +
-      TWO_DIGITS.setResultsName('hh') + TWO_DIGITS.setResultsName('mm') +
-      TWO_DIGITS.setResultsName('ss') + DOT +
-      MSEC.setResultsName('ms')).setResultsName('hdr_timestamp')
+      text_parser.PyparsingConstants.DATE.setResultsName(u'date') + HYPHEN +
+      TWO_DIGITS.setResultsName(u'hh') + TWO_DIGITS.setResultsName(u'mm') +
+      TWO_DIGITS.setResultsName(u'ss') + DOT +
+      MSEC.setResultsName(u'ms')).setResultsName(u'hdr_timestamp')
 
   # Line timestamp (07-25-13,16:06:31.820).
   SDE_TIMESTAMP = (
-      TWO_DIGITS.setResultsName('month') + HYPHEN +
-      TWO_DIGITS.setResultsName('day') + HYPHEN +
-      TWO_DIGITS.setResultsName('year_short') + COMMA +
-      TIME_MSEC.setResultsName('time')).setResultsName('timestamp')
+      TWO_DIGITS.setResultsName(u'month') + HYPHEN +
+      TWO_DIGITS.setResultsName(u'day') + HYPHEN +
+      TWO_DIGITS.setResultsName(u'year_short') + COMMA +
+      TIME_MSEC.setResultsName(u'time')).setResultsName(u'timestamp')
 
   # Header start.
   SDE_HEADER_START = (
       pyparsing.Literal(u'######').suppress() +
-      pyparsing.Literal(u'Logging started.').setResultsName('log_start'))
+      pyparsing.Literal(u'Logging started.').setResultsName(u'log_start'))
 
   # Multiline entry end marker, matched from right to left.
   SDE_ENTRY_END = pyparsing.StringEnd() | SDE_HEADER_START | SDE_TIMESTAMP
@@ -81,28 +81,28 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
   SDE_LINE = (
       SDE_TIMESTAMP + COMMA +
       IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName('module') + COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName('source_code') + COMMA +
+      pyparsing.CharsNotIn(u',').setResultsName(u'module') + COMMA +
+      pyparsing.CharsNotIn(u',').setResultsName(u'source_code') + COMMA +
       IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA +
-      pyparsing.Optional(pyparsing.CharsNotIn(u',').setResultsName('text')) +
-      COMMA + pyparsing.SkipTo(SDE_ENTRY_END).setResultsName('detail') +
+      pyparsing.Optional(pyparsing.CharsNotIn(u',').setResultsName(u'text')) +
+      COMMA + pyparsing.SkipTo(SDE_ENTRY_END).setResultsName(u'detail') +
       pyparsing.lineEnd())
 
   # SkyDriveError header pyparsing structure.
   SDE_HEADER = (
       SDE_HEADER_START +
-      pyparsing.Literal(u'Version=').setResultsName('ver_str') +
-      pyparsing.Word(pyparsing.nums + u'.').setResultsName('ver_num') +
+      pyparsing.Literal(u'Version=').setResultsName(u'ver_str') +
+      pyparsing.Word(pyparsing.nums + u'.').setResultsName(u'ver_num') +
       pyparsing.Literal(u'StartSystemTime:').suppress() +
       SDE_HEADER_TIMESTAMP +
-      pyparsing.Literal(u'StartLocalTime:').setResultsName('lt_str') +
-      pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName('details') +
+      pyparsing.Literal(u'StartLocalTime:').setResultsName(u'lt_str') +
+      pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName(u'details') +
       pyparsing.lineEnd())
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', SDE_LINE),
-      ('header', SDE_HEADER)
+      (u'logline', SDE_LINE),
+      (u'header', SDE_HEADER)
   ]
 
   def __init__(self):
@@ -123,10 +123,10 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       timestamp: A plaso timelib timestamp event or 0.
     """
     year, month, day = structure.date
-    hour = structure.get('hh', 0)
-    minute = structure.get('mm', 0)
-    second = structure.get('ss', 0)
-    microsecond = structure.get('ms', 0) * 1000
+    hour = structure.get(u'hh', 0)
+    minute = structure.get(u'mm', 0)
+    second = structure.get(u'ss', 0)
+    microsecond = structure.get(u'ms', 0) * 1000
 
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, microseconds=microsecond)
@@ -146,9 +146,9 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     hour, minute, second = structure.time[0]
     microsecond = structure.time[1] * 1000
     # TODO: Verify if timestamps are locale dependent.
-    year = structure.get('year_short', 0)
-    month = structure.get('month', 0)
-    day = structure.get('day', 0)
+    year = structure.get(u'year_short', 0)
+    month = structure.get(u'month', 0)
+    day = structure.get(u'day', 0)
     if year < 0 or not month or not day:
       return 0
 
@@ -206,9 +206,9 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'logline':
+    if key == u'logline':
       return self._ParseLine(structure)
-    elif key == 'header':
+    elif key == u'header':
       return self._ParseHeader(structure)
     else:
       logging.warning(

@@ -18,7 +18,7 @@ if pymsiecf.get_version() < '20150314':
 class MsiecfLeakEvent(time_events.TimestampEvent):
   """Convenience class for an MSIECF leak event."""
 
-  DATA_TYPE = 'msiecf:leak'
+  DATA_TYPE = u'msiecf:leak'
 
   def __init__(
       self, timestamp, timestamp_description, cache_directories, msiecf_item,
@@ -51,7 +51,7 @@ class MsiecfLeakEvent(time_events.TimestampEvent):
 class MsiecfRedirectedEvent(time_events.TimestampEvent):
   """Convenience class for an MSIECF redirected event."""
 
-  DATA_TYPE = 'msiecf:redirected'
+  DATA_TYPE = u'msiecf:redirected'
 
   def __init__(self, msiecf_item, recovered=False):
     """Initializes the event.
@@ -72,7 +72,7 @@ class MsiecfRedirectedEvent(time_events.TimestampEvent):
 class MsiecfUrlEvent(time_events.TimestampEvent):
   """Convenience class for an MSIECF URL event."""
 
-  DATA_TYPE = 'msiecf:url'
+  DATA_TYPE = u'msiecf:url'
 
   def __init__(
       self, timestamp, timestamp_description, cache_directories, msiecf_item,

@@ -22,7 +22,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OpenXMLParserEvent(time_events.TimestampEvent):
   """Process timestamps from MS Office XML Events."""
 
-  DATA_TYPE = 'metadata:openxml'
+  DATA_TYPE = u'metadata:openxml'
 
   def __init__(self, timestamp_string, usage, metadata):
     """Initializes the event object.
@@ -41,32 +41,32 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
 class OpenXMLParser(interface.SingleFileBaseParser):
   """Parse metadata from OXML files."""
 
-  NAME = 'openxml'
+  NAME = u'openxml'
   DESCRIPTION = u'Parser for OpenXML (OXML) files.'
 
   _METAKEY_TRANSLATE = {
-      'creator': 'author',
-      'lastModifiedBy': 'last_saved_by',
-      'Total_Time': 'total_edit_time',
-      'Pages': 'number_of_pages',
-      'CharactersWithSpaces': 'number_of_characters_with_spaces',
-      'Paragraphs': 'number_of_paragraphs',
-      'Characters': 'number_of_characters',
-      'Lines': 'number_of_lines',
-      'revision': 'revision_number',
-      'Words': 'number_of_words',
-      'Application': 'creating_app',
-      'Shared_Doc': 'shared',
+      u'creator': u'author',
+      u'lastModifiedBy': u'last_saved_by',
+      u'Total_Time': u'total_edit_time',
+      u'Pages': u'number_of_pages',
+      u'CharactersWithSpaces': u'number_of_characters_with_spaces',
+      u'Paragraphs': u'number_of_paragraphs',
+      u'Characters': u'number_of_characters',
+      u'Lines': u'number_of_lines',
+      u'revision': u'revision_number',
+      u'Words': u'number_of_words',
+      u'Application': u'creating_app',
+      u'Shared_Doc': u'shared',
   }
 
   _FILES_REQUIRED = frozenset([
-      '[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
+      u'[Content_Types].xml', u'_rels/.rels', u'docProps/core.xml'])
 
   def _FixString(self, key):
     """Convert CamelCase to lower_with_underscore."""
     # TODO: Add unicode support.
-    fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
+    fix_key = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', key)
+    return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an OXML file-like object.
@@ -83,27 +83,27 @@ class OpenXMLParser(interface.SingleFileBaseParser):
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, 'Not a Zip file.'))
+              self.NAME, file_name, u'Not a Zip file.'))
 
     try:
       zip_container = zipfile.ZipFile(file_object, 'r')
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, 'Bad Zip file.'))
+              self.NAME, file_name, u'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, 'OXML element(s) missing.'))
+              self.NAME, file_name, u'OXML element(s) missing.'))
 
     metadata = {}
     timestamps = {}
 
     try:
-      rels_xml = zip_container.read('_rels/.rels')
+      rels_xml = zip_container.read(u'_rels/.rels')
     except zipfile.BadZipfile as exception:
       parser_mediator.ProduceParseError(
           u'Unable to parse file with error: {0:s}'.format(exception))
@@ -112,9 +112,9 @@ class OpenXMLParser(interface.SingleFileBaseParser):
     rels_root = ElementTree.fromstring(rels_xml)
 
     for properties in rels_root.iter():
-      if 'properties' in repr(properties.get('Type')):
+      if u'properties' in repr(properties.get(u'Type')):
         try:
-          xml = zip_container.read(properties.get('Target'))
+          xml = zip_container.read(properties.get(u'Target'))
           root = ElementTree.fromstring(xml)
         except (
             OverflowError, IndexError, KeyError, ValueError,
@@ -126,34 +126,34 @@ class OpenXMLParser(interface.SingleFileBaseParser):
 
         for element in root.iter():
           if element.text:
-            _, _, tag = element.tag.partition('}')
+            _, _, tag = element.tag.partition(u'}')
             # Not including the 'lpstr' attribute because it is
             # very verbose.
-            if tag == 'lpstr':
+            if tag == u'lpstr':
               continue
 
-            if tag in ('created', 'modified', 'lastPrinted'):
+            if tag in [u'created', u'modified', u'lastPrinted']:
               timestamps[tag] = element.text
             else:
               tag_name = self._METAKEY_TRANSLATE.get(tag, self._FixString(tag))
               metadata[tag_name] = element.text
 
-    if timestamps.get('created', None):
+    created = timestamps.get(u'created', None)
+    if created:
       event_object = OpenXMLParserEvent(
-          timestamps.get('created'), eventdata.EventTimestamp.CREATION_TIME,
-          metadata)
+          created, eventdata.EventTimestamp.CREATION_TIME, metadata)
       parser_mediator.ProduceEvent(event_object)
 
-    if timestamps.get('modified', None):
+    modified = timestamps.get(u'modified', None)
+    if modified:
       event_object = OpenXMLParserEvent(
-          timestamps.get('modified'),
-          eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
+          modified, eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
       parser_mediator.ProduceEvent(event_object)
 
-    if timestamps.get('lastPrinted', None):
+    last_printed = timestamps.get(u'lastPrinted', None)
+    if last_printed:
       event_object = OpenXMLParserEvent(
-          timestamps.get('lastPrinted'), eventdata.EventTimestamp.LAST_PRINTED,
-          metadata)
+          last_printed, eventdata.EventTimestamp.LAST_PRINTED, metadata)
       parser_mediator.ProduceEvent(event_object)
 
 

@@ -17,7 +17,7 @@ from plaso.parsers import manager
 class AndroidAppUsageEvent(event.EventObject):
   """EventObject for an Android Application Last Resumed event."""
 
-  DATA_TYPE = 'android:event:last_resume_time'
+  DATA_TYPE = u'android:event:last_resume_time'
 
   def __init__(self, last_resume_time, package, component):
     """Initializes the event object.
@@ -42,7 +42,7 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = 'android_app_usage'
+  NAME = u'android_app_usage'
   DESCRIPTION = u'Parser for the Android usage-history.xml file.'
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -64,7 +64,7 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
 
     # Note that we must check the data here as a string first, otherwise
     # forcing first_line to convert to Unicode can raise a UnicodeDecodeError.
-    if not first_line.startswith('<?xml'):
+    if not first_line.startswith(u'<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [not XML]')
 
@@ -87,12 +87,12 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
 
     for app in root:
       for part in app.iter():
-        if part.tag == 'comp':
-          package = app.get(u'name', '')
-          component = part.get(u'name', '')
+        if part.tag == u'comp':
+          package = app.get(u'name', u'')
+          component = part.get(u'name', u'')
 
           try:
-            last_resume_time = int(part.get('lrt', u''), 10)
+            last_resume_time = int(part.get(u'lrt', u''), 10)
           except ValueError:
             continue
 

@@ -17,7 +17,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 class SkyDriveLogEvent(time_events.TimestampEvent):
   """Convenience class for a SkyDrive log line event."""
-  DATA_TYPE = 'skydrive:log:line'
+  DATA_TYPE = u'skydrive:log:line'
 
   def __init__(self, timestamp, offset, source_code, log_level, text):
     """Initializes the event object.
@@ -39,10 +39,10 @@ class SkyDriveLogEvent(time_events.TimestampEvent):
 class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse SkyDrive log files."""
 
-  NAME = 'skydrive_log'
+  NAME = u'skydrive_log'
   DESCRIPTION = u'Parser for OneDrive (or SkyDrive) log files.'
 
-  ENCODING = 'UTF-8-SIG'
+  ENCODING = u'UTF-8-SIG'
 
   # Common SDL (SkyDriveLog) pyparsing objects.
   SDL_COLON = pyparsing.Literal(u':')
@@ -51,7 +51,7 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
   # Timestamp (08-01-2013 21:22:28.999).
   SDL_TIMESTAMP = (
       text_parser.PyparsingConstants.DATE_REV +
-      text_parser.PyparsingConstants.TIME_MSEC).setResultsName('timestamp')
+      text_parser.PyparsingConstants.TIME_MSEC).setResultsName(u'timestamp')
 
   # SkyDrive source code pyparsing structures.
   SDL_SOURCE_CODE = pyparsing.Combine(
@@ -59,18 +59,18 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
       SDL_COLON +
       text_parser.PyparsingConstants.INTEGER +
       SDL_EXCLAMATION +
-      pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
+      pyparsing.Word(pyparsing.printables)).setResultsName(u'source_code')
 
   # SkyDriveLogLevel pyparsing structures.
   SDL_LOG_LEVEL = (
       pyparsing.Literal(u'(').suppress() +
-      pyparsing.SkipTo(u')').setResultsName('log_level') +
+      pyparsing.SkipTo(u')').setResultsName(u'log_level') +
       pyparsing.Literal(u')').suppress())
 
   # SkyDrive line pyparsing structure.
   SDL_LINE = (
       SDL_TIMESTAMP + SDL_SOURCE_CODE + SDL_LOG_LEVEL +
-      SDL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      SDL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
   # Sometimes the timestamped log line is followed by an empy line,
   # then by a file name plus other data and finally by another empty
@@ -79,12 +79,12 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
   # ad-hoc (see source), based on the last one if available.
   SDL_NO_HEADER_SINGLE_LINE = (
       pyparsing.Optional(pyparsing.Literal(u'->').suppress()) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', SDL_LINE),
-      ('no_header_single_line', SDL_NO_HEADER_SINGLE_LINE),
+      (u'logline', SDL_LINE),
+      (u'no_header_single_line', SDL_NO_HEADER_SINGLE_LINE),
   ]
 
   def __init__(self):
@@ -132,9 +132,9 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'logline':
+    if key == u'logline':
       return self._ParseLogline(structure)
-    elif key == 'no_header_single_line':
+    elif key == u'no_header_single_line':
       return self._ParseNoHeaderSingleLine(structure)
     else:
       logging.warning(

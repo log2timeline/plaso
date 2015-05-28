@@ -19,9 +19,9 @@ from plaso.parsers import manager
 class BencodeParser(interface.SingleFileBasePluginsParser):
   """Deserializes bencoded file; produces a dictionary containing bencoded data.
 
-  The Plaso engine calls parsers by their Parse() method. This parser's
-  Parse() deserializes bencoded files using the BitTorrent-bencode library
-  and calls plugins (BencodePlugin) registered through the interface by their
+  The Plaso engine calls parsers by their Parse() method. The Parse() function
+  deserializes bencoded files using the BitTorrent-bencode library and
+  calls plugins (BencodePlugin) registered through the interface by their
   Process() to produce event objects.
 
   Plugins are how this parser understands the content inside a bencoded file,
@@ -33,9 +33,9 @@ class BencodeParser(interface.SingleFileBasePluginsParser):
   _INITIAL_FILE_OFFSET = None
 
   # Regex match for a bencode dictionary followed by a field size.
-  BENCODE_RE = re.compile('d[0-9]')
+  BENCODE_RE = re.compile(r'd[0-9]')
 
-  NAME = 'bencode'
+  NAME = u'bencode'
   DESCRIPTION = u'Parser for bencoded files.'
 
   _plugin_classes = {}

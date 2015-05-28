@@ -41,7 +41,7 @@ class PluginList(object):
       A list containing the Windows Registry plugins (instances of
       RegistryPlugin) for the specific plugin type.
     """
-    return plugins_dict.get(plugin_type, []) + plugins_dict.get('any', [])
+    return plugins_dict.get(plugin_type, []) + plugins_dict.get(u'any', [])
 
   def AddPlugin(self, plugin_type, plugin_class):
     """Add a Windows Registry plugin to the plugin list.
@@ -53,7 +53,7 @@ class PluginList(object):
     """
     # Cannot import the interface here otherwise this will create a cyclic
     # dependency.
-    if hasattr(plugin_class, 'REG_VALUES'):
+    if hasattr(plugin_class, u'REG_VALUES'):
       self._value_plugins.setdefault(plugin_type, []).append(plugin_class)
 
     else:
@@ -137,7 +137,7 @@ class PluginList(object):
     return set(plugin.WEIGHT for plugin in self.GetAllValuePlugins()).union(
         plugin.WEIGHT for plugin in self.GetAllKeyPlugins())
 
-  def GetWeightPlugins(self, weight, plugin_type=''):
+  def GetWeightPlugins(self, weight, plugin_type=u''):
     """Return a list of all plugins for a given weight or priority.
 
     Each plugin defines a weight or a priority that defines in which order
@@ -171,7 +171,7 @@ class PluginList(object):
 class WinRegistryParser(interface.BasePluginsParser):
   """Parses Windows NT Registry (REGF) files."""
 
-  NAME = 'winreg'
+  NAME = u'winreg'
   DESCRIPTION = u'Parser for Windows NT Registry (REGF) files.'
 
   _plugin_classes = {}
@@ -179,12 +179,12 @@ class WinRegistryParser(interface.BasePluginsParser):
   # List of types Windows Registry types and required keys to identify each of
   # these types.
   REG_TYPES = {
-      'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
-      'SOFTWARE': ('\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
-      'SECURITY': ('\\Policy\\PolAdtEv',),
-      'SYSTEM': ('\\Select',),
-      'SAM': ('\\SAM\\Domains\\Account\\Users',),
-      'UNKNOWN': (),
+      u'NTUSER': (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
+      u'SOFTWARE': (u'\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
+      u'SECURITY': (u'\\Policy\\PolAdtEv',),
+      u'SYSTEM': (u'\\Select',),
+      u'SAM': (u'\\SAM\\Domains\\Account\\Users',),
+      u'UNKNOWN': (),
   }
 
   def __init__(self):
@@ -252,9 +252,9 @@ class WinRegistryParser(interface.BasePluginsParser):
               self.NAME, file_entry.name, exception))
 
     # Detect the Windows Registry file type.
-    registry_type = 'UNKNOWN'
+    registry_type = u'UNKNOWN'
     for reg_type in self.REG_TYPES:
-      if reg_type == 'UNKNOWN':
+      if reg_type == u'UNKNOWN':
         continue
 
       # Check if all the known keys for a certain Registry file exist.

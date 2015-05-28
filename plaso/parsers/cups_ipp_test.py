@@ -29,7 +29,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-03 18:07:21')
+        u'2013-11-03 18:07:21')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(
@@ -60,7 +60,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-03 18:07:21')
+        u'2013-11-03 18:07:21')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(
@@ -70,7 +70,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     event_object = event_objects[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-03 18:07:32')
+        u'2013-11-03 18:07:32')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(

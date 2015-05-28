@@ -23,7 +23,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class MacSecuritydLogEvent(time_events.TimestampEvent):
   """Convenience class for a ASL securityd line event."""
 
-  DATA_TYPE = 'mac:asl:securityd:line'
+  DATA_TYPE = u'mac:asl:securityd:line'
 
   def __init__(
       self, timestamp, structure, sender, sender_pid,
@@ -57,46 +57,46 @@ class MacSecuritydLogEvent(time_events.TimestampEvent):
 class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses the securityd file that contains logs from the security daemon."""
 
-  NAME = 'mac_securityd'
+  NAME = u'mac_securityd'
   DESCRIPTION = u'Parser for Mac OS X securityd log files.'
 
   ENCODING = u'utf-8'
 
   # Default ASL Securityd log.
   SECURITYD_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
-      pyparsing.CharsNotIn(u'[').setResultsName('sender') +
+      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      pyparsing.CharsNotIn(u'[').setResultsName(u'sender') +
       pyparsing.Literal(u'[').suppress() +
-      text_parser.PyparsingConstants.PID.setResultsName('sender_pid') +
+      text_parser.PyparsingConstants.PID.setResultsName(u'sender_pid') +
       pyparsing.Literal(u']').suppress() +
       pyparsing.Literal(u'<').suppress() +
-      pyparsing.CharsNotIn(u'>').setResultsName('level') +
+      pyparsing.CharsNotIn(u'>').setResultsName(u'level') +
       pyparsing.Literal(u'>').suppress() +
       pyparsing.Literal(u'[').suppress() +
-      pyparsing.CharsNotIn(u'{').setResultsName('facility') +
+      pyparsing.CharsNotIn(u'{').setResultsName(u'facility') +
       pyparsing.Literal(u'{').suppress() +
       pyparsing.Optional(pyparsing.CharsNotIn(
-          u'}').setResultsName('security_api')) +
+          u'}').setResultsName(u'security_api')) +
       pyparsing.Literal(u'}').suppress() +
-      pyparsing.Optional(pyparsing.CharsNotIn(u']:').setResultsName('caller')) +
-      pyparsing.Literal(u']:').suppress() +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
+      pyparsing.Optional(pyparsing.CharsNotIn(u']:').setResultsName(
+          u'caller')) + pyparsing.Literal(u']:').suppress() +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'message'))
 
   # Repeated line.
   REPEATED_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
+      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
       pyparsing.Literal(u'--- last message repeated').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('times') +
+      text_parser.PyparsingConstants.INTEGER.setResultsName(u'times') +
       pyparsing.Literal(u'time ---').suppress())
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', SECURITYD_LINE),
-      ('repeated', REPEATED_LINE)]
+      (u'logline', SECURITYD_LINE),
+      (u'repeated', REPEATED_LINE)]
 
   def __init__(self):
     """Initializes a parser object."""
@@ -141,7 +141,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'repeated' or key == 'logline':
+    if key in [u'logline', u'repeated']:
       return self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(
@@ -188,7 +188,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       return
     self._last_month = month
 
-    if key == 'logline':
+    if key == u'logline':
       self.previous_structure = structure
       message = structure.message
     else:
@@ -202,7 +202,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     sender = structure.sender.strip()
     caller = structure.caller.strip()
     if not caller:
-      caller = 'unknown'
+      caller = u'unknown'
     if not structure.security_api:
       security_api = u'unknown'
     else:
@@ -234,9 +234,9 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
   def _GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
-    time = getattr(stat, 'crtime', 0)
+    time = getattr(stat, u'crtime', 0)
     if not time:
-      time = getattr(stat, 'ctime', 0)
+      time = getattr(stat, u'ctime', 0)
 
     if not time:
       current_year = timelib.GetCurrentYear()

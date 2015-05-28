@@ -51,7 +51,7 @@ class SlowLexicalTextParser(
 
   # List of tokens that describe the structure of the log file.
   tokens = [
-      lexer.Token('INITIAL', '(.+)\n', 'ParseString', ''),
+      lexer.Token(u'INITIAL', r'(.+)\n', u'ParseString', u''),
       ]
 
   def __init__(self, local_zone=True):
@@ -165,13 +165,13 @@ class SlowLexicalTextParser(
     # We need to clear out few values in the Lexer before continuing.
     # There might be some leftovers from previous run.
     self.error = 0
-    self.buffer = ''
+    self.buffer = b''
 
     while True:
       _ = self.NextToken()
 
-      if self.state == 'INITIAL':
-        self.entry_offset = getattr(self, 'next_entry_offset', 0)
+      if self.state == u'INITIAL':
+        self.entry_offset = getattr(self, u'next_entry_offset', 0)
         self.next_entry_offset = file_object.tell() - len(self.buffer)
 
       if not file_verified and self.error >= self.MAX_LINES * 2:
@@ -241,9 +241,9 @@ class SlowLexicalTextParser(
       saved from the lexer.
     """
     try:
-      self.attributes[u'body'] += match.group(1).strip('\n')
+      self.attributes[u'body'] += match.group(1).strip(u'\n')
     except IndexError:
-      self.attributes[u'body'] += match.group(0).strip('\n')
+      self.attributes[u'body'] += match.group(0).strip(u'\n')
 
   def PrintLine(self):
     """"Return a string with combined values from the lexer."""
@@ -277,7 +277,7 @@ class SlowLexicalTextParser(
           date_string, time_string, hostname_string, reporter_string,
           body_string)
     except UnicodeError:
-      line = 'Unable to print line - due to encoding error.'
+      line = u'Unable to print line - due to encoding error.'
 
     return line
 
@@ -381,8 +381,9 @@ class TextCSVParser(interface.SingleFileBaseParser):
   COLUMNS = []
 
   # A CSV file is comma separated, but this can be overwritten to include
-  # tab, pipe or other character separation.
-  VALUE_SEPARATOR = ','
+  # tab, pipe or other character separation. Note this must be a byte string
+  # otherwise TypeError: "delimiter" must be an 1-character string is raised.
+  VALUE_SEPARATOR = b','
 
   # If there is a header before the lines start it can be defined here, and
   # the number of header lines that need to be skipped before the parsing
@@ -391,11 +392,11 @@ class TextCSVParser(interface.SingleFileBaseParser):
 
   # If there is a special quote character used inside the structured text
   # it can be defined here.
-  QUOTE_CHAR = '"'
+  QUOTE_CHAR = b'"'
 
   # Value that should not appear inside the file, made to test the actual
   # file to see if it confirms to standards.
-  MAGIC_TEST_STRING = 'RegnThvotturMeistarans'
+  MAGIC_TEST_STRING = u'RegnThvotturMeistarans'
 
   def VerifyRow(self, unused_parser_mediator, unused_row):
     """Return a bool indicating whether or not this is the correct parser.
@@ -601,7 +602,7 @@ class PyparsingConstants(object):
       exact=3)
 
   # Define date structures.
-  HYPHEN = pyparsing.Literal('-').suppress()
+  HYPHEN = pyparsing.Literal(u'-').suppress()
   YEAR = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       PyParseIntCast)
   TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
@@ -609,11 +610,11 @@ class PyparsingConstants(object):
   ONE_OR_TWO_DIGITS = pyparsing.Word(
       pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
   DATE = pyparsing.Group(
-      YEAR + pyparsing.Suppress('-') + TWO_DIGITS +
-      pyparsing.Suppress('-') + TWO_DIGITS)
+      YEAR + pyparsing.Suppress(u'-') + TWO_DIGITS +
+      pyparsing.Suppress(u'-') + TWO_DIGITS)
   DATE_REV = pyparsing.Group(
-      TWO_DIGITS + pyparsing.Suppress('-') + TWO_DIGITS +
-      pyparsing.Suppress('-') + YEAR)
+      TWO_DIGITS + pyparsing.Suppress(u'-') + TWO_DIGITS +
+      pyparsing.Suppress(u'-') + YEAR)
   TIME = pyparsing.Group(
       TWO_DIGITS + pyparsing.Suppress(':') + TWO_DIGITS +
       pyparsing.Suppress(':') + TWO_DIGITS)
@@ -621,7 +622,7 @@ class PyparsingConstants(object):
   DATE_TIME = DATE + TIME
   DATE_TIME_MSEC = DATE + TIME_MSEC
 
-  COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
+  COMMENT_LINE_HASH = pyparsing.Literal(u'#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
   # TODO: Add more commonly used structs that can be used by parsers.
   PID = pyparsing.Word(
@@ -657,7 +658,7 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
   # If this value needs to be calculated on the fly (not a fixed constant for
   # this particular file type) it can be done by modifying the self.encoding
   # attribute.
-  ENCODING = ''
+  ENCODING = u''
 
   def __init__(self):
     """Initializes the pyparsing single-line text parser object."""
@@ -696,10 +697,10 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
       return
 
     # If line is empty, skip it and go on.
-    if line == '\n' or line == '\r\n':
+    if line in [u'\n', u'\r\n']:
       # Max 40 new lines in a row before we bail out.
       if depth == 40:
-        return ''
+        return u''
 
       return self._ReadLine(
           parser_mediator, file_entry, text_file_object, max_len=max_len,
@@ -837,7 +838,7 @@ class EncodedTextReader(object):
       encoding: optional encoding. The default is None.
     """
     super(EncodedTextReader, self).__init__()
-    self._buffer = ''
+    self._buffer = b''
     self._buffer_size = buffer_size
     self._current_offset = 0
     self._encoding = encoding
@@ -846,8 +847,8 @@ class EncodedTextReader(object):
       self._new_line = u'\n'.encode(self._encoding)
       self._carriage_return = u'\r'.encode(self._encoding)
     else:
-      self._new_line = '\n'
-      self._carriage_return = '\r'
+      self._new_line = b'\n'
+      self._carriage_return = b'\r'
 
     self._new_line_length = len(self._new_line)
     self._carriage_return_length = len(self._carriage_return)
@@ -864,13 +865,13 @@ class EncodedTextReader(object):
       A string containing the line.
     """
     if len(self._buffer) < self._buffer_size:
-      self._buffer = ''.join([
+      self._buffer = b''.join([
           self._buffer, file_object.read(self._buffer_size)])
 
     line, new_line, self._buffer = self._buffer.partition(self._new_line)
     if not line and not new_line:
       line = self._buffer
-      self._buffer = ''
+      self._buffer = b''
 
     self._current_offset += len(line)
 
@@ -879,7 +880,7 @@ class EncodedTextReader(object):
       line = line[:-self._carriage_return_length]
 
     if new_line:
-      line = ''.join([line, self._new_line])
+      line = b''.join([line, self._new_line])
       self._current_offset += self._new_line_length
 
     # If a parser specifically indicates specific encoding we need
@@ -903,10 +904,10 @@ class EncodedTextReader(object):
     Returns:
       A single line read from the lines buffer.
     """
-    line, _, self.lines = self.lines.partition('\n')
+    line, _, self.lines = self.lines.partition(u'\n')
     if not line:
       self.ReadLines(file_object)
-      line, _, self.lines = self.lines.partition('\n')
+      line, _, self.lines = self.lines.partition(u'\n')
 
     return line
 
@@ -929,7 +930,7 @@ class EncodedTextReader(object):
 
   def Reset(self):
     """Resets the encoded text reader."""
-    self._buffer = ''
+    self._buffer = b''
     self._current_offset = 0
 
     self.lines = u''

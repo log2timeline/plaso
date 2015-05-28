@@ -68,7 +68,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 class XChatLogEvent(time_events.TimestampEvent):
   """Convenience class for a XChat Log line event."""
-  DATA_TYPE = 'xchat:log:line'
+  DATA_TYPE = u'xchat:log:line'
 
   def __init__(self, timestamp, text, nickname=None):
     """Initializes the event object.
@@ -87,25 +87,25 @@ class XChatLogEvent(time_events.TimestampEvent):
 class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
-  NAME = 'xchatlog'
+  NAME = u'xchatlog'
   DESCRIPTION = u'Parser for XChat log files.'
 
-  ENCODING = 'UTF-8'
+  ENCODING = u'UTF-8'
 
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
   IGNORE_STRING = pyparsing.Word(pyparsing.printables).suppress()
   LOG_ACTION = pyparsing.Word(
-      pyparsing.printables, min=3, max=5).setResultsName('log_action')
+      pyparsing.printables, min=3, max=5).setResultsName(u'log_action')
   MONTH_NAME = pyparsing.Word(
-      pyparsing.printables, exact=3).setResultsName('month_name')
+      pyparsing.printables, exact=3).setResultsName(u'month_name')
   DAY = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
-      text_parser.PyParseIntCast).setResultsName('day')
-  TIME = text_parser.PyparsingConstants.TIME.setResultsName('time')
-  YEAR = text_parser.PyparsingConstants.YEAR.setResultsName('year')
+      text_parser.PyParseIntCast).setResultsName(u'day')
+  TIME = text_parser.PyparsingConstants.TIME.setResultsName(u'time')
+  YEAR = text_parser.PyparsingConstants.YEAR.setResultsName(u'year')
   NICKNAME = pyparsing.QuotedString(
-      u'<', endQuoteChar=u'>').setResultsName('nickname')
-  TEXT = pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text')
+      u'<', endQuoteChar=u'>').setResultsName(u'nickname')
+  TEXT = pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text')
 
   # Header/footer pyparsing structures.
   # Sample: "**** BEGIN LOGGING AT Mon Dec 31 21:11:55 2011".
@@ -123,9 +123,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', LOG_LINE),
-      ('header', HEADER),
-      ('header_signature', HEADER_SIGNATURE),
+      (u'logline', LOG_LINE),
+      (u'header', HEADER),
+      (u'header_signature', HEADER_SIGNATURE),
   ]
 
   def __init__(self):
@@ -158,14 +158,14 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       # log line parsing (since xchat_year is unset to '0') until a new good
       # (it means supported) header with a valid year information is found.
       # TODO: reconsider this behaviour.
-      year = parse_result.get('year', 0)
+      year = parse_result.get(u'year', 0)
 
       if not year:
         return 0
 
       self.xchat_year = year
 
-    day = parse_result.get('day', 0)
+    day = parse_result.get(u'day', 0)
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, timezone=timezone)
 
@@ -206,7 +206,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       An event object (instance of EventObject) or None.
     """
-    if key == 'logline':
+    if key == u'logline':
       if not self.xchat_year:
         logging.debug(u'XChatLogParser, missing year information.')
         return
@@ -219,7 +219,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       # be removed, thus the split and re-join.
       return XChatLogEvent(
           timestamp, u' '.join(structure.text.split()), structure.nickname)
-    elif key == 'header':
+    elif key == u'header':
       timestamp = self._GetTimestamp(structure, parser_mediator.timezone)
       if not timestamp:
         logging.warning(u'XChatLogParser, cannot get timestamp from header.')
@@ -233,7 +233,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       else:
         logging.warning(u'Unknown log action: {0:s}.'.format(
             structure.log_action))
-    elif key == 'header_signature':
+    elif key == u'header_signature':
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
       # is found. Stop parsing is done setting xchat_year to 0.

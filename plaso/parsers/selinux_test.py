@@ -22,8 +22,8 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    knowledge_base_values = {'year': 2013}
-    test_file = self._GetTestFilePath(['selinux.log'])
+    knowledge_base_values = {u'year': 2013}
+    test_file = self._GetTestFilePath([u'selinux.log'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

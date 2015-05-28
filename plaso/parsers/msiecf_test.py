@@ -48,7 +48,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
         u'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
         u'/funnycats.exe')
 
-    self.assertEqual(event_object.data_type, 'msiecf:url')
+    self.assertEqual(event_object.data_type, u'msiecf:url')
     self.assertEqual(event_object.offset, 21376)
     self.assertEqual(event_object.url, expected_url)
     self.assertEqual(event_object.cache_directory_index, -2)
@@ -110,7 +110,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     event_object = event_objects[3]
 
     # Test cached file path.
-    self.assertEqual(event_object.data_type, 'msiecf:url')
+    self.assertEqual(event_object.data_type, u'msiecf:url')
 
     expected_msg = (
         u'Location: http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico '
@@ -137,7 +137,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[16]
 
-    self.assertEqual(event_object.data_type, 'msiecf:leak')
+    self.assertEqual(event_object.data_type, u'msiecf:leak')
     self.assertEqual(event_object.timestamp, 0)
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.NOT_A_TIME)
@@ -160,7 +160,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
         u'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;sz=1x1;'
         u'pc=[TPAS_ID];ord=2642102')
 
-    self.assertEqual(event_object.data_type, 'msiecf:redirected')
+    self.assertEqual(event_object.data_type, u'msiecf:redirected')
     self.assertEqual(event_object.timestamp, 0)
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.NOT_A_TIME)
