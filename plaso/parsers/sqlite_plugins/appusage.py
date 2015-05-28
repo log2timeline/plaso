@@ -13,7 +13,7 @@ from plaso.parsers.sqlite_plugins import interface
 class MacOSXApplicationUsageEvent(time_events.PosixTimeEvent):
   """Convenience class for a Mac OS X application usage event."""
 
-  DATA_TYPE = 'macosx:application_usage'
+  DATA_TYPE = u'macosx:application_usage'
 
   def __init__(
       self, posix_time, usage, application_name, application_version,
@@ -51,17 +51,17 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   Default installation: /var/db/application_usage.sqlite
   """
 
-  NAME = 'appusage'
+  NAME = u'appusage'
   DESCRIPTION = u'Parser for Mac OS X application usage SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [(
-      ('SELECT last_time, event, bundle_id, app_version, app_path, '
-       'number_times FROM application_usage ORDER BY last_time'),
-      'ParseApplicationUsageRow')]
+      (u'SELECT last_time, event, bundle_id, app_version, app_path, '
+       u'number_times FROM application_usage ORDER BY last_time'),
+      u'ParseApplicationUsageRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset(['application_usage'])
+  REQUIRED_TABLES = frozenset([u'application_usage'])
 
   def ParseApplicationUsageRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -72,6 +72,9 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     # TODO: replace usage by definition(s) in eventdata. Not sure which values
     # it will hold here.
     usage = u'Application {0:s}'.format(row['event'])

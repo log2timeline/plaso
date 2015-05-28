@@ -45,13 +45,13 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     sms = 0
     chats = 0
     for event_object in event_objects:
-      if event_object.data_type == 'skype:event:call':
+      if event_object.data_type == u'skype:event:call':
         calls += 1
-      if event_object.data_type == 'skype:event:transferfile':
+      if event_object.data_type == u'skype:event:transferfile':
         files += 1
-      if event_object.data_type == 'skype:event:sms':
+      if event_object.data_type == u'skype:event:sms':
         sms += 1
-      if event_object.data_type == 'skype:event:chat':
+      if event_object.data_type == u'skype:event:chat':
         chats += 1
 
     self.assertEqual(len(event_objects), 24)

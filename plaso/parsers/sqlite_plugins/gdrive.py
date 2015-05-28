@@ -17,7 +17,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class GoogleDriveSnapshotCloudEntryEvent(time_events.PosixTimeEvent):
   """Convenience class for a Google Drive snapshot cloud entry."""
 
-  DATA_TYPE = 'gdrive:snapshot:cloud_entry'
+  DATA_TYPE = u'gdrive:snapshot:cloud_entry'
 
   # TODO: this could be moved to the formatter.
   # The following definition for values can be found on Patrick Olson's blog:
@@ -58,7 +58,7 @@ class GoogleDriveSnapshotCloudEntryEvent(time_events.PosixTimeEvent):
 class GoogleDriveSnapshotLocalEntryEvent(time_events.PosixTimeEvent):
   """Convenience class for a Google Drive snapshot local entry event."""
 
-  DATA_TYPE = 'gdrive:snapshot:local_entry'
+  DATA_TYPE = u'gdrive:snapshot:local_entry'
 
   def __init__(self, posix_time, local_path, size):
     """Initializes the event object.
@@ -78,7 +78,7 @@ class GoogleDriveSnapshotLocalEntryEvent(time_events.PosixTimeEvent):
 class GoogleDrivePlugin(interface.SQLitePlugin):
   """SQLite plugin for Google Drive snapshot.db files."""
 
-  NAME = 'google_drive'
+  NAME = u'google_drive'
   DESCRIPTION = u'Parser for Google Drive SQLite database files.'
 
   # Define the needed queries.
@@ -86,14 +86,14 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       ((u'SELECT e.resource_id, e.filename, e.modified, e.created, e.size, '
         u'e.doc_type, e.shared, e.checksum, e.url, r.parent_resource_id FROM '
         u'cloud_entry AS e, cloud_relations AS r WHERE r.child_resource_id = '
-        u'e.resource_id AND e.modified IS NOT NULL;'), 'ParseCloudEntryRow'),
+        u'e.resource_id AND e.modified IS NOT NULL;'), u'ParseCloudEntryRow'),
       ((u'SELECT inode_number, filename, modified, checksum, size FROM '
-        u'local_entry WHERE modified IS NOT NULL;'), 'ParseLocalEntryRow')]
+        u'local_entry WHERE modified IS NOT NULL;'), u'ParseLocalEntryRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
-      'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
-      'mapping', 'overlay_status'])
+      u'cloud_entry', u'cloud_relations', u'local_entry', u'local_relations',
+      u'mapping', u'overlay_status'])
 
   # Queries used to build cache.
   LOCAL_PATH_CACHE_QUERY = (
@@ -116,14 +116,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     Returns:
       A full path, including the filename of the given inode value.
     """
-    local_path = cache.GetResults('local_path')
+    local_path = cache.GetResults(u'local_path')
     if not local_path:
       cursor = database.cursor
       results = cursor.execute(self.LOCAL_PATH_CACHE_QUERY)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'local_path', 'child_inode_number',
           ('parent_inode_number', 'filename'))
-      local_path = cache.GetResults('local_path')
+      local_path = cache.GetResults(u'local_path')
 
     parent, path = local_path.get(inode, [None, None])
 
@@ -158,13 +161,16 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     Returns:
       A full path to the resource value.
     """
-    cloud_path = cache.GetResults('cloud_path')
+    cloud_path = cache.GetResults(u'cloud_path')
     if not cloud_path:
       cursor = database.cursor
       results = cursor.execute(self.CLOUD_PATH_CACHE_QUERY)
+
+      # Note that pysqlite does not accept a Unicode string in row['string'] and
+      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'cloud_path', 'resource_id', ('filename', 'parent'))
-      cloud_path = cache.GetResults('cloud_path')
+      cloud_path = cache.GetResults(u'cloud_path')
 
     if resource_id == u'folder:root':
       return u'/'
@@ -197,13 +203,16 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       cache: The local cache object.
       database: The database object.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
     cloud_filename = u'{0:s}{1:s}'.format(cloud_path, row['filename'])
 
     if row['shared']:
-      shared = 'Shared'
+      shared = u'Shared'
     else:
-      shared = 'Private'
+      shared = u'Private'
 
     event_object = GoogleDriveSnapshotCloudEntryEvent(
         row['modified'], eventdata.EventTimestamp.MODIFICATION_TIME,
@@ -228,6 +237,9 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       cache: The local cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     local_path = self.GetLocalPath(row['inode_number'], cache, database)
 
     event_object = GoogleDriveSnapshotLocalEntryEvent(

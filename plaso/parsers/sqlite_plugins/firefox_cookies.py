@@ -15,7 +15,7 @@ from plaso.parsers.sqlite_plugins import interface
 class FirefoxCookieEvent(time_events.TimestampEvent):
   """Convenience class for a Firefox Cookie event."""
 
-  DATA_TYPE = 'firefox:cookie:entry'
+  DATA_TYPE = u'firefox:cookie:entry'
 
   def __init__(
       self, timestamp, usage, identifier, hostname, cookie_name, value, path,
@@ -58,17 +58,17 @@ class FirefoxCookieEvent(time_events.TimestampEvent):
 class FirefoxCookiePlugin(interface.SQLitePlugin):
   """Parse Firefox Cookies file."""
 
-  NAME = 'firefox_cookies'
+  NAME = u'firefox_cookies'
   DESCRIPTION = u'Parser for Firefox cookies SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      (('SELECT id, baseDomain, name, value, host, path, expiry, lastAccessed, '
-        'creationTime, isSecure, isHttpOnly FROM moz_cookies'),
-       'ParseCookieRow')]
+      ((u'SELECT id, baseDomain, name, value, host, path, expiry, '
+        u'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
+       u'ParseCookieRow')]
 
   # The required tables common to Archived History and History.
-  REQUIRED_TABLES = frozenset(['moz_cookies'])
+  REQUIRED_TABLES = frozenset([u'moz_cookies'])
 
   # Point to few sources for URL information.
   URLS = [
@@ -89,6 +89,9 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
 
       query: Optional query string. The default is None.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
     if row['creationTime']:
       event_object = FirefoxCookieEvent(
           row['creationTime'], eventdata.EventTimestamp.CREATION_TIME,
@@ -98,9 +101,9 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
 
     if row['lastAccessed']:
       event_object = FirefoxCookieEvent(
-          row['lastAccessed'], eventdata.EventTimestamp.ACCESS_TIME, row['id'],
-          row['host'], row['name'], row['value'], row['path'], row['isSecure'],
-          row['isHttpOnly'])
+          row['lastAccessed'], eventdata.EventTimestamp.ACCESS_TIME,
+          row['id'], row['host'], row['name'], row['value'], row['path'],
+          row['isSecure'], row['isHttpOnly'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['expiry']:
@@ -127,8 +130,8 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
     for cookie_plugin in self._cookie_plugins:
       try:
         cookie_plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=row['name'], cookie_data=row['value'],
-            url=url)
+            parser_mediator, cookie_name=row['name'],
+            cookie_data=row['value'], url=url)
       except errors.WrongPlugin:
         pass
 
