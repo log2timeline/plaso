@@ -280,9 +280,9 @@ class StorageFile(object):
       not exist.
     """
     if read_only:
-      access_mode = 'r'
+      access_mode = u'r'
     else:
-      access_mode = 'a'
+      access_mode = u'a'
 
     try:
       self._zipfile = zipfile.ZipFile(
@@ -355,7 +355,7 @@ class StorageFile(object):
       if not stream_name.startswith(u'plaso_tag_index.'):
         continue
 
-      file_object = self._OpenStream(stream_name, 'r')
+      file_object = self._OpenStream(stream_name, u'r')
       if file_object is None:
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -519,7 +519,7 @@ class StorageFile(object):
       stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
 
       if stream_name in self._GetStreamNames():
-        timestamp_file_object = self._OpenStream(stream_name, 'r')
+        timestamp_file_object = self._OpenStream(stream_name, u'r')
         if timestamp_file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -592,7 +592,7 @@ class StorageFile(object):
     if stream_number not in self._proto_streams:
       stream_name = u'plaso_proto.{0:06d}'.format(stream_number)
 
-      file_object = self._OpenStream(stream_name, 'r')
+      file_object = self._OpenStream(stream_name, u'r')
       if file_object is None:
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -626,7 +626,7 @@ class StorageFile(object):
       previous_file_object.close()
 
     stream_name = u'plaso_proto.{0:06d}'.format(stream_number)
-    file_object = self._OpenStream(stream_name, 'r')
+    file_object = self._OpenStream(stream_name, u'r')
     if file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -659,7 +659,7 @@ class StorageFile(object):
     # file object should be re-opened.
 
     stream_name = u'plaso_index.{0:06d}'.format(stream_number)
-    index_file_object = self._OpenStream(stream_name, 'r')
+    index_file_object = self._OpenStream(stream_name, u'r')
     if index_file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -745,7 +745,7 @@ class StorageFile(object):
       return
 
     stream_name = u'plaso_tagging.{0:06d}'.format(tag_index_value.store_number)
-    tag_file_object = self._OpenStream(stream_name, 'r')
+    tag_file_object = self._OpenStream(stream_name, u'r')
     if tag_file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -764,7 +764,7 @@ class StorageFile(object):
       A byte string containing the data of the stream.
     """
     data_segments = []
-    file_object = self._OpenStream(stream_name, 'r')
+    file_object = self._OpenStream(stream_name, u'r')
 
     # zipfile.ZipExtFile does not support the with-statement interface.
     if file_object:
@@ -885,7 +885,7 @@ class StorageFile(object):
 
     for stream_name in self._GetStreamNames():
       if stream_name.startswith(u'plaso_grouping.'):
-        file_object = self._OpenStream(stream_name, 'r')
+        file_object = self._OpenStream(stream_name, u'r')
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -949,7 +949,7 @@ class StorageFile(object):
     """
     for stream_name in self._GetStreamNames():
       if stream_name.startswith(u'plaso_tagging.'):
-        file_object = self._OpenStream(stream_name, 'r')
+        file_object = self._OpenStream(stream_name, u'r')
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -989,7 +989,7 @@ class StorageFile(object):
     """
     information = []
 
-    file_object = self._OpenStream(u'information.dump', 'r')
+    file_object = self._OpenStream(u'information.dump', u'r')
     if file_object is None:
       return information
 
@@ -1188,9 +1188,13 @@ class StorageFile(object):
     """Return all available protobuf numbers."""
     numbers = []
     for name in self._GetStreamNames():
-      if u'plaso_proto' in name:
-        _, num = name.split('.')
-        numbers.append(int(num))
+      if name.startswith(u'plaso_proto'):
+        _, _, number_string = name.partition(u'.')
+        try:
+          number = int(number_string, 10)
+          numbers.append(number)
+        except ValueError:
+          pass
 
     for number in sorted(numbers):
       yield number
@@ -1290,21 +1294,21 @@ class StorageFile(object):
   def HasTagging(self):
     """Return a bool indicating whether or not a Tag file is stored."""
     for name in self._GetStreamNames():
-      if u'plaso_tagging.' in name:
+      if name.startswith(u'plaso_tagging.'):
         return True
     return False
 
   def HasGrouping(self):
     """Return a bool indicating whether or not a Group file is stored."""
     for name in self._GetStreamNames():
-      if u'plaso_grouping.' in name:
+      if name.startswith(u'plaso_grouping.'):
         return True
     return False
 
   def HasReports(self):
     """Return a bool indicating whether or not a Report file is stored."""
     for name in self._GetStreamNames():
-      if u'plaso_report.' in name:
+      if name.startswith(u'plaso_report'):
         return True
 
     return False
@@ -1317,8 +1321,8 @@ class StorageFile(object):
     """
     report_number = 1
     for name in self._GetStreamNames():
-      if u'plaso_report.' in name:
-        _, _, number_string = name.partition('.')
+      if name.startswith(u'plaso_report.'):
+        _, _, number_string = name.partition(u'.')
         try:
           number = int(number_string, 10)
         except ValueError:
@@ -1351,7 +1355,7 @@ class StorageFile(object):
     """
     for stream_name in self._GetStreamNames():
       if stream_name.startswith(u'plaso_report.'):
-        file_object = self._OpenStream(stream_name, 'r')
+        file_object = self._OpenStream(stream_name, u'r')
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -1405,10 +1409,14 @@ class StorageFile(object):
     group_number = 1
     if self.HasGrouping():
       for name in self._GetStreamNames():
-        if u'plaso_grouping.' in name:
-          _, number = name.split('.')
-          if int(number) >= group_number:
-            group_number = int(number) + 1
+        if name.startswith(u'plaso_grouping.'):
+          _, _, number_string = name.partition(u'.')
+          try:
+            number = int(number_string, 10)
+            if number >= group_number:
+              group_number = number + 1
+          except ValueError:
+            pass
 
     group_packed = []
     size = 0
@@ -1477,12 +1485,19 @@ class StorageFile(object):
 
     tag_number = 1
     for name in self._GetStreamNames():
-      if u'plaso_tagging.' in name:
-        _, number = name.split('.')
-        if int(number) >= tag_number:
-          tag_number = int(number) + 1
-        if self._event_tag_index is None:
-          self._BuildTagIndex()
+      if not name.startswith(u'plaso_tagging.'):
+        continue
+
+      _, _, number_string = name.partition(u'.')
+      try:
+        number = int(number_string, 10)
+      except ValueError:
+        continue
+
+      if number >= tag_number:
+        tag_number = number + 1
+      if self._event_tag_index is None:
+        self._BuildTagIndex()
 
     tag_packed = []
     tag_index = []
@@ -1504,7 +1519,7 @@ class StorageFile(object):
         stream_name = u'plaso_tagging.{0:06d}'.format(
             tag_index_value.store_number)
 
-        tag_file_object = self._OpenStream(stream_name, 'r')
+        tag_file_object = self._OpenStream(stream_name, u'r')
         if tag_file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
