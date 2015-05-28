@@ -95,7 +95,9 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
     # b) the right XML.
     first_line = text_file_object.readline(90)
 
-    if not first_line.startswith(u'<?xml version="1.0'):
+    # Note that we must check the data here as a string first, otherwise
+    # forcing first_line to convert to Unicode can raise a UnicodeDecodeError.
+    if not first_line.startswith(b'<?xml version="1.0'):
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
 
@@ -105,7 +107,9 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
     # which denotes a typed_history.xml file.
     second_line = text_file_object.readline(50).strip()
 
-    if second_line != u'<typed_history>':
+    # Note that we must check the data here as a string first, otherwise
+    # forcing second_line to convert to Unicode can raise a UnicodeDecodeError.
+    if second_line != b'<typed_history>':
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 

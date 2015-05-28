@@ -64,7 +64,7 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
 
     # Note that we must check the data here as a string first, otherwise
     # forcing first_line to convert to Unicode can raise a UnicodeDecodeError.
-    if not first_line.startswith(u'<?xml'):
+    if not first_line.startswith(b'<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [not XML]')
 
@@ -74,7 +74,9 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
     # which denotes a typed_history.xml file.
     second_line = text_file_object.readline(50).strip()
 
-    if second_line != u'<usage-history>':
+    # Note that we must check the data here as a string first, otherwise
+    # forcing second_line to convert to Unicode can raise a UnicodeDecodeError.
+    if second_line != b'<usage-history>':
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [wrong XML root key]')
 
