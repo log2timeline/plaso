@@ -22,16 +22,16 @@ class BencodePlugin(plugins.BasePlugin):
 
   # BENCODE_KEYS is a list of keys required by a plugin.
   # This is expected to be overridden by the processing plugin.
-  # Ex. frozenset(['activity-date', 'done-date'])
-  BENCODE_KEYS = frozenset(['any'])
+  # Ex. frozenset([u'activity-date', u'done-date'])
+  BENCODE_KEYS = frozenset([u'any'])
 
   # This is expected to be overridden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
   # this key or value.
-  # Ex. ['https://wiki.theory.org/BitTorrentSpecification#Bencoding']
+  # Ex. [u'https://wiki.theory.org/BitTorrentSpecification#Bencoding']
   URLS = []
 
-  NAME = 'bencode'
+  NAME = u'bencode'
 
   def _GetKeys(self, data, keys, depth=1):
     """Helper function to return keys nested in a bencode dict.
@@ -68,7 +68,7 @@ class BencodePlugin(plugins.BasePlugin):
             return match
     return match
 
-  def _RecurseKey(self, recur_item, root='', depth=15):
+  def _RecurseKey(self, recur_item, root=u'', depth=15):
     """Flattens nested dictionaries and lists by yielding it's values.
 
     The hierarchy of a bencode file is a series of nested dictionaries and
@@ -91,13 +91,13 @@ class BencodePlugin(plugins.BasePlugin):
       logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
       return
 
-    if type(recur_item) in (list, tuple):
+    if isinstance(recur_item, (list, tuple)):
       for recur in recur_item:
         for key in self._RecurseKey(recur, root, depth):
           yield key
       return
 
-    if not hasattr(recur_item, 'iteritems'):
+    if not hasattr(recur_item, u'iteritems'):
       return
 
     for key, value in recur_item.iteritems():

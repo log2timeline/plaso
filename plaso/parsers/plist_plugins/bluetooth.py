@@ -73,7 +73,7 @@ class BluetoothPlugin(interface.PlistPlugin):
 
       if value.get(u'LastServicesUpdate', None):
         desc = desc = u' '.join(filter(None, (u'Services Updated', name)))
-        key = ''.join((device, u'/LastServicesUpdate'))
+        key = u''.join((device, u'/LastServicesUpdate'))
         event_object = plist_event.PlistEvent(
             root, key, value[u'LastServicesUpdate'], desc)
         parser_mediator.ProduceEvent(event_object)
