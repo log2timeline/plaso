@@ -135,7 +135,7 @@ class PlistPlugin(plugins.BasePlugin):
 
     else:
       # Make sure we are getting back an object that has an iterator.
-      if not hasattr(top_level, '__iter__'):
+      if not hasattr(top_level, u'__iter__'):
         raise errors.WrongPlistPlugin(self.NAME, plist_name)
 
       # This is a list and we need to just look at the first level
@@ -158,7 +158,8 @@ class PlistPlugin(plugins.BasePlugin):
     match = GetKeys(top_level, self.PLIST_KEYS)
     self.GetEntries(parser_mediator, top_level=top_level, match=match)
 
-def RecurseKey(recur_item, root='', depth=15):
+
+def RecurseKey(recur_item, root=u'', depth=15):
   """Flattens nested dictionaries and lists by yielding it's values.
 
   The hierarchy of a plist file is a series of nested dictionaries and lists.

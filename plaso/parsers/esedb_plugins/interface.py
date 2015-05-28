@@ -13,7 +13,7 @@ from plaso.parsers import plugins
 class EseDbPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
 
-  NAME = 'esedb'
+  NAME = u'esedb'
 
   BINARY_DATA_COLUMN_TYPES = frozenset([
       pyesedb.column_types.BINARY_DATA,
@@ -63,7 +63,7 @@ class EseDbPlugin(plugins.BasePlugin):
       A string or None if value is None.
     """
     if value:
-      return value.decode('ascii')
+      return value.decode(u'ascii')
 
   def _ConvertValueBinaryDataToStringBase16(self, value):
     """Converts a binary data value into a base-16 (hexadecimal) string.

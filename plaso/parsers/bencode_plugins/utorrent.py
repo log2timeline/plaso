@@ -11,7 +11,7 @@ from plaso.parsers.bencode_plugins import interface
 class UTorrentEvent(time_events.PosixTimeEvent):
   """Convenience class for a uTorrent active torrents history entries."""
 
-  DATA_TYPE = 'p2p:bittorrent:utorrent'
+  DATA_TYPE = u'p2p:bittorrent:utorrent'
 
   def __init__(
       self, timestamp, timestamp_description, path, caption, seedtime):
@@ -25,19 +25,20 @@ class UTorrentEvent(time_events.PosixTimeEvent):
     super(UTorrentEvent, self).__init__(timestamp, timestamp_description)
     self.path = path
     self.caption = caption
-    self.seedtime = seedtime // 60 # Convert seconds to minutes.
+    # Convert seconds to minutes.
+    self.seedtime, _ = divmod(seedtime, 60)
 
 
 class UTorrentPlugin(interface.BencodePlugin):
   """Plugin to extract uTorrent active torrent events."""
 
-  NAME = 'bencode_utorrent'
+  NAME = u'bencode_utorrent'
   DESCRIPTION = u'Parser for uTorrent bencoded files.'
 
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
   # returned for analysis.
-  BENCODE_KEYS = frozenset(['.fileguard'])
+  BENCODE_KEYS = frozenset([u'.fileguard'])
 
   def GetEntries(
       self, parser_mediator, data=None, **unused_kwargs):
@@ -69,9 +70,9 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not u'.torrent' in key:
         continue
 
-      caption = value.get('caption')
-      path = value.get('path')
-      seedtime = value.get('seedtime')
+      caption = value.get(u'caption')
+      path = value.get(u'path')
+      seedtime = value.get(u'seedtime')
       if not caption or not path or seedtime < 0:
         raise errors.WrongBencodePlugin(self.NAME)
 
@@ -79,25 +80,25 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not u'.torrent' in torrent:
         continue
 
-      path = value.get('path', None)
-      caption = value.get('caption', None)
-      seedtime = value.get('seedtime', None)
+      path = value.get(u'path', None)
+      caption = value.get(u'caption', None)
+      seedtime = value.get(u'seedtime', None)
 
       # Create timeline events based on extracted values.
       for event_key, event_value in value.iteritems():
-        if event_key == 'added_on':
+        if event_key == u'added_on':
           event_object = UTorrentEvent(
               event_value, eventdata.EventTimestamp.ADDED_TIME,
               path, caption, seedtime)
           parser_mediator.ProduceEvent(event_object)
 
-        elif event_key == 'completed_on':
+        elif event_key == u'completed_on':
           event_object = UTorrentEvent(
               event_value, eventdata.EventTimestamp.FILE_DOWNLOADED,
               path, caption, seedtime)
           parser_mediator.ProduceEvent(event_object)
 
-        elif event_key == 'modtimes':
+        elif event_key == u'modtimes':
           for modtime in event_value:
             # Some values are stored as 0, skip those.
             if not modtime:

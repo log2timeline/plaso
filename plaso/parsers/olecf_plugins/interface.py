@@ -11,7 +11,7 @@ from plaso.parsers import plugins
 class OlecfPlugin(plugins.BasePlugin):
   """An OLECF plugin for Plaso."""
 
-  NAME = 'olecf'
+  NAME = u'olecf'
 
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])

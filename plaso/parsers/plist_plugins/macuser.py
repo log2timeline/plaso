@@ -102,7 +102,7 @@ class MacUserPlugin(interface.PlistPlugin):
 
       if policy_dict.get(u'passwordLastSetTime', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get(u'passwordLastSetTime', '0'))
+            policy_dict.get(u'passwordLastSetTime', u'0'))
         shadow_hash_data = match.get(u'ShadowHashData', None)
         if timestamp > cocoa_zero and isinstance(
             shadow_hash_data, (list, tuple)):
@@ -144,7 +144,7 @@ class MacUserPlugin(interface.PlistPlugin):
 
       if policy_dict.get(u'lastLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get(u'lastLoginTimestamp', '0'))
+            policy_dict.get(u'lastLoginTimestamp', u'0'))
         description = u'Last login from {0:s} ({1!s})'.format(account, uid)
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
@@ -153,7 +153,7 @@ class MacUserPlugin(interface.PlistPlugin):
 
       if policy_dict.get(u'failedLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get(u'failedLoginTimestamp', '0'))
+            policy_dict.get(u'failedLoginTimestamp', u'0'))
         description = (
             u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
                 account, uid, policy_dict.get(u'failedLoginCount', 0))

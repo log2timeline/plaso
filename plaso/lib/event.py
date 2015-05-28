@@ -132,7 +132,7 @@ class EventObject(object):
 
   def __init__(self):
     """Initializes the event object."""
-    self.uuid = uuid.uuid4().get_hex()
+    self.uuid = u'{0:s}'.format(uuid.uuid4().get_hex())
     if self.DATA_TYPE:
       self.data_type = self.DATA_TYPE
 
@@ -179,7 +179,7 @@ class EventObject(object):
     if parser == u'filestat':
       inode = getattr(self, u'inode', u'a')
       if inode == u'a':
-        inode = u'_' + str(uuid.uuid4())
+        inode = u'_{0:s}'.format(uuid.uuid4())
       identity.append(u'inode')
       identity.append(inode)
 

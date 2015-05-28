@@ -42,7 +42,7 @@ class GoogleAnalyticsEvent(time_events.PosixTimeEvent):
 class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
   """A browser cookie plugin for Google Analytics cookies."""
 
-  NAME = 'google_analytics_utmz'
+  NAME = u'google_analytics_utmz'
 
   COOKIE_NAME = u'__utmz'
 
@@ -62,7 +62,7 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
     """
     # The structure of the field:
     #   <domain hash>.<last time>.<sessions>.<sources>.<variables>
-    fields = cookie_data.split('.')
+    fields = cookie_data.split(u'.')
 
     if len(fields) > 5:
       variables = u'.'.join(fields[4:])
@@ -80,24 +80,38 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
     for variable in extra_variables:
       key, _, value = variable.partition(u'=')
       try:
-        value_line = unicode(urllib.unquote(str(value)), 'utf-8')
+        value_line = urllib.unquote(value).encode(u'utf-8')
       except UnicodeDecodeError:
         value_line = repr(value)
 
       kwargs[key] = value_line
 
+    try:
+      last = int(last, 10)
+    except ValueError:
+      last = 0
+
+    try:
+      sessions = int(sessions, 10)
+    except ValueError:
+      sessions = 0
+
+    try:
+      sources = int(sources, 10)
+    except ValueError:
+      sources = 0
+
     event_object = GoogleAnalyticsEvent(
-        int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
-        url, 'utmz', self.COOKIE_NAME, domain_hash=domain_hash,
-        sessions=int(sessions, 10), sources=int(sources, 10),
-        **kwargs)
+        last, eventdata.EventTimestamp.LAST_VISITED_TIME, url, u'utmz',
+        self.COOKIE_NAME, domain_hash=domain_hash, sessions=sessions,
+        sources=sources, **kwargs)
     parser_mediator.ProduceEvent(event_object)
 
 
 class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
   """A browser cookie plugin for Google Analytics cookies."""
 
-  NAME = 'google_analytics_utma'
+  NAME = u'google_analytics_utma'
 
   COOKIE_NAME = u'__utma'
 
@@ -127,33 +141,48 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
 
     domain_hash, visitor_id, first_visit, previous, last, sessions = fields
 
-    # TODO: catch int() throwing a ValueError.
-
     # TODO: Double check this time is stored in UTC and not local time.
-    first_epoch = int(first_visit, 10)
+    try:
+      first_epoch = int(first_visit, 10)
+    except ValueError:
+      first_epoch = 0
+
+    try:
+      sessions = int(sessions, 10)
+    except ValueError:
+      sessions = 0
+
+    try:
+      previous = int(previous, 10)
+    except ValueError:
+      previous = 0
+
+    try:
+      last = int(last, 10)
+    except ValueError:
+      last = 0
+
     event_object = GoogleAnalyticsEvent(
-        first_epoch, 'Analytics Creation Time', url, 'utma', self.COOKIE_NAME,
-        domain_hash=domain_hash, visitor_id=visitor_id,
-        sessions=int(sessions, 10))
+        first_epoch, u'Analytics Creation Time', url, u'utma', self.COOKIE_NAME,
+        domain_hash=domain_hash, visitor_id=visitor_id, sessions=sessions)
     parser_mediator.ProduceEvent(event_object)
 
     event_object = GoogleAnalyticsEvent(
-        int(previous, 10), 'Analytics Previous Time', url, 'utma',
+        previous, u'Analytics Previous Time', url, u'utma', self.COOKIE_NAME,
+        domain_hash=domain_hash, visitor_id=visitor_id, sessions=sessions)
+    parser_mediator.ProduceEvent(event_object)
+
+    event_object = GoogleAnalyticsEvent(
+        last, eventdata.EventTimestamp.LAST_VISITED_TIME, url, u'utma',
         self.COOKIE_NAME, domain_hash=domain_hash, visitor_id=visitor_id,
-        sessions=int(sessions, 10))
-    parser_mediator.ProduceEvent(event_object)
-
-    event_object = GoogleAnalyticsEvent(
-        int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
-        url, 'utma', self.COOKIE_NAME, domain_hash=domain_hash,
-        visitor_id=visitor_id, sessions=int(sessions, 10))
+        sessions=sessions)
     parser_mediator.ProduceEvent(event_object)
 
 
 class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
   """A browser cookie plugin for Google Analytics cookies."""
 
-  NAME = 'google_analytics_utmb'
+  NAME = u'google_analytics_utmb'
 
   COOKIE_NAME = u'__utmb'
 
@@ -182,8 +211,17 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
 
     domain_hash, pages_viewed, _, last = fields
 
+    try:
+      last = int(last, 10)
+    except ValueError:
+      last = 0
+
+    try:
+      pages_viewed = int(pages_viewed, 10)
+    except ValueError:
+      pages_viewed = 0
+
     event_object = GoogleAnalyticsEvent(
-        int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
-        url, 'utmb', self.COOKIE_NAME, domain_hash=domain_hash,
-        pages_viewed=int(pages_viewed, 10))
+        last, eventdata.EventTimestamp.LAST_VISITED_TIME, url, u'utmb',
+        self.COOKIE_NAME, domain_hash=domain_hash, pages_viewed=pages_viewed)
     parser_mediator.ProduceEvent(event_object)

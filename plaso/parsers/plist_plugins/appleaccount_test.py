@@ -21,8 +21,9 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plist_file = (u'com.apple.coreservices.appleidauthenticationinfo.'
-                  u'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist')
+    plist_file = (
+        u'com.apple.coreservices.appleidauthenticationinfo.'
+        u'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist')
     plist_name = plist_file
     event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, [plist_name], plist_name)
@@ -49,13 +50,15 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
         event_object, expected_string, expected_short)
 
     event_object = event_objects[1]
-    expected_desc = (u'Connected Apple account '
-                     u'email@domain.com (Joaquin Moreno Garijo)')
+    expected_desc = (
+        u'Connected Apple account '
+        u'email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event_object.desc, expected_desc)
 
     event_object = event_objects[2]
-    expected_desc = (u'Last validation Apple account '
-                     u'email@domain.com (Joaquin Moreno Garijo)')
+    expected_desc = (
+        u'Last validation Apple account '
+        u'email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event_object.desc, expected_desc)
 
 

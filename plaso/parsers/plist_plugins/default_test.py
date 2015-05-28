@@ -23,13 +23,13 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""
     top_level_dict_single = {
-        'DE-00-AD-00-BE-EF': {
-            'Name': 'DBF Industries Slideshow Lazer', 'LastUsed':
+        u'DE-00-AD-00-BE-EF': {
+            u'Name': u'DBF Industries Slideshow Lazer', u'LastUsed':
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC)}}
 
     event_object_generator = self._ParsePlistWithPlugin(
-        self._plugin, 'single', top_level_dict_single)
+        self._plugin, u'single', top_level_dict_single)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
     self.assertEqual(len(event_objects), 1)
@@ -50,33 +50,32 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
   def testProcessMulti(self):
     """Tests Process on a plist containing five keys with date values."""
     top_level_dict_many_keys = {
-        'DeviceCache': {
-            '44-00-00-00-00-04': {
-                'Name': 'Apple Magic Trackpad 2', 'LMPSubversion': 796,
-                'LMPVersion': 3, 'PageScanMode': 0, 'ClassOfDevice': 9620,
-                'SupportedFeatures': '\x00\x00\x00\x00', 'Manufacturer': 76,
-                'PageScanPeriod': 0, 'ClockOffset': 17981, 'LastNameUpdate':
+        u'DeviceCache': {
+            u'44-00-00-00-00-04': {
+                u'Name': u'Apple Magic Trackpad 2', u'LMPSubversion': 796,
+                u'LMPVersion': 3, u'PageScanMode': 0, u'ClassOfDevice': 9620,
+                u'SupportedFeatures': b'\x00\x00\x00\x00', u'Manufacturer': 76,
+                u'PageScanPeriod': 0, u'ClockOffset': 17981, u'LastNameUpdate':
                 datetime.datetime(
                     2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC),
-                'InquiryRSSI': 198, 'PageScanRepetitionMode': 1,
-                'LastServicesUpdate':
+                u'InquiryRSSI': 198, u'PageScanRepetitionMode': 1,
+                u'LastServicesUpdate':
                 datetime.datetime(2012, 11, 2, 1, 13, 23, tzinfo=pytz.UTC),
-                'displayName': 'Apple Magic Trackpad 2', 'LastInquiryUpdate':
+                u'displayName': u'Apple Magic Trackpad 2', u'LastInquiryUpdate':
                 datetime.datetime(
                     2012, 11, 2, 1, 13, 17, 324095, tzinfo=pytz.UTC),
-                'Services': '', 'BatteryPercent': 0.61},
-            '44-00-00-00-00-02': {
-                'Name': 'test-macpro', 'ClockOffset': 28180, 'ClassOfDevice':
-                3670276, 'PageScanMode': 0, 'LastNameUpdate':
-                datetime.datetime(
+                u'Services': u'', u'BatteryPercent': 0.61},
+            u'44-00-00-00-00-02': {
+                u'Name': u'test-macpro', u'ClockOffset': 28180,
+                u'ClassOfDevice': 3670276, u'PageScanMode': 0,
+                u'LastNameUpdate': datetime.datetime(
                     2011, 4, 7, 17, 56, 53, 524275, tzinfo=pytz.UTC),
-                'PageScanPeriod': 2, 'PageScanRepetitionMode': 1,
-                'LastInquiryUpdate':
-                datetime.datetime(
+                u'PageScanPeriod': 2, u'PageScanRepetitionMode': 1,
+                u'LastInquiryUpdate': datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.UTC)}}}
 
     event_queue_consumer = self._ParsePlistWithPlugin(
-        self._plugin, 'nested', top_level_dict_many_keys)
+        self._plugin, u'nested', top_level_dict_many_keys)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 5)

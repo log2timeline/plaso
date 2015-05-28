@@ -10,7 +10,7 @@ from plaso.parsers.olecf_plugins import interface
 class OleCfSummaryInfoEvent(time_events.FiletimeEvent):
   """Convenience class for an OLECF Summary info event."""
 
-  DATA_TYPE = 'olecf:summary_info'
+  DATA_TYPE = u'olecf:summary_info'
 
   def __init__(self, timestamp, usage, attributes):
     """Initializes the event.
@@ -34,25 +34,25 @@ class OleCfSummaryInfoEvent(time_events.FiletimeEvent):
 class OleCfSummaryInfo(object):
   """An OLECF Summary Info object."""
 
-  _CLASS_IDENTIFIER = 'f29f85e0-4ff9-1068-ab91-08002b27b3d9'
+  _CLASS_IDENTIFIER = u'f29f85e0-4ff9-1068-ab91-08002b27b3d9'
 
   _PROPERTY_NAMES_INT32 = {
-      0x000e: 'number_of_pages',  # PIDSI_PAGECOUNT
-      0x000f: 'number_of_words',  # PIDSI_WORDCOUNT
-      0x0010: 'number_of_characters',  # PIDSI_CHARCOUNT
-      0x0013: 'security',  # PIDSI_SECURITY
+      0x000e: u'number_of_pages',  # PIDSI_PAGECOUNT
+      0x000f: u'number_of_words',  # PIDSI_WORDCOUNT
+      0x0010: u'number_of_characters',  # PIDSI_CHARCOUNT
+      0x0013: u'security',  # PIDSI_SECURITY
   }
 
   _PROPERTY_NAMES_STRING = {
-      0x0002: 'title',  # PIDSI_TITLE
-      0x0003: 'subject',  # PIDSI_SUBJECT
-      0x0004: 'author',  # PIDSI_AUTHOR
-      0x0005: 'keywords',  # PIDSI_KEYWORDS
-      0x0006: 'comments',  # PIDSI_COMMENTS
-      0x0007: 'template',  # PIDSI_TEMPLATE
-      0x0008: 'last_saved_by',  # PIDSI_LASTAUTHOR
-      0x0009: 'revision_number',  # PIDSI_REVNUMBER
-      0x0012: 'application',  # PIDSI_APPNAME
+      0x0002: u'title',  # PIDSI_TITLE
+      0x0003: u'subject',  # PIDSI_SUBJECT
+      0x0004: u'author',  # PIDSI_AUTHOR
+      0x0005: u'keywords',  # PIDSI_KEYWORDS
+      0x0006: u'comments',  # PIDSI_COMMENTS
+      0x0007: u'template',  # PIDSI_TEMPLATE
+      0x0008: u'last_saved_by',  # PIDSI_LASTAUTHOR
+      0x0009: u'revision_number',  # PIDSI_REVNUMBER
+      0x0012: u'application',  # PIDSI_APPNAME
   }
 
   PIDSI_CODEPAGE = 0x0001
@@ -155,18 +155,18 @@ class OleCfSummaryInfo(object):
     """
     if property_value.identifier == self.PIDSI_LASTPRINTED:
       self.events.append(
-          (property_value.data_as_integer, 'Document Last Printed Time'))
+          (property_value.data_as_integer, u'Document Last Printed Time'))
 
     elif property_value.identifier == self.PIDSI_CREATE_DTM:
       self.events.append(
-          (property_value.data_as_integer, 'Document Creation Time'))
+          (property_value.data_as_integer, u'Document Creation Time'))
 
     elif property_value.identifier == self.PIDSI_LASTSAVE_DTM:
       self.events.append(
-          (property_value.data_as_integer, 'Document Last Save Time'))
+          (property_value.data_as_integer, u'Document Last Save Time'))
 
     elif property_value.identifier == self.PIDSI_EDITTIME:
-      # property_name = 'total_edit_time'
+      # property_name = u'total_edit_time'
       # TODO: handle duration.
       pass
 
@@ -174,33 +174,33 @@ class OleCfSummaryInfo(object):
 class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
   """Convenience class for an OLECF Document Summary info event."""
 
-  DATA_TYPE = 'olecf:document_summary_info'
+  DATA_TYPE = u'olecf:document_summary_info'
 
-  _CLASS_IDENTIFIER = 'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
+  _CLASS_IDENTIFIER = u'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
 
   _PROPERTY_NAMES_BOOL = {
-      0x0013: 'shared_document',  # PIDDSI_SHAREDDOC
+      0x0013: u'shared_document',  # PIDDSI_SHAREDDOC
   }
 
   _PROPERTY_NAMES_INT32 = {
-      0x0004: 'number_of_bytes',  # PIDDSI_BYTECOUNT
-      0x0005: 'number_of_lines',  # PIDDSI_LINECOUNT
-      0x0006: 'number_of_paragraphs',  # PIDDSI_PARCOUNT
-      0x0007: 'number_of_slides',  # PIDDSI_SLIDECOUNT
-      0x0008: 'number_of_notes',  # PIDDSI_NOTECOUNT
-      0x0009: 'number_of_hidden_slides',  # PIDDSI_HIDDENCOUNT
-      0x000a: 'number_of_clips',  # PIDDSI_MMCLIPCOUNT
-      0x0011: 'number_of_characters_with_white_space',  # PIDDSI_CCHWITHSPACES
-      0x0017: 'application_version',  # PIDDSI_VERSION
+      0x0004: u'number_of_bytes',  # PIDDSI_BYTECOUNT
+      0x0005: u'number_of_lines',  # PIDDSI_LINECOUNT
+      0x0006: u'number_of_paragraphs',  # PIDDSI_PARCOUNT
+      0x0007: u'number_of_slides',  # PIDDSI_SLIDECOUNT
+      0x0008: u'number_of_notes',  # PIDDSI_NOTECOUNT
+      0x0009: u'number_of_hidden_slides',  # PIDDSI_HIDDENCOUNT
+      0x000a: u'number_of_clips',  # PIDDSI_MMCLIPCOUNT
+      0x0011: u'number_of_characters_with_white_space',  # PIDDSI_CCHWITHSPACES
+      0x0017: u'application_version',  # PIDDSI_VERSION
   }
 
   _PROPERTY_NAMES_STRING = {
-      0x000e: 'manager',  # PIDDSI_MANAGER
-      0x000f: 'company',  # PIDDSI_COMPANY
-      0x001a: 'content_type',  # PIDDSI_CONTENTTYPE
-      0x001b: 'content_status',  # PIDDSI_CONTENTSTATUS
-      0x001c: 'language',  # PIDDSI_LANGUAGE
-      0x001d: 'document_version',  # PIDDSI_DOCVERSION
+      0x000e: u'manager',  # PIDDSI_MANAGER
+      0x000f: u'company',  # PIDDSI_COMPANY
+      0x001a: u'content_type',  # PIDDSI_CONTENTTYPE
+      0x001b: u'content_status',  # PIDDSI_CONTENTSTATUS
+      0x001c: u'language',  # PIDDSI_LANGUAGE
+      0x001d: u'document_version',  # PIDDSI_DOCVERSION
   }
 
   PIDDSI_CODEPAGE = 0x0001
@@ -324,7 +324,7 @@ class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
 class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses DocumentSummaryInformation item from an OLECF file."""
 
-  NAME = 'olecf_document_summary'
+  NAME = u'olecf_document_summary'
   DESCRIPTION = u'Parser for a DocumentSummaryInformation OLECF stream.'
 
   # pylint: disable=anomalous-backslash-in-string
@@ -358,7 +358,7 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
 class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses the SummaryInformation item from an OLECF file."""
 
-  NAME = 'olecf_summary'
+  NAME = u'olecf_summary'
   DESCRIPTION = u'Parser for a SummaryInformation OLECF stream.'
 
   # pylint: disable=anomalous-backslash-in-string
@@ -398,5 +398,5 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
         parser_mediator.ProduceEvent(event_object)
 
 
-olecf.OleCfParser.RegisterPlugins(
-  [DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])
+olecf.OleCfParser.RegisterPlugins([
+    DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])

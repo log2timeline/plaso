@@ -12,7 +12,7 @@ from plaso.parsers.esedb_plugins import interface
 class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
   """Convenience class for a file history namespace table event."""
 
-  DATA_TYPE = 'file_history:namespace:event'
+  DATA_TYPE = u'file_history:namespace:event'
 
   def __init__(self, timestamp, usage, filename, record_values):
     """Initializes the event.
@@ -35,7 +35,7 @@ class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
 class FileHistoryEseDbPlugin(interface.EseDbPlugin):
   """Parses a File History ESE database file."""
 
-  NAME = 'esedb_file_history'
+  NAME = u'esedb_file_history'
   DESCRIPTION = u'Parser for File History ESE database files.'
 
   # TODO: Add support for other tables as well, backupset, file, library, etc.

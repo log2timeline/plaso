@@ -13,8 +13,8 @@ def GetPlugins():
   """Returns a list of all cookie plugins."""
   plugins_list = []
   for plugin_cls in CookiePlugin.classes.itervalues():
-    parent_name = getattr(plugin_cls, 'parent_class_name', 'NOTHERE')
-    if parent_name != 'cookie':
+    parent_name = getattr(plugin_cls, u'parent_class_name', u'NOTHERE')
+    if parent_name != u'cookie':
       continue
 
     plugins_list.append(plugin_cls())
@@ -31,7 +31,7 @@ class CookiePlugin(plugins.BasePlugin):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  NAME = 'cookie'
+  NAME = u'cookie'
 
   # The name of the cookie value that this plugin is designed to parse.
   # This value is used to evaluate whether the plugin is the correct one
@@ -41,7 +41,7 @@ class CookiePlugin(plugins.BasePlugin):
   def __init__(self):
     """Initialize the browser cookie plugin."""
     super(CookiePlugin, self).__init__()
-    self.cookie_data = ''
+    self.cookie_data = u''
 
   @abc.abstractmethod
   def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
