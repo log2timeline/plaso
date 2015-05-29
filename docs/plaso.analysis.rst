@@ -92,6 +92,22 @@ plaso.analysis.mediator_test module
     :undoc-members:
     :show-inheritance:
 
+plaso.analysis.tagging module
+-----------------------------
+
+.. automodule:: plaso.analysis.tagging
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.analysis.tagging_test module
+----------------------------------
+
+.. automodule:: plaso.analysis.tagging_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.analysis.test_lib module
 ------------------------------
 
