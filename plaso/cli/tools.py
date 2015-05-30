@@ -203,7 +203,6 @@ class CLITool(object):
       options: the command line arguments (instance of argparse.Namespace).
     """
     self._ParseInformationalOptions(options)
-    self._ParseDataLocationOption(options)
 
   def PrintColumnValue(self, name, description, column_width=25):
     """Prints a value with a name and description aligned to the column width.
