@@ -125,6 +125,9 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
         u'__type__': u'EventObject',
         u'a_tuple': [
             u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35],
+        u'binary_string': {
+            u'__type__': u'bytes',
+            u'stream': u'=C0=90=90binary'},
         u'data_type': u'test:event2',
         u'empty_string': u'',
         u'integer': 34,
@@ -177,6 +180,7 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
     # Prevent the event object for generating its own UUID.
     event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
+    event_object.binary_string = b'\xc0\x90\x90binary'
     event_object.empty_string = u''
     event_object.zero_integer = 0
     event_object.integer = 34

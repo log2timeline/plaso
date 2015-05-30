@@ -19,7 +19,7 @@ from plaso.output import test_lib
 
 class JSONTestEvent(event.EventObject):
   """Simplified EventObject for testing."""
-  DATA_TYPE = 'test:l2tjson'
+  DATA_TYPE = u'test:l2tjson'
 
   def __init__(self):
     """Initialize event with data."""
