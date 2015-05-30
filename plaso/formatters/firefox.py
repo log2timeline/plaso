@@ -9,7 +9,7 @@ from plaso.lib import errors
 class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
   """The Firefox bookmark annotation event formatter."""
 
-  DATA_TYPE = 'firefox:places:bookmark_annotation'
+  DATA_TYPE = u'firefox:places:bookmark_annotation'
 
   FORMAT_STRING_PIECES = [
       u'Bookmark Annotation: [{content}]',
@@ -18,25 +18,25 @@ class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'Bookmark Annotation: {title}']
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class FirefoxBookmarkFolderFormatter(interface.EventFormatter):
   """The Firefox bookmark folder event formatter."""
 
-  DATA_TYPE = 'firefox:places:bookmark_folder'
+  DATA_TYPE = u'firefox:places:bookmark_folder'
 
   FORMAT_STRING = u'{title}'
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
   """The Firefox URL bookmark event formatter."""
 
-  DATA_TYPE = 'firefox:places:bookmark'
+  DATA_TYPE = u'firefox:places:bookmark'
 
   FORMAT_STRING_PIECES = [
       u'Bookmark {type}',
@@ -49,29 +49,29 @@ class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
       u'Bookmarked {title}',
       u'({url})']
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
   """The Firefox page visited event formatter."""
 
-  DATA_TYPE = 'firefox:places:page_visited'
+  DATA_TYPE = u'firefox:places:page_visited'
 
   # Transitions defined in the source file:
   #   src/toolkit/components/places/nsINavHistoryService.idl
   # Also contains further explanation into what each of these settings mean.
   _URL_TRANSITIONS = {
-      1: 'LINK',
-      2: 'TYPED',
-      3: 'BOOKMARK',
-      4: 'EMBED',
-      5: 'REDIRECT_PERMANENT',
-      6: 'REDIRECT_TEMPORARY',
-      7: 'DOWNLOAD',
-      8: 'FRAMED_LINK',
+      1: u'LINK',
+      2: u'TYPED',
+      3: u'BOOKMARK',
+      4: u'EMBED',
+      5: u'REDIRECT_PERMANENT',
+      6: u'REDIRECT_TEMPORARY',
+      7: u'DOWNLOAD',
+      8: u'FRAMED_LINK',
   }
-  _URL_TRANSITIONS.setdefault('UNKOWN')
+  _URL_TRANSITIONS.setdefault(u'UNKOWN')
 
   # TODO: Make extra conditional formatting.
   FORMAT_STRING_PIECES = [
@@ -83,8 +83,8 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'URL: {url}']
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox History'
+  SOURCE_SHORT = u'WEBHIST'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
@@ -126,15 +126,15 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
 class FirefoxDowloadFormatter(interface.EventFormatter):
   """The Firefox download event formatter."""
 
-  DATA_TYPE = 'firefox:downloads:download'
+  DATA_TYPE = u'firefox:downloads:download'
 
   FORMAT_STRING = (
       u'{url} ({full_path}). Received: {received_bytes} bytes '
       u'out of: {total_bytes} bytes.')
   FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'
 
-  SOURCE_LONG = 'Firefox History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatters([

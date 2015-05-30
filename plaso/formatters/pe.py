@@ -7,7 +7,7 @@ from plaso.formatters import manager
 
 class PEEventFormatter(interface.ConditionalEventFormatter):
   """Parent class for PE event formatters."""
-  DATA_TYPE = 'pe'
+  DATA_TYPE = u'pe'
   FORMAT_STRING_SEPARATOR = u' '
 
   FORMAT_STRING_PIECES = [
@@ -22,13 +22,13 @@ class PEEventFormatter(interface.ConditionalEventFormatter):
 
 class PECompilationFormatter(PEEventFormatter):
   """Formatter for a PE compilation event."""
-  DATA_TYPE = 'pe:compilation:compilation_time'
+  DATA_TYPE = u'pe:compilation:compilation_time'
   SOURCE_LONG = u'PE Compilation time'
 
 
 class PEImportFormatter(PEEventFormatter):
   """Formatter for a PE import section event."""
-  DATA_TYPE = 'pe:import:import_time'
+  DATA_TYPE = u'pe:import:import_time'
   FORMAT_STRING_PIECES = [
       u'DLL name: {dll_name}',
       u'PE Type: {pe_type}',
@@ -39,7 +39,7 @@ class PEImportFormatter(PEEventFormatter):
 
 class PEDelayImportFormatter(PEEventFormatter):
   """Formatter for a PE delay import section event."""
-  DATA_TYPE = 'pe:delay_import:import_time'
+  DATA_TYPE = u'pe:delay_import:import_time'
   FORMAT_STRING_PIECES = [
       u'DLL name: {dll_name}',
       u'PE Type: {pe_type}',
@@ -50,13 +50,13 @@ class PEDelayImportFormatter(PEEventFormatter):
 
 class PEResourceCreationFormatter(PEEventFormatter):
   """Formatter for a PE resource creation event."""
-  DATA_TYPE = 'pe:resource:creation_time'
+  DATA_TYPE = u'pe:resource:creation_time'
   SOURCE_LONG = u'PE Resource Creation Time'
 
 
 class PELoadConfigModificationEvent(PEEventFormatter):
   """Formatter for a PE load configuration table event."""
-  DATA_TYPE = 'pe:load_config:modification_time'
+  DATA_TYPE = u'pe:load_config:modification_time'
   SOURCE_LONG = u'PE Load Configuration Table Time'
 
 

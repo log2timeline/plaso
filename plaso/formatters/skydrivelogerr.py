@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class SkyDriveLogErrorFormatter(interface.ConditionalEventFormatter):
   """Formatter for a SkyDrive error log file event."""
 
-  DATA_TYPE = 'skydrive:error:line'
+  DATA_TYPE = u'skydrive:error:line'
 
   FORMAT_STRING_PIECES = [
       u'[{module}',
@@ -18,8 +18,8 @@ class SkyDriveLogErrorFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{text}']
 
-  SOURCE_LONG = 'SkyDrive Error Log File'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'SkyDrive Error Log File'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(SkyDriveLogErrorFormatter)

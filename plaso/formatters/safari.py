@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class SafariHistoryFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Safari history event."""
 
-  DATA_TYPE = 'safari:history:visit'
+  DATA_TYPE = u'safari:history:visit'
 
   FORMAT_STRING_PIECES = [
       u'Visited: {url}',
@@ -17,8 +17,8 @@ class SafariHistoryFormatter(interface.ConditionalEventFormatter):
       u')',
       u'Visit Count: {visit_count}']
 
-  SOURCE_LONG = 'Safari History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Safari History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatter(SafariHistoryFormatter)

@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class ChromeCookieFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Chrome cookie event."""
 
-  DATA_TYPE = 'chrome:cookie:entry'
+  DATA_TYPE = u'chrome:cookie:entry'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -21,8 +21,8 @@ class ChromeCookieFormatter(interface.ConditionalEventFormatter):
       u'{host}',
       u'({cookie_name})']
 
-  SOURCE_LONG = 'Chrome Cookies'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Chrome Cookies'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatter(ChromeCookieFormatter)

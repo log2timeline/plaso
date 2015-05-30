@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for an ASL securityd log file event."""
 
-  DATA_TYPE = 'mac:asl:securityd:line'
+  DATA_TYPE = u'mac:asl:securityd:line'
 
   FORMAT_STRING_PIECES = [
       u'Sender: {sender}',
@@ -19,8 +19,8 @@ class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'Text: {message}']
 
-  SOURCE_LONG = 'Mac ASL Securityd Log'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Mac ASL Securityd Log'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(MacSecuritydLogFormatter)

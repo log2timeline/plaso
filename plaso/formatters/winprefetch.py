@@ -9,7 +9,7 @@ from plaso.lib import errors
 class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows Prefetch execution event."""
 
-  DATA_TYPE = 'windows:prefetch:execution'
+  DATA_TYPE = u'windows:prefetch:execution'
 
   FORMAT_STRING_PIECES = [
       u'Prefetch',
@@ -23,8 +23,8 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
       u'{executable} was run',
       u'{run_count} time(s)']
 
-  SOURCE_LONG = 'WinPrefetch'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'WinPrefetch'
+  SOURCE_SHORT = u'LOG'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

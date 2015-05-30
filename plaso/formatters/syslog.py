@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class SyslogLineFormatter(interface.ConditionalEventFormatter):
   """Formatter for a syslog line event."""
 
-  DATA_TYPE = 'syslog:line'
+  DATA_TYPE = u'syslog:line'
 
   FORMAT_STRING_SEPARATOR = u''
 
@@ -18,8 +18,8 @@ class SyslogLineFormatter(interface.ConditionalEventFormatter):
       u', pid: {pid}',
       u'] {body}']
 
-  SOURCE_LONG = 'Log File'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Log File'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(SyslogLineFormatter)

@@ -9,7 +9,7 @@ from plaso.lib import errors
 class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a shell item file entry event."""
 
-  DATA_TYPE = 'windows:shell_item:file_entry'
+  DATA_TYPE = u'windows:shell_item:file_entry'
 
   FORMAT_STRING_PIECES = [
       u'Name: {name}',
@@ -24,8 +24,8 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
       u'NTFS file reference: {file_reference}',
       u'Origin: {origin}']
 
-  SOURCE_LONG = 'File entry shell item'
-  SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = u'File entry shell item'
+  SOURCE_SHORT = u'FILE'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

@@ -213,7 +213,7 @@ class ConditionalEventFormatter(EventFormatter):
       if not result:
         # The text format string piece is stored as an empty map entry to
         # keep the index in the map equal to the format string pieces.
-        self._format_string_pieces_map.append('')
+        self._format_string_pieces_map.append(u'')
       elif len(result) == 1:
         # Extract the attribute name.
         attribute_name = regexp_name.findall(result[0])[0]
@@ -229,7 +229,7 @@ class ConditionalEventFormatter(EventFormatter):
       if not result:
         # The text format string piece is stored as an empty map entry to
         # keep the index in the map equal to the format string pieces.
-        self._format_string_short_pieces_map.append('')
+        self._format_string_short_pieces_map.append(u'')
       elif len(result) == 1:
         # Extract the attribute name.
         attribute_name = regexp_name.findall(result[0])[0]

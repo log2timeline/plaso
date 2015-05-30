@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class AndroidCallFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Android call history event."""
 
-  DATA_TYPE = 'android:event:call'
+  DATA_TYPE = u'android:event:call'
 
   FORMAT_STRING_PIECES = [
       u'{call_type}',
@@ -18,8 +18,8 @@ class AndroidCallFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{call_type} Call']
 
-  SOURCE_LONG = 'Android Call History'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Android Call History'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(AndroidCallFormatter)

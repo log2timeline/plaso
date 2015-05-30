@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
   """The UTMA Google Analytics cookie event formatter."""
 
-  DATA_TYPE = 'cookie:google:analytics:utma'
+  DATA_TYPE = u'cookie:google:analytics:utma'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -21,14 +21,14 @@ class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
       u'{url}',
       u'({cookie_name})']
 
-  SOURCE_LONG = 'Google Analytics Cookies'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Google Analytics Cookies'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class AnalyticsUtmbCookieFormatter(AnalyticsUtmaCookieFormatter):
   """The UTMB Google Analytics cookie event formatter."""
 
-  DATA_TYPE = 'cookie:google:analytics:utmb'
+  DATA_TYPE = u'cookie:google:analytics:utmb'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -40,7 +40,7 @@ class AnalyticsUtmbCookieFormatter(AnalyticsUtmaCookieFormatter):
 class AnalyticsUtmzCookieFormatter(AnalyticsUtmaCookieFormatter):
   """The UTMZ Google Analytics cookie event formatter."""
 
-  DATA_TYPE = 'cookie:google:analytics:utmz'
+  DATA_TYPE = u'cookie:google:analytics:utmz'
 
   FORMAT_STRING_PIECES = [
       u'{url}',

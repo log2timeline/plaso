@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class CupsIppFormatter(interface.ConditionalEventFormatter):
   """Formatter for a CUPS IPP event."""
 
-  DATA_TYPE = 'cups:ipp:event'
+  DATA_TYPE = u'cups:ipp:event'
 
   FORMAT_STRING_PIECES = [
       u'Status: {status}',
@@ -23,8 +23,8 @@ class CupsIppFormatter(interface.ConditionalEventFormatter):
       u'Status: {status}',
       u'Job Name: {job_name}']
 
-  SOURCE_LONG = 'CUPS IPP Log'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'CUPS IPP Log'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(CupsIppFormatter)

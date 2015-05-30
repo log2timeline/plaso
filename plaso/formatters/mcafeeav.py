@@ -9,7 +9,7 @@ class McafeeAccessProtectionLogEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a McAfee Access Protection Log event."""
 
-  DATA_TYPE = 'av:mcafee:accessprotectionlog'
+  DATA_TYPE = u'av:mcafee:accessprotectionlog'
 
   FORMAT_STRING_PIECES = [
       u'File Name: {filename}',
@@ -23,8 +23,8 @@ class McafeeAccessProtectionLogEventFormatter(
       u'{filename}',
       u'{action}']
 
-  SOURCE_LONG = 'McAfee Access Protection Log'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'McAfee Access Protection Log'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(
