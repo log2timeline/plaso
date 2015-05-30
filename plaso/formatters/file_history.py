@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class FileHistoryNamespaceEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a file history ESE database namespace table record."""
 
-  DATA_TYPE = 'file_history:namespace:event'
+  DATA_TYPE = u'file_history:namespace:event'
 
   FORMAT_STRING_PIECES = [
       u'Filename: {original_filename}',
@@ -20,8 +20,8 @@ class FileHistoryNamespaceEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Filename: {original_filename}']
 
-  SOURCE_LONG = 'File History Namespace'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'File History Namespace'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(FileHistoryNamespaceEventFormatter)

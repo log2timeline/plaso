@@ -9,7 +9,7 @@ from plaso.lib import errors
 class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows Recycler/Recycle Bin file event."""
 
-  DATA_TYPE = 'windows:metadata:deleted_item'
+  DATA_TYPE = u'windows:metadata:deleted_item'
 
   _DRIVE_LETTER = {
       0x00: u'A',
@@ -50,8 +50,8 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Deleted file: {orig_filename}']
 
-  SOURCE_LONG = 'Recycle Bin'
-  SOURCE_SHORT = 'RECBIN'
+  SOURCE_LONG = u'Recycle Bin'
+  SOURCE_SHORT = u'RECBIN'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

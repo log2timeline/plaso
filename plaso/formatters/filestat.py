@@ -9,7 +9,7 @@ from plaso.lib import errors
 class FileStatFormatter(interface.ConditionalEventFormatter):
   """The file system stat event formatter."""
 
-  DATA_TYPE = 'fs:stat'
+  DATA_TYPE = u'fs:stat'
 
   FORMAT_STRING_PIECES = [
       u'{display_name}',
@@ -18,7 +18,7 @@ class FileStatFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'{filename}']
 
-  SOURCE_SHORT = 'FILE'
+  SOURCE_SHORT = u'FILE'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

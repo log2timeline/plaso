@@ -9,19 +9,19 @@ from plaso.lib import errors
 class OleCfItemFormatter(interface.EventFormatter):
   """Formatter for an OLECF item event."""
 
-  DATA_TYPE = 'olecf:item'
+  DATA_TYPE = u'olecf:item'
 
   FORMAT_STRING = u'Name: {name}'
   FORMAT_STRING_SHORT = u'Name: {name}'
 
-  SOURCE_LONG = 'OLECF Item'
-  SOURCE_SHORT = 'OLECF'
+  SOURCE_LONG = u'OLECF Item'
+  SOURCE_SHORT = u'OLECF'
 
 
 class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF DestList stream event."""
 
-  DATA_TYPE = 'olecf:dest_list:entry'
+  DATA_TYPE = u'olecf:dest_list:entry'
 
   FORMAT_STRING_PIECES = [
       u'Entry: {entry_number}',
@@ -70,7 +70,7 @@ class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
 class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Document Summary Info property set stream event."""
 
-  DATA_TYPE = 'olecf:document_summary_info'
+  DATA_TYPE = u'olecf:document_summary_info'
 
   FORMAT_STRING_PIECES = [
       u'Number of bytes: {number_of_bytes}',
@@ -95,14 +95,14 @@ class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Company: {company}']
 
-  SOURCE_LONG = 'OLECF Document Summary Info'
-  SOURCE_SHORT = 'OLECF'
+  SOURCE_LONG = u'OLECF Document Summary Info'
+  SOURCE_SHORT = u'OLECF'
 
 
 class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream event."""
 
-  DATA_TYPE = 'olecf:summary_info'
+  DATA_TYPE = u'olecf:summary_info'
 
   FORMAT_STRING_PIECES = [
       u'Title: {title}',
@@ -126,14 +126,14 @@ class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
       u'Author: {author}',
       u'Revision number: {revision_number}']
 
-  SOURCE_LONG = 'OLECF Summary Info'
-  SOURCE_SHORT = 'OLECF'
+  SOURCE_LONG = u'OLECF Summary Info'
+  SOURCE_SHORT = u'OLECF'
 
   _SECURITY_VALUES = {
-      0x00000001: 'Password protected',
-      0x00000002: 'Read-only recommended',
-      0x00000004: 'Read-only enforced',
-      0x00000008: 'Locked for annotations',
+      0x00000001: u'Password protected',
+      0x00000002: u'Read-only recommended',
+      0x00000004: u'Read-only enforced',
+      0x00000008: u'Locked for annotations',
   }
 
   def GetMessages(self, unused_formatter_mediator, event_object):

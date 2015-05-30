@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class BSMFormatter(interface.ConditionalEventFormatter):
   """Formatter for an BSM log entry."""
 
-  DATA_TYPE = 'bsm:event'
+  DATA_TYPE = u'bsm:event'
 
   FORMAT_STRING_PIECES = [
       u'Type: {event_type}',
@@ -17,14 +17,14 @@ class BSMFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Type: {event_type}']
 
-  SOURCE_LONG = 'BSM entry'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'BSM entry'
+  SOURCE_SHORT = u'LOG'
 
 
 class MacBSMFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Mac OS X BSM log entry."""
 
-  DATA_TYPE = 'mac:bsm:event'
+  DATA_TYPE = u'mac:bsm:event'
 
   FORMAT_STRING_PIECES = [
       u'Type: {event_type}',
@@ -35,8 +35,8 @@ class MacBSMFormatter(interface.ConditionalEventFormatter):
       u'Type: {event_type}',
       u'Return: {return_value}']
 
-  SOURCE_LONG = 'BSM entry'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'BSM entry'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([

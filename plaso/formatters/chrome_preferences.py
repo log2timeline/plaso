@@ -9,7 +9,7 @@ class ChromeExtensionInstallationEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Chrome extension installation event."""
 
-  DATA_TYPE = 'chrome:preferences:extension_installation'
+  DATA_TYPE = u'chrome:preferences:extension_installation'
 
   FORMAT_STRING_PIECES = [
       u'CRX ID: {extension_id}',
@@ -20,8 +20,8 @@ class ChromeExtensionInstallationEventFormatter(
       u'{extension_id}',
       u'{path}']
 
-  SOURCE_LONG = 'Chrome Extension Installation'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Chrome Extension Installation'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(

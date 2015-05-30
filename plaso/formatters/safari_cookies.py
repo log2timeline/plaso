@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class SafaryCookieFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Safari Binary Cookie file entry event."""
 
-  DATA_TYPE = 'safari:cookie:entry'
+  DATA_TYPE = u'safari:cookie:entry'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -20,8 +20,8 @@ class SafaryCookieFormatter(interface.ConditionalEventFormatter):
       u'{url}',
       u'({cookie_name})']
 
-  SOURCE_LONG = 'Safari Cookies'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Safari Cookies'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatter(SafaryCookieFormatter)

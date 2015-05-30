@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class FirefoxCacheFormatter(interface.ConditionalEventFormatter):
   """The Firefox cache record event formatter."""
 
-  DATA_TYPE = 'firefox:cache:record'
+  DATA_TYPE = u'firefox:cache:record'
 
   FORMAT_STRING_PIECES = [
       u'Fetched {fetch_count} time(s)',
@@ -21,8 +21,8 @@ class FirefoxCacheFormatter(interface.ConditionalEventFormatter):
       u'{request_method}',
       u'"{url}"']
 
-  SOURCE_LONG = 'Firefox Cache'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox Cache'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatter(FirefoxCacheFormatter)

@@ -11,7 +11,7 @@ __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
 class PCAPFormatter(interface.ConditionalEventFormatter):
   """Formatter for a PCAP event."""
 
-  DATA_TYPE = 'metadata:pcap'
+  DATA_TYPE = u'metadata:pcap'
 
   FORMAT_STRING_PIECES = [
       u'Source IP: {source_ip}',
@@ -31,8 +31,8 @@ class PCAPFormatter(interface.ConditionalEventFormatter):
       u'Type: {stream_type}',
       u'First Packet ID: {first_packet_id}']
 
-  SOURCE_LONG = 'Packet Capture File (pcap)'
-  SOURCE_SHORT = 'PCAP'
+  SOURCE_LONG = u'Packet Capture File (pcap)'
+  SOURCE_SHORT = u'PCAP'
 
 
 manager.FormattersManager.RegisterFormatter(PCAPFormatter)

@@ -12,11 +12,11 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class HachoirFormatter(interface.EventFormatter):
   """Formatter for a Hachoir event."""
 
-  DATA_TYPE = 'metadata:hachoir'
+  DATA_TYPE = u'metadata:hachoir'
   FORMAT_STRING = u'{data}'
 
-  SOURCE_LONG = 'Hachoir Metadata'
-  SOURCE_SHORT = 'META'
+  SOURCE_LONG = u'Hachoir Metadata'
+  SOURCE_SHORT = u'META'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

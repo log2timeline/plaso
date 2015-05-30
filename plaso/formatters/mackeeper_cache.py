@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class MacKeeperCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MacKeeper Cache event."""
 
-  DATA_TYPE = 'mackeeper:cache'
+  DATA_TYPE = u'mackeeper:cache'
 
   FORMAT_STRING_PIECES = [
       u'{description}',
@@ -25,8 +25,8 @@ class MacKeeperCacheFormatter(interface.ConditionalEventFormatter):
       u'<{event_type}>',
       u'{text}']
 
-  SOURCE_LONG = 'MacKeeper Cache'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'MacKeeper Cache'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(MacKeeperCacheFormatter)

@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class UtmpSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for an UTMP session event."""
 
-  DATA_TYPE = 'linux:utmp:event'
+  DATA_TYPE = u'linux:utmp:event'
 
   FORMAT_STRING_PIECES = [
       u'User: {user}',
@@ -22,8 +22,8 @@ class UtmpSessionFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'User: {user}']
 
-  SOURCE_LONG = 'UTMP session'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'UTMP session'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(UtmpSessionFormatter)

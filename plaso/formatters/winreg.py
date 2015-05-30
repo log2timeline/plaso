@@ -9,13 +9,13 @@ from plaso.lib import errors
 class WinRegistryGenericFormatter(interface.EventFormatter):
   """Formatter for a Windows Registry key or value."""
 
-  DATA_TYPE = 'windows:registry:key_value'
+  DATA_TYPE = u'windows:registry:key_value'
 
   FORMAT_STRING = u'[{keyname}] {text}'
   FORMAT_STRING_ALTERNATIVE = u'{text}'
 
-  SOURCE_LONG = 'Registry Key'
-  SOURCE_SHORT = 'REG'
+  SOURCE_LONG = u'Registry Key'
+  SOURCE_SHORT = u'REG'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

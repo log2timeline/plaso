@@ -9,7 +9,7 @@ from plaso.lib import errors
 class WinEVTFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows EventLog (EVT) record event."""
 
-  DATA_TYPE = 'windows:evt:record'
+  DATA_TYPE = u'windows:evt:record'
 
   # TODO: add string representation of facility.
   FORMAT_STRING_PIECES = [
@@ -29,8 +29,8 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
       u'0x{event_identifier:04x}]',
       u'Strings: {strings}']
 
-  SOURCE_LONG = 'WinEVT'
-  SOURCE_SHORT = 'EVT'
+  SOURCE_LONG = u'WinEVT'
+  SOURCE_SHORT = u'EVT'
 
   # Mapping of the numeric event types to a descriptive string.
   _EVENT_TYPES = [

@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class IPodDeviceFormatter(interface.ConditionalEventFormatter):
   """Formatter for an iPod device event."""
 
-  DATA_TYPE = 'ipod:device:entry'
+  DATA_TYPE = u'ipod:device:entry'
 
   FORMAT_STRING_PIECES = [
       u'Device ID: {device_id}',
@@ -18,8 +18,8 @@ class IPodDeviceFormatter(interface.ConditionalEventFormatter):
       u'Serial nr: {serial_number}',
       u'IMEI [{imei}]']
 
-  SOURCE_LONG = 'iPod Connections'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'iPod Connections'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(IPodDeviceFormatter)

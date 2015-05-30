@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class MsieWebCacheContainerEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Container_# table record."""
 
-  DATA_TYPE = 'msie:webcache:container'
+  DATA_TYPE = u'msie:webcache:container'
 
   FORMAT_STRING_PIECES = [
       u'Entry identifier: {entry_identifier}',
@@ -27,14 +27,14 @@ class MsieWebCacheContainerEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'URL: {url}']
 
-  SOURCE_LONG = 'MSIE WebCache container record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE WebCache container record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class MsieWebCacheContainersEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Containers table record."""
 
-  DATA_TYPE = 'msie:webcache:containers'
+  DATA_TYPE = u'msie:webcache:containers'
 
   FORMAT_STRING_PIECES = [
       u'Container identifier: {container_identifier}',
@@ -46,14 +46,14 @@ class MsieWebCacheContainersEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Directory: {directory}']
 
-  SOURCE_LONG = 'MSIE WebCache containers record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE WebCache containers record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class MsieWebCacheLeakFilesEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database LeakFiles table record."""
 
-  DATA_TYPE = 'msie:webcache:leak_file'
+  DATA_TYPE = u'msie:webcache:leak_file'
 
   FORMAT_STRING_PIECES = [
       u'Leak identifier: {leak_identifier}',
@@ -62,14 +62,14 @@ class MsieWebCacheLeakFilesEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Filename: {cached_filename}']
 
-  SOURCE_LONG = 'MSIE WebCache partitions record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE WebCache partitions record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class MsieWebCachePartitionsEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Partitions table record."""
 
-  DATA_TYPE = 'msie:webcache:partitions'
+  DATA_TYPE = u'msie:webcache:partitions'
 
   FORMAT_STRING_PIECES = [
       u'Partition identifier: {partition_identifier}',
@@ -80,8 +80,8 @@ class MsieWebCachePartitionsEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Directory: {directory}']
 
-  SOURCE_LONG = 'MSIE WebCache partitions record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE WebCache partitions record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatters([

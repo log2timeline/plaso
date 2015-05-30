@@ -11,7 +11,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Google Drive snapshot cloud event."""
 
-  DATA_TYPE = 'gdrive:snapshot:cloud_entry'
+  DATA_TYPE = u'gdrive:snapshot:cloud_entry'
 
   FORMAT_STRING_PIECES = [
       u'File Path: {path}',
@@ -22,14 +22,14 @@ class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{path}']
 
-  SOURCE_LONG = 'Google Drive (cloud entry)'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Google Drive (cloud entry)'
+  SOURCE_SHORT = u'LOG'
 
 
 class GDriveLocalEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Google Drive snapshot local event."""
 
-  DATA_TYPE = 'gdrive:snapshot:local_entry'
+  DATA_TYPE = u'gdrive:snapshot:local_entry'
 
   FORMAT_STRING_PIECES = [
       u'File Path: {path}',
@@ -37,8 +37,8 @@ class GDriveLocalEntryFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{path}']
 
-  SOURCE_LONG = 'Google Drive (local entry)'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Google Drive (local entry)'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([

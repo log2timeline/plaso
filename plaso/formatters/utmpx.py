@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for an UTMPX session event."""
 
-  DATA_TYPE = 'mac:utmpx:event'
+  DATA_TYPE = u'mac:utmpx:event'
 
   FORMAT_STRING_PIECES = [
       u'User: {user}',
@@ -18,8 +18,8 @@ class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'User: {user}']
 
-  SOURCE_LONG = 'UTMPX session'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'UTMPX session'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(UtmpxSessionFormatter)

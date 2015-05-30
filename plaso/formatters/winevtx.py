@@ -9,7 +9,7 @@ from plaso.lib import errors
 class WinEVTXFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows XML EventLog (EVTX) record event."""
 
-  DATA_TYPE = 'windows:evtx:record'
+  DATA_TYPE = u'windows:evtx:record'
 
   FORMAT_STRING_PIECES = [
       u'[{event_identifier} /',
@@ -26,8 +26,8 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
       u'0x{event_identifier:04x}]',
       u'Strings: {strings}']
 
-  SOURCE_LONG = 'WinEVTX'
-  SOURCE_SHORT = 'EVT'
+  SOURCE_LONG = u'WinEVTX'
+  SOURCE_SHORT = u'EVT'
 
   def GetMessages(self, formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
