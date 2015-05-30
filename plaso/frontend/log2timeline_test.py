@@ -25,8 +25,8 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
 
     self.assertIn(u'Parsers', plugin_info)
     self.assertIsNotNone(plugin_info[u'Parsers'])
-    self.assertIn(u'Plugins', plugin_info)
-    self.assertIsNotNone(plugin_info[u'Plugins'])
+    self.assertIn(u'Parser Plugins', plugin_info)
+    self.assertIsNotNone(plugin_info[u'Parser Plugins'])
 
 
 if __name__ == '__main__':
