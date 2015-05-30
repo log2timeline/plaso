@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """The json serializer object implementation."""
 
+import binascii
 import collections
 import json
+import sys
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
@@ -14,10 +16,16 @@ from plaso.storage import collection
 import pytz
 
 
+if sys.version_info[0] < 3:
+  BYTES_TYPE = str
+else:
+  BYTES_TYPE = bytes
+
+
 class _AnalysisReportJSONDecoder(json.JSONDecoder):
   """A class that implements an analysis report object JSON decoder."""
 
-  _CLASS_TYPES = frozenset([u'AnalysisReport'])
+  _CLASS_TYPES = frozenset([u'AnalysisReport', u'bytes'])
 
   def __init__(self, *args, **kargs):
     """Initializes the JSON decoder object."""
@@ -80,13 +88,17 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
     # Remove the class type from the JSON dict since we cannot pass it.
     del json_dict[u'__type__']
 
+    if class_type == u'bytes':
+      return binascii.a2b_qp(json_dict[u'stream'])
+
     return self._ConvertDictToAnalysisReport(json_dict)
 
 
 class _EventObjectJSONDecoder(json.JSONDecoder):
   """A class that implements an event object JSON decoder."""
 
-  _CLASS_TYPES = frozenset([u'EventObject', u'EventTag', u'PathSpec'])
+  _CLASS_TYPES = frozenset([
+      u'bytes', u'EventObject', u'EventTag', u'PathSpec'])
 
   def __init__(self, *args, **kargs):
     """Initializes the JSON decoder object."""
@@ -202,7 +214,10 @@ class _EventObjectJSONDecoder(json.JSONDecoder):
     # Remove the class type from the JSON dict since we cannot pass it.
     del json_dict[u'__type__']
 
-    if class_type == u'EventTag':
+    if class_type == u'bytes':
+      return binascii.a2b_qp(json_dict[u'stream'])
+
+    elif class_type == u'EventTag':
       return self._ConvertDictToEventTag(json_dict)
 
     # Since we would like the JSON as flat as possible we handle decoding
@@ -217,7 +232,8 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
   """A class that implements a preprocessing object JSON decoder."""
 
   _CLASS_TYPES = frozenset([
-      u'collections.Counter', u'PreprocessObject', u'range', u'timezone'])
+      u'bytes', u'collections.Counter', u'PreprocessObject', u'range',
+      u'timezone'])
 
   def __init__(self, *args, **kargs):
     """Initializes the JSON decoder object."""
@@ -309,7 +325,10 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
     # Remove the class type from the JSON dict since we cannot pass it.
     del json_dict[u'__type__']
 
-    if class_type == u'collections.Counter':
+    if class_type == u'bytes':
+      return binascii.a2b_qp(json_dict[u'stream'])
+
+    elif class_type == u'collections.Counter':
       return self._ConvertDictToCollectionsCounter(json_dict)
 
     elif class_type == u'range':
@@ -363,6 +382,12 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
       if attribute_value is None:
         continue
 
+      if isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
+
       json_dict[attribute_name] = attribute_value
 
     return json_dict
@@ -400,6 +425,12 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
     for attribute_name, attribute_value in iter(event_tag.__dict__.items()):
       if attribute_value is None:
         continue
+
+      if isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
 
       json_dict[attribute_name] = attribute_value
 
@@ -495,6 +526,12 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
       elif attribute_name == u'tag':
         attribute_value = self._ConvertEventTagToDict(attribute_value)
 
+      elif isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
+
       json_dict[attribute_name] = attribute_value
 
     return json_dict
@@ -521,6 +558,12 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
         attribute_value = {
             u'__type__': u'timezone',
             u'zone': u'{0!s}'.format(attribute_value)
+        }
+
+      elif isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
         }
 
       json_dict[attribute_name] = attribute_value
@@ -557,6 +600,12 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
     for attribute_name, attribute_value in iter(collections_counter.items()):
       if attribute_value is None:
         continue
+
+      if isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
 
       json_dict[attribute_name] = attribute_value
 
@@ -622,6 +671,12 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
         attribute_value = {
             u'__type__': u'timezone',
             u'zone': u'{0!s}'.format(attribute_value)
+        }
+
+      elif isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
         }
 
       json_dict[attribute_name] = attribute_value
