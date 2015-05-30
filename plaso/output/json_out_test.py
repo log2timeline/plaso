@@ -1,49 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the JSON output class."""
+"""Tests for the JSON output module."""
 
 import json
 import os
 import sys
 import unittest
 
-from dfvfs.lib import definitions
-from dfvfs.path import factory as path_spec_factory
-
 from plaso.cli import test_lib as cli_test_lib
-from plaso.lib import event
 from plaso.lib import timelib
 from plaso.output import json_out
 from plaso.output import test_lib
 
 
-class JSONTestEvent(event.EventObject):
-  """Simplified EventObject for testing."""
-  DATA_TYPE = u'test:l2tjson'
-
-  def __init__(self):
-    """Initialize event with data."""
-    super(JSONTestEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
-    self.hostname = u'ubuntu'
-    self.display_name = u'OS: /var/log/syslog.1'
-    self.inode = 12345678
-    self.text = (
-        u'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
-        u'closed for user root)')
-    self.username = u'root'
-
-    os_location = u'{0:s}{1:s}'.format(
-        os.path.sep, os.path.join(u'cases', u'image.dd'))
-    os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=os_location)
-    self.pathspec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK, inode=15, location=u'/var/log/syslog.1',
-        parent=os_path_spec)
-
-
 class JSONOutputTest(test_lib.OutputModuleTestCase):
-  """Tests for the JSON outputter."""
+  """Tests for the JSON output module."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
@@ -51,7 +22,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     self._output_writer = cli_test_lib.TestOutputWriter()
     self._output_module = json_out.JSONOutputModule(
         output_mediator, output_writer=self._output_writer)
-    self._event_object = JSONTestEvent()
+    self._event_object = test_lib.TestEventObject()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
@@ -93,7 +64,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     expected_json_dict = {
         u'event_0': {
             u'__type__': u'EventObject',
-            u'data_type': u'test:l2tjson',
+            u'data_type': u'test:output',
             u'display_name': u'OS: /var/log/syslog.1',
             u'hostname': u'ubuntu',
             'inode': 12345678,
