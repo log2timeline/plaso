@@ -12,7 +12,6 @@ install:
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\pywin32-219.win32-py2.7.exe"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\WMI-1.4.9.win32.exe"
   - cmd: "%PYTHON%\\Scripts\\pip.exe install python-dateutil"
-  - cmd: "%PYTHON%\\Scripts\\pip.exe install protobuf==2.5.0"
   - cmd: "%PYTHON%\\Scripts\\pip.exe install hachoir-core hachoir-metadata hachoir-parser"
   - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3080803.zip 2>&1"
   - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
