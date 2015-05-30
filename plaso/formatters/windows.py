@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows volume creation event."""
 
-  DATA_TYPE = 'windows:volume:creation'
+  DATA_TYPE = u'windows:volume:creation'
 
   FORMAT_STRING_PIECES = [
       u'{device_path}',
@@ -19,8 +19,8 @@ class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
       u'{device_path}',
       u'Origin: {origin}']
 
-  SOURCE_LONG = 'System'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'System'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(WindowsVolumeCreationEventFormatter)

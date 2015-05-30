@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class AppCompatCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for an AppCompatCache Windows Registry event."""
 
-  DATA_TYPE = 'windows:registry:appcompatcache'
+  DATA_TYPE = u'windows:registry:appcompatcache'
 
   FORMAT_STRING_PIECES = [
       u'[{keyname}]',
@@ -17,8 +17,8 @@ class AppCompatCacheFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'Path: {path}']
 
-  SOURCE_LONG = 'AppCompatCache Registry Entry'
-  SOURCE_SHORT = 'REG'
+  SOURCE_LONG = u'AppCompatCache Registry Entry'
+  SOURCE_SHORT = u'REG'
 
 
 manager.FormattersManager.RegisterFormatter(AppCompatCacheFormatter)

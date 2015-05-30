@@ -12,20 +12,20 @@ from plaso.lib import event_test
 
 class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
   """A broken conditional event formatter."""
-  DATA_TYPE = 'test:broken_conditional'
+  DATA_TYPE = u'test:broken_conditional'
   FORMAT_STRING_PIECES = [u'{too} {many} formatting placeholders']
 
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Some Text File.'
+  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = u'Some Text File.'
 
 
 class ConditionalTestEvent(event_test.TestEvent):
-  DATA_TYPE = 'test:event:conditional'
+  DATA_TYPE = u'test:event:conditional'
 
 
 class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
   """Class to define a formatter for a conditional test event."""
-  DATA_TYPE = 'test:event:conditional'
+  DATA_TYPE = u'test:event:conditional'
   FORMAT_STRING_PIECES = [
       u'Description: {description}',
       u'Comment',
@@ -33,17 +33,17 @@ class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
       u'Optional: {optional}',
       u'Text: {text}']
 
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Some Text File.'
+  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = u'Some Text File.'
 
 
 class WrongEventFormatter(interface.EventFormatter):
   """A simple event formatter."""
-  DATA_TYPE = 'test:wrong'
+  DATA_TYPE = u'test:wrong'
   FORMAT_STRING = u'This format string does not match {body}.'
 
-  SOURCE_SHORT = 'FILE'
-  SOURCE_LONG = 'Weird Log File'
+  SOURCE_SHORT = u'FILE'
+  SOURCE_LONG = u'Weird Log File'
 
 
 class EventFormatterTest(unittest.TestCase):

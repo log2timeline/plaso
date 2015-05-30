@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class PopularityContestSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Popularity Contest Session information event."""
 
-  DATA_TYPE = 'popularity_contest:session:event'
+  DATA_TYPE = u'popularity_contest:session:event'
 
   FORMAT_STRING_PIECES = [
       u'Session {session}',
@@ -20,14 +20,14 @@ class PopularityContestSessionFormatter(interface.ConditionalEventFormatter):
       u'Session {session}',
       u'{status}']
 
-  SOURCE_LONG = 'Popularity Contest Session'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Popularity Contest Session'
+  SOURCE_SHORT = u'LOG'
 
 
 class PopularityContestLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Popularity Contest Log event."""
 
-  DATA_TYPE = 'popularity_contest:log:event'
+  DATA_TYPE = u'popularity_contest:log:event'
 
   FORMAT_STRING_PIECES = [
       u'mru [{mru}]',
@@ -36,8 +36,8 @@ class PopularityContestLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{mru}']
 
-  SOURCE_LONG = 'Popularity Contest Log'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Popularity Contest Log'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([

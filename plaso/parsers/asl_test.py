@@ -40,8 +40,8 @@ class AslParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.user_sid, u'205')
     self.assertEqual(event_object.group_id, 205)
     self.assertEqual(event_object.read_uid, 205)
-    self.assertEqual(event_object.read_gid, u'ALL')
-    self.assertEqual(event_object.level, u'WARNING (4)')
+    self.assertEqual(event_object.read_gid, 0xffffffff)
+    self.assertEqual(event_object.level, 4)
 
     expected_message = (
         u'Incorrect NSStringEncoding value 0x8000100 detected. '

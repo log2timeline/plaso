@@ -9,7 +9,7 @@ from plaso.lib import errors
 class RestorePointInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows Windows Restore Point information event."""
 
-  DATA_TYPE = 'windows:restore_point:info'
+  DATA_TYPE = u'windows:restore_point:info'
 
   FORMAT_STRING_PIECES = [
       u'{description}',
@@ -19,8 +19,8 @@ class RestorePointInfoFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'{description}']
 
-  SOURCE_LONG = 'Windows Restore Point'
-  SOURCE_SHORT = 'RP'
+  SOURCE_LONG = u'Windows Restore Point'
+  SOURCE_SHORT = u'RP'
 
   _RESTORE_POINT_EVENT_TYPES = {
       100: u'BEGIN_SYSTEM_CHANGE',

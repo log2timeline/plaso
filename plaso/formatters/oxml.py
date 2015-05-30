@@ -11,7 +11,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OXML event."""
 
-  DATA_TYPE = 'metadata:openxml'
+  DATA_TYPE = u'metadata:openxml'
 
   FORMAT_STRING_PIECES = [
       u'Creating App: {creating_app}',
@@ -49,8 +49,8 @@ class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
       u'Subject: {subject}',
       u'Author: {author}']
 
-  SOURCE_LONG = 'Open XML Metadata'
-  SOURCE_SHORT = 'META'
+  SOURCE_LONG = u'Open XML Metadata'
+  SOURCE_SHORT = u'META'
 
 
 manager.FormattersManager.RegisterFormatter(OpenXMLParserFormatter)

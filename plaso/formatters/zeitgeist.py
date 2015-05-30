@@ -8,12 +8,12 @@ from plaso.formatters import manager
 class ZeitgeistFormatter(interface.EventFormatter):
   """Formatter for a Zeitgeist activity database event."""
 
-  DATA_TYPE = 'zeitgeist:activity'
+  DATA_TYPE = u'zeitgeist:activity'
 
   FORMAT_STRING = u'{subject_uri}'
 
-  SOURCE_LONG = 'Zeitgeist activity log'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Zeitgeist activity log'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(ZeitgeistFormatter)

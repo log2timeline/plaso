@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class FirefoxCookieFormatter(interface.ConditionalEventFormatter):
   """The Firefox cookie entry event formatter."""
 
-  DATA_TYPE = 'firefox:cookie:entry'
+  DATA_TYPE = u'firefox:cookie:entry'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -21,8 +21,8 @@ class FirefoxCookieFormatter(interface.ConditionalEventFormatter):
       u'{host}',
       u'({cookie_name})']
 
-  SOURCE_LONG = 'Firefox Cookies'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Firefox Cookies'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatter(FirefoxCookieFormatter)

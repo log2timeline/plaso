@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class ChromeFileDownloadFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Chrome file download event."""
 
-  DATA_TYPE = 'chrome:history:file_downloaded'
+  DATA_TYPE = u'chrome:history:file_downloaded'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -20,14 +20,14 @@ class ChromeFileDownloadFormatter(interface.ConditionalEventFormatter):
       u'{full_path} downloaded',
       u'({received_bytes} bytes)']
 
-  SOURCE_LONG = 'Chrome History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Chrome History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Chrome page visited event."""
 
-  DATA_TYPE = 'chrome:history:page_visited'
+  DATA_TYPE = u'chrome:history:page_visited'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
@@ -42,8 +42,8 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       u'{url}',
       u'({title})']
 
-  SOURCE_LONG = 'Chrome History'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Chrome History'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatters([

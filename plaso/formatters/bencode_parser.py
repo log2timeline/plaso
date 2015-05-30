@@ -8,10 +8,10 @@ from plaso.formatters import manager
 class TransmissionEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Transmission active torrents event."""
 
-  DATA_TYPE = 'p2p:bittorrent:transmission'
+  DATA_TYPE = u'p2p:bittorrent:transmission'
 
-  SOURCE_LONG = 'Transmission Active Torrents'
-  SOURCE_SHORT = 'TORRENT'
+  SOURCE_LONG = u'Transmission Active Torrents'
+  SOURCE_SHORT = u'TORRENT'
 
   FORMAT_STRING_SEPARATOR = u'; '
 
@@ -23,10 +23,10 @@ class TransmissionEventFormatter(interface.ConditionalEventFormatter):
 class UTorrentEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a BitTorrent uTorrent active torrents event."""
 
-  DATA_TYPE = 'p2p:bittorrent:utorrent'
+  DATA_TYPE = u'p2p:bittorrent:utorrent'
 
-  SOURCE_LONG = 'uTorrent Active Torrents'
-  SOURCE_SHORT = 'TORRENT'
+  SOURCE_LONG = u'uTorrent Active Torrents'
+  SOURCE_SHORT = u'TORRENT'
 
   FORMAT_STRING_SEPARATOR = u'; '
 

@@ -9,7 +9,7 @@ class ChromeExtensionActivityEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Chrome extension activity event."""
 
-  DATA_TYPE = 'chrome:extension_activity:activity_log'
+  DATA_TYPE = u'chrome:extension_activity:activity_log'
 
   FORMAT_STRING_PIECES = [
       u'Chrome extension: {extension_id}',
@@ -26,8 +26,8 @@ class ChromeExtensionActivityEventFormatter(
       u'{api_name}',
       u'{args}']
 
-  SOURCE_LONG = 'Chrome Extension Activity'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'Chrome Extension Activity'
+  SOURCE_SHORT = u'WEBHIST'
 
   # TODO: add action_type string representation.
 

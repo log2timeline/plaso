@@ -11,7 +11,7 @@ __author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
 class IISLogFileEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Microsoft IIS log file event."""
 
-  DATA_TYPE = 'iis:log:line'
+  DATA_TYPE = u'iis:log:line'
 
   FORMAT_STRING_PIECES = [
       u'{http_method}',
@@ -40,8 +40,8 @@ class IISLogFileEventFormatter(interface.ConditionalEventFormatter):
       u'{dest_port}',
       u']']
 
-  SOURCE_LONG = 'IIS Log'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'IIS Log'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(IISLogFileEventFormatter)

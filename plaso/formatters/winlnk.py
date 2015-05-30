@@ -9,7 +9,7 @@ from plaso.lib import errors
 class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows Shortcut (LNK) link event."""
 
-  DATA_TYPE = 'windows:lnk:link'
+  DATA_TYPE = u'windows:lnk:link'
 
   FORMAT_STRING_PIECES = [
       u'[{description}]',
@@ -32,8 +32,8 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       u'{linked_path}',
       u'{command_line_arguments}']
 
-  SOURCE_LONG = 'Windows Shortcut'
-  SOURCE_SHORT = 'LNK'
+  SOURCE_LONG = u'Windows Shortcut'
+  SOURCE_SHORT = u'LNK'
 
   def _GetLinkedPath(self, event_object):
     """Determines the linked path.
@@ -45,7 +45,7 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
     Returns:
       A string containing the linked path.
     """
-    if hasattr(event_object, 'local_path'):
+    if hasattr(event_object, u'local_path'):
       return event_object.local_path
 
     if hasattr(event_object, u'network_path'):

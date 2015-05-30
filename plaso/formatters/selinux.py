@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class SELinuxFormatter(interface.ConditionalEventFormatter):
   """Formatter for a selinux log file event."""
 
-  DATA_TYPE = 'selinux:line'
+  DATA_TYPE = u'selinux:line'
 
   FORMAT_STRING_SEPARATOR = u''
 
@@ -19,8 +19,8 @@ class SELinuxFormatter(interface.ConditionalEventFormatter):
       u']',
       u' {body}']
 
-  SOURCE_LONG = 'Audit log File'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Audit log File'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(SELinuxFormatter)

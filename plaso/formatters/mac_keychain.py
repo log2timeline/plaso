@@ -8,7 +8,7 @@ from plaso.formatters import manager
 class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for a keychain application record event."""
 
-  DATA_TYPE = 'mac:keychain:application'
+  DATA_TYPE = u'mac:keychain:application'
 
   FORMAT_STRING_PIECES = [
       u'Name: {entry_name}',
@@ -16,14 +16,14 @@ class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{entry_name}']
 
-  SOURCE_LONG = 'Keychain Application password'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Keychain Application password'
+  SOURCE_SHORT = u'LOG'
 
 
 class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for a keychain Internet record event."""
 
-  DATA_TYPE = 'mac:keychain:internet'
+  DATA_TYPE = u'mac:keychain:internet'
 
   FORMAT_STRING_PIECES = [
       u'Name: {entry_name}',
@@ -34,8 +34,8 @@ class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'{entry_name}']
 
-  SOURCE_LONG = 'Keychain Internet password'
-  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = u'Keychain Internet password'
+  SOURCE_SHORT = u'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([

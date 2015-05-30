@@ -12,7 +12,7 @@ from plaso.winnt import human_readable_service_enums
 class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
   """Formatter for a Windows service event."""
 
-  DATA_TYPE = 'windows:registry:service'
+  DATA_TYPE = u'windows:registry:service'
 
   def GetMessages(self, formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.

@@ -74,20 +74,6 @@ class AslParser(interface.SingleFileBaseParser):
 
   ASL_MAGIC = b'ASL DB\x00\x00\x00\x00\x00\x00'
 
-  # If not right assigned, the value is "-1" as a 32-bit integer.
-  ASL_NO_RIGHTS = 0xffffffff
-
-  # Priority level (criticality)
-  ASL_MESSAGE_PRIORITY = {
-      0 : u'EMERGENCY',
-      1 : u'ALERT',
-      2 : u'CRITICAL',
-      3 : u'ERROR',
-      4 : u'WARNING',
-      5 : u'NOTICE',
-      6 : u'INFO',
-      7 : u'DEBUG'}
-
   # ASL File header.
   # magic: magic number that identify ASL files.
   # version: version of the file.
@@ -219,15 +205,15 @@ class AslParser(interface.SingleFileBaseParser):
         event_object, offset = self.ReadAslEvent(file_object, offset)
 
   def ReadAslEvent(self, file_object, offset):
-    """Returns an AslEvent from a single ASL entry.
+    """Reads an ASL record at a specific offset.
 
     Args:
       file_object: a file-like object that points to an ASL file.
       offset: offset where the static part of the entry starts.
 
     Returns:
-      An event object constructed from a single ASL record, and the offset to
-      the next entry in the file.
+      A tuple of an event object extracted from the ASL record,
+      and the offset to the next ASL record in the file.
     """
     # The heap of the entry is saved to try to avoid seek (performance issue).
     # It has the real start position of the entry.
@@ -347,22 +333,11 @@ class AslParser(interface.SingleFileBaseParser):
     _ = file_object.read(8)
 
     # Parsed section, we translate the read data to an appropriate format.
-    microsecond = record_header.nanosec // 1000
+    microsecond, _ = divmod(record_header.nanosec, 1000)
     timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
         record_header.timestamp, microsecond)
     record_position = offset
     message_id = record_header.asl_message_id
-    level = u'{0} ({1})'.format(
-        self.ASL_MESSAGE_PRIORITY[record_header.level], record_header.level)
-    # If the value is -1 (FFFFFFFF), it can be read by everyone.
-    if record_header.read_uid != self.ASL_NO_RIGHTS:
-      read_uid = record_header.read_uid
-    else:
-      read_uid = u'ALL'
-    if record_header.read_gid != self.ASL_NO_RIGHTS:
-      read_gid = record_header.read_gid
-    else:
-      read_gid = u'ALL'
 
     # Parsing the dynamic values (text or pointers to position with text).
     # The first four are always the host, sender, facility, and message.
@@ -381,10 +356,12 @@ class AslParser(interface.SingleFileBaseParser):
             values[index * 2], values[(index * 2) + 1])
 
     # Return the event and the offset for the next entry.
-    return AslEvent(
-        timestamp, record_position, message_id, level, record_header, read_uid,
-        read_gid, computer_name, sender, facility, message,
-        extra_information), record_header.next_offset
+    return (
+        AslEvent(
+            timestamp, record_position, message_id, record_header.level,
+            record_header, record_header.read_uid, record_header.read_gid,
+            computer_name, sender, facility, message, extra_information),
+        record_header.next_offset)
 
 
 manager.ParsersManager.RegisterParser(AslParser)

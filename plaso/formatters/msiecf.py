@@ -34,7 +34,7 @@ class MsiecfItemFormatter(interface.ConditionalEventFormatter):
       event_values[u'http_headers'] = http_headers.replace(u'\r\n', u' - ')
 
     if event_values.get(u'recovered', None):
-      event_values[u'recovered_string'] = '[Recovered Entry]'
+      event_values[u'recovered_string'] = u'[Recovered Entry]'
 
     cached_file_path = event_values.get(u'cached_filename', None)
     if cached_file_path:
@@ -49,7 +49,7 @@ class MsiecfItemFormatter(interface.ConditionalEventFormatter):
 class MsiecfLeakFormatter(MsiecfItemFormatter):
   """Formatter for a MSIECF leak item event."""
 
-  DATA_TYPE = 'msiecf:leak'
+  DATA_TYPE = u'msiecf:leak'
 
   FORMAT_STRING_PIECES = [
       u'Cached file: {cached_file_path}',
@@ -59,14 +59,14 @@ class MsiecfLeakFormatter(MsiecfItemFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Cached file: {cached_file_path}']
 
-  SOURCE_LONG = 'MSIE Cache File leak record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE Cache File leak record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class MsiecfRedirectedFormatter(MsiecfItemFormatter):
   """Formatter for a MSIECF leak redirected event."""
 
-  DATA_TYPE = 'msiecf:redirected'
+  DATA_TYPE = u'msiecf:redirected'
 
   FORMAT_STRING_PIECES = [
       u'Location: {url}',
@@ -75,14 +75,14 @@ class MsiecfRedirectedFormatter(MsiecfItemFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Location: {url}']
 
-  SOURCE_LONG = 'MSIE Cache File redirected record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE Cache File redirected record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 class MsiecfUrlFormatter(MsiecfItemFormatter):
   """Formatter for a MSIECF URL item event."""
 
-  DATA_TYPE = 'msiecf:url'
+  DATA_TYPE = u'msiecf:url'
 
   FORMAT_STRING_PIECES = [
       u'Location: {url}',
@@ -96,8 +96,8 @@ class MsiecfUrlFormatter(MsiecfItemFormatter):
       u'Location: {url}',
       u'Cached file: {cached_file_path}']
 
-  SOURCE_LONG = 'MSIE Cache File URL record'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_LONG = u'MSIE Cache File URL record'
+  SOURCE_SHORT = u'WEBHIST'
 
 
 manager.FormattersManager.RegisterFormatters([
