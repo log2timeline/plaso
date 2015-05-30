@@ -246,7 +246,6 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  # TODO: add bogus data location test.
   # TODO: add test with remove duplicates disabled.
 
 

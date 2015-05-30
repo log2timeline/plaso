@@ -481,6 +481,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       return
 
     super(PsortTool, self).ParseOptions(options)
+    self._ParseDataLocationOption(options)
 
     self._ParseAnalysisPluginOptions(options)
     self._ParseFilterOptions(options)

@@ -195,11 +195,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    # TODO: Refactor to avoid this hack.
-    # This means we parse the data location twice, (the other time is in
-    # CLITool.ParseOptions) but it's required to get the signatures to be
-    # listed.
+    # The data location is required to list signatures.
     self._ParseDataLocationOption(options)
+
     # Check the list options first otherwise required options will raise.
     signature_identifiers = getattr(options, u'signature_identifiers', None)
     if signature_identifiers == u'list':
