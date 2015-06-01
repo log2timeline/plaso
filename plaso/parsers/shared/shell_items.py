@@ -3,14 +3,13 @@
 
 import pyfwsi
 
+from plaso import dependencies
 from plaso.events import shell_item_events
 from plaso.lib import eventdata
 from plaso.winnt import shell_folder_ids
 
 
-if pyfwsi.get_version() < '20140714':
-  raise ImportWarning(
-      u'Shell item support functions require at least pyfwsi 20140714.')
+dependencies.CheckModuleVersion(u'pyfwsi')
 
 
 class ShellItemsParser(object):
