@@ -396,7 +396,7 @@ class TextCSVParser(interface.SingleFileBaseParser):
 
   # Value that should not appear inside the file, made to test the actual
   # file to see if it confirms to standards.
-  MAGIC_TEST_STRING = u'RegnThvotturMeistarans'
+  MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
   def VerifyRow(self, unused_parser_mediator, unused_row):
     """Return a bool indicating whether or not this is the correct parser.
