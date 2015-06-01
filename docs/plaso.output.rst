@@ -148,6 +148,14 @@ plaso.output.rawpy module
     :undoc-members:
     :show-inheritance:
 
+plaso.output.rawpy_test module
+------------------------------
+
+.. automodule:: plaso.output.rawpy_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.output.shared_4n6time module
 ----------------------------------
 

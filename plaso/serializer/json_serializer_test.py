@@ -87,12 +87,18 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
-    # TODO: add report_array, _anomalies and _tags tests.
+    # TODO: add report_array and _anomalies tests.
+
+    self._event_tag_json_string = (
+        u'[{"comment": "This is a test event tag.", '
+        u'"event_uuid": "403818f93dce467bac497ef0f263fde8", '
+        u'"__type__": "EventTag", '
+        u'"tags": ["This is a test.", "Also a test."]}]')
 
     self._json_dict = {
         u'__type__': u'AnalysisReport',
         u'_anomalies': [],
-        u'_tags': [],
+        u'_tags': self._event_tag_json_string,
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': self._report_dict,
         u'text': self._report_text,
@@ -106,11 +112,20 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
+
+    event_tag = event.EventTag()
+
+    event_tag.event_uuid = u'403818f93dce467bac497ef0f263fde8'
+    event_tag.comment = u'This is a test event tag.'
+    event_tag.tags = [u'This is a test.', u'Also a test.']
+
+    self.assertTrue(event_tag.IsValidForSerialization())
     analysis_report = event.AnalysisReport(u'chrome_extension_test')
 
     analysis_report.report_dict = self._report_dict
     analysis_report.text = self._report_text
     analysis_report.time_compiled = 1431978243000000
+    analysis_report.SetTags([event_tag])
 
     self._TestWriteSerialized(
         self._serializer, analysis_report, self._json_dict)
@@ -204,6 +219,35 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
 
     # A None (or Null) value should not get stored.
     # self.assertFalse(hasattr(event_object, u'null_value'))
+
+
+class JSONEventTagSerializerTest(JSONSerializerTestCase):
+  """Test for the JSON Event Tag serializer object."""
+
+  def setUp(self):
+    """Set up the necessary objects."""
+    self._event_uuid = u'403818f93dce467bac497ef0f263fde8'
+    self._json_dict = {
+        u'event_uuid': self._event_uuid,
+        u'comment': u'This is a test event tag.',
+        u'tags':  [u'This is a test.', u'Also a test.'],
+    }
+
+    self._serializer = json_serializer.JSONEventTagSerializer
+
+  def testReadSerialized(self):
+    """Tests the ReadSerialized function."""
+    self._TestReadSerialized(self._serializer, self._json_dict)
+
+  def testWriteSerializer(self):
+    """Tests the WriteSerialized function."""
+    event_tag = event.EventTag()
+
+    event_tag.event_uuid = self._event_uuid
+    event_tag.comment = u'This is a test event tag.'
+    event_tag.tags = [u'This is a test.', u'Also a test.']
+    self.assertTrue(event_tag.IsValidForSerialization())
+    self._TestWriteSerialized(self._serializer, event_tag, self._json_dict)
 
 
 class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
