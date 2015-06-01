@@ -12,18 +12,9 @@ from plaso.lib import storage
 class AnalysisFrontend(frontend.Frontend):
   """Class that implements an analysis front-end."""
 
-  def __init__(self, input_reader, output_writer):
-    """Initializes the front-end object.
-
-    Args:
-      input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
-    """
-    super(AnalysisFrontend, self).__init__(input_reader, output_writer)
+  def __init__(self):
+    """Initializes the front-end object."""
+    super(AnalysisFrontend, self).__init__()
     self._storage_file_path = None
 
   def AddStorageFileOptions(self, argument_group):

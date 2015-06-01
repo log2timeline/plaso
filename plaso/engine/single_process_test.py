@@ -100,8 +100,7 @@ class SingleProcessEngineTest(unittest.TestCase):
     test_engine.PreprocessSource(u'Windows')
 
     test_collector = test_engine.CreateCollector(
-        False, vss_stores=None, filter_find_specs=None,
-        resolver_context=resolver_context)
+        False, filter_find_specs=None, resolver_context=resolver_context)
     self.assertNotEqual(test_collector, None)
     self.assertIsInstance(
         test_collector, single_process.SingleProcessCollector)

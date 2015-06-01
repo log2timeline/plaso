@@ -70,17 +70,12 @@ class Frontend(object):
   # The maximum length of the line in number of characters.
   _LINE_LENGTH = 80
 
-  def __init__(self, input_reader, output_writer):
-    """Initializes the front-end object.
+  def __init__(self):
+    """Initializes the front-end object."""
+    # TODO: remove the need to pass input_reader and output_writer.
+    input_reader = StdinFrontendInputReader()
+    output_writer = StdoutFrontendOutputWriter()
 
-    Args:
-      input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
-    """
     super(Frontend, self).__init__()
     self._input_reader = input_reader
     self._output_writer = output_writer

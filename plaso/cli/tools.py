@@ -51,6 +51,7 @@ class CLITool(object):
     self._debug_mode = False
     self._input_reader = input_reader
     self._output_writer = output_writer
+    self._quiet_mode = False
     self._timezone = pytz.UTC
 
     self.list_timezones = False
@@ -95,6 +96,12 @@ class CLITool(object):
       options: the command line arguments (instance of argparse.Namespace).
     """
     self._debug_mode = getattr(options, u'debug', False)
+    self._quiet_mode = getattr(options, u'quiet', False)
+
+    if self._debug_mode and self._quiet_mode:
+      logging.warning(
+          u'Cannot use debug and quiet mode at the same time, defaulting to '
+          u'debug output.')
 
   def _ParseTimezoneOption(self, options):
     """Parses the timezone options.
@@ -108,7 +115,8 @@ class CLITool(object):
     timezone_string = getattr(options, u'timezone', None)
     if timezone_string and timezone_string == u'list':
       self.list_timezones = True
-    else:
+
+    elif timezone_string:
       try:
         self._timezone = pytz.timezone(timezone_string)
       except pytz.UnknownTimeZoneError as exception:
@@ -153,7 +161,11 @@ class CLITool(object):
     """
     argument_group.add_argument(
         '-d', '--debug', dest='debug', action='store_true', default=False,
-        help=u'enable debug information.')
+        help=u'enable debug output.')
+
+    argument_group.add_argument(
+        '-q', '--quiet', dest='quiet', action='store_true', default=False,
+        help=u'disable informational output.')
 
   def AddTimezoneOption(self, argument_group):
     """Adds the timezone option to the argument group.

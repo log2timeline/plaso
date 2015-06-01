@@ -320,7 +320,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       collection_information[u'runtime'] = u'multi process mode'
       # TODO: retrieve this value from the multi-process engine.
       # refactor engine to set number_of_extraction_workers
-      # before ProcessSource.
+      # before ProcessSources.
       collection_information[u'workers'] = 0
 
     # TODO: output/storage settings:
@@ -332,13 +332,16 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     else:
       recursive = False
 
-    collection_information[u'file_processed'] = self._source_path
+    # TODO: replace by scan node.
+    # collection_information[u'file_processed'] = self._source_path
     collection_information[u'recursive'] = recursive
-    collection_information[u'vss parsing'] = bool(self.vss_stores)
+    # TODO: replace by scan node.
+    # collection_information[u'vss parsing'] = bool(self.vss_stores)
 
     if self.SourceIsStorageMediaImage():
       collection_information[u'method'] = u'imaged processed'
-      collection_information[u'image_offset'] = self.partition_offset
+      # TODO: replace by scan node.
+      # collection_information[u'image_offset'] = self.partition_offset
     else:
       collection_information[u'method'] = u'OS collection'
 
@@ -379,15 +382,18 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     if not getattr(pre_obj, u'zone', None):
       pre_obj.zone = timezone
 
-  def _ProcessSourceMultiProcessMode(
-      self, pre_obj, filter_find_specs=None, hasher_names_string=None,
-      include_directory_stat=True, number_of_worker_processes=0,
-      parser_filter_string=None, status_update_callback=None,
+  def _ProcessSourcesMultiProcessMode(
+      self, pre_obj, source_path_specs, filter_find_specs=None,
+      hasher_names_string=None, include_directory_stat=True,
+      number_of_worker_processes=0, parser_filter_string=None,
+      status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
-    """Processes the source with multiple processes.
+    """Processes the sources with multiple processes.
 
     Args:
       pre_obj: the preprocess object (instance of PreprocessObject).
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       hasher_names_string: optional comma separated string of names of
@@ -408,10 +414,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     resolver_context = context.Context()
 
-    # TODO: create multi process collector.
+    # TODO: move collector into worker.
     self._collector = self._engine.CreateCollector(
-        include_directory_stat, vss_stores=self.vss_stores,
-        filter_find_specs=filter_find_specs, resolver_context=resolver_context)
+        include_directory_stat, filter_find_specs=filter_find_specs,
+        resolver_context=resolver_context)
 
     if self._output_module:
       storage_writer = storage.BypassStorageWriter(
@@ -428,8 +434,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           profiling_type=self._profiling_type)
 
     try:
-      self._engine.ProcessSource(
-          self._collector, storage_writer,
+      self._engine.ProcessSources(
+          source_path_specs, self._collector, storage_writer,
           hasher_names_string=hasher_names_string,
           number_of_extraction_workers=number_of_worker_processes,
           parser_filter_string=parser_filter_string,
@@ -440,14 +446,17 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       self._CleanUpAfterAbort()
       raise errors.UserAbort(u'Process source aborted.')
 
-  def _ProcessSourceSingleProcessMode(
-      self, pre_obj, filter_find_specs=None, hasher_names_string=None,
-      include_directory_stat=True, parser_filter_string=None,
+  def _ProcessSourcesSingleProcessMode(
+      self, pre_obj, source_path_specs, filter_find_specs=None,
+      hasher_names_string=None, include_directory_stat=True,
+      parser_filter_string=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
-    """Processes the source in a single process.
+    """Processes the sources in a single process.
 
     Args:
       pre_obj: the preprocess object (instance of PreprocessObject).
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       hasher_names_string: optional comma separated string of names of
@@ -463,7 +472,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     try:
       self._StartSingleThread(
-          pre_obj, filter_find_specs=filter_find_specs,
+          pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
           hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
@@ -479,8 +488,9 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         pdb.post_mortem()
 
   def _StartSingleThread(
-      self, pre_obj, filter_find_specs=None, hasher_names_string=None,
-      include_directory_stat=True, parser_filter_string=None,
+      self, pre_obj, source_path_specs, filter_find_specs=None,
+      hasher_names_string=None, include_directory_stat=True,
+      parser_filter_string=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Starts everything up in a single process.
 
@@ -499,6 +509,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     Args:
       pre_obj: the preprocess object (instance of PreprocessObject).
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       hasher_names_string: optional comma separated string of names of
@@ -511,8 +523,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
                                  The default is protobuf.
     """
     self._collector = self._engine.CreateCollector(
-        include_directory_stat, vss_stores=self.vss_stores,
-        filter_find_specs=filter_find_specs,
+        include_directory_stat, filter_find_specs=filter_find_specs,
         resolver_context=self._resolver_context)
 
     if self._output_module:
@@ -530,8 +541,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           profiling_type=self._profiling_type)
 
     try:
-      self._engine.ProcessSource(
-          self._collector, storage_writer,
+      self._engine.ProcessSources(
+          source_path_specs, self._collector, storage_writer,
           parser_filter_string=parser_filter_string,
           hasher_names_string=hasher_names_string)
 
@@ -549,16 +560,18 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     return self._engine.GetSourceFileSystemSearcher(
         resolver_context=self._resolver_context)
 
-  def ProcessSource(
-      self, filter_file=None, hasher_names_string=None,
+  def ProcessSources(
+      self, source_path_specs, filter_file=None, hasher_names_string=None,
       parser_filter_string=None, single_process_mode=False,
       status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
-    """Processes the source.
+    """Processes the sources.
 
     Args:
-      filter_file: a path to a file that contains find specifications.
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
+      filter_file: optional path to a file that contains find specifications.
                    The default is None.
       hasher_names_string: optional comma separated string of names of
                            hashers to enable. The default is None.
@@ -639,15 +652,15 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         parser_filter_string=parser_filter_string)
 
     if self._single_process_mode:
-      self._ProcessSourceSingleProcessMode(
-          pre_obj, filter_find_specs=filter_find_specs,
+      self._ProcessSourcesSingleProcessMode(
+          pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
           hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
           storage_serializer_format=storage_serializer_format)
     else:
-      self._ProcessSourceMultiProcessMode(
-          pre_obj, filter_find_specs=filter_find_specs,
+      self._ProcessSourcesMultiProcessMode(
+          pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
           hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,

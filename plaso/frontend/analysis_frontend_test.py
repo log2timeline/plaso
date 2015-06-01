@@ -14,15 +14,9 @@ from plaso.lib import storage
 class AnalysisFrontendTests(test_lib.FrontendTestCase):
   """Tests for the analysis front-end object."""
 
-  def setUp(self):
-    """Sets up the objects used throughout the test."""
-    self._input_reader = frontend.StdinFrontendInputReader()
-    self._output_writer = frontend.StdoutFrontendOutputWriter()
-
   def testOpenStorageFile(self):
     """Tests the open storage file function."""
-    test_front_end = analysis_frontend.AnalysisFrontend(
-        self._input_reader, self._output_writer)
+    test_front_end = analysis_frontend.AnalysisFrontend()
 
     options = frontend.Options()
     options.storage_file = self._GetTestFilePath([u'psort_test.out'])
@@ -36,8 +30,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
 
   def testParseOptions(self):
     """Tests the parse options function."""
-    test_front_end = analysis_frontend.AnalysisFrontend(
-        self._input_reader, self._output_writer)
+    test_front_end = analysis_frontend.AnalysisFrontend()
 
     options = frontend.Options()
 

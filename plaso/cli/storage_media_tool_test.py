@@ -87,15 +87,15 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS)
 
-  def testAddVssProcessingOptions(self):
-    """Tests the AddVssProcessingOptions function."""
+  def testAddVSSProcessingOptions(self):
+    """Tests the AddVSSProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
         description=u'Test argument parser.',
         add_help=False)
 
     test_tool = storage_media_tool.StorageMediaTool()
-    test_tool.AddVssProcessingOptions(argument_parser)
+    test_tool.AddVSSProcessingOptions(argument_parser)
 
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)

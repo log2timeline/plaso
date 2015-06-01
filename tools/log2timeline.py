@@ -287,7 +287,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.AddFilterOptions(extraction_group)
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddTimezoneOption(extraction_group)
-    self.AddVssProcessingOptions(extraction_group)
+    self.AddVSSProcessingOptions(extraction_group)
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
@@ -305,9 +305,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     info_group.add_argument(
         u'--status_view', u'--status-view', dest=u'status_view_mode',
-        choices=[u'linear', u'window'], action=u'store',
+        choices=[u'linear', u'none', u'window'], action=u'store',
         metavar=u'TYPE', default=u'linear', help=(
-            u'The processing status view mode: "linear" or "window". '
+            u'The processing status view mode: "linear", "none" or "window". '
             u'Note that the "window" mode is still experimental.'))
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
@@ -404,6 +404,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     log_file = getattr(options, u'log_file', None)
     if self._debug_mode:
       logging_level = logging.DEBUG
+    elif self._quiet_mode:
+      logging_level = logging.WARNING
     else:
       logging_level = logging.INFO
 
@@ -447,23 +449,24 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write(
         u'Is storage media image or device\t: {0!s}\n'.format(is_image))
 
-    if is_image:
-      image_offset_bytes = self._front_end.partition_offset
-      if isinstance(image_offset_bytes, basestring):
-        try:
-          image_offset_bytes = int(image_offset_bytes, 10)
-        except ValueError:
-          image_offset_bytes = 0
-      elif image_offset_bytes is None:
-        image_offset_bytes = 0
-
-      self._output_writer.Write(
-          u'Partition offset\t\t\t: {0:d} (0x{0:08x})\n'.format(
-              image_offset_bytes))
-
-      if self._front_end.process_vss and self._front_end.vss_stores:
-        self._output_writer.Write(
-            u'VSS stores\t\t\t\t: {0!s}\n'.format(self._front_end.vss_stores))
+    # TODO: replace by scan node.
+    # if is_image:
+    #   image_offset_bytes = self._front_end.partition_offset
+    #   if isinstance(image_offset_bytes, basestring):
+    #     try:
+    #       image_offset_bytes = int(image_offset_bytes, 10)
+    #     except ValueError:
+    #       image_offset_bytes = 0
+    #   elif image_offset_bytes is None:
+    #     image_offset_bytes = 0
+    #
+    #   self._output_writer.Write(
+    #       u'Partition offset\t\t\t: {0:d} (0x{0:08x})\n'.format(
+    #           image_offset_bytes))
+    #
+    #   if self._front_end.process_vss and self._front_end.vss_stores:
+    #     self._output_writer.Write(
+    #         u'VSS stores\t\t\t\t: {0!s}\n'.format(self._front_end.vss_stores))
 
     if self._filter_file:
       self._output_writer.Write(u'Filter file\t\t\t\t: {0:s}\n'.format(
@@ -471,8 +474,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._output_writer.Write(u'\n')
 
-  def ProcessSource(self):
-    """Processes the source.
+  def ProcessSources(self):
+    """Processes the sources.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
@@ -490,10 +493,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._front_end.SetStorageFile(self._output)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
-    self._front_end.ScanSource(
-        self._source_path, partition_number=self._partition_number,
-        partition_offset=self._partition_offset, enable_vss=self._process_vss,
-        vss_stores=self._vss_stores)
+    self.ScanSource(self._front_end)
 
     self._output_writer.Write(u'\n')
     self.PrintOptions()
@@ -510,7 +510,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       status_update_callback = None
 
-    self._front_end.ProcessSource(
+    self._front_end.ProcessSources(
+        self._source_path_specs,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
         parser_filter_string=self._parser_filter_string,
@@ -548,17 +549,14 @@ def Main():
     return True
 
   try:
-    tool.ProcessSource()
+    tool.ProcessSources()
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')
     return False
 
   except errors.SourceScannerError as exception:
-    logging.warning((
-        u'Unable to scan for a supported filesystem with error: {0:s}\n'
-        u'Most likely the image format is not supported by the '
-        u'tool.').format(exception))
+    logging.warning(exception)
     return False
 
   return True

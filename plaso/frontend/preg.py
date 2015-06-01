@@ -92,6 +92,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     #   c) CLI
     self._output_writer = output_writer
     self._parse_restore_points = False
+    self._source_path = None
     self._verbose_output = False
     self.plugins = None
 
@@ -577,20 +578,18 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not source_path:
       raise errors.BadConfigOption(u'No image location set.')
 
-    partition_number = getattr(options, u'partition_number', None)
-    partition_offset = getattr(options, u'image_offset', None)
-    vss_stores = getattr(options, u'vss_stores', None)
-
-    if vss_stores:
-      enable_vss = True
-    else:
-      enable_vss = False
+    # TODO: implement this using scan nodes.
+    # partition_number = getattr(options, u'partition_number', None)
+    # partition_offset = getattr(options, u'image_offset', None)
+    # vss_stores = getattr(options, u'vss_stores', None)
+    #
+    # if vss_stores:
+    #   enable_vss = True
+    # else:
+    #   enable_vss = False
 
     try:
-      self.ScanSource(
-          source_path, partition_number=partition_number,
-          partition_offset=partition_offset, enable_vss=enable_vss,
-          vss_stores=vss_stores)
+      self.ScanSource(source_path)
     except errors.SourceScannerError as exception:
       raise errors.BadConfigOption((
           u'Unable to scan for a supported filesystem with error: {0:s}\n'
