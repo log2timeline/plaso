@@ -42,8 +42,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
 
-    # TODO: clean up arguments after front-end refactor.
-    self._front_end = analysis_frontend.AnalysisFrontend(None, None)
+    self._front_end = analysis_frontend.AnalysisFrontend()
 
     self._verbose = False
     self.compare_storage_information = False
@@ -519,6 +518,16 @@ class PinfoTool(analysis_tool.AnalysisTool):
       BadConfigOption: if the options are invalid.
     """
     super(PinfoTool, self).ParseOptions(options)
+
+    if self._debug_mode:
+      logging_level = logging.DEBUG
+    elif self._quiet_mode:
+      logging_level = logging.WARNING
+    else:
+      logging_level = logging.INFO
+
+    logging.basicConfig(
+        level=logging_level, format=u'[%(levelname)s] %(message)s')
 
     self._verbose = getattr(options, u'verbose', False)
 

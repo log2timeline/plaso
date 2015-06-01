@@ -158,7 +158,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._storage_writer_process.terminate()
 
   def CreateCollector(
-      self, include_directory_stat, vss_stores=None, filter_find_specs=None,
+      self, include_directory_stat, filter_find_specs=None,
       resolver_context=None):
     """Creates a collector object.
 
@@ -169,9 +169,6 @@ class MultiProcessEngine(engine.BaseEngine):
     Args:
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected.
-      vss_stores: Optional list of VSS stores to include in the collection,
-                  where 1 represents the first store. Set to None if no
-                  VSS stores should be processed. The default is None.
       filter_find_specs: Optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
@@ -188,13 +185,9 @@ class MultiProcessEngine(engine.BaseEngine):
       raise RuntimeError(u'Missing source.')
 
     collector_object = collector.Collector(
-        self._path_spec_queue, self._source, self._source_path_spec,
-        resolver_context=resolver_context)
+        self._path_spec_queue, resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)
-
-    if vss_stores:
-      collector_object.SetVssInformation(vss_stores)
 
     if filter_find_specs:
       collector_object.SetFilter(filter_find_specs)
@@ -244,13 +237,16 @@ class MultiProcessEngine(engine.BaseEngine):
 
     return extraction_worker
 
-  def ProcessSource(
-      self, collector_object, storage_writer, hasher_names_string=None,
-      number_of_extraction_workers=0, parser_filter_string=None,
-      status_update_callback=None, show_memory_usage=False):
-    """Processes the source and extracts event objects.
+  def ProcessSources(
+      self, source_path_specs, collector_object, storage_writer,
+      hasher_names_string=None, number_of_extraction_workers=0,
+      parser_filter_string=None, status_update_callback=None,
+      show_memory_usage=False):
+    """Processes the sources and extract event objects.
 
     Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
       hasher_names_string: Optional comma separated string of names of
@@ -310,7 +306,8 @@ class MultiProcessEngine(engine.BaseEngine):
       self._worker_processes.append(worker_process)
 
     self._collection_process = MultiProcessCollectionProcess(
-        self._path_spec_queue, collector_object, name=u'Collector')
+        source_path_specs, self._path_spec_queue, collector_object,
+        name=u'Collector')
     self._collection_process.start()
     self._foreman_object.StartProcessMonitoring(self._collection_process)
 
@@ -531,10 +528,13 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 class MultiProcessCollectionProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing collection process."""
 
-  def __init__(self, path_spec_queue, collector_object, **kwargs):
+  def __init__(
+      self, source_path_specs, path_spec_queue, collector_object, **kwargs):
     """Initializes the process object.
 
     Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       path_spec_queue: the path specification queue object (instance of
                        MultiProcessingQueue).
       collector_object: A collector object (instance of Collector).
@@ -544,6 +544,7 @@ class MultiProcessCollectionProcess(MultiProcessBaseProcess):
     self._abort = False
     self._collector = collector_object
     self._path_spec_queue = path_spec_queue
+    self._source_path_specs = source_path_specs
 
   def _GetStatus(self):
     """Returns a status dictionary."""
@@ -555,7 +556,7 @@ class MultiProcessCollectionProcess(MultiProcessBaseProcess):
     """The main loop."""
     logging.info(u'Collector (PID: {0:d}) started'.format(self._pid))
 
-    self._collector.Collect()
+    self._collector.Collect(self._source_path_specs)
 
     # If not aborted we wait for the queue thread here, which signifies
     # the queue is truly empty.
@@ -717,6 +718,7 @@ class MultiProcessingQueue(queue.Queue):
     # This queue appears not to be FIFO.
     self._queue = multiprocessing.Queue(maxsize=maximum_number_of_queued_items)
 
+  # pylint: disable=arguments-differ
   def Close(self, abort=False):
     """Closes the queue.
 

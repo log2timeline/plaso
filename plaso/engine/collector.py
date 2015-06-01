@@ -3,25 +3,20 @@
 
 import hashlib
 import logging
-import os
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
-from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import queue
 from plaso.lib import definitions
-from plaso.lib import errors
 
 
 class Collector(queue.ItemQueueProducer):
   """Class that implements a collector object."""
 
-  def __init__(
-      self, path_spec_queue, source_path, source_path_spec,
-      resolver_context=None):
+  def __init__(self, path_spec_queue, resolver_context=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -30,13 +25,9 @@ class Collector(queue.ItemQueueProducer):
 
     Args:
       path_spec_queue: The path specification queue (instance of Queue).
-                       This queue contains the path specifications (instances
+                       This queue contains path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
-      source_path: Path of the source file or directory.
-      source_path_spec: The source path specification (instance of
-                        dfvfs.PathSpec) as determined by the file system
-                        scanner. The default is None.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
@@ -44,42 +35,18 @@ class Collector(queue.ItemQueueProducer):
     self._filter_find_specs = None
     self._fs_collector = FileSystemCollector(path_spec_queue)
     self._resolver_context = resolver_context
-    # TODO: remove the need to pass source_path
-    self._source_path = os.path.abspath(source_path)
-    self._source_path_spec = source_path_spec
-    self._vss_stores = None
 
     # Attributes that contain the current status of the collector.
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
 
-  def __enter__(self):
-    """Enters a with statement."""
-    return self
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Exits a with statement."""
-    return
-
-  def _ProcessImage(self, volume_path_spec, find_specs=None):
-    """Processes a volume within a storage media image.
+  def _ProcessFileSystem(self, path_spec, find_specs=None):
+    """Processes a file system within a storage media image.
 
     Args:
-      volume_path_spec: The path specification of the volume containing
-                        the file system.
+      path_spec: The path specification of the root of the file system.
       find_specs: Optional list of find specifications (instances of
                   dfvfs.FindSpec). The default is None.
     """
-    if find_specs:
-      logging.debug(u'Collecting from image file: {0:s} with filter'.format(
-          self._source_path))
-    else:
-      logging.debug(u'Collecting from image file: {0:s}'.format(
-          self._source_path))
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-        parent=volume_path_spec)
-
     try:
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=self._resolver_context)
@@ -89,155 +56,61 @@ class Collector(queue.ItemQueueProducer):
       return
 
     try:
-      self._fs_collector.Collect(
-          file_system, path_spec, find_specs=find_specs)
+      self._fs_collector.Collect(file_system, path_spec, find_specs=find_specs)
+
     except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
       logging.warning(u'{0:s}'.format(exception))
 
-      if find_specs:
-        logging.debug(u'Collection from image with filter FAILED.')
-      else:
-        logging.debug(u'Collection from image FAILED.')
-      return
-
-    file_system.Close()
-
-    if self._abort:
-      return
-
-    if self._vss_stores:
-      self._ProcessVSS(volume_path_spec, find_specs=find_specs)
-
-    if find_specs:
-      logging.debug(u'Collection from image with filter COMPLETED.')
-    else:
-      logging.debug(u'Collection from image COMPLETED.')
-
-  def _ProcessPartitions(self, root_path_spec, find_specs=None):
-    """Processes the sub entries partitions of the given root_path_spec.
-
-    Args:
-      root_path_spec: The path specification of the directory containing
-                      volumes. (instances of dfvfs.path.PathSpec)
-      find_specs: Optional list of find specifications (instances of
-                  dfvfs.FindSpec). The default is None.
-    """
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        self._source_path_spec, resolver_context=self._resolver_context)
-    file_entry = file_system.GetFileEntryByPathSpec(root_path_spec)
-
-    for partition_file_entry in file_entry.sub_file_entries:
-      self._ProcessImage(partition_file_entry.path_spec, find_specs=find_specs)
-
-  def _ProcessVSS(self, volume_path_spec, find_specs=None):
-    """Processes a VSS volume within a storage media image.
-
-    Args:
-      volume_path_spec: The path specification of the volume containing
-                        the file system.
-      find_specs: Optional list of find specifications (instances of
-                  dfvfs.FindSpec). The default is None.
-    """
-    logging.info(u'Processing VSS.')
-
-    vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
-        parent=volume_path_spec)
-
-    vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        vss_path_spec, resolver_context=self._resolver_context)
-
-    number_of_vss = vss_file_entry.number_of_sub_file_entries
-
-    # In plaso 1 represents the first store index in dfvfs and pyvshadow 0
-    # represents the first store index so 1 is subtracted.
-    vss_store_range = [store_nr - 1 for store_nr in self._vss_stores]
-
-    for store_index in vss_store_range:
-      if self._abort:
-        return
-
-      if find_specs:
-        logging.info((
-            u'Collecting from VSS volume: {0:d} out of: {1:d} '
-            u'with filter').format(store_index + 1, number_of_vss))
-      else:
-        logging.info(u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
-            store_index + 1, number_of_vss))
-
-      vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
-          parent=volume_path_spec)
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-          parent=vss_path_spec)
-
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          path_spec, resolver_context=self._resolver_context)
-
-      result_string = u'COMPLETED'
-      try:
-        self._fs_collector.Collect(
-            file_system, path_spec, find_specs=find_specs)
-      except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
-        logging.warning(u'{0:s}'.format(exception))
-        result_string = u'FAILED'
-
+    finally:
       file_system.Close()
 
-      if find_specs:
-        logging.debug(
-            u'Collection from VSS store: {0:d} with filter {1:s}.'.format(
-                store_index + 1, result_string))
-      else:
-        logging.debug(u'Collection from VSS store: {0:d} {1:s}.'.format(
-            store_index + 1, result_string))
+  def _ProcessPathSpec(self, path_spec, find_specs=None):
+    """Processes a specific path specification.
 
-  def Collect(self):
-    """Collects files from the source."""
-    source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        self._source_path_spec, resolver_context=self._resolver_context)
+    Args:
+      path_spec: the path specification (instance of dfvfs.path.PathSpec)
+                 to process.
+      find_specs: optional list of find specifications (instances of
+                  dfvfs.FindSpec). The default is None.
+    """
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
+    if not file_entry:
+      logging.warning(u'Unable to open: {0:s}'.format(path_spec.comparable))
+      return
 
-    if not source_file_entry:
+    if (not file_entry.IsDirectory() and not file_entry.IsFile() and
+        not file_entry.IsDevice()):
+      logging.warning((
+          u'Source path specification not a device, file or directory.\n'
+          u'{0:s}').format(path_spec.comparable))
+      return
+
+    if file_entry.IsFile():
+      self.ProduceItem(path_spec)
+
+    else:
+      self._ProcessFileSystem(path_spec, find_specs=find_specs)
+
+  def Collect(self, source_path_specs):
+    """Collects file entry path specifications.
+
+    Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to collect from.
+    """
+    if not source_path_specs:
       logging.warning(u'No files to collect.')
       return
 
-    if (not source_file_entry.IsDirectory() and
-        not source_file_entry.IsFile() and
-        not source_file_entry.IsDevice()):
-      raise errors.CollectorError(
-          u'Source path: {0:s} not a device, file or directory.'.format(
-              self._source_path))
-
     self._status = definitions.PROCESSING_STATUS_RUNNING
 
-    type_indicator = self._source_path_spec.type_indicator
+    for source_path_spec in source_path_specs:
+      if self._abort:
+        break
 
-    if not path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      if (type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION
-          and source_file_entry.IsRoot()):
-        self._ProcessPartitions(
-            self._source_path_spec, find_specs=self._filter_find_specs)
-      else:
-        self._ProcessImage(
-            self._source_path_spec.parent, find_specs=self._filter_find_specs)
-
-    elif source_file_entry.IsFile():
-      self.ProduceItem(self._source_path_spec)
-
-    else:
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          self._source_path_spec, resolver_context=self._resolver_context)
-
-      try:
-        self._fs_collector.Collect(
-            file_system, self._source_path_spec,
-            find_specs=self._filter_find_specs)
-      except (dfvfs_errors.AccessError,
-              dfvfs_errors.BackEndError) as exception:
-        logging.warning(u'{0:s}'.format(exception))
-
-      file_system.Close()
+      self._ProcessPathSpec(
+          source_path_spec, find_specs=self._filter_find_specs)
 
     self._status = definitions.PROCESSING_STATUS_COMPLETED
 
@@ -270,17 +143,6 @@ class Collector(queue.ItemQueueProducer):
     """
     self._filter_find_specs = filter_find_specs
 
-  def SetVssInformation(self, vss_stores):
-    """Sets the Volume Shadow Snapshots (VSS) information.
-
-       This function will enable VSS collection.
-
-    Args:
-      vss_stores: The range of VSS stores to include in the collection,
-                  where 1 represents the first store.
-    """
-    self._vss_stores = vss_stores
-
   def SignalAbort(self):
     """Signals the collector to abort."""
     self._fs_collector.SignalAbort()
@@ -299,7 +161,7 @@ class FileSystemCollector(queue.ItemQueueProducer):
 
     Args:
       path_spec_queue: The path specification queue (instance of Queue).
-                       This queue contains the path specifications (instances
+                       This queue contains path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
     """

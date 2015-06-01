@@ -34,12 +34,13 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_INFORMATIONAL_OPTIONS = u'\n'.join([
-      u'usage: tool_test.py [-d]',
+      u'usage: tool_test.py [-d] [-q]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  -d, --debug  enable debug information.',
+      u'  -d, --debug  enable debug output.',
+      u'  -q, --quiet  disable informational output.',
       u''])
 
   _EXPECTED_TIMEZONE_OPTION = u'\n'.join([

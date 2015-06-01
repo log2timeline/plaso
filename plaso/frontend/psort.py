@@ -40,10 +40,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = frontend.StdinFrontendInputReader()
-    output_writer = frontend.StdoutFrontendOutputWriter()
-
-    super(PsortFrontend, self).__init__(input_reader, output_writer)
+    super(PsortFrontend, self).__init__()
 
     self._analysis_process_info = []
     self._filter_buffer = None
@@ -391,7 +388,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       # Get all reports and tags from analysis plugins.
       self._ProcessAnalysisPlugins(
           analysis_plugins, analysis_output_queue, storage_file, counter,
-        preferred_encoding=preferred_encoding)
+          preferred_encoding=preferred_encoding)
 
     if self._output_file_object:
       self._output_file_object.close()

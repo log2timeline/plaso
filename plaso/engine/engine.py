@@ -49,7 +49,7 @@ class BaseEngine(object):
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def CreateCollector(
-      self, include_directory_stat, vss_stores=None, filter_find_specs=None,
+      self, include_directory_stat, filter_find_specs=None,
       resolver_context=None):
     """Creates a collector object.
 
@@ -60,9 +60,6 @@ class BaseEngine(object):
     Args:
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected.
-      vss_stores: Optional list of VSS stores to include in the collection,
-                  where 1 represents the first store. Set to None if no
-                  VSS stores should be processed. The default is None.
       filter_find_specs: Optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
@@ -79,13 +76,9 @@ class BaseEngine(object):
       raise RuntimeError(u'Missing source.')
 
     collector_object = collector.Collector(
-        self._path_spec_queue, self._source, self._source_path_spec,
-        resolver_context=resolver_context)
+        self._path_spec_queue, resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)
-
-    if vss_stores:
-      collector_object.SetVssInformation(vss_stores)
 
     if filter_find_specs:
       collector_object.SetFilter(filter_find_specs)
