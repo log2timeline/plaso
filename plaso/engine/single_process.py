@@ -18,9 +18,7 @@ from plaso.parsers import mediator as parsers_mediator
 class SingleProcessCollector(collector.Collector):
   """Class that implements a single process collector object."""
 
-  def __init__(
-      self, path_spec_queue, source_path, source_path_spec,
-      resolver_context=None):
+  def __init__(self, path_spec_queue, resolver_context=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -32,16 +30,11 @@ class SingleProcessCollector(collector.Collector):
                        This queue contains the path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
-      source_path: Path of the source file or directory.
-      source_path_spec: The source path specification (instance of
-                        dfvfs.PathSpec) as determined by the file system
-                        scanner. The default is None.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
     super(SingleProcessCollector, self).__init__(
-        path_spec_queue, source_path, source_path_spec,
-        resolver_context=resolver_context)
+        path_spec_queue, resolver_context=resolver_context)
 
     self._extraction_worker = None
     self._fs_collector = SingleProcessFileSystemCollector(path_spec_queue)
@@ -92,7 +85,7 @@ class SingleProcessEngine(engine.BaseEngine):
         parse_error_queue)
 
   def CreateCollector(
-      self, include_directory_stat, vss_stores=None, filter_find_specs=None,
+      self, include_directory_stat, filter_find_specs=None,
       resolver_context=None):
     """Creates a collector object.
 
@@ -103,9 +96,6 @@ class SingleProcessEngine(engine.BaseEngine):
     Args:
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected.
-      vss_stores: Optional list of VSS stores to include in the collection,
-                  where 1 represents the first store. Set to None if no
-                  VSS stores should be processed. The default is None.
       filter_find_specs: Optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
@@ -122,13 +112,9 @@ class SingleProcessEngine(engine.BaseEngine):
       raise RuntimeError(u'Missing source.')
 
     collector_object = SingleProcessCollector(
-        self._path_spec_queue, self._source, self._source_path_spec,
-        resolver_context=resolver_context)
+        self._path_spec_queue, resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)
-
-    if vss_stores:
-      collector_object.SetVssInformation(vss_stores)
 
     if filter_find_specs:
       collector_object.SetFilter(filter_find_specs)
@@ -176,12 +162,14 @@ class SingleProcessEngine(engine.BaseEngine):
 
     return extraction_worker
 
-  def ProcessSource(
-      self, collector_object, storage_writer, hasher_names_string=None,
-      parser_filter_string=None):
-    """Processes the source and extracts event objects.
+  def ProcessSources(
+      self, source_path_specs, collector_object, storage_writer,
+      hasher_names_string=None, parser_filter_string=None):
+    """Processes the sources and extract event objects.
 
     Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
       hasher_names_string: Optional comma separated string of names of
@@ -207,7 +195,7 @@ class SingleProcessEngine(engine.BaseEngine):
     logging.debug(u'Processing started.')
 
     logging.debug(u'Collection started.')
-    collector_object.Collect()
+    collector_object.Collect(source_path_specs)
     logging.debug(u'Collection stopped.')
 
     logging.debug(u'Extraction worker started.')

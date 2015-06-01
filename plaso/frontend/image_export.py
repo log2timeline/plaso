@@ -7,7 +7,6 @@ import logging
 import os
 
 from dfvfs.helpers import file_system_searcher
-from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -577,13 +576,15 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     super(ImageExportFrontend, self).__init__()
     self._filter_collection = FileEntryFilterCollection()
     self._knowledge_base = None
-    self._source_path_spec = None
 
   # TODO: merge with collector and/or engine.
-  def _Extract(self, destination_path, remove_duplicates=True):
+  def _Extract(
+      self, source_path_specs, destination_path, remove_duplicates=True):
     """Extracts files.
 
     Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       destination_path: the path where the extracted files should be stored.
       remove_duplicates: optional boolean value to indicate if files with
                          duplicate content should be removed. The default
@@ -593,14 +594,8 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
       os.makedirs(destination_path)
 
     input_queue = single_process.SingleProcessQueue()
-
-    # TODO: add support to handle multiple partitions.
-    self._source_path_spec = self.GetSourcePathSpec()
-
-    image_collector = collector.Collector(
-        input_queue, self._source_path, self._source_path_spec)
-
-    image_collector.Collect()
+    image_collector = collector.Collector(input_queue)
+    image_collector.Collect(source_path_specs)
 
     file_saver = FileSaver(skip_duplicates=remove_duplicates)
     input_queue_consumer = ImageExtractorQueueConsumer(
@@ -630,13 +625,16 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
 
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
-      self, destination_path, filter_file_path, remove_duplicates=True):
+      self, source_path_specs, destination_path, filter_file_path,
+      remove_duplicates=True):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
     potentially on every VSS if that is wanted.
 
     Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       destination_path: The path where the extracted files should be stored.
       filter_file_path: The path of the file that contains the filter
                         expressions.
@@ -644,71 +642,34 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
                          duplicate content should be removed. The default
                          is True.
     """
-    # TODO: add support to handle multiple partitions.
-    self._source_path_spec = self.GetSourcePathSpec()
+    for source_path_spec in source_path_specs:
+      file_system, searcher = self._GetSourceFileSystemSearcher(
+          source_path_spec, resolver_context=self._resolver_context)
 
-    file_system, searcher = self._GetSourceFileSystemSearcher(
-        resolver_context=self._resolver_context)
+      if self._knowledge_base is None:
+        self._Preprocess(searcher)
 
-    if self._knowledge_base is None:
-      self._Preprocess(searcher)
+      if not os.path.isdir(destination_path):
+        os.makedirs(destination_path)
 
-    if not os.path.isdir(destination_path):
-      os.makedirs(destination_path)
+      find_specs = engine_utils.BuildFindSpecsFromFile(
+          filter_file_path, pre_obj=self._knowledge_base.pre_obj)
 
-    find_specs = engine_utils.BuildFindSpecsFromFile(
-        filter_file_path, pre_obj=self._knowledge_base.pre_obj)
+      # Save the regular files.
+      file_saver = FileSaver(skip_duplicates=remove_duplicates)
 
-    # Save the regular files.
-    file_saver = FileSaver(skip_duplicates=remove_duplicates)
+      for path_spec in searcher.Find(find_specs=find_specs):
+        self._ExtractFile(file_saver, path_spec, destination_path)
 
-    for path_spec in searcher.Find(find_specs=find_specs):
-      self._ExtractFile(file_saver, path_spec, destination_path)
-
-    file_system.Close()
-
-    if self.process_vss and self.vss_stores:
-      volume_path_spec = self._source_path_spec.parent
-
-      logging.info(u'Extracting files from VSS.')
-      vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
-          parent=volume_path_spec)
-
-      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(vss_path_spec)
-
-      number_of_vss = vss_file_entry.number_of_sub_file_entries
-
-      # In plaso 1 represents the first store index in dfvfs and pyvshadow 0
-      # represents the first store index so 1 is subtracted.
-      vss_store_range = [store_nr - 1 for store_nr in self.vss_stores]
-
-      for store_index in vss_store_range:
-        logging.info(u'Extracting files from VSS {0:d} out of {1:d}'.format(
-            store_index + 1, number_of_vss))
-
-        vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
-            parent=volume_path_spec)
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-            parent=vss_path_spec)
-
-        file_system = path_spec_resolver.Resolver.OpenFileSystem(
-            path_spec, resolver_context=self._resolver_context)
-        searcher = file_system_searcher.FileSystemSearcher(
-            file_system, vss_path_spec)
-
-        for path_spec in searcher.Find(find_specs=find_specs):
-          self._ExtractFile(file_saver, path_spec, destination_path)
-
-        file_system.Close()
+      file_system.Close()
 
   # TODO: refactor, this is a duplicate of the function in engine.
-  def _GetSourceFileSystemSearcher(self, resolver_context=None):
+  def _GetSourceFileSystemSearcher(
+      self, source_path_spec, resolver_context=None):
     """Retrieves the file system searcher of the source.
 
     Args:
+      source_path_spec: the path specification of the source file.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
                         must have its own resolver context.
@@ -720,17 +681,17 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     Raises:
       RuntimeError: if source path specification is not set.
     """
-    if not self._source_path_spec:
+    if not source_path_spec:
       raise RuntimeError(u'Missing source.')
 
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        self._source_path_spec, resolver_context=resolver_context)
+        source_path_spec, resolver_context=resolver_context)
 
-    type_indicator = self._source_path_spec.type_indicator
+    type_indicator = source_path_spec.type_indicator
     if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      mount_point = self._source_path_spec
+      mount_point = source_path_spec
     else:
-      mount_point = self._source_path_spec.parent
+      mount_point = source_path_spec.parent
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
     return file_system, searcher
@@ -935,11 +896,14 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     """
     self._filter_collection.Print(output_writer)
 
-  def ProcessSource(
-      self, destination_path, filter_file=None, remove_duplicates=True):
-    """Processes the source.
+  def ProcessSources(
+      self, source_path_specs, destination_path, filter_file=None,
+      remove_duplicates=True):
+    """Processes the sources.
 
     Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
       destination_path: the path where the extracted files should be stored.
       filter_file: optional name of of the filter file. The default is None.
       remove_duplicates: optional boolean value to indicate if files with
@@ -948,6 +912,9 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     """
     if filter_file:
       self._ExtractWithFilter(
-          destination_path, filter_file, remove_duplicates=remove_duplicates)
+          source_path_specs, destination_path, filter_file,
+          remove_duplicates=remove_duplicates)
     else:
-      self._Extract(destination_path, remove_duplicates=remove_duplicates)
+      self._Extract(
+          source_path_specs, destination_path,
+          remove_duplicates=remove_duplicates)

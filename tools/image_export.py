@@ -155,7 +155,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             u'this option to include duplicate files in the export.'))
 
     self.AddStorageMediaImageOptions(argument_parser)
-    self.AddVssProcessingOptions(argument_parser)
+    self.AddVSSProcessingOptions(argument_parser)
 
     argument_parser.add_argument(
         u'image', nargs='?', action=u'store', metavar=u'IMAGE', default=None,
@@ -257,22 +257,20 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Prints the filter collection."""
     self._front_end.PrintFilterCollection(self._output_writer)
 
-  def ProcessSource(self):
-    """Processes the source.
+  def ProcessSources(self):
+    """Processes the sources.
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
                           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._front_end.ScanSource(
-        self._source_path, partition_number=self._partition_number,
-        partition_offset=self._partition_offset, enable_vss=self._process_vss,
-        vss_stores=self._vss_stores)
+    self.ScanSource(self._front_end)
 
     logging.info(u'Processing started.')
-    self._front_end.ProcessSource(
-        self._destination_path, filter_file=self._filter_file,
+    self._front_end.ProcessSources(
+        self._source_path_specs, self._destination_path,
+        filter_file=self._filter_file,
         remove_duplicates=self._remove_duplicates)
     logging.info(u'Processing completed.')
 
@@ -295,7 +293,7 @@ def Main():
   tool.PrintFilterCollection()
 
   try:
-    tool.ProcessSource()
+    tool.ProcessSources()
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')

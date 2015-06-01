@@ -59,7 +59,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     # TODO: remove after psort options refactor.
     self._options = None
     self._output_format = None
-    self._quiet_mode = False
     self._time_slice_event_time_string = None
     self._time_slice_duration = 5
     self._use_time_slicer = False
@@ -117,19 +116,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     if self._time_slice_event_time_string and self._use_time_slicer:
       raise errors.BadConfigOption(
           u'Time slice and slicer cannot be used at the same time.')
-
-  def _ParseInformationalOptions(self, options):
-    """Parses the informational options.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(PsortTool, self)._ParseInformationalOptions(options)
-
-    self._quiet_mode = getattr(options, u'quiet', False)
 
   def _ParseLanguageOptions(self, options):
     """Parses the language options.
@@ -223,19 +209,6 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'A filter that can be used to filter the dataset before it '
             u'is written into storage. More information about the filters '
             u'and how to use them can be found here: {0:s}').format(self._URL))
-
-  def AddInformationalOptions(self, argument_group):
-    """Adds the informational options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    super(PsortTool, self).AddInformationalOptions(argument_group)
-
-    argument_group.add_argument(
-        u'-q', u'--quiet', action=u'store_true', dest=u'quiet', default=False,
-        help=u'Do not print a summary after processing.')
 
   def AddLanguageOptions(self, argument_group):
     """Adds the language options to the argument group.
@@ -482,13 +455,13 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     super(PsortTool, self).ParseOptions(options)
     self._ParseDataLocationOption(options)
-
     self._ParseAnalysisPluginOptions(options)
     self._ParseFilterOptions(options)
 
-    debug = getattr(options, u'debug', False)
-    if debug:
+    if self._debug_mode:
       logging_level = logging.DEBUG
+    elif self._quiet_mode:
+      logging_level = logging.WARNING
     else:
       logging_level = logging.INFO
 

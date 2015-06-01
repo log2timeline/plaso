@@ -117,9 +117,8 @@ class CollectorTest(CollectorTestCase):
       test_path_spec_queue = single_process.SingleProcessQueue()
       resolver_context = context.Context()
       test_collector = collector.Collector(
-          test_path_spec_queue, dirname, path_spec,
-          resolver_context=resolver_context)
-      test_collector.Collect()
+          test_path_spec_queue, resolver_context=resolver_context)
+      test_collector.Collect([path_spec])
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
           test_path_spec_queue)
@@ -144,13 +143,12 @@ class CollectorTest(CollectorTestCase):
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_path_spec_queue, dirname, path_spec,
-        resolver_context=resolver_context)
+        test_path_spec_queue, resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
     test_collector.SetFilter(find_specs)
 
-    test_collector.Collect()
+    test_collector.Collect([path_spec])
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_path_spec_queue)
@@ -218,9 +216,8 @@ class CollectorTest(CollectorTestCase):
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_path_spec_queue, test_file, path_spec,
-        resolver_context=resolver_context)
-    test_collector.Collect()
+        test_path_spec_queue, resolver_context=resolver_context)
+    test_collector.Collect([path_spec])
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_path_spec_queue)
@@ -248,13 +245,12 @@ class CollectorTest(CollectorTestCase):
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_path_spec_queue, test_file, path_spec,
-        resolver_context=resolver_context)
+        test_path_spec_queue, resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
     test_collector.SetFilter(find_specs)
 
-    test_collector.Collect()
+    test_collector.Collect([path_spec])
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_path_spec_queue)
@@ -288,91 +284,89 @@ class CollectorTest(CollectorTestCase):
   def testImageWithPartitionsCollections(self):
     """Test collection on a storage media image file with multiple partitions.
 
-    This images has two NTFS partitions (p1 and p2).
-
-    Both partitions contain:
-      + /$AttrDef
-      + /$BadClus
-      + /$Bitmap
-      + /$Boot
-      + /$Extend
-      + /$Extend/$ObjId
-      + /$Extend/$Quota
-      + /$Extend/$Reparse
-      + /$Extend/$RmMetadata
-      + /$Extend/$RmMetadata/$Repair
-      + /$Extend/$RmMetadata/$TxfLog
-      + /$LogFile
-      + /$MFT
-      + /$MFTMirr
-      + /$Secure
-      + /$UpCase
-      + /$Volume
-
-    p1 contains:
-      + /file1.txt
-      + /file2.txt
-
-    p2 contains:
-      + /file1_on_part_2.txt
-      + /file2_on_part_2.txt
+    The image contains 2 partitions (p1 and p2) with NFTS file systems.
     """
     test_file = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
-    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+    image_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/',
-        parent=volume_path_spec)
+
+    p1_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
+        part_index=2, start_offset=0x00010000, parent=image_path_spec)
+    p1_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=p1_path_spec)
+
+    p2_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p2',
+        part_index=3, start_offset=0x00510000, parent=image_path_spec)
+    p2_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=p2_path_spec)
 
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_path_spec_queue, test_file, path_spec,
-        resolver_context=resolver_context)
-    test_collector.Collect()
+        test_path_spec_queue, resolver_context=resolver_context)
+    test_collector.Collect([p1_file_system_path_spec, p2_file_system_path_spec])
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_path_spec_queue)
     test_collector_queue_consumer.ConsumeItems()
 
-    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 38)
+    paths = test_collector_queue_consumer.GetFilePaths()
 
-    # Test that we have expected path specs from both partitions.
-    p1_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
-        part_index=2, start_offset=0x00010000, parent=volume_path_spec)
-    p2_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p2',
-        part_index=3, start_offset=0x00510000, parent=volume_path_spec)
+    expected_paths_p1 = [
+        u'/$AttrDef',
+        u'/$BadClus',
+        u'/$Bitmap',
+        u'/$Boot',
+        u'/$Extend',
+        u'/$Extend/$ObjId',
+        u'/$Extend/$Quota',
+        u'/$Extend/$Reparse',
+        u'/$Extend/$RmMetadata',
+        u'/$Extend/$RmMetadata/$Repair',
+        u'/$Extend/$RmMetadata/$TxfLog',
+        u'/$LogFile',
+        u'/$MFT',
+        u'/$MFTMirr',
+        u'/$Secure',
+        u'/$UpCase',
+        u'/$Volume',
+        u'/file1.txt',
+        u'/file2.txt']
 
-    filesystem_files = [
-        (u'/$AttrDef', 4), (u'/$BadClus', 8), (u'/$Bitmap', 6), (u'/$Boot', 7),
-        (u'/$Extend', 11), (u'/$Extend/$ObjId', 25), (u'/$Extend/$Quota', 24),
-        (u'/$Extend/$Reparse', 26), (u'/$Extend/$RmMetadata', 27),
-        (u'/$Extend/$RmMetadata/$Repair', 28),
-        (u'/$Extend/$RmMetadata/$TxfLog', 29), (u'/$LogFile', 2), (u'/$MFT', 0),
-        (u'/$MFTMirr', 1), (u'/$Secure', 9), (u'/$UpCase', 10),
-        (u'/$Volume', 3)]
+    expected_paths_p2 = [
+        u'/$AttrDef',
+        u'/$BadClus',
+        u'/$Bitmap',
+        u'/$Boot',
+        u'/$Extend',
+        u'/$Extend/$ObjId',
+        u'/$Extend/$Quota',
+        u'/$Extend/$Reparse',
+        u'/$Extend/$RmMetadata',
+        u'/$Extend/$RmMetadata/$Repair',
+        u'/$Extend/$RmMetadata/$TxfLog',
+        u'/$LogFile',
+        u'/$MFT',
+        u'/$MFTMirr',
+        u'/$Secure',
+        u'/$UpCase',
+        u'/$Volume',
+        u'/file1_on_part_2.txt',
+        u'/file2_on_part_2.txt']
 
-    p1_files = [(u'/file1.txt', 30), (u'/file2.txt', 31)]
-    p2_files = [(u'/file1_on_part_2.txt', 30), (u'/file2_on_part_2.txt', 31)]
+    expected_paths = []
+    expected_paths.extend(expected_paths_p1)
+    expected_paths.extend(expected_paths_p2)
 
-    expected_path_specs = []
-    for location, inode in filesystem_files + p1_files:
-      expected_path_specs.append(path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=location,
-          inode=inode, parent=p1_path_spec).comparable)
-    for location, inode in filesystem_files + p2_files:
-      expected_path_specs.append(path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=location,
-          inode=inode, parent=p2_path_spec).comparable)
+    self.assertEqual(
+        test_collector_queue_consumer.number_of_path_specs, len(expected_paths))
 
-    path_specs = []
-    for path_spec in test_collector_queue_consumer.path_specs:
-      path_specs.append(path_spec.comparable)
-
-    self.assertEqual(sorted(expected_path_specs), sorted(path_specs))
+    self.assertEqual(sorted(paths), sorted(expected_paths))
 
 
 class BuildFindSpecsFromFileTest(unittest.TestCase):

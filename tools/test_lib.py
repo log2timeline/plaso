@@ -6,6 +6,8 @@ import os
 import unittest
 
 
+# TODO: move the contents fo this file to CLI after preg tool refactor.
+
 class StringIOOutputWriter(object):
   """Class that implements a StringIO output writer."""
 

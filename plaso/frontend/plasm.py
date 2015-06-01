@@ -12,7 +12,6 @@ import sys
 from plaso import filters
 
 from plaso.frontend import analysis_frontend
-from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import storage
@@ -27,10 +26,7 @@ class PlasmFrontend(analysis_frontend.AnalysisFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = frontend.StdinFrontendInputReader()
-    output_writer = frontend.StdoutFrontendOutputWriter()
-
-    super(PlasmFrontend, self).__init__(input_reader, output_writer)
+    super(PlasmFrontend, self).__init__()
 
     self._cluster_closeness = None
     self._cluster_threshold = None

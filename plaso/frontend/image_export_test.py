@@ -7,7 +7,7 @@ import shutil
 import tempfile
 import unittest
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -39,9 +39,9 @@ class DateTimeFileEntryFilter(test_lib.FrontendTestCase):
     """Tests the Matches function."""
     test_path = self._GetTestFilePath([u'ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK, inode=16,
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
         location=u'/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
@@ -144,14 +144,33 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     shutil.rmtree(self._temp_directory, True)
     self._temp_directory = None
 
-  def testProcessSourceExtractWithDateTimeFilter(self):
-    """Tests extract with a date time filter."""
+  def _GetTestScanNode(self, scan_context):
+    """Retrieves the scan node for testing.
+
+    Retrieves the first scan node, from the root upwards, with more or less
+    than 1 sub node.
+
+    Args:
+      scan_context: scan context (instance of dfvfs.ScanContext).
+
+    Returns:
+      A scan node (instance of dfvfs.ScanNode).
+    """
+    scan_node = scan_context.GetRootScanNode()
+    while len(scan_node.sub_nodes) == 1:
+      scan_node = scan_node.sub_nodes[0]
+
+    return scan_node
+
+  def testProcessSourcesExtractWithDateTimeFilter(self):
+    """Tests the ProcessSources function with a date time filter."""
     test_front_end = image_export.ImageExportFrontend()
     source_path = self._GetTestFilePath([u'image.qcow2'])
 
     test_front_end.ParseDateFilters([
         u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
 
+    # TODO: move to corresponding CLI test.
     output_writer = test_lib.StringIOOutputWriter()
     test_front_end.PrintFilterCollection(output_writer)
 
@@ -162,8 +181,14 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     value = output_writer.GetValue()
     self.assertEqual(value, expected_value)
 
-    test_front_end.ScanSource(source_path)
-    test_front_end.ProcessSource(self._temp_directory)
+    scan_context = test_front_end.ScanSource(source_path)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertNotEqual(scan_node, None)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'a_directory'),
@@ -173,15 +198,21 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourceExtractWithExtensionsFilter(self):
-    """Tests extract with an extensions filter."""
+  def testProcessSourcesExtractWithExtensionsFilter(self):
+    """Tests the ProcessSources function with an extensions filter."""
     test_front_end = image_export.ImageExportFrontend()
     source_path = self._GetTestFilePath([u'image.qcow2'])
 
     test_front_end.ParseExtensionsString(u'txt')
 
-    test_front_end.ScanSource(source_path)
-    test_front_end.ProcessSource(self._temp_directory)
+    scan_context = test_front_end.ScanSource(source_path)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertNotEqual(scan_node, None)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'passwords.txt')])
@@ -190,14 +221,20 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourceExtractWithNamesFilter(self):
-    """Tests extract with a names filter."""
+  def testProcessSourcesExtractWithNamesFilter(self):
+    """Tests the ProcessSources function with a names filter."""
     test_front_end = image_export.ImageExportFrontend()
     source_path = self._GetTestFilePath([u'image.qcow2'])
 
     test_front_end.ParseNamesString(u'another_file')
-    test_front_end.ScanSource(source_path)
-    test_front_end.ProcessSource(self._temp_directory)
+    scan_context = test_front_end.ScanSource(source_path)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertNotEqual(scan_node, None)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'a_directory'),
@@ -207,8 +244,8 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourceExtractWithFilter(self):
-    """Tests extract with a filter file."""
+  def testProcessSourcesExtractWithFilter(self):
+    """Tests the ProcessSources function with a filter file."""
     test_front_end = image_export.ImageExportFrontend()
     source_path = self._GetTestFilePath([u'image.qcow2'])
 
@@ -216,8 +253,15 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     with open(filter_file, 'wb') as file_object:
       file_object.write(b'/a_directory/.+_file\n')
 
-    test_front_end.ScanSource(source_path)
-    test_front_end.ProcessSource(self._temp_directory, filter_file=filter_file)
+    scan_context = test_front_end.ScanSource(source_path)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertNotEqual(scan_node, None)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    test_front_end.ProcessSources(
+        [scan_node.path_spec], self._temp_directory, filter_file=filter_file)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'filter.txt'),
@@ -229,14 +273,20 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourceExtractWithSignaturesFilter(self):
-    """Tests extract with a signatures filter."""
+  def testProcessSourcesExtractWithSignaturesFilter(self):
+    """Tests the ProcessSources function with a signatures filter."""
     test_front_end = image_export.ImageExportFrontend()
     source_path = self._GetTestFilePath([u'syslog_image.dd'])
 
     test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
-    test_front_end.ScanSource(source_path)
-    test_front_end.ProcessSource(self._temp_directory)
+    scan_context = test_front_end.ScanSource(source_path)
+
+    scan_node = self._GetTestScanNode(scan_context)
+    self.assertNotEqual(scan_node, None)
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'logs'),
