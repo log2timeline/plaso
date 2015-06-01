@@ -25,7 +25,7 @@ else:
 class _AnalysisReportJSONDecoder(json.JSONDecoder):
   """A class that implements an analysis report object JSON decoder."""
 
-  _CLASS_TYPES = frozenset([u'AnalysisReport', u'bytes'])
+  _CLASS_TYPES = frozenset([u'AnalysisReport', u'EventTag', u'bytes'])
 
   def __init__(self, *args, **kargs):
     """Initializes the JSON decoder object."""
@@ -63,6 +63,32 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
 
     return analysis_report
 
+  def _ConvertDictToEventTag(self, json_dict):
+    """Converts a JSON dict into an event tag object.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventTag'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case this should
+    be 'EventTag'. The rest of the elements of the dictionary make up the
+    event tag object properties.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      An event tag (instance of EventTag).
+    """
+    event_tag = event.EventTag()
+
+    for key, value in iter(json_dict.items()):
+      setattr(event_tag, key, value)
+
+    return event_tag
+
   def _ConvertDictToObject(self, json_dict):
     """Converts a JSON dict into an object.
 
@@ -90,6 +116,9 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
 
     if class_type == u'bytes':
       return binascii.a2b_qp(json_dict[u'stream'])
+
+    elif class_type == u'EventTag':
+      return self._ConvertDictToEventTag(json_dict)
 
     return self._ConvertDictToAnalysisReport(json_dict)
 
@@ -346,9 +375,49 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
   # Note: that the following functions do not follow the style guide
   # because they are part of the json.JSONEncoder object interface.
 
+  def _ConvertEventTagToDict(self, event_tag):
+    """Converts an event tag object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventTag'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case 'EventTag'.
+    The rest of the elements of the dictionary make up the event tag object
+    attributes.
+
+    Args:
+      event_tag: an event tag object (instance of EventTag).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of EventTag.
+    """
+    if not isinstance(event_tag, event.EventTag):
+      raise TypeError
+
+    json_dict = {u'__type__': u'EventTag'}
+    for attribute_name, attribute_value in iter(event_tag.__dict__.items()):
+      if attribute_value is None:
+        continue
+
+      if isinstance(attribute_value, BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
+
   # pylint: disable=method-hidden
   def default(self, analysis_report):
-    """Converts a preprocessing object into a JSON dictionary.
+    """Converts an analysis report object into a JSON dictionary.
 
     The resulting dictionary of the JSON serialized objects consists of:
     {
@@ -382,7 +451,13 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, BYTES_TYPE):
+      if attribute_name == u'_tags':
+        event_tags = []
+        for event_tag in attribute_value:
+          event_tags.append(self._ConvertEventTagToDict(event_tag))
+        attribute_value = json.dumps(event_tags)
+
+      elif isinstance(attribute_value, BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -744,7 +819,7 @@ class JSONEventObjectSerializer(interface.EventObjectSerializer):
 
 
 class JSONEventTagSerializer(interface.EventTagSerializer):
-  """Class that implements the json event tag serializer."""
+  """Class that implements the JSON event tag serializer."""
 
   @classmethod
   def ReadSerialized(cls, json_string):
