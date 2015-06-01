@@ -5,6 +5,7 @@ import logging
 
 import pyevtx
 
+from plaso import dependencies
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -12,8 +13,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-if pyevtx.get_version() < '20141112':
-  raise ImportWarning(u'WinEvtxParser requires at least pyevtx 20141112.')
+dependencies.CheckModuleVersion(u'pyevtx')
 
 
 class WinEvtxRecordEvent(time_events.FiletimeEvent):

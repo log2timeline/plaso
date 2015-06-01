@@ -3,6 +3,7 @@
 
 import pylnk
 
+from plaso import dependencies
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -12,8 +13,7 @@ from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
 
 
-if pylnk.get_version() < '20141026':
-  raise ImportWarning(u'WinLnkParser requires at least pylnk 20141026.')
+dependencies.CheckModuleVersion(u'pylnk')
 
 
 class WinLnkLinkEvent(time_events.FiletimeEvent):

@@ -5,14 +5,14 @@ import logging
 
 import pyolecf
 
+from plaso import dependencies
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-if pyolecf.get_version() < '20131012':
-  raise ImportWarning(u'OleCfParser requires at least pyolecf 20131012.')
+dependencies.CheckModuleVersion(u'pyolecf')
 
 
 class OleCfParser(interface.SingleFileBasePluginsParser):

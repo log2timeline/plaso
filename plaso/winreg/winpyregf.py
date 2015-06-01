@@ -3,6 +3,7 @@
 
 import logging
 
+from plaso import dependencies
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.winreg import interface
@@ -10,8 +11,7 @@ from plaso.winreg import interface
 import pyregf
 
 
-if pyregf.get_version() < '20150315':
-  raise ImportWarning(u'WinPyregf requires at least pyregf 20150315.')
+dependencies.CheckModuleVersion(u'pyregf')
 
 
 class WinPyregfKey(interface.WinRegKey):
