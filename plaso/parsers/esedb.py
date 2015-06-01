@@ -5,6 +5,7 @@ import logging
 
 import pyesedb
 
+from plaso import dependencies
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -12,8 +13,7 @@ from plaso.parsers import manager
 from plaso.parsers import plugins
 
 
-if pyesedb.get_version() < '20150409':
-  raise ImportWarning(u'EseDbParser requires at least pyesedb 20150409.')
+dependencies.CheckModuleVersion(u'pyesedb')
 
 
 class EseDbCache(plugins.BasePluginCache):

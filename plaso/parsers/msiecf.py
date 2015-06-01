@@ -3,6 +3,7 @@
 
 import pymsiecf
 
+from plaso import dependencies
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -11,8 +12,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-if pymsiecf.get_version() < '20150314':
-  raise ImportWarning(u'MsiecfParser requires at least pymsiecf 20150314.')
+dependencies.CheckModuleVersion(u'pymsiecf')
 
 
 class MsiecfLeakEvent(time_events.TimestampEvent):
