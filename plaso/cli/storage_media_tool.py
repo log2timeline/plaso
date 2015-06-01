@@ -148,7 +148,7 @@ class StorageMediaTool(tools.CLITool):
               partition_offset))
 
     if len(volume_identifiers) == 1:
-      return [volume_identifiers]
+      return volume_identifiers
 
     try:
       selected_volume_identifier = self._PromptUserForPartitionIdentifier(
