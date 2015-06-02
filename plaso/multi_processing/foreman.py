@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """This file contains a foreman class for monitoring processes."""
 
-import collections
+import ctypes
 import logging
+import os
+import signal
+import sys
 
 from plaso.engine import processing_status
 from plaso.lib import definitions
@@ -13,202 +16,363 @@ from plaso.multi_processing import xmlrpc
 
 
 class Foreman(object):
-  """A foreman class that monitors processes.
+  """A foreman class that monitors the extraction of events.
 
-  The foreman is responsible for monitoring processes and reporting status
-  information.
+  The foreman is responsible for monitoring processes and queues.
+  The foreman gathers process information using both RPC calls to
+  the processes as well as data provided by the psutil library.
 
-  The worker status information contains among other things:
-  * the number of events extracted by each worker;
+  The foreman monitors among other things:
   * the path specification of the current file entry the worker is processing;
-  * an indicator whether the worker is alive or not;
-  * the memory consumption of the worker.
+  * the number of events extracted by each worker;
+  * an indicator whether a process is alive or not;
+  * the memory consumption of the processes.
 
-  This information is gathered using both RPC calls to the processes
-  as well as data provided by the psutil library.
-
-  In the future the Foreman should be able to actively monitor
-  the health of the processes and terminate and restart processes
-  that are stuck.
+  Attributes:
+    error_detected: boolean value to indicate whether the foreman
+                    detected an error.
+    processing_status: the processing status object (instance of
+                       ProcessingStatus).
   """
 
-  # TODO: refactor process label, instead keep a list of processes and
-  # process information objects.
-  PROCESS_LABEL = collections.namedtuple(
-      u'process_label', u'label pid process_information')
-
-  def __init__(self, event_queue_producer, show_memory_usage=False):
+  def __init__(
+      self, path_spec_queue, event_object_queue, parse_error_queue,
+      show_memory_usage=False):
     """Initialize the foreman process.
 
     Args:
-      event_queue_producer: The event object queue producer (instance of
-                            ItemQueueProducer).
+      path_spec_queue: the path specification queue object (instance of
+                       MultiProcessingQueue).
+      event_object_queue: the event object queue object (instance of
+                          MultiProcessingQueue).
+      parse_error_queue: the parser error queue object (instance of
+                         MultiProcessingQueue).
       show_memory_usage: Optional boolean value to indicate memory information
                          should be included in logging. The default is false.
     """
     super(Foreman, self).__init__()
-    self._event_queue_producer = event_queue_producer
-    self._monitored_process_labels = {}
+    self._event_object_queue = event_object_queue
+    self._parse_error_queue = parse_error_queue
+    self._path_spec_queue = path_spec_queue
+    self._process_information_per_pid = {}
     self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}
+    self._rpc_errors_per_pid = {}
     self._show_memory_usage = show_memory_usage
 
+    self.error_detected = False
     self.processing_status = processing_status.ProcessingStatus()
 
-  def _CheckStatus(self, process_label):
+  def _CheckStatus(self, pid):
     """Check status for a single process from the monitoring list.
 
-    This function takes a process label and checks if the corresponding
-    process is alive and to collect its status information.
-
     Args:
-      process_label: A process label (instance of PROCESS_LABEL).
+      pid: The process ID (PID).
 
     Raises:
-      KeyError: if the process label is not in the monitoring list.
-      ValueError: if the process label is missing.
+      ForemanAbort: when the collector or storage worker process
+                    unexpectedly terminated.
+      KeyError: if the process is not registered with the foreman.
     """
-    if not process_label:
-      raise ValueError(u'Missing process label.')
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
 
-    if process_label.pid not in self._monitored_process_labels:
-      raise KeyError(u'Process label not in monitoring list.')
+    process = self._processes_per_pid[pid]
 
-    process_is_alive = process_label.process_information.IsAlive()
+    process_is_alive = process.is_alive()
     if process_is_alive:
-      rpc_client = self._rpc_clients_per_pid.get(process_label.pid, None)
+      rpc_client = self._rpc_clients_per_pid.get(pid, None)
       process_status = rpc_client.CallFunction()
     else:
       process_status = None
 
-    status_indicator = None
-    if process_status and isinstance(process_status, dict):
-      self._UpdateProcessingStatus(process_label, process_status)
-      if self._show_memory_usage:
-        self._LogMemoryUsage(process_label)
+    if isinstance(process_status, dict):
+      self._rpc_errors_per_pid[pid] = 0
 
       status_indicator = process_status.get(u'processing_status', None)
 
-    elif process_status:
-      logging.warning((
-          u'Unable to retrieve process: {0:s} status via RPC socket: '
-          u'http://localhost:{1:d}').format(
-              process_label.label, process_label.pid))
+    else:
+      rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
+      self._rpc_errors_per_pid[pid] = rpc_errors
 
-    if not process_is_alive:
-      logging.warning(u'Process {0:s} (PID: {1:d}) is not alive.'.format(
-          process_label.label, process_label.pid))
+      if rpc_errors > 10:
+        process_is_alive = False
 
-      self._TerminateProcess(process_label)
+      if process_is_alive:
+        logging.warning((
+            u'Unable to retrieve process: {0:s} status via RPC socket: '
+            u'http://localhost:{1:d}').format(process.name, pid))
 
-    elif status_indicator not in [
+        processing_status_string = u'RPC error'
+        status_indicator = definitions.PROCESSING_STATUS_RUNNING
+      else:
+        processing_status_string = u'killed'
+        status_indicator = definitions.PROCESSING_STATUS_KILLED
+
+      process_status = {
+          u'processing_status': processing_status_string,
+          u'type': process.type,
+      }
+
+    self._UpdateProcessingStatus(pid, process_status)
+
+    if status_indicator not in [
         definitions.PROCESSING_STATUS_COMPLETED,
         definitions.PROCESSING_STATUS_INITIALIZED,
         definitions.PROCESSING_STATUS_RUNNING]:
 
+      logging.error(
+          u'Process {0:s} (PID: {1:d}) is not functioning correctly.'.format(
+              process.name, pid))
+
+      self.error_detected = True
+
+      if process.type == definitions.PROCESS_TYPE_COLLECTOR:
+        raise errors.ForemanAbort(u'Collector unexpectedly terminated')
+
+      if process.type == definitions.PROCESS_TYPE_STORAGE_WRITER:
+        raise errors.ForemanAbort(u'Storage writer unexpectedly terminated')
+
       # We need to terminate the process.
       # TODO: Add a function to start a new instance of a process instead of
       # just removing and killing it.
-      logging.error((
-          u'Process {0:s} (PID: {1:d}) is not functioning when it should be. '
-          u'Terminating it and removing from list.').format(
-              process_label.label, process_label.pid))
-
-      self._TerminateProcess(process_label)
+      self._TerminateProcess(pid)
 
     elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
-      logging.info((
+      logging.debug((
           u'Process {0:s} (PID: {1:d}) has completed its processing. '
           u'Total of {2:d} events extracted').format(
-              process_label.label, process_label.pid,
-              process_status.get(u'number_of_events', 0)))
+              process.name, pid, process_status.get(u'number_of_events', 0)))
 
-      self.StopProcessMonitoring(process_label.pid)
+      self._StopMonitoringProcess(pid)
 
-  def _LogMemoryUsage(self, process_label):
-    """Logs memory information gathered from a process.
+    elif self._show_memory_usage:
+      self._LogMemoryUsage(pid)
 
-    This function will take a process label and call the logging infrastructure
-    to log information about the process's memory information.
-
-    Args:
-      process_label: A process label (instance of PROCESS_LABEL).
-    """
-    mem_info = process_label.process_information.GetMemoryInformation()
-    logging.info((
-        u'{0:s} - RSS: {1:d}, VMS: {2:d}, Shared: {3:d}, Text: {4:d}, lib: '
-        u'{5:d}, data: {6:d}, dirty: {7:d}, Memory Percent: {8:0.2f}%').format(
-            process_label.label, mem_info.rss, mem_info.vms, mem_info.shared,
-            mem_info.text, mem_info.lib, mem_info.data, mem_info.dirty,
-            mem_info.percent * 100))
-
-  def _TerminateProcess(self, process_label):
-    """Terminate a process in the monitoring list.
+  def _KillProcess(self, pid):
+    """Issues a SIGKILL or equivalent to the process.
 
     Args:
-      process_label: A process label (instance of PROCESS_LABEL).
-
-    Raises:
-      KeyError: if the process label is not in the monitoring list.
-      ValueError: if the process label is missing.
+      pid: The process identifier.
     """
-    if not process_label:
-      raise ValueError(u'Missing process label.')
-
-    if process_label.pid not in self._monitored_process_labels:
-      raise KeyError(u'Process label not in monitoring list.')
-
-    process_label.process_information.TerminateProcess()
-
-    # Double check the process is dead.
-    if process_label.process_information.IsAlive():
-      logging.warning(u'Process {0:s} (PID: {1:d}) is still alive.'.format(
-          process_label.label, process_label.pid))
+    if sys.platform.startswith(u'win'):
+      process_terminate = 1
+      handle = ctypes.windll.kernel32.OpenProcess(
+          process_terminate, False, pid)
+      ctypes.windll.kernel32.TerminateProcess(handle, -1)
+      ctypes.windll.kernel32.CloseHandle(handle)
 
     else:
-      logging.warning(u'Process {0:s} (PID: {1:d}) status: {2!s}.'.format(
-          process_label.label, process_label.pid,
-          process_label.process_information.status))
+      try:
+        os.kill(pid, signal.SIGKILL)
+      except OSError as exception:
+        logging.error(u'Unable to kill process {0:d} with error: {1:s}'.format(
+            pid, exception))
 
-      self.StopProcessMonitoring(process_label.pid)
+  def _LogMemoryUsage(self, pid):
+    """Logs memory information gathered from a process.
 
-  def _UpdateProcessingStatus(self, process_label, process_status):
+    Args:
+      pid: The process ID (PID).
+
+    Raises:
+      KeyError: if the process is not registered with the foreman.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+
+    if pid not in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
+
+    process = self._processes_per_pid[pid]
+    process_information = self._process_information_per_pid[pid]
+    memory_info = process_information.GetMemoryInformation()
+    logging.debug((
+        u'{0:s} - RSS: {1:d}, VMS: {2:d}, Shared: {3:d}, Text: {4:d}, lib: '
+        u'{5:d}, data: {6:d}, dirty: {7:d}, Memory Percent: {8:0.2f}%').format(
+            process.name, memory_info.rss, memory_info.vms,
+            memory_info.shared, memory_info.text, memory_info.lib,
+            memory_info.data, memory_info.dirty, memory_info.percent * 100))
+
+  def _StartMonitoringProcess(self, pid):
+    """Starts monitoring a process.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the foreman or
+                if the process if the processed is already being monitored.
+      IOError: if the RPC client cannot connect to the server.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+
+    if pid in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) already in monitoring list.'.format(pid))
+
+    if pid in self._rpc_clients_per_pid:
+      raise KeyError(
+          u'RPC client (PID: {0:d}) already exists'.format(pid))
+
+    rpc_client = xmlrpc.XMLProcessStatusRPCClient()
+
+    hostname = u'localhost'
+    port = rpc.GetProxyPortNumberFromPID(pid)
+    if not rpc_client.Open(hostname, port):
+      raise IOError((
+          u'RPC client (PID: {0:d}) unable to connect to server: '
+          u'{1:s}:{2:d}').format(pid, hostname, port))
+
+    self._rpc_clients_per_pid[pid] = rpc_client
+    self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
+
+  def _StopMonitoringProcess(self, pid):
+    """Stops monitoring a process.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the foreman or
+                if the process is registered, but not monitored.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+
+    if pid not in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
+
+    process = self._processes_per_pid[pid]
+    del self._process_information_per_pid[pid]
+
+    rpc_client = self._rpc_clients_per_pid.get(pid, None)
+    if rpc_client:
+      rpc_client.Close()
+      del self._rpc_clients_per_pid[pid]
+
+    if pid in self._rpc_errors_per_pid:
+      del self._rpc_errors_per_pid[pid]
+
+    logging.debug((
+        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
+        u'list.').format(process.name, pid))
+
+  def _TerminateProcess(self, pid):
+    """Terminate a process.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the foreman.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+
+    process = self._processes_per_pid[pid]
+
+    logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
+    process.terminate()
+
+    if process.is_alive():
+      logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
+      self._KillProcess(pid)
+
+    self._StopMonitoringProcess(pid)
+
+  def _UpdateProcessingStatus(self, pid, process_status):
     """Updates the processing status.
 
     Args:
-      process_label: A process label (instance of PROCESS_LABEL).
+      pid: The process identifier.
       process_status: A process status dictionary.
+
+    Raises:
+      KeyError: if the process is not registered with the foreman.
     """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+
     if not process_status:
       return
+
+    process = self._processes_per_pid[pid]
 
     process_type = process_status.get(u'type', None)
     status_indicator = process_status.get(u'processing_status', None)
 
-    if process_type == u'collector':
+    if process_type == definitions.PROCESS_TYPE_COLLECTOR:
       number_of_path_specs = process_status.get(u'number_of_path_specs', None)
 
       self.processing_status.UpdateCollectorStatus(
-          process_label.label, process_label.pid, number_of_path_specs,
-          status_indicator)
+          process.name, pid, number_of_path_specs, status_indicator)
 
-    elif process_type == u'storage_writer':
+    elif process_type == definitions.PROCESS_TYPE_STORAGE_WRITER:
       number_of_events = process_status.get(u'number_of_events', 0)
 
-      self.processing_status.UpdateStorageWriterStatus(number_of_events)
+      self.processing_status.UpdateStorageWriterStatus(
+          process.name, pid, number_of_events, status_indicator)
 
-    elif process_type == u'worker':
+    elif process_type == definitions.PROCESS_TYPE_WORKER:
+      if pid not in self._process_information_per_pid:
+        raise KeyError(
+            u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
+
       number_of_events = process_status.get(u'number_of_events', 0)
       number_of_path_specs = process_status.get(u'number_of_path_specs', 0)
       display_name = process_status.get(u'display_name', u'')
+      process_information = self._process_information_per_pid[pid]
 
       self.processing_status.UpdateExtractionWorkerStatus(
-          process_label.label, process_label.pid, display_name,
-          number_of_events, number_of_path_specs, status_indicator,
-          process_label.process_information.status)
+          process.name, pid, display_name, number_of_events,
+          number_of_path_specs, status_indicator, process_information.status)
+
+  def AbortJoin(self, timeout=None):
+    """Aborts all registered processes by joining with the parent process.
+
+    Args:
+      timeout: the process join timeout. The default is None meaning no timeout.
+    """
+    for pid, process in iter(self._processes_per_pid.items()):
+      logging.debug(u'Waiting for process: {0:s} (PID: {1:d}).'.format(
+          process.name, pid))
+      process.join(timeout=timeout)
+      if not process.is_alive():
+        logging.debug(u'Process {0:s} (PID: {1:d}) stopped.'.format(
+            process.name, pid))
+
+  def AbortKill(self):
+    """Aborts all registered processes by sending a SIGKILL or equivalent."""
+    for pid, process in iter(self._processes_per_pid.items()):
+      if not process.is_alive():
+        continue
+
+      logging.warning(u'Killing process: {0:s} (PID: {1:d}).'.format(
+          process.name, pid))
+      self._KillProcess(pid)
+
+  def AbortTerminate(self):
+    """Aborts all registered processes by sending a SIGTERM or equivalent."""
+    for pid, process in iter(self._processes_per_pid.items()):
+      if not process.is_alive():
+        continue
+
+      logging.warning(u'Terminating process: {0:s} (PID: {1:d}).'.format(
+          process.name, pid))
+      process.terminate()
 
   def CheckStatus(self):
-    """Checks status of either a single process or all from the monitoring list.
+    """Checks status of the monitored processes.
 
     Returns:
       A boolean indicating whether processing is complete.
@@ -216,50 +380,27 @@ class Foreman(object):
     Raises:
       ForemanAbort: when all the worker are idle.
     """
-    for process_label in self._monitored_process_labels.values():
-      self._CheckStatus(process_label)
+    for pid in iter(self._process_information_per_pid.keys()):
+      self._CheckStatus(pid)
 
     processing_completed = self.processing_status.GetProcessingCompleted()
-    if processing_completed:
+    if not self.error_detected and processing_completed:
       logging.debug(u'Processing completed.')
 
     elif self.processing_status.WorkersIdle():
-      logging.warning(u'Workers are idle.')
-      raise errors.ForemanAbort
+      self.error_detected = True
+      raise errors.ForemanAbort(u'Workers idle for too long')
 
     return processing_completed
 
-  def GetLabelByPid(self, pid):
-    """Retrieves a proces label for a specific PID.
-
-    Args:
-      pid: The process ID (PID).
-
-    Returns:
-      A process label (instance of PROCESS_LABEL) or None.
-    """
-    return self._monitored_process_labels.get(pid, None)
-
-  def IsMonitored(self, pid):
-    """Determines if the foreman is monitoring a certain process.
-
-    Args:
-      pid: The process ID (PID).
-
-    Returns:
-      A boolean indicating if the process is being monitored.
-    """
-    return pid in self._processes_per_pid
-
-  def StartProcessMonitoring(self, process):
-    """Starts monitoring a processes by adding it to the monitor list.
+  def RegisterProcess(self, process):
+    """Registers a process to be registered with the foreman.
 
     Args:
       process: The process object (instance of MultiProcessBaseProcess).
 
     Raises:
-      IOError: if the RPC client cannot connect to the server.
-      KeyError: if the process or RPC client is already set for a certain PID.
+      KeyError: if the process is already registered with the foreman.
       ValueError: if the process object is missing.
     """
     if process is None:
@@ -267,59 +408,17 @@ class Foreman(object):
 
     if process.pid in self._processes_per_pid:
       raise KeyError(
-          u'Already monitoring process: {0!s} (PID: {1:d})'.format(
+          u'Already managing process: {0!s} (PID: {1:d})'.format(
               process.name, process.pid))
 
-    if process.pid in self._rpc_clients_per_pid:
-      raise KeyError(
-          u'RPC client (PID: {0:d}) already exists'.format(process.pid))
-
-    rpc_client = xmlrpc.XMLProcessStatusRPCClient()
-
-    hostname = u'localhost'
-    port = rpc.GetProxyPortNumberFromPID(process.pid)
-    if not rpc_client.Open(hostname, port):
-      raise IOError((
-          u'RPC client (PID: {0:d}) unable to connect to server: '
-          u'{1:s}:{2:d}').format(process.pid, hostname, port))
-
     self._processes_per_pid[process.pid] = process
-    self._rpc_clients_per_pid[process.pid] = rpc_client
 
-    # TODO: refactor to use process instead of process label.
-    process_information = process_info.ProcessInfo(process.pid)
-    label = self.PROCESS_LABEL(process.name, process.pid, process_information)
+  def StartProcessMonitoring(self):
+    """Starts monitoring the registered processes."""
+    for pid in iter(self._processes_per_pid.keys()):
+      self._StartMonitoringProcess(pid)
 
-    if label.pid not in self._monitored_process_labels:
-      self._monitored_process_labels[label.pid] = label
-
-  def StopProcessMonitoring(self, pid):
-    """Stops monitoring a process.
-
-    Args:
-      pid: The process identifier.
-
-    Raises:
-      KeyError: if the process PID is not being monitored.
-    """
-    if pid not in self._processes_per_pid:
-      raise KeyError(u'Not monitoring process (PID: {0:d})'.format(pid))
-
-    if pid not in self._monitored_process_labels:
-      raise KeyError(
-          u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
-
-    del self._processes_per_pid[pid]
-
-    process_label = self._monitored_process_labels[pid]
-    del self._monitored_process_labels[pid]
-
-    # Remove the RPC client.
-    rpc_client = self._rpc_clients_per_pid.get(pid, None)
-    if rpc_client:
-      rpc_client.Close()
-      del self._rpc_clients_per_pid[pid]
-
-    logging.info((
-        u'Process: {0:s} (PID: {1:d}) has been removed from the monitored '
-        u'list.').format(process_label.label, pid))
+  def StopProcessMonitoring(self):
+    """Stops monitoring processes."""
+    for pid in iter(self._process_information_per_pid.keys()):
+      self._StopMonitoringProcess(pid)

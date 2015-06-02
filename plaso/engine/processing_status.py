@@ -7,7 +7,19 @@ from plaso.lib import definitions
 
 
 class CollectorStatus(object):
-  """The collector status."""
+  """The collector status.
+
+  Attributes:
+    identifier: the extraction worker identifier.
+    last_running_time: timestamp of the last update when the process
+                       had a running process status.
+    number_of_path_specs: the total number of path specifications
+                          processed by the extraction worker.
+    number_of_path_specs_delta: the number of path specifications since
+                                the last status update.
+    pid: the collector process identifier (PID).
+    status: string containing the collector status.
+    """
 
   def __init__(self):
     """Initializes the collector status object."""
@@ -21,7 +33,25 @@ class CollectorStatus(object):
 
 
 class ExtractionWorkerStatus(object):
-  """The extraction worker status."""
+  """The extraction worker status.
+
+  Attributes:
+    display_name: the display name of the file entry currently being
+                  processed by the extraction worker.
+    identifier: the extraction worker identifier.
+    last_running_time: timestamp of the last update when the process
+                       had a running process status.
+    number_of_events: the total number of events extracted
+                      by the extraction worker.
+    number_of_events_delta: the number of events since the last status update.
+    number_of_path_specs: the total number of path specifications
+                          processed by the extraction worker.
+    number_of_path_specs_delta: the number of path specifications since
+                                the last status update.
+    pid: the extraction worker process identifier (PID).
+    process_status: string containing the process status.
+    status: string containing the extraction worker status.
+    """
 
   def __init__(self):
     """Initializes the extraction worker status object."""
@@ -35,6 +65,30 @@ class ExtractionWorkerStatus(object):
     self.number_of_path_specs_delta = 0
     self.pid = None
     self.process_status = None
+    self.status = None
+
+
+class StorageWriterStatus(object):
+  """The storage writer status.
+
+  Attributes:
+    identifier: the extraction worker identifier.
+    last_running_time: timestamp of the last update when the process
+                       had a running process status.
+    number_of_events: the total number of events received
+                      by the storage writer.
+    pid: the storage writer process identifier (PID).
+    status: string containing the storage writer status.
+    """
+
+  def __init__(self):
+    """Initializes the storage writer status object."""
+    super(StorageWriterStatus, self).__init__()
+    self.identifier = None
+    self.last_running_time = 0
+    self.number_of_events = 0
+    self.number_of_events_delta = 0
+    self.pid = None
     self.status = None
 
 
@@ -52,7 +106,12 @@ class ProcessingStatus(object):
     self._collector_completed_count = 0
     self._extraction_workers = {}
     self._last_running_time = 0
-    self._number_of_events = 0
+    self._storage_writer = None
+
+  @property
+  def collector(self):
+    """The collector status object."""
+    return self._collector
 
   @property
   def extraction_workers(self):
@@ -60,6 +119,11 @@ class ProcessingStatus(object):
     return [
         self._extraction_workers[identifier]
         for identifier in sorted(self._extraction_workers.keys())]
+
+  @property
+  def storage_writer(self):
+    """The storage writer status object."""
+    return self._storage_writer
 
   def GetExtractionCompleted(self):
     """Determines the extraction completed status.
@@ -91,14 +155,14 @@ class ProcessingStatus(object):
   def GetNumberOfExtractedEvents(self):
     """Retrieves the number of extracted events."""
     number_of_events = 0
-    for extraction_worker_status in self._extraction_workers.itervalues():
+    for extraction_worker_status in iter(self._extraction_workers.values()):
       number_of_events += extraction_worker_status.number_of_events
     return number_of_events
 
   def GetNumberOfExtractedPathSpecs(self):
     """Retrieves the number of extracted path specifications."""
     number_of_path_specs = 0
-    for extraction_worker_status in self._extraction_workers.itervalues():
+    for extraction_worker_status in iter(self._extraction_workers.values()):
       number_of_path_specs += extraction_worker_status.number_of_path_specs
     return number_of_path_specs
 
@@ -110,8 +174,9 @@ class ProcessingStatus(object):
     """
     extraction_completed = self.GetExtractionCompleted()
     number_of_events = self.GetNumberOfExtractedEvents()
-    if (extraction_completed and
-        self._number_of_events == number_of_events):
+
+    if (extraction_completed and self._storage_writer and
+        self._storage_writer.number_of_events == number_of_events):
       return True
 
     return False
@@ -122,16 +187,17 @@ class ProcessingStatus(object):
 
     Args:
       identifier: the extraction worker identifier.
-      pid: the extraction worker process identifier (PID).
+      pid: the collector process identifier (PID).
       number_of_path_specs: the total number of path specifications
                             processed by the extraction worker.
-      status: the collector status.
+      status: string containing the collector status.
     """
     if not self._collector:
       self._collector = CollectorStatus()
 
-    number_of_path_specs_delta = (
-        number_of_path_specs - self._collector.number_of_path_specs)
+    number_of_path_specs_delta = number_of_path_specs
+    if number_of_path_specs_delta > 0:
+      number_of_path_specs_delta -= self._collector.number_of_path_specs
 
     self._collector.identifier = identifier
     self._collector.number_of_path_specs = number_of_path_specs
@@ -158,18 +224,22 @@ class ProcessingStatus(object):
                         by the extraction worker.
       number_of_path_specs: the total number of path specifications
                             processed by the extraction worker.
-      status: the extraction worker status.
-      process_status: the process status.
+      status: string containing the extraction worker status.
+      process_status: string containing the process status.
     """
     if identifier not in self._extraction_workers:
       self._extraction_workers[identifier] = ExtractionWorkerStatus()
 
     extraction_worker_status = self._extraction_workers[identifier]
 
-    number_of_events_delta = (
-        number_of_events - extraction_worker_status.number_of_events)
-    number_of_path_specs_delta = (
-        number_of_path_specs - extraction_worker_status.number_of_path_specs)
+    number_of_events_delta = number_of_events
+    if number_of_events_delta > 0:
+      number_of_events_delta -= extraction_worker_status.number_of_events
+
+    number_of_path_specs_delta = number_of_path_specs
+    if number_of_path_specs_delta > 0:
+      number_of_path_specs_delta -= (
+          extraction_worker_status.number_of_path_specs)
 
     extraction_worker_status.display_name = display_name
     extraction_worker_status.identifier = identifier
@@ -187,14 +257,32 @@ class ProcessingStatus(object):
       extraction_worker_status.last_running_time = timestamp
       self._last_running_time = timestamp
 
-  def UpdateStorageWriterStatus(self, number_of_events):
+  def UpdateStorageWriterStatus(
+      self, identifier, pid, number_of_events, status):
     """Updates the storage writer status.
 
     Args:
+      identifier: the extraction worker identifier.
+      pid: the storage writer process identifier (PID).
       number_of_events: the total number of events received
                         by the storage writer.
+      status: string containing the storage writer status.
     """
-    self._number_of_events = number_of_events
+    if not self._storage_writer:
+      self._storage_writer = StorageWriterStatus()
+
+    number_of_events_delta = number_of_events
+    if number_of_events_delta > 0:
+      number_of_events_delta -= self._storage_writer.number_of_events
+
+    self._storage_writer.identifier = identifier
+    self._storage_writer.number_of_events = number_of_events
+    self._storage_writer.number_of_events_delta = number_of_events_delta
+    self._storage_writer.pid = pid
+    self._storage_writer.status = status
+
+    if status != definitions.PROCESSING_STATUS_COMPLETED:
+      self._storage_writer.last_running_time = time.time()
 
   def WorkersIdle(self):
     """Determines if the workers are idle."""
@@ -208,7 +296,7 @@ class ProcessingStatus(object):
 
   def WorkersRunning(self):
     """Determines if the workers are running."""
-    for extraction_worker_status in self._extraction_workers.itervalues():
+    for extraction_worker_status in iter(self._extraction_workers.values()):
       if (extraction_worker_status.number_of_events_delta > 0 or
           extraction_worker_status.number_of_path_specs_delta > 0):
         return True

@@ -443,7 +443,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     except KeyboardInterrupt:
       self._CleanUpAfterAbort()
-      raise errors.UserAbort(u'Process source aborted.')
+      raise errors.UserAbort
 
   def _ProcessSourcesSingleProcessMode(
       self, pre_obj, source_path_specs, filter_find_specs=None,
@@ -547,7 +547,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     except KeyboardInterrupt:
       self._CleanUpAfterAbort()
-      raise errors.UserAbort(u'Process source aborted.')
+      raise errors.UserAbort
 
   def ProcessSources(
       self, source_path_specs, filter_file=None, hasher_names_string=None,
