@@ -213,7 +213,7 @@ class MultiProcessEngine(engine.BaseEngine):
     for worker_number in range(self._number_of_extraction_workers):
       extraction_worker = self.CreateExtractionWorker(worker_number)
 
-      process_name = u'Worker_{0:d}'.format(worker_number)
+      process_name = u'Worker_{0:02d}'.format(worker_number)
 
       # TODO: Test to see if a process pool can be a better choice.
       worker_process = MultiProcessEventExtractionWorkerProcess(
