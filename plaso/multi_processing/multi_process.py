@@ -177,13 +177,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Returns:
       A collector object (instance of Collector).
-
-    Raises:
-      RuntimeError: if source path specification is not set.
     """
-    if not self._source_path_spec:
-      raise RuntimeError(u'Missing source.')
-
     collector_object = collector.Collector(
         self._path_spec_queue, resolver_context=resolver_context)
 
