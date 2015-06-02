@@ -12,8 +12,8 @@ class ForemanTest(unittest.TestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    # TODO: pass an event queue producer to the foreman instead of none.
-    foreman_object = foreman.Foreman(None)
+    # TODO: pass queues to the foreman instead of none.
+    foreman_object = foreman.Foreman(None, None, None)
     self.assertNotEqual(foreman_object, None)
 
   # TODO: add more tests.

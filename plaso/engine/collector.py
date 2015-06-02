@@ -123,7 +123,7 @@ class Collector(queue.ItemQueueProducer):
     return {
         u'number_of_path_specs': number_of_path_specs,
         u'processing_status': self._status,
-        u'type': u'collector'}
+        u'type': definitions.PROCESS_TYPE_COLLECTOR}
 
   def SetCollectDirectoryMetadata(self, collect_directory_metadata):
     """Sets the collect directory metadata flag.

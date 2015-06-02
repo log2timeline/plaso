@@ -91,6 +91,36 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging.warning(u'Unsupported source type.')
 
+  def _FormatStatusTableRow(
+      self, identifier, pid, status, number_of_events, number_of_events_delta,
+      display_name):
+    """Formats a status table row.
+
+    Args:
+      identifier: identifier to describe the status table entry.
+      pid: the process identifier (PID).
+      status: the process status string.
+      number_of_events: the total number of events.
+      number_of_events_delta: the number of events since the last status update.
+      display_name: the display name of the file last processed.
+    """
+    # This check makes sure the columns are tab aligned.
+    if len(status) < 8:
+      status = u'{0:s}\t'.format(status)
+
+    if number_of_events is None or number_of_events_delta is None:
+      events = u''
+    else:
+      events = u'{0:d} ({1:d})'.format(number_of_events, number_of_events_delta)
+
+      # This check makes sure the columns are tab aligned.
+      if len(events) < 8:
+        events = u'{0:s}\t'.format(events)
+
+    # TODO: shorten display name to fit in 80 chars and show the filename.
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
+        identifier, pid, status, events, display_name)
+
   def _ParseOutputOptions(self, options):
     """Parses the output options.
 
@@ -117,7 +147,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._foreman_verbose = getattr(options, u'foreman_verbose', False)
 
-    # TODO: workers.
+    # TODO: add code to parse the worker options.
 
   def _PrintStatusUpdate(self, processing_status):
     """Prints the processing status.
@@ -139,28 +169,35 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.PrintOptions()
 
     status_table = [u'\033[1mIdentifier\tPID\tStatus\t\tEvents\t\tFile\033[0m']
+
+    status_row = self._FormatStatusTableRow(
+        processing_status.collector.identifier, processing_status.collector.pid,
+        processing_status.collector.status, None, None, u'')
+
+    status_table.append(status_row)
+
     for extraction_worker_status in processing_status.extraction_workers:
       status = extraction_worker_status.status
       if status == definitions.PROCESSING_STATUS_RUNNING:
         status = extraction_worker_status.process_status
 
-      if len(status) < 8:
-        status = u'{0:s}\t'.format(status)
-
-      events = u'{0:d} ({1:d})'.format(
-          extraction_worker_status.number_of_events,
-          extraction_worker_status.number_of_events_delta)
-
-      if len(events) < 8:
-        events = u'{0:s}\t'.format(events)
-
-      # TODO: shorten display name to fit in 80 chars and show the filename.
-      status_row = u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
+      status_row = self._FormatStatusTableRow(
           extraction_worker_status.identifier,
-          extraction_worker_status.pid, status, events,
+          extraction_worker_status.pid, status,
+          extraction_worker_status.number_of_events,
+          extraction_worker_status.number_of_events_delta,
           extraction_worker_status.display_name)
 
       status_table.append(status_row)
+
+    status_row = self._FormatStatusTableRow(
+        processing_status.storage_writer.identifier,
+        processing_status.storage_writer.pid,
+        processing_status.storage_writer.status,
+        processing_status.storage_writer.number_of_events,
+        processing_status.storage_writer.number_of_events_delta, u'')
+
+    status_table.append(status_row)
 
     status_table.append(u'')
     self._output_writer.Write(u'\n'.join(status_table))
