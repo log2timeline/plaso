@@ -176,9 +176,6 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     if self._text_prepend:
       engine.SetTextPrepend(self._text_prepend)
-    # TODO: add support to handle multiple partitions.
-    engine.SetSource(
-        self.GetSourcePathSpec(), resolver_context=self._resolver_context)
 
     return engine
 
@@ -205,14 +202,14 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     if self._text_prepend:
       engine.SetTextPrepend(self._text_prepend)
 
-    # TODO: add support to handle multiple partitions.
-    engine.SetSource(
-        self.GetSourcePathSpec(), resolver_context=self._resolver_context)
-
     return engine
 
-  def _PreprocessSource(self):
+  def _PreprocessSource(self, source_path_specs):
     """Preprocesses the source.
+
+    Args:
+      source_path_specs: list of path specifications (instances of
+                         dfvfs.PathSpec) to process.
 
     Returns:
       The preprocessing object (instance of PreprocessObject).
@@ -238,7 +235,9 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         (self.SourceIsDirectory() or self.SourceIsStorageMediaImage())):
       try:
         self._engine.PreprocessSource(
-            self._operating_system, resolver_context=self._resolver_context)
+            source_path_specs, self._operating_system,
+            resolver_context=self._resolver_context)
+
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))
@@ -550,16 +549,6 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       self._CleanUpAfterAbort()
       raise errors.UserAbort(u'Process source aborted.')
 
-  def GetSourceFileSystemSearcher(self):
-    """Retrieves the file system searcher of the source.
-
-    Returns:
-      A tuple of the file system (instance of dfvfs.FileSystem) and
-      the file system searcher object (instance of dfvfs.FileSystemSearcher)
-    """
-    return self._engine.GetSourceFileSystemSearcher(
-        resolver_context=self._resolver_context)
-
   def ProcessSources(
       self, source_path_specs, filter_file=None, hasher_names_string=None,
       parser_filter_string=None, single_process_mode=False,
@@ -609,7 +598,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     else:
       self._engine = self._InitializeMultiProcessModeEngine()
 
-    pre_obj = self._PreprocessSource()
+    pre_obj = self._PreprocessSource(source_path_specs)
 
     self._operating_system = getattr(pre_obj, u'guessed_os', None)
 
