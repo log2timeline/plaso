@@ -83,21 +83,15 @@ class SingleProcessEngineTest(unittest.TestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    test_engine.SetSource(source_path_spec, resolver_context=resolver_context)
-
-    self.assertFalse(test_engine.SourceIsDirectory())
-    self.assertFalse(test_engine.SourceIsFile())
-    self.assertTrue(test_engine.SourceIsStorageMediaImage())
-
     test_file_system, test_searcher = test_engine.GetSourceFileSystemSearcher(
-        resolver_context=resolver_context)
+        source_path_spec, resolver_context=resolver_context)
     self.assertNotEqual(test_searcher, None)
     self.assertIsInstance(
         test_searcher, file_system_searcher.FileSystemSearcher)
 
     test_file_system.Close()
 
-    test_engine.PreprocessSource(u'Windows')
+    test_engine.PreprocessSource([source_path_spec], u'Windows')
 
     test_collector = test_engine.CreateCollector(
         False, filter_find_specs=None, resolver_context=resolver_context)
