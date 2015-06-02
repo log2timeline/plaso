@@ -358,7 +358,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         u'number_of_events': self._parser_mediator.number_of_events,
         u'number_of_path_specs': number_of_path_specs,
         u'processing_status': self._status,
-        u'type': u'worker'}
+        u'type': definitions.PROCESS_TYPE_WORKER}
 
   def HashFileEntry(self, file_entry):
     """Produces a dictionary containing hash digests of the file entry content.
@@ -510,13 +510,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
 
-    logging.info(
+    logging.debug(
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
             self._identifier, os.getpid()))
 
     self.ConsumeItems()
 
-    logging.info(
+    logging.debug(
         u'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
             self._identifier, os.getpid()))
 

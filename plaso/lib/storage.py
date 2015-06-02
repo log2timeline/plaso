@@ -1608,7 +1608,7 @@ class StorageWriter(queue.ItemQueueConsumer):
     return {
         u'number_of_events': self.number_of_consumed_items,
         u'processing_status': self._status,
-        u'type': u'storage_writer'}
+        u'type': definitions.PROCESS_TYPE_STORAGE_WRITER}
 
   def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
     """Enables or disables profiling.
