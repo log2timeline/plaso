@@ -15,6 +15,5 @@ xcopy /q /y config\licenses\* dist\plaso\licenses
 xcopy /q /y /s dist\image_export\* dist\plaso
 xcopy /q /y /s dist\log2timeline\* dist\plaso
 xcopy /q /y /s dist\pinfo\* dist\plaso
-xcopy /q /y /s dist\plasm\* dist\plaso
 xcopy /q /y /s dist\preg\* dist\plaso
 xcopy /q /y /s dist\psort\* dist\plaso
