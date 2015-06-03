@@ -1,44 +1,11 @@
 # -*- coding: utf-8 -*-
 """Front-end related functions and classes for testing."""
 
-import io
 import os
 import unittest
 
 
-# TODO: move the contents fo this file to CLI after preg tool refactor.
-
-class StringIOOutputWriter(object):
-  """Class that implements a StringIO output writer."""
-
-  def __init__(self):
-    """Initialize the string output writer."""
-    super(StringIOOutputWriter, self).__init__()
-    self._string_io = io.StringIO()
-
-    # Make the output writer compatible with a filehandle interface.
-    self.write = self.Write
-
-  def flush(self):
-    """Flush the internal buffer."""
-    self._string_io.flush()
-
-  def GetValue(self):
-    """Returns the write buffer from the output writer."""
-    return self._string_io.getvalue()
-
-  def GetLine(self):
-    """Returns a single line read from the output buffer."""
-    return self._string_io.readline()
-
-  def SeekToBeginning(self):
-    """Seeks the output buffer to the beginning of the buffer."""
-    self._string_io.seek(0)
-
-  def Write(self, string):
-    """Writes a string to the StringIO object."""
-    self._string_io.write(string)
-
+# TODO: move the contents of this file to CLI after preg tool refactor.
 
 class ToolTestCase(unittest.TestCase):
   """The unit test case for a tool."""

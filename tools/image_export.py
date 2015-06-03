@@ -86,7 +86,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
-        description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False)
+        description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
