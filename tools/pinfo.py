@@ -469,8 +469,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Returns:
       A boolean value indicating the arguments were successfully parsed.
     """
-    logging.basicConfig(
-        level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+    self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, add_help=False)
@@ -526,8 +525,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     else:
       logging_level = logging.INFO
 
-    logging.basicConfig(
-        level=logging_level, format=u'[%(levelname)s] %(message)s')
+    self._ConfigureLogging(log_level=logging_level)
 
     self._verbose = getattr(options, u'verbose', False)
 

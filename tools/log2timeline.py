@@ -309,8 +309,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Returns:
       A boolean value indicating the arguments were successfully parsed.
     """
-    logging.basicConfig(
-        level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+    self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -335,11 +334,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--info', dest=u'show_info', action=u'store_true', default=False,
         help=u'Print out information about supported plugins and parsers.')
 
-    info_group.add_argument(
-        u'--logfile', u'--log_file', u'--log-file', action=u'store',
-        metavar=u'FILENAME', dest=u'log_file', type=unicode, default=u'', help=(
-            u'If defined all log messages will be redirected to this file '
-            u'instead the default STDERR.'))
+    self.AddLogFileOptions(info_group)
 
     info_group.add_argument(
         u'--status_view', u'--status-view', dest=u'status_view_mode',
@@ -439,7 +434,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
         u'<%(module)s> %(message)s')
 
-    log_file = getattr(options, u'log_file', None)
     if self._debug_mode:
       logging_level = logging.DEBUG
     elif self._quiet_mode:
@@ -447,11 +441,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging_level = logging.INFO
 
-    if log_file:
-      logging.basicConfig(
-          level=logging_level, format=format_string, filename=log_file)
-    else:
-      logging.basicConfig(level=logging_level, format=format_string)
+    log_file = getattr(options, u'log_file', None)
+    self._ConfigureLogging(
+        log_level=logging_level, format_string=format_string,
+        filename=log_file)
 
     if self._debug_mode:
       logging_filter = log2timeline.LoggingFilter()
