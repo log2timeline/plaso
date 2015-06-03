@@ -116,6 +116,22 @@ plaso.analysis.test_lib module
     :undoc-members:
     :show-inheritance:
 
+plaso.analysis.virustotal module
+--------------------------------
+
+.. automodule:: plaso.analysis.virustotal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.analysis.virustotal_test module
+-------------------------------------
+
+.. automodule:: plaso.analysis.virustotal_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.analysis.windows_services module
 --------------------------------------
 

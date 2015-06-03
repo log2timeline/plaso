@@ -44,6 +44,14 @@ plaso.cli.helpers.tagging_analysis module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.virustotal_analysis module
+--------------------------------------------
+
+.. automodule:: plaso.cli.helpers.virustotal_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.windows_services_analysis module
 --------------------------------------------------
 

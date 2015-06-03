@@ -50,6 +50,7 @@ PYTHON_DEPENDENCIES = [
     # TODO: determine the version of pytz.
     # pytz uses __version__ but has a different version indicator e.g. 2012d
     (u'pytz', u'', u'', None),
+    (u'requests', u'__version__', u'2.2.1', None),
     (u'six', u'__version__', u'1.1.0', None),
     (u'sqlite3', u'sqlite_version', u'3.7.8', None),
     (u'yaml', u'__version__', u'3.10', None)]
