@@ -12,7 +12,6 @@ try:
   from timesketch.lib.datastores.elastic import ElasticSearchDataStore
   from timesketch.models import db_session
   from timesketch.models.sketch import SearchIndex
-  from timesketch.models.user import User
 except ImportError:
   timesketch = None
 
@@ -50,14 +49,6 @@ class TimesketchOutputModule(interface.OutputModule):
           u'action': u'store',
           u'required': False,
           u'default': uuid.uuid4().hex}),
-      (u'--owner', {
-          u'dest': u'owner',
-          u'type': unicode,
-          u'help': u'The username of the Timesketch user that will be the '
-                   u'owner of this timeline. Default: None',
-          u'action': u'store',
-          u'required': False,
-          u'default': u''}),
       (u'--flush_interval', {
           u'dest': u'flush_interval',
           u'type': int,
@@ -89,7 +80,6 @@ class TimesketchOutputModule(interface.OutputModule):
         u'flush_interval')
     self._index_name = self._output_mediator.GetConfigurationValue(u'index')
     self._timeline_name = self._output_mediator.GetConfigurationValue(u'name')
-    self._timeline_owner = self._output_mediator.GetConfigurationValue(u'owner')
 
     hostname = self._output_mediator.GetStoredHostname()
     if hostname:
@@ -163,28 +153,21 @@ class TimesketchOutputModule(interface.OutputModule):
         index=self._index_name, doc_type=self._doc_type, body=self._events)
     # Clear the events list.
     self._events = []
+    logging.info(u'{0:d} events added'.format(self._counter[u'events']))
 
   def Close(self):
     """Closes the connection to TimeSketch Elasticsearch database.
 
-    Sends the remaining events for indexing and adds the timeline to Timesketch.
+    Sends the remaining events for indexing and removes the processing status on
+    the Timesketch search index object.
     """
     self._FlushEventsToElasticsearch()
-
     with self._timesketch.app_context():
-      # Get Timesketch user object, or None if user do not exist. This is a
-      # SQLAlchemy query against the Timesketch database.
-      user_query = User.query.filter_by(username=self._timeline_owner)
-      user = user_query.first()
-      search_index = SearchIndex(
-          name=self._timeline_name, description=self._timeline_name, user=user,
-          index_name=self._index_name)
-
-    # Grant all users read permission on the mapping object.
-    search_index.grant_permission(None, u'read')
-    # Save the mapping object to the Timesketch database.
-    db_session.add(search_index)
-    db_session.commit()
+      search_index = SearchIndex.query.filter_by(
+          index_name=self._index_name).first()
+      search_index.status.remove(search_index.status[0])
+      db_session.add(search_index)
+      db_session.commit()
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
@@ -206,7 +189,11 @@ class TimesketchOutputModule(interface.OutputModule):
       self._FlushEventsToElasticsearch()
 
   def WriteHeader(self):
-    """Creates the Elasticsearch index with Timesketch specific settings."""
+    """Setup the Elasticsearch index and the Timesketch database object.
+
+    Creates the Elasticsearch index with Timesketch specific settings and the
+    Timesketch SearchIndex database object.
+    """
     # This cannot be static because we use the value of self._doc_type from
     # arguments.
     _document_mapping = {
@@ -229,6 +216,17 @@ class TimesketchOutputModule(interface.OutputModule):
             u'Unable to proceed, cannot connect to Timesketch backend '
             u'with error: {0:s}.\nPlease verify connection.').format(exception))
         raise RuntimeError(u'Unable to connect to Timesketch backend.')
+
+    with self._timesketch.app_context():
+      search_index = SearchIndex.get_or_create(
+          name=self._timeline_name, description=self._timeline_name, user=None,
+          index_name=self._index_name)
+      # Grant all users read permission on the mapping object and set status.
+      search_index.grant_permission(None, u'read')
+      search_index.set_status(u'processing')
+      # Save the mapping object to the Timesketch database.
+      db_session.add(search_index)
+      db_session.commit()
 
     logging.info(u'Adding events to Timesketch..')
 
