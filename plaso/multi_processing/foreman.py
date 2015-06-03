@@ -74,9 +74,7 @@ class Foreman(object):
                     unexpectedly terminated.
       KeyError: if the process is not registered with the foreman.
     """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+    self._RaiseIfNotRegistered(pid)
 
     process = self._processes_per_pid[pid]
 
@@ -179,13 +177,8 @@ class Foreman(object):
     Raises:
       KeyError: if the process is not registered with the foreman.
     """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
-
-    if pid not in self._process_information_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
+    self._RaiseIfNotRegistered(pid)
+    self._RaiseIfNotMonitored(pid)
 
     process = self._processes_per_pid[pid]
     process_information = self._process_information_per_pid[pid]
@@ -208,9 +201,7 @@ class Foreman(object):
                 if the process if the processed is already being monitored.
       IOError: if the RPC client cannot connect to the server.
     """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+    self._RaiseIfNotRegistered(pid)
 
     if pid in self._process_information_per_pid:
       raise KeyError(
@@ -232,6 +223,32 @@ class Foreman(object):
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
+  def _RaiseIfNotMonitored(self, pid):
+    """Raises if the process is not monitored by the foreman.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not monitored by the foreman.
+    """
+    if pid not in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not monitored by foreman.'.format(pid))
+
+  def _RaiseIfNotRegistered(self, pid):
+    """Raises if the process is not registered with the foreman.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the foreman.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+
   def _StopMonitoringProcess(self, pid):
     """Stops monitoring a process.
 
@@ -242,13 +259,8 @@ class Foreman(object):
       KeyError: if the process is not registered with the foreman or
                 if the process is registered, but not monitored.
     """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
-
-    if pid not in self._process_information_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
+    self._RaiseIfNotRegistered(pid)
+    self._RaiseIfNotMonitored(pid)
 
     process = self._processes_per_pid[pid]
     del self._process_information_per_pid[pid]
@@ -274,9 +286,7 @@ class Foreman(object):
     Raises:
       KeyError: if the process is not registered with the foreman.
     """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+    self._RaiseIfNotRegistered(pid)
 
     process = self._processes_per_pid[pid]
 
@@ -299,9 +309,7 @@ class Foreman(object):
     Raises:
       KeyError: if the process is not registered with the foreman.
     """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with foreman'.format(pid))
+    self._RaiseIfNotRegistered(pid)
 
     if not process_status:
       return
@@ -324,9 +332,7 @@ class Foreman(object):
           process.name, pid, number_of_events, status_indicator)
 
     elif process_type == definitions.PROCESS_TYPE_WORKER:
-      if pid not in self._process_information_per_pid:
-        raise KeyError(
-            u'Process (PID: {0:d}) not in monitoring list.'.format(pid))
+      self._RaiseIfNotMonitored(pid)
 
       number_of_events = process_status.get(u'number_of_events', 0)
       number_of_path_specs = process_status.get(u'number_of_path_specs', 0)

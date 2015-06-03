@@ -868,7 +868,7 @@ class StorageFile(object):
       self._zipfile.close()
       self._file_open = False
       if not self._read_only:
-        logging.info((
+        logging.debug((
             u'[Storage] Closing the storage, number of events added: '
             u'{0:d}').format(self._write_counter))
 
