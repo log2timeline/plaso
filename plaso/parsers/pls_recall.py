@@ -54,6 +54,13 @@ class PlsRecallParser(interface.SingleFileBaseParser):
   """
 
   _INITIAL_FILE_OFFSET = None
+  _PLS_KEYWORD = frozenset([
+      u'begin', u'commit', u'create', u'declare', u'drop', u'end', u'exception',
+      u'execute', u'insert', u'replace', u'rollback', u'select', u'set',
+      u'update'])
+
+  # 6 * 365 * 24 * 60 * 60 * 1000000.
+  _SIX_YEARS_IN_MICRO_SECONDS = 189216000000000
 
   NAME = u'pls_recall'
   DESCRIPTION = u'Parser for PL/SQL Recall files.'
@@ -131,6 +138,16 @@ class PlsRecallParser(interface.SingleFileBaseParser):
     if timestamp <= 0:
       return False
 
+    # Verify that the timestamp is no more than six years into the future.
+    # Six years is an arbitrary time length just to evaluate the timestamp
+    # against some value. There is no guarantee that this will catch everything.
+    # TODO: Add a check for similarly valid value back in time. Maybe if it the
+    # timestamp is before 1980 we are pretty sure it is invalid?
+    # TODO: This is a very flaky assumption. Find a better one.
+    current_timestamp = timelib.Timestamp.GetNow()
+    if timestamp > current_timestamp + self._SIX_YEARS_IN_MICRO_SECONDS:
+      return False
+
     # TODO: Add other verification checks here. For instance make sure
     # that the query actually looks like a SQL query. This structure produces a
     # lot of false positives and thus we need to add additional verification to
@@ -143,6 +160,13 @@ class PlsRecallParser(interface.SingleFileBaseParser):
     if not utils.IsText(structure.Query):
       return False
     if not utils.IsText(structure.Database):
+      return False
+
+    # Take the first word from the query field and attempt to match that against
+    # allowed queries.
+    first_word, _, _ = structure.Query.partition(b' ')
+
+    if first_word.lower() not in self._PLS_KEYWORD:
       return False
 
     return True
