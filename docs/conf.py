@@ -13,6 +13,7 @@
 #
 # Valid options are documented at http://sphinx-doc.org/config.html.
 
+from __future__ import print_function
 import os
 import sys
 import time
@@ -92,9 +93,9 @@ modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 PIP_INSTALLED_MODULES = set(
     [u'google.protobuf', u'six', u'pyparsing', u'construct'])
 modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
-print u'Mocking modules'
+print(u'Mocking modules')
 for module_name in modules_to_mock:
-  print module_name
+  print(module_name)
 
 sys.modules.update((module_name, Mock()) for module_name in modules_to_mock)
 

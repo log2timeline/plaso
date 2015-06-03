@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The psort front-end."""
 
+from __future__ import print_function
 import collections
 import multiprocessing
 import logging
@@ -564,7 +565,8 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
 
     report_string = analysis_report.GetString()
     try:
-      print report_string.encode(self._preferred_encoding)
+      # TODO: move this print to the psort tool or equivalent.
+      print(report_string.encode(self._preferred_encoding))
     except UnicodeDecodeError:
       logging.error(
           u'Unable to print report due to an unicode decode error. '

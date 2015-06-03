@@ -6,6 +6,7 @@
    sudo python setup.py install
 """
 
+from __future__ import print_function
 import glob
 import locale
 import os
@@ -27,8 +28,8 @@ import plaso.dependencies
 
 version_tuple = (sys.version_info[0], sys.version_info[1])
 if version_tuple < (2, 7) or version_tuple >= (3, 0):
-  print (u'Unsupported Python version: {0:s}, version 2.7 or higher and '
-         u'lower than 3.x required.').format(sys.version)
+  print((u'Unsupported Python version: {0:s}, version 2.7 or higher and '
+         u'lower than 3.x required.').format(sys.version))
   sys.exit(1)
 
 

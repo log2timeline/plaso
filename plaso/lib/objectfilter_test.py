@@ -173,17 +173,12 @@ class ObjectFilterTest(unittest.TestCase):
   def testBinaryOperators(self):
     for operator, test_data in self.operator_tests.items():
       for test_unit in test_data:
-        # TODO: why is there a print statement here?
-        print (u'Testing {0:s} with {1!s} and {2!s}'.format(
-            operator, test_unit[0], test_unit[1]))
         kwargs = {'arguments': test_unit[1],
                   'value_expander': self.value_expander}
         ops = operator(**kwargs)
         self.assertEqual(test_unit[0], ops.Matches(self.file))
         if hasattr(ops, 'FlipBool'):
           ops.FlipBool()
-          # TODO: why is there a print statement here?
-          print u'Testing negative matching.'
           self.assertEqual(not test_unit[0], ops.Matches(self.file))
 
   def testExpand(self):
