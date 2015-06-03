@@ -23,7 +23,6 @@ from plaso.cli import tools as cli_tools
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import frontend
 from plaso.frontend import psort
-from plaso.frontend import utils as frontend_utils
 from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
 from plaso.lib import errors
@@ -232,10 +231,9 @@ class PsortTool(analysis_tool.AnalysisTool):
         time_slice=time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
-      logging.info(frontend_utils.FormatHeader(u'Counter'))
+      self.PrintHeader(u'Counter')
       for element, count in counter.most_common():
-        # TODO: replace by self._output_writer.Write().
-        logging.info(frontend_utils.FormatOutputString(element, count))
+        self.PrintColumnValue(element, u'{0:d}'.format(count))
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
@@ -397,7 +395,8 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, add_help=False,
-        conflict_handler=u'resolve')
+        conflict_handler=u'resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
     self.AddStorageFileOptions(argument_parser)

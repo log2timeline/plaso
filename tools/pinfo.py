@@ -472,7 +472,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
-        description=self.DESCRIPTION, add_help=False)
+        description=self.DESCRIPTION, add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
     self.AddStorageFileOptions(argument_parser)
