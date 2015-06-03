@@ -3,7 +3,6 @@
 
 from collections import Counter
 import logging
-import uuid
 
 try:
   from elasticsearch import exceptions as elastic_exceptions
@@ -31,71 +30,34 @@ class TimesketchOutputModule(interface.OutputModule):
   NAME = u'timesketch'
   DESCRIPTION = u'Create a Timesketch timeline.'
 
-  ARGUMENTS = [
-      (u'--name', {
-          u'dest': u'name',
-          u'type': unicode,
-          u'help': (u'The name of the timeline in Timesketch. Default: '
-                    u'hostname if present in the storage file. If no hostname '
-                    u'is found then manual input is used.'),
-          u'action': u'store',
-          u'required': False,
-          u'default': u''}),
-      (u'--index', {
-          u'dest': u'index',
-          u'type': unicode,
-          u'help': u'The name of the Elasticsearch index. Default: Generate a '
-                   u'random UUID',
-          u'action': u'store',
-          u'required': False,
-          u'default': uuid.uuid4().hex}),
-      (u'--flush_interval', {
-          u'dest': u'flush_interval',
-          u'type': int,
-          u'help': u'The number of events to queue up before sent in bulk '
-                   u'to Elasticsearch. Default: 1000',
-          u'action': u'store',
-          u'required': False,
-          u'default': 1000})]
-
-  def __init__(self, output_mediator, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(TimesketchOutputModule, self).__init__(output_mediator, **kwargs)
+    super(TimesketchOutputModule, self).__init__(output_mediator)
 
-    # Get Elasticsearch config from Timesketch.
+    self._counter = Counter()
+    self._doc_type = u'plaso_event'
+    self._events = []
+    self._flush_interval = None
+    self._index_name = None
     self._timesketch = timesketch.create_app()
+
+    # TODO: Support reading in server and port information and set this using
+    # options.
     with self._timesketch.app_context():
       self._elastic_db = ElasticSearchDataStore(
           host=current_app.config[u'ELASTIC_HOST'],
           port=current_app.config[u'ELASTIC_PORT'])
 
-    self._counter = Counter()
-    self._doc_type = u'plaso_event'
-    self._events = []
-    self._flush_interval = self._output_mediator.GetConfigurationValue(
-        u'flush_interval')
-    self._index_name = self._output_mediator.GetConfigurationValue(u'index')
-    self._timeline_name = self._output_mediator.GetConfigurationValue(u'name')
-
     hostname = self._output_mediator.GetStoredHostname()
     if hostname:
       logging.info(u'Hostname: {0:s}'.format(hostname))
-
-    # Make sure we have a name for the timeline. Prompt the user if not.
-    if not self._timeline_name:
-      if hostname:
-        self._timeline_name = hostname
-      else:
-        # This should not be handles in this module.
-        # TODO: Move this to CLI code when available.
-        self._timeline_name = raw_input(u'Timeline name: ')
-
-    logging.info(u'Timeline name: {0:s}'.format(self._timeline_name))
-    logging.info(u'Index: {0:s}'.format(self._index_name))
+      self._timeline_name = hostname
+    else:
+      self._timeline_name = None
 
   def _GetSanitizedEventValues(self, event_object):
     """Builds a dictionary from an event_object.
@@ -168,6 +130,44 @@ class TimesketchOutputModule(interface.OutputModule):
       search_index.status.remove(search_index.status[0])
       db_session.add(search_index)
       db_session.commit()
+
+  def GetMissingArguments(self):
+    """Return a list of arguments that are missing from the input.
+
+    Returns:
+      a list of argument names that are missing and necessary for the
+      module to continue to operate.
+    """
+    if not self._timeline_name:
+      return [u'timeline_name']
+
+    return []
+
+  def SetFlushInterval(self, flush_interval):
+    """Set the flush interval.
+
+    Args:
+      flush_interval: the flush interval.
+    """
+    self._flush_interval = flush_interval
+
+  def SetIndex(self, index):
+    """Set the index name.
+
+    Args:
+      index: the index name.
+    """
+    self._index_name = index
+    logging.info(u'Index: {0:s}'.format(self._index_name))
+
+  def SetName(self, name):
+    """Set the timeline name.
+
+    Args:
+      name: the timeline name.
+    """
+    self._timeline_name = name
+    logging.info(u'Timeline name: {0:s}'.format(self._timeline_name))
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.

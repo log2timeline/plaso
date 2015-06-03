@@ -9,16 +9,17 @@ class EventObjectFilter(filter_interface.FilterObject):
 
   def CompileFilter(self, filter_string):
     """Compile the filter string into a filter matcher."""
-    self.matcher = pfilter.GetMatcher(filter_string, True)
-    if not self.matcher:
+    self._matcher = pfilter.GetMatcher(filter_string, True)
+    if not self._matcher:
       raise errors.WrongPlugin('Malformed filter string.')
+    self._filter_expression = filter_string
 
   def Match(self, event_object):
     """Evaluate an EventObject against a filter."""
-    if not self.matcher:
+    if not self._matcher:
       return True
 
-    self._decision = self.matcher.Matches(event_object)
+    self._decision = self._matcher.Matches(event_object)
 
     return self._decision
 

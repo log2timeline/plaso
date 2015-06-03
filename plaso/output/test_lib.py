@@ -79,12 +79,10 @@ class OutputModuleTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
-  def _CreateOutputMediator(self, config=None, storage_object=None):
+  def _CreateOutputMediator(self, storage_object=None):
     """Creates a test output mediator.
 
     Args:
-      config: optional configuration object, containing config information.
-              The default is None.
       storage_object: optional storage file object (instance of StorageFile)
                       that defines the storage. The default is None.
 
@@ -92,5 +90,4 @@ class OutputModuleTestCase(unittest.TestCase):
       An output mediator (instance of OutputMediator).
     """
     formatter_mediator = formatters_mediator.FormatterMediator()
-    return mediator.OutputMediator(
-        formatter_mediator, storage_object, config=config)
+    return mediator.OutputMediator(formatter_mediator, storage_object)

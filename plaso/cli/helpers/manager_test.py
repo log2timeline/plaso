@@ -87,7 +87,7 @@ class HelperManagerTest(unittest.TestCase):
     manager.ArgumentHelperManager.RegisterHelpers(
         [TestHelper, AnotherTestHelper])
 
-    arg_parser = argparse.ArgumentParser()
+    arg_parser = argparse.ArgumentParser(conflict_handler=u'resolve')
     manager.ArgumentHelperManager.AddCommandLineArguments(arg_parser)
 
     # Assert the parameters have been set.

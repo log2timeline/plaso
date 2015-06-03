@@ -12,13 +12,13 @@ class JSONOutputModule(interface.LinearOutputModule):
   NAME = u'json'
   DESCRIPTION = u'Saves the events into a JSON format.'
 
-  def __init__(self, output_mediator, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(JSONOutputModule, self).__init__(output_mediator, **kwargs)
+    super(JSONOutputModule, self).__init__(output_mediator)
     self._event_counter = 0
 
   def WriteEventBody(self, event_object):

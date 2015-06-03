@@ -264,6 +264,11 @@ class StorageFile(object):
     self._serializers_profiler = None
 
   @property
+  def file_path(self):
+    """The file path."""
+    return self._output_file
+
+  @property
   def serialization_format(self):
     """The serialization format."""
     return self._serializer_format_string

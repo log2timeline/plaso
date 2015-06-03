@@ -49,8 +49,8 @@ class PstorageTest(test_lib.OutputModuleTestCase):
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:
         output_mediator = self._CreateOutputMediator(storage_object=store)
-        formatter = pstorage.PlasoStorageOutputModule(
-            output_mediator, filehandle=dump_file)
+        formatter = pstorage.PlasoStorageOutputModule(output_mediator)
+        formatter.SetFilehandle(dump_file)
 
         with interface.EventBuffer(
             formatter, check_dedups=False) as output_buffer:

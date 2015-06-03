@@ -142,5 +142,6 @@ class DynamicFilter(eventfilter.EventObjectFilter):
     if lex.lex_filter:
       super(DynamicFilter, self).CompileFilter(lex.lex_filter)
     else:
-      self.matcher = None
+      self._matcher = None
+    self._filter_expression = filter_string
 

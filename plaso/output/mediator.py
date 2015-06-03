@@ -11,8 +11,8 @@ class OutputMediator(object):
   """Class that implements the output mediator."""
 
   def __init__(
-      self, formatter_mediator, storage_object, config=None,
-      fields_filter=None, preferred_encoding=u'utf-8', timezone=pytz.UTC):
+      self, formatter_mediator, storage_object, fields_filter=None,
+      preferred_encoding=u'utf-8', timezone=pytz.UTC):
     """Initializes a output mediator object.
 
     Args:
@@ -20,8 +20,6 @@ class OutputMediator(object):
                           FormatterMediator).
       storage_object: a storage file object (instance of StorageFile)
                       that defines the storage.
-      config: optional configuration object, containing config information.
-              The default is None.
       fields_filter: optional filter object (instance of FilterObject) to
                      indicate which fields should be outputed. The default
                      is None.
@@ -29,7 +27,6 @@ class OutputMediator(object):
       timezone: optional timezone. The default is UTC.
     """
     super(OutputMediator, self).__init__()
-    self._config = config
     self._formatter_mediator = formatter_mediator
     self._hostnames = None
     self._preferred_encoding = preferred_encoding
@@ -74,23 +71,22 @@ class OutputMediator(object):
     return self._preferred_encoding
 
   @property
+  def filter_expression(self):
+    """The filter expression if a filter is set, None otherwise."""
+    if not self.fields_filter:
+      return
+
+    return self.fields_filter.filter_expression
+
+  @property
+  def storage_file_path(self):
+    """The storage file path."""
+    return self._storage_object.file_path
+
+  @property
   def timezone(self):
     """The timezone."""
     return self._timezone
-
-  # TODO: solve this differently in a future refactor.
-  def GetConfigurationValue(self, identifier, default_value=None):
-    """Retrieves a configuration value.
-
-    Args:
-      identifier: the identifier of the configuration value.
-      default_value: optional value containing the default.
-                     The default is None.
-
-    Returns:
-      The configuration value or None if not set.
-    """
-    return getattr(self._config, identifier, default_value)
 
   def GetEventFormatter(self, event_object):
     """Retrieves the event formatter for a specific event object type.
