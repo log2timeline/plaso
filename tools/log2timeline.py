@@ -219,12 +219,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       processing_status: the processsing status (instance of ProcessingStatus).
     """
     if processing_status.GetExtractionCompleted():
-      logging.info(u'All extraction workers completed - waiting for storage.')
+      self._output_writer.Write(
+          u'All extraction workers completed - waiting for storage.')
 
     else:
       for extraction_worker_status in processing_status.extraction_workers:
         status = extraction_worker_status.status
-        logging.info((
+        self._output_writer.Write((
             u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
             u'- running: {4!s} <{5:s}>').format(
                 extraction_worker_status.identifier,
@@ -538,7 +539,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # TODO: merge this into the output of PrintOptions.
     self._DebugPrintCollection()
 
-    logging.info(u'Processing started.')
+    self._output_writer.Write(u'Processing started.\n')
 
     if self._status_view_mode == u'linear':
       status_update_callback = self._PrintStatusUpdateStream
@@ -547,7 +548,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       status_update_callback = None
 
-    self._front_end.ProcessSources(
+    result = self._front_end.ProcessSources(
         self._source_path_specs,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
@@ -557,7 +558,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         storage_serializer_format=self._storage_serializer_format,
         timezone=self._timezone)
 
-    logging.info(u'Processing completed.')
+    if result:
+      self._output_writer.Write(u'Processing completed.\n')
+    else:
+      self._output_writer.Write(u'Processing aborted.\n')
+    self._output_writer.Write(u'\n')
 
 
 def Main():

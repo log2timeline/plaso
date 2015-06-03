@@ -169,6 +169,10 @@ class SingleProcessEngine(engine.BaseEngine):
       hasher_names_string: Optional comma separated string of names of
                            hashers to enable. The default is None.
       parser_filter_string: Optional parser filter string. The default is None.
+
+    Returns:
+      A boolean value indicating the sources were processed without
+      unrecoverable errors.
     """
     extraction_worker = self.CreateExtractionWorker(0)
 
@@ -209,6 +213,8 @@ class SingleProcessEngine(engine.BaseEngine):
     collector_object.SetExtractionWorker(None)
 
     logging.debug(u'Processing completed.')
+
+    return True
 
 
 class SingleProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
