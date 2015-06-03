@@ -40,7 +40,6 @@ def GetScripts():
       u'image_export.py',
       u'log2timeline.py',
       u'pinfo.py',
-      u'plasm.py',
       u'preg.py',
       u'psort.py'])
 
@@ -98,7 +97,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    packages=find_packages('.', exclude=[u'tests', u'tools']),
+    packages=find_packages('.', exclude=[u'tests', u'tests.*', u'tools']),
     package_dir={
         'plaso': 'plaso',
     },
