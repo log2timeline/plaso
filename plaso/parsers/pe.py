@@ -128,8 +128,11 @@ class PEParser(interface.SingleFileBaseParser):
     section_names = []
     for section in pefile_object.sections:
       section_name = getattr(section, u'Name', b'')
-      # Ensure the name is encoded correctly.
-      section_name = u'{0:s}'.format(section_name.encode(u'unicode_escape'))
+      # Ensure the name is decoded correctly.
+      try:
+        section_name = u'{0:s}'.format(section_name.decode(u'unicode_escape'))
+      except UnicodeDecodeError:
+        section_name = u'{0:s}'.format(repr(section_name))
       section_names.append(section_name)
 
     return section_names

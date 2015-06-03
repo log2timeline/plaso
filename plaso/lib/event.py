@@ -183,7 +183,14 @@ class EventObject(object):
       identity.append(u'inode')
       identity.append(inode)
 
-    return u'|'.join(map(unicode, identity))
+    try:
+      text = u'|'.join(map(unicode, identity))
+      return text
+    except UnicodeDecodeError:
+      # If we cannot properly decode the equality string we give back the UUID
+      # which is unique to this event and thus will not trigger an equal string
+      # with another event.
+      return self.uuid
 
   def __eq__(self, event_object):
     """Return a boolean indicating if two EventObject are considered equal.
