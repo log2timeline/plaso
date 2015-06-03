@@ -3,7 +3,8 @@
 
 import logging
 import re
-import urllib2
+
+import requests
 
 from plaso.analysis import interface
 from plaso.analysis import manager
@@ -18,7 +19,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  _TITLE_RE = re.compile('<title>([^<]+)</title>')
+  _TITLE_RE = re.compile(r'<title>([^<]+)</title>')
   _WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
   def __init__(self, incoming_queue):
@@ -45,55 +46,59 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     Args:
       extension_id: string containing the extension identifier.
+
+    Returns:
+      A binary string containing the page content or None.
     """
     web_store_url = self._WEB_STORE_URL.format(xid=extension_id)
     try:
-      response = urllib2.urlopen(web_store_url)
+      response = requests.get(web_store_url)
 
-    except urllib2.HTTPError as exception:
+    except (requests.ConnectionError, requests.HTTPError) as exception:
       logging.warning((
           u'[{0:s}] unable to retrieve URL: {1:s} with error: {2:s}').format(
               self.NAME, web_store_url, exception))
       return
 
-    except urllib2.URLError as exception:
-      logging.warning((
-          u'[{0:s}] invalid URL: {1:s} with error: {2:s}').format(
-              self.NAME, web_store_url, exception))
-      return
-
-    return response
+    return response.text
 
   def _GetTitleFromChromeWebStore(self, extension_id):
     """Retrieves the name of the extension from the Chrome store website.
 
     Args:
       extension_id: string containing the extension identifier.
+
+    Returns:
+      The name of the extension or None.
     """
     # Check if we have already looked this extension up.
     if extension_id in self._extensions:
       return self._extensions.get(extension_id)
 
-    response = self._GetChromeWebStorePage(extension_id)
-    if not response:
+    page_content = self._GetChromeWebStorePage(extension_id)
+    if not page_content:
       logging.warning(
           u'[{0:s}] no data returned for extension identifier: {1:s}'.format(
               self.NAME, extension_id))
       return
 
-    first_line = response.readline()
+    first_line, _, _ = page_content.partition(b'\n')
     match = self._TITLE_RE.search(first_line)
+    name = None
     if match:
       title = match.group(1)
-      if title.startswith(u'Chrome Web Store - '):
+      if title.startswith(b'Chrome Web Store - '):
         name = title[19:]
-      elif title.endswith(u'- Chrome Web Store'):
+      elif title.endswith(b'- Chrome Web Store'):
         name = title[:-19]
 
-      self._extensions[extension_id] = name
-      return name
+    if not name:
+      self._extensions[extension_id] = u'UNKNOWN'
+      return
 
-    self._extensions[extension_id] = u'Not Found'
+    name = name.decode(u'utf-8', errors=u'replace')
+    self._extensions[extension_id] = name
+    return name
 
   def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.

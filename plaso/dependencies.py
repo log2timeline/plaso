@@ -3,6 +3,8 @@
 
 from __future__ import print_function
 import re
+# Keep urllib2 here since we this code should be able to be used
+# by a default Python set up.
 import urllib2
 
 

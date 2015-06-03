@@ -29,12 +29,16 @@ class TestChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
 
     Args:
       extension_id: string containing the extension identifier.
+
+    Returns:
+      A binary string containing the page content or None.
     """
     chrome_web_store_file = os.path.join(self._TEST_DATA_PATH, extension_id)
     if not os.path.exists(chrome_web_store_file):
       return
 
-    return open(chrome_web_store_file, 'rb')
+    file_object = open(chrome_web_store_file, 'rb')
+    return file_object.read()
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
