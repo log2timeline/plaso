@@ -4,6 +4,14 @@ plaso.cli.helpers package
 Submodules
 ----------
 
+plaso.cli.helpers.database_config module
+----------------------------------------
+
+.. automodule:: plaso.cli.helpers.database_config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.elastic_output module
 ---------------------------------------
 
@@ -36,10 +44,58 @@ plaso.cli.helpers.manager_test module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.mysql_4n6time_output module
+---------------------------------------------
+
+.. automodule:: plaso.cli.helpers.mysql_4n6time_output
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.helpers.pstorage module
+---------------------------------
+
+.. automodule:: plaso.cli.helpers.pstorage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.helpers.server_config module
+--------------------------------------
+
+.. automodule:: plaso.cli.helpers.server_config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.helpers.shared_4n6time_output module
+----------------------------------------------
+
+.. automodule:: plaso.cli.helpers.shared_4n6time_output
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.helpers.sqlite_4n6time_output module
+----------------------------------------------
+
+.. automodule:: plaso.cli.helpers.sqlite_4n6time_output
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.tagging_analysis module
 -----------------------------------------
 
 .. automodule:: plaso.cli.helpers.tagging_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.helpers.timesketch_out module
+---------------------------------------
+
+.. automodule:: plaso.cli.helpers.timesketch_out
     :members:
     :undoc-members:
     :show-inheritance:

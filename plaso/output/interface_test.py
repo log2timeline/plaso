@@ -70,8 +70,8 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
 
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = TestOutputModule(
-        output_mediator, output_writer=output_writer)
+    output_module = TestOutputModule(output_mediator)
+    output_module.SetOutputWriter(output_writer)
     output_module.WriteHeader()
     for event_object in events:
       output_module.WriteEvent(event_object)
@@ -140,8 +140,8 @@ class EventBufferTest(test_lib.OutputModuleTestCase):
     """Test to ensure we empty our buffers and sends to output properly."""
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = TestOutputModule(
-        output_mediator, output_writer=output_writer)
+    output_module = TestOutputModule(output_mediator)
+    output_module.SetOutputWriter(output_writer)
     event_buffer = interface.EventBuffer(output_module, False)
 
     event_buffer.Append(TestEvent(123456, u'Now is now'))

@@ -540,7 +540,8 @@ class ClusteringEngine(object):
             formatter_mediator, store)
 
         output_module = output_manager.OutputManager.NewOutputModule(
-            u'pstorage', output_mediator_object, filehandle=nodup_filename)
+            u'pstorage', output_mediator_object)
+        output_module.SetOutputWriter(nodup_filename)
 
         with output_interface.EventBuffer(
             output_module, check_dedups=True) as output_buffer:

@@ -11,44 +11,33 @@ from plaso.lib import utils
 class OutputModule(object):
   """Class that implements the output module object interface."""
 
-  # TODO: refactor this to the cli classes (aka storage helper).
-  # Optional arguments to be added to the argument parser.
-  # An example would be:
-  #   ARGUMENTS = [('--myparameter', {
-  #       'action': 'store',
-  #       'help': 'This is my parameter help',
-  #       'dest': 'myparameter',
-  #       'default': '',
-  #       'type': 'unicode'})]
-  #
-  # Where all arguments into the dict object have a direct translation
-  # into the argparse parser.
-  ARGUMENTS = []
-
   NAME = u''
   DESCRIPTION = u''
 
-  def __init__(self, output_mediator, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      kwargs: a dictionary of keyword arguments dependending on the output
-              module.
 
     Raises:
       ValueError: when there are unused keyword arguments.
     """
-    if kwargs:
-      raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
-          u', '.join(kwargs.keys())))
-
     super(OutputModule, self).__init__()
     self._output_mediator = output_mediator
 
   def Close(self):
     """Closes the output."""
     pass
+
+  def GetMissingArguments(self):
+    """Return a list of arguments that are missing from the input.
+
+    Returns:
+      A list of argument names that are missing and necessary for the
+      module to continue to operate.
+    """
+    return []
 
   def Open(self):
     """Opens the output."""
@@ -120,22 +109,17 @@ class LinearOutputModule(OutputModule):
   # classes need to implement that function.
   # pylint: disable=abstract-method
 
-  def __init__(self, output_mediator, output_writer=None, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      output_writer: Optional output writer object (instance of
-                     CLIOutputWriter). The default is None.
 
     Raises:
       ValueError: if the output writer is missing.
     """
-    if not output_writer:
-      raise ValueError(u'Missing output writer.')
-
-    super(LinearOutputModule, self).__init__(output_mediator, **kwargs)
-    self._output_writer = output_writer
+    super(LinearOutputModule, self).__init__(output_mediator)
+    self._output_writer = None
 
   def _WriteLine(self, line):
     """Write a single line to the supplied file-like object.
@@ -144,6 +128,15 @@ class LinearOutputModule(OutputModule):
       line: the line of text to write.
     """
     self._output_writer.Write(line)
+
+  def SetOutputWriter(self, output_writer):
+    """Set the output writer.
+
+    Args:
+      output_writer: Optional output writer object (instance of
+                     CLIOutputWriter). The default is None.
+    """
+    self._output_writer = output_writer
 
   def Close(self):
     """Closes the output."""

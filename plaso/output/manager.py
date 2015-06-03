@@ -103,7 +103,7 @@ class OutputManager(object):
     return name.lower() in cls._output_classes
 
   @classmethod
-  def NewOutputModule(cls, name, output_mediator, **kwargs):
+  def NewOutputModule(cls, name, output_mediator):
     """Creates a new output module object for the specified output format.
 
     Args:
@@ -118,7 +118,7 @@ class OutputManager(object):
       ValueError: if name is not a string.
     """
     output_class = cls.GetOutputClass(name)
-    return output_class(output_mediator, **kwargs)
+    return output_class(output_mediator)
 
   @classmethod
   def RegisterOutput(cls, output_class, disabled=False):

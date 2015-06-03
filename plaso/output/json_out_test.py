@@ -20,8 +20,8 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     """Sets up the objects needed for this test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = json_out.JSONOutputModule(
-        output_mediator, output_writer=self._output_writer)
+    self._output_module = json_out.JSONOutputModule(output_mediator)
+    self._output_module.SetOutputWriter(self._output_writer)
     self._event_object = test_lib.TestEventObject()
 
   def testWriteHeader(self):

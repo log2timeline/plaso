@@ -204,7 +204,7 @@ do
       then
         for CSV_FILE in *.csv;
         do
-          mv "${CSV_FILE}" "${TEST_PREFIX}-${CSV_FILE}";
+          mv "${CSV_FILE}" "${TEST_PREFIX}-${TEST_OPTIONS_SET}-${CSV_FILE}";
         done
       fi
 

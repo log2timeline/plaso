@@ -54,32 +54,15 @@ class DynamicOutputModule(interface.LinearOutputModule):
       u'zone': u'_FormatZone',
   }
 
-  def __init__(
-      self, output_mediator, fields_filter=None, output_writer=None, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      fields_filter: optional filter object (instance of FilterObject) to
-                     indicate which fields should be outputed. The default
-                     is None.
-      output_writer: Optional output writer object (instance of
-                     CLIOutputWriter). The default is None.
     """
-    super(DynamicOutputModule, self).__init__(
-        output_mediator, output_writer=output_writer, **kwargs)
-    self._fields = None
-    self._field_delimiter = None
-
-    if fields_filter:
-      self._fields = fields_filter.fields
-      self._field_delimiter = fields_filter.separator
-
-    if not self._fields:
-      self._fields = self._DEFAULT_FIELDS
-
-    if not self._field_delimiter:
-      self._field_delimiter = self._FIELD_DELIMITER
+    super(DynamicOutputModule, self).__init__(output_mediator)
+    self._field_delimiter = self._FIELD_DELIMITER
+    self._fields = self._DEFAULT_FIELDS
 
   def _FormatDate(self, event_object):
     """Formats the date.
@@ -341,6 +324,19 @@ class DynamicOutputModule(interface.LinearOutputModule):
     if self._field_delimiter:
       return field.replace(self._field_delimiter, u' ')
     return field
+
+  def SetFieldsFilter(self, fields_filter):
+    """Set the fields filter.
+
+    Args:
+      fields_filter: filter object (instance of FilterObject) to
+                     indicate which fields should be outputed.
+    """
+    if not fields_filter:
+      return
+
+    self._fields = fields_filter.fields
+    self._field_delimiter = fields_filter.separator
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.

@@ -59,6 +59,7 @@ class ObjectFilterList(filter_interface.FilterObject):
       raise errors.WrongPlugin(
           u'Wrong format of YAML file, entry not a dict ({})'.format(
               results_type))
+    self._filter_expression = filter_string
 
   def _ParseEntry(self, entry):
     """Parse a single YAML filter entry."""

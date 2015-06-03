@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements a StorageFile output module."""
 
-import sys
-
 from plaso.lib import event
 from plaso.lib import storage
 from plaso.lib import timelib
@@ -16,29 +14,15 @@ class PlasoStorageOutputModule(interface.OutputModule):
   NAME = u'pstorage'
   DESCRIPTION = u'Dumps event objects to a plaso storage file.'
 
-  def __init__(self, output_mediator, filehandle=sys.stdout, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      filehandle: Optional file-like object that can be written to.
-                  The default is sys.stdout.
-
-    Raises:
-     TypeError: if the file handle is of an unsupported type.
     """
-    super(PlasoStorageOutputModule, self).__init__(output_mediator, **kwargs)
+    super(PlasoStorageOutputModule, self).__init__(output_mediator)
 
-    if isinstance(filehandle, basestring):
-      self._file_object = open(filehandle, 'wb')
-
-    # Check if the filehandle object has a write method.
-    elif hasattr(filehandle, u'write'):
-      self._file_object = filehandle
-
-    else:
-      raise TypeError(u'Unsupported file handle type.')
-
+    self._file_object = None
     self._storage = None
 
   def Close(self):
@@ -51,16 +35,29 @@ class PlasoStorageOutputModule(interface.OutputModule):
     pre_obj.collection_information = {
         u'time_of_run': timelib.Timestamp.GetNow()}
 
-    configuration_value = self._output_mediator.GetConfigurationValue(u'filter')
-    if configuration_value:
-      pre_obj.collection_information[u'filter'] = configuration_value
+    filter_expression = self._output_mediator.filter_expression
+    if filter_expression:
+      pre_obj.collection_information[u'filter'] = filter_expression
 
-    configuration_value = self._output_mediator.GetConfigurationValue(
-        u'storagefile')
-    if configuration_value:
-      pre_obj.collection_information[u'file_processed'] = configuration_value
+    storage_file_path = self._output_mediator.storage_file_path
+    if storage_file_path:
+      pre_obj.collection_information[u'file_processed'] = storage_file_path
 
     self._storage = storage.StorageFile(self._file_object, pre_obj=pre_obj)
+
+  def SetFilehandle(self, file_path=None, file_object=None):
+    """Sets the filehandle.
+
+    Args:
+      file_path: the full path to the output file.
+      file_object: a file like object to use for a filehandle.
+    """
+    if file_object:
+      self._file_object = file_object
+      return
+
+    if file_path:
+      self._file_object = open(file_path, 'wb')
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
