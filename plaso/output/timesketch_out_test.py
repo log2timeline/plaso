@@ -34,9 +34,9 @@ if timesketch_out.timesketch is None:
 
 class TimesketchTestConfig(object):
   """Config object for the tests."""
-  name = u'Test'
+  timeline_name = u'Test'
+  output_format = u'timesketch'
   index = u''
-  owner = None
   show_stats = False
   flush_interval = 1000
 
@@ -70,8 +70,7 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
         u'2012-06-27 18:17:01+00:00')
     self._event_object = TimesketchTestEvent(self._event_timestamp)
 
-    test_config = TimesketchTestConfig()
-    output_mediator = self._CreateOutputMediator(config=test_config)
+    output_mediator = self._CreateOutputMediator()
     self._timesketch_output = timesketch_out.TimesketchOutputModule(
         output_mediator)
 
@@ -99,6 +98,21 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     self.assertIsInstance(event_dict, dict)
     self.assertDictContainsSubset(expected_dict, event_dict)
+
+  def testMissingParameters(self):
+    """Tests the GetMissingArguments function."""
+    self.assertListEqual(
+        self._timesketch_output.GetMissingArguments(), [u'timeline_name'])
+
+    config = TimesketchTestConfig()
+
+    self._timesketch_output.SetIndex(config.index)
+    self._timesketch_output.SetFlushInterval(config.flush_interval)
+    self.assertListEqual(
+        self._timesketch_output.GetMissingArguments(), [u'timeline_name'])
+
+    self._timesketch_output.SetName(config.timeline_name)
+    self.assertListEqual(self._timesketch_output.GetMissingArguments(), [])
 
 
 if __name__ == '__main__':

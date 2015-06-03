@@ -52,8 +52,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     """Tests the WriteHeader function."""
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = dynamic.DynamicOutputModule(
-        output_mediator, output_writer=output_writer)
+    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module.SetOutputWriter(output_writer)
     expected_header = (
         b'datetime,timestamp_desc,source,source_long,message,parser,'
         b'display_name,tag,store_number,store_index\n')
@@ -66,9 +66,9 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object,
-        output_writer=output_writer)
+    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module.SetFieldsFilter(filter_object)
+    output_module.SetOutputWriter(output_writer)
 
     expected_header = b'date,time,message,hostname,filename,some_stuff\n'
     output_module.WriteHeader()
@@ -80,9 +80,9 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         separator='@')
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object,
-        output_writer=output_writer)
+    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module.SetFieldsFilter(filter_object)
+    output_module.SetOutputWriter(output_writer)
 
     expected_header = b'date@time@message@hostname@filename@some_stuff\n'
     output_module.WriteHeader()
@@ -102,9 +102,9 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         u'filename', u'inode', u'notes', u'format', u'extra'])
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object,
-        output_writer=output_writer)
+    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module.SetFieldsFilter(filter_object)
+    output_module.SetOutputWriter(output_writer)
 
     output_module.WriteHeader()
     expected_header = (
@@ -127,9 +127,9 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         u'datetime', u'nonsense', u'hostname', u'message'])
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = dynamic.DynamicOutputModule(
-        output_mediator, fields_filter=filter_object,
-        output_writer=output_writer)
+    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module.SetFieldsFilter(filter_object)
+    output_module.SetOutputWriter(output_writer)
 
     expected_header = b'datetime,nonsense,hostname,message\n'
     output_module.WriteHeader()

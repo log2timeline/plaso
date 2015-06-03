@@ -23,13 +23,13 @@ class ElasticSearchOutputModule(interface.OutputModule):
   NAME = u'elastic'
   DESCRIPTION = u'Saves the events into an ElasticSearch database.'
 
-  def __init__(self, output_mediator, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(ElasticSearchOutputModule, self).__init__(output_mediator, **kwargs)
+    super(ElasticSearchOutputModule, self).__init__(output_mediator)
     self._counter = 0
     self._data = []
     self._doc_type = None
@@ -126,7 +126,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
     else:
       self._doc_type = u'event'
 
-  def SetElasticServer(self, elastic_host, elastic_port):
+  def SetServerInformation(self, elastic_host, elastic_port):
     """Set the ElasticSearch connection.
 
     Args:

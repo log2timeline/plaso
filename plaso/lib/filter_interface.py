@@ -10,8 +10,16 @@ from plaso.lib import registry
 class FilterObject(object):
   """The interface that each filter needs to implement in plaso."""
 
+  # TODO: Re-factor into filters/interface and use a manager instead
+  # of the registry library.
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
+
+  @property
+  def filter_expression(self):
+    """Return the compiled filter expression or None if not compiled."""
+    if self._filter_expression:
+      return self._filter_expression
 
   @property
   def filter_name(self):
@@ -43,6 +51,12 @@ class FilterObject(object):
   def limit(self):
     """Returns the max number of records to return, or zero for all records."""
     return 0
+
+  def __init__(self):
+    """Initialize the filter object."""
+    super(FilterObject, self).__init__()
+    self._filter_expression = None
+    self._matcher = None
 
   @abc.abstractmethod
   def CompileFilter(self, unused_filter_string):

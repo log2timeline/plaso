@@ -11,14 +11,11 @@ from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import manager as analysis_manager
 from plaso.analysis import mediator as analysis_mediator
-from plaso.cli import tools as cli_tools
-from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
-from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
@@ -50,6 +47,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._output_file_object = None
     self._output_format = None
     self._preferred_language = u'en-US'
+    self._quiet_mode = False
+    self._storage_file = None
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
     """Appends an event object to an output buffer and queues.
@@ -184,21 +183,141 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     for item, value in analysis_queue_consumer.counter.iteritems():
       counter[item] = value
 
+  def SetFilter(self, filter_object, filter_expression):
+    """Set the filter information.
+
+    Args:
+      filter_object: a filter object (instance of FilterObject).
+      filter_expression: the filter expression string.
+    """
+    self._filter_object = filter_object
+    self._filter_expression = filter_expression
+
+  def SetPreferredLanguageIdentifier(self, language_identifier):
+    """Sets the preferred language identifier.
+
+    Args:
+      language_identifier: the language identifier string e.g. en-US for
+                           US English or is-IS for Icelandic.
+    """
+    self._preferred_language = language_identifier
+
+  def SetOutputFilename(self, output_filename):
+    """Sets the output format.
+
+    Args:
+      output_filename: the output filename.
+    """
+    self._output_filename = output_filename
+
+  def SetOutputFormat(self, output_format):
+    """Sets the output format.
+
+    Args:
+      output_format: the output format.
+    """
+    self._output_format = output_format
+
+  def GetOutputModule(
+      self, storage_file, preferred_encoding=u'utf-8', timezone=pytz.UTC):
+    """Return an output module.
+
+    Args:
+      storage_file: the storage file object (instance of StorageFile).
+      preferred_encoding: optional preferred encoding. The default is "utf-8".
+      timezone: optional timezone. The default is UTC.
+
+    Returns:
+      an output module object (instance of OutputModule) or None if not able to
+      open one up.
+
+    Raises:
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    formatter_mediator = self.GetFormatterMediator()
+
+    try:
+      formatter_mediator.SetPreferredLanguageIdentifier(
+          self._preferred_language)
+    except (KeyError, TypeError) as exception:
+      raise RuntimeError(exception)
+
+    output_mediator_object = output_mediator.OutputMediator(
+        formatter_mediator, storage_file,
+        preferred_encoding=preferred_encoding, timezone=timezone)
+
+    try:
+      output_module = output_manager.OutputManager.NewOutputModule(
+          self._output_format, output_mediator_object)
+
+    except IOError as exception:
+      raise RuntimeError(
+          u'Unable to create output module with error: {0:s}'.format(
+              exception))
+
+    if not output_module:
+      raise RuntimeError(u'Missing output module.')
+
+    return output_module
+
+  def GetAnalysisPluginsAndEventQueues(self, analysis_plugins):
+    """Return a list of analysis plugins and event queues.
+
+    Args:
+      analysis_plugins: comma separated string with names of analysis
+                        plugins to load.
+
+    Returns:
+      A tuple of two lists, one containing list of analysis plugins
+      and the other a list of event queues.
+    """
+    if not analysis_plugins:
+      return [], []
+
+    # Start queues and load up plugins.
+    event_queue_producers = []
+    event_queues = []
+    analysis_plugins_list = [
+        name.strip() for name in analysis_plugins.split(u',')]
+
+    for _ in range(0, len(analysis_plugins_list)):
+      # TODO: add upper queue limit.
+      analysis_plugin_queue = multi_process.MultiProcessingQueue(timeout=5)
+      event_queues.append(analysis_plugin_queue)
+      event_queue_producers.append(
+          queue.ItemQueueProducer(event_queues[-1]))
+
+    analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
+        analysis_plugins_list, event_queues)
+
+    return analysis_plugins, event_queue_producers
+
+  def SetQuietMode(self, quiet_mode=False):
+    """Sets whether tools is in quiet mode or not.
+
+    Args:
+      quiet_mode: boolean, when True the tool is in quiet mode.
+    """
+    self._quiet_mode = quiet_mode
+
   def ProcessStorage(
-      self, options, analysis_plugins, deduplicate_events=True,
-      preferred_encoding=u'utf-8', time_slice=None,
-      timezone=pytz.UTC, use_time_slicer=False):
+      self, output_module, storage_file, analysis_plugins,
+      event_queue_producers, deduplicate_events=True,
+      preferred_encoding=u'utf-8', time_slice=None, use_time_slicer=False):
     """Processes a plaso storage file.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      analysis_plugins: the analysis plugins.
+      output_module: an output module (instance of OutputModule).
+      storage_file: the storage file object (instance of StorageFile).
+      analysis_plugins: list of analysis plugin objects (instance of
+                        AnalysisPlugin).
+      event_queue_producers: list of event queue producer objects (instance
+                             of ItemQueueProducer).
       deduplicate_events: optional boolean value to indicate if the event
                           objects should be deduplicated. The default is True.
       preferred_encoding: optional preferred encoding. The default is "utf-8".
       time_slice: optional time slice object (instance of TimeSlice).
                   The default is None.
-      timezone: optional timezone. The default is UTC.
       use_time_slicer: optional boolean value to indicate the 'time slicer'
                        should be used. The default is False. The 'time slicer'
                        will provide a context of events around an event of
@@ -211,10 +330,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    # TODO: remove this in psort options refactor.
-    self._output_format = getattr(options, u'output_format', None)
-    self._output_filename = getattr(options, u'write', None)
-
     if time_slice:
       if time_slice.event_timestamp:
         pfilter.TimeRangeCache.SetLowerTimestamp(time_slice.start_timestamp)
@@ -223,67 +338,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       elif use_time_slicer:
         self._filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
-    if analysis_plugins:
-      read_only = False
-    else:
-      read_only = True
-
-    try:
-      storage_file = self.OpenStorageFile(read_only=read_only)
-    except IOError as exception:
-      raise RuntimeError(
-          u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
-              self._storage_file_path, exception))
-
     counter = None
     with storage_file:
       storage_file.SetStoreLimit(self._filter_object)
-
-      formatter_mediator = self.GetFormatterMediator()
-
-      try:
-        formatter_mediator.SetPreferredLanguageIdentifier(
-            self._preferred_language)
-      except (KeyError, TypeError) as exception:
-        raise RuntimeError(exception)
-
-      output_mediator_object = output_mediator.OutputMediator(
-          formatter_mediator, storage_file, config=options,
-          preferred_encoding=preferred_encoding, timezone=timezone)
-
-      kwargs = {}
-      # TODO: refactor this to use CLI argument helpers.
-      if self._output_format == u'4n6time_sqlite':
-        kwargs[u'filename'] = self._output_filename
-      elif self._output_format == u'pstorage':
-        kwargs[u'filehandle'] = self._output_filename
-      elif self._output_format not in [u'elastic', u'timesketch']:
-        if self._output_filename:
-          self._output_file_object = open(self._output_filename, 'wb')
-          kwargs[u'output_writer'] = cli_tools.FileObjectOutputWriter(
-              self._output_file_object)
-        else:
-          kwargs[u'output_writer'] = self._output_writer
-
-      try:
-        output_module = output_manager.OutputManager.NewOutputModule(
-            self._output_format, output_mediator_object, **kwargs)
-
-      except IOError as exception:
-        raise RuntimeError(
-            u'Unable to create output module with error: {0:s}'.format(
-                exception))
-
-      if not output_module:
-        raise RuntimeError(u'Missing output module.')
-
-      # TODO: This should be done in tools/psort.py but requires
-      # a larger re-factor of this function.
-      try:
-        helpers_manager.ArgumentHelperManager.ParseOptions(
-            options, output_module)
-      except errors.BadConfigOption as exception:
-        raise RuntimeError(exception)
 
       # TODO: allow for single processing.
       # TODO: add upper queue limit.
@@ -328,32 +385,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         # pylint: disable=protected-access
         storage_file._pre_obj = pre_obj
 
-        # Start queues and load up plugins.
-        event_queue_producers = []
-        event_queues = []
-        analysis_plugins_list = [
-            name.strip() for name in analysis_plugins.split(u',')]
-
-        for _ in xrange(0, len(analysis_plugins_list)):
-          # TODO: add upper queue limit.
-          analysis_plugin_queue = multi_process.MultiProcessingQueue(timeout=5)
-          event_queues.append(analysis_plugin_queue)
-          event_queue_producers.append(
-              queue.ItemQueueProducer(event_queues[-1]))
-
         knowledge_base_object = knowledge_base.KnowledgeBase()
-
-        analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
-            analysis_plugins_list, event_queues)
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:
-          # TODO: This should be done in tools/psort.py but requires
-          # a larger re-factor of this function.
-          # Set up the plugin based on the options.
-          helpers_manager.ArgumentHelperManager.ParseOptions(
-              options, analysis_plugin)
-
           analysis_report_queue_producer = queue.ItemQueueProducer(
               analysis_output_queue)
 
@@ -388,8 +423,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         if hasattr(information, u'counter'):
           counter[u'Stored Events'] += information.counter[u'total']
 
-      # TODO: refactor to separate function.
-      if not getattr(options, u'quiet', False):
+      if not self._quiet_mode:
         logging.info(u'Output processing is done.')
 
       # Get all reports and tags from analysis plugins.
@@ -543,11 +577,11 @@ class PsortAnalysisProcess(object):
   """A class to contain information about a running analysis process.
 
   Attributes:
-      completion_event: An optional Event object (instance of
-                        Multiprocessing.Event, Queue.Event or similar) that will
-                        be set when the analysis plugin is complete.
-    plugin: The plugin running in the process (instance of AnalysisProcess).
-    process: The process (instance of Multiprocessing.Process) that
+    completion_event: an optional Event object (instance of
+                      Multiprocessing.Event, Queue.Event or similar) that will
+                      be set when the analysis plugin is complete.
+    plugin: the plugin running in the process (instance of AnalysisProcess).
+    process: the process (instance of Multiprocessing.Process) that
              encapsulates the analysis process.
   """
   def __init__(self, completion_event, plugin, process):

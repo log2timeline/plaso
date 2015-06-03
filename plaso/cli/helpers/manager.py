@@ -10,7 +10,8 @@ class ArgumentHelperManager(object):
   _helper_classes = {}
 
   @classmethod
-  def AddCommandLineArguments(cls, argument_group, argument_category=None):
+  def AddCommandLineArguments(
+      cls, argument_group, argument_category=None, module_list=None):
     """Adds command line arguments to a configuration object.
 
     Args:
@@ -20,10 +21,18 @@ class ArgumentHelperManager(object):
                          eg: storage, output. Used to add arguments to a select
                          group of registered helpers. Defaults to None, which
                          applies the added arguments to all helpers.
+      module_list: a list of modules to apply the command line arguments agains.
+                   The comparison is done against the NAME attribute of the
+                   helper. Defaults to None, in which case all registered
+                   helpers are applied.
     """
     for helper in cls._helper_classes.itervalues():
       if argument_category and helper.CATEGORY != argument_category:
         continue
+
+      if module_list and helper.NAME not in module_list:
+        continue
+
       helper.AddArguments(argument_group)
 
   @classmethod

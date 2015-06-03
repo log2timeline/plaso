@@ -19,9 +19,12 @@ from plaso import filters
 # TODO: remove after psort options refactor.
 from plaso.analysis import interface as analysis_interface
 from plaso.cli import analysis_tool
+from plaso.cli import tools as cli_tools
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
+from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
 from plaso.lib import errors
 from plaso.winnt import language_ids
@@ -56,7 +59,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._filter_expression = None
     self._filter_object = None
     self._front_end = psort.PsortFrontend()
-    # TODO: remove after psort options refactor.
     self._options = None
     self._output_format = None
     self._time_slice_event_time_string = None
@@ -112,10 +114,26 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._time_slice_duration = getattr(options, u'slice_size', 5)
     self._use_time_slicer = getattr(options, u'slicer', False)
 
+    self._front_end.SetFilter(self._filter_object, self._filter_expression)
+
     # The slice and slicer cannot be set at the same time.
     if self._time_slice_event_time_string and self._use_time_slicer:
       raise errors.BadConfigOption(
           u'Time slice and slicer cannot be used at the same time.')
+
+  def _ParseInformationalOptions(self, options):
+    """Parses the informational options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    super(PsortTool, self)._ParseInformationalOptions(options)
+
+    self._quiet_mode = getattr(options, u'quiet', False)
+    self._front_end.SetQuietMode(self._quiet_mode)
 
   def _ParseLanguageOptions(self, options):
     """Parses the language options.
@@ -124,10 +142,11 @@ class PsortTool(analysis_tool.AnalysisTool):
       options: the command line arguments (instance of argparse.Namespace).
     """
     preferred_language = getattr(options, u'preferred_language', u'en-US')
+
     if preferred_language == u'list':
       self.list_language_identifiers = True
     else:
-      self._preferred_language = preferred_language
+      self._front_end.SetPreferredLanguageIdentifier(preferred_language)
 
   def _ProcessStorage(self):
     """Processes a plaso storage file.
@@ -141,18 +160,94 @@ class PsortTool(analysis_tool.AnalysisTool):
           self._time_slice_event_time_string,
           duration=self._time_slice_duration, timezone=self._timezone)
 
+    if self._analysis_plugins:
+      read_only = False
+    else:
+      read_only = True
+
+    try:
+      storage_file = self._front_end.OpenStorageFile(read_only=read_only)
+    except IOError as exception:
+      raise RuntimeError(
+          u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
+              self._storage_file_path, exception))
+
+    output_module = self._front_end.GetOutputModule(
+        storage_file, preferred_encoding=self.preferred_encoding,
+        timezone=self._timezone)
+
+    if isinstance(output_module, output_interface.LinearOutputModule):
+      if self._output_filename:
+        output_file_object = open(self._output_filename, u'wb')
+        output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+      else:
+        output_writer = cli_tools.StdoutOutputWriter()
+      output_module.SetOutputWriter(output_writer)
+
+    # TODO: To set the filter we need to have the filter object. This may
+    # be better handled in an argument helper, but ATM the argument helper
+    # does not have access to the actual filter object.
+    if hasattr(output_module, u'SetFieldsFilter') and self._filter_object:
+      output_module.SetFieldsFilter(self._filter_object)
+
+    try:
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          self._options, output_module)
+    except errors.BadConfigOption as exception:
+      raise RuntimeError(exception)
+
+    # Check if there are parameters that have not been defined and need to
+    # in order for the output module to continue. Prompt user to supply
+    # those that may be missing.
+    missing_parameters = output_module.GetMissingArguments()
+    while missing_parameters:
+      configuration_object = frontend.Options()
+      setattr(configuration_object, u'output_format', output_module.NAME)
+      for parameter in missing_parameters:
+        value = self._PromptUserForInput(
+            u'Missing parameter {0:s} for output module'.format(parameter))
+        if value is None:
+          logging.warning(
+              u'Unable to set the missing parameter for: {0:s}'.format(
+                  parameter))
+          continue
+        setattr(configuration_object, parameter, value)
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          configuration_object, output_module)
+      missing_parameters = output_module.GetMissingArguments()
+
+    # Get ANALYSIS PLUGINS AND CONFIGURE!
+    get_plugins_and_producers = self._front_end.GetAnalysisPluginsAndEventQueues
+    analysis_plugins, event_queue_producers = get_plugins_and_producers(
+        self._analysis_plugins)
+
+    for analysis_plugin in analysis_plugins:
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          self._options, analysis_plugin)
+
     counter = self._front_end.ProcessStorage(
-        self._options, self._analysis_plugins,
+        output_module, storage_file, analysis_plugins, event_queue_producers,
         deduplicate_events=self._deduplicate_events,
         preferred_encoding=self.preferred_encoding,
-        time_slice=time_slice, timezone=self._timezone,
-        use_time_slicer=self._use_time_slicer)
+        time_slice=time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
       logging.info(frontend_utils.FormatHeader(u'Counter'))
       for element, count in counter.most_common():
         # TODO: replace by self._output_writer.Write().
         logging.info(frontend_utils.FormatOutputString(element, count))
+
+  def _PromptUserForInput(self, input_text):
+    """Prompts user for an input and return back read data.
+
+    Args:
+      input_text: the text used for prompting the user for input.
+
+    Returns:
+      string containing the input read from the user.
+    """
+    self._output_writer.Write(u'{0:s}: '.format(input_text))
+    return self._input_reader.Read()
 
   def AddAnalysisPluginOptions(self, argument_group, plugin_names):
     """Adds the analysis plugin options to the argument group
@@ -233,25 +328,13 @@ class PsortTool(analysis_tool.AnalysisTool):
     Args:
       argument_group: The argparse argument group (instance of
                       argparse._ArgumentGroup).
-      module_names: a string containing comma separated output module names.
+      module_names: a list of output module names.
     """
-    if module_names == u'list':
+    if u'list' in module_names:
       return
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, u'output')
-
-    # TODO: Remove this once all output modules have been transitioned
-    # into the CLI argument helpers.
-    modules_list = set([name.lower() for name in module_names])
-
-    for name, output_class in self._front_end.GetOutputClasses():
-      if not name.lower() in modules_list:
-        continue
-
-      if output_class.ARGUMENTS:
-        for parameter, config in output_class.ARGUMENTS:
-          argument_group.add_argument(parameter, **config)
+        argument_group, argument_category=u'output', module_list=module_names)
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
@@ -314,7 +397,8 @@ class PsortTool(analysis_tool.AnalysisTool):
         level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
     argument_parser = argparse.ArgumentParser(
-        description=self.DESCRIPTION, add_help=False)
+        description=self.DESCRIPTION, add_help=False,
+        conflict_handler=u'resolve')
 
     self.AddBasicOptions(argument_parser)
     self.AddStorageFileOptions(argument_parser)
@@ -376,11 +460,14 @@ class PsortTool(analysis_tool.AnalysisTool):
       argument_index = 0
 
     if argument_index > 0:
-      module_names = arguments[argument_index]
-      if module_names == u'list':
+      module_names_string = arguments[argument_index]
+      if module_names_string == u'list':
         self.list_output_modules = True
       else:
-        self.AddOutputModuleOptions(output_group, [module_names])
+        module_names = module_names_string.split(u',')
+        module_group = argument_parser.add_argument_group(
+            u'Output Module Specific Arguments')
+        self.AddOutputModuleOptions(module_group, module_names)
 
     # Add the analysis plugin options.
     if u'--analysis' in arguments:
@@ -471,6 +558,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:
       raise errors.BadConfigOption(u'Missing output format.')
+    self._front_end.SetOutputFormat(self._output_format)
 
     if not self._front_end.HasOutputClass(self._output_format):
       raise errors.BadConfigOption(
@@ -479,8 +567,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._deduplicate_events = getattr(options, u'dedup', True)
 
     self._output_filename = getattr(options, u'write', None)
-
-    self._preferred_language = getattr(options, u'preferred_language', u'en-US')
+    if self._output_filename:
+      self._front_end.SetOutputFilename(self._output_filename)
 
     if not self._data_location:
       logging.warning(u'Unable to automatically determine data location.')
@@ -514,7 +602,8 @@ def Main():
   """The main function."""
   multiprocessing.freeze_support()
 
-  tool = PsortTool()
+  input_reader = cli_tools.StdinInputReader()
+  tool = PsortTool(input_reader=input_reader)
 
   if not tool.ParseArguments():
     return False

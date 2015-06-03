@@ -16,19 +16,24 @@ class Base4n6TimeOutputModule(interface.OutputModule):
 
   NAME = '4n6time_shared'
 
-  def __init__(self, output_mediator, **kwargs):
+  _DEFAULT_FIELDS = [
+      u'color', u'datetime', u'host', u'source', u'sourcetype', u'user',
+      u'type']
+
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      kwargs: a dictionary of keyword arguments dependending on the output
-              module.
 
     Raises:
       ValueError: when there are unused keyword arguments.
     """
-    super(Base4n6TimeOutputModule, self).__init__(output_mediator, **kwargs)
-    self._evidence = None
+    super(Base4n6TimeOutputModule, self).__init__(output_mediator)
+    self._append = False
+    self._evidence = u'-'
+    self._fields = self._DEFAULT_FIELDS
+    self._set_status = None
 
   def _GetSanitizedEventValues(self, event_object):
     """Sanitizes the event object for use in 4n6time.
@@ -148,3 +153,38 @@ class Base4n6TimeOutputModule(interface.OutputModule):
       return -1
 
     return getattr(event_object.pathspec, u'vss_store_number', -1)
+
+  def SetAppendMode(self, append):
+    """Set the append status.
+
+    Args:
+      append: boolean that determines whether or not to append to the database.
+    """
+    if append:
+      self._append = True
+    else:
+      self._append = False
+
+  def SetEvidence(self, evidence):
+    """Set the evidence field.
+
+    Args:
+      evidence: the evidence field.
+    """
+    self._evidence = evidence
+
+  def SetFields(self, fields):
+    """Set the fields that will be indexed in the database.
+
+    Args:
+      fields: a list of fields that should be indexed.
+    """
+    self._fields = fields
+
+  def SetStatusObject(self, status_object):
+    """Set the status object.
+
+    Args:
+      status_object: status object provided by the 4n6time tool.
+    """
+    self._set_status = status_object

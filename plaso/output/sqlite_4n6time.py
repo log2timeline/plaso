@@ -16,10 +16,6 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
   DESCRIPTION = (
       u'Saves the data in a SQLite database, used by the tool 4n6time.')
 
-  _DEFAULT_FIELDS = frozenset([
-      u'host', u'user', u'source', u'sourcetype', u'type', u'datetime',
-      u'color'])
-
   _META_FIELDS = frozenset([
       u'sourcetype', u'source', u'user', u'host', u'MACB', u'color', u'type',
       u'record_number'])
@@ -51,34 +47,19 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u':URL, :record_number, :event_identifier, :event_type,'
       u':source_name, :user_sid, :computer_name, :evidence)')
 
-  def __init__(self, output_mediator, filename=None, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
-      filename: The filename.
 
     Raises:
       ValueError: if the file handle is missing.
     """
-    if not filename:
-      raise ValueError(u'Missing filename.')
-
-    super(SQLite4n6TimeOutputModule, self).__init__(output_mediator, **kwargs)
-    self._append = self._output_mediator.GetConfigurationValue(
-        u'append', default_value=False)
-
+    super(SQLite4n6TimeOutputModule, self).__init__(output_mediator)
     self._connection = None
     self._cursor = None
-
-    self._evidence = self._output_mediator.GetConfigurationValue(
-        u'evidence', default_value=u'-')
-    self._fields = self._output_mediator.GetConfigurationValue(
-        u'fields', default_value=self._DEFAULT_FIELDS)
-
-    self._filename = filename
-    self._set_status = self._output_mediator.GetConfigurationValue(
-        u'set_status')
+    self._filename = None
 
   def _GetDistinctValues(self, field_name):
     """Query database for unique field types.
@@ -204,6 +185,14 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
         self._set_status(u'Created table: l2t_disk')
 
     self.count = 0
+
+  def SetFilename(self, filename):
+    """Sets the filename.
+
+    Args:
+      filename: the filename.
+    """
+    self._filename = filename
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.

@@ -17,8 +17,8 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     """Sets up the objects needed for this test."""
     self._output_writer = cli_test_lib.TestOutputWriter()
     output_mediator = self._CreateOutputMediator()
-    self._output_module = tln.TLNOutputModule(
-        output_mediator, output_writer=self._output_writer)
+    self._output_module = tln.TLNOutputModule(output_mediator)
+    self._output_module.SetOutputWriter(self._output_writer)
     self._event_object = test_lib.TestEventObject()
 
   def testWriteHeader(self):
@@ -58,8 +58,8 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     """Sets up the objects needed for this test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
-    self._output_module = tln.L2TTLNOutputModule(
-        output_mediator, output_writer=self._output_writer)
+    self._output_module = tln.L2TTLNOutputModule(output_mediator)
+    self._output_module.SetOutputWriter(self._output_writer)
     self._event_object = test_lib.TestEventObject()
 
   def testWriteHeader(self):

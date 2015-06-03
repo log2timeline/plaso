@@ -140,22 +140,33 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
   def testProcessStorage(self):
     """Test the ProcessStorage function."""
+    test_front_end = psort.PsortFrontend()
+    test_front_end.SetOutputFilename(u'output.txt')
+    test_front_end.SetOutputFormat(u'dynamic')
+    test_front_end.SetPreferredLanguageIdentifier(u'en-US')
+    test_front_end.SetQuietMode(True)
+
+    # TODO: Remove the need to parse the option object at all.
     options = frontend.Options()
+    options.data_location = None
     options.storage_file = self._GetTestFilePath([u'psort_test.out'])
-    options.output_format = u'dynamic'
+    test_front_end.ParseOptions(options)
 
+    storage_file = test_front_end.OpenStorageFile(read_only=True)
+
+    output_writer = test_lib.StringIOOutputWriter()
+    output_module = test_front_end.GetOutputModule(storage_file)
+    output_module.SetOutputWriter(output_writer)
+
+    counter = test_front_end.ProcessStorage(output_module, storage_file, [], [])
+    self.assertEqual(counter[u'Stored Events'], 15)
+
+    output_writer.SeekToBeginning()
     lines = []
-    with test_lib.TempDirectory() as temp_directory:
-      temp_file_name = os.path.join(temp_directory, u'output.txt')
-      options.write = temp_file_name
-
-      test_front_end = psort.PsortFrontend()
-      test_front_end.ParseOptions(options)
-      test_front_end.ProcessStorage(options, [], u'text')
-
-      with open(temp_file_name, 'rb') as file_object:
-        for line in file_object:
-          lines.append(line)
+    line = output_writer.GetLine()
+    while line:
+      lines.append(line)
+      line = output_writer.GetLine()
 
     self.assertEqual(len(lines), 16)
 
@@ -193,8 +204,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         storage_file.store_range = [1]
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator, storage_file)
-        output_module = TestOutputModule(
-            output_mediator_object, output_writer=output_writer)
+        output_module = TestOutputModule(output_mediator_object)
+        output_module.SetOutputWriter(output_writer)
         event_buffer = TestEventBuffer(
             output_module, check_dedups=False, store=storage_file)
 

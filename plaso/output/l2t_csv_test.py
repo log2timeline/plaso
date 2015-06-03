@@ -49,8 +49,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     """Sets up the objects needed for this test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
-    self.formatter = l2t_csv.L2TCSVOutputModule(
-        output_mediator, output_writer=self._output_writer)
+    self.formatter = l2t_csv.L2TCSVOutputModule(output_mediator)
+    self.formatter.SetOutputWriter(self._output_writer)
     self.event_object = L2tTestEvent()
 
   def testWriteHeader(self):

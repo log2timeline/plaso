@@ -18,66 +18,6 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
   NAME = '4n6time_mysql'
   DESCRIPTION = u'MySQL database output for the 4n6time tool.'
 
-  # TODO: move this to a CLI argument helper.
-  ARGUMENTS = [
-      ('--db_user', {
-          'dest': 'db_user',
-          'type': unicode,
-          'help': 'Defines the database user.',
-          'metavar': 'USERNAME',
-          'action': 'store',
-          'default': 'root'}),
-      ('--db_host', {
-          'dest': 'db_host',
-          'metavar': 'HOSTNAME',
-          'type': unicode,
-          'help': (
-              'Defines the IP address or the hostname of the database '
-              'server.'),
-          'action': 'store',
-          'default': 'localhost'}),
-      ('--db_pass', {
-          'dest': 'db_pass',
-          'metavar': 'PASSWORD',
-          'type': unicode,
-          'help': 'The password for the database user.',
-          'action': 'store',
-          'default': 'forensic'}),
-      ('--db_name', {
-          'dest': 'db_name',
-          'type': unicode,
-          'help': 'The name of the database to connect to.',
-          'action': 'store',
-          'default': 'log2timeline'}),
-      ('--append', {
-          'dest': 'append',
-          'action': 'store_true',
-          'help': (
-              'Defines whether the intention is to append to an already '
-              'existing database or overwrite it. Defaults to overwrite.'),
-          'default': False}),
-      ('--fields', {
-          'dest': 'fields',
-          'action': 'store',
-          'type': unicode,
-          'nargs': '*',
-          'help': 'Defines which fields should be indexed in the database.',
-          'default': [
-              'host', 'user', 'source', 'sourcetype', 'type', 'datetime',
-              'color']}),
-      ('--evidence', {
-          'dest': 'evidence',
-          'action': 'store',
-          'help': (
-              'Set the evidence field to a specific value, defaults to '
-              'empty.'),
-          'type': unicode,
-          'default': '-'})]
-
-  _DEFAULT_FIELDS = frozenset([
-      u'host', u'user', u'source', u'sourcetype', u'type', u'datetime',
-      u'color'])
-
   _META_FIELDS = frozenset([
       u'sourcetype', u'source', u'user', u'host', u'MACB', u'color', u'type',
       u'record_number'])
@@ -114,33 +54,21 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u':URL, :record_number, :event_identifier, :event_type,'
       u':source_name, :user_sid, :computer_name, :evidence)')
 
-  def __init__(self, output_mediator, **kwargs):
+  def __init__(self, output_mediator):
     """Initializes the output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(MySQL4n6TimeOutputModule, self).__init__(output_mediator, **kwargs)
+    super(MySQL4n6TimeOutputModule, self).__init__(output_mediator)
 
     self._connection = None
     self._cursor = None
 
-    self._append = self._output_mediator.GetConfigurationValue(
-        u'append', default_value=False)
-    self._dbname = self._output_mediator.GetConfigurationValue(
-        u'db_name', default_value=u'log2timeline')
-    self._evidence = self._output_mediator.GetConfigurationValue(
-        u'evidence', default_value=u'-')
-    self._fields = self._output_mediator.GetConfigurationValue(
-        u'fields', default_value=self._DEFAULT_FIELDS)
-    self._host = self._output_mediator.GetConfigurationValue(
-        u'db_host', default_value=u'localhost')
-    self._password = self._output_mediator.GetConfigurationValue(
-        u'db_pass', default_value=u'forensic')
-    self._set_status = self._output_mediator.GetConfigurationValue(
-        u'set_status')
-    self._user = self._output_mediator.GetConfigurationValue(
-        u'db_user', default_value=u'root')
+    self._dbname = u'log2timeline'
+    self._host = u'localhost'
+    self._password = u'forensic'
+    self._user = u'root'
 
   def _GetDistinctValues(self, field_name):
     """Query database for unique field types.
@@ -295,6 +223,36 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
           exception))
 
     self.count = 0
+
+  def SetCredentials(self, username=None, password=None):
+    """Set the database credentials.
+
+    Args:
+      username: an optional username field. Defaults to None.
+      password: an optional password field. Defaults to None.
+    """
+    if username:
+      self._user = username
+    if password:
+      self._password = password
+
+  def SetDatabaseName(self, name):
+    """Set the database name.
+
+    Args:
+      name: the database name.
+    """
+    self._dbname = name
+
+  def SetServerInformation(self, server, port):
+    """Set the server information.
+
+    Args:
+      server: the server name or IP address.
+      port: the port number the database listens on.
+    """
+    self._host = server
+    self._port = port
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
