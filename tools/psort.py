@@ -393,8 +393,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     Returns:
       A boolean value indicating the arguments were successfully parsed.
     """
-    logging.basicConfig(
-        level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+    self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, add_help=False,
@@ -412,6 +411,8 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'or "--analysis list" to see a list of available plugins.'))
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
+
+    self.AddLogFileOptions(info_group)
 
     self.AddInformationalOptions(info_group)
 
@@ -552,8 +553,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       logging_level = logging.INFO
 
-    logging.basicConfig(
-        level=logging_level, format=u'[%(levelname)s] %(message)s')
+    log_file = getattr(options, u'log_file', None)
+    self._ConfigureLogging(log_level=logging_level, filename=log_file)
 
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:

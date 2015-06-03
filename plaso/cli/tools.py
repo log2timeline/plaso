@@ -57,6 +57,36 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
+  def _ConfigureLogging(
+      self, log_level=None, format_string=None, filename=None):
+    """Configure the logger.
+
+    Args:
+      log_level: optional integer representing the log level, eg. logging.DEBUG.
+                 Defaults to None, which configures the logger to use INFO
+                 level.
+      format_string: optional format string for the logs. Defaults to None,
+                     which in turn configures the logger to use a default format
+                     string.
+      filename: optional path to a filename to append logs to. Defaults to None,
+                which means logs will not be redirected to a file.
+    """
+    # Remove all possible log handlers.
+    for handler in logging.root.handlers:
+      logging.root.removeHandler(handler)
+
+    if log_level is None:
+      log_level = logging.INFO
+
+    if not format_string:
+      format_string = u'[%(levelname)s] %(message)s'
+
+    if filename:
+      logging.basicConfig(
+          level=log_level, format=format_string, filename=filename)
+    else:
+      logging.basicConfig(level=log_level, format=format_string)
+
   def _ParseDataLocationOption(self, options):
     """Parses the data location option.
 
@@ -166,6 +196,19 @@ class CLITool(object):
     argument_group.add_argument(
         '-q', '--quiet', dest='quiet', action='store_true', default=False,
         help=u'disable informational output.')
+
+  def AddLogFileOptions(self, argument_group):
+    """Adds the log file option to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--logfile', u'--log_file', u'--log-file', action=u'store',
+        metavar=u'FILENAME', dest=u'log_file', type=unicode, default=u'', help=(
+            u'If defined all log messages will be redirected to this file '
+            u'instead the default STDERR.'))
 
   def AddTimezoneOption(self, argument_group):
     """Adds the timezone option to the argument group.

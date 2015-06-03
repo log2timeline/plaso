@@ -83,8 +83,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Returns:
       A boolean value indicating the arguments were successfully parsed.
     """
-    logging.basicConfig(
-        level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+    self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False)
@@ -92,6 +91,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
     self.AddDataLocationOption(argument_parser)
+    self.AddLogFileOptions(argument_parser)
 
     argument_parser.add_argument(
         u'-w', u'--write', action=u'store', dest=u'path', type=unicode,
@@ -208,12 +208,16 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     super(ImageExportTool, self).ParseOptions(options)
 
-    format_str = u'%(asctime)s [%(levelname)s] %(message)s'
+    format_string = u'%(asctime)s [%(levelname)s] %(message)s'
 
     if self._debug_mode:
-      logging.basicConfig(level=logging.DEBUG, format=format_str)
+      log_level = logging.DEBUG
     else:
-      logging.basicConfig(level=logging.INFO, format=format_str)
+      log_level = logging.INFO
+
+    log_file = getattr(options, u'log_file', None)
+    self._ConfigureLogging(
+        format_string=format_string, log_level=log_level, filename=log_file)
 
     self._destination_path = getattr(options, u'path', u'export')
 
