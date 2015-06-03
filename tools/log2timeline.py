@@ -13,7 +13,6 @@ import plaso
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
 from plaso.frontend import log2timeline
-from plaso.frontend import utils as frontend_utils
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import pfilter
@@ -285,23 +284,15 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   def ListPluginInformation(self):
     """Lists all plugin and parser information."""
     plugin_list = self._front_end.GetPluginData()
-    lines_of_text = [
-        u'{:=^80}'.format(u' log2timeline/plaso information. ')]
+    self._output_writer.Write(
+        u'{0:=^80s}\n'.format(u' log2timeline/plaso information '))
 
     for header, data in plugin_list.items():
-      # TODO: Using the frontend utils here instead of "self.PrintHeader"
-      # since the desired output here is a string that can be sent later
-      # to an output writer. Change this entire function so it can utilize
-      # PrintHeader or something similar.
-
-      # TODO: refactor usage of frontend utils away.
-      lines_of_text.append(frontend_utils.FormatHeader(header))
+      self.PrintHeader(header)
       for entry_header, entry_data in sorted(data):
-        lines_of_text.append(
-            frontend_utils.FormatOutputString(entry_header, entry_data))
+        self.PrintColumnValue(entry_header, entry_data)
 
-    lines_of_text.append(u'')
-    self._output_writer.Write(u'\n'.join(lines_of_text))
+    self._output_writer.Write(u'\n')
 
   def ParseArguments(self):
     """Parses the command line arguments.

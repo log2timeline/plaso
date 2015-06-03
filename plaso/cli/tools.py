@@ -234,7 +234,7 @@ class CLITool(object):
 
     utc_date_time = datetime.datetime.utcnow()
 
-    self.PrintColumnValue(u'Timezone', u'UTC Offset', max_length)
+    self.PrintColumnValue(u'Timezone', u'UTC Offset', column_width=max_length)
     for timezone_name in pytz.all_timezones:
       local_timezone = pytz.timezone(timezone_name)
 
@@ -247,7 +247,7 @@ class CLITool(object):
         _, _, diff = local_date_string.rpartition(u'-')
         diff_string = u'-{0:s}'.format(diff)
 
-      self.PrintColumnValue(timezone_name, diff_string, max_length)
+      self.PrintColumnValue(timezone_name, diff_string, column_width=max_length)
 
     self.PrintSeparatorLine()
 
@@ -317,7 +317,8 @@ class CLITool(object):
 
   def PrintSeparatorLine(self):
     """Prints a separator line."""
-    self._output_writer.Write(u'{0:s}\n'.format(u'-' * self._LINE_LENGTH))
+    self._output_writer.Write(u'-' * self._LINE_LENGTH)
+    self._output_writer.Write(u'\n')
 
 
 class CLIInputReader(object):
