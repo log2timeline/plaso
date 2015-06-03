@@ -146,19 +146,26 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # Wait for all analysis plugins to complete.
     for analysis_process_info in self._analysis_process_info:
-      name = analysis_process_info.plugin_name
+      name = analysis_process_info.plugin.name
+      if analysis_process_info.plugin.LONG_RUNNING_PLUGIN:
+        logging.warning(
+            u'{0:s} may take a long time to run. It will not be automatically '
+            u'terminated.'.format(name))
+        report_wait = None
+      else:
+        report_wait = self.MAX_ANALYSIS_PLUGIN_REPORT_WAIT
       completion_event = analysis_process_info.completion_event
       process = analysis_process_info.process
       logging.info(
           u'Waiting for analysis plugin: {0:s} to complete.'.format(name))
-      if completion_event.wait(self.MAX_ANALYSIS_PLUGIN_REPORT_WAIT):
+      if completion_event.wait(report_wait):
         logging.info(u'Plugin {0:s} has completed.'.format(name))
       else:
         logging.warning(
             u'Analysis process {0:s} failed to compile its report in a '
             u'reasonable time. No report will be displayed or stored.'.format(
                 name))
-        process.Terminate()
+        process.terminate()
 
     logging.info(u'All analysis plugins are now completed.')
 
@@ -360,7 +367,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
               target=analysis_plugin.RunPlugin,
               args=(analysis_mediator_object,))
           process_info = PsortAnalysisProcess(
-              completion_event, analysis_plugin.plugin_name, analysis_process)
+              completion_event, analysis_plugin, analysis_process)
           self._analysis_process_info.append(process_info)
 
           analysis_process.start()
@@ -539,12 +546,12 @@ class PsortAnalysisProcess(object):
       completion_event: An optional Event object (instance of
                         Multiprocessing.Event, Queue.Event or similar) that will
                         be set when the analysis plugin is complete.
-    plugin_name: The name of the plugin running in the process.
+    plugin: The plugin running in the process (instance of AnalysisProcess).
     process: The process (instance of Multiprocessing.Process) that
              encapsulates the analysis process.
   """
-  def __init__(self, completion_event, plugin_name, process):
+  def __init__(self, completion_event, plugin, process):
     super(PsortAnalysisProcess, self).__init__()
     self.completion_event = completion_event
-    self.plugin_name = plugin_name
+    self.plugin = plugin
     self.process = process

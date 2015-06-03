@@ -17,6 +17,9 @@ class CollectorError(Error):
   """Class that defines collector errors."""
 
 
+class ConnectionError(Error):
+  """Class that defines errors encountered connecting to a service."""
+
 class ForemanAbort(Error):
   """Class that defines a foreman initiated abort exception."""
 
