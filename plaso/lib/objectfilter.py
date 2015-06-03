@@ -40,7 +40,7 @@ our fleet like this:
 
   for car in fleet:
     if compiled_filter.Matches(car):
-      print "Car %s matches the supplied filter." % car.code
+      print("Car %s matches the supplied filter." % car.code)
 
 The filter expression contains two subexpressions joined by an AND operator:
   "color is grey" and "doors >= 3"

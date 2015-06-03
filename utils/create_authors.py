@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """This file simply creates the AUTHOR file based on parser content."""
 
-import os
+from __future__ import print_function
 import fnmatch
+import os
 
 
 def ProcessFile(file_path):
@@ -63,4 +64,4 @@ Keith Wall (kwallster@gmail.com)
     out_file.write('\n'.join(authors))
     out_file.write('\n')
 
-  print 'Added {0:d} authors from files.'.format(len(authors))
+  print(u'Added {0:d} authors from files.'.format(len(authors)))
