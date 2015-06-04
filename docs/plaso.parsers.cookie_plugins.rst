@@ -12,26 +12,10 @@ plaso.parsers.cookie_plugins.ganalytics module
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.cookie_plugins.ganalytics_test module
----------------------------------------------------
-
-.. automodule:: plaso.parsers.cookie_plugins.ganalytics_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.parsers.cookie_plugins.interface module
 ---------------------------------------------
 
 .. automodule:: plaso.parsers.cookie_plugins.interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.cookie_plugins.test_lib module
---------------------------------------------
-
-.. automodule:: plaso.parsers.cookie_plugins.test_lib
     :members:
     :undoc-members:
     :show-inheritance:

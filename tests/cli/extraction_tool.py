@@ -72,24 +72,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        more than a single partition.',
       u''])
 
-  _EXPECTED_OUTPUT_FILTER_OPTIONS = u'\n'.join([
-      u'usage: extraction_tool_test.py [-f FILE_FILTER]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER',
-      (u'                        List of files to include for targeted '
-       u'collection of'),
-      (u'                        files to parse, one line per file path, '
-       u'setup is'),
-      (u'                        /path|file - where each element can contain '
-       u'either a'),
-      (u'                        variable set in the preprocessing stage or '
-       u'a regular'),
-      u'                        expression.',
-      u''])
-
   _EXPECTED_PERFOMANCE_OPTIONS = u'\n'.join([
       u'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
       u'                               [--queue_size QUEUE_SIZE]',
@@ -155,19 +137,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_OUTPUT_EXTRACTION_OPTIONS)
-
-  def testAddFilterOptions(self):
-    """Tests the AddFilterOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
-
-    test_tool = extraction_tool.ExtractionTool()
-    test_tool.AddFilterOptions(argument_parser)
-
-    output = argument_parser.format_help()
-    self.assertEqual(output, self._EXPECTED_OUTPUT_FILTER_OPTIONS)
 
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""
