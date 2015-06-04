@@ -12,26 +12,10 @@ plaso.parsers.olecf_plugins.automatic_destinations module
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.olecf_plugins.automatic_destinations_test module
---------------------------------------------------------------
-
-.. automodule:: plaso.parsers.olecf_plugins.automatic_destinations_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.parsers.olecf_plugins.default module
 ------------------------------------------
 
 .. automodule:: plaso.parsers.olecf_plugins.default
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.olecf_plugins.default_test module
------------------------------------------------
-
-.. automodule:: plaso.parsers.olecf_plugins.default_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -48,22 +32,6 @@ plaso.parsers.olecf_plugins.summary module
 ------------------------------------------
 
 .. automodule:: plaso.parsers.olecf_plugins.summary
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.olecf_plugins.summary_test module
------------------------------------------------
-
-.. automodule:: plaso.parsers.olecf_plugins.summary_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.olecf_plugins.test_lib module
--------------------------------------------
-
-.. automodule:: plaso.parsers.olecf_plugins.test_lib
     :members:
     :undoc-members:
     :show-inheritance:

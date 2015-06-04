@@ -12,14 +12,6 @@ plaso.parsers.bencode_plugins.interface module
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.bencode_plugins.test_lib module
----------------------------------------------
-
-.. automodule:: plaso.parsers.bencode_plugins.test_lib
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.parsers.bencode_plugins.transmission module
 -------------------------------------------------
 

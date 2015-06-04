@@ -12,14 +12,6 @@ plaso.engine.collector module
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.collector_test module
-----------------------------------
-
-.. automodule:: plaso.engine.collector_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.engine.engine module
 --------------------------
 
@@ -32,14 +24,6 @@ plaso.engine.knowledge_base module
 ----------------------------------
 
 .. automodule:: plaso.engine.knowledge_base
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.engine.knowledge_base_test module
----------------------------------------
-
-.. automodule:: plaso.engine.knowledge_base_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -60,14 +44,6 @@ plaso.engine.profiler module
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.profiler_test module
----------------------------------
-
-.. automodule:: plaso.engine.profiler_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.engine.queue module
 -------------------------
 
@@ -84,22 +60,6 @@ plaso.engine.single_process module
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.single_process_test module
----------------------------------------
-
-.. automodule:: plaso.engine.single_process_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.engine.test_lib module
-----------------------------
-
-.. automodule:: plaso.engine.test_lib
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.engine.utils module
 -------------------------
 
@@ -112,14 +72,6 @@ plaso.engine.worker module
 --------------------------
 
 .. automodule:: plaso.engine.worker
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.engine.worker_test module
--------------------------------
-
-.. automodule:: plaso.engine.worker_test
     :members:
     :undoc-members:
     :show-inheritance:

@@ -12,14 +12,6 @@ plaso.winreg.cache module
     :undoc-members:
     :show-inheritance:
 
-plaso.winreg.cache_test module
-------------------------------
-
-.. automodule:: plaso.winreg.cache_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.winreg.interface module
 -----------------------------
 
@@ -32,14 +24,6 @@ plaso.winreg.path_expander module
 ---------------------------------
 
 .. automodule:: plaso.winreg.path_expander
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.winreg.test_lib module
-----------------------------
-
-.. automodule:: plaso.winreg.test_lib
     :members:
     :undoc-members:
     :show-inheritance:
@@ -60,26 +44,10 @@ plaso.winreg.winpyregf module
     :undoc-members:
     :show-inheritance:
 
-plaso.winreg.winpyregf_test module
-----------------------------------
-
-.. automodule:: plaso.winreg.winpyregf_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.winreg.winregistry module
 -------------------------------
 
 .. automodule:: plaso.winreg.winregistry
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.winreg.winregistry_test module
-------------------------------------
-
-.. automodule:: plaso.winreg.winregistry_test
     :members:
     :undoc-members:
     :show-inheritance:

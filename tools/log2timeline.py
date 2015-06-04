@@ -342,6 +342,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     processing_group = argument_parser.add_argument_group(
         u'Processing Arguments')
 
+    self.AddDataLocationOption(processing_group)
     self.AddPerformanceOptions(processing_group)
     self.AddProfilingOptions(processing_group)
     self.AddProcessingOptions(processing_group)
