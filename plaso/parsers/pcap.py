@@ -285,7 +285,7 @@ class Stream(object):
     self.start_time = packet[0]
     self.all_data = [prot_data]
     self.protocol_data = u''
-    self.stream_data = []
+    self.stream_data = b''
 
     if prot in [u'TCP', u'UDP']:
       self.source_port = prot_data.sport
@@ -322,7 +322,7 @@ class Stream(object):
       (i.e. HTTP Request) and the prettyfied string for the protocols.
     """
     packet_details = []
-    if self.stream_data[:4] == u'HTTP':
+    if self.stream_data[:4] == b'HTTP':
       try:
         http = dpkt.http.Response(self.stream_data)
         packet_details.append(u'HTTP Response: status: ')
@@ -353,7 +353,7 @@ class Stream(object):
                 exception, repr(self.stream_data[:20]))
         return u'HTTP Response', packet_details
 
-    elif self.stream_data[:3] == u'GET' or self.stream_data[:4] == u'POST':
+    elif self.stream_data[:3] == b'GET' or self.stream_data[:4] == b'POST':
       try:
         http = dpkt.http.Request(self.stream_data)
         packet_details.append(u'HTTP Request: method: ')

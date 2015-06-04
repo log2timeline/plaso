@@ -5,8 +5,9 @@
 import os
 import unittest
 
-from plaso.cli import test_lib as cli_test_lib
 from plaso.frontend import frontend
+from tests.cli import test_lib as cli_test_lib
+
 from tools import log2timeline
 
 
