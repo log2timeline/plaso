@@ -12,14 +12,6 @@ plaso.parsers.esedb_plugins.file_history module
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.esedb_plugins.file_history_test module
-----------------------------------------------------
-
-.. automodule:: plaso.parsers.esedb_plugins.file_history_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.parsers.esedb_plugins.interface module
 --------------------------------------------
 
@@ -32,22 +24,6 @@ plaso.parsers.esedb_plugins.msie_webcache module
 ------------------------------------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.msie_webcache
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.esedb_plugins.msie_webcache_test module
------------------------------------------------------
-
-.. automodule:: plaso.parsers.esedb_plugins.msie_webcache_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.esedb_plugins.test_lib module
--------------------------------------------
-
-.. automodule:: plaso.parsers.esedb_plugins.test_lib
     :members:
     :undoc-members:
     :show-inheritance:

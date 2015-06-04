@@ -99,13 +99,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         metavar=u'PATH', default=u'export', help=(
             u'The directory in which extracted files should be stored.'))
 
-    argument_parser.add_argument(
-        u'-f', u'--filter', action=u'store', dest=u'filter', type=unicode,
-        metavar=u'FILTER_FILE', help=(
-            u'Full path to the file that contains the collection filter, '
-            u'the file can use variables that are defined in preprocessing, '
-            u'just like any other log2timeline/plaso collection filter.'))
-
+    self.AddFilterOptions(argument_parser)
     argument_parser.add_argument(
         u'--date-filter', u'--date_filter', action=u'append', type=unicode,
         dest=u'date_filters', metavar=u'TYPE_START_END', default=None, help=(
@@ -222,13 +216,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self._destination_path = getattr(options, u'path', u'export')
 
-    filter_file = getattr(options, u'filter', None)
-    if filter_file and not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'Unable to proceed, filter file: {0:s} does not exist.'.format(
-              filter_file))
-
-    self._filter_file = filter_file
+    self._ParseFilterOptions(options)
 
     if (getattr(options, u'no_vss', False) or
         getattr(options, u'include_duplicates', False)):

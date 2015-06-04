@@ -2,7 +2,6 @@
 """The extraction CLI tool."""
 
 import argparse
-import os
 
 from plaso.cli import storage_media_tool
 from plaso.engine import engine
@@ -33,7 +32,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         input_reader=input_reader, output_writer=output_writer)
     self._buffer_size = 0
     self._enable_profiling = False
-    self._filter_file = None
     self._filter_object = None
     self._hasher_names_string = None
     self._mount_path = None
@@ -66,22 +64,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._old_preprocess = getattr(options, u'old_preprocess', False)
 
     self._process_archive_files = getattr(options, u'scan_archives', False)
-
-  def _ParseFilterOptions(self, options):
-    """Parses the filter options.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    filter_file = getattr(options, u'file_filter', None)
-    if filter_file and not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(filter_file))
-
-    self._filter_file = filter_file
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -210,21 +192,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'the storage file is used. This can be handy when parsing an '
             u'image that contains more than a single partition.'))
 
-  def AddFilterOptions(self, argument_group):
-    """Adds the filter options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
-        action=u'store', type=unicode, default=None, help=(
-            u'List of files to include for targeted collection of files to '
-            u'parse, one line per file path, setup is /path|file - where each '
-            u'element can contain either a variable set in the preprocessing '
-            u'stage or a regular expression.'))
-
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
 
@@ -299,6 +266,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """
     super(ExtractionTool, self).ParseOptions(options)
     self._ParseExtractionOptions(options)
+    self._ParseDataLocationOption(options)
     self._ParseFilterOptions(options)
     self._ParsePerformanceOptions(options)
     self._ParseProfilingOptions(options)

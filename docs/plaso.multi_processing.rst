@@ -12,14 +12,6 @@ plaso.multi_processing.foreman module
     :undoc-members:
     :show-inheritance:
 
-plaso.multi_processing.foreman_test module
-------------------------------------------
-
-.. automodule:: plaso.multi_processing.foreman_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.multi_processing.multi_process module
 -------------------------------------------
 
@@ -28,26 +20,10 @@ plaso.multi_processing.multi_process module
     :undoc-members:
     :show-inheritance:
 
-plaso.multi_processing.multi_process_test module
-------------------------------------------------
-
-.. automodule:: plaso.multi_processing.multi_process_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.multi_processing.process_info module
 ------------------------------------------
 
 .. automodule:: plaso.multi_processing.process_info
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.multi_processing.process_info_test module
------------------------------------------------
-
-.. automodule:: plaso.multi_processing.process_info_test
     :members:
     :undoc-members:
     :show-inheritance:

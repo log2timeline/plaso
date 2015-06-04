@@ -12,26 +12,10 @@ plaso.lib.binary module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.binary_test module
-----------------------------
-
-.. automodule:: plaso.lib.binary_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.bufferlib module
 --------------------------
 
 .. automodule:: plaso.lib.bufferlib
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.lib.bufferlib_test module
--------------------------------
-
-.. automodule:: plaso.lib.bufferlib_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -56,14 +40,6 @@ plaso.lib.event module
 ----------------------
 
 .. automodule:: plaso.lib.event
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.lib.event_test module
----------------------------
-
-.. automodule:: plaso.lib.event_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -108,26 +84,10 @@ plaso.lib.objectfilter module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.objectfilter_test module
-----------------------------------
-
-.. automodule:: plaso.lib.objectfilter_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.pfilter module
 ------------------------
 
 .. automodule:: plaso.lib.pfilter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.lib.pfilter_test module
------------------------------
-
-.. automodule:: plaso.lib.pfilter_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -148,26 +108,10 @@ plaso.lib.specification module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.specification_test module
------------------------------------
-
-.. automodule:: plaso.lib.specification_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.storage module
 ------------------------
 
 .. automodule:: plaso.lib.storage
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.lib.storage_test module
------------------------------
-
-.. automodule:: plaso.lib.storage_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -180,26 +124,10 @@ plaso.lib.timelib module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.timelib_test module
------------------------------
-
-.. automodule:: plaso.lib.timelib_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.utils module
 ----------------------
 
 .. automodule:: plaso.lib.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.lib.utils_test module
----------------------------
-
-.. automodule:: plaso.lib.utils_test
     :members:
     :undoc-members:
     :show-inheritance:

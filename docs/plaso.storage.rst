@@ -20,14 +20,6 @@ plaso.storage.factory module
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.factory_test module
----------------------------------
-
-.. automodule:: plaso.storage.factory_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------

@@ -36,14 +36,6 @@ plaso.cli.helpers.manager module
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.manager_test module
--------------------------------------
-
-.. automodule:: plaso.cli.helpers.manager_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.cli.helpers.mysql_4n6time_output module
 ---------------------------------------------
 

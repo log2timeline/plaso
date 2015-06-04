@@ -20,26 +20,10 @@ plaso.preprocessors.linux module
     :undoc-members:
     :show-inheritance:
 
-plaso.preprocessors.linux_test module
--------------------------------------
-
-.. automodule:: plaso.preprocessors.linux_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.preprocessors.macosx module
 ---------------------------------
 
 .. automodule:: plaso.preprocessors.macosx
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.preprocessors.macosx_test module
---------------------------------------
-
-.. automodule:: plaso.preprocessors.macosx_test
     :members:
     :undoc-members:
     :show-inheritance:
@@ -52,34 +36,10 @@ plaso.preprocessors.manager module
     :undoc-members:
     :show-inheritance:
 
-plaso.preprocessors.manager_test module
----------------------------------------
-
-.. automodule:: plaso.preprocessors.manager_test
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.preprocessors.test_lib module
------------------------------------
-
-.. automodule:: plaso.preprocessors.test_lib
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.preprocessors.windows module
 ----------------------------------
 
 .. automodule:: plaso.preprocessors.windows
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.preprocessors.windows_test module
----------------------------------------
-
-.. automodule:: plaso.preprocessors.windows_test
     :members:
     :undoc-members:
     :show-inheritance:

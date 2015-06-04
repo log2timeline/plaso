@@ -39,6 +39,7 @@ class StorageMediaTool(tools.CLITool):
     """
     super(StorageMediaTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._filter_file = None
     # TODO: refactor to partitions.
     self._partition_number = None
     self._partition_offset = None
@@ -195,6 +196,33 @@ class StorageMediaTool(tools.CLITool):
       raise errors.UserAbort(u'File system scan aborted.')
 
     return selected_store_identifiers
+
+  def _ParseFilterOptions(self, options):
+    """Parses the filter options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    filter_file = getattr(options, u'file_filter', None)
+
+    if not filter_file:
+      return
+
+    if self._data_location:
+      filter_file_base = os.path.basename(filter_file)
+      filter_file_check = os.path.join(self._data_location, filter_file_base)
+      if os.path.isfile(filter_file_check):
+        self._filter_file = filter_file_check
+        return
+
+    if not os.path.isfile(filter_file):
+      raise errors.BadConfigOption(
+          u'No such collection filter file: {0:s}.'.format(filter_file))
+
+    self._filter_file = filter_file
 
   def _ParseStorageMediaImageOptions(self, options):
     """Parses the storage media image options.
@@ -531,6 +559,21 @@ class StorageMediaTool(tools.CLITool):
     # TODO: replace check with dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS.
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
       self._source_path_specs.append(scan_node.path_spec)
+
+  def AddFilterOptions(self, argument_group):
+    """Adds the filter options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
+        action=u'store', type=unicode, default=None, help=(
+            u'List of files to include for targeted collection of files to '
+            u'parse, one line per file path, setup is /path|file - where each '
+            u'element can contain either a variable set in the preprocessing '
+            u'stage or a regular expression.'))
 
   def AddStorageMediaImageOptions(self, argument_group):
     """Adds the storage media image options to the argument group.
