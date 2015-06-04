@@ -262,6 +262,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._StopExtractionProcesses(abort=self._foreman_object.error_detected)
 
+    # TODO: kept here for testing now but this should be moved to
+    # an error report that is provided after processing.
+    # for path_spec_comparable in self._foreman_object._error_path_specs:
+    #   logging.error(path_spec_comparable)
+
     return self._foreman_object.error_detected
 
   def _StopExtractionProcesses(self, abort=False):
@@ -338,6 +343,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    self._original_sigsegv_handler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
     self._pid = None
@@ -358,7 +364,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     should override this method to do the necessary actions in the main loop.
     """
 
-  @abc.abstractmethod
   def _OnExit(self):
     """The process on exit handler.
 
@@ -366,6 +371,35 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     should override this method to do the necessary actions up after
     the main loop.
     """
+    return
+
+  def _OnCriticalError(self):
+    """The process on critical error handler.
+
+    This method is called when the process encountered a critical error e.g.
+    a segfault. A sub class should override this method to do the necessary
+    actions before the original critical error signal handler it called.
+
+    Be aware that the state of the process should not be trusted a significant
+    part of memory could have been overwritten before a segfault. This callback
+    is primarily intended to salvage what we need to troubleshoot the error.
+    """
+    return
+
+  def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
+    """Signal handler for the SIGSEGV signal.
+
+    Args:
+      signal_number: Numeric representation of the signal.
+      stack_frame: The current stack frame (instance of frame object) or None.
+    """
+    self._OnCriticalError()
+
+    # Note that the original SIGSEGV handler can be 0.
+    if self._original_sigsegv_handler is not None:
+      # Let the original SIGSEGV handler take over.
+      signal.signal(signal.SIGSEGV, self._original_sigsegv_handler)
+      os.kill(self._pid, signal.SIGSEGV)
 
   def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGTERM signal.
@@ -403,8 +437,18 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       return
 
     # Make sure the foreman gets one more status update so it knows
-    # the worker has completed. Hence we wait slightly longer than
-    # the foreman sleep time.
+    # the worker has completed.
+    self._WaitForStatusNotRunning()
+
+    self._rpc_server.Stop()
+    self._rpc_server = None
+
+    logging.debug(
+        u'Process: {0!s} process status RPC server stopped'.format(self._name))
+
+  def _WaitForStatusNotRunning(self):
+    """Waits for the status is running to change to false."""
+    # We wait slightly longer than the foreman sleep time.
     time.sleep(2.0)
     time_slept = 2.0
     while self._status_is_running:
@@ -412,12 +456,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       time_slept += 0.5
       if time_slept >= self._PROCESS_JOIN_TIMEOUT:
         break
-
-    self._rpc_server.Stop()
-    self._rpc_server = None
-
-    logging.debug(
-        u'Process: {0!s} process status RPC server stopped'.format(self._name))
 
   @property
   def name(self):
@@ -440,6 +478,11 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # A SIGTERM signal handler is necessary to make sure IPC is cleaned up
     # correctly on terminate.
     signal.signal(signal.SIGTERM, self._SigTermHandler)
+
+    # A SIGSEGV signal handler is necessary to try to indicate where
+    # worker failed.
+    self._original_sigsegv_handler = signal.signal(
+        signal.SIGSEGV, self._SigSegvHandler)
 
     self._pid = os.getpid()
 
@@ -554,6 +597,7 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     """
     super(MultiProcessEventExtractionWorkerProcess, self).__init__(
         definitions.PROCESS_TYPE_WORKER, stop_process_event, **kwargs)
+    self._critical_error = False
     self._extraction_worker = extraction_worker
     self._event_object_queue = event_object_queue
     self._parse_error_queue = parse_error_queue
@@ -567,6 +611,12 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
   def _GetStatus(self):
     """Returns a status dictionary."""
     status = self._extraction_worker.GetStatus()
+    if self._critical_error:
+      # Note seem unable to pass objects here.
+      current_path_spec = self._extraction_worker.current_path_spec
+      status[u'path_spec'] = current_path_spec.comparable
+      status[u'processing_status'] = definitions.PROCESSING_STATUS_ERROR
+
     self._status_is_running = status.get(u'is_running', False)
     return status
 
@@ -588,6 +638,11 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
+
+  def _OnCriticalError(self):
+    """The process on critical error handler."""
+    self._critical_error = True
+    self._WaitForStatusNotRunning()
 
   def _OnExit(self):
     """The process on exit handler."""
