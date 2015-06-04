@@ -4,9 +4,10 @@
 
 import unittest
 
-from plaso.cli import test_lib as cli_test_lib
 from plaso.lib import errors
 from plaso.frontend import frontend
+from tests.cli import test_lib as cli_test_lib
+
 from tools import image_export
 
 
