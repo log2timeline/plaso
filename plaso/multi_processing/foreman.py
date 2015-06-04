@@ -51,6 +51,7 @@ class Foreman(object):
                          should be included in logging. The default is false.
     """
     super(Foreman, self).__init__()
+    self._error_path_specs = []
     self._event_object_queue = event_object_queue
     self._parse_error_queue = parse_error_queue
     self._path_spec_queue = path_spec_queue
@@ -112,6 +113,11 @@ class Foreman(object):
           u'processing_status': processing_status_string,
           u'type': process.type,
       }
+
+    if status_indicator == definitions.PROCESSING_STATUS_ERROR:
+      path_spec = process_status.get(u'path_spec', None)
+      if path_spec:
+        self._error_path_specs.append(path_spec)
 
     self._UpdateProcessingStatus(pid, process_status)
 
