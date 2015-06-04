@@ -5,13 +5,14 @@
 import os
 import unittest
 
-from plaso.cli import test_lib as cli_test_lib
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import frontend
-from plaso.frontend import psort_test
 from plaso.lib import errors
 from plaso.output import manager as output_manager
+from tests.cli import test_lib as cli_test_lib
+from tests.frontend import psort as psort_test
+
 from tools import psort
 from tools import test_lib
 

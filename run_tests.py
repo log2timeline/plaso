@@ -19,3 +19,9 @@ if __name__ == '__main__':
   test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
   if not test_results.wasSuccessful():
     sys.exit(1)
+
+  # Run the tool tests.
+  test_suite = unittest.TestLoader().discover('tools', pattern='*_test.py')
+  test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
+  if not test_results.wasSuccessful():
+    sys.exit(1)

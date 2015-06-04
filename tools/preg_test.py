@@ -8,10 +8,10 @@ import unittest
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.cli import test_lib as cli_test_lib
 from plaso.frontend import frontend
 from plaso.frontend import preg as preg_frontend
 from plaso.lib import errors
+from tests.cli import test_lib as cli_test_lib
 
 from tools import preg
 from tools import test_lib
