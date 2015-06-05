@@ -267,7 +267,7 @@ class MultiProcessEngine(engine.BaseEngine):
     # for path_spec_comparable in self._foreman_object._error_path_specs:
     #   logging.error(path_spec_comparable)
 
-    return self._foreman_object.error_detected
+    return not self._foreman_object.error_detected
 
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.

@@ -861,6 +861,8 @@ class StorageFile(object):
       stream_name: the name of the stream.
       stream_data: the data of the steam.
     """
+    # TODO: this can raise an IOError e.g. "Stale NFS file handle".
+    # Determine if this be handled more error resillient.
     self._zipfile.writestr(stream_name, stream_data)
 
   def Close(self):

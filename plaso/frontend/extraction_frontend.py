@@ -408,6 +408,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
                               The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
+
+    Returns:
+      A boolean value indicating the sources were processed without
+      unrecoverable errors or being aborted.
     """
     logging.info(u'Starting extraction in multi process mode.')
 
@@ -433,7 +437,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           profiling_type=self._profiling_type)
 
     try:
-      self._engine.ProcessSources(
+      return self._engine.ProcessSources(
           source_path_specs, self._collector, storage_writer,
           hasher_names_string=hasher_names_string,
           number_of_extraction_workers=number_of_worker_processes,
@@ -466,17 +470,22 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       parser_filter_string: optional parser filter string. The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
+
+    Returns:
+      A boolean value indicating the sources were processed without
+      unrecoverable errors or being aborted.
     """
     logging.info(u'Starting extraction in single process mode.')
 
     try:
-      self._StartSingleThread(
+      return self._StartSingleThread(
           pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
           hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
           storage_serializer_format=storage_serializer_format)
 
+    # TODO: check if this still works and if still needed.
     except Exception as exception:
       # The tool should generally not be run in single process mode
       # for other reasons than to debug. Hence the general error
@@ -485,6 +494,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           exception, traceback.format_exc()))
       if self._debug_mode:
         pdb.post_mortem()
+
+    return False
 
   def _StartSingleThread(
       self, pre_obj, source_path_specs, filter_find_specs=None,
@@ -520,6 +531,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       parser_filter_string: optional parser filter string. The default is None.
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
+
+    Returns:
+      A boolean value indicating the sources were processed without
+      unrecoverable errors or being aborted.
     """
     self._collector = self._engine.CreateCollector(
         include_directory_stat, filter_find_specs=filter_find_specs,
@@ -540,7 +555,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           profiling_type=self._profiling_type)
 
     try:
-      self._engine.ProcessSources(
+      return self._engine.ProcessSources(
           source_path_specs, self._collector, storage_writer,
           parser_filter_string=parser_filter_string,
           hasher_names_string=hasher_names_string)
@@ -573,6 +588,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       storage_serializer_format: optional storage serializer format.
                                  The default is protobuf.
       timezone: optional preferred timezone. The default is UTC.
+
+    Returns:
+      A boolean value indicating the sources were processed without
+      unrecoverable errors or being aborted.
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
@@ -641,14 +660,14 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         parser_filter_string=parser_filter_string)
 
     if self._single_process_mode:
-      self._ProcessSourcesSingleProcessMode(
+      return self._ProcessSourcesSingleProcessMode(
           pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
           hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,
           parser_filter_string=parser_filter_string,
           storage_serializer_format=storage_serializer_format)
     else:
-      self._ProcessSourcesMultiProcessMode(
+      return self._ProcessSourcesMultiProcessMode(
           pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
           hasher_names_string=hasher_names_string,
           include_directory_stat=include_directory_stat,

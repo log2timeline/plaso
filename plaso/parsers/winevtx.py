@@ -109,7 +109,6 @@ class WinEvtxParser(interface.SingleFileBaseParser):
     try:
       evtx_file.open_file_object(file_object)
     except IOError as exception:
-      evtx_file.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
