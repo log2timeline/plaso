@@ -317,8 +317,9 @@ class ParserMediator(object):
     """
     self.number_of_parse_errors += 1
     # TODO: Remove call to logging when parser error queue is fully functional.
-    logging.error(u'Error in {0:s} while parsing file {1:s}: {2:s}'.format(
-        self.GetParserChain(), self.GetDisplayName(), message))
+    logging.error(
+        u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+            self.GetParserChain(), self.GetDisplayName(), message))
 
     # TODO: disabled as long nothing is listening on the parse error queue.
     # if self._parse_error_queue_producer:

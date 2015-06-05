@@ -129,7 +129,6 @@ class WinEvtParser(interface.SingleFileBaseParser):
     try:
       evt_file.open_file_object(file_object)
     except IOError as exception:
-      evt_file.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, file_name, exception))
