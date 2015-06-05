@@ -53,6 +53,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                         The default is None.
     """
     super(BaseEventExtractionWorker, self).__init__(path_spec_queue)
+    self._current_display_name = u''
     self._current_file_entry = False
     self._enable_debug_output = False
     self._identifier = identifier
@@ -87,36 +88,37 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     Args:
       path_spec: a path specification (instance of dfvfs.PathSpec).
+
+    Raises:
+      QueueFull: If a queue is full.
     """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=self._resolver_context)
-
-    if file_entry is None:
-      logging.warning(u'Unable to open file entry: {0:s}'.format(
-          path_spec.comparable))
-      return
-
-    if self._hasher_names:
-      try:
-        digests = self.HashFileEntry(file_entry)
-        if digests:
-          for hash_name, digest in digests.iteritems():
-            attribute_string = u'{0:s}_hash'.format(hash_name)
-            self._parser_mediator.AddEventAttribute(attribute_string, digest)
-
-      except IOError as exception:
-        logging.warning(u'Unable to hash file: {0:s} with error: {1:s}'.format(
-            path_spec.comparable, exception))
-
     try:
-      self.ParseFileEntry(file_entry)
-    except IOError as exception:
-      logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
-          path_spec.comparable, exception))
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
 
-  def _DebugParseFileEntry(self):
-    """Callback for debugging file entry parsing failures."""
-    return
+      if file_entry is None:
+        logging.warning(u'Unable to open file entry: {0:s}'.format(
+            path_spec.comparable))
+        return
+
+      self._ProcessFileEntry(file_entry)
+
+    # Make sure a queue full exception is passed for single processing.
+    except errors.QueueFull:
+      raise
+
+    except IOError as exception:
+      logging.warning(
+          u'Unable to process file: {0:s} with error: {1:s}'.format(
+              path_spec.comparable, exception))
+
+    # All exceptions need to be caught here to prevent a worker process
+    # form being killed by an uncaught exception.
+    except Exception as exception:
+      logging.warning(
+          u'Unable to process file: {0:s} with error: {1:s}.'.format(
+              path_spec.comparable, exception))
+      logging.exception(exception)
 
   def _GetSignatureMatchParserNames(self, file_entry):
     """Determines if a file matches one of the known signatures.
@@ -147,15 +149,63 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     return parser_name_list
 
+  def _HashFileEntry(self, file_entry):
+    """Hashes the contents of a file entry.
+
+    The resulting digest hashes are set in the parser mediator as attribute
+    to add to event objects.
+
+    Args:
+      file_entry: The file entry object to be hashed (instance of
+                  dfvfs.FileEntry)
+    """
+    if not file_entry.IsFile() or not self._hasher_names:
+      return
+
+    logging.debug(u'[ProcessFileEntry] hashing file: {0:s}'.format(
+        self._current_display_name))
+
+    hasher_objects = hashers_manager.HashersManager.GetHasherObjects(
+        self._hasher_names)
+
+    file_object = file_entry.GetFileObject()
+    try:
+      file_object.seek(0, os.SEEK_SET)
+
+      # We only do one read, then pass it to each of the hashers in turn.
+      data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+      while data:
+        for hasher in hasher_objects:
+          hasher.Update(data)
+        data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+
+    finally:
+      file_object.close()
+
+    # Get the digest values for every active hasher.
+    digests = {}
+    for hasher in hasher_objects:
+      digests[hasher.NAME] = hasher.GetStringDigest()
+      logging.debug(
+          u'[HashFileEntry] digest {0:s} calculated for file: {1:s}.'.format(
+              hasher.GetStringDigest(), self._current_display_name))
+
+    if self._enable_profiling:
+      self._ProfilingSampleMemory()
+
+    for hash_name, digest in iter(digests.items()):
+      attribute_name = u'{0:s}_hash'.format(hash_name)
+      self._parser_mediator.AddEventAttribute(attribute_name, digest)
+
+    logging.debug(u'[HashFileEntry] completed hashing file: {0:s}'.format(
+        self._current_display_name))
+
   def _ParseFileEntryWithParser(self, parser_object, file_entry):
     """Parses a file entry with a specific parser.
 
     Args:
       parser_object: A parser object (instance of BaseParser).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Raises:
-      QueueFull: If a queue is full.
     """
     self._parser_mediator.ClearParserChain()
 
@@ -172,30 +222,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
           parser_object.NAME, file_entry.name, exception))
 
-    except errors.QueueFull:
-      raise
-
-    except IOError as exception:
-      logging.debug(
-          u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
-              parser_object.NAME, file_entry.path_spec.comparable,
-              exception))
-
-    # Casting a wide net, catching all exceptions. Done to keep the worker
-    # running, despite the parser hitting errors, so the worker doesn't die
-    # if a single file is corrupted or there is a bug in a parser.
-    except Exception as exception:
-      logging.warning(
-          u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
-              parser_object.NAME, file_entry.path_spec.comparable,
-              exception))
-      logging.debug(
-          u'The path specification that caused the error: {0:s}'.format(
-              file_entry.path_spec.comparable))
-      logging.exception(exception)
-      if self._enable_debug_output:
-        self._DebugParseFileEntry()
-
     finally:
       if self._parsers_profiler:
         self._parsers_profiler.StopTiming(parser_object.NAME)
@@ -203,9 +229,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
           file_entry.path_spec):
         logging.warning((
-            u'[{0:s}] did not explicitly close file-object for path '
-            u'specification: {1:s}.').format(
-                parser_object.NAME, file_entry.path_spec.comparable))
+            u'[{0:s}] did not explicitly close file-object for file: '
+            u'{1:s}.').format(parser_object.NAME, self._current_display_name))
 
   def _ProcessArchiveFile(self, file_entry):
     """Processes an archive file (file that contains file entries).
@@ -227,7 +252,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       logging.debug((
           u'Found multiple format type indicators: {0:s} for '
           u'archive file: {1:s}').format(
-              type_indicators, file_entry.path_spec.comparable))
+              type_indicators, self._current_display_name))
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
@@ -244,7 +269,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.debug((
             u'Unsupported archive format type indicator: {0:s} for '
             u'archive file: {1:s}').format(
-                type_indicator, file_entry.path_spec.comparable))
+                type_indicator, self._current_display_name))
 
         archive_path_spec = None
 
@@ -269,7 +294,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
-              archive_path_spec.comparable))
+              self._current_display_name))
 
     return True
 
@@ -293,7 +318,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       logging.debug((
           u'Found multiple format type indicators: {0:s} for '
           u'compressed stream file: {1:s}').format(
-              type_indicators, file_entry.path_spec.comparable))
+              type_indicators, self._current_display_name))
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
@@ -310,7 +335,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.debug((
             u'Unsupported compressed stream format type indicators: {0:s} for '
             u'compressed stream file: {1:s}').format(
-                type_indicator, file_entry.path_spec.comparable))
+                type_indicator, self._current_display_name))
 
         compressed_stream_path_spec = None
 
@@ -319,6 +344,81 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         self._number_of_path_specs_produced += 1
 
     return True
+
+  def _ProcessFileEntry(self, file_entry):
+    """Processses a file entry.
+
+    Args:
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Raises:
+      RuntimeError: if the parser object is missing.
+    """
+    self._current_file_entry = file_entry
+    self._current_display_name = self._parser_mediator.GetDisplayName(
+        file_entry)
+
+    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec)
+
+    self._parser_mediator.SetFileEntry(file_entry)
+
+    try:
+      self._HashFileEntry(file_entry)
+
+      logging.debug(u'[ProcessFileEntry] parsing file: {0:s}'.format(
+          self._current_display_name))
+
+      is_archive = False
+      is_compressed_stream = False
+      is_file = file_entry.IsFile()
+
+      if is_file:
+        is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
+        if not is_compressed_stream:
+          is_archive = self._ProcessArchiveFile(file_entry)
+
+      if is_file and not is_archive and not is_compressed_stream:
+        parser_name_list = self._GetSignatureMatchParserNames(file_entry)
+        if not parser_name_list:
+          parser_name_list = self._non_sigscan_parser_names
+
+        for parser_name in parser_name_list:
+          parser_object = self._parser_objects.get(parser_name, None)
+          if not parser_object:
+            self._parser_mediator.ResetFileEntry()
+            raise RuntimeError(u'No such parser: {0:s}'.format(parser_name))
+
+          logging.debug((
+              u'[ProcessFileEntry] parsing file: {0:s} with parser: '
+              u'{1:s}').format(self._current_display_name, parser_name))
+
+          self._ParseFileEntryWithParser(parser_object, file_entry)
+
+      elif self._filestat_parser_object:
+        # TODO: for archive and compressed stream files is the desired behavior
+        # to only apply the filestat parser?
+        self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
+
+    finally:
+      if reference_count != self._resolver_context.GetFileObjectReferenceCount(
+          file_entry.path_spec):
+        # Clean up after parsers that do not call close explicitly.
+        if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
+          logging.warning(
+              u'File-object not explicitly closed for file: {0:s}'.format(
+                  self._current_display_name))
+
+    # We do not clear self._current_file_entry or self._current_display_name
+    # here to allow the foreman to see which file was previously processed.
+
+    self._parser_mediator.ResetFileEntry()
+
+    if self._enable_profiling:
+      self._ProfilingSampleMemory()
+
+    logging.debug(u'[ParseFileEntry] done processing: {0:s}'.format(
+        self._current_display_name))
 
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""
@@ -355,70 +455,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""
-    if self._current_file_entry:
-      display_name = self._parser_mediator.GetDisplayName(
-          file_entry=self._current_file_entry)
-    else:
-      display_name = u''
-
     # TODO: include the path specs generated by the workers.
     number_of_path_specs = (
         self.number_of_consumed_items - self._number_of_path_specs_produced)
 
     return {
-        u'display_name': display_name,
+        u'display_name': self._current_display_name,
         u'identifier': self._identifier_string,
         u'number_of_events': self._parser_mediator.number_of_events,
         u'number_of_path_specs': number_of_path_specs,
         u'processing_status': self._status,
         u'type': definitions.PROCESS_TYPE_WORKER}
-
-  def HashFileEntry(self, file_entry):
-    """Produces a dictionary containing hash digests of the file entry content.
-
-    Args:
-      file_entry: The file entry object to be hashed (instance of
-                  dfvfs.FileEntry)
-
-    Returns:
-      A dictionary mapping hasher names to the digest calculated by that hasher,
-      or None if the file_entry is not a file, or no hashers are enabled.
-    """
-    logging.debug(u'[HashFileEntry] Hashing: {0:s}'.format(
-        file_entry.path_spec.comparable))
-    if not file_entry.IsFile() or not self._hasher_names:
-      return
-
-    hasher_objects = hashers_manager.HashersManager.GetHasherObjects(
-        self._hasher_names)
-
-    file_object = file_entry.GetFileObject()
-    try:
-      file_object.seek(0, os.SEEK_SET)
-
-      # We only do one read, then pass it to each of the hashers in turn.
-      data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
-      while data:
-        for hasher in hasher_objects:
-          hasher.Update(data)
-        data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
-
-      digests = {}
-      # Get the digest values for every active hasher.
-      for hasher in hasher_objects:
-        digests[hasher.NAME] = hasher.GetStringDigest()
-        logging.debug(
-            u'[HashFileEntry] Digest {0:s} calculated for {1:s}.'.format(
-                hasher.GetStringDigest(), file_entry.path_spec.comparable))
-    finally:
-      file_object.close()
-
-    if self._enable_profiling:
-      self._ProfilingSampleMemory()
-
-    logging.debug(u'[HashFileEntry] Finished hashing: {0:s}'.format(
-        file_entry.path_spec.comparable))
-    return digests
 
   def InitializeParserObjects(self, parser_filter_string=None):
     """Initializes the parser objects.
@@ -446,73 +493,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         parser_filter_string=parser_filter_string)
 
     self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
-
-  def ParseFileEntry(self, file_entry):
-    """Parses a file entry.
-
-    Args:
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Raises:
-      RuntimeError: if the parser object is missing.
-    """
-    logging.debug(u'[ParseFileEntry] Parsing: {0:s}'.format(
-        file_entry.path_spec.comparable))
-
-    self._parser_mediator.SetFileEntry(file_entry)
-    self._current_file_entry = file_entry
-
-    reference_count = self._resolver_context.GetFileObjectReferenceCount(
-        file_entry.path_spec)
-
-    is_archive = False
-    is_compressed_stream = False
-    is_file = file_entry.IsFile()
-
-    if is_file:
-      is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
-      if not is_compressed_stream:
-        is_archive = self._ProcessArchiveFile(file_entry)
-
-    if is_file and not is_archive and not is_compressed_stream:
-      parser_name_list = self._GetSignatureMatchParserNames(file_entry)
-      if not parser_name_list:
-        parser_name_list = self._non_sigscan_parser_names
-
-      for parser_name in parser_name_list:
-        parser_object = self._parser_objects.get(parser_name, None)
-        if not parser_object:
-          self._parser_mediator.ResetFileEntry()
-          raise RuntimeError(u'No such parser: {0:s}'.format(parser_name))
-
-        logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
-            file_entry.name, parser_name))
-
-        self._ParseFileEntryWithParser(parser_object, file_entry)
-
-    elif self._filestat_parser_object:
-      # TODO: for archive and compressed stream files is the desired behavior
-      # to only apply the filestat parser?
-      self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
-
-    if reference_count != self._resolver_context.GetFileObjectReferenceCount(
-        file_entry.path_spec):
-      # Clean up after parsers that do not call close explicitly.
-      if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
-        logging.warning((
-            u'File-object not explicitly closed for path specification: '
-            u'{0:s}.').format(file_entry.path_spec.comparable))
-
-    # We do not clear self._current_file_entry here to allow the foreman
-    # to see which file was previously processed.
-
-    logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
-        file_entry.path_spec.comparable))
-
-    self._parser_mediator.ResetFileEntry()
-
-    if self._enable_profiling:
-      self._ProfilingSampleMemory()
 
   def Run(self):
     """Extracts event objects from file entries."""

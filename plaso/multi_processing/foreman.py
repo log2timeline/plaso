@@ -396,10 +396,12 @@ class Foreman(object):
       self._CheckStatus(pid)
 
     processing_completed = self.processing_status.GetProcessingCompleted()
-    if not self.error_detected and processing_completed:
-      logging.debug(u'Processing completed.')
+    if processing_completed:
+      if not self.error_detected:
+        logging.debug(u'Processing completed.')
 
     elif self.processing_status.WorkersIdle():
+      logging.error(u'Workers idle for too long')
       self.error_detected = True
       raise errors.ForemanAbort(u'Workers idle for too long')
 
