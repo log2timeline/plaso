@@ -193,8 +193,8 @@ class PregHelper(object):
     """
     super(PregHelper, self).__init__()
     self._options = options
-    self._preg_tool = preg_tool
     self.hive_storage = hive_storage
+    self.preg_tool = preg_tool
 
   def BuildParserMediator(self, event_queue=None):
     """Build the parser object.
@@ -285,8 +285,8 @@ class PregHelper(object):
           u'eg: NTUSER, SOFTWARE, etc')
       return
 
-    hives, collectors = self.GetHivesAndCollectors(
-        self._options, registry_types=registry_types)
+    hives, collectors = self.preg_tool.GetHivesAndCollectors(
+        registry_types=registry_types)
 
     if not hives:
       print(u'No new discovered hives.')
@@ -366,6 +366,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self._parse_restore_points = False
     self._plugin_names = u''
     self._registry_file = u''
+    self._source_path = None
     self._verbose_output = False
 
     self.list_plugins = False
@@ -524,11 +525,10 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
   # TODO: refactor move non tool code into frontend.
   def GetHivesAndCollectors(
-      self, options, registry_types=None, plugin_names=None):
+      self, registry_types=None, plugin_names=None):
     """Returns a list of discovered Registry hives and collectors.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
       registry_types: an optional list of Registry types, eg: NTUSER, SAM, etc
                       that should be included. Defaults to None.
       plugin_names: an optional list of strings containing the name of the
@@ -564,10 +564,6 @@ class PregTool(storage_media_tool.StorageMediaTool):
     if not self._source_path:
       searchers = [(u'', None)]
       return registry_types, searchers
-
-    source_path = getattr(options, u'image', None)
-    if not source_path:
-      raise errors.BadConfigOption(u'No image location set.')
 
     try:
       self.ScanSource(self._front_end)
@@ -646,7 +642,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         dest=u'restore_points', action=u'store_true', default=False,
         help=u'Include restore points in the Registry file locations.')
 
-    self.AddVssProcessingOptions(additional_options)
+    self.AddVSSProcessingOptions(additional_options)
 
     image_options = argument_parser.add_argument_group(u'Image Options')
 
@@ -1018,7 +1014,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     """
     # Get all the hives and collectors.
     hives, hive_collectors = self.GetHivesAndCollectors(
-        self._options, registry_types=[self._registry_file])
+        registry_types=[self._registry_file])
 
     hive_storage = preg.PregStorage()
     shell_helper = PregHelper(self._options, self, hive_storage)
@@ -1051,7 +1047,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     all available plugins.
     """
     hives, hive_collectors = self.GetHivesAndCollectors(
-        self._options, registry_types=[self._registry_file],
+        registry_types=[self._registry_file],
         plugin_names=self._plugin_names)
 
     key_paths = [self._key_path]
@@ -1076,7 +1072,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     # TODO: Add support for splitting the output to separate files based on
     # each plugin name.
     hives, hive_collectors = self.GetHivesAndCollectors(
-        self._options, plugin_names=self._plugin_names)
+        plugin_names=self._plugin_names)
 
     if hives is None:
       hives = [self._registry_file]
@@ -1313,7 +1309,7 @@ class PregMagics(magic.Magics):
     # Clear the last results from parse key.
     preg.PregCache.events_from_last_parse = []
 
-    print_strings = preg.PregCache.shell_helper._preg_tool.ParseKey(
+    print_strings = preg.PregCache.shell_helper.preg_tool.ParseKey(
         key=current_hive.GetCurrentRegistryKey(), hive_helper=current_hive,
         shell_helper=preg.PregCache.shell_helper, verbose=verbose)
     self.output_writer.write(u'\n'.join(print_strings))
@@ -1411,7 +1407,7 @@ class PregMagics(magic.Magics):
       # Move the current location to the key to be parsed.
       self.ChangeDirectory(registry_key)
       # Parse the key.
-      print_strings = preg.PregCache.shell_helper._preg_tool.ParseKey(
+      print_strings = preg.PregCache.shell_helper.preg_tool.ParseKey(
           key=current_hive.GetCurrentRegistryKey(), hive_helper=current_hive,
           shell_helper=preg.PregCache.shell_helper, verbose=False,
           use_plugins=[plugin_name])
@@ -1471,61 +1467,6 @@ class PregConsole(object):
     self._preg_cache = preg.PregCache
     self._preg_tool = preg_tool
 
-  def _CommandCompleterCd(self, unused_event_object):
-    """Command completer function for cd.
-
-    Args:
-      event_object: an event object (instance of EventObject)
-    """
-    return_list = []
-    hive_helper = self._preg_cache.GetLoadedHive()
-    current_key = hive_helper.GetCurrentRegistryKey()
-    for key in current_key.GetSubkeys():
-      return_list.append(key.name)
-
-    return return_list
-
-  def _CommandCompleterPlugins(self, event_object):
-    """Command completer function for plugins.
-
-    Args:
-      event_object: an event object (instance of EventObject)
-    """
-    ret_list = []
-
-    if not IsLoaded():
-      return ret_list
-
-    if not u'-h' in event_object.line:
-      ret_list.append(u'-h')
-
-    plugins_list = self._preg_tool.GetWindowsRegistryPlugins()
-
-    hive_helper = self._preg_cache.GetLoadedHive()
-    hive_type = hive_helper.type
-
-    for plugin_cls in plugins_list.GetKeyPlugins(hive_type):
-      plugins_list = plugin_cls(reg_cache=hive_helper.reg_cache)
-
-      plugin_name = plugins_list.plugin_name
-
-      if plugin_name == u'winreg_default':
-        continue
-      ret_list.append(plugin_name)
-
-    return ret_list
-
-  def _CommandCompleterVerbose(self, event_object):
-    """Command completer function for verbose output.
-
-    Args:
-      event_object: an event object (instance of EventObject)
-    """
-    if u'-v' in event_object.line:
-      return []
-    else:
-      return [u'-v']
-
   def _CommandGetCurrentKey(self):
     """Command function to retrieve the currently loaded Registry key.
 
@@ -1581,7 +1522,7 @@ class PregConsole(object):
 
   def _FormatBanner(self):
     """Formats the banner."""
-    header = self.FormatHeader(
+    header = FormatHeader(
         u'Welcome to PREG - home of the Plaso Windows Registry Parsing.')
 
     lines_of_text = [
@@ -1641,7 +1582,9 @@ class PregConsole(object):
     Returns:
       A string containing the formatted column value.
     """
-    line_length = self._LINE_LENGTH - column_width - 3
+    # TODO: Remove the need to directly call the line length.
+    # pylint: disable-msg=protected-access
+    line_length = self._preg_tool._LINE_LENGTH - column_width - 3
 
     # The format string of the first line of the column value.
     primary_format_string = u'{{0:>{0:d}s}} : {{1:s}}\n'.format(column_width)
@@ -1687,21 +1630,28 @@ class PregConsole(object):
     Returns:
       A string containing the formatted header.
     """
-    format_string = u'{{0:{0:s}^{1:d}}}\n'.format(character, self._LINE_LENGTH)
+    # TODO: Remove the need to directly call the line length.
+    # pylint: disable-msg=protected-access
+    format_string = u'{{0:{0:s}^{1:d}}}\n'.format(
+        character, self._preg_tool._LINE_LENGTH)
     return format_string.format(u' {0:s} '.format(text))
 
   def Run(self):
     """Runs the interactive console."""
     hive_storage = preg.PregStorage()
     # TODO: move options out of PregHelper and fix this hack.
-    shell_helper = PregHelper(self._preg_tool._options, self, hive_storage)
+    # pylint: disable-msg=protected-access
+    shell_helper = PregHelper(
+        self._preg_tool._options, self._preg_tool, hive_storage)
     parser_mediator = shell_helper.BuildParserMediator()
 
     self._preg_cache.parser_mediator = parser_mediator
     self._preg_cache.shell_helper = shell_helper
     self._preg_cache.hive_storage = hive_storage
 
-    registry_types = getattr(self._options, u'regfile', None)
+    # TODO: Remove the need to call the options object.
+    # pylint:disable-msg=protected-access
+    registry_types = getattr(self._preg_tool._options, u'registry_file', None)
     if isinstance(registry_types, basestring):
       registry_types = registry_types.split(u',')
 
@@ -1710,7 +1660,7 @@ class PregConsole(object):
           u'NTUSER', u'USRCLASS', u'SOFTWARE', u'SYSTEM', u'SAM', u'SECURITY']
     self._preg_cache.shell_helper.Scan(registry_types)
 
-    banner = self._GetBanner()
+    banner = self._FormatBanner()
 
     # Adding variables in scope.
     namespace = {}
@@ -1723,7 +1673,7 @@ class PregConsole(object):
         u'get_value_data': self. _CommandGetValueData,
         u'number_of_hives': self._CommandGetTotalNumberOfLoadedHives,
         u'range_of_hives': self._CommandGetRangeForAllLoadedHives,
-        u'options': self._options})
+        u'options': self._preg_tool._options})
 
     ipshell_config = ConsoleConfig.GetConfig()
 
@@ -1750,13 +1700,75 @@ class PregConsole(object):
 
     # Registering command completion for the magic commands.
     ipshell.set_hook(
-        u'complete_command', self._CommandCompleterCd, str_key='%cd')
+        u'complete_command', CommandCompleterCd, str_key='%cd')
     ipshell.set_hook(
-        u'complete_command', self._CommandCompleterVerbose, str_key='%ls')
+        u'complete_command', CommandCompleterVerbose, str_key='%ls')
     ipshell.set_hook(
-        u'complete_command', self._CommandCompleterVerbose, str_key='%parse')
+        u'complete_command', CommandCompleterVerbose, str_key='%parse')
     ipshell.set_hook(
-        u'complete_command', self._CommandCompleterPlugins, str_key='%plugin')
+        u'complete_command', CommandCompleterPlugins, str_key='%plugin')
+
+    ipshell()
+
+
+# Completer commands need to be top level methods or directly callable
+# and cannot be part of a class that needs to be initialized.
+def CommandCompleterCd(unused_console, unused_core_completer):
+  """Command completer function for cd."""
+  return_list = []
+  hive_helper = preg.PregCache.GetLoadedHive()
+  current_key = hive_helper.GetCurrentRegistryKey()
+  for key in current_key.GetSubkeys():
+    return_list.append(key.name)
+
+  return return_list
+
+
+# Completer commands need to be top level methods or directly callable
+# and cannot be part of a class that needs to be initialized.
+def CommandCompleterPlugins(unused_console, core_completer):
+  """Command completer function for plugins.
+
+  Args:
+    core_completer: an IPython completer object (instance of completer.Bunch).
+  """
+  ret_list = []
+
+  if not IsLoaded():
+    return ret_list
+
+  if not u'-h' in core_completer.line:
+    ret_list.append(u'-h')
+
+  plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+
+  hive_helper = preg.PregCache.GetLoadedHive()
+  hive_type = hive_helper.type
+
+  for plugin_cls in plugins_list.GetKeyPlugins(hive_type):
+    plugins_list = plugin_cls(reg_cache=hive_helper.reg_cache)
+
+    plugin_name = plugins_list.plugin_name
+
+    if plugin_name == u'winreg_default':
+      continue
+    ret_list.append(plugin_name)
+
+  return ret_list
+
+
+# Completer commands need to be top level methods or directly callable
+# and cannot be part of a class that needs to be initialized.
+def CommandCompleterVerbose(unused_console, core_completer):
+  """Command completer function for verbose output.
+
+  Args:
+    core_completer: an IPython completer object (instance of completer.Bunch).
+  """
+  if u'-v' in core_completer.line:
+    return []
+  else:
+    return [u'-v']
 
 
 def IsLoaded():
