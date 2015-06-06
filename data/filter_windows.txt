@@ -29,7 +29,8 @@
 /RECYCLER/.+/.+
 # Windows Registry hives.
 /(Users|Documents And Settings)/.+/NTUSER[.]DAT
-/(Users|Documents And Settings)/.+/AppData/Local/Microsoft/Windows/Usrclass[.]dat
+/Users/.+/AppData/Local/Microsoft/Windows/Usrclass[.]dat
+/Documents And Settings/.+/Local Settings/Application Data/Microsoft/Windows/Usrclass[.]dat
 # {sysregistry} points to the location that contains the system hives,
 # eg: \Windows\System32\config.
 {sysregistry}/(SAM|SOFTWARE|SECURITY|SYSTEM)
