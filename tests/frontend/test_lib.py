@@ -3,8 +3,6 @@
 
 import io
 import os
-import shutil
-import tempfile
 import unittest
 
 
@@ -38,24 +36,6 @@ class StringIOOutputWriter(object):
   def Write(self, string):
     """Writes a string to the StringIO object."""
     self._string_io.write(string)
-
-
-class TempDirectory(object):
-  """A self cleaning temporary directory."""
-
-  def __init__(self):
-    """Initializes the temporary directory."""
-    super(TempDirectory, self).__init__()
-    self.name = u''
-
-  def __enter__(self):
-    """Make this work with the 'with' statement."""
-    self.name = tempfile.mkdtemp()
-    return self.name
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make this work with the 'with' statement."""
-    shutil.rmtree(self.name, True)
 
 
 class FrontendTestCase(unittest.TestCase):

@@ -17,6 +17,7 @@ from plaso.lib import timelib
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.frontend import test_lib
 
@@ -192,7 +193,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
     output_writer = cli_test_lib.TestOutputWriter()
 
-    with test_lib.TempDirectory() as dirname:
+    with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
 
       storage_file = storage.StorageFile(temp_file, read_only=False)

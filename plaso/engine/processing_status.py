@@ -13,11 +13,12 @@ class CollectorStatus(object):
     identifier: the extraction worker identifier.
     last_running_time: timestamp of the last update when the process
                        had a running process status.
-    number_of_path_specs: the total number of path specifications
-                          processed by the extraction worker.
-    number_of_path_specs_delta: the number of path specifications since
-                                the last status update.
     pid: the collector process identifier (PID).
+    process_status: string containing the process status.
+    produced_number_of_path_specs: the total number of path specifications
+                                   produced by the collector.
+    produced_number_of_path_specs_delta: the number of path specifications
+                                         produced since the last status update.
     status: string containing the collector status.
     """
 
@@ -26,9 +27,10 @@ class CollectorStatus(object):
     super(CollectorStatus, self).__init__()
     self.identifier = None
     self.last_running_time = 0
-    self.number_of_path_specs = 0
-    self.number_of_path_specs_delta = 0
     self.pid = None
+    self.process_status = None
+    self.produced_number_of_path_specs = 0
+    self.produced_number_of_path_specs_delta = 0
     self.status = None
 
 
@@ -36,6 +38,10 @@ class ExtractionWorkerStatus(object):
   """The extraction worker status.
 
   Attributes:
+    consumed_number_of_path_specs: the total number of path specifications
+                                   consumed by the extraction worker.
+    consumed_number_of_path_specs_delta: the number of path specifications
+                                         consumed since the last status update.
     display_name: the display name of the file entry currently being
                   processed by the extraction worker.
     identifier: the extraction worker identifier.
@@ -44,27 +50,29 @@ class ExtractionWorkerStatus(object):
     number_of_events: the total number of events extracted
                       by the extraction worker.
     number_of_events_delta: the number of events since the last status update.
-    number_of_path_specs: the total number of path specifications
-                          processed by the extraction worker.
-    number_of_path_specs_delta: the number of path specifications since
-                                the last status update.
     pid: the extraction worker process identifier (PID).
     process_status: string containing the process status.
+    produced_number_of_path_specs: the total number of path specifications
+                                   produced by the collector.
+    produced_number_of_path_specs_delta: the number of path specifications
+                                         produced since the last status update.
     status: string containing the extraction worker status.
     """
 
   def __init__(self):
     """Initializes the extraction worker status object."""
     super(ExtractionWorkerStatus, self).__init__()
+    self.consumed_number_of_path_specs = 0
+    self.consumed_number_of_path_specs_delta = 0
     self.display_name = None
     self.identifier = None
     self.last_running_time = 0
     self.number_of_events = 0
     self.number_of_events_delta = 0
-    self.number_of_path_specs = 0
-    self.number_of_path_specs_delta = 0
     self.pid = None
     self.process_status = None
+    self.produced_number_of_path_specs = 0
+    self.produced_number_of_path_specs_delta = 0
     self.status = None
 
 
@@ -78,6 +86,7 @@ class StorageWriterStatus(object):
     number_of_events: the total number of events received
                       by the storage writer.
     pid: the storage writer process identifier (PID).
+    process_status: string containing the process status.
     status: string containing the storage writer status.
     """
 
@@ -89,11 +98,19 @@ class StorageWriterStatus(object):
     self.number_of_events = 0
     self.number_of_events_delta = 0
     self.pid = None
+    self.process_status = None
     self.status = None
 
 
 class ProcessingStatus(object):
-  """The processing status."""
+  """The processing status.
+
+  Attributes:
+    error_detected: boolean value to indicate if an error was detected
+                    during processing.
+    error_path_specs: a list of path specification strings that caused
+                      critical errors during processing.
+  """
 
   # The idle timeout in seconds.
   _IDLE_TIMEOUT = 5 * 60
@@ -105,8 +122,11 @@ class ProcessingStatus(object):
     self._collector_completed = False
     self._collector_completed_count = 0
     self._extraction_workers = {}
-    self._last_running_time = 0
+    self._extraction_workers_last_running_time = 0
     self._storage_writer = None
+
+    self.error_detected = False
+    self.error_path_specs = []
 
   @property
   def collector(self):
@@ -131,26 +151,27 @@ class ProcessingStatus(object):
     Returns:
       A boolean value indicating the extraction completed status.
     """
-    number_of_path_specs = self.GetNumberOfExtractedPathSpecs()
+    if not self._collector_completed:
+      return False
 
-    # TODO: include the path specs generated by the workers.
-    if (self._collector_completed and
-        self._collector.number_of_path_specs == number_of_path_specs):
-      workers_running = self.WorkersRunning()
+    consumed_number_of_path_specs = self.GetConsumedNumberOfPathSpecs()
+    produced_number_of_path_specs = self.GetProducedNumberOfPathSpecs()
+    if consumed_number_of_path_specs != produced_number_of_path_specs:
+      return False
 
-      # Determining if extraction is completed can be a bit flaky
-      # at the moment. Hence we wait until the condition is met at least
-      # consecutive 3 times.
-      if workers_running:
-        self._collector_completed_count = 0
+    workers_running = self.WorkersRunning()
 
-      elif self._collector_completed_count < 3:
-        self._collector_completed_count += 1
-        workers_running = True
+    # Determining if extraction is completed can be a bit flaky
+    # at the moment. Hence we wait until the condition is met at least
+    # consecutive 3 times.
+    if workers_running:
+      self._collector_completed_count = 0
 
-      return not workers_running
+    elif self._collector_completed_count < 3:
+      self._collector_completed_count += 1
+      workers_running = True
 
-    return False
+    return not workers_running
 
   def GetNumberOfExtractedEvents(self):
     """Retrieves the number of extracted events."""
@@ -159,11 +180,20 @@ class ProcessingStatus(object):
       number_of_events += extraction_worker_status.number_of_events
     return number_of_events
 
-  def GetNumberOfExtractedPathSpecs(self):
-    """Retrieves the number of extracted path specifications."""
+  def GetConsumedNumberOfPathSpecs(self):
+    """Retrieves the number of consumed path specifications."""
     number_of_path_specs = 0
     for extraction_worker_status in iter(self._extraction_workers.values()):
-      number_of_path_specs += extraction_worker_status.number_of_path_specs
+      number_of_path_specs += (
+          extraction_worker_status.consumed_number_of_path_specs)
+    return number_of_path_specs
+
+  def GetProducedNumberOfPathSpecs(self):
+    """Retrieves the number of consumed path specifications."""
+    number_of_path_specs = self._collector.produced_number_of_path_specs
+    for extraction_worker_status in iter(self._extraction_workers.values()):
+      number_of_path_specs += (
+          extraction_worker_status.produced_number_of_path_specs)
     return number_of_path_specs
 
   def GetProcessingCompleted(self):
@@ -182,27 +212,33 @@ class ProcessingStatus(object):
     return False
 
   def UpdateCollectorStatus(
-      self, identifier, pid, number_of_path_specs, status):
+      self, identifier, pid, produced_number_of_path_specs, status,
+      process_status):
     """Updates the collector status.
 
     Args:
       identifier: the extraction worker identifier.
       pid: the collector process identifier (PID).
-      number_of_path_specs: the total number of path specifications
-                            processed by the extraction worker.
+      produced_number_of_path_specs: the total number of path specifications
+                                     produced by the collector.
       status: string containing the collector status.
+      process_status: string containing the process status.
     """
     if not self._collector:
       self._collector = CollectorStatus()
 
-    number_of_path_specs_delta = number_of_path_specs
-    if number_of_path_specs_delta > 0:
-      number_of_path_specs_delta -= self._collector.number_of_path_specs
+    produced_number_of_path_specs_delta = produced_number_of_path_specs
+    if produced_number_of_path_specs_delta > 0:
+      produced_number_of_path_specs_delta -= (
+          self._collector.produced_number_of_path_specs)
 
     self._collector.identifier = identifier
-    self._collector.number_of_path_specs = number_of_path_specs
-    self._collector.number_of_path_specs_delta = number_of_path_specs_delta
     self._collector.pid = pid
+    self._collector.process_status = process_status
+    self._collector.produced_number_of_path_specs = (
+        produced_number_of_path_specs)
+    self._collector.produced_number_of_path_specs_delta = (
+        produced_number_of_path_specs)
     self._collector.status = status
 
     if status == definitions.PROCESSING_STATUS_COMPLETED:
@@ -212,7 +248,8 @@ class ProcessingStatus(object):
 
   def UpdateExtractionWorkerStatus(
       self, identifier, pid, display_name, number_of_events,
-      number_of_path_specs, status, process_status):
+      consumed_number_of_path_specs, produced_number_of_path_specs, status,
+      process_status):
     """Updates the extraction worker status.
 
     Args:
@@ -222,8 +259,10 @@ class ProcessingStatus(object):
                     processed by the extraction worker.
       number_of_events: the total number of events extracted
                         by the extraction worker.
-      number_of_path_specs: the total number of path specifications
-                            processed by the extraction worker.
+      consumed_number_of_path_specs: the total number of path specifications
+                                     consumed by the extraction worker.
+      produced_number_of_path_specs: the total number of path specifications
+                                     produced by the collector.
       status: string containing the extraction worker status.
       process_status: string containing the process status.
     """
@@ -236,29 +275,41 @@ class ProcessingStatus(object):
     if number_of_events_delta > 0:
       number_of_events_delta -= extraction_worker_status.number_of_events
 
-    number_of_path_specs_delta = number_of_path_specs
-    if number_of_path_specs_delta > 0:
-      number_of_path_specs_delta -= (
-          extraction_worker_status.number_of_path_specs)
+    consumed_number_of_path_specs_delta = consumed_number_of_path_specs
+    if consumed_number_of_path_specs_delta > 0:
+      consumed_number_of_path_specs_delta -= (
+          extraction_worker_status.consumed_number_of_path_specs)
 
+    produced_number_of_path_specs_delta = produced_number_of_path_specs
+    if produced_number_of_path_specs_delta > 0:
+      produced_number_of_path_specs_delta -= (
+          extraction_worker_status.produced_number_of_path_specs)
+
+    extraction_worker_status.consumed_number_of_path_specs = (
+        consumed_number_of_path_specs)
+    extraction_worker_status.consumed_number_of_path_specs_delta = (
+        consumed_number_of_path_specs_delta)
     extraction_worker_status.display_name = display_name
     extraction_worker_status.identifier = identifier
     extraction_worker_status.number_of_events = number_of_events
     extraction_worker_status.number_of_events_delta = number_of_events_delta
-    extraction_worker_status.number_of_path_specs = number_of_path_specs
-    extraction_worker_status.number_of_path_specs_delta = (
-        number_of_path_specs_delta)
     extraction_worker_status.pid = pid
     extraction_worker_status.process_status = process_status
+    extraction_worker_status.produced_number_of_path_specs = (
+        produced_number_of_path_specs)
+    extraction_worker_status.produced_number_of_path_specs_delta = (
+        produced_number_of_path_specs_delta)
     extraction_worker_status.status = status
 
-    if number_of_events_delta > 0 or number_of_path_specs_delta > 0:
+    if (number_of_events_delta > 0 or
+        consumed_number_of_path_specs_delta > 0 or
+        produced_number_of_path_specs_delta > 0):
       timestamp = time.time()
       extraction_worker_status.last_running_time = timestamp
-      self._last_running_time = timestamp
+      self._extraction_workers_last_running_time = timestamp
 
   def UpdateStorageWriterStatus(
-      self, identifier, pid, number_of_events, status):
+      self, identifier, pid, number_of_events, status, process_status):
     """Updates the storage writer status.
 
     Args:
@@ -267,6 +318,7 @@ class ProcessingStatus(object):
       number_of_events: the total number of events received
                         by the storage writer.
       status: string containing the storage writer status.
+      process_status: string containing the process status.
     """
     if not self._storage_writer:
       self._storage_writer = StorageWriterStatus()
@@ -279,25 +331,42 @@ class ProcessingStatus(object):
     self._storage_writer.number_of_events = number_of_events
     self._storage_writer.number_of_events_delta = number_of_events_delta
     self._storage_writer.pid = pid
+    self._storage_writer.process_status = process_status
     self._storage_writer.status = status
 
-    if status != definitions.PROCESSING_STATUS_COMPLETED:
+    if number_of_events_delta > 0:
       self._storage_writer.last_running_time = time.time()
+
+  def StorageWriterIdle(self):
+    """Determines if the storage writer is idle."""
+    timestamp = time.time()
+    if (self._storage_writer.last_running_time == 0 or
+        self._storage_writer.last_running_time >= timestamp):
+      return False
+
+    timestamp -= self._storage_writer.last_running_time
+    if timestamp < self._IDLE_TIMEOUT:
+      return False
+    return True
 
   def WorkersIdle(self):
     """Determines if the workers are idle."""
     timestamp = time.time()
-    if (self._last_running_time > 0 and
-        self._last_running_time < timestamp and
-        timestamp - self._last_running_time >= self._IDLE_TIMEOUT):
-      return True
-    else:
+    if (self._extraction_workers_last_running_time == 0 or
+        self._extraction_workers_last_running_time >= timestamp):
       return False
+
+    timestamp -= self._extraction_workers_last_running_time
+    if timestamp < self._IDLE_TIMEOUT:
+      return False
+    return True
 
   def WorkersRunning(self):
     """Determines if the workers are running."""
     for extraction_worker_status in iter(self._extraction_workers.values()):
       if (extraction_worker_status.number_of_events_delta > 0 or
-          extraction_worker_status.number_of_path_specs_delta > 0):
+          extraction_worker_status.consumed_number_of_path_specs_delta > 0 or
+          extraction_worker_status.produced_number_of_path_specs_delta > 0):
         return True
+
     return False

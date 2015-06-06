@@ -20,8 +20,9 @@ class CollectorError(Error):
 class ConnectionError(Error):
   """Class that defines errors encountered connecting to a service."""
 
-class ForemanAbort(Error):
-  """Class that defines a foreman initiated abort exception."""
+
+class EngineAbort(Error):
+  """Class that defines an engine initiated abort exception."""
 
 
 class NotAText(Error):

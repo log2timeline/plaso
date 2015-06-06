@@ -16,7 +16,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyevt': 20120410,
     u'pyevtx': 20141112,
     u'pyewf': 20131210,
-    u'pyfwsi': 20140714,
+    u'pyfwsi': 20150606,
     u'pylnk': 20141026,
     u'pymsiecf': 20150314,
     u'pyolecf': 20150413,

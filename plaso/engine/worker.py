@@ -53,6 +53,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                         The default is None.
     """
     super(BaseEventExtractionWorker, self).__init__(path_spec_queue)
+    self._compressed_stream_path_spec = None
     self._current_display_name = u''
     self._current_file_entry = False
     self._enable_debug_output = False
@@ -62,11 +63,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._filestat_parser_object = None
     self._hasher_names = None
     self._non_sigscan_parser_names = None
-    self._number_of_path_specs_produced = 0
     self._open_files = False
     self._parser_mediator = parser_mediator
     self._parser_objects = None
     self._process_archive_files = False
+    self._produced_number_of_path_specs = 0
     self._resolver_context = resolver_context
     self._specification_store = None
 
@@ -92,33 +93,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Raises:
       QueueFull: If a queue is full.
     """
-    try:
-      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-          path_spec, resolver_context=self._resolver_context)
+    self._ProcessPathSpec(path_spec)
 
-      if file_entry is None:
-        logging.warning(u'Unable to open file entry: {0:s}'.format(
-            path_spec.comparable))
-        return
-
-      self._ProcessFileEntry(file_entry)
-
-    # Make sure a queue full exception is passed for single processing.
-    except errors.QueueFull:
-      raise
-
-    except IOError as exception:
-      logging.warning(
-          u'Unable to process file: {0:s} with error: {1:s}'.format(
-              path_spec.comparable, exception))
-
-    # All exceptions need to be caught here to prevent a worker process
-    # form being killed by an uncaught exception.
-    except Exception as exception:
-      logging.warning(
-          u'Unable to process file: {0:s} with error: {1:s}.'.format(
-              path_spec.comparable, exception))
-      logging.exception(exception)
+    # TODO: work-around for now the compressed stream path spec
+    # needs to be processed after the current path spec.
+    if self._compressed_stream_path_spec:
+      self._ProcessPathSpec(self._compressed_stream_path_spec)
+      self._compressed_stream_path_spec = None
 
   def _GetSignatureMatchParserNames(self, file_entry):
     """Determines if a file matches one of the known signatures.
@@ -286,7 +267,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
             # path spec "depth" to prevent ZIP bombs and equiv.
             file_system_collector = collector.FileSystemCollector(self._queue)
             file_system_collector.Collect(file_system, archive_path_spec)
-            self._number_of_path_specs_produced += (
+            self._produced_number_of_path_specs += (
                 file_system_collector.number_of_produced_items)
 
           finally:
@@ -340,8 +321,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         compressed_stream_path_spec = None
 
       if compressed_stream_path_spec:
-        self._queue.PushItem(compressed_stream_path_spec)
-        self._number_of_path_specs_produced += 1
+        # TODO: disabled for now since it can cause a deadlock.
+        # self._queue.PushItem(compressed_stream_path_spec)
+        # self._produced_number_of_path_specs += 1
+
+        # TODO: work-around for now the compressed stream path spec
+        # needs to be processed after the current path spec.
+        self._compressed_stream_path_spec = compressed_stream_path_spec
 
     return True
 
@@ -420,6 +406,37 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[ParseFileEntry] done processing: {0:s}'.format(
         self._current_display_name))
 
+  def _ProcessPathSpec(self, path_spec):
+    """Processses a path specification.
+
+    Args:
+      path_spec: A path specification object (instance of dfvfs.PathSpec).
+    """
+    try:
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
+
+      if file_entry is None:
+        logging.warning(
+            u'Unable to open file entry with path spec: {0:s}'.format(
+                path_spec.comparable))
+        return
+
+      self._ProcessFileEntry(file_entry)
+
+    except IOError as exception:
+      logging.warning(
+          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
+              path_spec.comparable, exception))
+
+    # All exceptions need to be caught here to prevent the worker
+    # form being killed by an uncaught exception.
+    except Exception as exception:
+      logging.warning(
+          u'Unhandled exception while processing path spec: {0:s}.'.format(
+              path_spec.comparable))
+      logging.exception(exception)
+
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""
     if not self._memory_profiler:
@@ -455,16 +472,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""
-    # TODO: include the path specs generated by the workers.
-    number_of_path_specs = (
-        self.number_of_consumed_items - self._number_of_path_specs_produced)
-
     return {
+        u'consumed_number_of_path_specs': self.number_of_consumed_items,
         u'display_name': self._current_display_name,
         u'identifier': self._identifier_string,
         u'number_of_events': self._parser_mediator.number_of_events,
-        u'number_of_path_specs': number_of_path_specs,
         u'processing_status': self._status,
+        u'produced_number_of_path_specs': self._produced_number_of_path_specs,
         u'type': definitions.PROCESS_TYPE_WORKER}
 
   def InitializeParserObjects(self, parser_filter_string=None):

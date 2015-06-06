@@ -6,6 +6,7 @@ import os
 import unittest
 
 from plaso.frontend import frontend
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
 from tools import log2timeline
@@ -25,7 +26,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options = frontend.Options()
     test_source = self._GetTestFilePath([u'testdir'])
 
-    with cli_test_lib.TempDirectory() as temp_directory:
+    with shared_test_lib.TempDirectory() as temp_directory:
       test_storage_file = os.path.join(temp_directory, u'test.plaso')
 
       options.output = test_storage_file
@@ -47,7 +48,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options = frontend.Options()
     test_source = self._GetTestFilePath([u'image.qcow2'])
 
-    with cli_test_lib.TempDirectory() as temp_directory:
+    with shared_test_lib.TempDirectory() as temp_directory:
       test_storage_file = os.path.join(temp_directory, u'test.plaso')
 
       options.output = test_storage_file
@@ -69,7 +70,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options = frontend.Options()
     test_source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
-    with cli_test_lib.TempDirectory() as temp_directory:
+    with shared_test_lib.TempDirectory() as temp_directory:
       test_storage_file = os.path.join(temp_directory, u'test.plaso')
 
       # TODO: refactor to partitions.
@@ -93,7 +94,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options = frontend.Options()
     test_source = self._GetTestFilePath([u'vsstest.qcow2'])
 
-    with cli_test_lib.TempDirectory() as temp_directory:
+    with shared_test_lib.TempDirectory() as temp_directory:
       test_storage_file = os.path.join(temp_directory, u'test.plaso')
 
       options.output = test_storage_file
@@ -116,7 +117,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options = frontend.Options()
     test_source = self._GetTestFilePath([u'System.evtx'])
 
-    with cli_test_lib.TempDirectory() as temp_directory:
+    with shared_test_lib.TempDirectory() as temp_directory:
       test_storage_file = os.path.join(temp_directory, u'test.plaso')
 
       options.output = test_storage_file

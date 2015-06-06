@@ -10,6 +10,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.output import manager as output_manager
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.frontend import psort as psort_test
 
@@ -122,7 +123,7 @@ class PsortToolTest(test_lib.ToolTestCase):
         TestOutputModuleArgumentHelper)
 
     lines = []
-    with cli_test_lib.TempDirectory() as temp_directory:
+    with shared_test_lib.TempDirectory() as temp_directory:
       temp_file_name = os.path.join(temp_directory, u'output.txt')
       options.write = temp_file_name
 
