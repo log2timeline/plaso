@@ -116,13 +116,13 @@ class Collector(queue.ItemQueueProducer):
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""
-    number_of_path_specs = (
+    produced_number_of_path_specs = (
         self.number_of_produced_items +
         self._fs_collector.number_of_produced_items)
 
     return {
-        u'number_of_path_specs': number_of_path_specs,
         u'processing_status': self._status,
+        u'produced_number_of_path_specs': produced_number_of_path_specs,
         u'type': definitions.PROCESS_TYPE_COLLECTOR}
 
   def SetCollectDirectoryMetadata(self, collect_directory_metadata):

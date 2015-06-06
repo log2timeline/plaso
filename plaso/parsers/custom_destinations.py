@@ -55,7 +55,6 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
       u'file_footer',
       construct.ULInt32(u'signature'))
 
-
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     # There's a backslash in the class docstring, so as not to confuse Sphinx.
     # pylint: disable=anomalous-backslash-in-string
@@ -127,6 +126,8 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
         else:
           logging.warning(
               u'Unsupported Custom Destination file - invalid entry header.')
+
+        file_object.seek(-16, os.SEEK_CUR)
         break
 
       first_guid_checked = True

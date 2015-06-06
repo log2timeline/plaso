@@ -1610,6 +1610,14 @@ class StorageWriter(queue.ItemQueueConsumer):
     self._enable_profiling = False
     self._profiling_type = u'all'
 
+  def _Close(self):
+    """Closes the storage writer."""
+    return
+
+  def _Open(self):
+    """Opens the storage writer."""
+    return
+
   def GetStatus(self):
     """Returns a dictionary containing the status."""
     return {
@@ -1627,6 +1635,16 @@ class StorageWriter(queue.ItemQueueConsumer):
     """
     self._enable_profiling = enable_profiling
     self._profiling_type = profiling_type
+
+  def WriteEventObjects(self):
+    """Writes the event objects that are pushed on the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+
+    self._Open()
+    self.ConsumeItems()
+    self._Close()
+
+    self._status = definitions.PROCESSING_STATUS_COMPLETED
 
 
 class FileStorageWriter(StorageWriter):
@@ -1652,25 +1670,22 @@ class FileStorageWriter(StorageWriter):
     self._serializer_format = serializer_format
     self._storage_file = None
 
+  def _Close(self):
+    """Closes the storage writer."""
+    self._storage_file.Close()
+
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems."""
     self._storage_file.AddEventObject(event_object)
 
-  def WriteEventObjects(self):
-    """Writes the event objects that are pushed on the queue."""
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-
+  def _Open(self):
+    """Opens the storage writer."""
     self._storage_file = StorageFile(
         self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj,
         serializer_format=self._serializer_format)
 
     self._storage_file.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)
-
-    self.ConsumeItems()
-    self._storage_file.Close()
-
-    self._status = definitions.PROCESSING_STATUS_COMPLETED
 
 
 class BypassStorageWriter(StorageWriter):
@@ -1698,6 +1713,15 @@ class BypassStorageWriter(StorageWriter):
     self._pre_obj = pre_obj
     self._pre_obj.store_range = (1, 1)
 
+  def _Close(self):
+    """Closes the storage writer."""
+    # TODO: Re-enable this when storage library has been split up.
+    # Also update code to use NewOutputModule().
+    # pylint: disable=pointless-string-statement
+    """
+    self._output_module.End()
+    """
+
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems."""
     # Set the store number and index to default values since they are not used.
@@ -1705,6 +1729,23 @@ class BypassStorageWriter(StorageWriter):
     event_object.store_index = -1
 
     self._output_module.WriteEvent(event_object)
+
+  def _Open(self):
+    """Opens the storage writer."""
+    # TODO: Re-enable this when storage library has been split up.
+    # Also update code to use NewOutputModule().
+    # pylint: disable=pointless-string-statement
+    """
+    output_class = output_manager.OutputManager.GetOutputClass(
+        self._output_module_string)
+    if not output_class:
+      output_class = output_manager.OutputManager.GetOutputClass('l2tcsv')
+    self._output_module = output_class(
+        self, formatter_mediator, filehandle=self._output_file,
+        config=self._pre_obj)
+
+    self._output_module.Start()
+    """
 
   # Typically you will have a storage object that has this function,
   # as in you can call store.GetStorageInformation and that will read
@@ -1719,26 +1760,3 @@ class BypassStorageWriter(StorageWriter):
   def GetStorageInformation(self):
     """Return information about the storage object (used by output modules)."""
     return [self._pre_obj]
-
-  def WriteEventObjects(self):
-    """Writes the event objects that are pushed on the queue."""
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-
-    # TODO: Re-enable this when storage library has been split up.
-    # Also update code to use NewOutputModule().
-    # pylint: disable=pointless-string-statement
-    """
-    output_class = output_manager.OutputManager.GetOutputClass(
-        self._output_module_string)
-    if not output_class:
-      output_class = output_manager.OutputManager.GetOutputClass('l2tcsv')
-    self._output_module = output_class(
-        self, formatter_mediator, filehandle=self._output_file,
-        config=self._pre_obj)
-
-    self._output_module.Start()
-    self.ConsumeItems()
-    self._output_module.End()
-    """
-
-    self._status = definitions.PROCESSING_STATUS_COMPLETED

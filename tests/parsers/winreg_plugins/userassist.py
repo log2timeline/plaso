@@ -65,7 +65,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 62)
+    self.assertEqual(len(event_objects), 61)
 
     event_object = event_objects[0]
 

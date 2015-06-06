@@ -12,6 +12,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import sqlite_4n6time
 
+from tests import test_lib as shared_test_lib
 from tests.output import test_lib
 
 
@@ -89,7 +90,7 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
         u'vss_store_number': -1,
         u'user': u'-'
     }
-    with test_lib.TempDirectory() as dirname:
+    with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'sqlite_4n6.out')
       output_mediator = self._CreateOutputMediator(storage_object=temp_file)
       self._sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(

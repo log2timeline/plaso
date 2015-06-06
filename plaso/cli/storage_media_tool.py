@@ -382,7 +382,7 @@ class StorageMediaTool(tools.CLITool):
     while True:
       self._output_writer.Write(
           u'Please specify the identifier of the partition that should be '
-          u'processed.\nAll stores can be defined as: "all". Note that you '
+          u'processed.\nAll partitions can be defined as: "all". Note that you '
           u'can abort with Ctrl^C.\n')
 
       selected_volume_identifier = self._input_reader.Read()
@@ -587,7 +587,8 @@ class StorageMediaTool(tools.CLITool):
         default=None, help=(
             u'Choose a partition number from a disk image. This partition '
             u'number should correspond to the partion number on the disk '
-            u'image, starting from partition 1.'))
+            u'image, starting from partition 1. All partitions can be '
+            u'defined as: "all".'))
 
     argument_group.add_argument(
         u'-o', u'--offset', dest=u'image_offset', action=u'store', default=None,

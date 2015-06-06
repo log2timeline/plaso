@@ -4,7 +4,6 @@
 
 import os
 import tempfile
-import shutil
 import unittest
 import zipfile
 
@@ -21,6 +20,8 @@ from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
+
+from tests import test_lib as shared_test_lib
 
 
 class DummyObject(object):
@@ -55,24 +56,6 @@ class GroupMock(object):
         dummy.category = cat
 
       yield dummy
-
-
-class TempDirectory(object):
-  """A self cleaning temporary directory."""
-
-  def __init__(self):
-    """Initializes the temporary directory."""
-    super(TempDirectory, self).__init__()
-    self.name = u''
-
-  def __enter__(self):
-    """Make this work with the 'with' statement."""
-    self.name = tempfile.mkdtemp()
-    return self.name
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make this work with the 'with' statement."""
-    shutil.rmtree(self.name, True)
 
 
 class StorageFileTest(unittest.TestCase):
@@ -160,7 +143,7 @@ class StorageFileTest(unittest.TestCase):
 
     serializer = protobuf_serializer.ProtobufEventObjectSerializer
 
-    with TempDirectory() as dirname:
+    with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, 'plaso.db')
       store = storage.StorageFile(temp_file)
       store.AddEventObjects(self._event_objects)
