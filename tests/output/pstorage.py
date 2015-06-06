@@ -3,8 +3,6 @@
 """Tests for plaso.output.pstorage."""
 
 import os
-import shutil
-import tempfile
 import unittest
 
 from plaso.lib import pfilter
@@ -12,25 +10,8 @@ from plaso.lib import storage
 from plaso.output import interface
 from plaso.output import pstorage
 
+from tests import test_lib as shared_test_lib
 from tests.output import test_lib
-
-
-class TempDirectory(object):
-  """A self cleaning temporary directory."""
-
-  def __init__(self):
-    """Initializes the temporary directory."""
-    super(TempDirectory, self).__init__()
-    self.name = u''
-
-  def __enter__(self):
-    """Make this work with the 'with' statement."""
-    self.name = tempfile.mkdtemp()
-    return self.name
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make this work with the 'with' statement."""
-    shutil.rmtree(self.name, True)
 
 
 class PstorageTest(test_lib.OutputModuleTestCase):
@@ -45,7 +26,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
     pfilter.TimeRangeCache.ResetTimeConstraints()
 
   def testOutput(self):
-    with TempDirectory() as dirname:
+    with shared_test_lib.TempDirectory() as dirname:
       dump_file = os.path.join(dirname, u'plaso.db')
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:

@@ -91,18 +91,23 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       logging.warning(u'Unsupported source type.')
 
   def _FormatStatusTableRow(
-      self, identifier, pid, status, number_of_events, number_of_events_delta,
-      display_name):
+      self, identifier, pid, status, process_status, number_of_events,
+      number_of_events_delta, display_name):
     """Formats a status table row.
 
     Args:
       identifier: identifier to describe the status table entry.
       pid: the process identifier (PID).
       status: the process status string.
+      process_status: string containing the process status.
       number_of_events: the total number of events.
       number_of_events_delta: the number of events since the last status update.
       display_name: the display name of the file last processed.
     """
+    if (number_of_events_delta == 0 and
+        status == definitions.PROCESSING_STATUS_RUNNING):
+      status = process_status
+
     # This check makes sure the columns are tab aligned.
     if len(status) < 8:
       status = u'{0:s}\t'.format(status)
@@ -171,18 +176,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     status_row = self._FormatStatusTableRow(
         processing_status.collector.identifier, processing_status.collector.pid,
-        processing_status.collector.status, None, None, u'')
+        processing_status.collector.status,
+        processing_status.collector.process_status, None, None, u'')
 
     status_table.append(status_row)
 
     for extraction_worker_status in processing_status.extraction_workers:
-      status = extraction_worker_status.status
-      if status == definitions.PROCESSING_STATUS_RUNNING:
-        status = extraction_worker_status.process_status
-
       status_row = self._FormatStatusTableRow(
           extraction_worker_status.identifier,
-          extraction_worker_status.pid, status,
+          extraction_worker_status.pid,
+          extraction_worker_status.status,
+          extraction_worker_status.process_status,
           extraction_worker_status.number_of_events,
           extraction_worker_status.number_of_events_delta,
           extraction_worker_status.display_name)
@@ -193,6 +197,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         processing_status.storage_writer.identifier,
         processing_status.storage_writer.pid,
         processing_status.storage_writer.status,
+        processing_status.storage_writer.process_status,
         processing_status.storage_writer.number_of_events,
         processing_status.storage_writer.number_of_events_delta, u'')
 
@@ -389,6 +394,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'risk.')
       time.sleep(5)
 
+    # TODO: added now since it can cause a deadlock.
+    if self._process_archive_files:
+      logging.warning(
+          u'Scanning archive files currently can cause deadlock. Continue at '
+          u'your own risk.')
+      time.sleep(5)
+
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
@@ -533,7 +545,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       status_update_callback = None
 
-    result = self._front_end.ProcessSources(
+    processing_status = self._front_end.ProcessSources(
         self._source_path_specs,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
@@ -543,11 +555,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         storage_serializer_format=self._storage_serializer_format,
         timezone=self._timezone)
 
-    if result:
+    if processing_status and not processing_status.error_detected:
       self._output_writer.Write(u'Processing completed.\n')
     else:
-      self._output_writer.Write(u'Processing aborted.\n')
+      self._output_writer.Write(u'Processing completed with errors.\n')
     self._output_writer.Write(u'\n')
+
+    if processing_status and processing_status.error_path_specs:
+      self._output_writer.Write(u'Path specifications that caused errors:\n')
+      for path_spec_comparable in processing_status.error_path_specs:
+        self._output_writer.Write(path_spec_comparable)
+        self._output_writer.Write(u'\n')
 
 
 def Main():

@@ -162,11 +162,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
     """
     text_dict = {}
 
-    if key.number_of_values == 0:
-      error_string = u'Key: {0:s} missing values.'.format(key.path)
-      parser_mediator.ProduceParseError(error_string)
-
-    else:
+    if key.number_of_values > 0:
       for value in key.GetValues():
         if not value.name:
           value_name = u'(default)'

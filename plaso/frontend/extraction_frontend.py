@@ -6,8 +6,6 @@ import os
 import pdb
 import traceback
 
-from dfvfs.resolver import context
-
 import plaso
 from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
@@ -41,7 +39,6 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     super(ExtractionFrontend, self).__init__()
     self._buffer_size = 0
     self._collection_process = None
-    self._collector = None
     self._debug_mode = False
     self._enable_profiling = False
     self._engine = None
@@ -97,9 +94,6 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       pdb.post_mortem()
       return
 
-    if self._collector:
-      self._collector.SignalAbort()
-
     if self._engine:
       self._engine.SignalAbort()
 
@@ -151,58 +145,6 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         parser_filter_string = u'win7'
 
     return parser_filter_string
-
-  def _InitializeMultiProcessModeEngine(self):
-    """Initializes the multi process mode engine.
-
-    Returns:
-      The engine object (instance of Engine).
-    """
-    engine = multi_process.MultiProcessEngine(
-        maximum_number_of_queued_items=self._queue_size)
-
-    engine.SetEnableDebugOutput(self._debug_mode)
-    engine.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
-    engine.SetProcessArchiveFiles(self._process_archive_files)
-
-    if self._filter_object:
-      engine.SetFilterObject(self._filter_object)
-
-    if self._mount_path:
-      engine.SetMountPath(self._mount_path)
-
-    if self._text_prepend:
-      engine.SetTextPrepend(self._text_prepend)
-
-    return engine
-
-  def _InitializeSingleProcessModeEngine(self):
-    """Initializes the single process mode engine.
-
-    Returns:
-      The engine object (instance of Engine).
-    """
-    engine = single_process.SingleProcessEngine(self._queue_size)
-    engine.SetEnableDebugOutput(self._debug_mode)
-    engine.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
-    engine.SetProcessArchiveFiles(self._process_archive_files)
-
-    if self._filter_object:
-      engine.SetFilterObject(self._filter_object)
-
-    if self._mount_path:
-      engine.SetMountPath(self._mount_path)
-
-    if self._text_prepend:
-      engine.SetTextPrepend(self._text_prepend)
-
-    return engine
 
   def _PreprocessSource(self, source_path_specs):
     """Preprocesses the source.
@@ -381,189 +323,6 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     if not getattr(pre_obj, u'zone', None):
       pre_obj.zone = timezone
 
-  def _ProcessSourcesMultiProcessMode(
-      self, pre_obj, source_path_specs, filter_find_specs=None,
-      hasher_names_string=None, include_directory_stat=True,
-      number_of_worker_processes=0, parser_filter_string=None,
-      status_update_callback=None,
-      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
-    """Processes the sources with multiple processes.
-
-    Args:
-      pre_obj: the preprocess object (instance of PreprocessObject).
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec). The default is None.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
-      include_directory_stat: Boolean value to indicate whether directory
-                              stat information should be collected. The default
-                              is True.
-      number_of_worker_processes: optional number of worker processes.
-                                  The default is 0 which represents deterimine
-                                  automatically.
-      parser_filter_string: optional parser filter string. The default is None.
-      status_update_callback: Optional callback function for status updates.
-                              The default is None.
-      storage_serializer_format: optional storage serializer format.
-                                 The default is protobuf.
-
-    Returns:
-      A boolean value indicating the sources were processed without
-      unrecoverable errors or being aborted.
-    """
-    logging.info(u'Starting extraction in multi process mode.')
-
-    resolver_context = context.Context()
-
-    # TODO: move collector into worker.
-    self._collector = self._engine.CreateCollector(
-        include_directory_stat, filter_find_specs=filter_find_specs,
-        resolver_context=resolver_context)
-
-    if self._output_module:
-      storage_writer = storage.BypassStorageWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          output_module_string=self._output_module, pre_obj=pre_obj)
-    else:
-      storage_writer = storage.FileStorageWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          buffer_size=self._buffer_size, pre_obj=pre_obj,
-          serializer_format=storage_serializer_format)
-
-      storage_writer.SetEnableProfiling(
-          self._enable_profiling,
-          profiling_type=self._profiling_type)
-
-    try:
-      return self._engine.ProcessSources(
-          source_path_specs, self._collector, storage_writer,
-          hasher_names_string=hasher_names_string,
-          number_of_extraction_workers=number_of_worker_processes,
-          parser_filter_string=parser_filter_string,
-          status_update_callback=status_update_callback,
-          show_memory_usage=self._show_worker_memory_information)
-
-    except KeyboardInterrupt:
-      self._CleanUpAfterAbort()
-      raise errors.UserAbort
-
-  def _ProcessSourcesSingleProcessMode(
-      self, pre_obj, source_path_specs, filter_find_specs=None,
-      hasher_names_string=None, include_directory_stat=True,
-      parser_filter_string=None,
-      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
-    """Processes the sources in a single process.
-
-    Args:
-      pre_obj: the preprocess object (instance of PreprocessObject).
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec). The default is None.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
-      include_directory_stat: Boolean value to indicate whether directory
-                              stat information should be collected. The default
-                              is True.
-      parser_filter_string: optional parser filter string. The default is None.
-      storage_serializer_format: optional storage serializer format.
-                                 The default is protobuf.
-
-    Returns:
-      A boolean value indicating the sources were processed without
-      unrecoverable errors or being aborted.
-    """
-    logging.info(u'Starting extraction in single process mode.')
-
-    try:
-      return self._StartSingleThread(
-          pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
-          hasher_names_string=hasher_names_string,
-          include_directory_stat=include_directory_stat,
-          parser_filter_string=parser_filter_string,
-          storage_serializer_format=storage_serializer_format)
-
-    # TODO: check if this still works and if still needed.
-    except Exception as exception:
-      # The tool should generally not be run in single process mode
-      # for other reasons than to debug. Hence the general error
-      # catching.
-      logging.error(u'An uncaught exception occurred: {0:s}.\n{1:s}'.format(
-          exception, traceback.format_exc()))
-      if self._debug_mode:
-        pdb.post_mortem()
-
-    return False
-
-  def _StartSingleThread(
-      self, pre_obj, source_path_specs, filter_find_specs=None,
-      hasher_names_string=None, include_directory_stat=True,
-      parser_filter_string=None,
-      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
-    """Starts everything up in a single process.
-
-    This should not normally be used, since running the tool in a single
-    process buffers up everything into memory until the storage is called.
-
-    Just to make it clear, this starts up the collection, completes that
-    before calling the worker that extracts all EventObjects and stores
-    them in memory. when that is all done, the storage function is called
-    to drain the buffer. Hence the tool's excessive use of memory in this
-    mode and the reason why it is not suggested to be used except for
-    debugging reasons (and mostly to get into the debugger).
-
-    This is therefore mostly useful during debugging sessions for some
-    limited parsing.
-
-    Args:
-      pre_obj: the preprocess object (instance of PreprocessObject).
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec). The default is None.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
-      include_directory_stat: Boolean value to indicate whether directory
-                              stat information should be collected. The default
-                              is True.
-      parser_filter_string: optional parser filter string. The default is None.
-      storage_serializer_format: optional storage serializer format.
-                                 The default is protobuf.
-
-    Returns:
-      A boolean value indicating the sources were processed without
-      unrecoverable errors or being aborted.
-    """
-    self._collector = self._engine.CreateCollector(
-        include_directory_stat, filter_find_specs=filter_find_specs,
-        resolver_context=self._resolver_context)
-
-    if self._output_module:
-      storage_writer = storage.BypassStorageWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          output_module_string=self._output_module, pre_obj=pre_obj)
-    else:
-      storage_writer = storage.FileStorageWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          buffer_size=self._buffer_size, pre_obj=pre_obj,
-          serializer_format=storage_serializer_format)
-
-      storage_writer.SetEnableProfiling(
-          self._enable_profiling,
-          profiling_type=self._profiling_type)
-
-    try:
-      return self._engine.ProcessSources(
-          source_path_specs, self._collector, storage_writer,
-          parser_filter_string=parser_filter_string,
-          hasher_names_string=hasher_names_string)
-
-    except KeyboardInterrupt:
-      self._CleanUpAfterAbort()
-      raise errors.UserAbort
-
   def ProcessSources(
       self, source_path_specs, filter_file=None, hasher_names_string=None,
       parser_filter_string=None, single_process_mode=False,
@@ -590,8 +349,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       timezone: optional preferred timezone. The default is UTC.
 
     Returns:
-      A boolean value indicating the sources were processed without
-      unrecoverable errors or being aborted.
+      The processing status (instance of ProcessingStatus) or None.
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
@@ -613,9 +371,16 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       self._single_process_mode = True
 
     if self._single_process_mode:
-      self._engine = self._InitializeSingleProcessModeEngine()
+      self._engine = single_process.SingleProcessEngine(self._queue_size)
     else:
-      self._engine = self._InitializeMultiProcessModeEngine()
+      self._engine = multi_process.MultiProcessEngine(
+          maximum_number_of_queued_items=self._queue_size)
+
+    self._engine.SetEnableDebugOutput(self._debug_mode)
+    self._engine.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
 
     pre_obj = self._PreprocessSource(source_path_specs)
 
@@ -659,21 +424,73 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         pre_obj, self._engine, filter_file=filter_file,
         parser_filter_string=parser_filter_string)
 
-    if self._single_process_mode:
-      return self._ProcessSourcesSingleProcessMode(
-          pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
-          hasher_names_string=hasher_names_string,
-          include_directory_stat=include_directory_stat,
-          parser_filter_string=parser_filter_string,
-          storage_serializer_format=storage_serializer_format)
+    if self._output_module:
+      storage_writer = storage.BypassStorageWriter(
+          self._engine.event_object_queue, self._storage_file_path,
+          output_module_string=self._output_module, pre_obj=pre_obj)
     else:
-      return self._ProcessSourcesMultiProcessMode(
-          pre_obj, source_path_specs, filter_find_specs=filter_find_specs,
-          hasher_names_string=hasher_names_string,
-          include_directory_stat=include_directory_stat,
-          parser_filter_string=parser_filter_string,
-          status_update_callback=status_update_callback,
-          storage_serializer_format=storage_serializer_format)
+      storage_writer = storage.FileStorageWriter(
+          self._engine.event_object_queue, self._storage_file_path,
+          buffer_size=self._buffer_size, pre_obj=pre_obj,
+          serializer_format=storage_serializer_format)
+
+      storage_writer.SetEnableProfiling(
+          self._enable_profiling,
+          profiling_type=self._profiling_type)
+
+    processing_status = None
+    try:
+      if self._single_process_mode:
+        logging.debug(u'Starting extraction in single process mode.')
+
+        processing_status = self._engine.ProcessSources(
+            source_path_specs, storage_writer,
+            filter_find_specs=filter_find_specs,
+            filter_object=self._filter_object,
+            hasher_names_string=hasher_names_string,
+            include_directory_stat=include_directory_stat,
+            mount_path=self._mount_path,
+            parser_filter_string=parser_filter_string,
+            process_archive_files=self._process_archive_files,
+            resolver_context=self._resolver_context,
+            status_update_callback=status_update_callback,
+            text_prepend=self._text_prepend)
+
+      else:
+        logging.debug(u'Starting extraction in multi process mode.')
+
+        # TODO: pass number_of_extraction_workers.
+        processing_status = self._engine.ProcessSources(
+            source_path_specs, storage_writer,
+            filter_find_specs=filter_find_specs,
+            filter_object=self._filter_object,
+            hasher_names_string=hasher_names_string,
+            include_directory_stat=include_directory_stat,
+            mount_path=self._mount_path,
+            parser_filter_string=parser_filter_string,
+            process_archive_files=self._process_archive_files,
+            status_update_callback=status_update_callback,
+            show_memory_usage=self._show_worker_memory_information,
+            text_prepend=self._text_prepend)
+
+    except KeyboardInterrupt:
+      self._CleanUpAfterAbort()
+      raise errors.UserAbort
+
+    # TODO: check if this still works and if still needed.
+    except Exception as exception:
+      if not self._single_process_mode:
+        raise
+
+      # The tool should generally not be run in single process mode
+      # for other reasons than to debug. Hence the general error
+      # catching.
+      logging.error(u'An uncaught exception occurred: {0:s}.\n{1:s}'.format(
+          exception, traceback.format_exc()))
+      if self._debug_mode:
+        pdb.post_mortem()
+
+    return processing_status
 
   def SetDebugMode(self, enable_debug=False):
     """Enables or disables debug mode.

@@ -79,13 +79,14 @@ class SingleProcessEngine(engine.BaseEngine):
     super(SingleProcessEngine, self).__init__(
         path_spec_queue, event_object_queue, parse_error_queue)
 
+    self._collector = None
     self._event_queue_producer = SingleProcessItemQueueProducer(
         event_object_queue)
     self._parse_error_queue_producer = SingleProcessItemQueueProducer(
         parse_error_queue)
 
-  def CreateCollector(
-      self, include_directory_stat, filter_find_specs=None,
+  def _CreateCollector(
+      self, filter_find_specs=None, include_directory_stat=True,
       resolver_context=None):
     """Creates a collector object.
 
@@ -94,10 +95,11 @@ class SingleProcessEngine(engine.BaseEngine):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      include_directory_stat: Boolean value to indicate whether directory
-                              stat information should be collected.
       filter_find_specs: Optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
+      include_directory_stat: Optional boolean value to indicate whether
+                              directory stat information should be collected.
+                              The default is True.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
                         must have its own resolver context.
@@ -115,11 +117,22 @@ class SingleProcessEngine(engine.BaseEngine):
 
     return collector_object
 
-  def CreateExtractionWorker(self, worker_number):
+  def _CreateExtractionWorker(
+      self, worker_number, filter_object=None, mount_path=None,
+      process_archive_files=False, text_prepend=None):
     """Creates an extraction worker object.
 
     Args:
       worker_number: A number that identifies the worker.
+      filter_object: Optional filter object (instance of objectfilter.Filter).
+                     The default is None.
+      mount_path: Optional string containing the mount path. The default
+                  is None.
+      process_archive_files: Optional boolean value to indicate if the worker
+                             should scan for file entries inside files.
+                             The default is False.
+      text_prepend: Optional string that contains the text to prepend to every
+                    event object. The default is None.
 
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
@@ -142,39 +155,64 @@ class SingleProcessEngine(engine.BaseEngine):
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type)
 
-    if self._process_archive_files:
-      extraction_worker.SetProcessArchiveFiles(self._process_archive_files)
+    extraction_worker.SetProcessArchiveFiles(process_archive_files)
 
-    if self._filter_object:
-      extraction_worker.SetFilterObject(self._filter_object)
+    if filter_object:
+      extraction_worker.SetFilterObject(filter_object)
 
-    if self._mount_path:
-      extraction_worker.SetMountPath(self._mount_path)
+    if mount_path:
+      extraction_worker.SetMountPath(mount_path)
 
-    if self._text_prepend:
-      extraction_worker.SetTextPrepend(self._text_prepend)
+    if text_prepend:
+      extraction_worker.SetTextPrepend(text_prepend)
 
     return extraction_worker
 
   def ProcessSources(
-      self, source_path_specs, collector_object, storage_writer,
-      hasher_names_string=None, parser_filter_string=None):
+      self, source_path_specs, storage_writer, filter_find_specs=None,
+      filter_object=None, hasher_names_string=None, include_directory_stat=True,
+      mount_path=None, parser_filter_string=None, process_archive_files=False,
+      resolver_context=None, status_update_callback=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
-      collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
+      filter_find_specs: Optional list of filter find specifications (instances
+                         of dfvfs.FindSpec). The default is None.
+      filter_object: Optional filter object (instance of objectfilter.Filter).
+                     The default is None.
       hasher_names_string: Optional comma separated string of names of
                            hashers to enable. The default is None.
+      include_directory_stat: Optional boolean value to indicate whether
+                              directory stat information should be collected.
+                              The default is True.
+      mount_path: Optional string containing the mount path. The default
+                  is None.
       parser_filter_string: Optional parser filter string. The default is None.
+      process_archive_files: Optional boolean value to indicate if the worker
+                             should scan for file entries inside files.
+                             The default is False.
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None. Note that every thread or process
+                        must have its own resolver context.
+      status_update_callback: Optional callback function for status updates.
+                              The default is None.
+      text_prepend: Optional string that contains the text to prepend to every
+                    event object. The default is None.
 
     Returns:
-      A boolean value indicating the sources were processed without
-      unrecoverable errors.
+      The processing status (instance of ProcessingStatus).
     """
-    extraction_worker = self.CreateExtractionWorker(0)
+    self._collector = self._CreateCollector(
+        filter_find_specs=filter_find_specs,
+        include_directory_stat=include_directory_stat,
+        resolver_context=resolver_context)
+
+    extraction_worker = self._CreateExtractionWorker(
+        0, filter_object=filter_object, mount_path=mount_path,
+        process_archive_files=process_archive_files, text_prepend=text_prepend)
 
     if hasher_names_string:
       extraction_worker.SetHashers(hasher_names_string)
@@ -186,14 +224,17 @@ class SingleProcessEngine(engine.BaseEngine):
     # can be accessed if the QueueFull exception is raised. This is
     # needed in single process mode to prevent the queue consuming too
     # much memory.
-    collector_object.SetExtractionWorker(extraction_worker)
+    self._collector.SetExtractionWorker(extraction_worker)
     self._event_queue_producer.SetStorageWriter(storage_writer)
     self._parse_error_queue_producer.SetStorageWriter(storage_writer)
+
+    # TODO: implement using status_update_callback.
+    _ = status_update_callback
 
     logging.debug(u'Processing started.')
 
     logging.debug(u'Collection started.')
-    collector_object.Collect(source_path_specs)
+    self._collector.Collect(source_path_specs)
     logging.debug(u'Collection stopped.')
 
     logging.debug(u'Extraction worker started.')
@@ -210,11 +251,17 @@ class SingleProcessEngine(engine.BaseEngine):
     # to be garbage collected.
     self._event_queue_producer.SetStorageWriter(None)
     self._parse_error_queue_producer.SetStorageWriter(None)
-    collector_object.SetExtractionWorker(None)
+    self._collector = None
 
     logging.debug(u'Processing completed.')
 
-    return True
+    return self._processing_status
+
+  def SignalAbort(self):
+    """Signals the engine to abort."""
+    super(SingleProcessEngine, self).SignalAbort()
+    if self._collector:
+      self._collector.SignalAbort()
 
 
 class SingleProcessEventExtractionWorker(worker.BaseEventExtractionWorker):

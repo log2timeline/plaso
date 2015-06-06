@@ -19,23 +19,7 @@ from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 
-
-class TempDirectory(object):
-  """A self cleaning temporary directory."""
-
-  def __init__(self):
-    """Initializes the temporary directory."""
-    super(TempDirectory, self).__init__()
-    self.name = u''
-
-  def __enter__(self):
-    """Make this work with the 'with' statement."""
-    self.name = tempfile.mkdtemp()
-    return self.name
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make this work with the 'with' statement."""
-    shutil.rmtree(self.name, True)
+from tests import test_lib as shared_test_lib
 
 
 class TestCollectorQueueConsumer(queue.ItemQueueConsumer):
@@ -107,7 +91,7 @@ class CollectorTest(CollectorTestCase):
         self._GetTestFilePath([u'syslog.bz2']),
         self._GetTestFilePath([u'wtmp.1'])]
 
-    with TempDirectory() as dirname:
+    with shared_test_lib.TempDirectory() as dirname:
       for a_file in test_files:
         shutil.copy(a_file, dirname)
 

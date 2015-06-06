@@ -20,12 +20,30 @@ from plaso.lib import timelib
 class PinfoTool(analysis_tool.AnalysisTool):
   """Class that implements the pinfo CLI tool."""
 
-  _INDENTATION_LEVEL = 8
-
   NAME = u'pinfo'
   DESCRIPTION = (
       u'Gives you information about the storage file, how it was '
       u'collected, what information was gained from the image, etc.')
+
+  _INDENTATION_LEVEL = 8
+
+  _PREPROCESSING_VALUE_DESCRIPTIONS = {
+      u'code_page': u'Code page',
+      u'guessed_os': u'Operating system',
+      u'hostname': u'Hostname',
+      u'name': u'Name',
+      u'osversion': u'Operating system',
+      u'path': u'Profile path',
+      u'plugin_counter': u'Number of plugins',
+      u'programfiles': u'%ProgramFiles%',
+      u'sid': u'SID',
+      u'systemroot': u'%SystemRoot%',
+      u'sysregistry': u'Registry path',
+      u'users': u'Users information',
+      u'time_zone_str': u'Time zone',
+      u'windir': u'%WinDir%',
+      u'zone': u'Time zone',
+  }
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -289,12 +307,31 @@ class PinfoTool(analysis_tool.AnalysisTool):
     lines_of_text.append(u'\t\tPlaso Storage Information')
     lines_of_text.append(u'-' * self._LINE_LENGTH)
 
-  def _FormatPreprocessingInformation(
-      self, printer_object, lines_of_text, storage_information):
+  def _FormatPreprocessingInformationValue(self, key, value):
+    """Formats a processing information value.
+
+    Args:
+      key: The key of the value.
+      value: The value.
+
+    Returns:
+      A line of text containing the formatted processing information value.
+    """
+    description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
+    # Make sure we have the same tab aligment for all the values.
+    if len(description) < 7:
+      text = u'\t{0:s}\t\t\t: {1!s}'.format(description, value)
+    elif len(description) < 15:
+      text = u'\t{0:s}\t\t: {1!s}'.format(description, value)
+    else:
+      text = u'\t{0:s}\t: {1!s}'.format(description, value)
+
+    return text
+
+  def _FormatPreprocessingInformation(self, lines_of_text, storage_information):
     """Formats the processing information.
 
     Args:
-      printer_object: A pretty printer object (instance of PrettyPrinter).
       lines_of_text: A list containing the lines of text.
       storage_information: The storage information object (instance of
                            PreprocessObject).
@@ -308,16 +345,44 @@ class PinfoTool(analysis_tool.AnalysisTool):
       return
 
     lines_of_text.append(u'Preprocessing information:')
+
+    for key in [u'osversion', u'hostname', u'time_zone_str', u'codepage']:
+      value = getattr(storage_information, key, None)
+      if value:
+        text = self._FormatPreprocessingInformationValue(key, value)
+        lines_of_text.append(text)
+
+    for key in [u'programfiles', u'systemroot', u'windir']:
+      value = getattr(storage_information, key, None)
+      if value:
+        text = self._FormatPreprocessingInformationValue(key, value)
+        lines_of_text.append(text)
+
+    key = u'users'
+    users_list = getattr(storage_information, key, [])
+    if users_list:
+      description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
+      lines_of_text.append(u'    {0:s}:'.format(description))
+      for user_dict in users_list:
+        for key in [u'name', u'sid', u'path']:
+          value = user_dict.get(key, None)
+          if value:
+            text = self._FormatPreprocessingInformationValue(key, value)
+            lines_of_text.append(text)
+
+    # TODO: clean this up after restructuring the preprocessing information.
+    lines_of_text.append(u'    Other:')
     for key, value in storage_information.__dict__.iteritems():
-      if key in [u'collection_information', u'counter', u'stores']:
+      if key in frozenset([
+          u'_user_ids_to_names', u'codepage', u'collection_information',
+          u'counter', u'hostname', u'osversion', u'plugin_counter',
+          u'programfiles', u'stores', u'systemroot', u'time_zone_str',
+          u'users', u'windir']):
         continue
 
-      if isinstance(value, list):
-        value = printer_object.pformat(value)
-        lines_of_text.append(u'\t{0:s} ='.format(key))
-        lines_of_text.append(u'{0!s}'.format(value))
-      else:
-        lines_of_text.append(u'\t{0:s} = {1!s}'.format(key, value))
+      if value:
+        text = self._FormatPreprocessingInformationValue(key, value)
+        lines_of_text.append(text)
 
   def _FormatReports(self, storage_file):
     """Formats the reports.
@@ -368,8 +433,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._FormatStoreInformation(
         printer_object, lines_of_text, storage_information)
 
-    self._FormatPreprocessingInformation(
-        printer_object, lines_of_text, storage_information)
+    self._FormatPreprocessingInformation(lines_of_text, storage_information)
 
     if last_entry:
       lines_of_text.append(u'')

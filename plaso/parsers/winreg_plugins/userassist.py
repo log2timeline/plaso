@@ -133,16 +133,19 @@ class UserAssistPlugin(interface.KeyPlugin):
             value_name = environ_expand.ExpandWindowsEnvironmentVariables(
                 value_name, parser_mediator.knowledge_base.pre_obj)
 
+        value_data_size = len(value.data)
         if not value.DataIsBinaryData():
           parser_mediator.ProduceParseError(
               u'Unsupported value data type: {0:s}'.format(
                   value.data_type_string))
 
+        elif value_name == u'UEME_CTLSESSION':
+          pass
+
         elif version_value.data == 3:
-          if len(value.data) != self.USERASSIST_V3_STRUCT.sizeof():
+          if value_data_size != self.USERASSIST_V3_STRUCT.sizeof():
             parser_mediator.ProduceParseError(
-                u'Unsupported value data size: {0:d}'.format(
-                    len(value.data)))
+                u'Unsupported value data size: {0:d}'.format(value_data_size))
 
           else:
             parsed_data = self.USERASSIST_V3_STRUCT.parse(value.data)
@@ -160,10 +163,9 @@ class UserAssistPlugin(interface.KeyPlugin):
             parser_mediator.ProduceEvent(event_object)
 
         elif version_value.data == 5:
-          if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
+          if value_data_size != self.USERASSIST_V5_STRUCT.sizeof():
             parser_mediator.ProduceParseError(
-                u'Unsupported value data size: {0:d}'.format(
-                    len(value.data)))
+                u'Unsupported value data size: {0:d}'.format(value_data_size))
 
           parsed_data = self.USERASSIST_V5_STRUCT.parse(value.data)
 

@@ -48,6 +48,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
        u'partion'),
       (u'                        number on the disk image, starting from '
        u'partition 1.'),
+      u'                        All partitions can be defined as: "all".',
       u'  -o IMAGE_OFFSET, --offset IMAGE_OFFSET',
       (u'                        The offset of the volume within the storage '
        u'media'),
