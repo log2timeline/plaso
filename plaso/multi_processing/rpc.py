@@ -4,26 +4,6 @@
 import abc
 
 
-def GetProxyPortNumberFromPID(process_id):
-  """Determines a port number based on a PID value.
-
-  Args:
-    process_id: An integer, process ID (PID), value that should be used to find
-                a port number.
-
-  Returns:
-    An integer indicating a possible port number for the process to listen on.
-  """
-  # TODO: Improve this method of selecting ports.
-  if process_id > 65535:
-    process_id %= 65535
-
-  if process_id < 1024:
-    process_id += 1024
-
-  return process_id
-
-
 class RPCClient(object):
   """Class that defines the RPC client interface."""
 
