@@ -4,14 +4,6 @@ plaso.multi_processing package
 Submodules
 ----------
 
-plaso.multi_processing.foreman module
--------------------------------------
-
-.. automodule:: plaso.multi_processing.foreman
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.multi_processing.multi_process module
 -------------------------------------------
 

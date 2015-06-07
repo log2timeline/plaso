@@ -1,0 +1,5 @@
+Invalid Tag
+  some text here
+Partially Valid Tag
+  filename contains '/tmp/whoaaaa'
+  some other invalid text.

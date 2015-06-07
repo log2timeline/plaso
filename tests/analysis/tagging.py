@@ -26,6 +26,7 @@ class TestChromeDownloadEvent(event.EventObject):
 class TaggingTest(test_lib.AnalysisPluginTestCase):
   """Test for the tagging analysis plugin."""
   TEST_TAG_FILE_NAME = u'test_tag_file.txt'
+  INVALID_TEST_TAG_FILE_NAME = u'invalid_test_tag_file.txt'
   TEST_EVENTS = [
       {u'event_type': u'prefetch',
        u'timestamp': timelib.Timestamp.CopyFromString(u'2015-05-01 15:12:00'),
@@ -65,7 +66,20 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     self.assertIn(u'Application Execution', tags.keys())
     self.assertIn(u'File Downloaded', tags.keys())
 
-  def TestTag(self):
+  def testInvalidTagParsing(self):
+    """Test parsing of definition files that contain invalid directives."""
+    event_queue = single_process.SingleProcessQueue()
+    analysis_plugin = tagging.TaggingPlugin(event_queue)
+    # pylint: disable=protected-access
+    tags = analysis_plugin._ParseTaggingFile(
+        self._GetTestFilePath([self.INVALID_TEST_TAG_FILE_NAME]))
+    self.assertEqual(len(tags), 2)
+    self.assertTrue(u'Invalid Tag' in tags)
+    self.assertEqual(len(tags[u'Invalid Tag']), 0)
+    self.assertTrue(u'Partially Valid Tag' in tags)
+    self.assertEqual(len(tags[u'Partially Valid Tag']), 1)
+
+  def testTag(self):
     """Test that the tagging plugin successfully tags events."""
     event_queue = single_process.SingleProcessQueue()
     test_queue_producer = queue.ItemQueueProducer(event_queue)
