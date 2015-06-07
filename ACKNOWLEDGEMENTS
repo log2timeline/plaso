@@ -7,8 +7,8 @@ Plaso is a Python rewrite of the log2timeline Perl version.
 
 Plaso is developed and maintained by:
 * Kristinn Gudjonsson
-* Eric Mak
 * Joachim Metz
+* Daniel White
 
 Plaso depends on various other projects. So thanks to the authors
 and others involved with these projects:
@@ -44,6 +44,7 @@ Thanks to contributors (alphabetically based on last name):
 * Marc Leavitt
   * Parsers
     * PL-SQL recall (PLSRecall.dat)
+* Eric Mak
 * Preston Miller
   *Windows Registry Plugins
     * SAM Users
