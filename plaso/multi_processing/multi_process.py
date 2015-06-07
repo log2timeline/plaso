@@ -340,6 +340,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_object = None
     self._hasher_names_string = None
     self._include_directory_stat = True
+    self._last_worker_number = 0
     self._mount_path = None
     self._number_of_extraction_workers = 0
     self._parser_filter_string = None
@@ -487,10 +488,10 @@ class MultiProcessEngine(engine.BaseEngine):
       if process.type == definitions.PROCESS_TYPE_STORAGE_WRITER:
         raise errors.EngineAbort(u'Storage writer unexpectedly terminated')
 
-      # We need to terminate the process.
-      # TODO: Add a function to start a new instance of a process instead of
-      # just removing and killing it.
       self._TerminateProcess(pid)
+
+      worker_process = self._StartExtractionWorkerProcess()
+      self._StartMonitoringProcess(worker_process.pid)
 
     elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
       logging.debug((
@@ -502,72 +503,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
-
-  # TODO: move this function into MultiProcessEventExtractionWorkerProcess.
-  def _CreateExtractionWorkerProcess(
-      self, worker_number, filter_object=None, hasher_names_string=None,
-      mount_path=None, process_archive_files=False, parser_filter_string=None,
-      text_prepend=None):
-    """Creates an extraction worker process.
-
-    Args:
-      worker_number: A number that identifies the worker.
-      filter_object: Optional filter object (instance of objectfilter.Filter).
-                     The default is None.
-      hasher_names_string: Optional comma separated string of names of
-                           hashers to enable enable. The default is None.
-      mount_path: Optional string containing the mount path. The default
-                  is None.
-      process_archive_files: Optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-                             The default is False.
-      parser_filter_string: Optional parser filter string. The default is None.
-      text_prepend: Optional string that contains the text to prepend to every
-                    event object. The default is None.
-
-    Returns:
-      An extraction worker process (instance of
-      MultiProcessEventExtractionWorkerProcess).
-    """
-    parser_mediator = parsers_mediator.ParserMediator(
-        self._event_queue_producer, self._parse_error_queue_producer,
-        self.knowledge_base)
-
-    # We need a resolver context per process to prevent multi processing
-    # issues with file objects stored in images.
-    resolver_context = context.Context()
-
-    extraction_worker = worker.BaseEventExtractionWorker(
-        worker_number, self._path_spec_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_mediator,
-        resolver_context=resolver_context)
-
-    extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
-
-    extraction_worker.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
-
-    extraction_worker.SetProcessArchiveFiles(process_archive_files)
-
-    if filter_object:
-      extraction_worker.SetFilterObject(filter_object)
-
-    if mount_path:
-      extraction_worker.SetMountPath(mount_path)
-
-    if text_prepend:
-      extraction_worker.SetTextPrepend(text_prepend)
-
-    process_name = u'Worker_{0:02d}'.format(worker_number)
-
-    return MultiProcessEventExtractionWorkerProcess(
-        self._path_spec_queue, self.event_object_queue,
-        self._parse_error_queue, extraction_worker,
-        hasher_names_string=hasher_names_string,
-        parser_filter_string=parser_filter_string,
-        name=process_name)
 
   def _KillProcess(self, pid):
     """Issues a SIGKILL or equivalent to the process.
@@ -611,6 +546,34 @@ class MultiProcessEngine(engine.BaseEngine):
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
 
+  def _StartExtractionWorkerProcess(self):
+    """Creates, starts and registers an extraction worker process.
+
+    Returns:
+      An extraction worker process (instance of
+      MultiProcessEventExtractionWorkerProcess).
+    """
+    process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
+    worker_process = MultiProcessEventExtractionWorkerProcess(
+        self._path_spec_queue, self.event_object_queue,
+        self._parse_error_queue, self.knowledge_base, self._last_worker_number,
+        enable_debug_output=self._enable_debug_output,
+        enable_profiling=self._enable_profiling,
+        filter_object=self._filter_object,
+        hasher_names_string=self._hasher_names_string,
+        mount_path=self._mount_path, name=process_name,
+        parser_filter_string=self._parser_filter_string,
+        process_archive_files=self._process_archive_files,
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type, text_prepend=self._text_prepend)
+
+    worker_process.start()
+    self._last_worker_number += 1
+
+    self._RegisterProcess(worker_process)
+
+    return worker_process
+
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
 
@@ -624,8 +587,6 @@ class MultiProcessEngine(engine.BaseEngine):
     # any blocking behavior.
 
     if abort:
-      super(MultiProcessEngine, self).SignalAbort()
-
       # Signal all the processes to abort.
       self._AbortTerminate()
 
@@ -952,16 +913,8 @@ class MultiProcessEngine(engine.BaseEngine):
     storage_writer_process.start()
     self._RegisterProcess(storage_writer_process)
 
-    for worker_number in range(0, number_of_extraction_workers):
-      worker_process = self._CreateExtractionWorkerProcess(
-          worker_number, filter_object=self._filter_object,
-          hasher_names_string=self._hasher_names_string,
-          mount_path=self._mount_path,
-          parser_filter_string=self._parser_filter_string,
-          process_archive_files=self._process_archive_files,
-          text_prepend=self._text_prepend)
-      worker_process.start()
-      self._RegisterProcess(worker_process)
+    for _ in range(number_of_extraction_workers):
+      _ = self._StartExtractionWorkerProcess()
 
     self._stop_collector_event = multiprocessing.Event()
     collector_process = MultiProcessCollectorProcess(
@@ -999,7 +952,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def SignalAbort(self):
     """Signals the engine to abort."""
-    super(MultiProcessEngine, self).SignalAbort()
     try:
       self._StopExtractionProcesses(abort=True)
 
@@ -1016,7 +968,10 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
   def __init__(
       self, path_spec_queue, event_object_queue, parse_error_queue,
-      extraction_worker, hasher_names_string=None, parser_filter_string=None,
+      knowledge_base, worker_number, enable_debug_output=False,
+      enable_profiling=False, filter_object=None, hasher_names_string=None,
+      mount_path=None, parser_filter_string=None, process_archive_files=False,
+      profiling_sample_rate=1000, profiling_type=u'all', text_prepend=None,
       **kwargs):
     """Initializes the process object.
 
@@ -1027,29 +982,66 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
                           MultiProcessingQueue).
       parse_error_queue: the parser error queue object (instance of
                          MultiProcessingQueue).
-      extraction_worker: The extraction worker object (instance of
-                         MultiProcessEventExtractionWorker).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
+      worker_number: A number that identifies the worker.
+      enable_debug_output: Optional boolean value to indicate if the debug
+                           output should be enabled. The default is False.
+      enable_profiling: Optional boolean value to indicate if profiling should
+                        be enabled. The default is False.
+      filter_object: Optional filter object (instance of objectfilter.Filter).
+                     The default is None.
       hasher_names_string: Optional comma separated string of names of
                            hashers to enable enable. The default is None.
+      mount_path: Optional string containing the mount path. The default
+                  is None.
       parser_filter_string: Optional parser filter string. The default is None.
+      process_archive_files: Optional boolean value to indicate if the worker
+                             should scan for file entries inside files.
+                             The default is False.
+      profiling_sample_rate: optional integer indicating the profiling sample
+                             rate. The value contains the number of files
+                             processed. The default value is 1000.
+      profiling_type: optional profiling type. The default is 'all'.
+      text_prepend: Optional string that contains the text to prepend to every
+                    event object. The default is None.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessEventExtractionWorkerProcess, self).__init__(
         definitions.PROCESS_TYPE_WORKER, **kwargs)
     self._critical_error = False
-    self._extraction_worker = extraction_worker
+    self._enable_debug_output = enable_debug_output
     self._event_object_queue = event_object_queue
+    self._event_queue_producer = None
+    self._extraction_worker = None
+    self._knowledge_base = knowledge_base
     self._parse_error_queue = parse_error_queue
     self._path_spec_queue = path_spec_queue
+    self._parse_error_queue_producer = None
+    self._worker_number = worker_number
+
+    # Attributes for profiling.
+    self._enable_profiling = enable_profiling
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
 
     # TODO: clean this up with the implementation of a task based
     # multi-processing approach.
-    self._parser_filter_string = parser_filter_string
+    self._filter_object = filter_object
     self._hasher_names_string = hasher_names_string
+    self._mount_path = mount_path
+    self._process_archive_files = process_archive_files
+    self._parser_filter_string = parser_filter_string
+    self._text_prepend = text_prepend
 
   def _GetStatus(self):
     """Returns a status dictionary."""
-    status = self._extraction_worker.GetStatus()
+    if not self._extraction_worker:
+      status = {}
+    else:
+      status = self._extraction_worker.GetStatus()
+
     if self._critical_error:
       # Note seem unable to pass objects here.
       current_path_spec = self._extraction_worker.current_path_spec
@@ -1061,6 +1053,42 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
+    self._event_queue_producer = queue.ItemQueueProducer(
+        self._event_object_queue)
+    self._parse_error_queue_producer = queue.ItemQueueProducer(
+        self._parse_error_queue)
+
+    parser_mediator = parsers_mediator.ParserMediator(
+        self._event_queue_producer, self._parse_error_queue_producer,
+        self._knowledge_base)
+
+    # We need a resolver context per process to prevent multi processing
+    # issues with file objects stored in images.
+    resolver_context = context.Context()
+
+    self._extraction_worker = worker.BaseEventExtractionWorker(
+        self._worker_number, self._path_spec_queue, self._event_queue_producer,
+        self._parse_error_queue_producer, parser_mediator,
+        resolver_context=resolver_context)
+
+    self._extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
+
+    self._extraction_worker.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
+
+    self._extraction_worker.SetProcessArchiveFiles(self._process_archive_files)
+
+    if self._filter_object:
+      self._extraction_worker.SetFilterObject(self._filter_object)
+
+    if self._mount_path:
+      self._extraction_worker.SetMountPath(self._mount_path)
+
+    if self._text_prepend:
+      self._extraction_worker.SetTextPrepend(self._text_prepend)
+
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
@@ -1096,7 +1124,14 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    self._extraction_worker.SignalAbort()
+    if self._event_queue_producer:
+      self._event_queue_producer.SignalAbort()
+
+    if self._parse_error_queue_producer:
+      self._parse_error_queue_producer.SignalAbort()
+
+    if self._extraction_worker:
+      self._extraction_worker.SignalAbort()
 
 
 class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
