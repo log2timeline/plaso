@@ -7,6 +7,7 @@ import logging
 import multiprocessing
 import os
 import Queue
+import random
 import signal
 import sys
 import time
@@ -20,14 +21,18 @@ from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import process_info
-from plaso.multi_processing import rpc
 from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
-  """Class that defines the multi-processing process interface."""
+  """Class that defines the multi-processing process interface.
 
+  Attributes:
+    rpc_port: the port number of the process status RPC server.
+  """
+
+  _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
   _PROCESS_JOIN_TIMEOUT = 5.0
 
   def __init__(self, process_type, **kwargs):
@@ -45,6 +50,9 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._rpc_server = None
     self._status_is_running = False
     self._type = process_type
+
+    # We need to share the RPC port number with the engine process.
+    self.rpc_port = multiprocessing.Value('I', 0)
 
   @abc.abstractmethod
   def _GetStatus(self):
@@ -103,15 +111,31 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._rpc_server = xmlrpc.XMLProcessStatusRPCServer(self._GetStatus)
 
     hostname = u'localhost'
-    port = rpc.GetProxyPortNumberFromPID(self._pid)
+
+    # Try the PID as port number first otherwise pick something random
+    # between 1024 and 60000.
+    if self._pid < 1024 or self._pid > 60000:
+      port = random.randint(1024, 60000)
+    else:
+      port = self._pid
 
     if not self._rpc_server.Start(hostname, port):
+      port = 0
+      for _ in range(self._NUMBER_OF_RPC_SERVER_START_ATTEMPTS):
+        port = random.randint(1024, 60000)
+        if self._rpc_server.Start(hostname, port):
+          break
+
+        port = 0
+
+    if not port:
       logging.error((
           u'Unable to start a process status RPC server for {0!s} '
           u'(PID: {1:d})').format(self._name, self._pid))
-
       self._rpc_server = None
       return
+
+    self.rpc_port.value = port
 
     logging.debug(
         u'Process: {0!s} process status RPC server started'.format(self._name))
@@ -127,6 +151,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     self._rpc_server.Stop()
     self._rpc_server = None
+    self.rpc_port.value = 0
 
     logging.debug(
         u'Process: {0!s} process status RPC server stopped'.format(self._name))
@@ -421,9 +446,11 @@ class MultiProcessEngine(engine.BaseEngine):
         process_is_alive = False
 
       if process_is_alive:
+        rpc_port = process.rpc_port.value
         logging.warning((
-            u'Unable to retrieve process: {0:s} status via RPC socket: '
-            u'http://localhost:{1:d}').format(process.name, pid))
+            u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
+            u'RPC socket: http://localhost:{2:d}').format(
+                process.name, pid, rpc_port))
 
         processing_status_string = u'RPC error'
         status_indicator = definitions.PROCESSING_STATUS_RUNNING
@@ -659,14 +686,29 @@ class MultiProcessEngine(engine.BaseEngine):
       raise KeyError(
           u'RPC client (PID: {0:d}) already exists'.format(pid))
 
+    process = self._processes_per_pid[pid]
     rpc_client = xmlrpc.XMLProcessStatusRPCClient()
 
+    # Make sure that a process has started its RPC server. RPC port will
+    # be 0 if no server is available.
+    rpc_port = process.rpc_port.value
+    time_waited_for_process = 0.0
+    while not rpc_port:
+      time.sleep(0.1)
+      rpc_port = process.rpc_port.value
+      time_waited_for_process += 0.1
+
+      if time_waited_for_process >= 5.0:
+        raise IOError(
+            u'RPC client unable to determine server (PID: {0:d}) port.'.format(
+                pid))
+
     hostname = u'localhost'
-    port = rpc.GetProxyPortNumberFromPID(pid)
-    if not rpc_client.Open(hostname, port):
+
+    if not rpc_client.Open(hostname, rpc_port):
       raise IOError((
-          u'RPC client (PID: {0:d}) unable to connect to server: '
-          u'{1:s}:{2:d}').format(pid, hostname, port))
+          u'RPC client unable to connect to server (PID: {0:d}) '
+          u'http://{1:s}:{2:d}').format(pid, hostname, rpc_port))
 
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
