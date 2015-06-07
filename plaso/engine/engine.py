@@ -8,7 +8,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.engine import knowledge_base
 from plaso.engine import processing_status
 from plaso.engine import profiler
-from plaso.engine import queue
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -31,11 +30,8 @@ class BaseEngine(object):
     """
     self._enable_debug_output = False
     self._enable_profiling = False
-    self._event_queue_producer = queue.ItemQueueProducer(event_object_queue)
     self._path_spec_queue = path_spec_queue
     self._parse_error_queue = parse_error_queue
-    self._parse_error_queue_producer = queue.ItemQueueProducer(
-        parse_error_queue)
     self._processing_status = processing_status.ProcessingStatus()
     self._profiling_sample_rate = 1000
     self._profiling_type = u'all'
@@ -131,11 +127,6 @@ class BaseEngine(object):
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate
     self._profiling_type = profiling_type
-
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    self._event_queue_producer.SignalAbort()
-    self._parse_error_queue_producer.SignalAbort()
 
   @classmethod
   def SupportsMemoryProfiling(cls):

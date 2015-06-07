@@ -259,7 +259,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def SignalAbort(self):
     """Signals the engine to abort."""
-    super(SingleProcessEngine, self).SignalAbort()
+    self._event_queue_producer.SignalAbort()
+    self._parse_error_queue_producer.SignalAbort()
+
     if self._collector:
       self._collector.SignalAbort()
 
