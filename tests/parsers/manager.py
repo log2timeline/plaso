@@ -133,7 +133,7 @@ class ParsersManagerTest(unittest.TestCase):
     manager.ParsersManager.RegisterParser(TestParser)
 
     # Add a plugin, the parser name should be included.
-    test_filter_string = u'test_plugin, test_parser'
+    test_filter_string = u'test_plugin,test_parser'
     expected_set = set([u'test_parser', u'test_parser_with_plugins'])
     parser_set = set([name for name, _ in list(
         manager.ParsersManager.GetParsers(

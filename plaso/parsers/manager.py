@@ -11,7 +11,6 @@ class ParsersManager(object):
   """Class that implements the parsers manager."""
 
   _parser_classes = {}
-  _plugin_to_parser_map = {}
 
   @classmethod
   def DeregisterParser(cls, parser_class):
@@ -102,12 +101,14 @@ class ParsersManager(object):
     if not parser_filter_string:
       return [], []
 
-    if not cls._plugin_to_parser_map:
-      # Build the plugin to parser map.
-      for parser_name, parser_class in cls._parser_classes.iteritems():
-        if parser_class.SupportsPlugins():
-          for plugin_name in parser_class.GetPluginNames():
-            cls._plugin_to_parser_map[plugin_name] = parser_name
+    # Build the plugin to parser map, which cannot be a class member
+    # otherwise the map will become invalid if a parser with plugins
+    # is deregistered.
+    plugin_to_parser_map = {}
+    for parser_name, parser_class in cls._parser_classes.iteritems():
+      if parser_class.SupportsPlugins():
+        for plugin_name in parser_class.GetPluginNames():
+          plugin_to_parser_map[plugin_name] = parser_name
 
     includes = set()
     excludes = set()
@@ -131,10 +132,10 @@ class ParsersManager(object):
 
       elif filter_string in preset_categories:
         for entry in presets.GetParsersFromCategory(filter_string):
-          active_list.add(cls._plugin_to_parser_map.get(entry, entry))
+          active_list.add(plugin_to_parser_map.get(entry, entry))
 
       else:
-        active_list.add(cls._plugin_to_parser_map.get(
+        active_list.add(plugin_to_parser_map.get(
             filter_string, filter_string))
 
     return list(includes), list(excludes)
