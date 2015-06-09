@@ -41,6 +41,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     super(PsortFrontend, self).__init__()
 
     self._analysis_process_info = []
+    self._data_location = None
     self._filter_buffer = None
     self._filter_expression = None
     self._filter_object = None
@@ -146,7 +147,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # Wait for all analysis plugins to complete.
     for analysis_process_info in self._analysis_process_info:
-      name = analysis_process_info.plugin.name
+      name = analysis_process_info.plugin.NAME
       if analysis_process_info.plugin.LONG_RUNNING_PLUGIN:
         logging.warning(
             u'{0:s} may take a long time to run. It will not be automatically '
@@ -155,7 +156,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       else:
         report_wait = self.MAX_ANALYSIS_PLUGIN_REPORT_WAIT
       completion_event = analysis_process_info.completion_event
-      process = analysis_process_info.process
       logging.info(
           u'Waiting for analysis plugin: {0:s} to complete.'.format(name))
       if completion_event.wait(report_wait):
@@ -165,7 +165,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
             u'Analysis process {0:s} failed to compile its report in a '
             u'reasonable time. No report will be displayed or stored.'.format(
                 name))
-        process.terminate()
 
     logging.info(u'All analysis plugins are now completed.')
 
@@ -261,25 +260,25 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return output_module
 
-  def GetAnalysisPluginsAndEventQueues(self, analysis_plugins):
+  def GetAnalysisPluginsAndEventQueues(self, analysis_plugins_string):
     """Return a list of analysis plugins and event queues.
 
     Args:
-      analysis_plugins: comma separated string with names of analysis
-                        plugins to load.
+      analysis_plugins_string: comma separated string with names of analysis
+                               plugins to load.
 
     Returns:
       A tuple of two lists, one containing list of analysis plugins
       and the other a list of event queues.
     """
-    if not analysis_plugins:
+    if not analysis_plugins_string:
       return [], []
 
     # Start queues and load up plugins.
     event_queue_producers = []
     event_queues = []
     analysis_plugins_list = [
-        name.strip() for name in analysis_plugins.split(u',')]
+        name.strip() for name in analysis_plugins_string.split(u',')]
 
     for _ in range(0, len(analysis_plugins_list)):
       # TODO: add upper queue limit.
@@ -290,6 +289,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
         analysis_plugins_list, event_queues)
+
+    analysis_plugins = list(analysis_plugins)
 
     return analysis_plugins, event_queue_producers
 
@@ -371,7 +372,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         pre_obj.collection_information[u'file_processed'] = (
             self._storage_file_path)
         pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
-        pre_obj.collection_information[u'plugins'] = analysis_plugins
+        analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
+        pre_obj.collection_information[u'plugins'] = analysis_plugin_names
         time_of_run = timelib.Timestamp.GetNow()
         pre_obj.collection_information[u'time_of_run'] = time_of_run
 
@@ -386,7 +388,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         # pylint: disable=protected-access
         storage_file._pre_obj = pre_obj
 
-        knowledge_base_object = knowledge_base.KnowledgeBase()
+        knowledge_base_object = knowledge_base.KnowledgeBase(pre_obj=pre_obj)
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:
