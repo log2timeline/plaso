@@ -11,7 +11,8 @@ from plaso.lib import errors
 
 class VirusTotalAnalyzer(interface.HashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal."""
-  VIRUSTOTAL_API_REPORT_URL = u'https://www.virustotal.com/vtapi/v2/file/report'
+  _VIRUSTOTAL_API_REPORT_URL = (
+      u'https://www.virustotal.com/vtapi/v2/file/report')
 
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
@@ -91,7 +92,7 @@ class VirusTotalAnalyzer(interface.HashAnalyzer):
     resource_string = u', '.join(hashes)
     params = {u'apikey': self._api_key, u'resource': resource_string}
     try:
-      response = requests.get(self.VIRUSTOTAL_API_REPORT_URL, params=params)
+      response = requests.get(self._VIRUSTOTAL_API_REPORT_URL, params=params)
       response.raise_for_status()
     except requests.ConnectionError as exception:
       error_string = u'Unable to connect to VirusTotal: {0:s}'.format(

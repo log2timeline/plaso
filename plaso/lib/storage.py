@@ -1289,7 +1289,7 @@ class StorageFile(object):
       self._FlushBuffer()
 
   def AddEventObjects(self, event_objects):
-    """Adds an event objects to the storage.
+    """Adds event objects to the storage.
 
     Args:
       event_objects: a list or generator of event objects (instances of
@@ -1530,7 +1530,7 @@ class StorageFile(object):
         if tag_file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
-        # Since zipfile.ZipExtFile is not seekable we need to read upto
+        # Since zipfile.ZipExtFile is not seekable we need to read up to
         # the store offset.
         _ = tag_file_object.read(tag_index_value.store_offset)
 

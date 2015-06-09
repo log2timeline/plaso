@@ -15,6 +15,7 @@ class AnalysisFrontend(frontend.Frontend):
   def __init__(self):
     """Initializes the front-end object."""
     super(AnalysisFrontend, self).__init__()
+    self._data_location = None
     self._storage_file_path = None
 
   def AddStorageFileOptions(self, argument_group):
@@ -64,6 +65,8 @@ class AnalysisFrontend(frontend.Frontend):
     """
     return storage.StorageFile(self._storage_file_path, read_only=read_only)
 
+  # TODO: Frontends should not have any option parsing code in them. Refactor to
+  # remove this.
   def ParseOptions(self, options):
     """Parses the options and initializes the front-end.
 
@@ -84,4 +87,11 @@ class AnalysisFrontend(frontend.Frontend):
       raise errors.BadConfigOption(
           u'No such storage file {0:s}.'.format(self._storage_file_path))
 
-    self._data_location = getattr(options, u'data_location', None)
+  def SetDataLocation(self, data_location):
+    """Set the data location.
+
+    Args:
+      data_location: The path to the location that data files should be loaded
+                     from.
+    """
+    self._data_location = data_location

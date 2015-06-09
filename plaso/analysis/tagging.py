@@ -55,11 +55,14 @@ class TaggingPlugin(interface.AnalysisPlugin):
       True if a tag file is autodetected, False otherwise.
     """
     self._autodetect_tag_file_attempt = True
-    platform = analysis_mediator.GetPlatform()
+    if not analysis_mediator.data_location:
+      return False
+    platform = analysis_mediator.platform
     filename = self._OS_TAG_FILES.get(platform.lower(), None)
     if not filename:
       return False
-    tag_file_path = os.path.join(analysis_mediator.GetDataLocation(), filename)
+    logging.info(u'Using auto detected tag file: {0:s}'.format(filename))
+    tag_file_path = os.path.join(analysis_mediator.data_location, filename)
     self.SetAndLoadTagFile(tag_file_path)
     return True
 
@@ -77,6 +80,9 @@ class TaggingPlugin(interface.AnalysisPlugin):
         # tag file, so there's nothing we can do with this event (or any other).
         return
       if not self._AttemptAutoDetectTagFile(analysis_mediator):
+        logging.info(u'No tag definition file specified, and plaso was not '
+                     u'able to autoselect a tagging file. As no definitions '
+                     u'were specified, no events will be tagged.')
         return
 
     matched_tags = []
@@ -91,6 +97,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     event_tag.event_uuid = getattr(event_object, u'uuid')
     event_tag.comment = u'Tag applied by tagging analysis plugin.'
     event_tag.tags = matched_tags
+    logging.debug(u'Tagging event: {0!s}'.format(event_tag.event_uuid))
     self._tags.append(event_tag)
 
   def _ParseTaggingFile(self, input_path):

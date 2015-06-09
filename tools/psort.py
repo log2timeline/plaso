@@ -570,7 +570,9 @@ class PsortTool(analysis_tool.AnalysisTool):
     if self._output_filename:
       self._front_end.SetOutputFilename(self._output_filename)
 
-    if not self._data_location:
+    if self._data_location:
+      self._front_end.SetDataLocation(self._data_location)
+    else:
       logging.warning(u'Unable to automatically determine data location.')
 
     # TODO: refactor this.
