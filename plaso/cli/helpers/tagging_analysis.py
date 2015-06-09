@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The arguments helper for the tagging analysis plugin."""
 
+import os
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -47,10 +49,11 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
           u'Analysis plugin is not an instance of TaggingPlugin')
 
     tagging_file = getattr(options, u'tagging_file', None)
-    if tagging_file is None:
-      raise errors.BadConfigOption(u'Tagging file path not set.')
-
-    analysis_plugin.SetAndLoadTagFile(tagging_file)
+    if tagging_file:
+      if not os.path.exists(tagging_file) or not os.path.isfile(tagging_file):
+        raise errors.BadConfigOption(
+            u'Tagging file {0:s} does not exist.'.format(tagging_file))
+      analysis_plugin.SetAndLoadTagFile(tagging_file)
 
 
 manager.ArgumentHelperManager.RegisterHelper(TaggingAnalysisHelper)

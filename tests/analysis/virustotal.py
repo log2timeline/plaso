@@ -48,8 +48,9 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
       simulates a real response object returned by the requests library from the
       VirusTotal API.
     """
+    # pylint: disable=protected-access
     self.assertEqual(
-        url, virustotal.VirusTotalAnalyzer.VIRUSTOTAL_API_REPORT_URL)
+        url, virustotal.VirusTotalAnalyzer._VIRUSTOTAL_API_REPORT_URL)
     if params[u'resource'] == self.EVENT_1_HASH:
       response = MockResponse()
       response[u'resource'] = self.EVENT_1_HASH

@@ -117,6 +117,9 @@ class CLITool(object):
         if not os.path.exists(data_location):
           data_location = None
 
+    logging.info(
+        u'Data files will be loaded from {0:s} by default.'.format(
+            data_location))
     self._data_location = data_location
 
   def _ParseInformationalOptions(self, options):
