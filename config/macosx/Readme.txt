@@ -9,6 +9,7 @@ be installed and work as it should.
 What the installer does is to install all dependencies to plaso as well as
 plaso and dfvfs as separate packages.
 
-More documentation: http://plaso.kiddaland.net
+More documentation: https://github.com/log2timeline/plaso/wiki
+Build instructions: https://github.com/log2timeline/plaso/wiki/Development-release-Mac-OS-X
 
 Questions/comments/thoughts? send them to log2timeline-discuss@googlegroups.com
