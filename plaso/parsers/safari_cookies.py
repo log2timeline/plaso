@@ -12,8 +12,7 @@ from plaso.lib import eventdata
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-from plaso.parsers.cookie_plugins import interface as cookie_interface
+from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
 
 class BinaryCookieEvent(time_events.CocoaTimeEvent):
@@ -82,7 +81,8 @@ class BinaryCookieParser(interface.SingleFileBaseParser):
   def __init__(self):
     """Initialize the parser."""
     super(BinaryCookieParser, self).__init__()
-    self._cookie_plugins = cookie_interface.GetPlugins()
+    self._cookie_plugins = (
+        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
   def _ParsePage(self, page_data, parser_mediator):
     """Extract events from a page and produce events.
