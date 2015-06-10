@@ -45,7 +45,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        Choose a partition number from a disk image. '
        u'This'),
       (u'                        partition number should correspond to the '
-       u'partion'),
+       u'partition'),
       (u'                        number on the disk image, starting from '
        u'partition 1.'),
       u'                        All partitions can be defined as: "all".',

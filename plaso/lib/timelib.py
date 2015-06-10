@@ -638,7 +638,7 @@ class Timestamp(object):
                 YYYY-DD-MM, etc).
       gmt_as_timezone: Sometimes the dateutil parser will interpret GMT and UTC
                        the same way, that is not make a distinction. By default
-                       this is set to true, that is GMT can be intepreted
+                       this is set to true, that is GMT can be interpreted
                        differently than UTC. If that is not the expected result
                        this attribute can be set to false.
 
@@ -743,7 +743,7 @@ def StringToDatetime(
               etc).
     gmt_as_timezone: Sometimes the dateutil parser will interpret GMT and UTC
                      the same way, that is not make a distinction. By default
-                     this is set to true, that is GMT can be intepreted
+                     this is set to true, that is GMT can be interpreted
                      differently than UTC. If that is not the expected result
                      this attribute can be set to false.
 

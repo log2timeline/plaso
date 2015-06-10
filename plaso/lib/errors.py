@@ -24,6 +24,8 @@ class ConnectionError(Error):
 class EngineAbort(Error):
   """Class that defines an engine initiated abort exception."""
 
+class FileSystemScannerError(Error):
+  """Raised when a there is an issue scanning for a file system."""
 
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""

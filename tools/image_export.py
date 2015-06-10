@@ -145,7 +145,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         u'--include_duplicates', dest=u'include_duplicates',
         action=u'store_true', default=False, help=(
             u'If extraction from VSS is enabled, by default a digest hash '
-            u'is calcuted for each file. These hases are compared to the '
+            u'is calculated for each file. These hashes are compared to the '
             u'previously exported files and duplicates are skipped. Use '
             u'this option to include duplicate files in the export.'))
 

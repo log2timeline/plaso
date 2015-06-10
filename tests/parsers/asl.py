@@ -44,6 +44,8 @@ class AslParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.read_gid, 0xffffffff)
     self.assertEqual(event_object.level, 4)
 
+    # Note that "compatiblity" is spelt incorrectly in the actual message being
+    # tested here.
     expected_message = (
         u'Incorrect NSStringEncoding value 0x8000100 detected. '
         u'Assuming NSASCIIStringEncoding. Will stop this compatiblity '

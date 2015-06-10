@@ -75,7 +75,7 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
 
   def __init__(self):
-    """Initialize an attribue value expander."""
+    """Initialize an attribute value expander."""
     super(PlasoValueExpander, self).__init__()
 
   def _GetMessage(self, event_object):
@@ -355,7 +355,7 @@ class TrueObject(object):
     """Return a string to make regular expression searches possible.
 
     Returns:
-      A string that containes the original query with some of the matches
+      A string that contains the original query with some of the matches
       expanded, perhaps several times.
     """
     # Regular expressions in pfilter may include the following escapes:

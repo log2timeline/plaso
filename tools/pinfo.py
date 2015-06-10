@@ -76,7 +76,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
                             PreprocessObject).
       compare_storage_information: The storage information object (instance of
                                    PreprocessObject) to compare against.
-      ignore_values: optional list of value indentifier to ignore. The default
+      ignore_values: optional list of value identifier to ignore. The default
                      is None.
 
     Returns:
@@ -219,7 +219,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     if number_of_list_entries < storage_information_list_length:
       self._output_writer.Write((
-          u'Storage file: {0:s} contains: {1:d} addititional storage '
+          u'Storage file: {0:s} contains: {1:d} additional storage '
           u'information entries.\n').format(
               self._storage_file_path,
               storage_information_list_length - number_of_list_entries))
@@ -227,7 +227,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     if number_of_list_entries < compare_storage_information_list_length:
       self._output_writer.Write((
-          u'Storage file: {0:s} contains: {1:d} addititional storage '
+          u'Storage file: {0:s} contains: {1:d} additional storage '
           u'information entries.\n').format(
               self._compare_storage_file_path,
               compare_storage_information_list_length - number_of_list_entries))
@@ -318,7 +318,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       A line of text containing the formatted processing information value.
     """
     description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
-    # Make sure we have the same tab aligment for all the values.
+    # Make sure we have the same tab alignment for all the values.
     if len(description) < 7:
       text = u'\t{0:s}\t\t\t: {1!s}'.format(description, value)
     elif len(description) < 15:

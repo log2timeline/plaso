@@ -157,7 +157,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Prints the processing status.
 
     Args:
-      processing_status: the processsing status (instance of ProcessingStatus).
+      processing_status: the processing status (instance of ProcessingStatus).
     """
     if self._stdout_output_writer:
       # ANSI escape sequence to clear screen.
@@ -220,7 +220,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Prints the processing status as a stream of output.
 
     Args:
-      processing_status: the processsing status (instance of ProcessingStatus).
+      processing_status: the processing status (instance of ProcessingStatus).
     """
     if processing_status.GetExtractionCompleted():
       self._output_writer.Write(

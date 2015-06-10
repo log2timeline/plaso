@@ -367,7 +367,7 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers: List of allowed volume identifiers.
 
     Returns:
-      A string containing the parition identifier or "all".
+      A string containing the partition identifier or "all".
 
     Raises:
       FileSystemScannerError: if the source cannot be processed.
@@ -597,7 +597,7 @@ class StorageMediaTool(tools.CLITool):
         u'--partition', dest=u'partition_number', action=u'store', type=str,
         default=None, help=(
             u'Choose a partition number from a disk image. This partition '
-            u'number should correspond to the partion number on the disk '
+            u'number should correspond to the partition number on the disk '
             u'image, starting from partition 1. All partitions can be '
             u'defined as: "all".'))
 

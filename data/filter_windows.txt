@@ -10,7 +10,7 @@
 # * Windows Event Log files.
 # * Prefetch files.
 # * SetupAPI file.
-# * Application Compatability files, the Recentfilecache and AmCachefile.
+# * Application Compatibility files, the Recentfilecache and AmCachefile.
 # * Windows At job files.
 # * Browser history: IE, Firefox and Chrome.
 # * Browser cookie files: IE.
