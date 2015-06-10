@@ -54,6 +54,8 @@ class HashersManagerTest(unittest.TestCase):
     manager.HashersManager.DeregisterHasher(TestHasher)
     names = manager.HashersManager.GetHasherNamesFromString(test_strings)
     self.assertEqual(2, len(names))
+    names = manager.HashersManager.GetHasherNamesFromString(u'all')
+    self.assertEqual(len(names), len(manager.HashersManager._hasher_classes))
 
   def testGetHasherObject(self):
     """Tests the GetHasherObject function."""
