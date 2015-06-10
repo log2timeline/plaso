@@ -41,7 +41,7 @@ class StorageMediaTool(tools.CLITool):
         input_reader=input_reader, output_writer=output_writer)
     self._filter_file = None
     # TODO: refactor to partitions.
-    self._partition_number = None
+    self._partition_string = None
     self._partition_offset = None
     self._process_vss = False
     # TODO: refactor to front-end.
@@ -90,7 +90,7 @@ class StorageMediaTool(tools.CLITool):
   # TODO: refactor this method that it become more clear what it is
   # supposed to do.
   def _GetTSKPartitionIdentifiers(
-      self, scan_node, partition_number=None, partition_offset=None):
+      self, scan_node, partition_string=None, partition_offset=None):
     """Determines the TSK partition identifiers.
 
     This method first checks for the preferred partition number, then for
@@ -99,8 +99,8 @@ class StorageMediaTool(tools.CLITool):
 
     Args:
       scan_node: the scan node (instance of dfvfs.ScanNode).
-      partition_number: Optional preferred partition number. The default is
-                        None.
+      partition_string: Optional preferred partition number string. The default
+                        is None.
       partition_offset: Optional preferred partition byte offset. The default
                         is None.
 
@@ -126,15 +126,25 @@ class StorageMediaTool(tools.CLITool):
       logging.info(u'No partitions found.')
       return
 
-    if partition_number == u'all':
+    if partition_string == u'all':
       return volume_identifiers
+
+    if partition_string is not None and not partition_string.startswith(u'p'):
+      return volume_identifiers
+
+    partition_number = None
+    if partition_string:
+      try:
+        partition_number = int(partition_string[1:], 10)
+      except ValueError:
+        pass
 
     if partition_number is not None and partition_number > 0:
       # Plaso uses partition numbers starting with 1 while dfvfs expects
       # the volume index to start with 0.
       volume = volume_system.GetVolumeByIndex(partition_number - 1)
       if volume:
-        return [partition_number - 1]
+        return [u'p{0:d}'.format(partition_number)]
 
       logging.warning(u'No such partition: {0:d}.'.format(partition_number))
 
@@ -233,17 +243,18 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._partition_number = getattr(options, u'partition_number', None)
-    if self._partition_number not in [None, u'all']:
-      if not isinstance(self._partition_number, basestring):
+    self._partition_string = getattr(options, u'partition_number', None)
+    if self._partition_string not in [None, u'all']:
+      if not isinstance(self._partition_string, basestring):
         raise errors.BadConfigOption(
             u'Invalid partition number {0!s}.'.format(
-                self._partition_number))
+                self._partition_string))
       try:
-        self._partition_number = int(self._partition_number, 10)
+        partition_number = int(self._partition_string, 10)
+        self._partition_string = u'p{0:d}'.format(partition_number)
       except ValueError:
         raise errors.BadConfigOption(
-            u'Invalid partition number: {0:s}.'.format(self._partition_number))
+            u'Invalid partition number: {0:s}.'.format(self._partition_string))
 
     self._partition_offset = getattr(options, u'image_offset_bytes', None)
     if (self._partition_offset is not None and
@@ -549,12 +560,12 @@ class StorageMediaTool(tools.CLITool):
               parent=sub_scan_node.path_spec)
           self._source_path_specs.append(path_spec)
 
-        # TODO: move the TSK current volume scan node to the same level as
-        # the VSS scan node.
-        for sub_scan_node in scan_node.sub_nodes:
-          if sub_scan_node.type_indicator == (
-              dfvfs_definitions.TYPE_INDICATOR_TSK):
-            self._source_path_specs.append(sub_scan_node.path_spec)
+      # TODO: move the TSK current volume scan node to the same level as
+      # the VSS scan node.
+      for sub_scan_node in scan_node.sub_nodes:
+        if sub_scan_node.type_indicator == (
+            dfvfs_definitions.TYPE_INDICATOR_TSK):
+          self._source_path_specs.append(sub_scan_node.path_spec)
 
     # TODO: replace check with dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS.
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
@@ -713,7 +724,7 @@ class StorageMediaTool(tools.CLITool):
       partition_identifiers = None
     else:
       partition_identifiers = self._GetTSKPartitionIdentifiers(
-          scan_node, partition_number=self._partition_number,
+          scan_node, partition_string=self._partition_string,
           partition_offset=self._partition_offset)
 
     if not partition_identifiers:
