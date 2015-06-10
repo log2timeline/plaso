@@ -36,7 +36,8 @@ class HashersManager(object):
 
     Args:
       hasher_names_string: Comma separated string of names of
-                           hashers to enable enable.
+                           hashers to enable enable, or the string 'all', to
+                           enable all hashers.
 
     Returns:
       A list of names of valid hashers from the string, or an empty list if
@@ -46,6 +47,9 @@ class HashersManager(object):
 
     if not hasher_names_string:
       return hasher_names
+
+    if hasher_names_string.strip() == u'all':
+      return cls.GetHasherNames()
 
     for hasher_name in hasher_names_string.split(u','):
       hasher_name = hasher_name.strip()
