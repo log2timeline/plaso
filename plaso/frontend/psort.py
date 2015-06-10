@@ -121,6 +121,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       A time slice object (instance of TimeSlice).
     """
     if event_time_string:
+      # TODO: move this to a place where bad config can be raised.
       event_timestamp = timelib.Timestamp.FromTimeString(
           event_time_string, timezone=timezone)
     else:

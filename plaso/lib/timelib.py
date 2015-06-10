@@ -16,6 +16,8 @@ import logging
 import time
 import pytz
 
+from plaso.lib import errors
+
 
 MONTH_DICT = {
     'jan': 1,
@@ -623,15 +625,12 @@ class Timestamp(object):
 
   @classmethod
   def FromTimeString(
-      cls, time_string, timezone=pytz.UTC, dayfirst=False,
-      gmt_as_timezone=True):
+      cls, time_string, dayfirst=False, gmt_as_timezone=True,
+      timezone=pytz.UTC):
     """Converts a string containing a date and time value into a timestamp.
 
     Args:
       time_string: String that contains a date and time value.
-      timezone: Optional timezone object (instance of pytz.timezone) that
-                the data and time value in the string represents. This value
-                is used when the timezone cannot be determined from the string.
       dayfirst: An optional boolean argument. If set to true then the
                 parser will change the precedence in which it parses timestamps
                 from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be
@@ -641,13 +640,33 @@ class Timestamp(object):
                        this is set to true, that is GMT can be interpreted
                        differently than UTC. If that is not the expected result
                        this attribute can be set to false.
+      timezone: Optional timezone object (instance of pytz.timezone) that
+                the data and time value in the string represents. This value
+                is used when the timezone cannot be determined from the string.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      An integer containing the timestamp.
+
+    Raises:
+      TimestampError: if the time string could not be parsed.
     """
-    datetime_object = StringToDatetime(
-        time_string, timezone=timezone, dayfirst=dayfirst,
-        gmt_as_timezone=gmt_as_timezone)
+    if not gmt_as_timezone and time_string.endswith(' GMT'):
+      time_string = u'{0:s}UTC'.format(time_string[:-3])
+
+    try:
+      # TODO: deprecate the use of dateutil parser.
+      datetime_object = dateutil.parser.parse(time_string, dayfirst=dayfirst)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.TimestampError((
+          u'Unable to convert time string: {0:s} in to a datetime object '
+          u'with error: {1:s}').format(time_string, exception))
+
+    if datetime_object.tzinfo:
+      datetime_object = datetime_object.astimezone(pytz.UTC)
+    else:
+      datetime_object = timezone.localize(datetime_object)
+
     return cls.FromPythonDatetime(datetime_object)
 
   @classmethod
@@ -724,48 +743,6 @@ class Timestamp(object):
     rounded = round(float(leftovers) / cls.MICRO_SECONDS_PER_SECOND)
 
     return int(scrubbed + rounded * cls.MICRO_SECONDS_PER_SECOND)
-
-
-# TODO: deprecate in favor of CopyFromString, which will remove the
-# dependency on dateutil.parser.
-def StringToDatetime(
-    time_string, timezone=pytz.UTC, dayfirst=False, gmt_as_timezone=True):
-  """Converts a string representation of a timestamp into a datetime object.
-
-  Args:
-    time_string: String that contains a date and time value.
-    timezone: Optional timezone object (instance of pytz.timezone) that
-               the data and time value in the string represents. This value
-               is used when the timezone cannot be determined from the string.
-    dayfirst: An optional boolean argument. If set to true then the
-              parser will change the precedence in which it parses timestamps
-              from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be YYYY-DD-MM,
-              etc).
-    gmt_as_timezone: Sometimes the dateutil parser will interpret GMT and UTC
-                     the same way, that is not make a distinction. By default
-                     this is set to true, that is GMT can be interpreted
-                     differently than UTC. If that is not the expected result
-                     this attribute can be set to false.
-
-  Returns:
-    A datetime object.
-  """
-  if not gmt_as_timezone and time_string.endswith(' GMT'):
-    time_string = u'{0:s}UTC'.format(time_string[:-3])
-
-  try:
-    datetime_object = dateutil.parser.parse(time_string, dayfirst=dayfirst)
-
-  except (TypeError, ValueError) as exception:
-    logging.error(
-        u'Unable to copy {0:s} to a datetime object with error: {1:s}'.format(
-            time_string, exception))
-    return datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
-
-  if datetime_object.tzinfo:
-    return datetime_object.astimezone(pytz.UTC)
-
-  return timezone.localize(datetime_object)
 
 
 def GetCurrentYear():

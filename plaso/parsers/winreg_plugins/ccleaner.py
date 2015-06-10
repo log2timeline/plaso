@@ -2,6 +2,7 @@
 """Parser for the CCleaner Registry key."""
 
 from plaso.events import windows_events
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
@@ -41,8 +42,14 @@ class CCleanerPlugin(interface.KeyPlugin):
       text_dict[value.name] = value.data
 
       if value.name == u'UpdateKey':
-        timestamp = timelib.Timestamp.FromTimeString(
-            value.data, timezone=parser_mediator.timezone)
+        try:
+          timestamp = timelib.Timestamp.FromTimeString(
+              value.data, timezone=parser_mediator.timezone)
+        except errors.TimestampError:
+          parser_mediator.ProduceParseError(
+              u'Unable to parse time string: {0:s}'.format(value.data))
+          continue
+
         event_object = windows_events.WindowsRegistryEvent(
             timestamp, key.path, text_dict, offset=key.offset,
             registry_type=registry_type)

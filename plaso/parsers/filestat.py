@@ -18,7 +18,8 @@ class FileStatEvent(time_events.TimestampEvent):
     """Initializes the event.
 
     Args:
-      timestamp: The timestamp value.
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC
       usage: The usage string describing the timestamp.
       allocated: Boolean value to indicate the file entry is allocated.
       size: The file size in bytes.
