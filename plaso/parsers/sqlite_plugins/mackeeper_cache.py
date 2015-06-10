@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Mac OS X MacKeeper cache database."""
 
+import codecs
 import json
 
-from plaso.lib import event
+from plaso.events import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import sqlite
@@ -88,7 +90,7 @@ def ParseChatData(data):
   return data_store
 
 
-class MacKeeperCacheEvent(event.EventObject):
+class MacKeeperCacheEvent(time_events.TimestampEvent):
   """Convenience class for a MacKeeper Cache event."""
   DATA_TYPE = u'mackeeper:cache'
 
@@ -96,31 +98,25 @@ class MacKeeperCacheEvent(event.EventObject):
     """Initializes the event object.
 
     Args:
-      timestamp: A timestamp as a number of milliseconds since Epoch
-                 or as a UTC string.
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC
       description: The description of the cache entry.
       identifier: The row identifier.
       url: The MacKeeper URL value that is stored in every event.
       data_dict: A dict object with the descriptive information.
     """
-    super(MacKeeperCacheEvent, self).__init__()
+    super(MacKeeperCacheEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
 
-    # Two different types of timestamps stored in log files.
-    if isinstance(timestamp, (int, long)):
-      self.timestamp = timelib.Timestamp.FromJavaTime(timestamp)
-    else:
-      self.timestamp = timelib.Timestamp.FromTimeString(timestamp)
-
-    self.timestamp_desc = eventdata.EventTimestamp.ADDED_TIME
     self.description = description
-    self.offset = identifier
-    self.text = data_dict.get(u'text', None)
-    self.user_sid = data_dict.get(u'sid', None)
-    self.user_name = data_dict.get(u'user', None)
     self.event_type = data_dict.get(u'event_type', None)
-    self.room = data_dict.get(u'room', None)
+    self.offset = identifier
     self.record_id = data_dict.get(u'id', None)
+    self.room = data_dict.get(u'room', None)
+    self.text = data_dict.get(u'text', None)
     self.url = url
+    self.user_name = data_dict.get(u'user', None)
+    self.user_sid = data_dict.get(u'sid', None)
 
 
 class MacKeeperCachePlugin(interface.SQLitePlugin):
@@ -163,6 +159,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     if key_url.endswith(u'plist'):
       description = u'Configuration Definition'
       data[u'text'] = u'Plist content added to cache.'
+
     elif key_url.startswith(u'http://event.zeobit.com'):
       description = u'MacKeeper Event'
       try:
@@ -170,6 +167,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         data[u'text'] = part.replace(u'&', u' ')
       except UnicodeDecodeError:
         data[u'text'] = u'N/A'
+
     elif key_url.startswith(u'http://account.zeobit.com'):
       description = u'Account Activity'
       _, _, activity = key_url.partition(u'#')
@@ -177,11 +175,11 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         data[u'text'] = u'Action started: {0:s}'.format(activity)
       else:
         data[u'text'] = u'Unknown activity.'
+
     elif key_url.startswith(u'http://support.') and u'chat' in key_url:
       description = u'Chat '
       try:
-        # TODO: replace by row['data'].encode(ENCODING).
-        jquery = unicode(row['data'])
+        jquery = codecs.decode(row['data'], u'utf-8')
       except UnicodeDecodeError:
         jquery = u''
 
@@ -202,8 +200,19 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         if not data[u'text']:
           data[u'text'] = u'No additional data.'
 
+    time_value = row['time_string']
+    if isinstance(time_value, (int, long)):
+      timestamp = timelib.Timestamp.FromJavaTime(time_value)
+    else:
+      try:
+        timestamp = timelib.Timestamp.FromTimeString(time_value)
+      except errors.TimestampError:
+        parser_mediator.ProduceParseError(
+            u'Unable to parse time string: {0:s}'.format(time_value))
+        return
+
     event_object = MacKeeperCacheEvent(
-        row['time_string'], description, row['id'], key_url, data)
+        timestamp, description, row['id'], key_url, data)
     parser_mediator.ProduceEvent(event_object, query=query)
 
 
