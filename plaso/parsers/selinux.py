@@ -142,10 +142,13 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+
+    Raises:
+      TimestampError: if timestamp is not defined.
     """
     if not self.timestamp:
-      raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse entry, timestamp not defined.')
+      raise errors.TimestampError(
+          u'Unable to parse log line - missing timestamp.')
 
     offset = getattr(self, u'entry_offset', 0)
     event_object = SELinuxLineEvent(self.timestamp, offset, self.attributes)

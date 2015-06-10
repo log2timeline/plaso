@@ -10,7 +10,7 @@ from plaso.formatters import mediator as formatters_mediator
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
 from plaso.frontend import presets
-
+from plaso.lib import errors
 from plaso.lib import limit
 from plaso.lib import objectfilter
 from plaso.lib import timelib
@@ -262,9 +262,8 @@ class DateCompareObject(object):
       try:
         self.data = timelib.Timestamp.FromTimeString(
             utils.GetUnicodeString(data))
-      except ValueError as exception:
-        raise ValueError(u'Wrongly formatted date string: {0:s} - {1:s}'.format(
-            data, exception))
+      except (ValueError, errors.TimestampError):
+        raise ValueError(u'Wrongly formatted date string: {0:s}'.format(data))
     elif isinstance(data, datetime.datetime):
       self.data = timelib.Timestamp.FromPythonDatetime(data)
     elif isinstance(DateCompareObject, data):

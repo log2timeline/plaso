@@ -14,6 +14,7 @@ from dfvfs.resolver import context
 from xml.etree import ElementTree
 
 from plaso.events import plist_event
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
@@ -100,9 +101,15 @@ class MacUserPlugin(interface.PlistPlugin):
         # as the key and the other one as the value.
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
 
-      if policy_dict.get(u'passwordLastSetTime', 0):
-        timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get(u'passwordLastSetTime', u'0'))
+      time_string = policy_dict.get(u'passwordLastSetTime', None)
+      if time_string:
+        try:
+          timestamp = timelib.Timestamp.FromTimeString(time_string)
+        except errors.TimestampError:
+          parser_mediator.ProduceParseError(
+              u'Unable to parse time string: {0:s}'.format(time_string))
+          timestamp = 0
+
         shadow_hash_data = match.get(u'ShadowHashData', None)
         if timestamp > cocoa_zero and isinstance(
             shadow_hash_data, (list, tuple)):
@@ -142,18 +149,30 @@ class MacUserPlugin(interface.PlistPlugin):
               self._ROOT, u'passwordLastSetTime', timestamp, description)
           parser_mediator.ProduceEvent(event_object)
 
-      if policy_dict.get(u'lastLoginTimestamp', 0):
-        timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get(u'lastLoginTimestamp', u'0'))
+      time_string = policy_dict.get(u'lastLoginTimestamp', None)
+      if time_string:
+        try:
+          timestamp = timelib.Timestamp.FromTimeString(time_string)
+        except errors.TimestampError:
+          parser_mediator.ProduceParseError(
+              u'Unable to parse time string: {0:s}'.format(time_string))
+          timestamp = 0
+
         description = u'Last login from {0:s} ({1!s})'.format(account, uid)
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'lastLoginTimestamp', timestamp, description)
           parser_mediator.ProduceEvent(event_object)
 
-      if policy_dict.get(u'failedLoginTimestamp', 0):
-        timestamp = timelib.Timestamp.FromTimeString(
-            policy_dict.get(u'failedLoginTimestamp', u'0'))
+      time_string = policy_dict.get(u'failedLoginTimestamp', None)
+      if time_string:
+        try:
+          timestamp = timelib.Timestamp.FromTimeString(time_string)
+        except errors.TimestampError:
+          parser_mediator.ProduceParseError(
+              u'Unable to parse time string: {0:s}'.format(time_string))
+          timestamp = 0
+
         description = (
             u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
                 account, uid, policy_dict.get(u'failedLoginCount', 0))

@@ -187,7 +187,7 @@ class SlowLexicalTextParser(
           self.ParseLine(parser_mediator)
           file_verified = True
 
-        except errors.TimestampNotCorrectlyFormed as exception:
+        except errors.TimestampError as exception:
           error_count += 1
           if file_verified:
             logging.debug(
@@ -286,14 +286,19 @@ class SlowLexicalTextParser(
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
+
+    Raises:
+      TimestampError: if time is not defined or invalid.
     """
     if not self.attributes[u'time']:
-      raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse timestamp, time not set.')
+      raise errors.TimestampError(
+          u'Unable to parse log line: {0:s} - missing time.'.format(
+              self.PrintLine()))
 
     if not self.attributes[u'iyear']:
-      raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse timestamp, year not set.')
+      raise errors.TimestampError(
+          u'Unable to parse log line: {0:s} - missing year.'.format(
+              self.PrintLine()))
 
     times = self.attributes[u'time'].split(u':')
     if self.local_zone:
@@ -302,9 +307,9 @@ class SlowLexicalTextParser(
       timezone = pytz.UTC
 
     if len(times) < 3:
-      raise errors.TimestampNotCorrectlyFormed((
-          u'Unable to parse timestamp, not of the format HH:MM:SS '
-          u'[{0:s}]').format(self.PrintLine()))
+      raise errors.TimestampError(
+          u'Unable to parse log line - unsupported format: {0:s}'.format(
+              self.PrintLine()))
     try:
       secs = times[2].split('.')
       if len(secs) == 2:
@@ -319,8 +324,8 @@ class SlowLexicalTextParser(
           int(sec), microseconds=int(us), timezone=timezone)
 
     except ValueError as exception:
-      raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse: {0:s} with error: {1:s}'.format(
+      raise errors.TimestampError(
+          u'Unable to parse log line: {0:s} with error: {1:s}'.format(
               self.PrintLine(), exception))
 
     event_object = self.CreateEvent(

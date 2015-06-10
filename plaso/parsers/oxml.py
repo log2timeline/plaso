@@ -24,16 +24,16 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
 
   DATA_TYPE = u'metadata:openxml'
 
-  def __init__(self, timestamp_string, usage, metadata):
+  def __init__(self, timestamp, usage, metadata):
     """Initializes the event object.
 
     Args:
-      timestamp_string: An ISO 8601 representation of a timestamp.
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC
       usage: The description of the usage of the time value.
       metadata: A dict object containing extracted metadata.
     """
-    timestamp = timelib.Timestamp.FromTimeString(timestamp_string)
-    super(OpenXMLParserEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
+    super(OpenXMLParserEvent, self).__init__(timestamp, usage)
     for key, value in metadata.iteritems():
       setattr(self, key, value)
 
@@ -67,6 +67,28 @@ class OpenXMLParser(interface.SingleFileBaseParser):
     # TODO: Add unicode support.
     fix_key = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
+
+  def _GetTimestampFromString(self, parser_mediator, time_string):
+    """Determines a timestamp from the time string.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      time_string: A string containing the date and time.
+
+    Returns:
+      The timestamp time value. The timestamp contains the number of
+      microseconds since Jan 1, 1970 00:00:00 UTC or None if the time string
+      could not be parsed.
+    """
+    if not time_string:
+      return
+
+    try:
+      return timelib.Timestamp.FromTimeString(time_string)
+
+    except errors.TimestampError:
+      parser_mediator.ProduceParseError(
+          u'Unable to parse time string: {0:s}'.format(time_string))
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an OXML file-like object.
@@ -138,22 +160,27 @@ class OpenXMLParser(interface.SingleFileBaseParser):
               tag_name = self._METAKEY_TRANSLATE.get(tag, self._FixString(tag))
               metadata[tag_name] = element.text
 
-    created = timestamps.get(u'created', None)
-    if created:
+    event_object = None
+
+    time_string = timestamps.get(u'created', None)
+    timestamp = self._GetTimestampFromString(parser_mediator, time_string)
+    if timestamp is not None:
       event_object = OpenXMLParserEvent(
-          created, eventdata.EventTimestamp.CREATION_TIME, metadata)
+          timestamp, eventdata.EventTimestamp.CREATION_TIME, metadata)
       parser_mediator.ProduceEvent(event_object)
 
-    modified = timestamps.get(u'modified', None)
-    if modified:
+    time_string = timestamps.get(u'modified', None)
+    timestamp = self._GetTimestampFromString(parser_mediator, time_string)
+    if timestamp is not None:
       event_object = OpenXMLParserEvent(
-          modified, eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
+          timestamp, eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
       parser_mediator.ProduceEvent(event_object)
 
-    last_printed = timestamps.get(u'lastPrinted', None)
-    if last_printed:
+    time_string = timestamps.get(u'lastPrinted', None)
+    timestamp = self._GetTimestampFromString(parser_mediator, time_string)
+    if timestamp is not None:
       event_object = OpenXMLParserEvent(
-          last_printed, eventdata.EventTimestamp.LAST_PRINTED, metadata)
+          timestamp, eventdata.EventTimestamp.LAST_PRINTED, metadata)
       parser_mediator.ProduceEvent(event_object)
 
 

@@ -67,8 +67,8 @@ class SourceScannerError(Error):
   """Class that defines source scanner errors."""
 
 
-class TimestampNotCorrectlyFormed(Error):
-  """Raised when there is an error adding a timestamp to an EventObject."""
+class TimestampError(Error):
+  """Class that defines timestamp errors."""
 
 
 class UnableToOpenFile(Error):

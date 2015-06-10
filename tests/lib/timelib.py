@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """This file contains a unit test for the timelib in Plaso."""
 
-import calendar
 import datetime
 import unittest
 
+from plaso.lib import errors
 from plaso.lib import timelib
 
 import pytz
@@ -139,7 +139,7 @@ class TimeLibTest(unittest.TestCase):
   def testHFSTimes(self):
     """Tests the HFS timestamp conversion."""
     timestamp = timelib.Timestamp.FromHfsTime(
-        3458215528, timezone=pytz.timezone('EST5EDT'), is_dst=True)
+        3458215528, timezone=pytz.timezone(u'EST5EDT'), is_dst=True)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-01 15:25:28-04:00')
     self.assertEqual(timestamp, expected_timestamp)
@@ -286,16 +286,16 @@ class TimeLibTest(unittest.TestCase):
 
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""
-    self.assertEqual(timelib.MONTH_DICT['nov'], 11)
-    self.assertEqual(timelib.MONTH_DICT['jan'], 1)
-    self.assertEqual(timelib.MONTH_DICT['may'], 5)
+    self.assertEqual(timelib.MONTH_DICT[u'nov'], 11)
+    self.assertEqual(timelib.MONTH_DICT[u'jan'], 1)
+    self.assertEqual(timelib.MONTH_DICT[u'may'], 5)
 
-    month = timelib.MONTH_DICT.get('doesnotexist')
+    month = timelib.MONTH_DICT.get(u'doesnotexist')
     self.assertEqual(month, None)
 
   def testLocaltimeToUTC(self):
     """Test the localtime to UTC conversion."""
-    timezone = pytz.timezone('CET')
+    timezone = pytz.timezone(u'CET')
 
     local_timestamp = timelib.Timestamp.CopyFromString(u'2013-01-01 01:00:00')
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
@@ -350,7 +350,7 @@ class TimeLibTest(unittest.TestCase):
         local_timestamp)
 
     # Use a timezone in the Western Hemisphere.
-    timezone = pytz.timezone('EST')
+    timezone = pytz.timezone(u'EST')
 
     local_timestamp = timelib.Timestamp.CopyFromString(u'2013-01-01 00:00:00')
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
@@ -360,7 +360,7 @@ class TimeLibTest(unittest.TestCase):
 
   def testCopyToDatetime(self):
     """Test the copy to datetime object."""
-    timezone = pytz.timezone('CET')
+    timezone = pytz.timezone(u'CET')
 
     timestamp = timelib.Timestamp.CopyFromString(u'2013-03-14 20:20:08.850041')
     datetime_object = timelib.Timestamp.CopyToDatetime(timestamp, timezone)
@@ -383,15 +383,15 @@ class TimeLibTest(unittest.TestCase):
 
     # Check certain variance of this timestamp.
     timestamp = timelib.Timestamp.FromTimeString(
-        '2013-10-01 14:00:00', pytz.timezone('Europe/Rome'))
+        u'2013-10-01 14:00:00', timezone=pytz.timezone(u'Europe/Rome'))
     self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromTimeString(
-        '2013-10-01 12:00:00', pytz.timezone('UTC'))
+        u'2013-10-01 12:00:00', timezone=pytz.timezone(u'UTC'))
     self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromTimeString(
-        '2013-10-01 05:00:00', pytz.timezone('PST8PDT'))
+        u'2013-10-01 05:00:00', timezone=pytz.timezone(u'PST8PDT'))
     self.assertEqual(timestamp, expected_timestamp)
 
     # Now to test outside of the daylight savings.
@@ -399,20 +399,20 @@ class TimeLibTest(unittest.TestCase):
         u'2014-02-01 12:00:00')
 
     timestamp = timelib.Timestamp.FromTimeString(
-        '2014-02-01 13:00:00', pytz.timezone('Europe/Rome'))
+        u'2014-02-01 13:00:00', timezone=pytz.timezone(u'Europe/Rome'))
     self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromTimeString(
-        '2014-02-01 12:00:00', pytz.timezone('UTC'))
+        u'2014-02-01 12:00:00', timezone=pytz.timezone(u'UTC'))
     self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromTimeString(
-        '2014-02-01 04:00:00', pytz.timezone('PST8PDT'))
+        u'2014-02-01 04:00:00', timezone=pytz.timezone(u'PST8PDT'))
     self.assertEqual(timestamp, expected_timestamp)
 
     # Define two timestamps, one being GMT and the other UTC.
-    time_string_utc = 'Wed 05 May 2010 03:52:31 UTC'
-    time_string_gmt = 'Wed 05 May 2010 03:52:31 GMT'
+    time_string_utc = u'Wed 05 May 2010 03:52:31 UTC'
+    time_string_gmt = u'Wed 05 May 2010 03:52:31 GMT'
 
     timestamp_utc = timelib.Timestamp.FromTimeString(time_string_utc)
     timestamp_gmt = timelib.Timestamp.FromTimeString(time_string_gmt)
@@ -423,6 +423,51 @@ class TimeLibTest(unittest.TestCase):
     if timestamp_utc != timestamp_gmt:
       self.assertEqual(timestamp_utc, timelib.Timestamp.FromTimeString(
           time_string_gmt, gmt_as_timezone=False))
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'12-15-1984 05:13:00', timezone=pytz.timezone(u'EST5EDT'))
+    self.assertEqual(timestamp, 471953580000000)
+
+    # Swap day and month.
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'12-10-1984 05:13:00', timezone=pytz.timezone(u'EST5EDT'),
+        dayfirst=True)
+    self.assertEqual(timestamp, 466420380000000)
+
+    timestamp = timelib.Timestamp.FromTimeString(u'12-15-1984 10:13:00Z')
+    self.assertEqual(timestamp, 471953580000000)
+
+    # Setting the timezone for string that already contains a timezone
+    # indicator should not affect the conversion.
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'12-15-1984 10:13:00Z', timezone=pytz.timezone(u'EST5EDT'))
+    self.assertEqual(timestamp, 471953580000000)
+
+    timestamp = timelib.Timestamp.FromTimeString(u'15/12/1984 10:13:00Z')
+    self.assertEqual(timestamp, 471953580000000)
+
+    timestamp = timelib.Timestamp.FromTimeString(u'15-12-84 10:13:00Z')
+    self.assertEqual(timestamp, 471953580000000)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'15-12-84 10:13:00-04', timezone=pytz.timezone(u'EST5EDT'))
+    self.assertEqual(timestamp, 471967980000000)
+
+    with self.assertRaises(errors.TimestampError):
+      timestamp = timelib.Timestamp.FromTimeString(
+          u'thisisnotadatetime', timezone=pytz.timezone(u'EST5EDT'))
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'12-15-1984 04:13:00', timezone=pytz.timezone(u'America/Chicago'))
+    self.assertEqual(timestamp, 471953580000000)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'07-14-1984 23:13:00', timezone=pytz.timezone(u'America/Chicago'))
+    self.assertEqual(timestamp, 458712780000000)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        u'12-15-1984 05:13:00', timezone=pytz.timezone(u'US/Pacific'))
+    self.assertEqual(timestamp, 471964380000000)
 
   def testRoundTimestamp(self):
     """Test the RoundToSeconds function."""
@@ -439,7 +484,7 @@ class TimeLibTest(unittest.TestCase):
   def testTimestampFromTimeParts(self):
     """Test the FromTimeParts function."""
     timestamp = timelib.Timestamp.FromTimeParts(
-        2013, 6, 25, 22, 19, 46, 0, timezone=pytz.timezone('PST8PDT'))
+        2013, 6, 25, 22, 19, 46, 0, timezone=pytz.timezone(u'PST8PDT'))
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-06-25 22:19:46-07:00')
     self.assertEqual(timestamp, expected_timestamp)
@@ -453,62 +498,6 @@ class TimeLibTest(unittest.TestCase):
         u'2013-06-26 05:19:46.000542')
     timestamp = timelib.Timestamp.FromTimeParts(2013, 6, 26, 5, 19, 46, 542)
     self.assertEqual(timestamp, expected_timestamp)
-
-  def _TestStringToDatetime(
-      self, expected_timestamp, time_string, timezone=pytz.UTC, dayfirst=False):
-    """Tests the StringToDatetime function.
-
-    Args:
-      expected_timestamp: The expected timesamp.
-      time_string: String that contains a date and time value.
-      timezone: The timezone (pytz.timezone) object.
-      dayfirst: Change precedence of day vs. month.
-
-    Returns:
-      A result object.
-    """
-    date_time = timelib.StringToDatetime(
-        time_string, timezone=timezone, dayfirst=dayfirst)
-    timestamp = int(calendar.timegm((date_time.utctimetuple())))
-    self.assertEqual(timestamp, expected_timestamp)
-
-  def testStringToDatetime(self):
-    """Test the StringToDatetime function."""
-    self._TestStringToDatetime(
-        471953580, '12-15-1984 05:13:00', timezone=pytz.timezone('EST5EDT'))
-
-    # Swap day and month.
-    self._TestStringToDatetime(
-        466420380, '12-10-1984 05:13:00', timezone=pytz.timezone('EST5EDT'),
-        dayfirst=True)
-
-    self._TestStringToDatetime(471953580, '12-15-1984 10:13:00Z')
-
-    # Setting the timezone for string that already contains a timezone
-    # indicator should not affect the conversion.
-    self._TestStringToDatetime(
-        471953580, '12-15-1984 10:13:00Z', timezone=pytz.timezone('EST5EDT'))
-
-    self._TestStringToDatetime(471953580, '15/12/1984 10:13:00Z')
-
-    self._TestStringToDatetime(471953580, '15-12-84 10:13:00Z')
-
-    self._TestStringToDatetime(
-        471967980, '15-12-84 10:13:00-04', timezone=pytz.timezone('EST5EDT'))
-
-    self._TestStringToDatetime(
-        0, 'thisisnotadatetime', timezone=pytz.timezone('EST5EDT'))
-
-    self._TestStringToDatetime(
-        471953580, '12-15-1984 04:13:00',
-        timezone=pytz.timezone('America/Chicago'))
-
-    self._TestStringToDatetime(
-        458712780, '07-14-1984 23:13:00',
-        timezone=pytz.timezone('America/Chicago'))
-
-    self._TestStringToDatetime(
-        471964380, '12-15-1984 05:13:00', timezone=pytz.timezone('US/Pacific'))
 
 
 if __name__ == '__main__':

@@ -180,8 +180,13 @@ class JavaIDXParser(interface.SingleFileBaseParser):
         # information in the string itself. If that is not the case then
         # there is no reliable method for plaso to determine the proper
         # timezone, so the assumption is that it is UTC.
-        download_date = timelib.Timestamp.FromTimeString(
-            value.string, gmt_as_timezone=False)
+        try:
+          download_date = timelib.Timestamp.FromTimeString(
+              value.string, gmt_as_timezone=False)
+        except errors.TimestampError:
+          download_date = None
+          parser_mediator.ProduceParseError(
+              u'Unable to parse time value: {0:s}'.format(value.string))
 
     if not url or not ip_address:
       raise errors.UnableToParseFile(

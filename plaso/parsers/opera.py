@@ -10,7 +10,6 @@ from xml.etree import ElementTree
 
 from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -18,33 +17,32 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class OperaTypedHistoryEvent(event.EventObject):
+class OperaTypedHistoryEvent(time_events.TimestampEvent):
   """An EventObject for an Opera typed history entry."""
 
   DATA_TYPE = u'opera:history:typed_entry'
 
-  def __init__(self, last_typed_time, url, entry_type):
+  def __init__(self, timestamp, url, entry_type):
     """A constructor for the typed history event.
 
     Args:
-      last_typed_time: A ISO 8601 string denoting the last time
-                       the URL was typed into a browser.
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC
       url: The url, or the typed hostname.
       entry_type: A string indicating whether the URL was directly
                   typed in or the result of the user choosing from the
                   auto complete (based on prior history).
     """
-    super(OperaTypedHistoryEvent, self).__init__()
-    self.url = url
+    super(OperaTypedHistoryEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.LAST_VISITED_TIME)
+
     self.entry_type = entry_type
+    self.url = url
 
     if entry_type == u'selected':
       self.entry_selection = u'Filled from autocomplete.'
     elif entry_type == u'text':
       self.entry_selection = u'Manually typed.'
-
-    self.timestamp = timelib.Timestamp.FromTimeString(last_typed_time)
-    self.timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
 
 
 class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
@@ -119,14 +117,19 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
 
     xml = ElementTree.parse(file_object)
 
-
-
     for history_item in xml.iterfind(u'typed_history_item'):
       content = history_item.get(u'content', u'')
       last_typed = history_item.get(u'last_typed', u'')
       entry_type = history_item.get(u'type', u'')
 
-      event_object = OperaTypedHistoryEvent(last_typed, content, entry_type)
+      try:
+        timestamp = timelib.Timestamp.FromTimeString(last_typed)
+      except errors.TimestampError:
+        parser_mediator.ProduceParseError(
+            u'Unable to parse time string: {0:s}'.format(last_typed))
+        continue
+
+      event_object = OperaTypedHistoryEvent(timestamp, content, entry_type)
       parser_mediator.ProduceEvent(event_object)
 
 

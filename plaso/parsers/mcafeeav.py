@@ -7,6 +7,7 @@ updated, and when files match the virus database."""
 import logging
 
 from plaso.events import text_events
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -42,30 +43,39 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   COLUMNS = [u'date', u'time', u'status', u'username', u'filename',
              u'trigger_location', u'rule', u'action']
 
-  def _GetTimestamp(self, date, time, timezone):
-    """Return a 64-bit signed timestamp in microseconds since Epoch.
+  def _GetTimestamp(self, parser_mediator, date, time):
+    """Determines a timestamp from the time string.
 
-     The timestamp is made up of two strings, the date and the time, separated
-     by a tab. The time is in local time. The month and day can be either 1 or 2
-     characters long.  E.g.: 7/30/2013\t10:22:48 AM
+    The date and time are made up of two strings, the date and the time,
+    separated by a tab. The time is in local time. The month and day can
+    be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM
 
-     Args:
-       date: The string representing the date.
-       time: The string representing the time.
-       timezone: The timezone object.
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      date: The string representing the date.
+      time: The string representing the time.
 
-     Returns:
-       A plaso timestamp value, microseconds since Epoch in UTC or None.
+    Returns:
+      The timestamp time value. The timestamp contains the number of
+      microseconds since Jan 1, 1970 00:00:00 UTC or None if the time string
+      could not be parsed.
     """
-
+    # TODO: check if this is correct, likely not date or not time
+    # is more accurate.
     if not (date and time):
       logging.warning(u'Unable to extract timestamp from McAfee AV logline.')
       return
 
     # TODO: Figure out how McAfee sets Day First and use that here.
     # The in-file time format is '07/30/2013\t10:22:48 AM'.
-    return timelib.Timestamp.FromTimeString(
-        u'{0:s} {1:s}'.format(date, time), timezone=timezone)
+    time_string = u'{0:s} {1:s}'.format(date, time)
+    try:
+      return timelib.Timestamp.FromTimeString(
+          time_string, timezone=parser_mediator.timezone)
+
+    except errors.TimestampError:
+      parser_mediator.ProduceParseError(
+          u'Unable to parse time string: {0:s}'.format(time_string))
 
   def VerifyRow(self, parser_mediator, row):
     """Verify that this is a McAfee AV Access Protection Log file.
@@ -88,9 +98,8 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
 
     # Check the date format!
     # If it doesn't pass, then this isn't a McAfee AV Access Protection Log
-    try:
-      self._GetTimestamp(row[u'date'], row[u'time'], parser_mediator.timezone)
-    except (TypeError, ValueError):
+    timestamp = self._GetTimestamp(parser_mediator, row[u'date'], row[u'time'])
+    if timestamp is None:
       return False
 
     # Use the presence of these strings as a backup or in case of partial file.
@@ -109,10 +118,10 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
     """
-    timestamp = self._GetTimestamp(
-        row[u'date'], row[u'time'], parser_mediator.timezone)
-    event_object = McafeeAVEvent(timestamp, row_offset, row)
-    parser_mediator.ProduceEvent(event_object)
+    timestamp = self._GetTimestamp(parser_mediator, row[u'date'], row[u'time'])
+    if timestamp is not None:
+      event_object = McafeeAVEvent(timestamp, row_offset, row)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(McafeeAccessProtectionParser)
