@@ -149,8 +149,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         u'--hashers', dest=u'hashers', type=str, action=u'store', default=u'',
         metavar=u'HASHER_LIST', help=(
             u'Define a list of hashers to use by the tool. This is a comma '
-            u'separated list where each entry is the name of a hasher. eg. md5,'
-            u'sha256.'))
+            u'separated list where each entry is the name of a hasher. eg. '
+            u'"md5,sha256" or "all" to indicate that all hashers should be '
+            u'enabled.'))
 
     # TODO: rename option name to parser_filter_string.
     argument_group.add_argument(
