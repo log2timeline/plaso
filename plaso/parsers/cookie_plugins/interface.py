@@ -4,34 +4,17 @@
 import abc
 
 from plaso.lib import errors
-from plaso.lib import registry
 from plaso.parsers import plugins
 
 
-# TODO: move this into the parsers and plugins manager.
-def GetPlugins():
-  """Returns a list of all cookie plugins."""
-  plugins_list = []
-  for plugin_cls in CookiePlugin.classes.itervalues():
-    parent_name = getattr(plugin_cls, u'parent_class_name', u'NOTHERE')
-    if parent_name != u'cookie':
-      continue
-
-    plugins_list.append(plugin_cls())
-
-  return plugins_list
-
-
-class CookiePlugin(plugins.BasePlugin):
+class BaseCookiePlugin(plugins.BasePlugin):
   """A browser cookie plugin for Plaso.
 
   This is a generic cookie parsing interface that can handle parsing
   cookies from all browsers.
   """
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
-
   NAME = u'cookie'
+  DESCRIPTION = u''
 
   # The name of the cookie value that this plugin is designed to parse.
   # This value is used to evaluate whether the plugin is the correct one
@@ -40,7 +23,7 @@ class CookiePlugin(plugins.BasePlugin):
 
   def __init__(self):
     """Initialize the browser cookie plugin."""
-    super(CookiePlugin, self).__init__()
+    super(BaseCookiePlugin, self).__init__()
     self.cookie_data = u''
 
   @abc.abstractmethod
@@ -49,8 +32,8 @@ class CookiePlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_data: Optional cookie data, as a byte string.
-      url: Optional URL or path where the cookie got set.
+      cookie_data: Optional cookie data, as a byte string. The default is None.
+      url: Optional URL or path where the cookie got set. The default is None.
     """
 
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
@@ -64,7 +47,7 @@ class CookiePlugin(plugins.BasePlugin):
 
     Raises:
       errors.WrongPlugin: If the cookie name differs from the one
-      supplied in COOKIE_NAME.
+                          supplied in COOKIE_NAME.
       ValueError: If cookie_name or cookie_data are not set.
     """
     if cookie_name is None or cookie_data is None:
@@ -76,6 +59,6 @@ class CookiePlugin(plugins.BasePlugin):
               cookie_name, self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
-    super(CookiePlugin, self).Process(parser_mediator)
+    super(BaseCookiePlugin, self).Process(parser_mediator)
 
     self.GetEntries(parser_mediator, cookie_data=cookie_data, url=url)

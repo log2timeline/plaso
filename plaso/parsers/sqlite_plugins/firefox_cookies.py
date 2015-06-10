@@ -8,7 +8,7 @@ from plaso.lib import timelib
 # Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import sqlite
-from plaso.parsers.cookie_plugins import interface as cookie_interface
+from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -78,7 +78,8 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   def __init__(self):
     """Initializes a plugin object."""
     super(FirefoxCookiePlugin, self).__init__()
-    self._cookie_plugins = cookie_interface.GetPlugins()
+    self._cookie_plugins = (
+        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
   def ParseCookieRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a cookie row.
