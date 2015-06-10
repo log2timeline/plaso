@@ -49,7 +49,7 @@ rm -rf build dist ${DISTDIR} ../${PKG_FILENAME} ../plaso-${PLASO_VERSION}_macosx
 
 python setup.py bdist
 
-mkdir dist/tmp
+mkdir -p dist/tmp
 cd dist/tmp
 tar xfvz ../*.tar.gz
 cd ../..

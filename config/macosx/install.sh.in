@@ -52,5 +52,16 @@ find ${VOLUME_NAME} -name "*.pkg" -exec sudo installer -target / -pkg {} \;
 
 echo "Done.";
 
+# Check for the existence of two versions of the pyparsing module.
+if test -f "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/pyparsing.pyc";
+then
+  if test -f "/Library/Python/2.7/site-packages/pyparsing.py";
+  then
+    echo "Two versions of the pyparsing module exist. Deleting the system provided one.";
+    # Removing the pyparsing library, including the .py, .pyc and .pyo file if they exist.
+    /bin/rm -rf "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/pyparsing.*"
+  fi
+fi
+
 exit ${EXIT_SUCCESS};
 
