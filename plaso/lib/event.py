@@ -102,7 +102,7 @@ class EventObject(object):
   that inherits from EventObject and implements the functions in it.
 
   The EventObject is then used by output processing for saving
-  in other forms, such as a protobuff, AFF4 container, CSV files,
+  in other forms, such as a protobuf, AFF4 container, CSV files,
   databases, etc.
 
   The goal of the EventObject is to provide a easily extensible

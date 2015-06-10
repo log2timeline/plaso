@@ -17,6 +17,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
 
+  _BYTES_IN_A_MIB = 1024 * 1024
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 

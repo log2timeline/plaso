@@ -21,7 +21,7 @@ class ArgumentHelperManager(object):
                          eg: storage, output. Used to add arguments to a select
                          group of registered helpers. Defaults to None, which
                          applies the added arguments to all helpers.
-      module_list: a list of modules to apply the command line arguments agains.
+      module_list: a list of modules to apply the command line arguments to.
                    The comparison is done against the NAME attribute of the
                    helper. Defaults to None, in which case all registered
                    helpers are applied.

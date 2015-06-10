@@ -340,7 +340,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       elif use_time_slicer:
         self._filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
-    counter = None
     with storage_file:
       storage_file.SetStoreLimit(self._filter_object)
 

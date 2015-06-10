@@ -789,7 +789,7 @@ class StorageFile(object):
       serializer_format: The storage serializer format.
 
     Raises:
-      ValueError: if the serializer format is not suported.
+      ValueError: if the serializer format is not supported.
     """
     if serializer_format == definitions.SERIALIZER_FORMAT_JSON:
       self._serializer_format_string = u'json'
@@ -832,7 +832,7 @@ class StorageFile(object):
 
     # Store information about store range for this particular
     # preprocessing object. This will determine which stores
-    # this information is applicaple for.
+    # this information is applicable for.
     stores = list(self.GetProtoNumbers())
     if stores:
       end = stores[-1] + 1
@@ -862,7 +862,7 @@ class StorageFile(object):
       stream_data: the data of the steam.
     """
     # TODO: this can raise an IOError e.g. "Stale NFS file handle".
-    # Determine if this be handled more error resillient.
+    # Determine if this be handled more error resiliently.
     self._zipfile.writestr(stream_name, stream_data)
 
   def Close(self):

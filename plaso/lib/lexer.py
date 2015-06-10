@@ -43,7 +43,7 @@ class Error(Exception):
 
 
 class ParseError(Error):
-  """A parse error occured."""
+  """A parse error occurred."""
 
 
 class Lexer(object):
@@ -249,7 +249,7 @@ class Expression(object):
     """Print the tree."""
     return u'{0:s} {1:s}'.format(depth, self)
 
-  def Compile(self, unused_filter_implemention):
+  def Compile(self, unused_filter_implementation):
     """Given a filter implementation, compile this expression."""
     raise NotImplementedError(
         u'{0:s} does not implement Compile.'.format(self.__class__.__name__))
@@ -272,7 +272,7 @@ class BinaryExpression(Expression):
         self.operator, [str(x) for x in self.args])
 
   def AddOperands(self, lhs, rhs):
-    """Add an operant."""
+    """Add an operand."""
     if isinstance(lhs, Expression) and isinstance(rhs, Expression):
       self.args = [lhs, rhs]
     else:
@@ -288,7 +288,7 @@ class BinaryExpression(Expression):
 
     return result
 
-  def Compile(self, filter_implemention):
+  def Compile(self, filter_implementation):
     """Compile the binary expression into a filter object."""
     operator = self.operator.lower()
     if operator == 'and' or operator == '&&':
@@ -298,8 +298,8 @@ class BinaryExpression(Expression):
     else:
       raise ParseError(u'Invalid binary operator {0:s}'.format(operator))
 
-    args = [x.Compile(filter_implemention) for x in self.args]
-    return getattr(filter_implemention, method)(*args)
+    args = [x.Compile(filter_implementation) for x in self.args]
+    return getattr(filter_implementation, method)(*args)
 
 
 class IdentityExpression(Expression):
@@ -468,7 +468,7 @@ class SearchParser(Lexer):
 
     length = len(self.stack)
     while length > 1:
-      # Precendence order
+      # Precedence order
       self._CombineParenthesis()
       self._CombineBinaryExpressions('and')
       self._CombineBinaryExpressions('or')

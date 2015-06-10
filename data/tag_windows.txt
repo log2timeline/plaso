@@ -29,8 +29,8 @@ Failed Login
 Logon
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 540
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4624
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 21
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1101
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 21
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 1101
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Winlogon' and event_identifier is 7001
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' and event_identifier is 1147
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' and event_identifier is 1149
@@ -40,20 +40,20 @@ Logoff
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 538
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4634
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Winlogon' and event_identifier is 7002
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 23
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1103
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 23
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 1103
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-User Profiles Service' and event_identifier is 4
 
 Disconnect
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 24
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 24
 
 Reconnect
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 25
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1105
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 25
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 1105
 
 Shell Start
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 22
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1102
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 22
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifier is 1102
 
 Task Scheduled
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 602

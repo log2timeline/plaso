@@ -20,6 +20,14 @@ plaso.parsers.cookie_plugins.interface module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.cookie_plugins.manager module
+-------------------------------------------
+
+.. automodule:: plaso.parsers.cookie_plugins.manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

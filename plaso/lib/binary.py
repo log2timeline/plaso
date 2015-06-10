@@ -100,14 +100,14 @@ def ReadUtf16Stream(file_object, offset=None, byte_size=0):
   """Reads an UTF-16 formatted stream from a file-like object.
 
   Reads an UTF-16 formatted stream that's terminated by
-  an end-of-string character (\x00\x00) or upto the byte size.
+  an end-of-string character (\x00\x00) or up to the byte size.
 
   Args:
     file_object: A file-like object to read the data from.
     offset: An offset into the file object data, if -1 or not set
             the current location into the file object data is used.
     byte_size: Maximum number of bytes to read or 0 if the function
-               should keep reading upto the end of file.
+               should keep reading up to the end of file.
 
   Returns:
     An Unicode string.
@@ -162,7 +162,7 @@ def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
   """Copies an array of UTF-16 formatted byte streams to an array of strings.
 
   The UTF-16 formatted byte stream should be terminated by an end-of-string
-  character (\x00\x00). Otherwise the function reads upto the byte stream size.
+  character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
     byte_stream: The UTF-16 formatted byte stream.
@@ -200,7 +200,7 @@ def ArrayOfUt16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
 
   The string table is a dict of strings with the byte offset as their key.
   The UTF-16 formatted byte stream should be terminated by an end-of-string
-  character (\x00\x00). Otherwise the function reads upto the byte stream size.
+  character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
     byte_stream: The UTF-16 formatted byte stream.
