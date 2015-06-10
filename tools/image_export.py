@@ -212,7 +212,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     log_file = getattr(options, u'log_file', None)
     self._ConfigureLogging(
-        format_string=format_string, log_level=log_level, filename=log_file)
+        filename=log_file, format_string=format_string, log_level=log_level)
 
     self._destination_path = getattr(options, u'path', u'export')
 
