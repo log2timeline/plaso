@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the "raw" (or native) Python output modulr."""
 
+import os
 import sys
 import unittest
 
@@ -27,9 +28,13 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     self._output_module.WriteEventBody(self._event_object)
 
     if sys.platform.startswith(u'win'):
-      os_location = u'C:\\cases\\image.dd'
+      # The dict comparison is very picky on Windows hence we
+      # have to make sure the drive letter is in the same case.
+      expected_os_location = os.path.abspath(u'\\{0:s}'.format(
+          os.path.join(u'cases', u'image.dd')))
     else:
-      os_location = u'/cases/image.dd'
+      expected_os_location = u'{0:s}{1:s}'.format(
+          os.path.sep, os.path.join(u'cases', u'image.dd'))
 
     expected_event_body = (
         b'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
@@ -51,7 +56,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         b'[Additional attributes]:\n'
         b'  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
         b'session\n'
-        b' closed for user root)\n').format(os_location)
+        b' closed for user root)\n').format(expected_os_location)
 
     event_body = self._output_writer.ReadOutput()
 
