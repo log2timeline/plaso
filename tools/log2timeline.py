@@ -447,8 +447,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     log_file = getattr(options, u'log_file', None)
     self._ConfigureLogging(
-        log_level=logging_level, format_string=format_string,
-        filename=log_file)
+        filename=log_file, format_string=format_string, log_level=logging_level)
 
     if self._debug_mode:
       logging_filter = log2timeline.LoggingFilter()

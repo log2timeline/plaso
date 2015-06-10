@@ -58,18 +58,21 @@ class CLITool(object):
     self.preferred_encoding = preferred_encoding
 
   def _ConfigureLogging(
-      self, log_level=None, format_string=None, filename=None):
+      self, filename=None, format_string=None, log_level=None):
     """Configure the logger.
 
+    If a filename is specified and the corresponding log file already exists,
+    the file is truncated.
+
     Args:
-      log_level: optional integer representing the log level, eg. logging.DEBUG.
-                 Defaults to None, which configures the logger to use INFO
-                 level.
+      filename: optional path to a filename to append logs to. Defaults to None,
+                which means logs will not be redirected to a file.
       format_string: optional format string for the logs. Defaults to None,
                      which in turn configures the logger to use a default format
                      string.
-      filename: optional path to a filename to append logs to. Defaults to None,
-                which means logs will not be redirected to a file.
+      log_level: optional integer representing the log level, eg. logging.DEBUG.
+                 Defaults to None, which configures the logger to use INFO
+                 level.
     """
     # Remove all possible log handlers.
     for handler in logging.root.handlers:
@@ -83,7 +86,8 @@ class CLITool(object):
 
     if filename:
       logging.basicConfig(
-          level=log_level, format=format_string, filename=filename)
+          level=log_level, format=format_string, filename=filename,
+          filemode=u'w')
     else:
       logging.basicConfig(level=log_level, format=format_string)
 

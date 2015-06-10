@@ -625,8 +625,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     Returns:
       A boolean value indicating the arguments were successfully parsed.
     """
-    logging.basicConfig(
-        level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+    self._ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -1583,7 +1582,7 @@ class PregConsole(object):
       A string containing the formatted column value.
     """
     # TODO: Remove the need to directly call the line length.
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     line_length = self._preg_tool._LINE_LENGTH - column_width - 3
 
     # The format string of the first line of the column value.
@@ -1631,7 +1630,7 @@ class PregConsole(object):
       A string containing the formatted header.
     """
     # TODO: Remove the need to directly call the line length.
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     format_string = u'{{0:{0:s}^{1:d}}}\n'.format(
         character, self._preg_tool._LINE_LENGTH)
     return format_string.format(u' {0:s} '.format(text))
@@ -1640,7 +1639,7 @@ class PregConsole(object):
     """Runs the interactive console."""
     hive_storage = preg.PregStorage()
     # TODO: move options out of PregHelper and fix this hack.
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     shell_helper = PregHelper(
         self._preg_tool._options, self._preg_tool, hive_storage)
     parser_mediator = shell_helper.BuildParserMediator()
@@ -1650,7 +1649,7 @@ class PregConsole(object):
     self._preg_cache.hive_storage = hive_storage
 
     # TODO: Remove the need to call the options object.
-    # pylint:disable-msg=protected-access
+    # pylint:disable=protected-access
     registry_types = getattr(self._preg_tool._options, u'registry_file', None)
     if isinstance(registry_types, basestring):
       registry_types = registry_types.split(u',')

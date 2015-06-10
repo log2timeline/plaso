@@ -553,7 +553,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       logging_level = logging.INFO
 
     log_file = getattr(options, u'log_file', None)
-    self._ConfigureLogging(log_level=logging_level, filename=log_file)
+    self._ConfigureLogging(filename=log_file, log_level=logging_level)
 
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:
