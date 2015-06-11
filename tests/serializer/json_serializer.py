@@ -339,7 +339,11 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
 
   def testReadSerialized(self):
     """Tests the ReadSerialized function."""
-    self._TestReadSerialized(self._serializer, self._json_dict)
+    pre_obj = self._TestReadSerialized(self._serializer, self._json_dict)
+    counter = pre_obj.counter
+
+    for key, value in iter(counter.items()):
+      self.assertEquals(self._counter[key], value)
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
