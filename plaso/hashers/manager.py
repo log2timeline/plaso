@@ -72,6 +72,20 @@ class HashersManager(object):
     return cls._hasher_classes.keys()
 
   @classmethod
+  def GetHashersInformation(cls):
+    """Retrieves the hashers information.
+
+    Returns:
+      A list of tuples of hasher names and descriptions.
+    """
+    hashers_information = []
+    for _, hasher_class in cls.GetHashers():
+      description = getattr(hasher_class, u'DESCRIPTION', u'')
+      hashers_information.append((hasher_class.NAME, description))
+
+    return hashers_information
+
+  @classmethod
   def GetHasherObject(cls, hasher_name):
     """Retrieves an instance of a specific hasher.
 
