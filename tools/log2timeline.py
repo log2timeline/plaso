@@ -19,7 +19,12 @@ from plaso.lib import pfilter
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
-  """Class that implements the log2timeline CLI tool."""
+  """Class that implements the log2timeline CLI tool.
+
+  Attributes:
+    show_info: a boolean value to indicate information about hashers, parsers,
+               plugins, etc. should be shown.
+  """
 
   NAME = u'log2timeline'
   DESCRIPTION = textwrap.dedent(u'\n'.join([
@@ -67,8 +72,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = u'linear'
     self._output = None
 
-    self.list_parsers_and_plugins = False
-    self.list_timezones = False
+    self.show_info = False
 
   def _DebugPrintCollection(self):
     """Prints debug information about the collection."""
@@ -286,16 +290,31 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         help=(u'The number of worker threads [defaults to available system '
               u'CPUs minus three].'))
 
-  def ListPluginInformation(self):
-    """Lists all plugin and parser information."""
-    plugin_list = self._front_end.GetPluginData()
-    self._output_writer.Write(
-        u'{0:=^80s}\n'.format(u' log2timeline/plaso information '))
+  def ListHashers(self):
+    """Lists information about the available hashers."""
+    hashers_information = self._front_end.GetHashersInformation()
+    self.PrintHeader(u'Hashers')
+    for name, description in sorted(hashers_information):
+      self.PrintColumnValue(name, description)
 
-    for header, data in plugin_list.items():
-      self.PrintHeader(header)
-      for entry_header, entry_data in sorted(data):
-        self.PrintColumnValue(entry_header, entry_data)
+    self._output_writer.Write(u'\n')
+
+  def ListParsersAndPlugins(self):
+    """Lists information about the available parsers and plugins."""
+    parsers_information = self._front_end.GetParsersInformation()
+    self.PrintHeader(u'Parsers')
+    for name, description in sorted(parsers_information):
+      self.PrintColumnValue(name, description)
+
+    plugins_information = self._front_end.GetParserPluginsInformation()
+    self.PrintHeader(u'Parser Plugins')
+    for name, description in sorted(plugins_information):
+      self.PrintColumnValue(name, description)
+
+    presets_information = self._front_end.GetParserPresetsInformation()
+    self.PrintHeader(u'Parsers Presets')
+    for name, description in sorted(presets_information):
+      self.PrintColumnValue(name, description)
 
     self._output_writer.Write(u'\n')
 
@@ -423,11 +442,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       BadConfigOption: if the options are invalid.
     """
     # Check the list options first otherwise required options will raise.
+    self._ParseExtractionOptions(options)
     self._ParseTimezoneOption(options)
 
-    self.list_parsers_and_plugins = getattr(options, u'show_info', False)
+    self.show_info = getattr(options, u'show_info', False)
 
-    if self.list_timezones or self.list_parsers_and_plugins:
+    if (self.list_hashers or self.list_parsers_and_plugins or
+        self.list_timezones or self.show_info):
       return
 
     super(Log2TimelineTool, self).ParseOptions(options)
@@ -566,6 +587,19 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         self._output_writer.Write(path_spec_comparable)
         self._output_writer.Write(u'\n')
 
+  def ShowInfo(self):
+    """Shows information about available hashers, parsers, plugins, etc."""
+    plugin_list = self._front_end.GetPluginData()
+    self._output_writer.Write(
+        u'{0:=^80s}\n'.format(u' log2timeline/plaso information '))
+
+    for header, data in plugin_list.items():
+      self.PrintHeader(header)
+      for entry_header, entry_data in sorted(data):
+        self.PrintColumnValue(entry_header, entry_data)
+
+    self._output_writer.Write(u'\n')
+
 
 def Main():
   """The main function."""
@@ -576,13 +610,17 @@ def Main():
   if not tool.ParseArguments():
     return False
 
-  # TODO: fix this. An explanation why this is needed is missing.
-  # u_argv = [x.decode(front_end.preferred_encoding) for x in sys.argv]
-  # sys.argv = u_argv
+  if tool.show_info:
+    tool.ShowInfo()
+    return True
 
   have_list_option = False
+  if tool.list_hashers:
+    tool.ListHashers()
+    have_list_option = True
+
   if tool.list_parsers_and_plugins:
-    tool.ListPluginInformation()
+    tool.ListParsersAndPlugins()
     have_list_option = True
 
   if tool.list_timezones:

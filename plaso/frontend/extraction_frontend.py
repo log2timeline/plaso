@@ -11,6 +11,7 @@ from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
+from plaso.frontend import presets
 from plaso.frontend import storage_media_frontend
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -321,6 +322,42 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     if not getattr(pre_obj, u'zone', None):
       pre_obj.zone = timezone
+
+  def GetHashersInformation(self):
+    """Retrieves the hashers information.
+
+    Returns:
+      A list of tuples of hasher names and descriptions.
+    """
+    return hashers_manager.HashersManager.GetHashersInformation()
+
+  def GetParserPluginsInformation(self):
+    """Retrieves the parser plugins information.
+
+    Returns:
+      A list of tuples of parser plugin names and descriptions.
+    """
+    return parsers_manager.ParsersManager.GetParserPluginsInformation()
+
+  def GetParserPresetsInformation(self):
+    """Retrieves the parser presets information.
+
+    Returns:
+      A list of tuples of parser preset names and related parsers names.
+    """
+    parser_presets_information = []
+    for preset_name, parser_names in sorted(presets.categories.items()):
+      parser_presets_information.append((preset_name, u', '.join(parser_names)))
+
+    return parser_presets_information
+
+  def GetParsersInformation(self):
+    """Retrieves the parsers information.
+
+    Returns:
+      A list of tuples of parser names and descriptions.
+    """
+    return parsers_manager.ParsersManager.GetParsersInformation()
 
   def ProcessSources(
       self, source_path_specs, filter_file=None, hasher_names_string=None,

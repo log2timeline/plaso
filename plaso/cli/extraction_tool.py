@@ -10,7 +10,13 @@ from plaso.lib import errors
 
 
 class ExtractionTool(storage_media_tool.StorageMediaTool):
-  """Class that implements an extraction CLI tool."""
+  """Class that implements an extraction CLI tool.
+
+  Attributes:
+    list_hashers: boolean value to indicate the hashers should be listed.
+    list_parsers_and_plugins: boolean value to indicate the parsers and
+                              plugins should be listed.
+  """
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
@@ -49,6 +55,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_PROTOBUF
     self._text_prepend = None
 
+    self.list_hashers = False
+    self.list_parsers_and_plugins = False
+
   def _ParseExtractionOptions(self, options):
     """Parses the extraction options.
 
@@ -59,7 +68,14 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the options are invalid.
     """
     self._hasher_names_string = getattr(options, u'hashers', u'')
+    if isinstance(self._hasher_names_string, basestring):
+      if self._hasher_names_string.lower() == u'list':
+        self.list_hashers = True
+
     self._parser_filter_string = getattr(options, u'parsers', u'')
+    if isinstance(self._parser_filter_string, basestring):
+      if self._parser_filter_string.lower() == u'list':
+        self.list_parsers_and_plugins = True
 
     # TODO: preprocess.
 
@@ -151,7 +167,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'Define a list of hashers to use by the tool. This is a comma '
             u'separated list where each entry is the name of a hasher. eg. '
             u'"md5,sha256" or "all" to indicate that all hashers should be '
-            u'enabled.'))
+            u'enabled. Use "--hashers list" or "--info" to list the available '
+            u'hashers.'))
 
     # TODO: rename option name to parser_filter_string.
     argument_group.add_argument(
@@ -166,7 +183,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'Examples would be: "reg" that matches the substring "reg" in '
             u'all parser names or the glob pattern "sky[pd]" that would match '
             u'all parsers that have the string "skyp" or "skyd" in its name. '
-            u'All matching is case insensitive.'))
+            u'All matching is case insensitive. Use "--parsers list" or '
+            u'"--info" to list the available parsers.'))
 
     argument_group.add_argument(
         u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
@@ -268,7 +286,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the options are invalid.
     """
     super(ExtractionTool, self).ParseOptions(options)
-    self._ParseExtractionOptions(options)
     self._ParseDataLocationOption(options)
     self._ParseFilterOptions(options)
     self._ParsePerformanceOptions(options)

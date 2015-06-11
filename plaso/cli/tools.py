@@ -15,7 +15,14 @@ import pytz
 
 
 class CLITool(object):
-  """Class that implements a CLI tool."""
+  """Class that implements a CLI tool.
+
+  Attributes:
+    list_timezones: boolean value to indicate the time zones should be listed.
+    preferred_encoding: string containing the preferred encoding of single-byte
+                        or multi-byte character strings (sometimes referred to
+                        as extended ASCII).
+  """
 
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
@@ -150,14 +157,15 @@ class CLITool(object):
       BadConfigOption: if the options are invalid.
     """
     timezone_string = getattr(options, u'timezone', None)
-    if timezone_string and timezone_string == u'list':
-      self.list_timezones = True
+    if isinstance(timezone_string, basestring):
+      if timezone_string.lower() == u'list':
+        self.list_timezones = True
 
-    elif timezone_string:
-      try:
-        self._timezone = pytz.timezone(timezone_string)
-      except pytz.UnknownTimeZoneError as exception:
-        raise errors.BadConfigOption(exception)
+      elif timezone_string:
+        try:
+          self._timezone = pytz.timezone(timezone_string)
+        except pytz.UnknownTimeZoneError as exception:
+          raise errors.BadConfigOption(exception)
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.

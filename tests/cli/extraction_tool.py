@@ -29,7 +29,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'name of a'),
       (u'                        hasher. eg. "md5,sha256" or "all" to indicate '
        u'that all'),
-      u'                        hashers should be enabled.',
+      (u'                        hashers should be enabled. Use "--hashers '
+       u'list" or "--'),
+      u'                        info" to list the available hashers.',
       u'  --parsers PARSER_LIST',
       (u'                        Define a list of parsers to use by the tool. '
        u'This is a'),
@@ -52,7 +54,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'have the'),
       (u'                        string "skyp" or "skyd" in its name. All '
        u'matching is'),
-      u'                        case insensitive.',
+      (u'                        case insensitive. Use "--parsers list" or '
+       u'"--info" to'),
+      u'                        list the available parsers.',
       (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
        u'turned on by'),
       (u'                        default when parsing image files, however if '
