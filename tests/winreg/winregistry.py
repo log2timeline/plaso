@@ -17,15 +17,15 @@ class RegistryUnitTest(test_lib.WinRegTestCase):
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    test_file = self._GetTestFilePath(['SOFTWARE'])
+    test_file = self._GetTestFilePath([u'SOFTWARE'])
     file_entry = self._GetTestFileEntry(test_file)
-    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+    winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
 
     registry.MountFile(winreg_file, u'HKEY_LOCAL_MACHINE\\Software')
 
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    test_file = self._GetTestFilePath([u'NTUSER-WIN7.DAT'])
     file_entry = self._GetTestFileEntry(test_file)
-    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+    winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
 
     with self.assertRaises(KeyError):
       registry.MountFile(winreg_file, u'HKEY_LOCAL_MACHINE\\Software')

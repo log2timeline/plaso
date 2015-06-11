@@ -176,9 +176,9 @@ class WinRegistryParser(interface.BasePluginsParser):
 
   _plugin_classes = {}
 
-  # List of types Windows Registry types and required keys to identify each of
-  # these types.
-  REG_TYPES = {
+  # List of types Windows Registry file types and required keys to identify
+  # each of these types.
+  _REGISTRY_FILE_TYPES = {
       u'NTUSER': (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
       u'SOFTWARE': (u'\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
       u'SECURITY': (u'\\Policy\\PolAdtEv',),
@@ -191,6 +191,93 @@ class WinRegistryParser(interface.BasePluginsParser):
     """Initializes a parser object."""
     super(WinRegistryParser, self).__init__()
     self._plugins = WinRegistryParser.GetPluginList()
+
+  def _CheckSignature(self, parser_mediator):
+    """Checks if the file matches the signature of a REGF file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+
+    Returns:
+      A boolean value indicating if the file matches the signature of
+      a REGF file.
+    """
+    file_object = parser_mediator.GetFileObject()
+    try:
+      data = file_object.read(4)
+    finally:
+      file_object.close()
+
+    return data == b'regf'
+
+  def _GetRegistryFileType(self, winreg_file):
+    """Determines the Registry file type.
+
+    Args:
+      winreg_file: A Windows Registry file (instance of WinRegFile).
+
+    Returns:
+      The Registry file type.
+    """
+    registry_type = u'UNKNOWN'
+    for reg_type in self._REGISTRY_FILE_TYPES:
+      if reg_type == u'UNKNOWN':
+        continue
+
+      # Check if all the known keys for a certain Registry file exist.
+      known_keys_found = True
+      for known_key_path in self._REGISTRY_FILE_TYPES[reg_type]:
+        if not winreg_file.GetKeyByPath(known_key_path):
+          known_keys_found = False
+          break
+
+      if known_keys_found:
+        registry_type = reg_type
+        break
+
+    return registry_type
+
+  def _ParseRegistryFile(
+      self, parser_mediator, winreg_file, registry_cache, registry_type):
+    """Parses a Windows Registry file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      winreg_file: A Windows Registry file (instance of WinRegFile).
+      registry_cache: The Registry cache object (instance of WinRegistryCache).
+      registry_type: The Registry file type.
+    """
+    plugins = {}
+    number_of_plugins = 0
+    for weight in self._plugins.GetWeights():
+      plist = self._plugins.GetWeightPlugins(weight, registry_type)
+      plugins[weight] = []
+      for plugin in plist:
+        plugins[weight].append(plugin(reg_cache=registry_cache))
+        number_of_plugins += 1
+
+    logging.debug(
+        u'Number of plugins for this Windows Registry file: {0:d}.'.format(
+            number_of_plugins))
+
+    # Recurse through keys in the file and apply the plugins in the order:
+    # 1. file type specific key-based plugins.
+    # 2. generic key-based plugins.
+    # 3. file type specific value-based plugins.
+    # 4. generic value-based plugins.
+    root_key = winreg_file.GetKeyByPath(u'\\')
+
+    for key in self._RecurseKey(root_key):
+      for weight in iter(plugins.keys()):
+        # TODO: determine if the plugin matches the key and continue
+        # to the next key.
+        for plugin in plugins[weight]:
+          if parser_mediator.abort:
+            break
+
+          plugin.UpdateChainAndProcess(
+              parser_mediator, key=key, registry_type=registry_type,
+              codepage=parser_mediator.codepage)
 
   def _RecurseKey(self, key):
     """A generator that takes a key and yields every subkey of it."""
@@ -223,92 +310,44 @@ class WinRegistryParser(interface.BasePluginsParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
+    display_name = parser_mediator.GetDisplayName()
+
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with
     # a Windows NT Registry file before proceeding.
 
-    file_object = parser_mediator.GetFileObject()
-    try:
-      data = file_object.read(4)
-    finally:
-      file_object.close()
-
-    file_entry = parser_mediator.GetFileEntry()
-    if data != b'regf':
+    if not self._CheckSignature(parser_mediator):
       raise errors.UnableToParseFile((
           u'[{0:s}] unable to parse file: {1:s} with error: invalid '
-          u'signature.').format(self.NAME, file_entry.name))
+          u'signature.').format(self.NAME, display_name))
 
+    # TODO: refactor this.
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    # Determine type, find all parsers
+    file_entry = parser_mediator.GetFileEntry()
     try:
       winreg_file = registry.OpenFile(
           file_entry, codepage=parser_mediator.codepage)
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, display_name, exception))
 
-    # Detect the Windows Registry file type.
-    registry_type = u'UNKNOWN'
-    for reg_type in self.REG_TYPES:
-      if reg_type == u'UNKNOWN':
-        continue
+    try:
+      registry_type = self._GetRegistryFileType(winreg_file)
+      logging.debug(
+          u'Windows Registry file {0:s}: detected as: {1:s}'.format(
+              display_name, registry_type))
 
-      # Check if all the known keys for a certain Registry file exist.
-      known_keys_found = True
-      for known_key_path in self.REG_TYPES[reg_type]:
-        if not winreg_file.GetKeyByPath(known_key_path):
-          known_keys_found = False
-          break
+      registry_cache = cache.WinRegistryCache()
+      registry_cache.BuildCache(winreg_file, registry_type)
 
-      if known_keys_found:
-        registry_type = reg_type
-        break
+      self._ParseRegistryFile(
+          parser_mediator, winreg_file, registry_cache, registry_type)
 
-    self._registry_type = registry_type
-    logging.debug(
-        u'Windows Registry file {0:s}: detected as: {1:s}'.format(
-            file_entry.name, registry_type))
-
-    registry_cache = cache.WinRegistryCache()
-    registry_cache.BuildCache(winreg_file, registry_type)
-
-    plugins = {}
-    number_of_plugins = 0
-    for weight in self._plugins.GetWeights():
-      plist = self._plugins.GetWeightPlugins(weight, registry_type)
-      plugins[weight] = []
-      for plugin in plist:
-        plugins[weight].append(plugin(reg_cache=registry_cache))
-        number_of_plugins += 1
-
-    logging.debug(
-        u'Number of plugins for this Windows Registry file: {0:d}.'.format(
-            number_of_plugins))
-
-    # Recurse through keys in the file and apply the plugins in the order:
-    # 1. file type specific key-based plugins.
-    # 2. generic key-based plugins.
-    # 3. file type specific value-based plugins.
-    # 4. generic value-based plugins.
-    root_key = winreg_file.GetKeyByPath(u'\\')
-
-    for key in self._RecurseKey(root_key):
-      for weight in plugins.iterkeys():
-        # TODO: determine if the plugin matches the key and continue
-        # to the next key.
-        for plugin in plugins[weight]:
-          if parser_mediator.abort:
-            break
-          plugin.UpdateChainAndProcess(
-              parser_mediator, key=key, registry_type=self._registry_type,
-              codepage=parser_mediator.codepage)
-
-
-    winreg_file.Close()
+    finally:
+      winreg_file.Close()
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)
