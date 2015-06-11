@@ -51,6 +51,15 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
     tagging_file = getattr(options, u'tagging_file', None)
     if tagging_file:
       if not os.path.exists(tagging_file) or not os.path.isfile(tagging_file):
+        # Check if the file exists in the data location path.
+        data_location = getattr(options, 'data_location', None)
+        if data_location:
+          new_tagging_path = os.path.join(data_location, tagging_file)
+          if os.path.exists(new_tagging_path) and os.path.isfile(
+              new_tagging_path):
+            analysis_plugin.SetAndLoadTagFile(new_tagging_path)
+            return
+
         raise errors.BadConfigOption(
             u'Tagging file {0:s} does not exist.'.format(tagging_file))
       analysis_plugin.SetAndLoadTagFile(tagging_file)

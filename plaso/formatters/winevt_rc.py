@@ -120,7 +120,11 @@ class Sqlite3DatabaseFile(object):
     self.filename = filename
     self.read_only = read_only
 
-    self._connection = sqlite3.connect(filename)
+    try:
+      self._connection = sqlite3.connect(filename)
+    except sqlite3.OperationalError:
+      return False
+
     if not self._connection:
       return False
 
@@ -339,13 +343,13 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       return
-  
+
     column_names = [u'value']
     condition = u'name == "{0:s}"'.format(attribute_name)
-  
+
     values = list(self._database_file.GetValues(
         [table_name], column_names, condition))
-  
+
     number_of_values = len(values)
     if number_of_values == 0:
       return

@@ -335,8 +335,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     if not fields_filter:
       return
 
-    self._fields = fields_filter.fields
-    self._field_delimiter = fields_filter.separator
+    if fields_filter.fields:
+      self._fields = fields_filter.fields
+    if fields_filter.separator:
+      self._field_delimiter = fields_filter.separator
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.

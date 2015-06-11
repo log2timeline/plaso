@@ -577,6 +577,8 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     if self._data_location:
       self._front_end.SetDataLocation(self._data_location)
+      # Update the data location with the calculated value.
+      options.data_location = self._data_location
     else:
       logging.warning(u'Unable to automatically determine data location.')
 
