@@ -174,7 +174,7 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
 
         file_object.seek(-16, os.SEEK_CUR)
         try:
-          file_footer = self._FILE_FOOTER.parse_stream(self._file_object)
+          file_footer = self._FILE_FOOTER.parse_stream(file_object)
         except (IOError, construct.FieldError) as exception:
           raise IOError((
               u'Unable to parse file footer at offset: 0x{0:08x} '

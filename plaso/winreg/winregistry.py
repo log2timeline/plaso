@@ -58,49 +58,11 @@ class WinRegistry(object):
     """
     return cls._FILENAME_MOUNTED_PATHS.get(filename.upper(), None)
 
-  def OpenFile(self, file_entry, codepage='cp1252'):
-    """Opens the file object based on the back-end.
-
-    Args:
-      file_entry: The file entry object.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Returns:
-      The a Windows Registry file (instance of WinRegFile) if successful
-      or None otherwise.
-    """
-    winreg_file = None
-
-    if self._backend == self.BACKEND_PYREGF:
-      winreg_file = winpyregf.WinPyregfFile()
-
-    if winreg_file:
-      winreg_file.Open(file_entry, codepage=codepage)
-
-    return winreg_file
-
-  def MountFile(self, winreg_file, mounted_path):
-    """Mounts a file in the Registry.
-
-    Args:
-      winreg_file: The Windows Registry file (instance of WinRegFile).
-      mounted_path: The path of the key where the Windows Registry file
-                    is mounted.
-
-    Raises:
-      KeyError: if mounted path is already set.
-      ValueError: if mounted path is not set.
-    """
-    if not mounted_path:
-      raise ValueError(u'Missing mounted path value')
-
-    if mounted_path in self._files:
-      raise KeyError(u'Mounted path: {0:s} already set.'.format(mounted_path))
-
-    self._files[mounted_path] = winreg_file
-
   def GetKeyByPath(self, path):
     """Retrieves a specific key defined by the Registry path.
+
+    Args:
+      path: the path of the Windows Registry key.
 
     Returns:
       The key (instance of WinRegKey) if available or None otherwise.
@@ -131,3 +93,44 @@ class WinRegistry(object):
     # TODO: correct the path of the key for the mounted location.
 
     return winreg_key
+
+  def MountFile(self, winreg_file, mounted_path):
+    """Mounts a file in the Registry.
+
+    Args:
+      winreg_file: The Windows Registry file (instance of WinRegFile).
+      mounted_path: The path of the key where the Windows Registry file
+                    is mounted.
+
+    Raises:
+      KeyError: if mounted path is already set.
+      ValueError: if mounted path is not set.
+    """
+    if not mounted_path:
+      raise ValueError(u'Missing mounted path value')
+
+    if mounted_path in self._files:
+      raise KeyError(u'Mounted path: {0:s} already set.'.format(mounted_path))
+
+    self._files[mounted_path] = winreg_file
+
+  def OpenFile(self, file_entry, codepage='cp1252'):
+    """Opens the file object based on the back-end.
+
+    Args:
+      file_entry: The file entry object (instance of dfvfs.FileEntry).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+
+    Returns:
+      The a Windows Registry file (instance of WinRegFile) if successful
+      or None otherwise.
+    """
+    winreg_file = None
+
+    if self._backend == self.BACKEND_PYREGF:
+      winreg_file = winpyregf.WinPyregfFile()
+
+    if winreg_file:
+      winreg_file.Open(file_entry, codepage=codepage)
+
+    return winreg_file
