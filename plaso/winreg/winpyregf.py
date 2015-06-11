@@ -35,8 +35,8 @@ class WinPyregfKey(interface.WinRegKey):
     if root:
       self._path = self.PATH_SEPARATOR
     else:
-      self._path = self.PATH_SEPARATOR.join(
-          [parent_path, self._pyregf_key.name])
+      self._path = self.PATH_SEPARATOR.join([
+          parent_path, self._pyregf_key.name])
 
   # pylint: disable=method-hidden
   @property
@@ -158,7 +158,7 @@ class WinPyregfValue(interface.WinRegValue):
     """
     super(WinPyregfValue, self).__init__()
     self._pyregf_value = pyregf_value
-    self._type_str = ''
+    self._type_str = u''
 
   @property
   def name(self):
@@ -182,7 +182,7 @@ class WinPyregfValue(interface.WinRegValue):
       return self._pyregf_value.data
     except IOError:
       raise errors.WinRegistryValueError(
-          'Unable to read data from value: {0:s}'.format(
+          u'Unable to read data from value: {0:s}'.format(
               self._pyregf_value.name))
 
   @property
@@ -211,8 +211,8 @@ class WinPyregfValue(interface.WinRegValue):
         return u''
 
       try:
-        utf16_string = unicode(self._pyregf_value.data.decode('utf-16-le'))
-        return filter(None, utf16_string.split('\x00'))
+        utf16_string = unicode(self._pyregf_value.data.decode(u'utf-16-le'))
+        return filter(None, utf16_string.split(b'\x00'))
       except UnicodeError:
         pass
 
@@ -220,47 +220,29 @@ class WinPyregfValue(interface.WinRegValue):
 
 
 class WinPyregfFile(interface.WinRegFile):
-  """Implementation of a Windows Registry file pyregf."""
+  """Implementation of a Windows Registry file pyregf.
+
+  Attributes:
+    name: the name of the Windows Registry file.
+  """
 
   def __init__(self):
     """Initializes a Windows Registry key object."""
     super(WinPyregfFile, self).__init__()
-    self._pyregf_file = pyregf.file()
-    self.name = ''
     self._base_key = None
+    self._file_object = None
+    self._pyregf_file = pyregf.file()
 
-  def Open(self, file_entry, codepage='cp1252'):
-    """Opens the Windows Registry file.
-
-    Args:
-      file_entry: The file entry object.
-      name: The name of the file.
-      codepage: Optional codepage for ASCII strings, default is cp1252.
-    """
-    # TODO: Add a more elegant error handling to this issue. There are some
-    # code pages that are not supported by the parent library. However we
-    # need to properly set the codepage so the library can properly interpret
-    # values in the Registry.
-    try:
-      self._pyregf_file.set_ascii_codepage(codepage)
-
-    except (TypeError, IOError):
-      logging.error((
-          u'Unable to set the Windows Registry file codepage: {0:s}. '
-          u'Ignoring provided value.').format(codepage))
-
-    self._file_object = file_entry.GetFileObject()
-    self._pyregf_file.open_file_object(self._file_object)
-
-    self._base_key = self._pyregf_file.get_root_key()
-
-    # TODO: move to a pyvfs like Registry sub-system.
-    self.name = file_entry.name
+    self.name = u''
 
   def Close(self):
     """Closes the Windows Registry file."""
-    self._pyregf_file.close()
-    self._file_object.close()
+    self._base_key = None
+
+    if self._file_object:
+      self._pyregf_file.close()
+      self._file_object.close()
+      self._file_object = None
 
   def GetKeyByPath(self, path):
     """Retrieves a specific key defined by the Registry path.
@@ -278,7 +260,6 @@ class WinPyregfFile(interface.WinRegFile):
       return None
 
     pyregf_key = self._base_key.get_sub_key_by_path(path)
-
     if not pyregf_key:
       return None
 
@@ -290,90 +271,39 @@ class WinPyregfFile(interface.WinRegFile):
     parent_path, _, _ = path.rpartition(interface.WinRegKey.PATH_SEPARATOR)
     return WinPyregfKey(pyregf_key, parent_path, root)
 
-
-class WinRegistry(object):
-  """Provides access to the Windows Registry file."""
-  # TODO: deprecate this class.
-
-  def __init__(self, file_entry, codepage='cp1252'):
-    """Constructor for the Registry object.
+  def Open(self, file_entry, codepage=u'cp1252'):
+    """Opens the Windows Registry file.
 
     Args:
-      file_entry: A file entry object.
-      codepage: The codepage of the Registry hive, used for string
-                representation.
-    """
-    self._pyregf_file = pyregf.file()
+      file_entry: The file entry object (instance of dfvfs.FileEntry).
+      name: The name of the file.
+      codepage: Optional codepage for ASCII strings, default is cp1252.
 
+    Raises:
+      IOError: if there is an error opening or reading the Registry file.
+    """
+    # TODO: Add a more elegant error handling to this issue. There are some
+    # code pages that are not supported by the parent library. However we
+    # need to properly set the codepage so the library can properly interpret
+    # values in the Registry.
     try:
-      # TODO: Add a more elegant error handling to this issue. There are some
-      # code pages that are not supported by the parent library. However we
-      # need to properly set the codepage so the library can properly interpret
-      # values in the Registry.
       self._pyregf_file.set_ascii_codepage(codepage)
+
     except (TypeError, IOError):
-      logging.error(
-          u'Unable to set the Registry codepage to: {}. Not setting it'.format(
-              codepage))
+      logging.error((
+          u'Unable to set the Windows Registry file codepage: {0:s}. '
+          u'Ignoring provided value.').format(codepage))
 
     file_object = file_entry.GetFileObject()
-    self._pyregf_file.open_file_object(file_object)
-
-  def GetRoot(self):
-    """Return the root key of the Registry hive."""
-    key = WinPyregfKey(self._pyregf_file.get_root_key())
-    # Change root key name to avoid key based plugins failing.
-    key.path = ''
-    return key
-
-  def GetKey(self, key):
-    """Return a Registry key as a WinPyregfKey object."""
-    if not key:
-      return None
-
-    my_key = self._pyregf_file.get_key_by_path(key)
-    if not my_key:
-      return None
-
-    path, _, _ = key.rpartition('\\')
-
-    return WinPyregfKey(my_key, path)
-
-  def __contains__(self, key):
-    """Check if a certain Registry key exists within the hive."""
     try:
-      return bool(self.GetKey(key))
-    except KeyError:
-      return False
+      self._pyregf_file.open_file_object(file_object)
 
-  def GetAllSubkeys(self, key):
-    """Generator that returns all sub keys of any given Registry key.
+      self._base_key = self._pyregf_file.get_root_key()
 
-    Args:
-      key: A Windows Registry key string or object (instance of WinPyregfKey).
+      # TODO: move to a dfVFS like Registry sub-system.
+      self.name = file_entry.name
+      self._file_object = file_object
 
-    Yields:
-      Windows Registry key objects (instances of WinPyregfKey) that represent
-      the subkeys stored within the key.
-    """
-    # TODO: refactor this function.
-    # TODO: remove the hasattr check.
-    if not hasattr(key, 'GetSubkeys'):
-      key = self.GetKey(key)
-
-    for subkey in key.GetSubkeys():
-      yield subkey
-      if subkey.number_of_subkeys != 0:
-        for s in self.GetAllSubkeys(subkey):
-          yield s
-
-  def __iter__(self):
-    """Default iterator, returns all subkeys of the Windows Registry file."""
-    root = self.GetRoot()
-    for key in self.GetAllSubkeys(root):
-      yield key
-
-
-def GetLibraryVersion():
-  """Return the pyregf and libregf version."""
-  return pyregf.get_version()
+    except IOError:
+      file_object.close()
+      raise

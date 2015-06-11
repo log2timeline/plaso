@@ -6,7 +6,6 @@ import abc
 from plaso.lib import errors
 
 
-
 class WinRegCachePlugin(object):
   """Class that implements the Window Registry cache plugin interface."""
 
@@ -86,17 +85,21 @@ class CurrentControlSetPlugin(WinRegCachePlugin):
     return u'ControlSet{0:03d}'.format(key_number)
 
 
+# TODO: split the cache and the plugin manager.
 class WinRegistryCache(object):
   """Class that implements the Windows Registry objects cache.
 
-     There are some values that are valid for the duration of an entire run
-     against an image, such as code_page, etc.
+  There are some values that are valid for the duration of an entire run
+  against an image, such as code_page, etc.
 
-     However there are other values that should only be valid for each
-     Windows Registry file, such as a current_control_set. The Windows Registry
-     objects cache is designed to store those short lived cache values, so they
-     can be calculated once for each Windows Registry file, yet do not live
-     across all files parsed within an image.
+  However there are other values that should only be valid for each
+  Windows Registry file, such as a current_control_set. The Windows Registry
+  objects cache is designed to store those short lived cache values, so they
+  can be calculated once for each Windows Registry file, yet do not live
+  across all files parsed within an image.
+
+  Attributes:
+    attributes: a dictionary of cached attributes and their identifier as key.
   """
   _plugin_classes = {}
 

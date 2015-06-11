@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.parsers import winreg
+from plaso.winreg import winpyregf
 
 from tests.parsers import test_lib
 
@@ -31,12 +32,44 @@ class WinRegTest(test_lib.ParserTestCase):
 
     return parser_chains
 
+  def _OpenWinRegFile(self, filename):
+    """Opens a Windows Registry file.
+
+    Args:
+      filename: The filename of the Windows Registry file, relative to
+                the test data location.
+
+    Returns:
+      A Windows Registry file object (instance of WinRegFile).
+    """
+    file_entry = self._GetTestFileEntryFromPath([filename])
+    winreg_file = winpyregf.WinPyregfFile()
+    winreg_file.Open(file_entry)
+
+    return winreg_file
+
   def _PluginNameToParserChain(self, plugin_name):
     """Generate the correct parser chain for a given plugin."""
     return u'winreg/{0:s}'.format(plugin_name)
 
-  def testNtuserParsing(self):
-    """Parse a NTUSER.dat file and check few items."""
+  def testGetRegistryFileType(self):
+    """Tests the _GetRegistryFileType function."""
+    winreg_file = self._OpenWinRegFile(u'NTUSER.DAT')
+
+    registry_type = self._parser._GetRegistryFileType(winreg_file)
+    self.assertEqual(registry_type, u'NTUSER')
+
+    winreg_file.Close()
+
+    winreg_file = self._OpenWinRegFile(u'SYSTEM')
+
+    registry_type = self._parser._GetRegistryFileType(winreg_file)
+    self.assertEqual(registry_type, u'SYSTEM')
+
+    winreg_file.Close()
+
+  def testParseNTUserDat(self):
+    """Tests the Parse function on a NTUSER.DAT file."""
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath([u'NTUSER.DAT'])
     event_queue_consumer = self._ParseFile(
@@ -45,18 +78,13 @@ class WinRegTest(test_lib.ParserTestCase):
 
     parser_chains = self._GetParserChains(event_objects)
 
-    # The _registry_type member is created dynamically by invoking
-    # the _GetParserChains function.
-    registry_type = getattr(self._parser, u'_registry_type', u'')
-    self.assertEqual(registry_type, u'NTUSER')
-
     expected_chain = self._PluginNameToParserChain(u'userassist')
     self.assertTrue(expected_chain in parser_chains)
 
     self.assertEqual(parser_chains[expected_chain], 14)
 
-  def testSystemParsing(self):
-    """Parse a SYSTEM hive an run few tests."""
+  def testParseSystem(self):
+    """Tests the Parse function on a SYSTEM file."""
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath([u'SYSTEM'])
     event_queue_consumer = self._ParseFile(
@@ -64,11 +92,6 @@ class WinRegTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     parser_chains = self._GetParserChains(event_objects)
-
-    # The _registry_type member is created dynamically by invoking
-    # the _GetParserChains function.
-    registry_type = getattr(self._parser, u'_registry_type', u'')
-    self.assertEqual(registry_type, u'SYSTEM')
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
