@@ -21,12 +21,15 @@ from plaso.analysis import interface as analysis_interface
 from plaso.cli import analysis_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
 from plaso.lib import errors
 from plaso.winnt import language_ids
+
+
+class PsortOptions(object):
+  """Class to define psort options."""
 
 
 class PsortTool(analysis_tool.AnalysisTool):
@@ -165,7 +168,8 @@ class PsortTool(analysis_tool.AnalysisTool):
       read_only = True
 
     try:
-      storage_file = self._front_end.OpenStorageFile(read_only=read_only)
+      storage_file = self._front_end.OpenStorage(
+          self._storage_file_path, read_only=read_only)
     except IOError as exception:
       raise RuntimeError(
           u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
@@ -200,7 +204,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     # those that may be missing.
     missing_parameters = output_module.GetMissingArguments()
     while missing_parameters:
-      configuration_object = frontend.Options()
+      # TODO: refactor this.
+      configuration_object = PsortOptions()
       setattr(configuration_object, u'output_format', output_module.NAME)
       for parameter in missing_parameters:
         value = self._PromptUserForInput(
@@ -580,7 +585,6 @@ class PsortTool(analysis_tool.AnalysisTool):
 
   def ProcessStorage(self):
     """Processes a plaso storage."""
-    self._front_end.ParseOptions(self._options)
     try:
       self._ProcessStorage()
 

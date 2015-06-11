@@ -209,7 +209,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
   def _PreprocessSetCollectionInformation(
       self, pre_obj, unused_engine, filter_file=None,
-      parser_filter_string=None):
+      parser_filter_string=None, preferred_encoding=u'utf-8'):
     """Sets the collection information as part of the preprocessing.
 
     Args:
@@ -218,6 +218,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       filter_file: a path to a file that contains find specifications.
                    The default is None.
       parser_filter_string: optional parser filter string. The default is None.
+      preferred_encoding: optional preferred encoding. The default is UTF-8.
     """
     collection_information = {}
 
@@ -229,7 +230,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     if not parser_filter_string:
       parser_filter_string = u'(no list set)'
     collection_information[u'parser_selection'] = parser_filter_string
-    collection_information[u'preferred_encoding'] = self.preferred_encoding
+    collection_information[u'preferred_encoding'] = preferred_encoding
 
     # TODO: extraction info:
     collection_information[u'configured_zone'] = pre_obj.zone
@@ -361,8 +362,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
   def ProcessSources(
       self, source_path_specs, filter_file=None, hasher_names_string=None,
-      parser_filter_string=None, single_process_mode=False,
-      status_update_callback=None,
+      parser_filter_string=None, preferred_encoding=u'utf-8',
+      single_process_mode=False, status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
     """Processes the sources.
@@ -375,6 +376,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       hasher_names_string: optional comma separated string of names of
                            hashers to enable. The default is None.
       parser_filter_string: optional parser filter string. The default is None.
+      preferred_encoding: optional preferred encoding. The default is UTF-8.
       single_process_mode: optional boolean value to indicate if the front-end
                            should run in single process mode. The default is
                            False.
@@ -458,7 +460,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     self._PreprocessSetCollectionInformation(
         pre_obj, self._engine, filter_file=filter_file,
-        parser_filter_string=parser_filter_string)
+        parser_filter_string=parser_filter_string,
+        preferred_encoding=preferred_encoding)
 
     if self._output_module:
       storage_writer = storage.BypassStorageWriter(
