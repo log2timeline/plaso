@@ -180,9 +180,8 @@ class PregToolTest(test_lib.ToolTestCase):
   # TODO: clean up PregHelper.
   def testParseHive(self):
     """Tests the ParseHive function."""
-    options = cli_test_lib.TestOptions()
     hive_storage = preg_frontend.PregStorage()
-    preg_helper = preg.PregHelper(options, self._test_tool, hive_storage)
+    preg_helper = preg.PregHelper(self._test_tool, hive_storage)
 
     # TODO: Replace this once _GetTestFileEntry is pushed in.
     system_hive_path = self._GetTestFilePath([u'SYSTEM'])
@@ -217,9 +216,8 @@ class PregConsoleTest(test_lib.ToolTestCase):
     # Open up a hive.
     hive_path = self._GetTestFilePath([u'NTUSER.DAT'])
 
-    options = cli_test_lib.TestOptions()
     hive_storage = preg_frontend.PregStorage()
-    preg_helper = preg.PregHelper(options, self._test_tool, hive_storage)
+    preg_helper = preg.PregHelper(self._test_tool, hive_storage)
 
     hive_helper = preg_helper.OpenHive(hive_path, None)
     self.assertEqual(hive_helper.name, u'NTUSER.DAT')
@@ -284,9 +282,8 @@ class PregConsoleTest(test_lib.ToolTestCase):
 
   def testTopLevelMethods(self):
     """Test few of the top level methods in the preg module."""
-    options = cli_test_lib.TestOptions()
     hive_storage = preg_frontend.PregStorage()
-    preg_helper = preg.PregHelper(options, self._test_tool, hive_storage)
+    preg_helper = preg.PregHelper(self._test_tool, hive_storage)
 
     # Set the cache.
     preg_frontend.PregCache.shell_helper = preg_helper

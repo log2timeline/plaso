@@ -65,15 +65,15 @@ from plaso.winreg import winregistry
 
 
 # Older versions of IPython don't have a version_info attribute.
-if getattr(IPython, 'version_info', (0, 0, 0)) < (1, 2, 1):
+if getattr(IPython, u'version_info', (0, 0, 0)) < (1, 2, 1):
   raise ImportWarning(
-      'Preg requires at least IPython version 1.2.1.')
+      u'Preg requires at least IPython version 1.2.1.')
 
 
 # TODO: replace by tool.PrintHeader.
-def FormatHeader(header, char='*'):
+def FormatHeader(header, char=u'*'):
   """Formats the header as a line of 80 chars with the header text centered."""
-  format_string = '\n{{0:{0:s}^80}}'.format(char)
+  format_string = u'\n{{0:{0:s}^80}}'.format(char)
   return format_string.format(u' {0:s} '.format(header))
 
 
@@ -111,7 +111,7 @@ def FormatOutputString(name, description, col_length=25):
   ret = []
   ret.append(fmt.format(name, lines[0]))
   for line in lines[1:]:
-    ret.append(fmt_second.format('', line))
+    ret.append(fmt_second.format(u'', line))
 
   return u'\n'.join(ret)
 
@@ -174,7 +174,6 @@ class ConsoleConfig(object):
       ipython_config.prompt_manager.in_template = r''.join(prompt_strings)
 
 
-# TODO: move options out of PregHelper and move parts to front end.
 class PregHelper(object):
   """Class that defines various helper functions.
 
@@ -183,16 +182,14 @@ class PregHelper(object):
   and provide additional helper functions to the IPython shell.
   """
 
-  def __init__(self, options, preg_tool, hive_storage):
+  def __init__(self, preg_tool, hive_storage):
     """Initialize the helper object.
 
     Args:
-      options: A configuration object.
       preg_tool: A preg tool object (instance of PregTool).
       hive_storage: A hive storage object (instance of PregStorage).
     """
     super(PregHelper, self).__init__()
-    self._options = options
     self.hive_storage = hive_storage
     self.preg_tool = preg_tool
 
@@ -220,7 +217,7 @@ class PregHelper(object):
 
   def OpenHive(
       self, filename_or_path_spec, hive_collector, hive_collector_name=None,
-      codepage='cp1252'):
+      codepage=u'cp1252'):
     """Open a Registry hive based on a collector or a filename.
 
     Args:
@@ -361,8 +358,6 @@ class PregTool(storage_media_tool.StorageMediaTool):
         input_reader=input_reader, output_writer=output_writer)
     self._front_end = preg.PregFrontend()
     self._key_path = None
-    # TODO: remove after preg options refactor.
-    self._options = None
     self._parse_restore_points = False
     self._plugin_names = u''
     self._registry_file = u''
@@ -391,19 +386,19 @@ class PregTool(storage_media_tool.StorageMediaTool):
     ret_strings = []
 
     timestamp_description = getattr(
-        event_object, 'timestamp_desc', eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object, u'timestamp_desc', eventdata.EventTimestamp.WRITTEN_TIME)
 
     if timestamp_description != eventdata.EventTimestamp.WRITTEN_TIME:
       ret_strings.append(u'<{0:s}>'.format(timestamp_description))
 
-    if hasattr(event_object, 'regvalue'):
+    if hasattr(event_object, u'regvalue'):
       attributes = event_object.regvalue
     else:
       # TODO: Add a function for this to avoid repeating code.
       keys = event_object.GetAttributes().difference(
           event_object.COMPARE_EXCLUDE)
-      keys.discard('offset')
-      keys.discard('timestamp_desc')
+      keys.discard(u'offset')
+      keys.discard(u'timestamp_desc')
       attributes = {}
       for key in keys:
         attributes[key] = getattr(event_object, key)
@@ -413,7 +408,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     if show_hex and file_entry:
       event_object.pathspec = file_entry.path_spec
-      ret_strings.append(self._FormatHeader(u'Hex Output From Event.', '-'))
+      ret_strings.append(self._FormatHeader(u'Hex Output From Event.', u'-'))
       ret_strings.append(
           frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
 
@@ -480,9 +475,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
     return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
 
   # TODO: replace by tool.PrintHeader.
-  def _FormatHeader(self, header, char='*'):
+  def _FormatHeader(self, header, char=u'*'):
     """Formats the header as a line of 80 characters with centered text."""
-    format_string = '\n{{0:{0:s}^80}}'.format(char)
+    format_string = u'\n{{0:{0:s}^80}}'.format(char)
     return format_string.format(u' {0:s} '.format(header))
 
   # TODO: Improve check and use dfVFS.
@@ -870,9 +865,6 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     self._registry_file = registry_file
 
-    # TODO: refactor this.
-    self._options = options
-
   # TODO: refactor move non tool code into frontend.
   def ParseKey(
       self, key, shell_helper, hive_helper, verbose=False, use_plugins=None):
@@ -979,7 +971,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
             first_event = event_objects_and_timestamps[event_timestamp][0]
             descriptions = set()
             for event_object in event_objects_and_timestamps[event_timestamp]:
-              descriptions.add(getattr(event_object, 'timestamp_desc', u''))
+              descriptions.add(getattr(event_object, u'timestamp_desc', u''))
             print_strings.extend(self._GetEventHeader(
                 first_event, list(descriptions), exclude_timestamp_in_header))
             first = False
@@ -997,7 +989,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         print_strings.append(u'')
 
     # Printing '*' 80 times.
-    print_strings.append(u'*'*80)
+    print_strings.append(u'*' * 80)
     print_strings.append(u'')
 
     return print_strings
@@ -1016,7 +1008,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         registry_types=[self._registry_file])
 
     hive_storage = preg.PregStorage()
-    shell_helper = PregHelper(self._options, self, hive_storage)
+    shell_helper = PregHelper(self, hive_storage)
     parser_mediator = shell_helper.BuildParserMediator()
 
     for hive in hives:
@@ -1055,7 +1047,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self._front_end.ExpandKeysRedirect(key_paths)
 
     hive_storage = preg.PregStorage()
-    shell_helper = PregHelper(self._options, self, hive_storage)
+    shell_helper = PregHelper(self, hive_storage)
 
     if hives is None:
       hives = [self._registry_file]
@@ -1086,7 +1078,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     # expand all keys.
     _, hive_collector = hive_collectors[0]
     hive_storage = preg.PregStorage()
-    shell_helper = PregHelper(self._options, self, hive_storage)
+    shell_helper = PregHelper(self, hive_storage)
     hive_helper = shell_helper.OpenHive(hives[0], hive_collector)
     parser_mediator = shell_helper.BuildParserMediator()
 
@@ -1200,21 +1192,21 @@ class PregMagics(magic.Magics):
     else:
       print(u'Unable to change to: {0:s}'.format(key_path))
 
-  @magic.line_magic('hive')
+  @magic.line_magic(u'hive')
   def HiveActions(self, line):
     """Define the hive command on the console prompt."""
-    if line.startswith('list'):
+    if line.startswith(u'list'):
       print(preg.PregCache.hive_storage.ListHives())
 
       print(u'')
       print(u'To open a hive, use: hive_open INDEX')
-    elif line.startswith('open ') or line.startswith('load '):
+    elif line.startswith(u'open ') or line.startswith(u'load '):
       preg.PregCache.hive_storage.SetOpenHive(line[5:])
       hive_helper = preg.PregCache.hive_storage.loaded_hive
       print(u'Opening hive: {0:s} [{1:s}]'.format(
           hive_helper.path, hive_helper.collector_name))
       ConsoleConfig.SetPrompt(hive_path=hive_helper.path)
-    elif line.startswith('scan'):
+    elif line.startswith(u'scan'):
       items = line.split()
       if len(items) < 2:
         print(
@@ -1224,15 +1216,15 @@ class PregMagics(magic.Magics):
 
       preg.PregCache.hive_storage.Scan(items[1:])
 
-  @magic.line_magic('ls')
+  @magic.line_magic(u'ls')
   def ListDirectoryContent(self, line):
     """List all subkeys and values of the current key."""
     if not IsLoaded():
       return
 
-    if 'true' in line.lower():
+    if u'true' in line.lower():
       verbose = True
-    elif '-v' in line.lower():
+    elif u'-v' in line.lower():
       verbose = True
     else:
       verbose = False
@@ -1246,16 +1238,16 @@ class PregMagics(magic.Magics):
     for key in current_key.GetSubkeys():
       # TODO: move this construction into a separate function in OutputWriter.
       timestamp, _, _ = frontend_utils.OutputWriter.GetDateTimeString(
-          key.last_written_timestamp).partition('.')
+          key.last_written_timestamp).partition(u'.')
 
       sub.append((u'{0:>19s} {1:>15s}  {2:s}'.format(
-          timestamp.replace('T', ' '), '[KEY]',
+          timestamp.replace(u'T', u' '), u'[KEY]',
           key.name), True))
 
     for value in current_key.GetValues():
       if not verbose:
         sub.append((u'{0:>19s} {1:>14s}]  {2:s}'.format(
-            u'', '[' + value.data_type_string, value.name), False))
+            u'', u'[' + value.data_type_string, value.name), False))
       else:
         if value.DataIsString():
           value_string = u'{0:s}'.format(value.data)
@@ -1288,12 +1280,12 @@ class PregMagics(magic.Magics):
       else:
         self.output_writer.write(u'-r-xr-xr-x {0:s}\n'.format(entry))
 
-  @magic.line_magic('parse')
+  @magic.line_magic(u'parse')
   def ParseCurrentKey(self, line):
     """Parse the current key."""
-    if 'true' in line.lower():
+    if u'true' in line.lower():
       verbose = True
-    elif '-v' in line.lower():
+    elif u'-v' in line.lower():
       verbose = True
     else:
       verbose = False
@@ -1320,12 +1312,12 @@ class PregMagics(magic.Magics):
         if value.DataIsBinaryData():
           if not header_shown:
             header_shown = True
-            print(FormatHeader('Hex Dump'))
+            print(FormatHeader(u'Hex Dump'))
           # Print '-' 80 times.
           self.output_writer.write(u'-'*80)
           self.output_writer.write(u'\n')
           self.output_writer.write(
-              FormatOutputString('Attribute', value.name))
+              FormatOutputString(u'Attribute', value.name))
           self.output_writer.write(u'-'*80)
           self.output_writer.write(u'\n')
           self.output_writer.write(
@@ -1336,7 +1328,7 @@ class PregMagics(magic.Magics):
 
     self.output_writer.flush()
 
-  @magic.line_magic('plugin')
+  @magic.line_magic(u'plugin')
   def ParseWithPlugin(self, line):
     """Parse a Registry key using a specific plugin."""
     if not IsLoaded():
@@ -1352,12 +1344,12 @@ class PregMagics(magic.Magics):
       return
 
     plugin_name = line
-    if '-h' in line:
+    if u'-h' in line:
       items = line.split()
       if len(items) != 2:
         print(u'Wrong usage: plugin [-h] PluginName')
         return
-      if items[0] == '-h':
+      if items[0] == u'-h':
         plugin_name = items[1]
       else:
         plugin_name = items[0]
@@ -1377,16 +1369,16 @@ class PregMagics(magic.Magics):
           plugin_name, hive_type))
       return
 
-    if not hasattr(plugin, 'REG_KEYS'):
+    if not hasattr(plugin, u'REG_KEYS'):
       print(u'Plugin: {0:s} has no key information.'.format(line))
       return
 
-    if '-h' in line:
+    if u'-h' in line:
       print(FormatHeader(plugin_name))
-      print(FormatOutputString('Description', plugin.__doc__))
+      print(FormatOutputString(u'Description', plugin.__doc__))
       print(u'')
       for registry_key in plugin.expanded_keys:
-        print(FormatOutputString('Registry Key', registry_key))
+        print(FormatOutputString(u'Registry Key', registry_key))
       return
 
     if not plugin.expanded_keys:
@@ -1413,7 +1405,7 @@ class PregMagics(magic.Magics):
       self.output_writer.write(u'\n'.join(print_strings))
     self.output_writer.flush()
 
-  @magic.line_magic('pwd')
+  @magic.line_magic(u'pwd')
   def PrintCurrentWorkingDirectory(self, unused_line):
     """Print the current path."""
     if not IsLoaded():
@@ -1426,14 +1418,14 @@ class PregMagics(magic.Magics):
     self.output_writer.write(u'{0:s}\n'.format(
         current_hive.GetCurrentRegistryPath()))
 
-  @magic.line_magic('redirect_output')
+  @magic.line_magic(u'redirect_output')
   def RedirectOutput(self, output_object):
     """Change the output writer to redirect plugin output to a file."""
 
     if isinstance(output_object, basestring):
-      output_object = open(output_object, 'wb')
+      output_object = open(output_object, u'wb')
 
-    if hasattr(output_object, 'write'):
+    if hasattr(output_object, u'write'):
       self.output_writer = output_object
 
 
@@ -1638,10 +1630,7 @@ class PregConsole(object):
   def Run(self):
     """Runs the interactive console."""
     hive_storage = preg.PregStorage()
-    # TODO: move options out of PregHelper and fix this hack.
-    # pylint: disable=protected-access
-    shell_helper = PregHelper(
-        self._preg_tool._options, self._preg_tool, hive_storage)
+    shell_helper = PregHelper(self._preg_tool, hive_storage)
     parser_mediator = shell_helper.BuildParserMediator()
 
     self._preg_cache.parser_mediator = parser_mediator
@@ -1699,13 +1688,13 @@ class PregConsole(object):
 
     # Registering command completion for the magic commands.
     ipshell.set_hook(
-        u'complete_command', CommandCompleterCd, str_key='%cd')
+        u'complete_command', CommandCompleterCd, str_key=u'%cd')
     ipshell.set_hook(
-        u'complete_command', CommandCompleterVerbose, str_key='%ls')
+        u'complete_command', CommandCompleterVerbose, str_key=u'%ls')
     ipshell.set_hook(
-        u'complete_command', CommandCompleterVerbose, str_key='%parse')
+        u'complete_command', CommandCompleterVerbose, str_key=u'%parse')
     ipshell.set_hook(
-        u'complete_command', CommandCompleterPlugins, str_key='%plugin')
+        u'complete_command', CommandCompleterPlugins, str_key=u'%plugin')
 
     ipshell()
 
