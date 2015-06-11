@@ -552,6 +552,7 @@ class StorageMediaTool(tools.CLITool):
         vss_store_identifiers = self._GetVSSStoreIdentifiers(
             scan_node, vss_stores=self._vss_stores)
 
+        self._vss_stores = vss_store_identifiers
         for vss_store_identifier in vss_store_identifiers:
           location = u'/vss{0:d}'.format(vss_store_identifier)
           sub_scan_node = scan_node.GetSubNodeByLocation(location)

@@ -56,7 +56,10 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
       message_string = formatter_mediator.GetWindowsEventMessage(
           source_name, message_identifier)
       if message_string:
-        event_values[u'message_string'] = message_string.format(*strings)
+        try:
+          event_values[u'message_string'] = message_string.format(*strings)
+        except IndexError:
+          pass
 
     message_strings = []
     for string in strings:

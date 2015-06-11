@@ -46,7 +46,8 @@ class FormatterMediator(object):
 
       self._winevt_database_reader = (
           winevt_rc.WinevtResourcesSqlite3DatabaseReader())
-      self._winevt_database_reader.Open(database_path)
+      if not self._winevt_database_reader.Open(database_path):
+        self._winevt_database_reader = None
 
     return self._winevt_database_reader
 

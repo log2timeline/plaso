@@ -291,7 +291,7 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
     collections_counter = collections.Counter()
 
     for key, value in iter(json_dict.items()):
-      setattr(collections_counter, key, value)
+      collections_counter[key] = value
 
     return collections_counter
 
