@@ -55,6 +55,55 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     # TODO: implement test.
 
+  def testGetHashersInformation(self):
+    """Tests the GetHashersInformation function."""
+    test_front_end = extraction_frontend.ExtractionFrontend()
+    hashers_information = test_front_end.GetHashersInformation()
+
+    self.assertGreaterEqual(len(hashers_information), 3)
+    available_hasher_names = []
+    for name, _ in hashers_information:
+      available_hasher_names.append(name)
+
+    self.assertIn(u'sha1', available_hasher_names)
+    self.assertIn(u'sha256', available_hasher_names)
+
+  def testGetParserPluginsInformation(self):
+    """Tests the GetParserPluginsInformation function."""
+    test_front_end = extraction_frontend.ExtractionFrontend()
+    parser_plugins_information = test_front_end.GetParserPluginsInformation()
+
+    self.assertGreaterEqual(len(parser_plugins_information), 1)
+    available_parser_names = []
+    for name, _ in parser_plugins_information:
+      available_parser_names.append(name)
+
+    self.assertIn(u'olecf_default', available_parser_names)
+
+  def testGetParserPresetsInformation(self):
+    """Tests the GetParserPresetsInformation function."""
+    test_front_end = extraction_frontend.ExtractionFrontend()
+    parser_presets_information = test_front_end.GetParserPresetsInformation()
+
+    self.assertGreaterEqual(len(parser_presets_information), 1)
+    available_parser_names = []
+    for name, _ in parser_presets_information:
+      available_parser_names.append(name)
+
+    self.assertIn(u'linux', available_parser_names)
+
+  def testGetParsersInformation(self):
+    """Tests the GetParsersInformation function."""
+    test_front_end = extraction_frontend.ExtractionFrontend()
+    parsers_information = test_front_end.GetParsersInformation()
+
+    self.assertGreaterEqual(len(parsers_information), 1)
+    available_parser_names = []
+    for name, _ in parsers_information:
+      available_parser_names.append(name)
+
+    self.assertIn(u'filestat', available_parser_names)
+
   # Note: this test takes multiple seconds to complete due to
   # the behavior of the multi processing queue.
   def testProcessSources(self):

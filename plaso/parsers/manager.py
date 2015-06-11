@@ -159,6 +159,22 @@ class ParsersManager(object):
     return parser_names
 
   @classmethod
+  def GetParserPluginsInformation(cls):
+    """Retrieves the parser plugins information.
+
+    Returns:
+      A list of tuples of parser plugin names and descriptions.
+    """
+    parser_plugins_information = []
+    for _, parser_class in cls.GetParsers():
+      if parser_class.SupportsPlugins():
+        for _, plugin_class in parser_class.GetPlugins():
+          description = getattr(plugin_class, u'DESCRIPTION', u'')
+          parser_plugins_information.append((plugin_class.NAME, description))
+
+    return parser_plugins_information
+
+  @classmethod
   def GetParserObjects(cls, parser_filter_string=None):
     """Retrieves the parser objects.
 
@@ -215,6 +231,20 @@ class ParsersManager(object):
         continue
 
       yield parser_name, parser_class
+
+  @classmethod
+  def GetParsersInformation(cls):
+    """Retrieves the parsers information.
+
+    Returns:
+      A list of tuples of parser names and descriptions.
+    """
+    parsers_information = []
+    for _, parser_class in cls.GetParsers():
+      description = getattr(parser_class, u'DESCRIPTION', u'')
+      parsers_information.append((parser_class.NAME, description))
+
+    return parsers_information
 
   @classmethod
   def GetScanner(cls, specification_store):
