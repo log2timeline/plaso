@@ -8,7 +8,6 @@ import unittest
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.frontend import frontend
 from plaso.frontend import preg as preg_frontend
 from plaso.lib import errors
 from tests.cli import test_lib as cli_test_lib
@@ -60,7 +59,7 @@ class PregToolTest(test_lib.ToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.foo = u'bar'
 
     with self.assertRaises(errors.BadConfigOption):
@@ -73,7 +72,7 @@ class PregToolTest(test_lib.ToolTestCase):
 
   def testListPluginInformation(self):
     """Tests the ListPluginInformation function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.show_info = True
 
     self._test_tool.ParseOptions(options)
@@ -90,7 +89,7 @@ class PregToolTest(test_lib.ToolTestCase):
 
   def testRunModeRegistryPlugin(self):
     """Tests the RunModeRegistryPlugin function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.registry_file = self._GetTestFilePath([u'NTUSER.DAT'])
     options.parser_names = u'userassist'
     options.verbose = False
@@ -111,7 +110,7 @@ class PregToolTest(test_lib.ToolTestCase):
 
   def testRunModeRegistryKey(self):
     """Tests the RunModeRegistryKey function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.key = u'\\Microsoft\\Windows NT\\CurrentVersion'
     options.parser_names = u''
     options.registry_file = self._GetTestFilePath([u'SOFTWARE'])
@@ -128,7 +127,7 @@ class PregToolTest(test_lib.ToolTestCase):
 
   def testRunModeRegistryFile(self):
     """Tests the RunModeRegistryFile function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.registry_file = self._GetTestFilePath([u'SOFTWARE'])
 
     self._test_tool.ParseOptions(options)
@@ -181,7 +180,7 @@ class PregToolTest(test_lib.ToolTestCase):
   # TODO: clean up PregHelper.
   def testParseHive(self):
     """Tests the ParseHive function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     hive_storage = preg_frontend.PregStorage()
     preg_helper = preg.PregHelper(options, self._test_tool, hive_storage)
 
@@ -218,7 +217,7 @@ class PregConsoleTest(test_lib.ToolTestCase):
     # Open up a hive.
     hive_path = self._GetTestFilePath([u'NTUSER.DAT'])
 
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     hive_storage = preg_frontend.PregStorage()
     preg_helper = preg.PregHelper(options, self._test_tool, hive_storage)
 
@@ -285,7 +284,7 @@ class PregConsoleTest(test_lib.ToolTestCase):
 
   def testTopLevelMethods(self):
     """Test few of the top level methods in the preg module."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     hive_storage = preg_frontend.PregStorage()
     preg_helper = preg.PregHelper(options, self._test_tool, hive_storage)
 

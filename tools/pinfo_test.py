@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.frontend import frontend
 from tests.cli import test_lib as cli_test_lib
 
 from tools import pinfo
@@ -23,7 +22,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_file1 = self._GetTestFilePath([u'psort_test.out'])
     test_file2 = self._GetTestFilePath([u'pinfo_test.out'])
 
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.compare_storage_file = test_file1
     options.storage_file = test_file1
 
@@ -34,7 +33,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     output = self._output_writer.ReadOutput()
     self.assertEqual(output, b'Storage files are identical.\n')
 
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.compare_storage_file = test_file1
     options.storage_file = test_file2
 
@@ -46,7 +45,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     """Tests the PrintStorageInformation function."""
     test_file = self._GetTestFilePath([u'psort_test.out'])
 
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.storage_file = test_file
 
     self._test_tool.ParseOptions(options)

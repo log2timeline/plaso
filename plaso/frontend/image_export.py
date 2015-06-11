@@ -46,8 +46,7 @@ class FileEntryFilter(object):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
+      output_writer: the output writer object (instance of CLIOutputWriter).
     """
 
 
@@ -159,8 +158,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
+      output_writer: the output writer object (instance of CLIOutputWriter).
     """
     if self._date_time_ranges:
       for date_time_range in self._date_time_ranges:
@@ -224,8 +222,7 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
+      output_writer: the output writer object (instance of CLIOutputWriter).
     """
     if self._extensions:
       output_writer.Write(u'\textensions: {0:s}\n'.format(
@@ -262,8 +259,7 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
+      output_writer: the output writer object (instance of CLIOutputWriter).
     """
     if self._names:
       output_writer.Write(u'\tnames: {0:s}\n'.format(
@@ -352,8 +348,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
+      output_writer: the output writer object (instance of CLIOutputWriter).
     """
     if self._file_scanner:
       output_writer.Write(u'\tsignature identifiers: {0:s}\n'.format(
@@ -408,8 +403,7 @@ class FileEntryFilterCollection(object):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
+      output_writer: the output writer object (instance of CLIOutputWriter).
     """
     if self._filters:
       output_writer.Write(u'Filters:\n')

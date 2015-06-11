@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.lib import errors
-from plaso.frontend import frontend
 from tests.cli import test_lib as cli_test_lib
 
 from tools import image_export
@@ -22,7 +21,7 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
 
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.data_location = self._TEST_DATA_PATH
     options.signature_identifiers = u'list'
 
@@ -45,7 +44,7 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.data_location = self._GetTestFilePath([u'tmp'])
     options.signature_identifiers = u'list'
 

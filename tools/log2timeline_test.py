@@ -5,7 +5,6 @@
 import os
 import unittest
 
-from plaso.frontend import frontend
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
@@ -23,7 +22,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesDirectory(self):
     """Tests the ProcessSources function on a directory."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     test_source = self._GetTestFilePath([u'testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -45,7 +44,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesImage(self):
     """Tests the ProcessSources function on a single partition image."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     test_source = self._GetTestFilePath([u'image.qcow2'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -67,7 +66,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesPartitionedImage(self):
     """Tests the ProcessSources function on a multi partition image."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     test_source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -91,7 +90,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesVSSImage(self):
     """Tests the ProcessSources function on an image containing VSS."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     test_source = self._GetTestFilePath([u'vsstest.qcow2'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -114,7 +113,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesSingleFile(self):
     """Tests the ProcessSources function on a single file."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     test_source = self._GetTestFilePath([u'System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:

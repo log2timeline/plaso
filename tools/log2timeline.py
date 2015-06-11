@@ -570,6 +570,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
         parser_filter_string=self._parser_filter_string,
+        preferred_encoding=self.preferred_encoding,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         storage_serializer_format=self._storage_serializer_format,
