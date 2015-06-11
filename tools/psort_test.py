@@ -7,7 +7,6 @@ import unittest
 
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 from tests import test_lib as shared_test_lib
@@ -113,7 +112,7 @@ class PsortToolTest(test_lib.ToolTestCase):
 
   def testProcessStorageWithMissingParameters(self):
     """Test the ProcessStorage function with half-configure output module."""
-    options = frontend.Options()
+    options = cli_test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'psort_test.out'])
     options.output_format = u'test_missing'
 

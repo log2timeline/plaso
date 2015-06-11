@@ -8,7 +8,6 @@ import unittest
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
-from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.lib import event
 from plaso.lib import pfilter
@@ -148,13 +147,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     test_front_end.SetPreferredLanguageIdentifier(u'en-US')
     test_front_end.SetQuietMode(True)
 
-    # TODO: Remove the need to parse the option object at all.
-    options = frontend.Options()
-    options.data_location = None
-    options.storage_file = self._GetTestFilePath([u'psort_test.out'])
-    test_front_end.ParseOptions(options)
-
-    storage_file = test_front_end.OpenStorageFile(read_only=True)
+    storage_file_path = self._GetTestFilePath([u'psort_test.out'])
+    storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
 
     output_writer = test_lib.StringIOOutputWriter()
     output_module = test_front_end.GetOutputModule(storage_file)
