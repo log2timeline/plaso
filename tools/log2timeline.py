@@ -64,6 +64,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._enable_sigsegv_handler = False
     self._filter_expression = None
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
@@ -371,6 +372,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.AddProfilingOptions(processing_group)
     self.AddProcessingOptions(processing_group)
 
+    processing_group.add_argument(
+        u'--sigsegv_handler', u'--sigsegv-handler', dest=u'sigsegv_handler',
+        action=u'store_true', default=False, help=(
+            u'Enables the SIGSEGV handler. WARNINGN this functionality is '
+            u'expirimental and will a deadlock worker process if a real '
+            u'segfault is caught, but not signal SIGSEGV. This functionality '
+            u'is therefore primarily intended for debugging purposes'))
+
     argument_parser.add_argument(
         u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
         type=unicode, help=(
@@ -494,6 +503,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
     self._status_view_mode = getattr(options, u'status_view_mode', u'linear')
+    self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 
   def PrintOptions(self):
     """Prints the options."""
@@ -567,6 +577,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     processing_status = self._front_end.ProcessSources(
         self._source_path_specs,
+        enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
         parser_filter_string=self._parser_filter_string,

@@ -35,14 +35,17 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
   _PROCESS_JOIN_TIMEOUT = 5.0
 
-  def __init__(self, process_type, **kwargs):
+  def __init__(self, process_type, enable_sigsegv_handler=False, **kwargs):
     """Initializes the process object.
 
     Args:
       process_type: the process type.
+      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
+                              handler should be enabled. The default is False.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    self._enable_sigsegv_handler = enable_sigsegv_handler
     self._original_sigsegv_handler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
@@ -191,9 +194,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     # A SIGSEGV signal handler is necessary to try to indicate where
     # worker failed.
-    # TODO: disabled for now this seems to deadlock the process.
-    # self._original_sigsegv_handler = signal.signal(
-    #     signal.SIGSEGV, self._SigSegvHandler)
+    # WARNING the SIGSEGV handler will deadlock the process on a real segfault.
+    if self._enable_sigsegv_handler:
+      self._original_sigsegv_handler = signal.signal(
+          signal.SIGSEGV, self._SigSegvHandler)
 
     self._pid = os.getpid()
 
@@ -336,6 +340,7 @@ class MultiProcessEngine(engine.BaseEngine):
     super(MultiProcessEngine, self).__init__(
         path_spec_queue, event_object_queue, parse_error_queue)
 
+    self._enable_sigsegv_handler = False
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
@@ -559,6 +564,7 @@ class MultiProcessEngine(engine.BaseEngine):
         self._parse_error_queue, self.knowledge_base, self._last_worker_number,
         enable_debug_output=self._enable_debug_output,
         enable_profiling=self._enable_profiling,
+        enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_object=self._filter_object,
         hasher_names_string=self._hasher_names_string,
         mount_path=self._mount_path, name=process_name,
@@ -832,8 +838,8 @@ class MultiProcessEngine(engine.BaseEngine):
           status_indicator, process_information.status)
 
   def ProcessSources(
-      self, source_path_specs, storage_writer, filter_find_specs=None,
-      filter_object=None, hasher_names_string=None,
+      self, source_path_specs, storage_writer, enable_sigsegv_handler=False,
+      filter_find_specs=None, filter_object=None, hasher_names_string=None,
       include_directory_stat=True, mount_path=None,
       number_of_extraction_workers=0, parser_filter_string=None,
       process_archive_files=False, status_update_callback=None,
@@ -844,6 +850,8 @@ class MultiProcessEngine(engine.BaseEngine):
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
       storage_writer: A storage writer object (instance of BaseStorageWriter).
+      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
+                              handler should be enabled. The default is False.
       filter_find_specs: Optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
       filter_object: Optional filter object (instance of objectfilter.Filter).
@@ -892,6 +900,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
       number_of_extraction_workers = cpu_count
 
+    self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_extraction_workers = number_of_extraction_workers
     self._show_memory_usage = show_memory_usage
 
@@ -909,6 +918,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     storage_writer_process = MultiProcessStorageWriterProcess(
         self.event_object_queue, self._parse_error_queue, storage_writer,
+        enable_sigsegv_handler=self._enable_sigsegv_handler,
         name=u'StorageWriter')
     storage_writer_process.start()
     self._RegisterProcess(storage_writer_process)
@@ -918,8 +928,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._stop_collector_event = multiprocessing.Event()
     collector_process = MultiProcessCollectorProcess(
-        self._stop_collector_event, source_path_specs,
-        self._path_spec_queue, filter_find_specs=self._filter_find_specs,
+        self._stop_collector_event, source_path_specs, self._path_spec_queue,
+        enable_sigsegv_handler=self._enable_sigsegv_handler,
+        filter_find_specs=self._filter_find_specs,
         include_directory_stat=self._include_directory_stat, name=u'Collector')
     collector_process.start()
     self._RegisterProcess(collector_process)

@@ -361,9 +361,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     return parsers_manager.ParsersManager.GetParsersInformation()
 
   def ProcessSources(
-      self, source_path_specs, filter_file=None, hasher_names_string=None,
-      parser_filter_string=None, preferred_encoding=u'utf-8',
-      single_process_mode=False, status_update_callback=None,
+      self, source_path_specs, enable_sigsegv_handler=False, filter_file=None,
+      hasher_names_string=None, parser_filter_string=None,
+      preferred_encoding=u'utf-8', single_process_mode=False,
+      status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
     """Processes the sources.
@@ -371,6 +372,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
+      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
+                              handler should be enabled. The default is False.
       filter_file: optional path to a file that contains find specifications.
                    The default is None.
       hasher_names_string: optional comma separated string of names of
@@ -501,6 +504,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         # TODO: pass number_of_extraction_workers.
         processing_status = self._engine.ProcessSources(
             source_path_specs, storage_writer,
+            enable_sigsegv_handler=enable_sigsegv_handler,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
