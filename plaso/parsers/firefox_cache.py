@@ -188,6 +188,10 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    # TODO: determine if the minimum file size is really 4 bytes.
+    if file_object.get_size() < 4:
+      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
+
     file_entry = parser_mediator.GetFileEntry()
 
     try:
