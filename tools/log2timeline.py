@@ -9,6 +9,12 @@ import sys
 import time
 import textwrap
 
+try:
+  import win32api
+  import win32console
+except ImportError:
+  win32console = None
+
 import plaso
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
@@ -74,6 +80,31 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output = None
 
     self.show_info = False
+
+  def _ClearScreen(self):
+    """Clears the terminal/console screen."""
+    if not win32console:
+      # ANSI escape sequence to clear screen.
+      self._output_writer.Write(b'\033[2J')
+      # ANSI escape sequence to move cursor to top left.
+      self._output_writer.Write(b'\033[H')
+
+    else:
+      # Windows cmd.exe does not support ANSI escape codes, thus instead we
+      # fill the console screen buffer with spaces.
+      top_left_coordinate = win32console.PyCOORDType(0, 0)
+      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
+      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
+
+      screen_buffer_attributes = screen_buffer_information[u'Attributes']
+      screen_buffer_size = screen_buffer_information[u'Size']
+      console_size = screen_buffer_size.X * screen_buffer_size.Y
+
+      screen_buffer.FillConsoleOutputCharacter(
+          b' ', console_size, top_left_coordinate)
+      screen_buffer.FillConsoleOutputAttribute(
+          screen_buffer_attributes, console_size, top_left_coordinate)
+      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
   def _DebugPrintCollection(self):
     """Prints debug information about the collection."""
@@ -165,10 +196,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       processing_status: the processing status (instance of ProcessingStatus).
     """
     if self._stdout_output_writer:
-      # ANSI escape sequence to clear screen.
-      self._output_writer.Write(b'\033[2J')
-      # ANSI escape sequence to move cursor to top left.
-      self._output_writer.Write(b'\033[H')
+      self._ClearScreen()
 
     self._output_writer.Write(
         u'plaso - {0:s} version {1:s}\n'.format(
@@ -177,7 +205,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.PrintOptions()
 
-    status_table = [u'\033[1mIdentifier\tPID\tStatus\t\tEvents\t\tFile\033[0m']
+    # TODO: for win32console get current color and set intensity,
+    # write the header separately then reset intensity.
+    status_header = u'Identifier\tPID\tStatus\t\tEvents\t\tFile'
+    if not win32console:
+      status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
+
+    status_table = [status_header]
 
     status_row = self._FormatStatusTableRow(
         processing_status.collector.identifier, processing_status.collector.pid,
@@ -217,6 +251,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'All extraction workers completed - waiting for storage.\n')
       self._output_writer.Write(u'\n')
 
+    # TODO: remove update flicker. For win32console we could set the cursor
+    # top left, write the table, clean the remainder of the screen buffer
+    # and set the cursor at the end of the table.
     if self._stdout_output_writer:
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
