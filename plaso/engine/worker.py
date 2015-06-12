@@ -31,7 +31,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   are pushed on a storage queue for further processing.
   """
 
-  DEFAULT_HASH_READ_SIZE = 4096
+  _DEFAULT_HASH_READ_SIZE = 4096
 
   def __init__(
       self, identifier, path_spec_queue, event_queue_producer,
@@ -143,7 +143,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if not file_entry.IsFile() or not self._hasher_names:
       return
 
-    logging.debug(u'[ProcessFileEntry] hashing file: {0:s}'.format(
+    logging.debug(u'[HashFileEntry] hashing file: {0:s}'.format(
         self._current_display_name))
 
     hasher_objects = hashers_manager.HashersManager.GetHasherObjects(
@@ -154,11 +154,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       file_object.seek(0, os.SEEK_SET)
 
       # We only do one read, then pass it to each of the hashers in turn.
-      data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+      data = file_object.read(self._DEFAULT_HASH_READ_SIZE)
       while data:
         for hasher in hasher_objects:
           hasher.Update(data)
-        data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+        data = file_object.read(self._DEFAULT_HASH_READ_SIZE)
 
     finally:
       file_object.close()
@@ -199,9 +199,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     try:
       parser_object.UpdateChainAndParse(self._parser_mediator)
 
+    # We catch the IOError so we can determine the parser that generated
+    # the error.
+    except IOError as exception:
+      logging.warning(
+          u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
+              parser_object.NAME, self._current_display_name, exception))
+
     except errors.UnableToParseFile as exception:
-      logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
-          parser_object.NAME, file_entry.name, exception))
+      logging.debug(
+          u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
+              parser_object.NAME, self._current_display_name, exception))
 
     finally:
       if self._parsers_profiler:
@@ -222,8 +230,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Returns:
       A boolean indicating if the file is an archive file.
     """
-    type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
-        file_entry.path_spec, resolver_context=self._resolver_context)
+    try:
+      type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
+          file_entry.path_spec, resolver_context=self._resolver_context)
+    except IOError as exception:
+      logging.warning((
+          u'Analyzer failed to determine archive type indicators '
+          u'for file: {0:s} with error: {1:s}').format(
+              self._current_display_name, exception))
+      return False
 
     number_of_type_indicators = len(type_indicators)
     if number_of_type_indicators == 0:
@@ -288,8 +303,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Returns:
       A boolean indicating if the file is a compressed stream file.
     """
-    type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-        file_entry.path_spec, resolver_context=self._resolver_context)
+    try:
+      type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
+          file_entry.path_spec, resolver_context=self._resolver_context)
+    except IOError as exception:
+      logging.warning((
+          u'Analyzer failed to determine compressed stream type indicators '
+          u'for file: {0:s} with error: {1:s}').format(
+              self._current_display_name, exception))
+      return False
 
     number_of_type_indicators = len(type_indicators)
     if number_of_type_indicators == 0:
