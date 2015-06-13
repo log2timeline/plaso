@@ -549,6 +549,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._ParseDataLocationOption(options)
     self._ParseAnalysisPluginOptions(options)
     self._ParseFilterOptions(options)
+    self._front_end.SetStorageFile(self._storage_file_path)
 
     if self._debug_mode:
       logging_level = logging.DEBUG
