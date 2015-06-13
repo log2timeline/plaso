@@ -50,7 +50,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._output_format = None
     self._preferred_language = u'en-US'
     self._quiet_mode = False
-    self._storage_file = None
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
     """Appends an event object to an output buffer and queues.
@@ -370,7 +369,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           except UnicodeDecodeError:
             pass
         pre_obj.collection_information[u'file_processed'] = (
-            self._storage_file_path)
+            self._storage_file)
         pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
         analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
         pre_obj.collection_information[u'plugins'] = analysis_plugin_names

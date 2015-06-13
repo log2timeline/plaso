@@ -13,6 +13,7 @@ class AnalysisFrontend(frontend.Frontend):
     """Initializes the front-end object."""
     super(AnalysisFrontend, self).__init__()
     self._data_location = None
+    self._storage_file = None
 
   def AddStorageFileOptions(self, argument_group):
     """Adds the storage file options to the argument group.
@@ -56,3 +57,11 @@ class AnalysisFrontend(frontend.Frontend):
                      from.
     """
     self._data_location = data_location
+
+  def SetStorageFile(self, storage_file):
+    """Set the storage file.
+
+    Args:
+      storage_file: The path to the storage file being parsed.
+    """
+    self._storage_file = storage_file

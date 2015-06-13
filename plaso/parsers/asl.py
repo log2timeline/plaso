@@ -191,7 +191,8 @@ class AslParser(interface.SingleFileBaseParser):
 
     # If the ASL file has entries.
     if offset:
-      event_object, offset = self.ReadAslEvent(file_object, offset)
+      event_object, offset = self.ReadAslEvent(
+          file_object, parser_mediator, offset)
       while event_object:
         parser_mediator.ProduceEvent(event_object)
 
@@ -202,13 +203,15 @@ class AslParser(interface.SingleFileBaseParser):
               u'Unable to parse header. Last element header does not match '
               u'header offset.')
         old_offset = offset
-        event_object, offset = self.ReadAslEvent(file_object, offset)
+        event_object, offset = self.ReadAslEvent(
+            file_object, parser_mediator, offset)
 
-  def ReadAslEvent(self, file_object, offset):
+  def ReadAslEvent(self, file_object, parser_mediator, offset):
     """Reads an ASL record at a specific offset.
 
     Args:
       file_object: a file-like object that points to an ASL file.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       offset: offset where the static part of the entry starts.
 
     Returns:
@@ -341,19 +344,45 @@ class AslParser(interface.SingleFileBaseParser):
 
     # Parsing the dynamic values (text or pointers to position with text).
     # The first four are always the host, sender, facility, and message.
-    computer_name = values[0]
-    sender = values[1]
-    facility = values[2]
-    message = values[3]
+    number_of_values = len(values)
+
+    if number_of_values < 4:
+      parser_mediator.ProduceParseError(
+          u'Less than four values read from an ASL event.')
+
+    if number_of_values >= 1:
+      computer_name = values[0]
+    else:
+      computer_name = u'N/A'
+
+    if number_of_values >= 2:
+      sender = values[1]
+    else:
+      sender = u'N/A'
+
+    if number_of_values >= 3:
+      facility = values[2]
+    else:
+      facility = u'N/A'
+
+    if number_of_values >= 4:
+      message = values[3]
+    else:
+      message = u'N/A'
 
     # If the entry has an extra fields, they works as a pairs:
     # The first is the name of the field and the second the value.
     extra_information = u''
-    if len(values) > 4:
-      values = values[4:]
-      for index in xrange(0, len(values) // 2):
-        extra_information += u'[{0!s}: {1!s}]'.format(
-            values[index * 2], values[(index * 2) + 1])
+    if number_of_values > 4 and number_of_values % 2 == 0:
+      # Taking all the extra attributes and merging them together,
+      # eg: a = [1, 2, 3, 4] will look like "1: 2, 3: 4".
+      try:
+        extra_values = map(unicode, values[4:])
+        extra_information = u', '.join(
+            map(u': '.join, zip(extra_values[0::2], extra_values[1::2])))
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceParseError(
+            u'Unable to decode all ASL values in the extra information fields.')
 
     # Return the event and the offset for the next entry.
     return (

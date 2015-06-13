@@ -259,6 +259,9 @@ def _CheckPythonModule(
     module_version = getattr(module_object, version_attribute_name, None)
 
     if not module_version:
+      print((
+          u'[FAILURE]\tunable to determine version information '
+          u'for: {0:s}').format(module_name))
       return False
 
     # Split the version string and convert every digit into an integer.
