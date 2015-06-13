@@ -54,9 +54,9 @@ class AslParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.message, expected_message)
 
     expected_extra = (
-        u'[CFLog Local Time: 2013-11-25 09:45:35.701]'
-        u'[CFLog Thread: 1007]'
-        u'[Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51]')
+        u'CFLog Local Time: 2013-11-25 09:45:35.701, '
+        u'CFLog Thread: 1007, '
+        u'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51')
 
     self.assertEqual(event_object.extra_information, expected_extra)
 
