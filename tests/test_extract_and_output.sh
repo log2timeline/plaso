@@ -175,6 +175,22 @@ do
     OPTIONS=" ";
   fi
 
+  if test -f "${TEST_CONFIG_DIR}/${TEST_SET}/psort_options";
+  then
+    PSORT_OPTIONS=`cat "${TEST_CONFIG_DIR}/${TEST_SET}/psort_options" | sed '/^#/d'`;
+  else
+    # Need a space here otherwise the test options loop is not run.
+    PSORT_OPTIONS=" ";
+  fi
+
+  if test -f "${TEST_CONFIG_DIR}/${TEST_SET}/psort_filters";
+  then
+    PSORT_FILTERS=`cat "${TEST_CONFIG_DIR}/${TEST_SET}/psort_filters" | sed '/^#/d'`;
+  else
+    # Need a space here otherwise the test options loop is not run.
+    PSORT_FILTERS=" ";
+  fi
+
   mkdir "${RESULT_SET_DIR}/${TEST_SET}";
 
   for TEST_FILE in ${TEST_FILES};
@@ -243,17 +259,37 @@ do
         fi
       fi
 
-      OUTPUT_FILE="${TEST_PREFIX}-psort-${TEST_OPTIONS_SET}.log.gz";
+      OUTPUT_FILE="${TEST_PREFIX}-psort-${TEST_OPTIONS_SET}";
 
-      echo "Running: psort on ${STORAGE_FILE}";
-      eval ${PYTHONPATH} ${PSORT} "${STORAGE_FILE}" 2>&1 | gzip - > "${OUTPUT_FILE}";
+      TEST_PSORT_SET=1;
+      for TEST_PSORT_OPTIONS in ${PSORT_OPTIONS};
+      do
+        TEST_PSORT_FILTER_SET=1;
+        for TEST_PSORT_FILTER in ${PSORT_FILTERS};
+        do
+          TEST_PSORT_FILTER_NO_SPACE=`echo ${TEST_PSORT_FILTER} | sed -e 's/ //g'`;
+          TEST_PSORT_STATUS=0;
+          if test "${TEST_PSORT_FILTER_NO_SPACE}" != "";
+          then
+            echo "Running: psort ${TEST_PSORT_OPTIONS} on ${STORAGE_FILE} ${TEST_PSORT_FILTER}";
+            eval ${PYTHONPATH} ${PSORT} ${TEST_PSORT_OPTIONS} "${STORAGE_FILE}" \"${TEST_PSORT_FILTER}\" 2>&1 > "${OUTPUT_FILE}-${TEST_PSORT_SET}-${TEST_PSORT_FILTER_SET}.log";
+            TEST_PSORT_STATUS=$?;
+          else
+            echo "Running: psort on ${STORAGE_FILE}";
+            eval ${PYTHONPATH} ${PSORT} ${TEST_PSORT_OPTIONS} "${STORAGE_FILE}" 2>&1 > "${OUTPUT_FILE}-${TEST_PSORT_SET}-${TEST_PSORT_FILTER_SET}.log";
+            TEST_PSORT_STATUS=$?;
+          fi
 
-      if test $? -ne ${EXIT_SUCCESS};
-      then
-        RESULT=${EXIT_FAILURE};
-        echo "FAILED";
-        continue
-      fi
+          if test ${TEST_PSORT_STATUS} -ne ${EXIT_SUCCESS};
+          then
+            RESULT=${EXIT_FAILURE};
+            echo "FAILED";
+            continue
+          fi
+          TEST_PSORT_FILTER_SET=`expr ${TEST_PSORT_FILTER_SET} + 1`;
+        done
+        TEST_PSORT_SET=`expr ${TEST_PSORT_SET} + 1`;
+      done
 
       TEST_OPTIONS_SET=`expr ${TEST_OPTIONS_SET} + 1`;
     done
