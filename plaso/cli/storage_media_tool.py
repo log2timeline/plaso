@@ -465,7 +465,7 @@ class StorageMediaTool(tools.CLITool):
       if print_header:
         self._output_writer.Write(
             u'The following Volume Shadow Snapshots (VSS) were found:\n'
-            u'Identifier\tVSS store identifier\tCreation Time\n')
+            u'Identifier\tVSS store identifier\t\t\tCreation Time\n')
 
         for volume_identifier in volume_identifiers:
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
