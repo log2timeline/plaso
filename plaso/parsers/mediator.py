@@ -170,6 +170,13 @@ class ParserMediator(object):
     if not relative_path:
       return file_entry.path_spec.type_indicator
 
+    if path_spec.parent and path_spec.parent.type_indicator in [
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
+      store_index = getattr(path_spec.parent, u'store_index', None)
+      if store_index is not None:
+        return u'VSS{0:d}:{1:s}:{2:s}'.format(
+            store_index + 1, file_entry.path_spec.type_indicator, relative_path)
+
     return u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, relative_path)
 
