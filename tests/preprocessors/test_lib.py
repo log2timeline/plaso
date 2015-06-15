@@ -12,7 +12,7 @@ from dfvfs.vfs import fake_file_system
 class PreprocessPluginTest(unittest.TestCase):
   """The unit test case for a preprocess plug-in object."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   def _BuildSingleFileFakeFileSystem(self, path, file_data):
     """Builds a single file fake file system.
