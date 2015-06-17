@@ -2,6 +2,7 @@
 """Look up files in VirusTotal and tag events derived from them."""
 
 import logging
+import sys
 
 import requests
 
@@ -27,6 +28,7 @@ class VirusTotalAnalyzer(interface.HashAnalyzer):
     super(VirusTotalAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
     self._api_key = None
+    self._checked_for_old_python_version = False
 
   def SetAPIKey(self, api_key):
     """Sets the VirusTotal API key to use in queries.
@@ -91,6 +93,18 @@ class VirusTotalAnalyzer(interface.HashAnalyzer):
     """
     resource_string = u', '.join(hashes)
     params = {u'apikey': self._api_key, u'resource': resource_string}
+
+    if not self._checked_for_old_python_version:
+      if sys.version_info[0:3] < (2, 7, 9):
+        logging.warn(
+            u'You are running a version of Python prior to 2.7.9. Your version '
+            u'of Python has multiple weaknesses in its SSL implementation that '
+            u'can allow an attacker to read or modify SSL encrypted data. '
+            u'Please update. Further SSL warnings will be suppressed. See '
+            u'https://www.python.org/dev/peps/pep-0466/ for more information.')
+        requests.packages.urllib3.disable_warnings()
+      self._checked_for_old_python_version = True
+
     try:
       response = requests.get(self._VIRUSTOTAL_API_REPORT_URL, params=params)
       response.raise_for_status()
