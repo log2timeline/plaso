@@ -291,7 +291,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         self._analyzer.analyses_performed)
     batches_remaining = number_of_hashes / hashes_per_batch
     estimated_seconds_per_batch = average_analysis_time + wait_time_per_batch
-    return batches_remaining / estimated_seconds_per_batch
+    return batches_remaining * estimated_seconds_per_batch
 
   # TODO: Refactor to do this more elegantly, perhaps via callback.
   def _LogProgressUpdateIfReasonable(self):
@@ -299,11 +299,10 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     next_log_time = (
         self._time_of_last_status_log +
         self.SECONDS_BETWEEN_STATUS_LOG_MESSAGES)
-    next_log_time = time.ctime(next_log_time)
     current_time = time.time()
     if current_time < next_log_time:
       return
-    completion_time = current_time + self.EstimateTimeRemaining()
+    completion_time = time.ctime(current_time + self.EstimateTimeRemaining())
     log_message = (
         u'{0:s} hash analysis plugin running. {1:d} hashes in queue, '
         u'estimated completion time {2:s}.'.format(
