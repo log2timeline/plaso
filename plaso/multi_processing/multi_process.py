@@ -317,6 +317,10 @@ class MultiProcessEngine(engine.BaseEngine):
   _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_TERMINATION_SLEEP = 0.5
 
+  # Note that on average Windows seems to require a bit longer wait
+  # than 5 seconds.
+  _RPC_SERVER_TIMEOUT = 8.0
+
   _STATUS_CHECK_SLEEP = 1.5
 
   _WORKER_PROCESSES_MINIMUM = 2
@@ -665,7 +669,7 @@ class MultiProcessEngine(engine.BaseEngine):
       rpc_port = process.rpc_port.value
       time_waited_for_process += 0.1
 
-      if time_waited_for_process >= 5.0:
+      if time_waited_for_process >= self._RPC_SERVER_TIMEOUT:
         raise IOError(
             u'RPC client unable to determine server (PID: {0:d}) port.'.format(
                 pid))

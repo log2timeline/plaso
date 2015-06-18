@@ -183,6 +183,9 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
         if file_footer.signature != self._FOOTER_SIGNATURE:
           logging.warning(error_message)
 
+        file_object.seek(-4, os.SEEK_CUR)
+
+        # TODO: add support for Jump List LNK file recovery.
         break
 
       first_guid_checked = True
