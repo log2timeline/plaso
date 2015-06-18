@@ -174,7 +174,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       logging.error(u'{0:s}'.format(exception))
 
       self._output_writer.Write(u'')
-      self._output_writer.Write(argument_parser.format_help())
+      self._output_writer.Write(argument_parser.format_usage())
 
       return False
 
