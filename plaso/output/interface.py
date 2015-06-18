@@ -197,7 +197,7 @@ class EventBuffer(object):
       try:
         self._output_module.WriteEvent(event_object)
       except errors.WrongFormatter as exception:
-        logging.error(u'Unable to write event: {:s}'.format(exception))
+        logging.error(u'Unable to write event: {0:s}'.format(exception))
 
     self._buffer_dict = {}
 
@@ -210,21 +210,23 @@ class EventBuffer(object):
     # perhaps something that can be evaluated here (regular TSK in favor of
     # an event stored deep inside a VSS for instance).
     for attr in self.MERGE_ATTRIBUTES:
-      val_a = set(utils.GetUnicodeString(getattr(event_a, attr, '')).split(';'))
-      val_b = set(utils.GetUnicodeString(getattr(event_b, attr, '')).split(';'))
+      val_a = set(utils.GetUnicodeString(
+          getattr(event_a, attr, u'')).split(u';'))
+      val_b = set(utils.GetUnicodeString(
+          getattr(event_b, attr, u'')).split(u';'))
       values_list = list(val_a | val_b)
       values_list.sort() # keeping this consistent across runs helps with diffs
       setattr(event_a, attr, u';'.join(values_list))
 
     # Special instance if this is a filestat entry we need to combine the
     # description field.
-    if getattr(event_a, 'parser', u'') == 'filestat':
-      description_a = set(getattr(event_a, 'timestamp_desc', u'').split(';'))
-      description_b = set(getattr(event_b, 'timestamp_desc', u'').split(';'))
+    if getattr(event_a, u'parser', u'') == u'filestat':
+      description_a = set(getattr(event_a, u'timestamp_desc', u'').split(u';'))
+      description_b = set(getattr(event_b, u'timestamp_desc', u'').split(u';'))
       descriptions = list(description_a | description_b)
       descriptions.sort()
       if event_b.timestamp_desc not in event_a.timestamp_desc:
-        setattr(event_a, 'timestamp_desc', u';'.join(descriptions))
+        setattr(event_a, u'timestamp_desc', u';'.join(descriptions))
 
   def End(self):
     """Call the formatter to produce the closing line."""

@@ -313,7 +313,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         else:
           logging.warning((
               u'Unable to automatically configure timezone falling back '
-              u'to preffered timezone value: {0:s}').format(timezone))
+              u'to preferred timezone value: {0:s}').format(timezone))
         pre_obj.zone = timezone
 
     else:
