@@ -566,7 +566,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       logging.error(u'{0:s}'.format(exception))
 
       self._output_writer.Write(u'\n')
-      self._output_writer.Write(argument_parser.format_help())
+      self._output_writer.Write(argument_parser.format_usage())
 
       return False
 

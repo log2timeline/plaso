@@ -490,8 +490,9 @@ class PsortTool(analysis_tool.AnalysisTool):
         try:
           self.AddAnalysisPluginOptions(analysis_group, plugin_names)
         except errors.BadConfigOption as exception:
+          logging.error(u'{0:s}'.format(exception))
           self._output_writer.Write(u'\n')
-          self._output_writer.Write(argument_parser.format_help())
+          self._output_writer.Write(argument_parser.format_usage())
           return False
 
     try:
@@ -522,7 +523,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       logging.error(u'{0:s}'.format(exception))
 
       self._output_writer.Write(u'\n')
-      self._output_writer.Write(argument_parser.format_help())
+      self._output_writer.Write(argument_parser.format_usage())
 
       return False
 

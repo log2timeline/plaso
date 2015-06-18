@@ -164,8 +164,9 @@ class CLITool(object):
       elif timezone_string:
         try:
           self._timezone = pytz.timezone(timezone_string)
-        except pytz.UnknownTimeZoneError as exception:
-          raise errors.BadConfigOption(exception)
+        except pytz.UnknownTimeZoneError:
+          raise errors.BadConfigOption(
+              u'Unknown timezone: {0:s}'.format(timezone_string))
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
