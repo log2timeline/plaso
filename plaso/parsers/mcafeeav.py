@@ -95,6 +95,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
     if row[u'date'][0:3] == b'\xef\xbb\xbf':
       row[u'date'] = row[u'date'][3:]
+      self.encoding = u'utf-8'
 
     # Check the date format!
     # If it doesn't pass, then this isn't a McAfee AV Access Protection Log
