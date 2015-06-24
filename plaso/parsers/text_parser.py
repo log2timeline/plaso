@@ -380,7 +380,12 @@ class SlowLexicalTextParser(
 
 
 class TextCSVParser(interface.SingleFileBaseParser):
-  """An implementation of a simple CSV line-per-entry log files."""
+  """An implementation of a simple CSV line-per-entry log files.
+
+  Attributes:
+    encoding: The encoding used in the CSV file, or None, if the encoding is
+              unknown.
+  """
 
   # A list that contains the names of all the fields in the log file.
   COLUMNS = []
@@ -403,12 +408,50 @@ class TextCSVParser(interface.SingleFileBaseParser):
   # file to see if it confirms to standards.
   MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
+  def __init__(self, encoding=None):
+    """Initialize the CSV reader.
+
+    Arguments:
+      encoding: Optional encoding used in the CSV file. If None, the system
+                codepage set in the parser mediator will be used.
+    """
+    super(TextCSVParser, self).__init__()
+    self.encoding = encoding
+
+  def _ConvertRowToUnicode(self, parser_mediator, row):
+    """Converts all strings in a CSV row dict to unicode.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      row: a single row from the CSV file. Strings in this dict are binary
+           strings.
+
+    Returns:
+      A dict containing data from the CSV file, with all strings converted to
+      unicode.
+    """
+    if not self.encoding:
+      # If no encoding is set, we default to the system codepage.
+      self.encoding = parser_mediator.codepage
+
+    for key, value in iter(row.items()):
+      try:
+        row[key] = value.decode(self.encoding)
+      except UnicodeDecodeError:
+        replaced_value = value.decode(self.encoding, errors=u'replace')
+        parser_mediator.ProduceParserError(
+            u'Error decoding string as {0:s}, characters have been '
+            u'replaced in {1:s}'.format(self.encoding, replaced_value))
+        row[key] = replaced_value
+    return row
+
   def VerifyRow(self, unused_parser_mediator, unused_row):
     """Return a bool indicating whether or not this is the correct parser.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      row: a single row from the CSV file.
+      row: a single row from the CSV file. Strings in this dict are binary
+           strings, to aid in file verification.
 
     Returns:
       True if this is the correct parser, False otherwise.
@@ -422,7 +465,7 @@ class TextCSVParser(interface.SingleFileBaseParser):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       row_offset: the offset of the row.
       row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list.
+           COLUMNS class list. Strings in this dict are unicode strings.
     """
     event_object = event.EventObject()
     if row_offset is not None:
@@ -445,7 +488,7 @@ class TextCSVParser(interface.SingleFileBaseParser):
 
     text_file_object = text_file.TextFile(file_object)
 
-    # If we specifically define a number of lines we should skip do that here.
+    # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
       _ = text_file_object.readline()
 
@@ -482,9 +525,11 @@ class TextCSVParser(interface.SingleFileBaseParser):
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.NAME, path_spec_printable))
 
+    row = self._ConvertRowToUnicode(parser_mediator, row)
     self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
     for row in reader:
+      row = self._ConvertRowToUnicode(parser_mediator, row)
       self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
 

@@ -111,7 +111,7 @@ class PsortToolTest(test_lib.ToolTestCase):
       self.assertTrue(expected_string in raw_data)
 
   def testProcessStorageWithMissingParameters(self):
-    """Test the ProcessStorage function with half-configure output module."""
+    """Test the ProcessStorage function with half-configured output module."""
     options = cli_test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'psort_test.out'])
     options.output_format = u'test_missing'

@@ -183,7 +183,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))
-        return
+        return event.PreprocessObject()
 
     logging.debug(u'Preprocessing done.')
 
