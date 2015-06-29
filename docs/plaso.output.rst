@@ -68,6 +68,14 @@ plaso.output.mysql_4n6time module
     :undoc-members:
     :show-inheritance:
 
+plaso.output.null module
+------------------------
+
+.. automodule:: plaso.output.null
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.output.pstorage module
 ----------------------------
 
