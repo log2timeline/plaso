@@ -83,12 +83,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT e.resource_id, e.filename, e.modified, e.created, e.size, '
-        u'e.doc_type, e.shared, e.checksum, e.url, r.parent_resource_id FROM '
-        u'cloud_entry AS e, cloud_relations AS r WHERE r.child_resource_id = '
-        u'e.resource_id AND e.modified IS NOT NULL;'), u'ParseCloudEntryRow'),
-      ((u'SELECT inode_number, filename, modified, checksum, size FROM '
-        u'local_entry WHERE modified IS NOT NULL;'), u'ParseLocalEntryRow')]
+      ((u'SELECT cloud_entry.resource_id, cloud_entry.filename, '
+        u'cloud_entry.modified, cloud_entry.created, cloud_entry.size, '
+        u'cloud_entry.doc_type, cloud_entry.shared, cloud_entry.checksum, '
+        u'cloud_entry.url, cloud_relations.parent_resource_id '
+        u'FROM cloud_entry, cloud_relations '
+        u'WHERE cloud_relations.child_resource_id = cloud_entry.resource_id '
+        u'AND cloud_entry.modified IS NOT NULL;'),
+       u'ParseCloudEntryRow'),
+      ((u'SELECT inode_number, filename, modified, checksum, size '
+        u'FROM local_entry WHERE modified IS NOT NULL;'),
+       u'ParseLocalEntryRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
@@ -97,13 +102,16 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
   # Queries used to build cache.
   LOCAL_PATH_CACHE_QUERY = (
-      u'SELECT r.child_inode_number, r.parent_inode_number, e.filename FROM '
-      u'local_relations AS r, local_entry AS e WHERE r.child_inode_number = '
-      u'e.inode_number')
+      u'SELECT local_relations.child_inode_number, '
+      u'local_relations.parent_inode_number, local_entry.filename '
+      u'FROM local_relations, local_entry '
+      u'WHERE local_relations.child_inode_number = local_entry.inode_number')
   CLOUD_PATH_CACHE_QUERY = (
-      u'SELECT e.filename, e.resource_id, r.parent_resource_id AS parent '
-      u'FROM cloud_entry AS e, cloud_relations AS r WHERE e.doc_type = 0 '
-      u'AND e.resource_id = r.child_resource_id')
+      u'SELECT cloud_entry.filename, cloud_entry.resource_id, '
+      u'cloud_relations.parent_resource_id AS parent '
+      u'FROM cloud_entry, cloud_relations '
+      u'WHERE cloud_entry.doc_type = 0 '
+      u'AND cloud_entry.resource_id = cloud_relations.child_resource_id')
 
   def GetLocalPath(self, inode, cache, database):
     """Return local path for a given inode.

@@ -33,8 +33,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.
     #   10 files mounting to:
-    #     20 Cloud Entries (two timestamps per file).
-    #     10 Local Entries (one timestamp per file).
+    #     20 Cloud Entries (two timestamps per entry).
+    #     10 Local Entries (one timestamp per entry).
     local_entries = []
     cloud_entries = []
     for event_object in event_objects:
@@ -42,6 +42,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         local_entries.append(event_object)
       else:
         cloud_entries.append(event_object)
+
     self.assertEqual(len(local_entries), 10)
     self.assertEqual(len(cloud_entries), 20)
 
@@ -50,7 +51,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     file_path = (
         u'%local_sync_root%/Top Secret/Enn meiri '
-        u'leyndarm\xe1l/S\xfdnileiki - \xd6rverpi.gdoc')
+        u'leyndarmál/Sýnileiki - Örverpi.gdoc')
     self.assertEqual(event_object.path, file_path)
 
     expected_msg = u'File Path: {0:s} Size: 184'.format(file_path)
@@ -65,20 +66,22 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(event_object.document_type, u'DOCUMENT')
     self.assertEqual(
-        event_object.timestamp_desc,
-        eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEqual(event_object.url, (
+        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+
+    expected_url = (
         u'https://docs.google.com/document/d/'
-        u'1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api'))
+        u'1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api')
+    self.assertEqual(event_object.url, expected_url)
 
     expected_msg = (
-        u'File Path: /Almenningur/Saklausa hli\xf0in [Private] Size: 0 URL: '
-        u'https://docs.google.com/document/d/'
-        u'1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api '
-        u'Type: DOCUMENT')
-    expected_short = u'/Almenningur/Saklausa hli\xf0in'
+        u'File Path: /Almenningur/Saklausa hliðin '
+        u'[Private] '
+        u'Size: 0 '
+        u'URL: {0:s} '
+        u'Type: DOCUMENT').format(expected_url)
+    expected_msg_short = u'/Almenningur/Saklausa hliðin'
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-28 00:12:27')
