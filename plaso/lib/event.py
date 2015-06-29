@@ -95,28 +95,32 @@ class EventObject(object):
   The framework is designed to parse files and create an event
   from every single record, line or key extracted from the file.
 
-  An EventObject is the main data storage for an event in plaso.
+  An event object is the main data storage for an event in plaso.
 
-  This class defines the high level interface of EventObject.
-  Before creating an EventObject a class needs to be implemented
-  that inherits from EventObject and implements the functions in it.
+  This class defines the high level interface of event object.
+  Before creating an event object a class needs to be implemented
+  that inherits from event object and implements the functions in it.
 
-  The EventObject is then used by output processing for saving
+  The event object is then used by output processing for saving
   in other forms, such as a protobuf, AFF4 container, CSV files,
   databases, etc.
 
-  The goal of the EventObject is to provide a easily extensible
+  The goal of the event object is to provide a easily extensible
   data storage of each events internally in the tool.
 
-  The main EventObject only exposes those functions that the
+  The main event object only exposes those functions that the
   implementations need to implement. The functions that are needed
   simply provide information about the event, or describe the
   attributes that are necessary. How they are assembled is totally
   up to the implementation.
 
-  All required attributes of the EventObject are passed to the
+  All required attributes of the event object are passed to the
   constructor of the object while the optional ones are set
   using the method SetValue(attribute, value).
+
+  Attributes:
+    data_type: the data type indicator string.
+    uuid: unique identifier (UUID) for the event object.
   """
   # This is a convenience variable to define event object as
   # simple value objects. Its runtime equivalent data_type
@@ -125,22 +129,94 @@ class EventObject(object):
 
   # This is a reserved variable just used for comparison operation and defines
   # attributes that should not be used during evaluation of whether two
-  # EventObjects are the same.
+  # event objects are the same.
   COMPARE_EXCLUDE = frozenset([
       u'timestamp', u'inode', u'pathspec', u'filename', u'uuid',
       u'data_type', u'display_name', u'store_number', u'store_index', u'tag'])
 
   def __init__(self):
     """Initializes the event object."""
+    super(EventObject, self).__init__()
     self.uuid = u'{0:s}'.format(uuid.uuid4().get_hex())
     if self.DATA_TYPE:
       self.data_type = self.DATA_TYPE
 
+  def __eq__(self, event_object):
+    """Return a boolean indicating if two event objects are considered equal.
+
+    Compares two event objects together and evaluates if they are
+    the same or close enough to be considered to represent the same event.
+
+    For two event objects to be considered the same they need to
+    have the following conditions:
+    * Have the same timestamp.
+    * Have the same data_type value.
+    * Have the same set of attributes.
+    * Compare all other attributes than those that are reserved, and
+    they all have to match.
+
+    The following attributes are considered to be 'reserved' and not used
+    for the comparison, so they may be different yet the event object is still
+    considered to be equal:
+    * inode
+    * pathspec
+    * filename
+    * display_name
+    * store_number
+    * store_index
+
+    Args:
+      event_object: The event object to compare to (instance of EventObject).
+
+    Returns:
+      A boolean value indicating if both event objects are considered equal.
+    """
+    # Note: if this method changes, the above EqualityString method MUST be
+    # updated accordingly.
+    if (not isinstance(event_object, EventObject) or
+        self.timestamp != event_object.timestamp or
+        self.data_type != event_object.data_type):
+      return False
+
+    attributes = self.GetAttributes()
+    if attributes != event_object.GetAttributes():
+      return False
+
+    # Here we have to deal with "near" duplicates, so not all attributes
+    # should be compared.
+    for attribute in attributes.difference(self.COMPARE_EXCLUDE):
+      if getattr(self, attribute) != getattr(event_object, attribute):
+        return False
+
+    # If we are dealing with the stat parser the inode number is the one
+    # attribute that really matters, unlike others.
+    if u'filestat' in getattr(self, u'parser', u''):
+      inode = getattr(self, u'inode', None)
+      if inode is not None:
+        inode = utils.GetUnicodeString(inode)
+
+      event_object_inode = getattr(event_object, u'inode', None)
+      if event_object_inode is not None:
+        event_object_inode = utils.GetUnicodeString(event_object_inode)
+
+      return inode == event_object_inode
+
+    return True
+
+  def __str__(self):
+    """Returns a string representation."""
+    string = self.GetString()
+    return string.encode(u'utf-8')
+
+  def __unicode__(self):
+    """Returns a string representation."""
+    return self.GetString()
+
   def EqualityString(self):
-    """Return a string describing the EventObject in terms of object equality.
+    """Return a string describing the event object in terms of object equality.
 
     The details of this function must match the logic of __eq__. EqualityStrings
-    of two event objects should be the same if and only if the EventObjects are
+    of two event objects should be the same if and only if the event objects are
     equal as described in __eq__.
 
     Returns:
@@ -192,120 +268,54 @@ class EventObject(object):
       # with another event.
       return self.uuid
 
-  def __eq__(self, event_object):
-    """Return a boolean indicating if two EventObject are considered equal.
-
-    Compares two EventObject objects together and evaluates if they are
-    the same or close enough to be considered to represent the same event.
-
-    For two EventObject objects to be considered the same they need to
-    have the following conditions:
-    * Have the same timestamp.
-    * Have the same data_type value.
-    * Have the same set of attributes.
-    * Compare all other attributes than those that are reserved, and
-    they all have to match.
-
-    The following attributes are considered to be 'reserved' and not used
-    for the comparison, so they may be different yet the EventObject is still
-    considered to be equal:
-    * inode
-    * pathspec
-    * filename
-    * display_name
-    * store_number
-    * store_index
-
-    Args:
-      event_object: The EventObject that is being compared to this one.
-
-    Returns:
-      True: if both EventObjects are considered equal, otherwise False.
-    """
-
-    # Note: if this method changes, the above EqualityString method MUST be
-    # updated as well
-    if not isinstance(event_object, EventObject):
-      return False
-
-    if self.timestamp != event_object.timestamp:
-      return False
-
-    if self.data_type != event_object.data_type:
-      return False
-
-    attributes = self.GetAttributes()
-    if attributes != event_object.GetAttributes():
-      return False
-
-    # Here we have to deal with "near" duplicates, so not all attributes
-    # should be compared.
-    for attribute in attributes.difference(self.COMPARE_EXCLUDE):
-      if getattr(self, attribute) != getattr(event_object, attribute):
-        return False
-
-    # If we are dealing with the stat parser the inode number is the one
-    # attribute that really matters, unlike others.
-    if u'filestat' in getattr(self, u'parser', u''):
-      return utils.GetUnicodeString(getattr(
-          self, u'inode', u'a')) == utils.GetUnicodeString(getattr(
-              event_object, u'inode', u'b'))
-
-    return True
-
   def GetAttributes(self):
     """Return a list of all defined attributes."""
     return set(self.__dict__.keys())
 
+  def GetString(self):
+    """Retrieves a string representation of the event object.
+
+    Returns:
+      A Unicode string containing the string representation of the event object.
+    """
+    time_string = timelib.Timestamp.CopyToIsoFormat(self.timestamp)
+
+    out_write = [
+        u'+-' * 40,
+        u'[Timestamp]:',
+        u'  {0:s}'.format(time_string)]
+
+    pathspec = getattr(self, u'pathspec', None)
+    if pathspec:
+      out_write.append(u'[Pathspec]:')
+      attribute_string = pathspec.comparable.replace(u'\n', u'\n  ')
+      attribute_string = u'  {0:s}\n'.format(attribute_string)
+      out_write.append(attribute_string)
+
+    out_write.append(u'[Reserved attributes]:')
+    out_additional = [u'[Additional attributes]:']
+
+    for name, value in sorted(self.GetValues().items()):
+      if name not in definitions.RESERVED_VARIABLE_NAMES:
+        attribute_string = u'  {{{0!s}}} {1!s}'.format(name, value)
+        out_additional.append(attribute_string)
+
+      elif name != u'pathspec':
+        attribute_string = u'  {{{0!s}}} {1!s}'.format(name, value)
+        out_write.append(attribute_string)
+
+    out_write.append(u'')
+    out_additional.append(u'')
+
+    out_write.extend(out_additional)
+    return u'\n'.join(out_write)
+
   def GetValues(self):
     """Returns a dictionary of all defined attributes and their values."""
     values = {}
-    for attribute_name in self.GetAttributes():
+    for attribute_name in set(self.__dict__.keys()):
       values[attribute_name] = getattr(self, attribute_name)
     return values
-
-  def GetString(self):
-    """Return a unicode string representation of an EventObject."""
-    return unicode(self)
-
-  def __str__(self):
-    """Return a string object of the EventObject."""
-    return unicode(self).encode(u'utf-8')
-
-  def __unicode__(self):
-    """Print a human readable string from the EventObject."""
-    out_write = []
-
-    out_write.append(u'+-' * 40)
-    out_write.append(u'[Timestamp]:\n  {0:s}'.format(
-        timelib.Timestamp.CopyToIsoFormat(self.timestamp)))
-
-    if hasattr(self, u'pathspec'):
-      pathspec_string = self.pathspec.comparable
-      out_write.append(u'[Pathspec]:\n  {0:s}\n'.format(
-          pathspec_string.replace('\n', '\n  ')))
-
-    out_additional = []
-    out_write.append(u'[Reserved attributes]:')
-    out_additional.append(u'[Additional attributes]:')
-
-    for attr_key, attr_value in sorted(self.GetValues().items()):
-      if attr_key in definitions.RESERVED_VARIABLE_NAMES:
-        if attr_key == u'pathspec':
-          continue
-        else:
-          out_write.append(
-              u'  {{{key!s}}} {value!s}'.format(key=attr_key, value=attr_value))
-      else:
-        out_additional.append(
-            u'  {{{key!s}}} {value!s}'.format(key=attr_key, value=attr_value))
-
-    out_write.append(u'\n')
-    out_additional.append(u'')
-
-    part_1 = u'\n'.join(out_write)
-    part_2 = u'\n'.join(out_additional)
-    return part_1 + part_2
 
 
 class EventTag(object):
