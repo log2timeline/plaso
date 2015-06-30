@@ -535,6 +535,28 @@ class StorageMediaTool(tools.CLITool):
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
 
+    if len(volume_scan_node.sub_nodes) == 0:
+      self._ScanVolumeScanNode(volume_scan_node)
+
+    else:
+      # Some volumes contain other volume or file systems e.g. BitLocker ToGo
+      # has an encrypted and unencrypted volume.
+      for sub_scan_node in volume_scan_node.sub_nodes:
+        self._ScanVolumeScanNode(sub_scan_node)
+
+  def _ScanVolumeScanNode(self, volume_scan_node):
+    """Scans an individual volume scan node for volume and file systems.
+
+    Args:
+      volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
+
+    Raises:
+      SourceScannerError: if the format of or within the source
+                          is not supported or the the scan node is invalid.
+    """
+    if not volume_scan_node or not volume_scan_node.path_spec:
+      raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
+
     # Get the first node where where we need to decide what to process.
     scan_node = volume_scan_node
     while len(scan_node.sub_nodes) == 1:
@@ -561,15 +583,8 @@ class StorageMediaTool(tools.CLITool):
               parent=sub_scan_node.path_spec)
           self._source_path_specs.append(path_spec)
 
-      # TODO: move the TSK current volume scan node to the same level as
-      # the VSS scan node.
-      for sub_scan_node in scan_node.sub_nodes:
-        if sub_scan_node.type_indicator == (
-            dfvfs_definitions.TYPE_INDICATOR_TSK):
-          self._source_path_specs.append(sub_scan_node.path_spec)
-
-    # TODO: replace check with dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS.
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
+    elif scan_node.type_indicator in (
+        dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
       self._source_path_specs.append(scan_node.path_spec)
 
   def AddFilterOptions(self, argument_group):
@@ -723,6 +738,7 @@ class StorageMediaTool(tools.CLITool):
     if scan_node.type_indicator not in [
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
       partition_identifiers = None
+
     else:
       partition_identifiers = self._GetTSKPartitionIdentifiers(
           scan_node, partition_string=self._partition_string,
