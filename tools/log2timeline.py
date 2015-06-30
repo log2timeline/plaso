@@ -578,9 +578,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   def ProcessSources(self):
     """Processes the sources.
 
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
     Raises:
       SourceScannerError: if the source scanner could not find a supported
                           file system.
