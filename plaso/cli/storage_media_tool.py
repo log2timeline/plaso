@@ -108,10 +108,10 @@ class StorageMediaTool(tools.CLITool):
       A list of partition identifiers.
 
     Raises:
-      SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
       RuntimeError: if the volume for a specific identifier cannot be
                     retrieved.
+      SourceScannerError: if the format of or within the source
+                          is not supported or the the scan node is invalid.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid scan node.')

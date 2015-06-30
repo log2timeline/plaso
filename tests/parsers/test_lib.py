@@ -151,13 +151,13 @@ class ParserTestCase(unittest.TestCase):
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def _GetTestFileEntryFromPath(self, path_segments):
-    """Creates a dfVFS file_entry that references a file in the test dir.
+    """Creates a file entry that references a file in the test dir.
 
     Args:
       path_segments: the path segments inside the test data directory.
 
     Returns:
-      A dfVFS file_entry object.
+      A file entry object (instance of dfvfs.FileEntry).
     """
     path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
