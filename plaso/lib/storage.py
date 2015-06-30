@@ -291,7 +291,7 @@ class StorageFile(object):
 
     try:
       self._zipfile = zipfile.ZipFile(
-          self._output_file, access_mode, zipfile.ZIP_DEFLATED)
+          self._output_file, access_mode, zipfile.ZIP_DEFLATED, allowZip64=True)
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to read ZIP file with error: {0:s}'.format(
           exception))
