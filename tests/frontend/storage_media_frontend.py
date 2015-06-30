@@ -120,13 +120,23 @@ class StorageMediaFrontendTests(test_lib.FrontendTestCase):
     self.assertNotEqual(scan_node, None)
     self.assertEqual(
         scan_node.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
-    self.assertEqual(len(scan_node.sub_nodes), 3)
+        dfvfs_definitions.TYPE_INDICATOR_QCOW)
+    self.assertEqual(len(scan_node.sub_nodes), 2)
 
-    for scan_node in scan_node.sub_nodes:
-      if getattr(scan_node.path_spec, u'location', None) == u'/':
-        break
+    volume_scan_node = scan_node
 
+    scan_node = volume_scan_node.sub_nodes[0]
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
+    self.assertEqual(len(scan_node.sub_nodes), 2)
+
+    scan_node = scan_node.sub_nodes[0]
+    self.assertEqual(
+        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
+    # By default the file system inside a VSS volume is not scanned.
+    self.assertEqual(len(scan_node.sub_nodes), 0)
+
+    scan_node = volume_scan_node.sub_nodes[1]
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
 
