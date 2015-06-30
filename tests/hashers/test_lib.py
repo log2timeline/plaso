@@ -29,19 +29,18 @@ class HasherTestCase(unittest.TestCase):
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def _GetTestFileEntry(self, path_segments):
-    """Creates a dfVFS file_entry that references a file in the test dir.
+    """Creates a file_entry that references a file in the test dir.
 
     Args:
       path_segments: the path segments inside the test data directory.
 
     Returns:
-      A dfVFS file_entry object.
+      A file_entry object (instance of dfvfs.FileEntry).
     """
     path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    return file_entry
+    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _AssertFileEntryStringDigestMatch(self, hasher, file_entry, digest):
     """Test that a hasher returns a given result when it hashes a file.

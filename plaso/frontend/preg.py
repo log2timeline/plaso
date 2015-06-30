@@ -8,54 +8,17 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import knowledge_base
 from plaso.engine import queue
-
-# Import the winreg formatter to register it, adding the option
-# to print event objects using the default formatter.
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-
+from plaso.engine import single_process
 from plaso.frontend import extraction_frontend
-from plaso.frontend import frontend
-from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
-from plaso.lib import event
-from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
-from plaso.parsers import winreg as winreg_parser
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
-from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
-
-
-# TODO: refactor this to be an instance not a singleton.
-class PregCache(object):
-  """Cache storage used for iPython and other aspects of preg."""
-
-  events_from_last_parse = []
-
-  knowledge_base_object = knowledge_base.KnowledgeBase()
-
-  # Parser mediator, used when parsing Registry keys.
-  parser_mediator = None
-
-  hive_storage = None
-  shell_helper = None
-
-  @classmethod
-  def GetLoadedHive(cls):
-    """Retrieves the loaded hive.
-
-    Returns:
-      The loaded hive (an instance of TODO).
-    """
-    return cls.hive_storage.loaded_hive
 
 
 class PregItemQueueConsumer(queue.ItemQueueConsumer):
@@ -68,7 +31,7 @@ class PregItemQueueConsumer(queue.ItemQueueConsumer):
       event_queue: the event object queue (instance of Queue).
     """
     super(PregItemQueueConsumer, self).__init__(event_queue)
-    self.event_objects = []
+    self._event_objects = []
 
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
@@ -76,40 +39,68 @@ class PregItemQueueConsumer(queue.ItemQueueConsumer):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    self.event_objects.append(event_object)
+    self._event_objects.append(event_object)
+
+  def GetItems(self):
+    """Retrieves the consumed event objects.
+
+    Yields:
+      Event objects (instance of EventObject)
+    """
+    if not self._event_objects:
+      raise StopIteration
+
+    event_object = self._event_objects.pop(0)
+    while event_object:
+      yield event_object
+      if not self._event_objects:
+        break
+      event_object = self._event_objects.pop(0)
 
 
 class PregFrontend(extraction_frontend.ExtractionFrontend):
-  """Class that implements the preg front-end."""
+  """Class that implements the preg front-end.
+
+  Attributes:
+    knowledge_base_object: the knowledge base object (instance
+                           of KnowledgeBase).
+  """
 
   def __init__(self):
     """Initializes the front-end object."""
     super(PregFrontend, self).__init__()
+    self._mount_path_spec = None
     self._parse_restore_points = False
+    self._preprocess_completed = False
+    self._registry_files = []
     self._registry_plugin_list = (
         parsers_manager.ParsersManager.GetWindowsRegistryPlugins())
+    self._searcher = None
+    self._single_file = False
+    self._source_path = None
+    self._source_path_specs = []
 
-  def GetWindowsRegistryPlugins(self):
-    """Build a list of all available Windows Registry plugins.
+    self.knowledge_base_object = None
 
-    Returns:
-      A plugins list (instance of PluginList).
-    """
+  @property
+  def registry_plugin_list(self):
+    """The Windows Registry plugin list (instance of PluginList)."""
     return self._registry_plugin_list
 
   # TODO: clean up this function as part of dfvfs find integration.
-  # TODO: a duplicate of this function exists in class: WinRegistryPreprocess
-  # method: GetValue; merge them.
   def _FindRegistryPaths(self, searcher, pattern):
-    """Return a list of Windows Registry file paths.
+    """Return a list of Windows Registry file path specifications.
 
     Args:
-      searcher: The file system searcher object (instance of
+      searcher: the file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
-      pattern: The pattern to find.
+      pattern: the pattern to find.
+
+    Returns:
+      A list of path specification objects (instance of PathSpec).
     """
     # TODO: optimize this in one find.
-    hive_paths = []
+    registry_file_paths = []
     file_path, _, file_name = pattern.rpartition(u'/')
 
     # The path is split in segments to make it path segment separator
@@ -124,10 +115,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     if not path_specs:
       logging.debug(u'Directory: {0:s} not found'.format(file_path))
-      return hive_paths
+      return registry_file_paths
 
     for path_spec in path_specs:
-      directory_location = getattr(path_spec, 'location', None)
+      directory_location = getattr(path_spec, u'location', None)
       if not directory_location:
         raise errors.PreProcessFail(
             u'Missing directory location for: {0:s}'.format(file_path))
@@ -136,6 +127,22 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       # independent (and thus platform independent).
       path_segments = searcher.SplitPath(directory_location)
       path_segments.append(file_name)
+
+      # Remove mount part if OS mount path is set.
+      # TODO: Instead of using an absolute path spec, use a mount point one.
+      if self._mount_path_spec:
+        mount_point_location = getattr(self._mount_path_spec, u'location', u'')
+        mount_point_segments = mount_point_location.split(u'/')
+        if not mount_point_segments[0]:
+          mount_point_segments = mount_point_segments[1:]
+
+        remove_mount_point = True
+        for index in range(0, len(mount_point_segments)):
+          mount_point_segment = mount_point_segments[index]
+          if mount_point_segment != path_segments[index]:
+            remove_mount_point = False
+        if remove_mount_point:
+          path_segments = path_segments[len(mount_point_segments):]
 
       find_spec = file_system_searcher.FindSpec(
           location_regex=path_segments, case_sensitive=False)
@@ -146,75 +153,150 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
             file_name, directory_location))
         continue
 
-      hive_paths.extend(fh_path_specs)
+      registry_file_paths.extend(fh_path_specs)
 
-    return hive_paths
+    return registry_file_paths
+
+  def _GetRegistryHelperFromPath(self, path, codepage):
+    """Return a Registry helper object from a path.
+
+    Given a path to a Registry file this function goes through
+    all the discovered source path specifications (instance of PathSpec)
+    and extracts Registry helper objects based on the supplied
+    path.
+
+    Args:
+      path: the path filter to a Registry file.
+      codepage: the codepage used for the Registry file. The default is cp1252.
+
+    Yields:
+      A Registry helper object (instance of PregRegistryHelper).
+    """
+    for source_path_spec in self._source_path_specs:
+      type_indicator = source_path_spec.TYPE_INDICATOR
+      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
+        if file_entry.IsFile():
+          yield PregRegistryHelper(
+              file_entry=file_entry, collector_name=u'OS', codepage=codepage)
+          continue
+        # TODO: Change this into an actual mount point path spec.
+        self._mount_path_spec = source_path_spec
+
+      collector_name = type_indicator
+      parent_path_spec = getattr(source_path_spec, u'parent', None)
+      if parent_path_spec:
+        parent_type_indicator = parent_path_spec.TYPE_INDICATOR
+        if parent_type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+          vss_store = getattr(source_path_spec, u'store_index', 0)
+          collector_name = u'VSS Store: {0:d}'.format(vss_store)
+
+      searcher = self._GetSearcher()
+      for registry_file_path in self._FindRegistryPaths(searcher, path):
+        file_entry = searcher.GetFileEntryByPathSpec(registry_file_path)
+        yield PregRegistryHelper(
+            file_entry=file_entry, collector_name=collector_name,
+            codepage=codepage)
 
   def _GetRegistryTypes(self, plugin_name):
     """Retrieves the Windows Registry types based on a filter string.
 
     Args:
       plugin_name: string containing the name of the plugin or an empty
-                   string for all the types.
+                   string for all types.
 
     Returns:
       A list of Windows Registry types.
     """
-    types = []
+    types = set()
     for plugin in self.GetRegistryPlugins(plugin_name):
       for key_plugin_class in self._registry_plugin_list.GetAllKeyPlugins():
-        if plugin == key_plugin_class.NAME:
-          if key_plugin_class.REG_TYPE not in types:
-            types.append(key_plugin_class.REG_TYPE)
+        if plugin.NAME == key_plugin_class.NAME:
+          types.add(key_plugin_class.REG_TYPE)
           break
 
-    return types
+    return list(types)
 
-  def _GetSearchersForImage(self, volume_path_spec):
-    """Retrieves the file systems searchers for searching the image.
+  def _GetRegistryTypesFromPlugins(self, plugin_names):
+    """Return a list of Registry types extracted from a list of plugin names.
 
     Args:
-      volume_path_spec: The path specification of the volume containing
-                        the file system (instance of dfvfs.PathSpec).
+      plugin_names: a list of plugin names.
 
     Returns:
-      A list of tuples containing the a string identifying the file system
-      searcher and a file system searcher object (instance of
-      dfvfs.FileSystemSearcher).
+      A list of Registry types extracted from the supplied plugins.
     """
-    searchers = []
+    if not plugin_names:
+      return []
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-        parent=volume_path_spec)
+    plugins_list = self._registry_plugin_list
+    registry_types = set()
 
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
-    searcher = file_system_searcher.FileSystemSearcher(
-        file_system, volume_path_spec)
+    for plugin_name in plugin_names:
+      for plugin_class in plugins_list.GetAllKeyPlugins():
+        if plugin_name == plugin_class.NAME.lower():
+          # If a plugin is available for every Registry type
+          # we need to make sure all Registry files are included.
+          if plugin_class.REG_TYPE == u'any':
+            for available_type in PregRegistryHelper.REG_TYPES.iterkeys():
+              if available_type is u'Unknown':
+                continue
+              registry_types.add(available_type)
 
-    searchers.append((u'', searcher))
+          else:
+            registry_types.add(plugin_class.REG_TYPE)
 
-    vss_stores = self.vss_stores
+    return list(registry_types)
 
-    if not vss_stores:
-      return searchers
+  def _GetSearcher(self):
+    """Retrieve a searcher for the first source path specification.
 
-    for store_index in vss_stores:
-      vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index - 1,
-          parent=volume_path_spec)
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-          parent=vss_path_spec)
+    Returns:
+      A file system searcher object (instance of dfvfs.FileSystemSearcher)
+      for the first discovered source path specification, or None if there are
+      no discovered source path specifications.
+    """
+    if not self._source_path_specs:
+      return
 
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
-      searcher = file_system_searcher.FileSystemSearcher(
-          file_system, vss_path_spec)
+    if self._searcher:
+      return self._searcher
 
-      searchers.append((
-          u':VSS Store {0:d}'.format(store_index), searcher))
+    source_path_spec = self._source_path_specs[0]
+    type_indicator = source_path_spec.TYPE_INDICATOR
 
-    return searchers
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(source_path_spec)
+
+    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
+      mount_point = source_path_spec
+    else:
+      mount_point = source_path_spec.parent
+
+    self._searcher = file_system_searcher.FileSystemSearcher(
+        file_system, mount_point)
+
+    return self._searcher
+
+  def CreateParserMediator(self, event_queue=None):
+    """Create a parser mediator object.
+
+    Args:
+      event_queue: an optional event queue object (instance of Queue).
+                   The default is None.
+
+    Returns:
+      A parser mediator object (instance of parsers_mediator.ParserMediator).
+    """
+    if event_queue is None:
+      event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = queue.ItemQueueProducer(event_queue)
+
+    parse_error_queue = single_process.SingleProcessQueue()
+    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
+
+    return parsers_mediator.ParserMediator(
+        event_queue_producer, parse_error_queue_producer,
+        self.knowledge_base_object)
 
   def ExpandKeysRedirect(self, keys):
     """Expands a list of Registry key paths with their redirect equivalents.
@@ -223,8 +305,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       keys: a list of Windows Registry key paths.
     """
     for key in keys:
-      if key.startswith('\\Software') and 'Wow6432Node' not in key:
-        _, first, second = key.partition('\\Software')
+      if key.startswith(u'\\Software') and u'Wow6432Node' not in key:
+        _, first, second = key.partition(u'\\Software')
         keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
 
   def GetRegistryFilePaths(self, plugin_name=None, registry_type=None):
@@ -232,11 +314,11 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     Args:
       plugin_name: optional string containing the name of the plugin or an empty
-                   string or None for all the types. Defaults to None.
-      registry_type: optional Registry type string. None by default.
+                   string or None for all the types. The default is None.
+      registry_type: optional Registry type string. The default is None.
 
     Returns:
-      A list of path names for registry files.
+      A list of path names for Registry files.
     """
     if self._parse_restore_points:
       restore_path = u'/System Volume Information/_restor.+/RP[0-9]+/snapshot/'
@@ -252,34 +334,34 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     paths = []
 
     for reg_type in types:
-      if reg_type == 'NTUSER':
-        paths.append('/Documents And Settings/.+/NTUSER.DAT')
-        paths.append('/Users/.+/NTUSER.DAT')
+      if reg_type == u'NTUSER':
+        paths.append(u'/Documents And Settings/.+/NTUSER.DAT')
+        paths.append(u'/Users/.+/NTUSER.DAT')
         if restore_path:
-          paths.append('{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
+          paths.append(u'{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
 
-      elif reg_type == 'SOFTWARE':
-        paths.append('{sysregistry}/SOFTWARE')
+      elif reg_type == u'SOFTWARE':
+        paths.append(u'{sysregistry}/SOFTWARE')
         if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
+          paths.append(u'{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
 
-      elif reg_type == 'SYSTEM':
-        paths.append('{sysregistry}/SYSTEM')
+      elif reg_type == u'SYSTEM':
+        paths.append(u'{sysregistry}/SYSTEM')
         if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
+          paths.append(u'{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
 
-      elif reg_type == 'SECURITY':
-        paths.append('{sysregistry}/SECURITY')
+      elif reg_type == u'SECURITY':
+        paths.append(u'{sysregistry}/SECURITY')
         if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
+          paths.append(u'{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
 
-      elif reg_type == 'USRCLASS':
-        paths.append('/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
+      elif reg_type == u'USRCLASS':
+        paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
-      elif reg_type == 'SAM':
-        paths.append('{sysregistry}/SAM')
+      elif reg_type == u'SAM':
+        paths.append(u'{sysregistry}/SAM')
         if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
+          paths.append(u'{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
 
     # Expand all the paths.
     expanded_paths = []
@@ -287,7 +369,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     for path in paths:
       try:
         expanded_paths.append(expander.ExpandPath(
-            path, pre_obj=PregCache.knowledge_base_object.pre_obj))
+            path, pre_obj=self.knowledge_base_object.pre_obj))
 
       except KeyError as exception:
         logging.error(u'Unable to expand keys with error: {0:s}'.format(
@@ -295,26 +377,65 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return expanded_paths
 
-  def GetRegistryKeysFromHive(self, hive_helper, parser_mediator):
-    """Retrieves a list of all key plugins for a given Registry type.
+  def GetRegistryHelpers(
+      self, registry_types=None, plugin_names=None, codepage=u'cp1252'):
+    """Returns a list of discovered Registry helpers.
 
     Args:
-      hive_helper: A hive object (instance of PregHiveHelper).
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      registry_types: optional list of Registry types, eg: NTUSER, SAM, etc
+                      that should be included. The default is None.
+      plugin_names: optional list of strings containing the name of the
+                    plugin(s) or an empty string for all the types. The default
+                    is None.
+      codepage: the codepage used for the Registry file. The default is cp1252.
 
     Returns:
-      A list of Windows Registry keys.
-    """
-    keys = []
-    if not hive_helper:
-      return
-    for key_plugin_class in self._registry_plugin_list.GetAllKeyPlugins():
-      temp_obj = key_plugin_class(reg_cache=hive_helper.reg_cache)
-      if temp_obj.REG_TYPE == hive_helper.type:
-        temp_obj.ExpandKeys(parser_mediator)
-        keys.extend(temp_obj.expanded_keys)
+      A list of Registry helper objects (instance of PregRegistryHelper).
 
-    return keys
+    Raises:
+      ValueError: If neither registry_types nor plugin name is passed
+                  as a parameter.
+    """
+    if registry_types is None and plugin_names is None:
+      raise ValueError(
+          u'Missing Registry_types or plugin_name value.')
+
+    if plugin_names is None:
+      plugin_names = []
+    else:
+      plugin_names = [plugin_name.lower() for plugin_name in plugin_names]
+
+    # TODO: use non-preprocess collector with filter to collect Registry files.
+    if not self._single_file and not self._preprocess_completed:
+      searcher = self._GetSearcher()
+      preprocess_manager.PreprocessPluginsManager.RunPlugins(
+          u'Windows', searcher, self.knowledge_base_object)
+      self._preprocess_completed = True
+
+    if registry_types is None:
+      registry_types = []
+
+    types_from_plugins = self._GetRegistryTypesFromPlugins(plugin_names)
+    registry_types.extend(types_from_plugins)
+
+    paths = []
+    if self._single_file:
+      paths = [self._source_path]
+    elif registry_types:
+      for registry_type in registry_types:
+        paths.extend(self.GetRegistryFilePaths(
+            registry_type=registry_type.upper()))
+    else:
+      for plugin_name in plugin_names:
+        paths.extend(self.GetRegistryFilePaths(plugin_name=plugin_name))
+
+    self.knowledge_base_object.SetDefaultCodepage(codepage)
+    registry_helpers = []
+
+    for path in paths:
+      registry_helpers.extend([
+          helper for helper in self._GetRegistryHelperFromPath(path, codepage)])
+    return registry_helpers
 
   def GetRegistryPlugins(self, plugin_name):
     """Retrieves the Windows Registry plugins based on a filter string.
@@ -324,133 +445,305 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
                    string for all the plugins.
 
     Returns:
-      A list of Windows Registry plugins.
+      A list of Windows Registry plugins (instance of RegistryPlugin).
     """
-    key_plugin_names = [
-        plugin.NAME for plugin in self._registry_plugin_list.GetAllKeyPlugins()]
+    key_plugins = {}
+    for plugin in self._registry_plugin_list.GetAllKeyPlugins():
+      key_plugins[plugin.NAME] = plugin
 
     if not plugin_name:
-      return key_plugin_names
+      return key_plugins.values()
 
     plugin_name = plugin_name.lower()
 
     plugins_to_run = []
-    for key_plugin in key_plugin_names:
-      if plugin_name in key_plugin.lower():
+    for key_plugin_name, key_plugin in iter(key_plugins.items()):
+      if plugin_name in key_plugin_name.lower():
         plugins_to_run.append(key_plugin)
 
     return plugins_to_run
 
-  def GetRegistryPluginsFromRegistryType(self, hive_type):
-    """Retrieves the Windows Registry plugins based on a hive type.
+  def GetRegistryPluginsFromRegistryType(self, registry_type):
+    """Retrieves the Windows Registry plugins based on a Registry type.
 
     Args:
-      hive_type: string containing the hive type.
+      registry_type: string containing the Registry type.
 
     Returns:
-      A list of Windows Registry plugins.
+      A list of Windows Registry plugins (instance of RegistryPlugin).
     """
     key_plugins = {}
     for plugin in self._registry_plugin_list.GetAllKeyPlugins():
-      key_plugins[plugin.NAME.lower()] = plugin.REG_TYPE.lower()
+      key_plugins.setdefault(plugin.REG_TYPE.lower(), []).append(plugin)
 
-    if not hive_type:
+    if not registry_type:
       return key_plugins.values()
 
-    hive_type = hive_type.lower()
+    registry_type = registry_type.lower()
 
     plugins_to_run = []
-    for key_plugin_name, key_plugin_type in key_plugins.iteritems():
-      if hive_type == key_plugin_type:
-        plugins_to_run.append(key_plugin_name)
-      elif key_plugin_type == 'any':
-        plugins_to_run.append(key_plugin_name)
+    for key_plugin_type, key_plugin_list in iter(key_plugins.items()):
+      if registry_type == key_plugin_type:
+        plugins_to_run.extend(key_plugin_list)
+      elif key_plugin_type == u'any':
+        plugins_to_run.extend(key_plugin_list)
 
     return plugins_to_run
 
+  def ParseRegistryFile(
+      self, registry_helper, key_paths=None, use_plugins=None):
+    """Extracts events from a Registry file.
 
-class PregHiveHelper(object):
-  """Class that defines few helper functions for Registry operations."""
+    This function takes a Registry helper object (instance of
+    PregRegistryHelper) and information about either Registry plugins or keys.
+    The function then opens up the Registry file and runs the plugins defined
+    (or all if no plugins are defined) against all the keys supplied to it.
 
-  _currently_loaded_registry_key = ''
-  _hive = None
-  _hive_type = u'UNKNOWN'
+    Args:
+      registry_helper: Registry helper object (instance of PregRegistryHelper)
+      key_paths: optional list of Registry keys paths that are to be parsed.
+                 The default is None, which results in no keys parsed.
+      use_plugins: optional list of plugins used to parse the key. The
+                   default is None, in which case all plugins are used.
 
-  collector_name = None
-  file_entry = None
-  path_expander = None
-  reg_cache = None
+    Returns:
+      A dict that contains the following structure:
+          key_path:
+              key: a Registry key (instance of WinRegKey)
+              subkeys: a list of Registry keys (instance of WinRegKey).
+              data:
+                plugin: a plugin object (instance of RegistryPlugin)
+                  event_objects: List of event objects extracted.
+
+          key_path 2:
+              ...
+      Or an empty dict on error.
+    """
+    if not registry_helper:
+      return {}
+
+    try:
+      registry_helper.Open()
+    except IOError as exception:
+      logging.error(u'Unable to parse Registry file, with error: {0:s}'.format(
+          exception))
+      return {}
+
+    return_dict = {}
+    if key_paths is None:
+      key_paths = []
+
+    for key_path in key_paths:
+      key = registry_helper.GetKeyByPath(key_path)
+      return_dict[key_path] = {u'key': key}
+
+      if not key:
+        continue
+
+      return_dict[key_path][u'subkeys'] = list(key.GetSubkeys())
+
+      return_dict[key_path][u'data'] = self.ParseRegistryKey(
+          key=key, registry_helper=registry_helper, use_plugins=use_plugins)
+
+    return return_dict
+
+  def ParseRegistryKey(
+      self, key, registry_helper, use_plugins=None):
+    """Parse a single Registry key and return parsed information.
+
+    Parses the Registry key either using the supplied plugin or trying against
+    all available plugins.
+
+    Args:
+      key: the Registry key to parse, WinRegKey object or a string.
+      registry_helper: Registry helper object (instance of PregRegistryHelper)
+      use_plugins: optional list of plugin names to use. The default is None
+                   which uses all available plugins.
+
+    Returns:
+      A dictionary with plugin objects as keys and extracted event objects from
+      each plugin as values or an empty dict on error.
+    """
+    return_dict = {}
+    if not registry_helper:
+      return return_dict
+
+    if isinstance(key, basestring):
+      key = registry_helper.GetKeyByPath(key)
+
+    if not key:
+      return return_dict
+
+    registry_type = registry_helper.type
+
+    plugins = {}
+    plugins_list = self._registry_plugin_list
+
+    # Compile a list of plugins we are about to use.
+    for weight in plugins_list.GetWeights():
+      plugin_list = plugins_list.GetWeightPlugins(weight, registry_type)
+      plugins[weight] = []
+      for plugin in plugin_list:
+        if use_plugins:
+          plugin_obj = plugin(reg_cache=registry_helper.reg_cache)
+          if plugin_obj.NAME in use_plugins:
+            plugins[weight].append(plugin_obj)
+        else:
+          plugins[weight].append(plugin(
+              reg_cache=registry_helper.reg_cache))
+
+    event_queue = single_process.SingleProcessQueue()
+    event_queue_consumer = PregItemQueueConsumer(event_queue)
+
+    parser_mediator = self.CreateParserMediator(event_queue)
+    parser_mediator.SetFileEntry(registry_helper.file_entry)
+
+    for weight in plugins:
+      for plugin in plugins[weight]:
+        plugin.Process(parser_mediator, key=key)
+        event_queue_consumer.ConsumeItems()
+        return_dict[plugin] = [
+            event_object for event_object in event_queue_consumer.GetItems()]
+
+    return return_dict
+
+  def SetSingleFile(self, single_file=False):
+    """Sets the single file processing parameter.
+
+    Args:
+      single_file: boolean value, if set to True the tool treats the
+                   source as a single file input, otherwise as a storage
+                   media format. The default is False.
+    """
+    self._single_file = single_file
+
+  def SetSourcePath(self, source_path):
+    """Sets the source path.
+
+    Args:
+      source_path: the filesystem path to the disk image.
+    """
+    self._source_path = source_path
+
+  def SetSourcePathSpecs(self, source_path_specs):
+    """Sets the source path resolver.
+
+    Args:
+      source_path_specs: list of source path specifications (instance
+                         of PathSpec).
+    """
+    self._source_path_specs = source_path_specs
+
+  def SetKnowledgeBase(self, knowledge_base_object):
+    """Sets the knowledge base object for the front end.
+
+    Args:
+      knowledge_base_object: the knowledge base object (instance
+                             of KnowledgeBase).
+    """
+    self.knowledge_base_object = knowledge_base_object
+
+
+class PregRegistryHelper(object):
+  """Class that defines few helper functions for Registry operations.
+
+  Attributes:
+    file_entry: file entry object (instance of dfvfs.FileEntry).
+    path_expander: Windows Registry key path expander object (instance
+                   of WinRegistryKeyPathExpander).
+    reg_cache: Registry objects cache (instance of WinRegistryCache).
+  """
 
   REG_TYPES = {
-      u'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
-      u'SOFTWARE': ('\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
-      u'SECURITY': ('\\Policy\\PolAdtEv',),
-      u'SYSTEM': ('\\Select',),
-      u'SAM': ('\\SAM\\Domains\\Account\\Users',),
+      u'NTUSER': (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
+      u'SOFTWARE': (u'\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
+      u'SECURITY': (u'\\Policy\\PolAdtEv',),
+      u'SYSTEM': (u'\\Select',),
+      u'SAM': (u'\\SAM\\Domains\\Account\\Users',),
       u'USRCLASS': (
-          '\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion',),
+          u'\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion',),
       u'UNKNOWN': (),
   }
 
+  def __init__(self, file_entry, collector_name, codepage=u'cp1252'):
+    """Initialize the Registry helper.
+
+    Args:
+      file_entry: file entry object (instance of dfvfs.FileEntry).
+      collector_name: the name of the collector, eg. TSK.
+      codepage: the codepage used for the Registry file. The default is cp1252.
+    """
+    self._Reset()
+    self._codepage = codepage
+    self._collector_name = collector_name
+
+    self.file_entry = file_entry
+    self.path_expander = None
+    self.reg_cache = None
+
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.Close()
+
+  @property
+  def collector_name(self):
+    """The name of the collector used to discover the Registry file."""
+    return self._collector_name
+
   @property
   def name(self):
-    """Return the name of the hive."""
-    return getattr(self._hive, 'name', u'N/A')
+    """The name of the Registry file."""
+    return getattr(self._registry_file, u'name', u'N/A')
 
   @property
   def path(self):
-    """Return the file path of the hive."""
-    path_spec = getattr(self.file_entry, 'path_spec', None)
+    """The file path of the Registry file."""
+    path_spec = getattr(self.file_entry, u'path_spec', None)
     if not path_spec:
       return u'N/A'
 
-    return getattr(path_spec, 'location', u'N/A')
+    return getattr(path_spec, u'location', u'N/A')
 
   @property
   def root_key(self):
-    """Return the root key of the Registry hive."""
-    return self._hive.GetKeyByPath(u'\\')
+    """The root key of the Registry file."""
+    if self._registry_file:
+      return self._registry_file.GetKeyByPath(u'\\')
 
   @property
   def type(self):
-    """Return the hive type."""
-    return self._hive_type
+    """The Registry type."""
+    return self._registry_type
 
-  def __init__(self, hive, file_entry, collector_name):
-    """Initialize the Registry hive helper.
-
-    Args:
-      hive: A hive object (instance of WinPyregfFile).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      collector_name: Name of the collector used as a string.
-    """
-    self._hive = hive
-    self.file_entry = file_entry
-    self.collector_name = collector_name
-
-    # Determine type and build cache.
-    self._SetHiveType()
-    self._BuildHiveCache()
-
-    # Initialize the hive to the root key.
-    _ = self.GetKeyByPath(u'\\')
-
-  def _BuildHiveCache(self):
+  def _CreateRegistryCache(self):
     """Calculate the Registry cache."""
     self.reg_cache = cache.WinRegistryCache()
-    self.reg_cache.BuildCache(self._hive, self._hive_type)
+    self.reg_cache.BuildCache(self._registry_file, self._registry_type)
     self.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         reg_cache=self.reg_cache)
 
-  def _SetHiveType(self):
-    """Detect and set the hive type."""
-    get_key_by_path = self._hive.GetKeyByPath
+  def _Reset(self):
+    """Reset all attributes of the Registry helper."""
+    self._currently_loaded_registry_key = u''
+    self._registry_file = None
+    self._registry_type = u'UNKNOWN'
+    self._path_expander = None
+
+    self.reg_cache = None
+
+  def _DetectHiveType(self):
+    """Detect and set the Registry type."""
+    get_key_by_path = self._registry_file.GetKeyByPath
     for reg_type in self.REG_TYPES:
       if reg_type == u'UNKNOWN':
         continue
 
-      # For a hive to be considered a specific type all of the keys need to
-      # be found.
+      # For a Registry file to be considered a specific type all of the keys
+      # need to be found.
       found = True
       for reg_key in self.REG_TYPES[reg_type]:
         if not get_key_by_path(reg_key):
@@ -458,8 +751,12 @@ class PregHiveHelper(object):
           break
 
       if found:
-        self._hive_type = reg_type
+        self._registry_type = reg_type
         return
+
+  def Close(self):
+    """Closes the helper."""
+    self._Reset()
 
   def GetCurrentRegistryKey(self):
     """Return the currently loaded Registry key."""
@@ -485,101 +782,39 @@ class PregHiveHelper(object):
     if not path:
       return
 
-    key = self._hive.GetKeyByPath(path)
+    try:
+      expanded_path = self.path_expander.ExpandPath(
+          path, pre_obj=self.reg_cache)
+    except KeyError:
+      expanded_path = path
+
+    key = self._registry_file.GetKeyByPath(expanded_path)
     if not key:
       return
 
     self._currently_loaded_registry_key = key
     return key
 
+  def Open(self):
+    """Open the Registry file."""
+    if self._registry_file:
+      raise IOError(u'Registry file already open.')
 
-class PregStorage(object):
-  """Class for storing discovered hives."""
-
-  # Index number of the currently loaded Registry hive.
-  _current_index = -1
-  _currently_loaded_hive = None
-
-  _hive_list = []
-
-  @property
-  def loaded_hive(self):
-    """Return the currently loaded hive or None if no hive loaded."""
-    if not self._currently_loaded_hive:
-      return
-
-    return self._currently_loaded_hive
-
-  def __len__(self):
-    """Return the number of available hives."""
-    return len(self._hive_list)
-
-  def AppendHive(self, hive_helper):
-    """Append a hive object to the Registry hive storage.
-
-    Args:
-      hive_helper: A hive object (instance of PregHiveHelper)
-    """
-    self._hive_list.append(hive_helper)
-
-  def AppendHives(self, hive_helpers):
-    """Append hives to the Registry hive storage.
-
-    Args:
-      hive_helpers: A list of hive objects (instance of PregHiveHelper)
-    """
-    if not isinstance(hive_helpers, (list, tuple)):
-      hive_helpers = [hive_helpers]
-
-    self._hive_list.extend(hive_helpers)
-
-  def ListHives(self):
-    """Return a string with a list of all available hives and collectors.
-
-    Returns:
-      A string with a list of all available hives and collectors. If there are
-      no loaded hives None will be returned.
-    """
-    if not self._hive_list:
-      return
-
-    return_strings = [u'Index Hive [collector]']
-    for index, hive in enumerate(self._hive_list):
-      collector = hive.collector_name
-      if not collector:
-        collector = u'Currently Allocated'
-
-      if self._current_index == index:
-        star = u'*'
-      else:
-        star = u''
-      return_strings.append(u'{0:<5d} {1:s}{2:s} [{3:s}]'.format(
-          index, star, hive.path, collector))
-
-    return u'\n'.join(return_strings)
-
-  def SetOpenHive(self, hive_index):
-    """Set the current open hive.
-
-    Args:
-      hive_index: An index (integer) into the hive list.
-    """
-    if not self._hive_list:
-      return
-
-    index = hive_index
-    if isinstance(hive_index, basestring):
-      try:
-        index = int(hive_index, 10)
-      except ValueError:
-        print u'Wrong hive index, value should be decimal.'
-        return
+    win_registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
 
     try:
-      hive_helper = self._hive_list[index]
-    except IndexError:
-      print u'Hive not found, index out of range?'
-      return
+      self._registry_file = win_registry.OpenFile(
+          self.file_entry, codepage=self._codepage)
+    except IOError:
+      logging.error(
+          u'Unable to open Registry file: {0:s} [{1:s}]'.format(
+              self.path, self._collector_name))
+      self.Close()
+      raise
 
-    self._current_index = index
-    self._currently_loaded_hive = hive_helper
+    self._DetectHiveType()
+    self._CreateRegistryCache()
+
+    # Initialize the Registry file to the base key.
+    _ = self.GetKeyByPath(u'\\')
