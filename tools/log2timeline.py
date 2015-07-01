@@ -378,6 +378,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddTimezoneOption(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
+    self.AddCredentialOptions(extraction_group)
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
