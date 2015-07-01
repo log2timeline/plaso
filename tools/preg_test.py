@@ -77,7 +77,7 @@ class PregToolTest(test_lib.ToolTestCase):
     output = self._output_writer.ReadOutput()
 
     # TODO: refactor to more accurate way to test this.
-    self.assertIn(b'* Supported Plugins *', output)
+    self.assertIn(b'= Supported Plugins =', output)
     self.assertIn(b'userassist : Parser for User Assist Registry data', output)
     self.assertIn(
         b'services : Parser for services and drivers Registry', output)
