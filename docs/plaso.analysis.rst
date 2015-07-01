@@ -60,6 +60,14 @@ plaso.analysis.tagging module
     :undoc-members:
     :show-inheritance:
 
+plaso.analysis.viper module
+---------------------------
+
+.. automodule:: plaso.analysis.viper
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.analysis.virustotal module
 --------------------------------
 
