@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Look up files in VirusTotal and tag events derived from them."""
+"""Analysis plugin to look up files in VirusTotal and tag events."""
 
 import logging
-import sys
-
-import requests
 
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import errors
 
-class VirusTotalAnalyzer(interface.HashAnalyzer):
+
+class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal."""
   _VIRUSTOTAL_API_REPORT_URL = (
       u'https://www.virustotal.com/vtapi/v2/file/report')
-
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal Analyzer thread.
@@ -49,21 +46,28 @@ class VirusTotalAnalyzer(interface.HashAnalyzer):
 
     Returns:
       A list of HashAnalysis objects.
+
+    Raises:
+      RuntimeError: If the VirusTotal API key has not been set.
     """
     if not self._api_key:
       raise RuntimeError(u'No API key specified for VirusTotal lookup.')
 
     hash_analyses = []
+    resource_string = u', '.join(hashes)
+    params = {u'apikey': self._api_key, u'resource': resource_string}
     try:
-      json_response = self._GetVirusTotalJSONResponse(hashes)
+      json_response = self.MakeRequestAndDecodeJSON(
+          self._VIRUSTOTAL_API_REPORT_URL, u'GET', params=params)
     except errors.ConnectionError as exception:
       logging.error(
-          u'Error communicating with VirusTotal {0:s}. VirusTotal plugin is '
-          u'aborting.'.format(exception))
+          (u'Error communicating with VirusTotal {0:s}. VirusTotal plugin is '
+           u'aborting.').format(exception))
       self.SignalAbort()
       return hash_analyses
+
     # The content of the response from VirusTotal has a different structure if
-    # one or more than once hash is looked up at once.
+    # one or more than one hash is looked up at once.
     if isinstance(json_response, dict):
       # Only one result.
       resource = json_response[u'resource']
@@ -75,49 +79,6 @@ class VirusTotalAnalyzer(interface.HashAnalyzer):
         hash_analysis = interface.HashAnalysis(resource, result)
         hash_analyses.append(hash_analysis)
     return hash_analyses
-
-  def _GetVirusTotalJSONResponse(self, hashes):
-    """Makes a request to VirusTotal for information about hashes.
-
-    Args:
-      A list of file hashes (strings).
-
-    Returns:
-      The decoded JSON response from the VirusTotal API for the hashes.
-
-    Raises:
-      requests.ConnectionError: If it was not possible to connect to
-                                VirusTotal.
-      requests.exceptions.HTTPError: If the VirusTotal server returned an
-                                     error code.
-    """
-    resource_string = u', '.join(hashes)
-    params = {u'apikey': self._api_key, u'resource': resource_string}
-
-    if not self._checked_for_old_python_version:
-      if sys.version_info[0:3] < (2, 7, 9):
-        logging.warn(
-            u'You are running a version of Python prior to 2.7.9. Your version '
-            u'of Python has multiple weaknesses in its SSL implementation that '
-            u'can allow an attacker to read or modify SSL encrypted data. '
-            u'Please update. Further SSL warnings will be suppressed. See '
-            u'https://www.python.org/dev/peps/pep-0466/ for more information.')
-        requests.packages.urllib3.disable_warnings()
-      self._checked_for_old_python_version = True
-
-    try:
-      response = requests.get(self._VIRUSTOTAL_API_REPORT_URL, params=params)
-      response.raise_for_status()
-    except requests.ConnectionError as exception:
-      error_string = u'Unable to connect to VirusTotal: {0:s}'.format(
-          exception)
-      raise errors.ConnectionError(error_string)
-    except requests.HTTPError as exception:
-      error_string = u'VirusTotal returned a HTTP error: {0:s}'.format(
-          exception)
-      raise errors.ConnectionError(error_string)
-    json_response = response.json()
-    return json_response
 
 
 class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
@@ -175,6 +136,9 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       hash_information: A dictionary containing the JSON decoded contents of the
                         result of a VirusTotal lookup, as produced by the
                         VirusTotalAnalyzer.
+
+    Returns:
+      A string describing the results from VirusTotal.
     """
     response_code = hash_information[u'response_code']
     if response_code == self._VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE:

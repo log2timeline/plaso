@@ -4,13 +4,24 @@
 import abc
 import logging
 import Queue
+import sys
 import threading
 import time
+
+import requests
+# Some distributions unvendor urllib3 from the requests module, and we need to
+# access some methods inside urllib3 to disable warnings. We'll try to import it
+# here, to keep the imports together.
+try:
+  import urllib3
+except ImportError:
+  urllib3 = None
 
 from collections import defaultdict
 
 from plaso.engine import queue
 from plaso.lib import timelib
+from plaso.lib import errors
 from plaso.lib import event
 
 
@@ -445,6 +456,104 @@ class HashAnalyzer(threading.Thread):
       else:
         # Wait for some more hashes to be added to the queue.
         time.sleep(self.EMPTY_QUEUE_WAIT_TIME)
+
+
+class HTTPHashAnalyzer(HashAnalyzer):
+  """A class that provides a useful interface for hash plugins using HTTP"""
+
+  def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
+    """Initializes a HTTP hash analyzer.
+
+    Args:
+      hash_queue: A queue (instance of Queue.queue) that contains hashes to
+                  be analyzed.
+      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
+                           will append HashAnalysis objects to.
+    """
+    super(HTTPHashAnalyzer, self).__init__(
+        hash_queue, hash_analysis_queue, **kwargs)
+    self._checked_for_old_python_version = False
+
+  def _CheckPythonVersionAndDisableWarnings(self):
+    """Checks python version, and disables SSL warnings.
+
+    urllib3 will warn on each HTTPS request made by older versions of Python.
+    Rather than spamming the user, we print one warning message, then disable
+    warnings in urllib3.
+    """
+    if self._checked_for_old_python_version:
+      return
+    if sys.version_info[0:3] < (2, 7, 9):
+      logging.warn(
+          u'You are running a version of Python prior to 2.7.9. Your version '
+          u'of Python has multiple weaknesses in its SSL implementation that '
+          u'can allow an attacker to read or modify SSL encrypted data. '
+          u'Please update. Further SSL warnings will be suppressed. See '
+          u'https://www.python.org/dev/peps/pep-0466/ for more information.')
+      # Some distributions de-vendor urllib3 from requests, so we have to
+      # check if this has occurred and disable warnings in the correct
+      # package.
+      if (hasattr(requests, u'packages') and
+          hasattr(requests.packages, u'urllib3') and
+          hasattr(requests.packages.urllib3, u'disable_warnings')):
+        requests.packages.urllib3.disable_warnings()
+      else:
+        if urllib3 and hasattr(urllib3, u'disable_warnings'):
+          urllib3.disable_warnings()
+    self._checked_for_old_python_version = True
+
+  @abc.abstractmethod
+  def Analyze(self, hashes):
+    """Analyzes a list of hashes.
+
+    Args:
+      hashes: A list of hashes (strings) to look up.
+
+    Returns:
+      A list of hash analysis objects (instances of HashAnalysis).
+    """
+
+  def MakeRequestAndDecodeJSON(self, url, method, **kwargs):
+    """Make a HTTP request and decode the results as JSON.
+
+    Args:
+      url: The URL to make a request to.
+      method: The HTTP method to use to make the request, as a string. GET and
+              POST are supported.
+      kwargs: Parameters to the requests .get() or post() methods, depending
+              on the value of the method parameter.
+
+    Returns:
+      The body of the HTTP response, decoded from JSON.
+
+    Raises:
+      ConnectionError: If it is not possible to connect to the given URL, or it
+                       the request returns a HTTP error.
+      ValueError: If an invalid HTTP method is specified.
+    """
+    method = method.lower()
+    if method not in [u'get', u'post']:
+      raise ValueError(u'Method {0:s} is not supported')
+
+    if url.lower().startswith(u'https'):
+      self._CheckPythonVersionAndDisableWarnings()
+
+    try:
+      if method.lower() == u'get':
+        response = requests.get(url, **kwargs)
+      if method.lower() == u'post':
+        response = requests.post(url, **kwargs)
+      response.raise_for_status()
+    except requests.ConnectionError as exception:
+      error_string = u'Unable to connect to {0:s}: {1:s}'.format(
+          url, exception)
+      raise errors.ConnectionError(error_string)
+    except requests.HTTPError as exception:
+      error_string = u'{0:s} returned a HTTP error: {1:s}'.format(
+          url, exception)
+      raise errors.ConnectionError(error_string)
+
+    return response.json()
 
 
 class HashAnalysis(object):
