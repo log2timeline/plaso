@@ -14,6 +14,31 @@ from tests.cli import test_lib
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the storage media tool object."""
 
+  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = u'\n'.join([
+      u'usage: storage_media_tool_test.py [--credential TYPE:DATA]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  --credential TYPE:DATA',
+      (u'                        Define a credentials that can be used to '
+       u'unlock'),
+      (u'                        encrypted volumes e.g. BitLocker. The '
+       u'credential is'),
+      (u'                        defined as type:data e.g. '
+       u'"password:BDE-test".'),
+      (u'                        Supported credential types are: key_data, '
+       u'password,'),
+      (u'                        recovery_password, startup_key. Binary '
+       u'key data is'),
+      u'                        expected to be passed in BASE-16 encoding',
+      (u'                        (hexadecimal). WARNING credentials passed '
+       u'via command'),
+      (u'                        line arguments can end up in logs, so use '
+       u'this option'),
+      u'                        with care.',
+      u''])
+
   _EXPECTED_OUTPUT_FILTER_OPTIONS = u'\n'.join([
       u'usage: storage_media_tool_test.py [-f FILE_FILTER]',
       u'',
@@ -93,6 +118,19 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
        u'first store is'),
       u'                        1. All stores can be defined as: "all".',
       u''])
+
+  def testAddCredentialOptions(self):
+    """Tests the AddCredentialOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog=u'storage_media_tool_test.py',
+        description=u'Test argument parser.',
+        add_help=False)
+
+    test_tool = storage_media_tool.StorageMediaTool()
+    test_tool.AddCredentialOptions(argument_parser)
+
+    output = argument_parser.format_help()
+    self.assertEqual(output, self._EXPECTED_OUTPUT_CREDENTIAL_OPTIONS)
 
   def testAddFilterOptions(self):
     """Tests the AddFilterOptions function."""
