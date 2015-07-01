@@ -102,7 +102,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddFilterOptions(argument_parser)
     argument_parser.add_argument(
         u'--date-filter', u'--date_filter', action=u'append', type=unicode,
-        dest=u'date_filters', metavar=u'TYPE_START_END', default=None, help=(
+        dest=u'date_filters', metavar=u'TYPE_START_END', default=[], help=(
             u'Filter based on file entry date and time ranges. This parameter '
             u'is formatted as "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where '
             u'TIME_VALUE defines which file entry timestamp the filter applies '
