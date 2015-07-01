@@ -247,7 +247,14 @@ class DataBlockFile(object):
     self.number_of_entries = file_header.get(u'number_of_entries')
 
   def ReadCacheEntry(self, block_offset):
-    """Reads a cache entry."""
+    """Reads a cache entry.
+
+    Args:
+      block_offset: The block offset of the cache entry.
+
+    Returns:
+      A cache entry (instance of CacheEntry).
+    """
     self._file_object.seek(block_offset, os.SEEK_SET)
 
     try:
@@ -355,9 +362,13 @@ class ChromeCacheParser(interface.BaseParser):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    display_name = parser_mediator.GetDisplayName()
     file_object = parser_mediator.GetFileObject()
-    file_entry = parser_mediator.GetFileEntry()
+
     index_file = IndexFile()
     try:
       index_file.Open(file_object)
@@ -365,10 +376,28 @@ class ChromeCacheParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, display_name, exception))
 
-    # Build a lookup table for the data block files.
+    file_entry = parser_mediator.GetFileEntry()
     file_system = file_entry.GetFileSystem()
+
+    try:
+      self.ParseIndexFile(
+          parser_mediator, file_system, file_entry, index_file, **kwargs)
+    finally:
+      index_file.Close()
+
+  def ParseIndexFile(
+      self, parser_mediator, file_system, file_entry, index_file, **kwargs):
+    """Parses a Chrome Cache index file object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_system: The file system object (instance of dfvfs.FileSystem).
+      file_entry: The file entry object (instance of dfvfs.FileEntry).
+      index_file: An index file object (instance of IndexFile)
+    """
+    # Build a lookup table for the data block files.
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
 
     data_block_files = {}
@@ -426,8 +455,6 @@ class ChromeCacheParser(interface.BaseParser):
       for data_block_file in data_block_files.itervalues():
         if data_block_file:
           data_block_file.Close()
-
-      index_file.Close()
 
 
 manager.ParsersManager.RegisterParser(ChromeCacheParser)
