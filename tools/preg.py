@@ -557,7 +557,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     """Lists Registry plugin information."""
     plugin_list = self._front_end.registry_plugin_list
 
-    self.PrintHeader(u'Supported Plugins')
+    self.PrintHeader(u'Supported Plugins', u'=')
     self.PrintHeader(u'Key Plugins')
     for plugin_class in plugin_list.GetAllKeyPlugins():
       self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
@@ -1458,6 +1458,7 @@ class PregConsole(object):
     registry_helpers = self.preg_front_end.GetRegistryHelpers(
         registry_types=[self.preg_tool.registry_file],
         plugin_names=self.preg_tool.plugin_names)
+
     for registry_helper in registry_helpers:
       self.AddRegistryHelper(registry_helper)
 
@@ -1466,6 +1467,7 @@ class PregConsole(object):
 
     namespace.update(globals())
     namespace.update({
+        u'console': self,
         u'front_end': self.preg_front_end,
         u'get_current_key': self._CommandGetCurrentKey,
         u'get_key': self._CommandGetCurrentKey,
@@ -1477,7 +1479,11 @@ class PregConsole(object):
 
     ipshell_config = self.GetConfig()
 
+    if len(self._registry_helpers) == 1:
+      self.LoadRegistryFile(0)
+
     registry_helper = self._currently_loaded_helper
+
     if registry_helper:
       registry_file_path = registry_helper.name
     else:
@@ -1485,12 +1491,12 @@ class PregConsole(object):
 
     self.SetPrompt(registry_file_path=registry_file_path, config=ipshell_config)
 
-    banner = self.PrintBanner()
-
     # Starting the shell.
     ipshell = InteractiveShellEmbed(
-        user_ns=namespace, config=ipshell_config, banner1=banner, exit_msg=u'')
+        user_ns=namespace, config=ipshell_config, banner1=u'', exit_msg=u'')
     ipshell.confirm_exit = False
+
+    self.PrintBanner()
 
     # Adding "magic" functions.
     ipshell.register_magics(PregMagics)
