@@ -92,6 +92,14 @@ plaso.cli.helpers.timesketch_out module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.viper_analysis module
+---------------------------------------
+
+.. automodule:: plaso.cli.helpers.viper_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.virustotal_analysis module
 --------------------------------------------
 
