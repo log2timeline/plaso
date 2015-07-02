@@ -27,8 +27,8 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--virustotal-api-key', dest=u'virustotal-api-key',
-        type=unicode, action='store', default=u'text', help=u'Specify the API '
-        u'key for use with VirusTotal.')
+        type=unicode, action='store', default=None, help=u'Specify the API key '
+        u'for use with VirusTotal.')
     argument_group.add_argument(
         u'--virustotal-free-rate-limit', dest=u'virustotal-rate-limit',
         type=bool, action='store', default=True, help=u'Limit Virustotal '
@@ -53,8 +53,10 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
 
     api_key = getattr(options, u'virustotal-api-key', None)
     rate_limit = getattr(options, u'virustotal-rate-limit', None)
-    if api_key is None:
-      raise errors.BadConfigOption(u'VirusTotal API key not set.')
+    if not api_key:
+      raise errors.BadConfigOption(
+          u'VirusTotal API key not specified. Try again with '
+          u'--virustotal-api-key.')
 
     analysis_plugin.SetAPIKey(api_key)
     analysis_plugin.EnableFreeAPIKeyRateLimit(rate_limit)
