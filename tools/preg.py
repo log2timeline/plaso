@@ -783,7 +783,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     self.registry_file = registry_file
 
-    self.ScanSource(self._front_end)
+    self.ScanSource()
     self._front_end.SetSourcePathSpecs(self._source_path_specs)
 
   def RunModeRegistryFile(self):
