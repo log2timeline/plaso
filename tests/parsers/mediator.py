@@ -4,7 +4,7 @@
 
 import unittest
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -29,7 +29,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     test_path = self._GetTestFilePath([u'syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
@@ -38,7 +38,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     self.assertEqual(display_name, expected_display_name)
 
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
+        dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(gzip_path_spec)
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
@@ -48,14 +48,14 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     test_path = self._GetTestFilePath([u'vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=test_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
     vshadow_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_VSHADOW, location=u'/vss2', store_index=1,
-        parent=qcow_path_spec)
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/vss2',
+        store_index=1, parent=qcow_path_spec)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK, inode=35, location=u'/syslog.gz',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=35, location=u'/syslog.gz',
         parent=vshadow_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)

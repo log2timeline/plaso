@@ -15,6 +15,8 @@ try:
 except ImportError:
   win32console = None
 
+from dfvfs.helpers import source_scanner
+
 import plaso
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
@@ -76,6 +78,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._front_end = log2timeline.Log2TimelineFrontend()
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
+    self._source_type = None
+    self._source_type_string = u'UNKNOWN'
     self._status_view_mode = u'linear'
     self._output = None
 
@@ -105,26 +109,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       screen_buffer.FillConsoleOutputAttribute(
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
-
-  def _DebugPrintCollection(self):
-    """Prints debug information about the collection."""
-    if self._front_end.SourceIsStorageMediaImage():
-      if self._filter_file:
-        logging.debug(u'Starting a collection on image with filter.')
-      else:
-        logging.debug(u'Starting a collection on image.')
-
-    elif self._front_end.SourceIsDirectory():
-      if self._filter_file:
-        logging.debug(u'Starting a collection on directory with filter.')
-      else:
-        logging.debug(u'Starting a collection on directory.')
-
-    elif self._front_end.SourceIsFile():
-      logging.debug(u'Starting a collection on a single file.')
-
-    else:
-      logging.warning(u'Unsupported source type.')
 
   def _FormatStatusTableRow(
       self, identifier, pid, status, process_status, number_of_events,
@@ -189,6 +173,19 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # TODO: add code to parse the worker options.
 
+  def _PrintStatusHeader(self):
+    """Prints the processing status header."""
+    self._output_writer.Write(
+        u'Source path\t: {0:s}\n'.format(self._source_path))
+    self._output_writer.Write(
+        u'Source type\t: {0:s}\n'.format(self._source_type_string))
+
+    if self._filter_file:
+      self._output_writer.Write(u'Filter file\t: {0:s}\n'.format(
+          self._filter_file))
+
+    self._output_writer.Write(u'\n')
+
   def _PrintStatusUpdate(self, processing_status):
     """Prints the processing status.
 
@@ -203,7 +200,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             self.NAME, plaso.GetVersion()))
     self._output_writer.Write(u'\n')
 
-    self.PrintOptions()
+    self._PrintStatusHeader()
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
@@ -542,40 +539,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = getattr(options, u'status_view_mode', u'linear')
     self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 
-  def PrintOptions(self):
-    """Prints the options."""
-    self._output_writer.Write(
-        u'Source path\t\t\t\t: {0:s}\n'.format(self._source_path))
-
-    is_image = self._front_end.SourceIsStorageMediaImage()
-    self._output_writer.Write(
-        u'Is storage media image or device\t: {0!s}\n'.format(is_image))
-
-    # TODO: replace by scan node.
-    # if is_image:
-    #   image_offset_bytes = self._front_end.partition_offset
-    #   if isinstance(image_offset_bytes, basestring):
-    #     try:
-    #       image_offset_bytes = int(image_offset_bytes, 10)
-    #     except ValueError:
-    #       image_offset_bytes = 0
-    #   elif image_offset_bytes is None:
-    #     image_offset_bytes = 0
-    #
-    #   self._output_writer.Write(
-    #       u'Partition offset\t\t\t: {0:d} (0x{0:08x})\n'.format(
-    #           image_offset_bytes))
-    #
-    #   if self._front_end.process_vss and self._front_end.vss_stores:
-    #     self._output_writer.Write(
-    #         u'VSS stores\t\t\t\t: {0!s}\n'.format(self._front_end.vss_stores))
-
-    if self._filter_file:
-      self._output_writer.Write(u'Filter file\t\t\t\t: {0:s}\n'.format(
-          self._filter_file))
-
-    self._output_writer.Write(u'\n')
-
   def ProcessSources(self):
     """Processes the sources.
 
@@ -592,13 +555,32 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._front_end.SetStorageFile(self._output)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
-    self.ScanSource(self._front_end)
+    scan_context = self.ScanSource()
+    self._source_type = scan_context.source_type
+
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    if self._source_type == (
+        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY):
+      self._source_type_string = u'directory'
+
+    elif self._source_type == (
+        source_scanner.SourceScannerContext.SOURCE_TYPE_FILE):
+      self._source_type_string = u'single file'
+
+    elif self._source_type == (
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
+      self._source_type_string = u'storage media device'
+
+    elif self._source_type == (
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
+      self._source_type_string = u'storage media image'
+
+    else:
+      self._source_type_string = u'UNKNOWN'
 
     self._output_writer.Write(u'\n')
-    self.PrintOptions()
-
-    # TODO: merge this into the output of PrintOptions.
-    self._DebugPrintCollection()
+    self._PrintStatusHeader()
 
     self._output_writer.Write(u'Processing started.\n')
 
@@ -610,7 +592,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       status_update_callback = None
 
     processing_status = self._front_end.ProcessSources(
-        self._source_path_specs,
+        self._source_path_specs, self._source_type,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,

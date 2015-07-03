@@ -8,6 +8,7 @@ import os
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 import pysigscan
@@ -17,7 +18,7 @@ from plaso.engine import knowledge_base
 from plaso.engine import utils as engine_utils
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.frontend import storage_media_frontend
+from plaso.frontend import frontend
 from plaso.hashers import manager as hashers_manager
 from plaso.lib import specification
 from plaso.lib import timelib
@@ -577,7 +578,7 @@ class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
         path_spec, self._destination_path, filename_prefix=filename_prefix)
 
 
-class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
+class ImageExportFrontend(frontend.Frontend):
   """Class that implements the image export front-end."""
 
   def __init__(self):
@@ -585,6 +586,7 @@ class ImageExportFrontend(storage_media_frontend.StorageMediaFrontend):
     super(ImageExportFrontend, self).__init__()
     self._filter_collection = FileEntryFilterCollection()
     self._knowledge_base = None
+    self._resolver_context = context.Context()
 
   # TODO: merge with collector and/or engine.
   def _Extract(
