@@ -15,18 +15,6 @@ class AnalysisFrontend(frontend.Frontend):
     self._data_location = None
     self._storage_file = None
 
-  def AddStorageFileOptions(self, argument_group):
-    """Adds the storage file options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup) or argument parser (instance of
-                      argparse.ArgumentParser).
-    """
-    argument_group.add_argument(
-        u'storage_file', metavar=u'STORAGE_FILE', action=u'store', nargs=u'?',
-        type=unicode, default=None, help=u'The path of the storage file.')
-
   def GetFormatterMediator(self):
     """Retrieves the formatter mediator.
 

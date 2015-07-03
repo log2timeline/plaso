@@ -11,7 +11,6 @@ in a textual format.
 
 from __future__ import print_function
 import argparse
-import binascii
 import locale
 import logging
 import os
@@ -38,11 +37,11 @@ from dfvfs.lib import definitions
 from dfvfs.resolver import resolver
 from dfvfs.volume import tsk_volume_system
 
+from plaso.cli import hexdump
 from plaso.cli import storage_media_tool
 from plaso.cli import tools as cli_tools
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
-from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -142,6 +141,46 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self.plugin_names = u''
     self.registry_file = u''
     self.run_mode = None
+
+  def _GetEventDataHexDump(
+      self, event_object, before=0, maximum_number_of_lines=20):
+    """Returns a hexadecimal representation of the event data.
+
+     This function creates a hexadecimal string representation based on
+     the event data described by the event object.
+
+    Args:
+      event_object: The event object (instance of EventObject).
+      before: Optional number of bytes to include in the output before
+              the event. The default is none.
+      maximum_number_of_lines: Optional maximum number of lines to include
+                               in the output. The default is 20.
+
+    Returns:
+      A string that contains the hexadecimal representation of the event data.
+    """
+    if not event_object:
+      return u'Missing event object.'
+
+    if not hasattr(event_object, u'pathspec'):
+      return u'Event object has no path specification.'
+
+    try:
+      file_entry = resolver.Resolver.OpenFileEntry(event_object.pathspec)
+    except IOError as exception:
+      return u'Unable to open file with error: {0:s}'.format(exception)
+
+    offset = getattr(event_object, u'offset', 0)
+    if offset - before > 0:
+      offset -= before
+
+    file_object = file_entry.GetFileObject()
+    file_object.seek(offset, os.SEEK_SET)
+    data_size = maximum_number_of_lines * 16
+    data = file_object.read(data_size)
+    file_object.close()
+
+    return hexdump.Hexdump.FormatData(data, data_offset=offset)
 
   def _GetFormatString(self, event_object):
     """Return back a format string that can be used for a given event object."""
@@ -318,9 +357,10 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     if show_hex and file_entry:
       event_object.pathspec = file_entry.path_spec
-      self.PrintHeader(u'Hex Output From Event.', u'-')
-      self._output_writer.Write(
-          frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
+      hexadecimal_output = self._GetEventDataHexDump(event_object)
+
+      self.PrintHeader(u'Hexadecimal output from event.', u'-')
+      self._output_writer.Write(hexadecimal_output)
       self._output_writer.Write(u'\n')
 
   def _PrintEventHeader(self, event_object, descriptions, exclude_timestamp):
@@ -1010,11 +1050,12 @@ class PregMagics(magic.Magics):
     current_key = current_file.GetCurrentRegistryKey()
     for key in current_key.GetSubkeys():
       # TODO: move this construction into a separate function in OutputWriter.
-      timestamp, _, _ = frontend_utils.OutputWriter.GetDateTimeString(
-          key.last_written_timestamp).partition(u'.')
+      time_string = timelib.Timestamp.CopyToIsoFormat(
+          key.last_written_timestamp)
+      time_string, _, _ = time_string.partition(u'.')
 
       sub.append((u'{0:>19s} {1:>15s}  {2:s}'.format(
-          timestamp.replace(u'T', u' '), u'[KEY]',
+          time_string.replace(u'T', u' '), u'[KEY]',
           key.name), True))
 
     for value in current_key.GetValues():
@@ -1029,16 +1070,8 @@ class PregMagics(magic.Magics):
         elif value.DataIsMultiString():
           value_string = u'{0:s}'.format(u''.join(value.data))
         elif value.DataIsBinaryData():
-          hex_string = binascii.hexlify(value.data)
-          # We'll just print the first few bytes, but we need to pad them
-          # to make it fit in a single line if shorter.
-          leftovers = len(hex_string) % 32
-          if leftovers:
-            pad = u' ' * (32 - leftovers)
-            hex_string += pad
-
-          value_string = frontend_utils.OutputWriter.GetHexDumpLine(
-              hex_string, 0)
+          value_string = hexdump.Hexdump.FormatData(
+              value.data, maximum_data_size=16)
         else:
           value_string = u''
 
@@ -1076,20 +1109,20 @@ class PregMagics(magic.Magics):
     self.console.preg_tool.PrintParsedRegistryKey(
         parsed_data, file_entry=current_helper.file_entry)
 
-    # Print out a hex dump of all binary values.
+    # Print out a hexadecimal representation of all binary values.
     if verbose:
       header_shown = False
       for value in current_helper.GetCurrentRegistryKey().GetValues():
         if value.DataIsBinaryData():
           if not header_shown:
             header_shown = True
-            self.console.preg_tool.PrintHeader(u'Hex Dump')
+            self.console.preg_tool.PrintHeader(u'Hexadecimal representation')
           self.console.preg_tool.PrintSeparatorLine()
-          self.console.preg_tool.PrintColumnValue(
-              u'Attribute', value.name)
+          self.console.preg_tool.PrintColumnValue(u'Attribute', value.name)
           self.console.preg_tool.PrintSeparatorLine()
-          self.output_writer.Write(
-              frontend_utils.OutputWriter.GetHexDump(value.data))
+
+          value_string = hexdump.Hexdump.FormatData(value.data)
+          self.output_writer.Write(value_string)
           self.output_writer.Write(u'\n')
           self.output_writer.Write(u'+-'*40)
           self.output_writer.Write(u'\n')
