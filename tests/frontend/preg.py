@@ -25,11 +25,11 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     registry_file_path = self._GetTestFilePath([u'SYSTEM'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=registry_file_path)
+
     self._front_end.SetSourcePath(registry_file_path)
     self._front_end.SetSourcePathSpecs([path_spec])
     self._knowledge_base_object = knowledge_base.KnowledgeBase()
     self._front_end.SetKnowledgeBase(self._knowledge_base_object)
-    self._front_end.ScanSource(self._front_end._source_path)
 
   def testExpandKeysRedirect(self):
     """Tests the ExpandKeysRedirect function."""

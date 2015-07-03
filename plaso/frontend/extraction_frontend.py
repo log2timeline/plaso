@@ -6,13 +6,16 @@ import os
 import pdb
 import traceback
 
+from dfvfs.helpers import source_scanner
+from dfvfs.resolver import context
+
 import plaso
 from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
+from plaso.frontend import frontend
 from plaso.frontend import presets
-from plaso.frontend import storage_media_frontend
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
@@ -25,7 +28,7 @@ from plaso.parsers import manager as parsers_manager
 import pytz
 
 
-class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
+class ExtractionFrontend(frontend.Frontend):
   """Class that implements an extraction front-end."""
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
@@ -33,13 +36,13 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
 
-
   def __init__(self):
     """Initializes the front-end object."""
     super(ExtractionFrontend, self).__init__()
     self._buffer_size = 0
     self._collection_process = None
     self._debug_mode = False
+    self._enable_preprocessing = False
     self._enable_profiling = False
     self._engine = None
     self._filter_expression = None
@@ -49,11 +52,11 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     self._operating_system = None
     self._output_module = None
     self._parser_names = None
-    self._preprocess = False
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
+    self._resolver_context = context.Context()
     self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
@@ -146,12 +149,13 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
 
     return parser_filter_string
 
-  def _PreprocessSource(self, source_path_specs):
+  def _PreprocessSource(self, source_path_specs, source_type):
     """Preprocesses the source.
 
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
+      source_type: the dfVFS source type definition.
 
     Returns:
       The preprocessing object (instance of PreprocessObject).
@@ -167,14 +171,18 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
           if storage_information:
             logging.info(u'Using preprocessing information from a prior run.')
             pre_obj = storage_information[-1]
-            self._preprocess = False
+            self._enable_preprocessing = False
       except IOError:
         logging.warning(u'Storage file does not exist, running preprocess.')
 
     logging.debug(u'Starting preprocessing.')
 
-    if (self._preprocess and
-        (self.SourceIsDirectory() or self.SourceIsStorageMediaImage())):
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    if (self._enable_preprocessing and source_type in [
+        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY,
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]):
       try:
         self._engine.PreprocessSource(
             source_path_specs, self._operating_system,
@@ -208,12 +216,13 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
   #   * mount point
 
   def _PreprocessSetCollectionInformation(
-      self, pre_obj, unused_engine, filter_file=None,
+      self, pre_obj, source_type, unused_engine, filter_file=None,
       parser_filter_string=None, preferred_encoding=u'utf-8'):
     """Sets the collection information as part of the preprocessing.
 
     Args:
       pre_obj: the preprocess object (instance of PreprocessObject).
+      source_type: the dfVFS source type definition.
       engine: the engine object (instance of BaseEngine).
       filter_file: a path to a file that contains find specifications.
                    The default is None.
@@ -235,7 +244,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     # TODO: extraction info:
     collection_information[u'configured_zone'] = pre_obj.zone
     collection_information[u'parsers'] = self._parser_names
-    collection_information[u'preprocess'] = self._preprocess
+    collection_information[u'preprocess'] = self._enable_preprocessing
 
     if self._filter_expression:
       collection_information[u'filter'] = self._filter_expression
@@ -269,7 +278,10 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     collection_information[u'output_file'] = self._storage_file_path
 
     # TODO: source settings:
-    if self.SourceIsDirectory():
+
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY:
       recursive = True
     else:
       recursive = False
@@ -280,7 +292,11 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     # TODO: replace by scan node.
     # collection_information[u'vss parsing'] = bool(self.vss_stores)
 
-    if self.SourceIsStorageMediaImage():
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    if source_type in [
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       collection_information[u'method'] = u'imaged processed'
       # TODO: replace by scan node.
       # collection_information[u'image_offset'] = self.partition_offset
@@ -361,8 +377,8 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     return parsers_manager.ParsersManager.GetParsersInformation()
 
   def ProcessSources(
-      self, source_path_specs, enable_sigsegv_handler=False, filter_file=None,
-      hasher_names_string=None, parser_filter_string=None,
+      self, source_path_specs, source_type, enable_sigsegv_handler=False,
+      filter_file=None, hasher_names_string=None, parser_filter_string=None,
       preferred_encoding=u'utf-8', single_process_mode=False,
       status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
@@ -372,6 +388,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
+      source_type: the dfVFS source type definition.
       enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
                               handler should be enabled. The default is False.
       filter_file: optional path to a file that contains find specifications.
@@ -397,17 +414,24 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
                           file system.
       UserAbort: if the user initiated an abort.
     """
-    if self.SourceIsDirectory() or self.SourceIsStorageMediaImage():
-      # If the source is a directory or a storage media image
-      # run pre-processing.
-      self._preprocess = True
+    # If the source is a directory or a storage media image
+    # run pre-processing.
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    if source_type in [
+        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY,
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+      self.SetEnablePreprocessing(True)
     else:
-      self._preprocess = False
+      self.SetEnablePreprocessing(False)
 
     self._CheckStorageFile(self._storage_file_path)
 
     self._single_process_mode = single_process_mode
-    if self.SourceIsFile():
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
       # No need to multi process a single file source.
       self._single_process_mode = True
 
@@ -423,7 +447,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type)
 
-    pre_obj = self._PreprocessSource(source_path_specs)
+    pre_obj = self._PreprocessSource(source_path_specs, source_type)
 
     self._operating_system = getattr(pre_obj, u'guessed_os', None)
 
@@ -462,7 +486,7 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
       filter_find_specs = None
 
     self._PreprocessSetCollectionInformation(
-        pre_obj, self._engine, filter_file=filter_file,
+        pre_obj, source_type, self._engine, filter_file=filter_file,
         parser_filter_string=parser_filter_string,
         preferred_encoding=preferred_encoding)
 
@@ -544,6 +568,15 @@ class ExtractionFrontend(storage_media_frontend.StorageMediaFrontend):
                     is False.
     """
     self._debug_mode = enable_debug
+
+  def SetEnablePreprocessing(self, enable_preprocessing):
+    """Enables or disables preprocessing.
+
+    Args:
+      enable_preprocessing: boolean value to indicate if the preprocessing
+                            should be performed.
+    """
+    self._enable_preprocessing = enable_preprocessing
 
   def SetEnableProfiling(
       self, enable_profiling, profiling_sample_rate=1000,

@@ -8,7 +8,7 @@ import sys
 from dfvfs.credentials import manager as credentials_manager
 from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
@@ -52,7 +52,6 @@ class StorageMediaTool(tools.CLITool):
     self._partition_string = None
     self._partition_offset = None
     self._process_vss = False
-    # TODO: refactor to front-end.
     self._source_scanner = source_scanner.SourceScanner()
     self._source_path = None
     self._source_path_specs = []
@@ -127,7 +126,6 @@ class StorageMediaTool(tools.CLITool):
     volume_system = tsk_volume_system.TSKVolumeSystem()
     volume_system.Open(scan_node.path_spec)
 
-    # TODO: refactor to front-end.
     volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
         volume_system)
     if not volume_identifiers:
@@ -202,7 +200,6 @@ class StorageMediaTool(tools.CLITool):
     volume_system = vshadow_volume_system.VShadowVolumeSystem()
     volume_system.Open(scan_node.path_spec)
 
-    # TODO: refactor to front-end.
     volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
         volume_system)
     if not volume_identifiers:
@@ -340,7 +337,7 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._process_vss = not getattr(options, u'no_vss', False)
+    self._process_vss = not getattr(options, u'no_vss', True)
     if self._process_vss:
       vss_stores = getattr(options, u'vss_stores', None)
     else:
@@ -726,19 +723,20 @@ class StorageMediaTool(tools.CLITool):
             scan_context, volume_scan_node, credentials)
 
     if result:
-      # TODO: instead of hard coding TSK scan for the file system.
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-          parent=volume_scan_node.path_spec)
-      self._source_path_specs.append(path_spec)
+      self._source_scanner.Scan(
+          scan_context, scan_path_spec=volume_scan_node.path_spec)
+      self._ScanVolume(scan_context, volume_scan_node)
 
-  def _ScanVolumeScanNodeVSS(self, unused_scan_context, volume_scan_node):
+  def _ScanVolumeScanNodeVSS(self, scan_context, volume_scan_node):
     """Scans a VSS volume scan node for volume and file systems.
 
     Args:
       scan_context: the source scanner context (instance of
                     SourceScannerContext).
       volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
+
+    Raises:
+      SourceScannerError: if a VSS sub scan node scannot be retrieved.
     """
     if not self._process_vss:
       return
@@ -746,16 +744,21 @@ class StorageMediaTool(tools.CLITool):
     vss_store_identifiers = self._GetVSSStoreIdentifiers(
         volume_scan_node, vss_stores=self._vss_stores)
 
-    self._vss_stores = vss_store_identifiers
+    self._vss_stores = list(vss_store_identifiers)
+
+    # Process VSS stores starting with the most recent one.
+    vss_store_identifiers.reverse()
     for vss_store_identifier in vss_store_identifiers:
       location = u'/vss{0:d}'.format(vss_store_identifier)
       sub_scan_node = volume_scan_node.GetSubNodeByLocation(location)
+      if not sub_scan_node:
+        raise errors.SourceScannerError(
+            u'Scan node missing for VSS store identifier: {0:d}.'.format(
+                vss_store_identifier))
 
-      # TODO: instead of hard coding TSK scan for the file system.
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-          parent=sub_scan_node.path_spec)
-      self._source_path_specs.append(path_spec)
+      self._source_scanner.Scan(
+          scan_context, scan_path_spec=sub_scan_node.path_spec)
+      self._ScanVolume(scan_context, sub_scan_node)
 
   def AddCredentialOptions(self, argument_group):
     """Adds the credential options to the argument group.
@@ -893,31 +896,40 @@ class StorageMediaTool(tools.CLITool):
 
     self._source_path = os.path.abspath(self._source_path)
 
-  def ScanSource(self, front_end):
+  def ScanSource(self):
     """Scans the source path for volume and file systems.
 
-    This functions sets the internal source path specification and source
-    type values. The arguments provide the preferred source parameters
-    but will be ignored if they are not relevant.
+    This function sets the internal source path specification and source
+    type values.
 
-    Args:
-      front_end: the storage media front-end (instance of StorageMediaFrontend).
+    Returns:
+      The scan context (instance of dfvfs.ScanContext).
 
     Raises:
       SourceScannerError: if the format of or within the source is
                           not supported.
     """
+    if (not self._source_path.startswith(u'\\\\.\\') and
+        not os.path.exists(self._source_path)):
+      raise errors.SourceScannerError(
+          u'No such device, file or directory: {0:s}.'.format(
+              self._source_path))
+
+    scan_context = source_scanner.SourceScannerContext()
+    scan_context.OpenSourcePath(self._source_path)
+
     try:
-      scan_context = front_end.ScanSource(self._source_path)
-    except errors.SourceScannerError:
-      raise
+      self._source_scanner.Scan(scan_context)
+    except (dfvfs_errors.BackEndError, ValueError) as exception:
+      raise errors.SourceScannerError(
+          u'Unable to scan source with error: {0:s}.'.format(exception))
 
     if scan_context.source_type not in [
         scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
         scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       scan_node = scan_context.GetRootScanNode()
       self._source_path_specs.append(scan_node.path_spec)
-      return
+      return scan_context
 
     # Get the first node where where we need to decide what to process.
     scan_node = scan_context.GetRootScanNode()
@@ -947,3 +959,5 @@ class StorageMediaTool(tools.CLITool):
     if not self._source_path_specs:
       raise errors.SourceScannerError(
           u'No supported file system found in source.')
+
+    return scan_context

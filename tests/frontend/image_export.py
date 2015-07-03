@@ -166,8 +166,6 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourcesExtractWithDateTimeFilter(self):
     """Tests the ProcessSources function with a date time filter."""
     test_front_end = image_export.ImageExportFrontend()
-    source_path = self._GetTestFilePath([u'image.qcow2'])
-
     test_front_end.ParseDateFilters([
         u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
 
@@ -182,14 +180,16 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     value = output_writer.GetValue()
     self.assertEqual(value, expected_value)
 
-    scan_context = test_front_end.ScanSource(source_path)
+    test_path = self._GetTestFilePath([u'image.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=qcow_path_spec)
 
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-
-    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
+    test_front_end.ProcessSources([path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'a_directory'),
@@ -202,18 +202,18 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourcesExtractWithExtensionsFilter(self):
     """Tests the ProcessSources function with an extensions filter."""
     test_front_end = image_export.ImageExportFrontend()
-    source_path = self._GetTestFilePath([u'image.qcow2'])
-
     test_front_end.ParseExtensionsString(u'txt')
 
-    scan_context = test_front_end.ScanSource(source_path)
+    test_path = self._GetTestFilePath([u'image.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=qcow_path_spec)
 
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-
-    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
+    test_front_end.ProcessSources([path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'passwords.txt')])
@@ -225,17 +225,18 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourcesExtractWithNamesFilter(self):
     """Tests the ProcessSources function with a names filter."""
     test_front_end = image_export.ImageExportFrontend()
-    source_path = self._GetTestFilePath([u'image.qcow2'])
-
     test_front_end.ParseNamesString(u'another_file')
-    scan_context = test_front_end.ScanSource(source_path)
 
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+    test_path = self._GetTestFilePath([u'image.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=qcow_path_spec)
 
-    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
+    test_front_end.ProcessSources([path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'a_directory'),
@@ -248,21 +249,22 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourcesExtractWithFilter(self):
     """Tests the ProcessSources function with a filter file."""
     test_front_end = image_export.ImageExportFrontend()
-    source_path = self._GetTestFilePath([u'image.qcow2'])
 
     filter_file = os.path.join(self._temp_directory, u'filter.txt')
     with open(filter_file, 'wb') as file_object:
       file_object.write(b'/a_directory/.+_file\n')
 
-    scan_context = test_front_end.ScanSource(source_path)
-
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+    test_path = self._GetTestFilePath([u'image.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=qcow_path_spec)
 
     test_front_end.ProcessSources(
-        [scan_node.path_spec], self._temp_directory, filter_file=filter_file)
+        [path_spec], self._temp_directory, filter_file=filter_file)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'filter.txt'),
@@ -277,17 +279,16 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
   def testProcessSourcesExtractWithSignaturesFilter(self):
     """Tests the ProcessSources function with a signatures filter."""
     test_front_end = image_export.ImageExportFrontend()
-    source_path = self._GetTestFilePath([u'syslog_image.dd'])
-
     test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
-    scan_context = test_front_end.ScanSource(source_path)
 
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+    test_path = self._GetTestFilePath([u'syslog_image.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=os_path_spec)
 
-    test_front_end.ProcessSources([scan_node.path_spec], self._temp_directory)
+    test_front_end.ProcessSources([path_spec], self._temp_directory)
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'logs'),

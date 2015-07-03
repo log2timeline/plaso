@@ -258,7 +258,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                           file system.
       UserAbort: if the user initiated an abort.
     """
-    self.ScanSource(self._front_end)
+    self.ScanSource()
 
     logging.info(u'Processing started.')
     self._front_end.ProcessSources(

@@ -7,7 +7,9 @@ import shutil
 import tempfile
 import unittest
 
+from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.frontend import extraction_frontend
 from plaso.lib import pfilter
@@ -109,19 +111,22 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
   def testProcessSources(self):
     """Tests the ProcessSources function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
-    source_file = self._GetTestFilePath([u'ímynd.dd'])
     storage_file_path = os.path.join(self._temp_directory, u'plaso.db')
-
     test_front_end.SetStorageFile(storage_file_path=storage_file_path)
 
-    scan_context = test_front_end.ScanSource(source_file)
+    test_file = self._GetTestFilePath([u'ímynd.dd'])
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
 
-    scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
-    self.assertEqual(
-        scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
+    # to definitions.SOURCE_TYPE_.
+    source_type = (
+        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE)
 
-    test_front_end.ProcessSources([scan_node.path_spec])
+    test_front_end.ProcessSources([path_spec], source_type)
 
     try:
       storage_file = storage.StorageFile(storage_file_path, read_only=True)
