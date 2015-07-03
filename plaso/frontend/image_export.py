@@ -18,7 +18,6 @@ from plaso.engine import utils as engine_utils
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.frontend import storage_media_frontend
-from plaso.frontend import utils as frontend_utils
 from plaso.hashers import manager as hashers_manager
 from plaso.lib import specification
 from plaso.lib import timelib
@@ -422,6 +421,7 @@ class FileSaver(object):
       os.path.sep, u'!', u'$', u'%', u'&', u'*', u'+', u':', u';', u'<', u'>',
       u'?', u'@', u'|', u'~', u'\x7f'])
 
+  _COPY_BUFFER_SIZE = 32768
   _READ_BUFFER_SIZE = 4096
 
   def __init__(self, skip_duplicates=False):
@@ -453,6 +453,21 @@ class FileSaver(object):
       data = file_object.read(self._READ_BUFFER_SIZE)
 
     return hasher_object.GetStringDigest()
+
+  def _CopyFileObject(self, input_file_object, output_path):
+    """Copies the content of a file-like object to a file.
+
+    Args:
+      input_file_object: the input file-like object.
+      output_path: the path of the output file.
+    """
+    with open(output_path, 'wb') as output_file_object:
+      input_file_object.seek(0, os.SEEK_SET)
+
+      data = input_file_object.read(self._COPY_BUFFER_SIZE)
+      while data:
+        output_file_object.write(data)
+        data = input_file_object.read(self._COPY_BUFFER_SIZE)
 
   def WriteFile(self, source_path_spec, destination_path, filename_prefix=u''):
     """Writes the contents of the source to the destination file.
@@ -513,8 +528,8 @@ class FileSaver(object):
 
     try:
       file_object = file_entry.GetFileObject()
-      frontend_utils.OutputWriter.WriteFile(
-          file_object, os.path.join(target_directory, target_filename))
+      target_path = os.path.join(target_directory, target_filename)
+      self._CopyFileObject(file_object, target_path)
     except IOError as exception:
       logging.error(
           u'[skipping] unable to export file: {0:s} with error: {1:s}'.format(
