@@ -27,6 +27,14 @@ plaso.cli.extraction_tool module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.hexdump module
+------------------------
+
+.. automodule:: plaso.cli.hexdump
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.storage_media_tool module
 -----------------------------------
 
