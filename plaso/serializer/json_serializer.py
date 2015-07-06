@@ -4,22 +4,16 @@
 import binascii
 import collections
 import json
-import sys
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
 from plaso.lib import event
+from plaso.lib import py2to3
 from plaso.serializer import interface
 from plaso.storage import collection
 
 import pytz
-
-
-if sys.version_info[0] < 3:
-  BYTES_TYPE = str
-else:
-  BYTES_TYPE = bytes
 
 
 class _AnalysisReportJSONDecoder(json.JSONDecoder):
@@ -405,7 +399,7 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, BYTES_TYPE):
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -457,7 +451,7 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
           event_tags.append(self._ConvertEventTagToDict(event_tag))
         attribute_value = json.dumps(event_tags)
 
-      elif isinstance(attribute_value, BYTES_TYPE):
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -501,7 +495,7 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, BYTES_TYPE):
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -601,7 +595,7 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
       elif attribute_name == u'tag':
         attribute_value = self._ConvertEventTagToDict(attribute_value)
 
-      elif isinstance(attribute_value, BYTES_TYPE):
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -635,7 +629,7 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
             u'zone': u'{0!s}'.format(attribute_value)
         }
 
-      elif isinstance(attribute_value, BYTES_TYPE):
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -676,7 +670,7 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, BYTES_TYPE):
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
@@ -748,7 +742,7 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
             u'zone': u'{0!s}'.format(attribute_value)
         }
 
-      elif isinstance(attribute_value, BYTES_TYPE):
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
             u'__type__': u'bytes',
             u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))

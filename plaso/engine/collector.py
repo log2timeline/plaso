@@ -50,7 +50,9 @@ class Collector(queue.ItemQueueProducer):
     try:
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=self._resolver_context)
-    except IOError as exception:
+    except (
+        dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+        dfvfs_errors.PathSpecError) as exception:
       logging.error(
           u'Unable to open file system with error: {0:s}'.format(exception))
       return
@@ -58,7 +60,9 @@ class Collector(queue.ItemQueueProducer):
     try:
       self._fs_collector.Collect(file_system, path_spec, find_specs=find_specs)
 
-    except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
+    except (
+        dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+        dfvfs_errors.PathSpecError) as exception:
       logging.warning(u'{0:s}'.format(exception))
 
     finally:
@@ -73,8 +77,16 @@ class Collector(queue.ItemQueueProducer):
       find_specs: optional list of find specifications (instances of
                   dfvfs.FindSpec). The default is None.
     """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=self._resolver_context)
+    try:
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
+    except (
+        dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+        dfvfs_errors.PathSpecError) as exception:
+      logging.error(
+          u'Unable to open file entry with error: {0:s}'.format(exception))
+      return
+
     if not file_entry:
       logging.warning(u'Unable to open: {0:s}'.format(path_spec.comparable))
       return
@@ -270,7 +282,9 @@ class FileSystemCollector(queue.ItemQueueProducer):
 
       try:
         self._ProcessDirectory(sub_file_entry)
-      except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
+      except (
+          dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+          dfvfs_errors.PathSpecError) as exception:
         logging.warning(u'{0:s}'.format(exception))
 
   def Collect(self, file_system, path_spec, find_specs=None):
