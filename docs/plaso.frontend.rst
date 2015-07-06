@@ -68,22 +68,6 @@ plaso.frontend.psort module
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.storage_media_frontend module
---------------------------------------------
-
-.. automodule:: plaso.frontend.storage_media_frontend
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.frontend.utils module
----------------------------
-
-.. automodule:: plaso.frontend.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------

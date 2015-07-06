@@ -215,10 +215,27 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
     kwargs = {}
     for variable in extra_variables:
       key, _, value = variable.partition(u'=')
+
+      # Cookies can have a variety of different encodings, usually ASCII or
+      # UTF-8, and values may additionally be URL encoded. urllib only correctly
+      # url-decodes ASCII strings, so we'll convert our string to ASCII first.
       try:
-        value_line = urllib.unquote(value).encode(u'utf-8')
+        ascii_value = value.encode(u'ascii')
+      except UnicodeEncodeError:
+        ascii_value = value.encode(u'ascii', errors=u'ignore')
+        parser_mediator.ProduceParseError(
+            u'Cookie contains non 7-bit ASCII characters. The characters have '
+            u'been removed')
+
+      utf_stream = urllib.unquote(ascii_value)
+
+      try:
+        value_line = utf_stream.decode(u'utf-8')
       except UnicodeDecodeError:
-        value_line = repr(value)
+        value_line = utf_stream.decode(u'utf-8', errors=u'replace')
+        parser_mediator.ProduceParseError(
+            u'Cookie value did not decode to value unicode string. Non UTF-8 '
+            u'characters have been replaced.')
 
       kwargs[key] = value_line
 
