@@ -542,7 +542,7 @@ class StorageMediaTool(tools.CLITool):
                   default is None.
 
     Returns:
-      The list of selected VSS store identifiers or None.
+      The list of selected VSS store identifiers.
 
     Raises:
       SourceScannerError: if the source cannot be processed.
@@ -610,18 +610,20 @@ class StorageMediaTool(tools.CLITool):
 
       selected_vss_stores = selected_vss_stores.strip()
       if not selected_vss_stores:
+        selected_vss_stores = []
         break
 
       try:
         selected_vss_stores = self._ParseVSSStoresString(selected_vss_stores)
       except errors.BadConfigOption:
-        selected_vss_stores = []
+        selected_vss_stores = None
 
       if selected_vss_stores == [u'all']:
         # We need to set the stores to cover all vss stores.
         selected_vss_stores = range(1, volume_system.number_of_volumes + 1)
 
-      if not set(selected_vss_stores).difference(normalized_volume_identifiers):
+      if (selected_vss_stores is not None and not set(
+          selected_vss_stores).difference(normalized_volume_identifiers)):
         break
 
       self._output_writer.Write(
