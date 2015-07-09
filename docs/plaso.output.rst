@@ -28,6 +28,14 @@ plaso.output.interface module
     :undoc-members:
     :show-inheritance:
 
+plaso.output.json_line module
+-----------------------------
+
+.. automodule:: plaso.output.json_line
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.output.json_out module
 ----------------------------
 

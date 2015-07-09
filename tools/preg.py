@@ -32,6 +32,7 @@ from IPython.core import magic
 
 import pysmdev
 
+from dfvfs.helpers import source_scanner
 from dfvfs.helpers import windows_path_resolver
 from dfvfs.lib import definitions
 from dfvfs.resolver import resolver
@@ -66,6 +67,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     run_mode: the run mode of the tool, determines if the tool should
               be running in a plugin mode, parsing an entire Registry file,
               being run in a console, etc.
+    source_type: dfVFS source type indicator for the source file.
   """
 
   # Assign a default value to font align length.
@@ -134,13 +136,13 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self._knowledge_base_object = knowledge_base.KnowledgeBase()
     self._parse_restore_points = False
     self._path_resolvers = []
-    self._single_file = True
     self._verbose_output = False
     self._windows_directory = u''
 
     self.plugin_names = u''
     self.registry_file = u''
     self.run_mode = None
+    self.source_type = None
 
   def _GetEventDataHexDump(
       self, event_object, before=0, maximum_number_of_lines=20):
@@ -327,8 +329,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
       event_object: event object (instance of event.EventObject).
       file_entry: optional file entry object (instance of dfvfs.FileEntry)
                   that the event originated from. Default is None.
-      show_hex: optional boolean, if set to True hexadecimal representation of
-                the value is included in the output. The default value is False.
+      show_hex: optional boolean to indicate that the hexadecimal representation
+                of the event should be included in the output. The default is
+                False.
     """
     format_string = self._GetFormatString(event_object)
 
@@ -395,7 +398,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     self.PrintHeader(u'Data', u'+')
 
-  def _PrintEventObjectsBasedOnTime(self, event_objects, file_entry):
+  def _PrintEventObjectsBasedOnTime(
+      self, event_objects, file_entry, show_hex=False):
     """Write extracted data from a list of event objects to an output writer.
 
     This function groups together a list of event objects based on timestamps.
@@ -406,6 +410,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
       event_objects: list of event objects (instance of EventObject).
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   Defaults to None.
+      show_hex: optional boolean to indicate that the hexadecimal representation
+                of the event should be included in the output. The default is
+                False.
     """
     event_objects_and_timestamps = {}
     for event_object in event_objects:
@@ -434,7 +441,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
             timelib.Timestamp.CopyToIsoFormat(event_timestamp)))
 
       for event_object in event_objects_and_timestamps[event_timestamp]:
-        self._PrintEventBody(event_object, file_entry, self._verbose_output)
+        self._PrintEventBody(
+            event_object, file_entry=file_entry, show_hex=show_hex)
 
   def _PrintParsedRegistryFile(self, parsed_data, registry_helper):
     """Write extracted data from a Registry file to an output writer.
@@ -500,7 +508,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     if not key_data:
       return
 
-    self.PrintParsedRegistryKey(key_data, file_entry=file_entry)
+    self.PrintParsedRegistryKey(
+        key_data, file_entry=file_entry, show_hex=self._verbose_output)
 
   def _ScanFileSystem(self, path_resolver):
     """Scans a file system for the Windows volume.
@@ -523,13 +532,16 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     return result
 
-  def PrintParsedRegistryKey(self, key_data, file_entry=None):
+  def PrintParsedRegistryKey(self, key_data, file_entry=None, show_hex=False):
     """Write extracted data returned from ParseRegistryKey to an output writer.
 
     Args:
       key_data: dict object returned from ParseRegisterKey.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      show_hex: optional boolean to indicate that the hexadecimal representation
+                of the event should be included in the output. The default is
+                False.
     """
     self.PrintHeader(u'Plugins', u'-')
     for plugin, event_objects in iter(key_data.items()):
@@ -546,7 +558,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
       if not event_objects:
         continue
 
-      self._PrintEventObjectsBasedOnTime(event_objects, file_entry)
+      self._PrintEventObjectsBasedOnTime(
+          event_objects, file_entry, show_hex=show_hex)
 
     self.PrintSeparatorLine()
     self._output_writer.Write(u'\n\n')
@@ -783,7 +796,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     self.registry_file = registry_file
 
-    self.ScanSource()
+    scan_context = self.ScanSource()
+    self.source_type = scan_context.source_type
     self._front_end.SetSourcePathSpecs(self._source_path_specs)
 
   def RunModeRegistryFile(self):
@@ -817,7 +831,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
                 key=key, registry_helper=registry_helper,
                 use_plugins=[plugin.NAME])
             self.PrintParsedRegistryKey(
-                parsed_data, file_entry=registry_helper.file_entry)
+                parsed_data, file_entry=registry_helper.file_entry,
+                show_hex=self._verbose_output)
       finally:
         registry_helper.Close()
         self.PrintSeparatorLine()
@@ -847,8 +862,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
     """Run against a set of Registry plugins."""
     # TODO: Add support for splitting the output to separate files based on
     # each plugin name.
+    plugin_list = self.plugin_names.split(u',')
     registry_helpers = self._front_end.GetRegistryHelpers(
-        plugin_names=self.plugin_names)
+        plugin_names=plugin_list)
 
     plugins = []
     for plugin_name in self.plugin_names:
@@ -1008,26 +1024,34 @@ class PregMagics(magic.Magics):
             u'Unable to open Registry file, invalid index number.\n')
         return
 
-      self.console.LoadRegistryFile(registry_file_index)
+      try:
+        self.console.LoadRegistryFile(registry_file_index)
+      except errors.UnableToLoadRegistryHelper as exception:
+        self.output_writer.Write(
+            u'Unable to load hive, with error: {0:s}.\n'.format(exception))
+        return
+
       registry_helper = self.console.current_helper
       self.output_writer.Write(u'Opening hive: {0:s} [{1:s}]\n'.format(
           registry_helper.path, registry_helper.collector_name))
-      self.SetPrompt(registry_file_path=registry_helper.path)
+      self.console.SetPrompt(registry_file_path=registry_helper.path)
     elif line.startswith(u'scan'):
-      items = line.split()
-      if len(items) < 2:
-        self.output_writer.Write(
-            u'Unable to scan for an empty keyword. Please specify a keyword, '
-            u'eg: NTUSER, SOFTWARE, etc\n')
-        return
+      # Line contains: "scan REGISTRY_TYPES" where REGISTRY_TYPES is a comma
+      # separated list.
+      registry_type_string = line[5:]
+      if not registry_type_string:
+        registry_types = preg.PregRegistryHelper.REG_TYPES.keys()
+      else:
+        registry_types = [
+            string.strip() for string in registry_type_string.split(u',')]
 
-      # TODO: Add the ability to re-issue scan. When the console is started
-      # with a certain keyword, eg: NTUSER, only NTUSER hives are scanned for,
-      # while in the session you may want access to a SOFTWARE hive. In that
-      # case we have this option of scanning for new hives, also to include
-      # new VSS stores that weren't included to begin with.
-      self.output_writer.Write(
-          u'Currently unable to scan for new Registry files.\n')
+      registry_helpers = self.console.preg_front_end.GetRegistryHelpers(
+          registry_types=registry_types)
+
+      for registry_helper in registry_helpers:
+        self.console.AddRegistryHelper(registry_helper)
+
+      self.console.PrintRegistryFileList()
 
   @magic.line_magic(u'ls')
   def ListDirectoryContent(self, line):
@@ -1106,8 +1130,9 @@ class PregMagics(magic.Magics):
     current_key = current_helper.GetCurrentRegistryKey()
     parsed_data = self.console.preg_front_end.ParseRegistryKey(
         key=current_key, registry_helper=current_helper)
+
     self.console.preg_tool.PrintParsedRegistryKey(
-        parsed_data, file_entry=current_helper.file_entry)
+        parsed_data, file_entry=current_helper.file_entry, show_hex=verbose)
 
     # Print out a hexadecimal representation of all binary values.
     if verbose:
@@ -1249,8 +1274,8 @@ class PregConsole(object):
     """
     super(PregConsole, self).__init__()
     self._currently_loaded_helper = None
-    self._currently_loaded_helper_index = -1
-    self._registry_helpers = []
+    self._currently_loaded_helper_path = u''
+    self._registry_helpers = {}
 
     preferred_encoding = locale.getpreferredencoding()
     if not preferred_encoding:
@@ -1323,9 +1348,20 @@ class PregConsole(object):
 
     Args:
       registry_helper: registry helper object (instance of PregRegistryHelper)
+
+    Raises:
+      ValueError: if not Registry helper is supplied or Registry helper is not
+                  the correct object (instance of PregRegistryHelper).
     """
-    if registry_helper and registry_helper not in self._registry_helpers:
-      self._registry_helpers.append(registry_helper)
+    if not registry_helper:
+      raise ValueError(u'No Registry helper supplied.')
+
+    if not isinstance(registry_helper, preg.PregRegistryHelper):
+      raise ValueError(
+          u'Object passed in is not an instance of PregRegistryHelper.')
+
+    if registry_helper.path not in self._registry_helpers:
+      self._registry_helpers[registry_helper.path] = registry_helper
 
   def GetConfig(self):
     """Retrieves the iPython config.
@@ -1415,17 +1451,24 @@ class PregConsole(object):
       index: index into the list of available Registry helpers.
 
     Raises:
-      IndexError: if the index attempts to load an entry that does
-                  not exist.
+      UnableToLoadRegistryHelper: if the index attempts to load an entry
+                                  that does not exist or if there are no
+                                  Registry helpers loaded.
     """
-    if index < 0 or index >= len(self._registry_helpers):
-      raise IndexError(u'Index out of bounds.')
+    helper_keys = self._registry_helpers.keys()
+
+    if not helper_keys:
+      raise errors.UnableToLoadRegistryHelper(u'No Registry helpers loaded.')
+
+    if index < 0 or index >= len(helper_keys):
+      raise errors.UnableToLoadRegistryHelper(u'Index out of bounds.')
 
     if self._currently_loaded_helper:
       self._currently_loaded_helper.Close()
 
-    self._currently_loaded_helper = self._registry_helpers[index]
-    self._currently_loaded_helper_index = index
+    registry_helper_path = helper_keys[index]
+    self._currently_loaded_helper = self._registry_helpers[registry_helper_path]
+    self._currently_loaded_helper_path = registry_helper_path
 
     self._currently_loaded_helper.Open()
 
@@ -1435,17 +1478,17 @@ class PregConsole(object):
       return
 
     self._output_writer.Write(u'Index Hive [collector]\n')
-    for index, registry_helper in enumerate(self._registry_helpers):
+    for index, registry_helper in enumerate(self._registry_helpers.values()):
       collector_name = registry_helper.collector_name
       if not collector_name:
         collector_name = u'Currently Allocated'
 
-      if self._currently_loaded_helper_index == index:
+      if self._currently_loaded_helper_path == registry_helper.path:
         star = u'*'
       else:
         star = u''
 
-      self._output_writer.Write(u'{0:<5d} {1:s}{2:s} [{3:s}]'.format(
+      self._output_writer.Write(u'{0:<5d} {1:s}{2:s} [{3:s}]\n'.format(
           index, star, registry_helper.path, collector_name))
 
   def SetPrompt(
@@ -1488,9 +1531,17 @@ class PregConsole(object):
 
   def Run(self):
     """Runs the interactive console."""
+    source_type = self.preg_tool.source_type
+    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
+      registry_types = []
+    elif self.preg_tool.registry_file:
+      registry_types = [self.preg_tool.registry_file]
+    else:
+      # No Registry type specified use all available types instead.
+      registry_types = preg.PregRegistryHelper.REG_TYPES.keys()
+
     registry_helpers = self.preg_front_end.GetRegistryHelpers(
-        registry_types=[self.preg_tool.registry_file],
-        plugin_names=self.preg_tool.plugin_names)
+        registry_types=registry_types, plugin_names=self.preg_tool.plugin_names)
 
     for registry_helper in registry_helpers:
       self.AddRegistryHelper(registry_helper)
