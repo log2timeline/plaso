@@ -27,6 +27,7 @@ class EngineAbort(Error):
 class FileSystemScannerError(Error):
   """Raised when a there is an issue scanning for a file system."""
 
+
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""
 
@@ -69,6 +70,10 @@ class SourceScannerError(Error):
 
 class TimestampError(Error):
   """Class that defines timestamp errors."""
+
+
+class UnableToLoadRegistryHelper(Error):
+  """Raised when unable to load a Registry helper object."""
 
 
 class UnableToOpenFile(Error):
