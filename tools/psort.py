@@ -377,7 +377,7 @@ class PsortTool(analysis_tool.AnalysisTool):
   def ListOutputModules(self):
     """Lists the output modules."""
     self.PrintHeader(u'Output Modules')
-    for name, output_class in self._front_end.GetOutputClasses():
+    for name, output_class in sorted(self._front_end.GetOutputClasses()):
       self.PrintColumnValue(name, output_class.DESCRIPTION, 10)
     self.PrintSeparatorLine()
 

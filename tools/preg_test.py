@@ -251,7 +251,7 @@ class PregConsoleTest(test_lib.ToolTestCase):
     self._test_console.PrintRegistryFileList()
     text = output_writer.ReadOutput()
 
-    expected_text = u'Index Hive [collector]\n0     {0:s} [OS]'.format(
+    expected_text = u'Index Hive [collector]\n0     {0:s} [OS]\n'.format(
         self._file_path)
 
     self.assertEquals(text, expected_text)
@@ -315,7 +315,7 @@ class PregMagicClassTest(test_lib.ToolTestCase):
 
     registry_file_path = self._GetTestFilePath([u'NTUSER.DAT'])
     expected_text = (
-        u'Index Hive [collector]\n0     *{0:s} [OS]\n'
+        u'Index Hive [collector]\n0     *{0:s} [OS]\n\n'
         u'To open a Registry file, use: hive open INDEX\n').format(
             registry_file_path)
 

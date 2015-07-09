@@ -188,7 +188,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       if parent_path_spec:
         parent_type_indicator = parent_path_spec.TYPE_INDICATOR
         if parent_type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-          vss_store = getattr(source_path_spec, u'store_index', 0)
+          vss_store = getattr(parent_path_spec, u'store_index', 0)
           collector_name = u'VSS Store: {0:d}'.format(vss_store)
 
       searcher = self._GetSearcher()
@@ -602,8 +602,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       for plugin in plugins[weight]:
         plugin.Process(parser_mediator, key=key)
         event_queue_consumer.ConsumeItems()
-        return_dict[plugin] = [
+        event_objects = [
             event_object for event_object in event_queue_consumer.GetItems()]
+        if event_objects:
+          return_dict[plugin] = event_objects
 
     return return_dict
 
