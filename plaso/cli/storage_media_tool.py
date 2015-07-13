@@ -2,6 +2,7 @@
 """The storage media CLI tool."""
 
 import getpass
+import logging
 import os
 import sys
 
@@ -9,6 +10,7 @@ from dfvfs.credentials import manager as credentials_manager
 from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
+from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
@@ -610,20 +612,18 @@ class StorageMediaTool(tools.CLITool):
 
       selected_vss_stores = selected_vss_stores.strip()
       if not selected_vss_stores:
-        selected_vss_stores = []
         break
 
       try:
         selected_vss_stores = self._ParseVSSStoresString(selected_vss_stores)
       except errors.BadConfigOption:
-        selected_vss_stores = None
+        selected_vss_stores = []
 
       if selected_vss_stores == [u'all']:
         # We need to set the stores to cover all vss stores.
         selected_vss_stores = range(1, volume_system.number_of_volumes + 1)
 
-      if (selected_vss_stores is not None and not set(
-          selected_vss_stores).difference(normalized_volume_identifiers)):
+      if not set(selected_vss_stores).difference(normalized_volume_identifiers):
         break
 
       self._output_writer.Write(
@@ -676,6 +676,12 @@ class StorageMediaTool(tools.CLITool):
     # Get the first node where where we need to decide what to process.
     scan_node = volume_scan_node
     while len(scan_node.sub_nodes) == 1:
+      # Make sure that we prompt the user about VSS selection.
+      if scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+        location = getattr(scan_node.path_spec, u'location', None)
+        if location == u'/':
+          break
+
       scan_node = scan_node.sub_nodes[0]
 
     # The source scanner found an encrypted volume and we need
@@ -685,7 +691,7 @@ class StorageMediaTool(tools.CLITool):
       self._ScanVolumeScanNodeEncrypted(scan_context, scan_node)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      self._ScanVolumeScanNodeVSS(scan_context, scan_node)
+      self._ScanVolumeScanNodeVSS(scan_node)
 
     elif scan_node.type_indicator in (
         dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
@@ -729,7 +735,7 @@ class StorageMediaTool(tools.CLITool):
           scan_context, scan_path_spec=volume_scan_node.path_spec)
       self._ScanVolume(scan_context, volume_scan_node)
 
-  def _ScanVolumeScanNodeVSS(self, scan_context, volume_scan_node):
+  def _ScanVolumeScanNodeVSS(self, volume_scan_node):
     """Scans a VSS volume scan node for volume and file systems.
 
     Args:
@@ -743,6 +749,11 @@ class StorageMediaTool(tools.CLITool):
     if not self._process_vss:
       return
 
+    # Do not scan inside individual VSS store scan nodes.
+    location = getattr(volume_scan_node.path_spec, u'location', None)
+    if location != u'/':
+      return
+
     vss_store_identifiers = self._GetVSSStoreIdentifiers(
         volume_scan_node, vss_stores=self._vss_stores)
 
@@ -754,13 +765,17 @@ class StorageMediaTool(tools.CLITool):
       location = u'/vss{0:d}'.format(vss_store_identifier)
       sub_scan_node = volume_scan_node.GetSubNodeByLocation(location)
       if not sub_scan_node:
-        raise errors.SourceScannerError(
+        logging.error(
             u'Scan node missing for VSS store identifier: {0:d}.'.format(
                 vss_store_identifier))
+        continue
 
-      self._source_scanner.Scan(
-          scan_context, scan_path_spec=sub_scan_node.path_spec)
-      self._ScanVolume(scan_context, sub_scan_node)
+      # We "optimize" here for user experience, ideally we would scan for
+      # a file system instead of hard coding a TSK child path specification.
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+          parent=sub_scan_node.path_spec)
+      self._source_path_specs.append(path_spec)
 
   def AddCredentialOptions(self, argument_group):
     """Adds the credential options to the argument group.
