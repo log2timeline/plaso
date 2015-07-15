@@ -6,6 +6,7 @@ import os
 
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -110,6 +111,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Returns:
       A list of parser names for which the file entry matches their
       known signatures.
+
+    Raises:
+      IOError: if scanning for signatures failed.
     """
     parser_name_list = []
     scan_state = pysigscan.scan_state()
@@ -117,8 +121,14 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     file_object = file_entry.GetFileObject()
     try:
       self._file_scanner.scan_file_object(scan_state, file_object)
+    except IOError as exception:
+      raise IOError(
+          u'Unable to scan for signatures with error: {0:s}'.format(exception))
     finally:
       file_object.close()
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
 
     for scan_result in scan_state.scan_results:
       format_specification = (
@@ -162,6 +172,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     finally:
       file_object.close()
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
 
     # Get the digest values for every active hasher.
     digests = {}
@@ -238,6 +251,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'Analyzer failed to determine archive type indicators '
           u'for file: {0:s} with error: {1:s}').format(
               self._current_display_name, exception))
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
       return False
 
     number_of_type_indicators = len(type_indicators)
@@ -288,6 +304,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           finally:
             file_system.Close()
 
+            # Make sure frame.f_locals does not keep a reference to file_entry.
+            file_entry = None
+
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
               self._current_display_name))
@@ -311,6 +330,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'Analyzer failed to determine compressed stream type indicators '
           u'for file: {0:s} with error: {1:s}').format(
               self._current_display_name, exception))
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
       return False
 
     number_of_type_indicators = len(type_indicators)
@@ -417,10 +439,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
               u'File-object not explicitly closed for file: {0:s}'.format(
                   self._current_display_name))
 
-    # We do not clear self._current_file_entry or self._current_display_name
-    # here to allow the foreman to see which file was previously processed.
+      # We do not clear self._current_file_entry or self._current_display_name
+      # here to allow the foreman to see which file was previously processed.
 
-    self._parser_mediator.ResetFileEntry()
+      self._parser_mediator.ResetFileEntry()
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
 
     if self._enable_profiling:
       self._ProfilingSampleMemory()
@@ -451,6 +476,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'Unable to process path spec: {0:s} with error: {1:s}'.format(
               path_spec.comparable, exception))
 
+    except dfvfs_errors.CacheFullError:
+      # TODO: signal engine of failure.
+      self._abort = True
+      logging.error((
+          u'ABORT: detected cache full error while processing '
+          u'path spec: {0:s}').format(path_spec.comparable))
+
     # All exceptions need to be caught here to prevent the worker
     # form being killed by an uncaught exception.
     except Exception as exception:
@@ -458,6 +490,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'Unhandled exception while processing path spec: {0:s}.'.format(
               path_spec.comparable))
       logging.exception(exception)
+
+    # Make sure frame.f_locals does not keep a reference to file_entry.
+    file_entry = None
 
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""
