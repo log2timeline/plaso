@@ -71,6 +71,7 @@ cp -r config/licenses "${DISTDIR}";
 cp config/macosx/Readme.txt "${DISTDIR}";
 
 sed "s/@VOLUMENAME@/${DISTDIR}/" config/macosx/install.sh.in > "${DISTDIR}/install.sh";
+chmod 755 "${DISTDIR}/install.sh";
 
 mkdir "${DISTDIR}/packages";
 cp dependencies/*.pkg "${DISTDIR}/packages";
