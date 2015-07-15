@@ -499,6 +499,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
       self._TerminateProcess(pid)
 
+      logging.info(u'Starting replacement worker process for {0:s}'.format(
+          process.name))
       worker_process = self._StartExtractionWorkerProcess()
       self._StartMonitoringProcess(worker_process.pid)
 
@@ -813,7 +815,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if process_type == definitions.PROCESS_TYPE_COLLECTOR:
       produced_number_of_path_specs = process_status.get(
-          u'produced_number_of_path_specs', None)
+          u'produced_number_of_path_specs', 0)
 
       self._processing_status.UpdateCollectorStatus(
           process.name, pid, produced_number_of_path_specs, status_indicator,
@@ -834,7 +836,7 @@ class MultiProcessEngine(engine.BaseEngine):
       display_name = process_status.get(u'display_name', u'')
       number_of_events = process_status.get(u'number_of_events', 0)
       produced_number_of_path_specs = process_status.get(
-          u'produced_number_of_path_specs', None)
+          u'produced_number_of_path_specs', 0)
 
       self._processing_status.UpdateExtractionWorkerStatus(
           process.name, pid, display_name, number_of_events,
@@ -954,7 +956,7 @@ class MultiProcessEngine(engine.BaseEngine):
       logging.debug(u'Processing stopped.')
     except errors.EngineAbort as exception:
       logging.warning(
-          u'Processing aborted with error: {0:s}.'.format(exception))
+          u'Processing aborted with engine error: {0:s}.'.format(exception))
 
     except Exception as exception:
       logging.error(
@@ -974,7 +976,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._AbortKill()
 
       # The abort can leave the main process unresponsive
-      # due to incorrecly finalized IPC.
+      # due to incorrectly finalized IPC.
       self._KillProcess(os.getpid())
 
 
