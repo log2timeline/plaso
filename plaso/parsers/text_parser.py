@@ -439,7 +439,7 @@ class TextCSVParser(interface.SingleFileBaseParser):
         row[key] = value.decode(self.encoding)
       except UnicodeDecodeError:
         replaced_value = value.decode(self.encoding, errors=u'replace')
-        parser_mediator.ProduceParserError(
+        parser_mediator.ProduceParseError(
             u'Error decoding string as {0:s}, characters have been '
             u'replaced in {1:s}'.format(self.encoding, replaced_value))
         row[key] = replaced_value

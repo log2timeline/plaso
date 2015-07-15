@@ -196,22 +196,21 @@ class OutputMediator(object):
       return u'....'
 
     # The filestat parser is somewhat limited.
-    # Also fix this when duplicate entries have been implemented so that
-    # the function actually returns more than a single entry (as in combined).
-    if data_type.startswith('fs:'):
-      letter = event_object.timestamp_desc[0]
+    if data_type == u'fs:stat':
+      descriptions = event_object.timestamp_desc.split(u';')
 
-      if letter == u'm':
-        return u'M...'
-      elif letter == u'a':
-        return u'.A..'
-      elif letter == u'c':
-        if event_object.timestamp_desc[1] == u'r':
-          return u'...B'
+      return_characters = [u'.', u'.', u'.', u'.']
+      for description in descriptions:
+        if description == u'mtime':
+          return_characters[0] = u'M'
+        elif description == u'atime':
+          return_characters[1] = u'A'
+        elif description == u'ctime':
+          return_characters[2] = u'C'
+        elif description == u'crtime':
+          return_characters[3] = u'B'
 
-        return u'..C.'
-      else:
-        return u'....'
+      return u''.join(return_characters)
 
     # Access time.
     if event_object.timestamp_desc in [
