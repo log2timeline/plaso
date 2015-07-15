@@ -612,7 +612,7 @@ class StorageMediaTool(tools.CLITool):
 
       selected_vss_stores = selected_vss_stores.strip()
       if not selected_vss_stores:
-        break
+        return []
 
       try:
         selected_vss_stores = self._ParseVSSStoresString(selected_vss_stores)
