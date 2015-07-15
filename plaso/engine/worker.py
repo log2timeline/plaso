@@ -55,7 +55,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     super(BaseEventExtractionWorker, self).__init__(path_spec_queue)
     self._compressed_stream_path_spec = None
     self._current_display_name = u''
-    self._current_file_entry = False
+    self._current_file_entry = None
     self._enable_debug_output = False
     self._identifier = identifier
     self._identifier_string = u'Worker_{0:d}'.format(identifier)
@@ -354,7 +354,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     return True
 
   def _ProcessFileEntry(self, file_entry):
-    """Processses a file entry.
+    """Processes a file entry.
 
     Args:
       file_entry: A file entry object (instance of dfvfs.FileEntry).
@@ -429,7 +429,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         self._current_display_name))
 
   def _ProcessPathSpec(self, path_spec):
-    """Processses a path specification.
+    """Processes a path specification.
 
     Args:
       path_spec: A path specification object (instance of dfvfs.PathSpec).
