@@ -60,8 +60,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
   """Class that implements the preg CLI tool.
 
   Attributes:
-    plugin_names: a string containing selected Windows Registry plugins to be
-                  used, defaults to an empty string.
+    plugin_names: a list containing names of selected Windows Registry plugins
+                  to be used, defaults to an empty list.
     registry_file: a string containg the path to a Windows Registry file or
                    a Registry file type, eg: NTUSER, SOFTWARE, etc.
     run_mode: the run mode of the tool, determines if the tool should
@@ -139,7 +139,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self._verbose_output = False
     self._windows_directory = u''
 
-    self.plugin_names = u''
+    self.plugin_names = []
     self.registry_file = u''
     self.run_mode = None
     self.source_type = None
@@ -182,7 +182,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     data = file_object.read(data_size)
     file_object.close()
 
-    return hexdump.Hexdump.FormatData(data, data_offset=offset)
+    return hexdump.Hexdump.FormatData(data)
 
   def _GetFormatString(self, event_object):
     """Return back a format string that can be used for a given event object."""
@@ -777,7 +777,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       raise errors.BadConfigOption(
           u'Unable to read the input file with error: {0:s}'.format(reason))
 
-    self.plugin_names = getattr(options, u'plugin_names', u'')
+    self.plugin_names = getattr(options, u'plugin_names', [])
 
     self._front_end.SetKnowledgeBase(self._knowledge_base_object)
 
@@ -862,9 +862,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     """Run against a set of Registry plugins."""
     # TODO: Add support for splitting the output to separate files based on
     # each plugin name.
-    plugin_list = self.plugin_names.split(u',')
     registry_helpers = self._front_end.GetRegistryHelpers(
-        plugin_names=plugin_list)
+        plugin_names=self.plugin_names)
 
     plugins = []
     for plugin_name in self.plugin_names:
