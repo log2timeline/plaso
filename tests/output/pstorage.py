@@ -27,12 +27,12 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
   def testOutput(self):
     with shared_test_lib.TempDirectory() as dirname:
-      dump_file = os.path.join(dirname, u'plaso.db')
+      storage_file = os.path.join(dirname, u'plaso.plaso')
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:
         output_mediator = self._CreateOutputMediator(storage_object=store)
         formatter = pstorage.PlasoStorageOutputModule(output_mediator)
-        formatter.SetFilehandle(dump_file)
+        formatter.SetFilehandle(storage_file)
 
         with interface.EventBuffer(
             formatter, check_dedups=False) as output_buffer:
@@ -43,7 +43,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
       # Make sure original and dump have the same events.
       original = storage.StorageFile(self.test_filename, read_only=True)
-      dump = storage.StorageFile(dump_file, read_only=True)
+      dump = storage.StorageFile(storage_file, read_only=True)
       event_object_original = original.GetSortedEntry()
       event_object_dump = dump.GetSortedEntry()
       original_list = []
