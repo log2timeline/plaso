@@ -188,9 +188,9 @@ class EventObject(object):
       if getattr(self, attribute) != getattr(event_object, attribute):
         return False
 
-    # If we are dealing with the stat parser the inode number is the one
-    # attribute that really matters, unlike others.
-    if u'filestat' in getattr(self, u'parser', u''):
+    # If we are dealing with a filesystem event the inode number is
+    # the attribute that really matters.
+    if self.data_type.startswith(u'fs:'):
       inode = getattr(self, u'inode', None)
       if inode is not None:
         inode = utils.GetUnicodeString(inode)

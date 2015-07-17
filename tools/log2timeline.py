@@ -49,11 +49,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       u'Example usage:',
       u'',
       u'Run the tool against an image (full kitchen sink)',
-      u'    log2timeline.py /cases/mycase/plaso.dump ímynd.dd',
+      u'    log2timeline.py /cases/mycase/plaso.plaso ímynd.dd',
       u'',
       u'Instead of answering questions, indicate some of the options on the',
       u'command line (including data from particular VSS stores).',
-      (u'    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.dump '
+      (u'    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.plaso'
        u'image.E01'),
       u'',
       u'And that is how you build a timeline using log2timeline...',
