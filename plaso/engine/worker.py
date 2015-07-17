@@ -399,6 +399,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       logging.debug(u'[ProcessFileEntry] parsing file: {0:s}'.format(
           self._current_display_name))
 
+      # We always want to use the filestat parser.
+      if self._filestat_parser_object:
+        self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
+
       is_archive = False
       is_compressed_stream = False
       is_file = file_entry.IsFile()
@@ -424,11 +428,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
               u'{1:s}').format(self._current_display_name, parser_name))
 
           self._ParseFileEntryWithParser(parser_object, file_entry)
-
-      elif self._filestat_parser_object:
-        # TODO: for archive and compressed stream files is the desired behavior
-        # to only apply the filestat parser?
-        self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
@@ -553,9 +552,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       parser_filter_string: Optional parser filter string. The default is None.
     """
-    self._specification_store, self._non_sigscan_parser_names = (
+    self._specification_store, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetSpecificationStore(
             parser_filter_string=parser_filter_string))
+
+    self._non_sigscan_parser_names = []
+    for parser_name in non_sigscan_parser_names:
+      if parser_name == u'filestat':
+        continue
+      self._non_sigscan_parser_names.append(parser_name)
 
     self._file_scanner = parsers_manager.ParsersManager.GetScanner(
         self._specification_store)
@@ -564,6 +569,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         parser_filter_string=parser_filter_string)
 
     self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
+    if u'filestat' in self._parser_objects:
+      del self._parser_objects[u'filestat']
 
   def Run(self):
     """Extracts event objects from file entries."""
