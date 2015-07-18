@@ -7,12 +7,12 @@ install:
   - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\Projects\get-pip.py')
   - ps: (new-object net.webclient).DownloadFile('https://downloads.sourceforge.net/project/pywin32/pywin32/Build%20219/pywin32-219.win32-py2.7.exe', 'C:\Projects\pywin32-219.win32-py2.7.exe')
   - ps: (new-object net.webclient).DownloadFile('https://pypi.python.org/packages/any/W/WMI/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
-  - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2015/sqlite-dll-win32-x86-3080803.zip', 'C:\Projects\sqlite-dll-win32-x86-3080803.zip')
+  - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2015/sqlite-dll-win32-x86-3081002.zip', 'C:\Projects\sqlite-dll-win32-x86-3081002.zip')
   - cmd: "%PYTHON%\\python.exe C:\\Projects\\get-pip.py"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\pywin32-219.win32-py2.7.exe"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\WMI-1.4.9.win32.exe"
   - cmd: "%PYTHON%\\Scripts\\pip.exe install python-dateutil"
-  - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3080803.zip 2>&1"
+  - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3081002.zip 2>&1"
   - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
   - cmd: git clone https://github.com/log2timeline/l2tdevtools.git && move l2tdevtools ..\
   - cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86
