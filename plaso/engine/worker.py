@@ -214,7 +214,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     # We catch the IOError so we can determine the parser that generated
     # the error.
-    except IOError as exception:
+    except (dfvfs_errors.BackEndError, IOError) as exception:
       logging.warning(
           u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
               parser_object.NAME, self._current_display_name, exception))

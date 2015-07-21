@@ -838,7 +838,11 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
           parsed_event.offset = self._current_offset
           parser_mediator.ProduceEvent(parsed_event)
       else:
-        logging.warning(u'Unable to parse log line: {0:s}'.format(line))
+        if len(line) > 80:
+          line = u'{0:s}...'.format(line[0:77])
+        parser_mediator.ProduceParseError(
+            u'Unable to parse log line: {0:s} at offset {1:d}'.format(
+                repr(line), self._current_offset))
 
       self._current_offset = text_file_object.get_offset()
       line = self._ReadLine(parser_mediator, file_entry, text_file_object)
@@ -1083,7 +1087,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       else:
         odd_line = self._text_reader.ReadLine(file_object)
         if odd_line:
-          logging.warning(
+          if len(odd_line) > 80:
+            odd_line = u'{0:s}...'.format(odd_line[0:77])
+          parser_mediator.ProduceParseError(
               u'Unable to parse log line: {0:s}'.format(repr(odd_line)))
 
       try:
