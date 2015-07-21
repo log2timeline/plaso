@@ -244,7 +244,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     except (IOError, ValueError) as exception:
       raise errors.BadConfigOption(exception)
 
-    self.has_filters = self._front_end.HasFilters()
+    if self._filter_file:
+      self.has_filters = True
+    else:
+      self.has_filters = self._front_end.HasFilters()
 
   def PrintFilterCollection(self):
     """Prints the filter collection."""

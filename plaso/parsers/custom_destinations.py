@@ -6,6 +6,7 @@ import os
 
 import construct
 from dfvfs.lib import definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver
 
@@ -79,7 +80,7 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
 
     try:
       lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
-    except RuntimeError as exception:
+    except (dfvfs_errors.BackEndError, RuntimeError) as exception:
       message = (
           u'Unable to open LNK file: {0:s} with error {1:s}').format(
               display_name, exception)

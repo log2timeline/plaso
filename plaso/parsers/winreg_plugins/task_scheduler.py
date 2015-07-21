@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the Task Scheduler Registry keys plugins."""
 
-import logging
-
 import construct
 
 from plaso.events import windows_events
@@ -88,7 +86,8 @@ class TaskCachePlugin(interface.KeyPlugin):
     tree_key = key.GetSubkey(u'Tree')
 
     if not tasks_key or not tree_key:
-      logging.warning(u'Task Cache is missing a Tasks or Tree sub key.')
+      parser_mediator.ProduceParseError(
+          u'Task Cache is missing a Tasks or Tree sub key.')
       return
 
     task_guids = {}
@@ -97,8 +96,7 @@ class TaskCachePlugin(interface.KeyPlugin):
         # The GUID is in the form {%GUID%} and stored an UTF-16 little-endian
         # string and should be 78 bytes in size.
         if len(id_value.raw_data) != 78:
-          logging.warning(
-              u'[{0:s}] unsupported Id value data size.'.format(self.NAME))
+          parser_mediator.ProduceParseError(u'Unsupported Id value data size.')
           continue
         task_guids[id_value.data] = value_key.name
 
@@ -108,9 +106,8 @@ class TaskCachePlugin(interface.KeyPlugin):
         continue
 
       if len(dynamic_info_value.raw_data) != self._DYNAMIC_INFO_STRUCT_SIZE:
-        logging.warning(
-            u'[{0:s}] unsupported DynamicInfo value data size.'.format(
-                self.NAME))
+        parser_mediator.ProduceParseError(
+            u'Unsupported DynamicInfo value data size.')
         continue
 
       dynamic_info = self._DYNAMIC_INFO_STRUCT.parse(
