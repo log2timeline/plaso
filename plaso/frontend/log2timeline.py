@@ -28,7 +28,7 @@ class LoggingFilter(logging.Filter):
 
   def filter(self, record):
     """Filter messages sent to the logging infrastructure."""
-    if record.module == u'binplist' and record.levelno == logging.DEBUG:
+    if record.module == u'binplist' and record.levelno < logging.ERROR:
       return False
 
     return True
