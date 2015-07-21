@@ -2,7 +2,7 @@
 
 __version__ = '1.3.0'
 
-VERSION_DEV = True
+VERSION_DEV = False
 VERSION_DATE = '20150721'
 
 
