@@ -60,6 +60,14 @@ plaso.analysis.tagging module
     :undoc-members:
     :show-inheritance:
 
+plaso.analysis.unique_domains_visited module
+--------------------------------------------
+
+.. automodule:: plaso.analysis.unique_domains_visited
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.analysis.viper module
 ---------------------------
 

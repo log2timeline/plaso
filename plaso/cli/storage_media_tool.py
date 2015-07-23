@@ -744,7 +744,7 @@ class StorageMediaTool(tools.CLITool):
       volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
 
     Raises:
-      SourceScannerError: if a VSS sub scan node scannot be retrieved.
+      SourceScannerError: if a VSS sub scan node cannot be retrieved.
     """
     if not self._process_vss:
       return

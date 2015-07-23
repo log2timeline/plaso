@@ -41,7 +41,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   COLUMNS = [u'date', u'time', u'status', u'username', u'filename',
              u'trigger_location', u'rule', u'action']
 
-  def _GetTimestamp(self, parser_mediator, date, time):
+  def _GetTimestamp(self, date, time, timezone):
     """Determines a timestamp from the time string.
 
     The date and time are made up of two strings, the date and the time,
@@ -49,9 +49,10 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
       date: the string representing the date.
       time: the string representing the time.
+      timezone: timezone (instance of pytz.timezone) that the data and time
+                values represent.
 
     Returns:
       The timestamp time value. The timestamp contains the number of
@@ -75,8 +76,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     except UnicodeDecodeError:
       raise errors.TimestampError(u'Unable to form a timestamp string.')
 
-    return timelib.Timestamp.FromTimeString(
-        time_string, timezone=parser_mediator.timezone)
+    return timelib.Timestamp.FromTimeString(time_string, timezone=timezone)
 
   def VerifyRow(self, parser_mediator, row):
     """Verify that this is a McAfee AV Access Protection Log file.
@@ -99,10 +99,10 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
       self.encoding = u'utf-8'
 
     # Check the date format!
-    # If it doesn't pass, then this isn't a McAfee AV Access Protection Log
+    # If it doesn't parse, then this isn't a McAfee AV Access Protection Log
     try:
       timestamp = self._GetTimestamp(
-          parser_mediator, row[u'date'], row[u'time'])
+          row[u'date'], row[u'time'], parser_mediator.timezone)
     except errors.TimestampError:
       return False
 
@@ -127,7 +127,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     """
     try:
       timestamp = self._GetTimestamp(
-          parser_mediator, row[u'date'], row[u'time'])
+          row[u'date'], row[u'time'], parser_mediator.timezone)
     except errors.TimestampError as exception:
       parser_mediator.ProduceParseError(
           u'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(

@@ -101,7 +101,7 @@ def GetEventObjects():
   text_dict = {u'body': (
       u'This is a line by someone not reading the log line properly. And '
       u'since this log line exceeds the accepted 80 chars it will be '
-      u'shortened.'), u'hostname': u'nomachine', 'username': u'johndoe'}
+      u'shortened.'), u'hostname': u'nomachine', u'username': u'johndoe'}
 
   # TODO: move this to a TextEvent unit test.
   timestamp = timelib.Timestamp.CopyFromString(u'2012-06-05 22:14:19.000000')
