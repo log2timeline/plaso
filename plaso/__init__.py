@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
-VERSION_DEV = False
+VERSION_DEV = True
 VERSION_DATE = '20150723'
 
 
