@@ -62,7 +62,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
   Attributes:
     plugin_names: a list containing names of selected Windows Registry plugins
                   to be used, defaults to an empty list.
-    registry_file: a string containg the path to a Windows Registry file or
+    registry_file: a string containing the path to a Windows Registry file or
                    a Registry file type, eg: NTUSER, SOFTWARE, etc.
     run_mode: the run mode of the tool, determines if the tool should
               be running in a plugin mode, parsing an entire Registry file,
@@ -1339,7 +1339,7 @@ class PregConsole(object):
     return range(0, self._CommandGetTotalNumberOfLoadedHives())
 
   def _CommandGetTotalNumberOfLoadedHives(self):
-    """Return the total number of Registy hives that are loaded."""
+    """Return the total number of Registry hives that are loaded."""
     return len(self._registry_helpers)
 
   def AddRegistryHelper(self, registry_helper):

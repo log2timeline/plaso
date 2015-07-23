@@ -459,7 +459,7 @@ class HashAnalyzer(threading.Thread):
 
 
 class HTTPHashAnalyzer(HashAnalyzer):
-  """A class that provides a useful interface for hash plugins using HTTP"""
+  """A class that provides a useful interface for hash plugins using HTTP(S)"""
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a HTTP hash analyzer.

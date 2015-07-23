@@ -26,7 +26,7 @@ class TestHelper(interface.ArgumentsHelper):
 
   @classmethod
   def ParseOptions(cls, options, unused_config_object):
-    """Parse and validate the configurational options."""
+    """Parse and validate the configuration options."""
     if not getattr(options, 'dynamic', u''):
       raise errors.BadConfigOption(u'Always set this.')
 

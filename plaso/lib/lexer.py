@@ -305,9 +305,9 @@ class BinaryExpression(Expression):
 class IdentityExpression(Expression):
   """An Expression which always evaluates to True."""
 
-  def Compile(self, filter_implemention):
+  def Compile(self, filter_implementation):
     """Compile the expression."""
-    return filter_implemention.IdentityFilter()
+    return filter_implementation.IdentityFilter()
 
 
 class SearchParser(Lexer):
