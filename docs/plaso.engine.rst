@@ -76,14 +76,6 @@ plaso.engine.worker module
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.zeromq_queue module
---------------------------------
-
-.. automodule:: plaso.engine.zeromq_queue
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
