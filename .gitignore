@@ -16,9 +16,10 @@
 /dist/
 /plaso.egg-info
 
+# Code review files
+/.review
+._code_review_number
+
 # Test files
 .coverage
 tests-coverage.txt
-
-# And don't care about the temporary code review file if it exists
-._code_review_number
