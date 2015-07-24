@@ -8,9 +8,29 @@ EXIT_SUCCESS=0;
 SCRIPTNAME=`basename $0`;
 
 BROWSER_PARAM="";
-CACHE_PARAM="";
 CL_NUMBER="";
 USE_CL_FILE=0;
+CL_FILENAME="";
+
+if ! test -f "utils/common.sh";
+then
+  echo "Unable to find common scripts (utils/common.sh).";
+  echo "This script can only be run from the root of the source directory.";
+
+  exit ${EXIT_FAILURE};
+fi
+
+. utils/common.sh
+
+if ! have_curl;
+then
+  echo "You'll need to install curl for this script to continue.";
+
+  exit ${EXIT_FAILURE};
+fi
+
+# Determine if we have the master repo as origin.
+HAVE_REMOTE_ORIGIN=have_remote_origin;
 
 while test $# -gt 0;
 do
@@ -29,14 +49,19 @@ done
 
 if test -z "${CL_NUMBER}";
 then
-  if test -f ._code_review_number;
+  BRANCH="";
+  get_current_branch "BRANCH";
+
+  CL_FILENAME=".review/${BRANCH}";
+
+  if test -f ${CL_FILENAME};
   then
-    CL_NUMBER=`cat ._code_review_number`
+    CL_NUMBER=`cat ${CL_FILENAME}`
     RESULT=`echo ${CL_NUMBER} | sed -e 's/[0-9]//g'`;
 
     if ! test -z "${RESULT}";
     then
-      echo "File ._code_review_number exists but contains an incorrect CL number.";
+      echo "${CL_FILENAME} contains an invalid CL number.";
 
       exit ${EXIT_FAILURE};
     fi
@@ -49,40 +74,35 @@ then
   echo "Usage: ./${SCRIPTNAME} [--nobrowser] CL_NUMBER";
   echo "";
   echo "  CL_NUMBER: optional change list (CL) number that is to be submitted.";
-  echo "             If no CL number is provided the value is read from:";
-  echo "             ._code_review_number";
+  echo "             If no CL number is provided the value is read from the";
+  echo "             corresponding file in: .review/";
+  echo "";
+  echo "  --nobrowser: forces upload.py not to open a separate browser";
+  echo "               process to obtain OAuth2 credentials for Rietveld";
+  echo "               (https://codereview.appspot.com).";
   echo "";
 
   exit ${EXIT_MISSING_ARGS};
 fi
 
-if ! test -f "utils/common.sh";
+if ! ${HAVE_REMOTE_ORIGIN};
 then
-  echo "Unable to find common functions, are you in the wrong directory?";
+  echo "Submit aborted - no need to use the submit script. Instead use";
+  echo "the update script to update the code review or the close script";
+  echo "to close the code review after it has been submitted by one of";
+  echo "the git repository maintainers.";
 
   exit ${EXIT_FAILURE};
 fi
 
-# Source the common library.
-. utils/common.sh
-
-# Update auto-generated documentation.
-regenerate_docs
-
-# Check if we're on the master branch.
-BRANCH=`git branch | grep -e "^[*]" | sed "s/^[*] //"`;
-
-if test "${BRANCH}" != "master";
+if ! have_master_branch;
 then
   echo "Submit aborted - current branch is not master.";
 
   exit ${EXIT_FAILURE};
 fi
 
-# Check for double status codes, upload.py cannot handle these correctly.
-STATUS_CODES=`git status -s | cut -b1,2 | grep '\S\S' | grep -v '??' | sort | uniq`;
-
-if ! test -z "${STATUS_CODES}";
+if have_double_git_status_codes;
 then
   echo "Submit aborted - detected double git status codes."
   echo "Run: 'git stash && git stash pop'.";
@@ -90,26 +110,7 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-# Check if the local repo is in sync with the origin.
-git fetch
-
-if test $? -ne 0;
-then
-  echo "Submit aborted - unable to fetch updates from origin repo";
-
-  exit ${EXIT_FAILURE};
-fi
-
-NUMBER_OF_CHANGES=`git log HEAD..origin/master --oneline | wc -l`;
-
-if test $? -ne 0;
-then
-  echo "Submit aborted - unable to determine if local repo is in sync with origin";
-
-  exit ${EXIT_FAILURE};
-fi
-
-if test ${NUMBER_OF_CHANGES} -ne 0;
+if ! local_repo_in_sync_with_origin;
 then
   echo "Submit aborted - local repo out of sync with origin."
   echo "Run: 'git stash && git pull && git stash pop'.";
@@ -117,62 +118,53 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-# Check if the linting is correct.
-if ! linter;
+if ! linting_is_correct_remote_origin;
 then
   echo "Submit aborted - fix the issues reported by the linter.";
 
   exit ${EXIT_FAILURE};
 fi
 
-# Check if all the tests pass.
-if test -e run_tests.py;
+if ! tests_pass;
 then
-  echo "Running tests.";
-  python run_tests.py
+  echo "Submit aborted - fix the issues reported by the failing test.";
 
-  if test $? -ne 0;
-  then
-    echo "Submit aborted - fix the issues reported by the failing test.";
-
-    exit ${EXIT_FAILURE};
-  fi
+  exit ${EXIT_FAILURE};
 fi
 
 URL_CODEREVIEW="https://codereview.appspot.com";
 
 # Get the description of the change list.
-RESULT=`which json_xs`;
 
-# TODO: check if curl exists.
-if ! test -z "${RESULT}";
-then
-  DESCRIPTION=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER} | json_xs | grep '"subject"' | awk -F '"' '{print $(NF-1)}'`;
-else
-  DESCRIPTION=`curl ${URL_CODEREVIEW}/${CL_NUMBER}/ -s | grep "Issue ${CL_NUMBER}" | awk -F ':' '{print $2}' | tail -1`;
-fi
+# This will convert newlines into spaces.
+CODEREVIEW=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER}`;
 
-if test -z "${DESCRIPTION}";
+DESCRIPTION=`echo ${CODEREVIEW} | sed 's/^.*"subject":"\(.*\)","created.*$/\1/'`;
+
+if test -z "${DESCRIPTION}" || test "${DESCRIPTION}" = "${CODEREVIEW}";
 then
   echo "Submit aborted - unable to find change list with number: ${CL_NUMBER}.";
 
   exit ${EXIT_FAILURE};
 fi
 
-# Update the version information.
-echo "Updating version information to match today's date."
+COMMIT_DESCRIPTION="Code review: ${CL_NUMBER}: ${DESCRIPTION}";
+echo "Submitting ${COMMIT_DESCRIPTION}";
+
+# Need to change the status on codereview before commit.
+python utils/upload.py \
+    --oauth2 ${BROWSER_PARAM} ${CACHE_PARAM} --send_mail -i ${CL_NUMBER} \
+    -m "Code Submitted." -t "Submitted." -y;
 
 if test -f "utils/update_version.sh";
 then
   . utils/update_version.sh
 fi
 
-COMMIT_DESCRIPTION="Code review: ${CL_NUMBER}: ${DESCRIPTION}";
-echo "Submitting ${COMMIT_DESCRIPTION}";
-
 # Check if we need to set --cache.
 STATUS_CODES=`git status -s | cut -b1,2 | sed 's/\s//g' | sort | uniq`;
 
+CACHE_PARAM="";
 for STATUS_CODE in ${STATUS_CODES};
 do
   if test "${STATUS_CODE}" = "A";
@@ -181,24 +173,30 @@ do
   fi
 done
 
-python utils/upload.py \
-    --oauth2 ${BROWSER_PARAM} -y -i ${CL_NUMBER} ${CACHE_PARAM} \
-    -t "Submitted." -m "Code Submitted." --send_mail
-
 git commit -a -m "${COMMIT_DESCRIPTION}";
 git push
 
-if test -f "~/codereview_upload_cookies";
+if test $? -ne 0;
 then
-  curl -b ~/.codereview_upload_cookies ${URL_CODEREVIEW}/${CL_NUMBER}/close -d  ''
-else
-  echo "Could not find an authenticated session to codereview. You need to"
-  echo "manually close the ticket on the code review site."
+  echo "Submit aborted - unable to run: 'git push'.";
+
+  exit ${EXIT_FAILURE};
 fi
 
-if ! test -z "${USE_CL_FILE}" && test -f "._code_review_number";
+CODEREVIEW_COOKIES="${HOME}/.codereview_upload_cookies";
+
+if test -f "${CODEREVIEW_COOKIES}";
 then
-  rm -f ._code_review_number
+  curl -b "${CODEREVIEW_COOKIES}" ${URL_CODEREVIEW}/${CL_NUMBER}/close -d  '';
+else
+  echo "Could not find an authenticated session to codereview.";
+  echo "You need to manually close the ticket on the code review site:";
+  echo "${URL_CODEREVIEW}/${CL_NUMBER}";
+fi
+
+if ! test -z "${USE_CL_FILE}" && test -f "${CL_FILENAME}";
+then
+  rm -f ${CL_FILENAME};
 fi
 
 exit ${EXIT_SUCCESS};
