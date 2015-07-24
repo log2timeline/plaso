@@ -8,8 +8,20 @@ EXIT_SUCCESS=0;
 SCRIPTNAME=`basename $0`;
 
 BROWSER_PARAM="";
-CACHE_PARAM="";
 CL_NUMBER="";
+
+if ! test -f "utils/common.sh";
+then
+  echo "Unable to find common scripts (utils/common.sh).";
+  echo "This script can only be run from the root of the source directory.";
+
+  exit ${EXIT_FAILURE};
+fi
+
+. utils/common.sh
+
+# Determine if we have the master repo as origin.
+HAVE_REMOTE_ORIGIN=have_remote_origin;
 
 while test $# -gt 0;
 do
@@ -28,14 +40,19 @@ done
 
 if test -z "${CL_NUMBER}";
 then
-  if test -f ._code_review_number;
+  BRANCH="";
+  get_current_branch "BRANCH";
+
+  CL_FILENAME=".review/${BRANCH}";
+
+  if test -f ${CL_FILENAME};
   then
-    CL_NUMBER=`cat ._code_review_number`
+    CL_NUMBER=`cat ${CL_FILENAME}`;
     RESULT=`echo ${CL_NUMBER} | sed -e 's/[0-9]//g'`;
 
     if ! test -z "${RESULT}";
     then
-      echo "File ._code_review_number exists but contains an incorrect CL number.";
+      echo "${CL_FILENAME} contains an invalid CL number.";
 
       exit ${EXIT_FAILURE};
     fi
@@ -47,68 +64,116 @@ then
   echo "Usage: ./${SCRIPTNAME} [--nobrowser] [CL_NUMBER]";
   echo "";
   echo "  CL_NUMBER: optional change list (CL) number that is to be updated.";
-  echo "             If no CL number is provided the value is read from:";
-  echo "             ._code_review_number";
+  echo "             If no CL number is provided the value is read from the";
+  echo "             corresponding file in: .review/";
+  echo "";
+  echo "  --nobrowser: forces upload.py not to open a separate browser";
+  echo "               process to obtain OAuth2 credentials for Rietveld";
+  echo "               (https://codereview.appspot.com).";
   echo "";
 
   exit ${EXIT_MISSING_ARGS};
 fi
 
-if [ ! -f "utils/common.sh" ];
+if ! ${HAVE_REMOTE_ORIGIN};
 then
-  echo "Missing common functions, are you in the wrong directory?";
-
-  exit ${EXIT_FAILURE};
-fi
-
-. utils/common.sh
-
-# Check for double status codes, upload.py cannot handle these correctly.
-STATUS_CODES=`git status -s | cut -b1,2 | grep '\S\S' | grep -v '??' | sort | uniq`;
-
-if ! test -z "${STATUS_CODES}";
-then
-  echo "Update aborted - detected double git status codes."
-  echo "Run: 'git stash && git stash pop'.";
-
-  exit ${EXIT_FAILURE};
-fi
-
-# Check if the linting is correct.
-if ! linter;
-then
-  echo "Update aborted - fix the issues reported by the linter.";
-
-  exit ${EXIT_FAILURE};
-fi
-
-# Check if all the tests pass.
-if test -e run_tests.py;
-then
-  echo "Running tests.";
-  python run_tests.py
-
-  if test $? -ne 0;
+  if ! have_remote_upstream;
   then
-    echo "Update aborted - fix the issues reported by the failing test.";
+    echo "Update aborted - missing upstream.";
+    echo "Run: 'git remote add upstream https://github.com/log2timeline/${PROJECT_NAME}.git'";
+
+    exit ${EXIT_FAILURE};
+  fi
+  git fetch upstream;
+
+  if have_master_branch;
+  then
+    echo "Update aborted - current branch is master.";
+
+    exit ${EXIT_FAILURE};
+  fi
+
+  if have_uncommitted_changes;
+  then
+    echo "Update aborted - detected uncommitted changes.";
+
+    exit ${EXIT_FAILURE};
+  fi
+
+  if ! local_repo_in_sync_with_upstream;
+  then
+    echo "Local repo out of sync with upstream: running 'git pull --rebase upstream master'.":
+    git pull --rebase upstream master
+
+    if test $? -ne 0;
+    then
+      echo "Update aborted - unable to run: 'git pull --rebase upstream master'.";
+
+      exit ${EXIT_FAILURE};
+    fi
+  fi
+
+  if ! linting_is_correct_remote_upstream;
+  then
+    echo "Update aborted - fix the issues reported by the linter.";
+
+    exit ${EXIT_FAILURE};
+  fi
+else
+  if have_double_git_status_codes;
+  then
+    echo "Update aborted - detected double git status codes."
+    echo "Run: 'git stash && git stash pop'.";
+
+    exit ${EXIT_FAILURE};
+  fi
+
+  if ! linting_is_correct_remote_origin;
+  then
+    echo "Update aborted - fix the issues reported by the linter.";
 
     exit ${EXIT_FAILURE};
   fi
 fi
 
-# Check if we need to set --cache.
-STATUS_CODES=`git status -s | cut -b1,2 | sed 's/\s//g' | sort | uniq`;
+if ! tests_pass;
+then
+  echo "Update aborted - fix the issues reported by the failing test.";
 
-for STATUS_CODE in ${STATUS_CODES};
-do
-  if test "${STATUS_CODE}" = "A";
+  exit ${EXIT_FAILURE};
+fi
+
+if ! ${HAVE_REMOTE_ORIGIN};
+then
+  git push;
+
+  if test $? -ne 0;
+  then
+    echo "Unable to push to origin";
+    echo "";
+  
+    exit ${EXIT_FAILURE};
+  fi
+
+  DESCRIPTION="";
+  get_last_change_description "DESCRIPTION";
+
+  python utils/upload.py \
+      --oauth2 ${BROWSER_PARAM} -i ${CL_NUMBER} -m "Code updated." \
+      -t "${DESCRIPTION}" -y -- upstream/master;
+
+else
+  CACHE_PARAM="";
+  if have_uncommitted_changes_with_append_status;
   then
     CACHE_PARAM="--cache";
   fi
-done
+  echo -n "Short description of the update: ";
+  read DESCRIPTION
 
-python utils/upload.py \
-    --oauth2 ${BROWSER_PARAM} -y -i ${CL_NUMBER} ${CACHE_PARAM} \
-    -t "Uploading changes made to code." -m "Code updated.";
+  python utils/upload.py \
+      --oauth2 ${BROWSER_PARAM} ${CACHE_PARAM} -i ${CL_NUMBER} \
+      -m "Code updated." -t "${DESCRIPTION}" -y;
+fi
 
 exit ${EXIT_SUCCESS};
