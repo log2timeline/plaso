@@ -43,7 +43,7 @@ class BaseEngine(object):
     """Retrieves the file system of the source.
 
     The mount point path specification refers to either a directory or
-    a volume on storage media device or image. It is needed by the dfVFS
+    a volume on a storage media device or image. It is needed by the dfVFS
     file system searcher (instance of FileSystemSearcher) to indicate
     the base location of the file system.
 
@@ -56,7 +56,7 @@ class BaseEngine(object):
 
     Returns:
       A tuple of the file system (instance of dfvfs.FileSystem) and
-      the point path specification (instance of path.PathSpec).
+      the mount point path specification (instance of path.PathSpec).
 
     Raises:
       RuntimeError: if source path specification is not set.
