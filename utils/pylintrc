@@ -60,18 +60,19 @@ load-plugins=
 # R0915: Too many statements (N/50)
 # R0921: Abstract class not referenced
 # R0922: Abstract class is only referenced 1 times
-# R0924: Badly implemented Container, implements __len__ but not __getitem__ (incomplete-protocol) (pylint 0.26 and later)
 # W0122: Use of the exec statement
 # W0141: Used builtin function ''
 # W0142: Used * or ** magic
+# W0201: Variables defined initially outside the scope of __init__ (reconsider this, added by Kristinn).
+# W0212: Locally enabling protected-access
 # W0402: Uses of a deprecated module 'string'
 # W0404: 41: Reimport 'XX' (imported line NN)
 # W0511: TODO
 # W0603: Using the global statement
 # W0703: Catch "Exception"
 # W1201: Specify string format arguments as logging function parameters
-# W0201: Variables defined initially outside the scope of __init__ (reconsider this, added by Kristinn).
-disable=C0103,C0111,C0302,F0401,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,R0924,W0122,W0141,W0142,W0402,W0404,W0511,W0603,W0703,W1201,W0201
+# W1202: Use % formatting in logging functions but pass the % parameters as arguments
+disable=C0103,C0111,C0302,F0401,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0122,W0141,W0142,W0201,W0212,W0402,W0404,W0511,W0603,W0703,W1201,W1202
 
 
 [REPORTS]
@@ -79,9 +80,6 @@ disable=C0103,C0111,C0302,F0401,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,
 # Set the output format. Available formats are text, parseable, colorized, msvs
 # (visual studio) and html
 output-format=text
-
-# Include message's id in output
-include-ids=yes
 
 # Put messages in a separate file for each module / package specified on the
 # command line instead of printing them on stdout. Reports (if any) will be

@@ -153,6 +153,19 @@ linting_is_correct_remote_origin()
   # First find all files that need linter
   FILES=`git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep "\.py$"`;
 
+  # Determine the current pylint version.
+  PYLINT_VERSION=`pylint --version 2> /dev/null | awk '/pylint/ {print $2}' | rev | cut -c2- | rev`;
+
+  # Check if pylint version is < 1.4.0
+  # The following sed operation mimics 'sort -V' since it is not available on Mac OS X
+  RESULT=`echo -e "${PYLINT_VERSION}\n1.4.0" | sed 's/^[0-9]\./0&/; s/\.\([0-9]\)$/.0\1/; s/\.\([0-9]\)\./.0\1./g;s/\.\([0-9]\)\./.0\1./g' | sort | sed 's/^0// ; s/\.0/./g' | head -n1`;
+
+  if test "${RESULT}" != "${PYLINT_VERSION}";
+  then
+    echo "pylint verion 1.4.0 or later required.";
+
+    exit ${EXIT_FAILURE};
+  fi
   LINTER="pylint --rcfile=utils/pylintrc"
 
   echo "Running linter on changed files.";
@@ -195,6 +208,19 @@ linting_is_correct_remote_origin()
 # Version for usage with remote upstream
 linting_is_correct_remote_upstream()
 {
+  # Determine the current pylint version.
+  PYLINT_VERSION=`pylint --version 2> /dev/null | awk '/pylint/ {print $2}' | rev | cut -c2- | rev`;
+
+  # Check if pylint version is < 1.4.0
+  # The following sed operation mimics 'sort -V' since it is not available on Mac OS X
+  RESULT=`echo -e "${PYLINT_VERSION}\n1.4.0" | sed 's/^[0-9]\./0&/; s/\.\([0-9]\)$/.0\1/; s/\.\([0-9]\)\./.0\1./g;s/\.\([0-9]\)\./.0\1./g' | sort | sed 's/^0// ; s/\.0/./g' | head -n1`;
+
+  if test "${RESULT}" != "${PYLINT_VERSION}";
+  then
+    echo "pylint verion 1.4.0 or later required.";
+
+    exit ${EXIT_FAILURE};
+  fi
   echo "Running linter.";
 
   LINTER="pylint --rcfile=utils/pylintrc";
@@ -229,6 +255,7 @@ linting_is_correct_remote_upstream()
     then
       # TODO: allow lint all before erroring.
       echo "Fix linter errors before proceeding.";
+
       return ${FALSE};
     fi
   done
