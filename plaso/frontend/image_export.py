@@ -654,11 +654,11 @@ class ImageExportFrontend(frontend.Frontend):
                          is True.
     """
     for source_path_spec in source_path_specs:
-      file_system, searcher = self._GetSourceFileSystemSearcher(
+      file_system, mount_point = self._GetSourceFileSystem(
           source_path_spec, resolver_context=self._resolver_context)
 
       if self._knowledge_base is None:
-        self._Preprocess(searcher)
+        self._Preprocess(file_system, mount_point)
 
       if not os.path.isdir(destination_path):
         os.makedirs(destination_path)
@@ -669,25 +669,27 @@ class ImageExportFrontend(frontend.Frontend):
       # Save the regular files.
       file_saver = FileSaver(skip_duplicates=remove_duplicates)
 
+      searcher = file_system_searcher.FileSystemSearcher(
+          file_system, mount_point)
       for path_spec in searcher.Find(find_specs=find_specs):
         self._ExtractFile(file_saver, path_spec, destination_path)
 
       file_system.Close()
 
   # TODO: refactor, this is a duplicate of the function in engine.
-  def _GetSourceFileSystemSearcher(
-      self, source_path_spec, resolver_context=None):
-    """Retrieves the file system searcher of the source.
+  def _GetSourceFileSystem(self, source_path_spec, resolver_context=None):
+    """Retrieves the file system of the source.
 
     Args:
-      source_path_spec: the path specification of the source file.
+      source_path_spec: The source path specification (instance of
+                        dfvfs.PathSpec) of the file system.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
                         must have its own resolver context.
 
     Returns:
       A tuple of the file system (instance of dfvfs.FileSystem) and
-      the file system searcher object (instance of dfvfs.FileSystemSearcher).
+      the mount point path specification (instance of path.PathSpec).
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -704,15 +706,17 @@ class ImageExportFrontend(frontend.Frontend):
     else:
       mount_point = source_path_spec.parent
 
-    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
-    return file_system, searcher
+    return file_system, mount_point
 
-  def _Preprocess(self, searcher):
+  def _Preprocess(self, file_system, mount_point):
     """Preprocesses the image.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
+      file_system: the file system object (instance of vfs.FileSystem)
+                   to be preprocessed.
+      mount_point: the mount point path specification (instance of
+                   path.PathSpec) that refers to the base location
+                   of the file system.
     """
     if self._knowledge_base is not None:
       return
@@ -721,13 +725,14 @@ class ImageExportFrontend(frontend.Frontend):
 
     logging.info(u'Guessing OS')
 
+    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
     platform = preprocess_interface.GuessOS(searcher)
     logging.info(u'OS: {0:s}'.format(platform))
 
     logging.info(u'Running preprocess.')
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
-        platform, searcher, self._knowledge_base)
+        platform, file_system, mount_point, self._knowledge_base)
 
     logging.info(u'Preprocess done, saving files from image.')
 

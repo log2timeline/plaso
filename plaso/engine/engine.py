@@ -39,9 +39,13 @@ class BaseEngine(object):
     self.event_object_queue = event_object_queue
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
-  def GetSourceFileSystemSearcher(
-      self, source_path_spec, resolver_context=None):
-    """Retrieves the file system searcher of the source.
+  def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
+    """Retrieves the file system of the source.
+
+    The mount point path specification refers to either a directory or
+    a volume on storage media device or image. It is needed by the dfVFS
+    file system searcher (instance of FileSystemSearcher) to indicate
+    the base location of the file system.
 
     Args:
       source_path_spec: The source path specification (instance of
@@ -52,7 +56,7 @@ class BaseEngine(object):
 
     Returns:
       A tuple of the file system (instance of dfvfs.FileSystem) and
-      the file system searcher object (instance of dfvfs.FileSystemSearcher).
+      the point path specification (instance of path.PathSpec).
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -69,8 +73,7 @@ class BaseEngine(object):
     else:
       mount_point = source_path_spec.parent
 
-    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
-    return file_system, searcher
+    return file_system, mount_point
 
   def PreprocessSource(
       self, source_path_specs, platform, resolver_context=None):
@@ -85,16 +88,18 @@ class BaseEngine(object):
                         must have its own resolver context.
     """
     for source_path_spec in source_path_specs:
-      file_system, searcher = self.GetSourceFileSystemSearcher(
+      file_system, mount_point = self.GetSourceFileSystem(
           source_path_spec, resolver_context=resolver_context)
 
       try:
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system, mount_point)
         platform = preprocess_interface.GuessOS(searcher)
         if platform:
           self.knowledge_base.platform = platform
 
           preprocess_manager.PreprocessPluginsManager.RunPlugins(
-              platform, searcher, self.knowledge_base)
+              platform, file_system, mount_point, self.knowledge_base)
 
       finally:
         file_system.Close()
