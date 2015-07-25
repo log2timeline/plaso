@@ -112,6 +112,9 @@ then
 
     exit ${EXIT_FAILURE};
   fi
+  # Trigger a readthedocs build for the docs.
+  curl -X POST http://readthedocs.org/build/plaso
+  curl -X POST http://readthedocs.org/build/plaso-api
 fi
 
 URL_CODEREVIEW="https://codereview.appspot.com";
