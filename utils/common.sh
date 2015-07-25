@@ -158,7 +158,7 @@ linting_is_correct_remote_origin()
 
   # Check if pylint version is < 1.4.0
   # The following sed operation mimics 'sort -V' since it is not available on Mac OS X
-  RESULT=`echo -e "${PYLINT_VERSION}\n1.4.0" | sed 's/^[0-9]\./0&/; s/\.\([0-9]\)$/.0\1/; s/\.\([0-9]\)\./.0\1./g;s/\.\([0-9]\)\./.0\1./g' | sort | sed 's/^0// ; s/\.0/./g' | head -n1`;
+  RESULT=`echo -e "${PYLINT_VERSION}\n1.3.99" | sed 's/^[0-9]\./0&/; s/\.\([0-9]\)$/.0\1/; s/\.\([0-9]\)\./.0\1./g;s/\.\([0-9]\)\./.0\1./g' | sort | sed 's/^0// ; s/\.0/./g' | head -n1`;
 
   if test "${RESULT}" != "${PYLINT_VERSION}";
   then
@@ -213,9 +213,9 @@ linting_is_correct_remote_upstream()
 
   # Check if pylint version is < 1.4.0
   # The following sed operation mimics 'sort -V' since it is not available on Mac OS X
-  RESULT=`echo -e "${PYLINT_VERSION}\n1.4.0" | sed 's/^[0-9]\./0&/; s/\.\([0-9]\)$/.0\1/; s/\.\([0-9]\)\./.0\1./g;s/\.\([0-9]\)\./.0\1./g' | sort | sed 's/^0// ; s/\.0/./g' | head -n1`;
+  RESULT=`echo -e "${PYLINT_VERSION}\n1.3.99" | sed 's/^[0-9]\./0&/; s/\.\([0-9]\)$/.0\1/; s/\.\([0-9]\)\./.0\1./g;s/\.\([0-9]\)\./.0\1./g' | sort | sed 's/^0// ; s/\.0/./g' | head -n1`;
 
-  if test "${RESULT}" != "${PYLINT_VERSION}";
+  if test "${RESULT}" == "${PYLINT_VERSION}";
   then
     echo "pylint verion 1.4.0 or later required.";
 
