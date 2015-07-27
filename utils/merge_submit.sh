@@ -113,8 +113,9 @@ then
     exit ${EXIT_FAILURE};
   fi
   # Trigger a readthedocs build for the docs.
+  # The plaso readthedocs content is mirrored with the wiki repo
+  # and has no trigger on update webhook for readthedocs.
   curl -X POST http://readthedocs.org/build/plaso
-  curl -X POST http://readthedocs.org/build/plaso-api
 fi
 
 URL_CODEREVIEW="https://codereview.appspot.com";
