@@ -46,6 +46,8 @@ CL_NUMBER=$1;
 USERNAME=$2;
 FEATURE_BRANCH=$3;
 
+GITHUB_URL="https://github.com/${USERNAME}/${PROJECT_NAME}.git";
+
 if ! ${HAVE_REMOTE_ORIGIN};
 then
   echo "Submit aborted - invalid origin";
