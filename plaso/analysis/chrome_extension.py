@@ -14,7 +14,7 @@ from plaso.lib import event
 class ChromeExtensionPlugin(interface.AnalysisPlugin):
   """Convert Chrome extension IDs into names, requires Internet connection."""
 
-  NAME = 'chrome_extension'
+  NAME = u'chrome_extension'
 
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
@@ -136,10 +136,10 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       event_object: An event object (instance of EventObject).
     """
     # Only interested in filesystem events.
-    if event_object.data_type != 'fs:stat':
+    if event_object.data_type != u'fs:stat':
       return
 
-    filename = getattr(event_object, 'filename', None)
+    filename = getattr(event_object, u'filename', None)
     if not filename:
       return
 
@@ -183,7 +183,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       extension = extension_id
 
     self._results.setdefault(user, [])
-    extension_string = extension.decode('utf-8', 'ignore')
+    extension_string = extension.decode(u'utf-8', errors=u'ignore')
     if (extension_string, extension_id) not in self._results[user]:
       self._results[user].append((extension_string, extension_id))
 
