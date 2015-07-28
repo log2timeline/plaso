@@ -46,6 +46,8 @@ CL_NUMBER=$1;
 USERNAME=$2;
 FEATURE_BRANCH=$3;
 
+GITHUB_URL="https://github.com/${USERNAME}/${PROJECT_NAME}.git";
+
 if ! ${HAVE_REMOTE_ORIGIN};
 then
   echo "Submit aborted - invalid origin";
@@ -112,6 +114,10 @@ then
 
     exit ${EXIT_FAILURE};
   fi
+  # Trigger a readthedocs build for the docs.
+  # The plaso readthedocs content is mirrored with the wiki repo
+  # and has no trigger on update webhook for readthedocs.
+  curl -X POST http://readthedocs.org/build/plaso
 fi
 
 URL_CODEREVIEW="https://codereview.appspot.com";
