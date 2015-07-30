@@ -262,20 +262,50 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if self._searcher:
       return self._searcher
 
-    source_path_spec = self._source_path_specs[0]
-    type_indicator = source_path_spec.TYPE_INDICATOR
+    file_system, mount_point = self._GetSourceFileSystem(
+        self._source_path_specs[0])
+    self._searcher = file_system_searcher.FileSystemSearcher(
+        file_system, mount_point)
 
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(source_path_spec)
+    # TODO: close file_system after usage.
+    return self._searcher
 
+  # TODO: refactor, this is a duplicate of the function in engine.
+  def _GetSourceFileSystem(self, source_path_spec, resolver_context=None):
+    """Retrieves the file system of the source.
+
+    The mount point path specification refers to either a directory or
+    a volume on storage media device or image. It is needed by the dfVFS
+    file system searcher (instance of FileSystemSearcher) to indicate
+    the base location of the file system.
+
+    Args:
+      source_path_spec: The source path specification (instance of
+                        dfvfs.PathSpec) of the file system.
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None. Note that every thread or process
+                        must have its own resolver context.
+
+    Returns:
+      A tuple of the file system (instance of dfvfs.FileSystem) and
+      the mount point path specification (instance of path.PathSpec).
+
+    Raises:
+      RuntimeError: if source path specification is not set.
+    """
+    if not source_path_spec:
+      raise RuntimeError(u'Missing source.')
+
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(
+        source_path_spec, resolver_context=resolver_context)
+
+    type_indicator = source_path_spec.type_indicator
     if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
       mount_point = source_path_spec
     else:
       mount_point = source_path_spec.parent
 
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system, mount_point)
-
-    return self._searcher
+    return file_system, mount_point
 
   def CreateParserMediator(self, event_queue=None):
     """Create a parser mediator object.
@@ -407,10 +437,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     # TODO: use non-preprocess collector with filter to collect Registry files.
     if not self._single_file and not self._preprocess_completed:
-      searcher = self._GetSearcher()
+      file_system, mount_point = self._GetSourceFileSystem(
+          self._source_path_specs[0])
       preprocess_manager.PreprocessPluginsManager.RunPlugins(
-          u'Windows', searcher, self.knowledge_base_object)
+          u'Windows', file_system, mount_point, self.knowledge_base_object)
       self._preprocess_completed = True
+      file_system.Close()
 
     if registry_types is None:
       registry_types = []
@@ -721,10 +753,14 @@ class PregRegistryHelper(object):
     """The Registry type."""
     return self._registry_type
 
-  def _CreateRegistryCache(self):
-    """Calculate the Registry cache."""
+  def _CreateRegistryCache(self, registry_type):
+    """Creates the Registry cache.
+
+    Args:
+      registry_type: The Registry type, eg. "SYSTEM", "NTUSER".
+    """
     self.reg_cache = cache.WinRegistryCache()
-    self.reg_cache.BuildCache(self._registry_file, self._registry_type)
+    self.reg_cache.BuildCache(self._registry_file, registry_type)
     self.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         reg_cache=self.reg_cache)
 
@@ -803,7 +839,7 @@ class PregRegistryHelper(object):
       raise IOError(u'Registry file already open.')
 
     win_registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+        backend=winregistry.WinRegistry.BACKEND_PYREGF)
 
     try:
       self._registry_file = win_registry.OpenFile(
@@ -816,7 +852,7 @@ class PregRegistryHelper(object):
       raise
 
     self._DetectHiveType()
-    self._CreateRegistryCache()
+    self._CreateRegistryCache(self.type)
 
     # Initialize the Registry file to the base key.
     _ = self.GetKeyByPath(u'\\')
