@@ -1,78 +1,75 @@
-plaso.frontend package
-======================
+frontend Package
+================
 
-Submodules
-----------
+:mod:`frontend` Package
+-----------------------
 
-plaso.frontend.analysis_frontend module
----------------------------------------
+.. automodule:: plaso.frontend
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`analysis_frontend` Module
+-------------------------------
 
 .. automodule:: plaso.frontend.analysis_frontend
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.extraction_frontend module
------------------------------------------
+:mod:`extraction_frontend` Module
+---------------------------------
 
 .. automodule:: plaso.frontend.extraction_frontend
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.frontend module
-------------------------------
+:mod:`frontend` Module
+----------------------
 
 .. automodule:: plaso.frontend.frontend
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.image_export module
-----------------------------------
+:mod:`image_export` Module
+--------------------------
 
 .. automodule:: plaso.frontend.image_export
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.log2timeline module
-----------------------------------
+:mod:`log2timeline` Module
+--------------------------
 
 .. automodule:: plaso.frontend.log2timeline
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.preg module
---------------------------
+:mod:`preg` Module
+------------------
 
 .. automodule:: plaso.frontend.preg
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.presets module
------------------------------
+:mod:`presets` Module
+---------------------
 
 .. automodule:: plaso.frontend.presets
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.psort module
----------------------------
+:mod:`psort` Module
+-------------------
 
 .. automodule:: plaso.frontend.psort
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.frontend
-    :members:
-    :undoc-members:
-    :show-inheritance:
