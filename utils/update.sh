@@ -111,6 +111,14 @@ then
 
       exit ${EXIT_FAILURE};
     fi
+    git push -f
+
+    if test $? -ne 0;
+    then
+      echo "Review aborted - unable to run: 'git push -f' after update with upstream.";
+
+      exit ${EXIT_FAILURE};
+    fi
   fi
 
   if ! linting_is_correct_remote_upstream;
