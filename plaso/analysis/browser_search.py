@@ -53,7 +53,7 @@ class FilterClass(object):
 
   @classmethod
   def _SearchAndQInLine(cls, string):
-    """Determins if the susbstring 'q=' and 'search' appear in string.
+    """Determines if the susbstring 'q=' and 'search' appear in string.
 
     Returns:
       A boolean value indicating a match.
