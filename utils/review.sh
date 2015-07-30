@@ -222,11 +222,11 @@ then
   then
     echo "Upload server: codereview.appspot.com (change with -s/--server)";
     echo "Go to the following link in your browser:";
-
+    echo "";
     echo "    https://codereview.appspot.com/get-access-token";
-
+    echo "";
     echo "and copy the access token.";
-
+    echo "";
     echo -n "Enter access token: ";
   fi
 
@@ -293,11 +293,11 @@ else
   then
     echo "Upload server: codereview.appspot.com (change with -s/--server)";
     echo "Go to the following link in your browser:";
-
+    echo "";
     echo "    https://codereview.appspot.com/get-access-token";
-
+    echo "";
     echo "and copy the access token.";
-
+    echo "";
     echo -n "Enter access token: ";
   fi
 
