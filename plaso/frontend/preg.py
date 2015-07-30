@@ -754,7 +754,7 @@ class PregRegistryHelper(object):
     return self._registry_type
 
   def _CreateRegistryCache(self, registry_type):
-    """Calculate the Registry cache.
+    """Creates the Registry cache.
 
     Args:
       registry_type: The Registry type, eg. "SYSTEM", "NTUSER".

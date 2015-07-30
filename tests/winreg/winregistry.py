@@ -12,7 +12,7 @@ from tests.winreg import test_lib
 class RegistryUnitTest(test_lib.WinRegTestCase):
   """Tests for the Windows Registry library."""
 
-  def testInitialze(self):
+  def testInitialize(self):
     """Tests the initialization function."""
     registry = winregistry.WinRegistry(
         backend=winregistry.WinRegistry.BACKEND_PYREGF)

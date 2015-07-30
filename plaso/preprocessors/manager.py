@@ -129,9 +129,6 @@ class PreprocessPluginsManager(object):
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
-
-    Raises:
-      PreProcessFail: If the preprocessing failed.
     """
     # TODO: bootstrap the artifact preprocessor.
 
