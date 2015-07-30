@@ -3,12 +3,13 @@
 
 import logging
 
+import pyregf
+
 from plaso import dependencies
 from plaso.lib import errors
 from plaso.lib import timelib
+from plaso.winreg import cache
 from plaso.winreg import interface
-
-import pyregf
 
 
 dependencies.CheckModuleVersion(u'pyregf')
@@ -223,6 +224,7 @@ class WinPyregfFile(interface.WinRegFile):
   """Implementation of a Windows Registry file pyregf.
 
   Attributes:
+    cache: the file specific Windows Registry object cache.
     name: the name of the Windows Registry file.
   """
 
@@ -233,33 +235,107 @@ class WinPyregfFile(interface.WinRegFile):
     self._file_object = None
     self._pyregf_file = pyregf.file()
 
+    self.cache = None
     self.name = u''
 
   def Close(self):
     """Closes the Windows Registry file."""
     self._base_key = None
+    self.cache = None
+    self.name = u''
 
     if self._file_object:
       self._pyregf_file.close()
       self._file_object.close()
       self._file_object = None
 
-  def GetKeyByPath(self, path):
-    """Retrieves a specific key defined by the Registry path.
+  def ExpandPath(self, key_path, pre_obj=None):
+    """Expands a Registry key path based on attributes in pre calculated values.
+
+     A Registry key path may contain path segments that are attributes, based
+     on calculations from either preprocessing or based on each individual
+     Windows Registry file.
+
+     An attribute is defined as anything within a curly bracket, e.g.
+     "\\System\\{my_attribute}\\Path\\Keyname". If the attribute my_attribute
+     is defined in either the preprocessing object or the Registry objects
+     cache it's value will be replaced with the attribute name, e.g.
+     "\\System\\MyValue\\Path\\Keyname".
+
+     If the Registry path needs to have curly brackets in the path then
+     they need to be escaped with another curly bracket, eg
+     "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
+     case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
 
     Args:
-      path: the Registry path.
+      key_path: The Registry key path before being expanded.
+      pre_obj: Optional preprocess object that contains stored values from
+               the image.
+
+    Returns:
+      A Registry key path that is expanded based on attribute values.
+
+    Raises:
+      KeyError: If an attribute name is in the key path yet not set in
+                either the Registry objects cache nor in the preprocessing
+                object a KeyError will be raised.
+    """
+    expanded_key_path = u''
+    key_dict = {}
+    if self.cache:
+      key_dict.update(self.cache.attributes.items())
+
+    if pre_obj:
+      key_dict.update(pre_obj.__dict__.items())
+
+    try:
+      expanded_key_path = key_path.format(**key_dict)
+    except KeyError as exception:
+      raise KeyError(u'Unable to expand path with error: {0:s}'.format(
+          exception))
+
+    if not expanded_key_path:
+      raise KeyError(u'Unable to expand path, no value returned.')
+
+    return expanded_key_path
+
+  def GetKeyByExpandedPath(self, key_path, pre_obj=None):
+    """Retrieves a specific key defined by the expanded Registry path.
+
+    Args:
+      key_path: the path of the Windows Registry key.
+      pre_obj: Optional preprocess object that contains stored values from
+               the image.
 
     Returns:
       The key (instance of WinRegKey) if available or None otherwise.
     """
-    if not path:
+    try:
+      expanded_key_path = self.ExpandPath(key_path, pre_obj=pre_obj)
+    except KeyError:
+      return
+
+    if not expanded_key_path:
+      return
+
+    return self.GetKeyByPath(expanded_key_path)
+
+  def GetKeyByPath(self, key_path):
+    """Retrieves a specific key defined by the Registry path.
+
+    Args:
+      key_path: the Registry key path.
+
+    Returns:
+      The key (instance of WinRegKey) if available or None otherwise.
+    """
+    if not key_path:
       return None
 
     if not self._base_key:
       return None
 
-    pyregf_key = self._base_key.get_sub_key_by_path(path)
+    pyregf_key = self._base_key.get_sub_key_by_path(key_path)
     if not pyregf_key:
       return None
 
@@ -268,15 +344,15 @@ class WinPyregfFile(interface.WinRegFile):
     else:
       root = False
 
-    parent_path, _, _ = path.rpartition(interface.WinRegKey.PATH_SEPARATOR)
-    return WinPyregfKey(pyregf_key, parent_path, root)
+    parent_key_path, _, _ = key_path.rpartition(
+        interface.WinRegKey.PATH_SEPARATOR)
+    return WinPyregfKey(pyregf_key, parent_key_path, root)
 
   def Open(self, file_entry, codepage=u'cp1252'):
     """Opens the Windows Registry file.
 
     Args:
       file_entry: The file entry object (instance of dfvfs.FileEntry).
-      name: The name of the file.
       codepage: Optional codepage for ASCII strings, default is cp1252.
 
     Raises:
@@ -307,3 +383,18 @@ class WinPyregfFile(interface.WinRegFile):
     except IOError:
       file_object.close()
       raise
+
+  def OpenWithCache(self, file_entry, registry_type, codepage=u'cp1252'):
+    """Opens the Windows Registry file and creates an object cache.
+
+    Args:
+      file_entry: The file entry object (instance of dfvfs.FileEntry).
+      registry_type: The Registry type, e.g. "SYSTEM", "NTUSER".
+      codepage: Optional codepage for ASCII strings, default is cp1252.
+
+    Raises:
+      IOError: if there is an error opening or reading the Registry file.
+    """
+    self.Open(file_entry, codepage=codepage)
+    self.cache = cache.WinRegistryCache()
+    self.cache.BuildCache(self, registry_type)

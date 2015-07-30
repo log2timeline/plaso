@@ -4,6 +4,7 @@
 import logging
 
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.winreg import cache
@@ -291,6 +292,13 @@ class WinRegistryParser(interface.BasePluginsParser):
     for subkey in key.GetSubkeys():
       for recursed_key in self._RecurseKey(subkey):
         yield recursed_key
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'regf', offset=0)
+    return format_specification
 
   @classmethod
   def GetPluginList(cls):

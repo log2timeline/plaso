@@ -39,7 +39,8 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A Windows Registry key (instance of WinRegKey).
     """
-    registry = winregistry.WinRegistry(winregistry.WinRegistry.BACKEND_PYREGF)
+    registry = winregistry.WinRegistry(
+        backend=winregistry.WinRegistry.BACKEND_PYREGF)
     winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
     return winreg_file.GetKeyByPath(key_path)
 

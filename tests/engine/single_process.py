@@ -6,9 +6,10 @@ import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.helpers import file_system_searcher
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.path import path_spec
 from dfvfs.resolver import context
+from dfvfs.vfs import file_system
 
 from plaso.engine import single_process
 from plaso.lib import errors
@@ -19,8 +20,8 @@ from tests.engine import test_lib
 class SingleProcessEngineTest(test_lib.EngineTestCase):
   """Tests for the single process engine object."""
 
-  def testGetSourceFileSystemSearcher(self):
-    """Tests the GetSourceFileSystemSearcher function."""
+  def testGetSourceFileSystem(self):
+    """Tests the GetSourceFileSystem function."""
     resolver_context = context.Context()
     test_engine = single_process.SingleProcessEngine(
         maximum_number_of_queued_items=100)
@@ -32,11 +33,14 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    test_file_system, test_searcher = test_engine.GetSourceFileSystemSearcher(
+    test_file_system, test_mount_point = test_engine.GetSourceFileSystem(
         source_path_spec, resolver_context=resolver_context)
-    self.assertNotEqual(test_searcher, None)
-    self.assertIsInstance(
-        test_searcher, file_system_searcher.FileSystemSearcher)
+
+    self.assertNotEqual(test_file_system, None)
+    self.assertIsInstance(test_file_system, file_system.FileSystem)
+
+    self.assertNotEqual(test_mount_point, None)
+    self.assertIsInstance(test_mount_point, path_spec.PathSpec)
 
     test_file_system.Close()
 
