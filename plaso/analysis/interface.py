@@ -35,7 +35,7 @@ class AnalysisPlugin(queue.ItemQueueConsumer):
   # The name of the plugin. This is the name that is matched against when
   # loading plugins, so it is important that this name is short, concise and
   # explains the nature of the plugin easily. It also needs to be unique.
-  NAME = 'Plugin'
+  NAME = u'analysis_plugin'
 
   # A flag indicating whether or not this plugin should be run during extraction
   # phase or reserved entirely for post processing stage.
