@@ -9,7 +9,7 @@ from plaso.lib import event
 class FileHashesPlugin(interface.AnalysisPlugin):
   """A plugin for generating a list of file paths and corresponding hashes."""
 
-  NAME = 'file_hashes'
+  NAME = u'file_hashes'
 
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
@@ -31,7 +31,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
                          AnalysisMediator).
       event_object: The event object (instance of EventObject) to examine.
     """
-    pathspec = getattr(event_object, 'pathspec', None)
+    pathspec = getattr(event_object, u'pathspec', None)
     if pathspec is None:
       return
     if self._paths_with_hashes.get(pathspec, None):

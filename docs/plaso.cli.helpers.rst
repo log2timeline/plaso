@@ -1,126 +1,123 @@
-plaso.cli.helpers package
-=========================
+helpers Package
+===============
 
-Submodules
-----------
+:mod:`helpers` Package
+----------------------
 
-plaso.cli.helpers.database_config module
-----------------------------------------
+.. automodule:: plaso.cli.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`database_config` Module
+-----------------------------
 
 .. automodule:: plaso.cli.helpers.database_config
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.elastic_output module
----------------------------------------
+:mod:`elastic_output` Module
+----------------------------
 
 .. automodule:: plaso.cli.helpers.elastic_output
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.interface module
-----------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.cli.helpers.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.manager module
---------------------------------
+:mod:`manager` Module
+---------------------
 
 .. automodule:: plaso.cli.helpers.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.mysql_4n6time_output module
----------------------------------------------
+:mod:`mysql_4n6time_output` Module
+----------------------------------
 
 .. automodule:: plaso.cli.helpers.mysql_4n6time_output
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.pstorage module
----------------------------------
+:mod:`pstorage` Module
+----------------------
 
 .. automodule:: plaso.cli.helpers.pstorage
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.server_config module
---------------------------------------
+:mod:`server_config` Module
+---------------------------
 
 .. automodule:: plaso.cli.helpers.server_config
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.shared_4n6time_output module
-----------------------------------------------
+:mod:`shared_4n6time_output` Module
+-----------------------------------
 
 .. automodule:: plaso.cli.helpers.shared_4n6time_output
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.sqlite_4n6time_output module
-----------------------------------------------
+:mod:`sqlite_4n6time_output` Module
+-----------------------------------
 
 .. automodule:: plaso.cli.helpers.sqlite_4n6time_output
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.tagging_analysis module
------------------------------------------
+:mod:`tagging_analysis` Module
+------------------------------
 
 .. automodule:: plaso.cli.helpers.tagging_analysis
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.timesketch_out module
----------------------------------------
+:mod:`timesketch_out` Module
+----------------------------
 
 .. automodule:: plaso.cli.helpers.timesketch_out
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.viper_analysis module
----------------------------------------
+:mod:`viper_analysis` Module
+----------------------------
 
 .. automodule:: plaso.cli.helpers.viper_analysis
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.virustotal_analysis module
---------------------------------------------
+:mod:`virustotal_analysis` Module
+---------------------------------
 
 .. automodule:: plaso.cli.helpers.virustotal_analysis
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.windows_services_analysis module
---------------------------------------------------
+:mod:`windows_services_analysis` Module
+---------------------------------------
 
 .. automodule:: plaso.cli.helpers.windows_services_analysis
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.cli.helpers
-    :members:
-    :undoc-members:
-    :show-inheritance:
