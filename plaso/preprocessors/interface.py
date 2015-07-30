@@ -49,7 +49,7 @@ class PreprocessPlugin(object):
   WEIGHT = 3
 
   # Defines the knowledge base attribute to be set.
-  ATTRIBUTE = ''
+  ATTRIBUTE = u''
 
   @property
   def plugin_name(self):
@@ -101,7 +101,9 @@ class PreprocessPlugin(object):
     raise NotImplementedError
 
   def Run(self, searcher, knowledge_base):
-    """Set the attribute of the object store to the value from GetValue.
+    """Runs the plugins to determine the value of the preprocessing attribute.
+
+    The resulting preprocessing attribute value is stored in the knowledge base.
 
     Args:
       searcher: The file system searcher object (instance of

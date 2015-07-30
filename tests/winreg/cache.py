@@ -16,7 +16,7 @@ class CacheTest(test_lib.WinRegTestCase):
   def testBuildCache(self):
     """Tests creating a Windows Registry objects cache."""
     registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+        backend=winregistry.WinRegistry.BACKEND_PYREGF)
 
     test_file = self._GetTestFilePath([u'SYSTEM'])
     file_entry = self._GetTestFileEntry(test_file)
