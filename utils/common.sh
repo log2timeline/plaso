@@ -106,7 +106,7 @@ generate_api_documentation()
 {
   which sphinx-apidoc >/dev/null 2>&1;
 
-  if $? -ne ${EXIT_SUCCESS};
+  if test $? -ne ${EXIT_SUCCESS};
   then
     echo "WARNING: missing sphinx-apidoc - unable to update API documentation.";
 
