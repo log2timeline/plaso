@@ -4,9 +4,9 @@
 
 import unittest
 
-from plaso.winreg import winpyregf
+from plaso.winregistry import regf
 
-from tests.winreg import test_lib
+from tests.winregistry import test_lib
 
 
 class WinPyregfFileTest(test_lib.WinRegTestCase):
@@ -26,8 +26,8 @@ class WinPyregfFileTest(test_lib.WinRegTestCase):
     """Tests the Open and Close functions."""
     test_file = self._GetTestFilePath([u'NTUSER.DAT'])
     file_entry = self._GetTestFileEntry(test_file)
-    winreg_file = winpyregf.WinPyregfFile()
-    winreg_file.Open(file_entry)
+    winreg_file = regf.WinPyregfFile()
+    winreg_file.OpenFileEntry(file_entry)
 
     self._KeyPathCompare(winreg_file, u'\\')
     self._KeyPathCompare(winreg_file, u'\\Printers')

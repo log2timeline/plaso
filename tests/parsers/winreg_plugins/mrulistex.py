@@ -7,10 +7,10 @@ import unittest
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
-from plaso.winreg import interface as winreg_interface
+from plaso.winregistry import interface as winreg_interface
 
 from tests.parsers.winreg_plugins import test_lib
-from tests.winreg import test_lib as winreg_test_lib
+from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):

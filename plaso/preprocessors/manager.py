@@ -6,7 +6,7 @@ import logging
 from dfvfs.helpers import file_system_searcher
 
 from plaso.lib import errors
-from plaso.winreg import winregistry
+from plaso.winregistry import registry as winregistry
 
 
 class PreprocessPluginsManager(object):
@@ -96,7 +96,8 @@ class PreprocessPluginsManager(object):
           u'Plugin class already set for name: {0:s}.').format(
               plugin_class.__name__))
 
-    if hasattr(plugin_class, u'REG_KEY'):
+    # TODO: use type check instead of check for KEY_PATH.
+    if hasattr(plugin_class, u'KEY_PATH'):
       cls._registry_plugin_classes[plugin_class.__name__] = plugin_class
     else:
       cls._plugin_classes[plugin_class.__name__] = plugin_class

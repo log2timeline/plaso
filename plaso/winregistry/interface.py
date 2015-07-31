@@ -10,24 +10,28 @@ class WinRegKey(object):
   PATH_SEPARATOR = u'\\'
 
   @abc.abstractproperty
-  def path(self):
-    """The path of the key."""
+  def last_written_timestamp(self):
+    """The last written time of the key represented as a timestamp."""
 
   @abc.abstractproperty
   def name(self):
     """The name of the key."""
 
   @abc.abstractproperty
-  def offset(self):
-    """The offset of the key within the Windows Registry file."""
-
-  @abc.abstractproperty
-  def last_written_timestamp(self):
-    """The last written time of the key represented as a timestamp."""
+  def number_of_subkeys(self):
+    """The number of subkeys within the key."""
 
   @abc.abstractproperty
   def number_of_values(self):
     """The number of values within the key."""
+
+  @abc.abstractproperty
+  def offset(self):
+    """The offset of the key within the Windows Registry file."""
+
+  @abc.abstractproperty
+  def path(self):
+    """The path of the key."""
 
   @abc.abstractmethod
   def GetValue(self, name):
@@ -49,10 +53,6 @@ class WinRegKey(object):
       Windows Registry value objects (instances of WinRegValue) that represent
       the values stored within the key.
     """
-
-  @abc.abstractproperty
-  def number_of_subkeys(self):
-    """The number of subkeys within the key."""
 
   @abc.abstractmethod
   def GetSubkey(self, name):
@@ -179,33 +179,52 @@ class WinRegValue(object):
     return self.data_type == self.REG_BINARY
 
 
-class WinRegFile(object):
-  """Abstract class to represent the Windows Registry file interface."""
+class WinRegistryFile(object):
+  """Class that defines a Windows Registry file."""
 
-  def __init__(self):
-    """Default constructor for the Windows Registry file."""
-    self._mounted_key_path = u''
-
-  @abc.abstractmethod
-  def Open(self, file_object, codepage='cp1252'):
-    """Opens the Windows Registry file.
+  def __init__(self, ascii_codepage=u'cp1252'):
+    """Initializes the Windows Registry file.
 
     Args:
-      file_object: The file-like object of the Windows Registry file.
-      codepage: Optional codepage for ASCII strings, default is cp1252.
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
     """
+    super(WinRegistryFile, self).__init__()
+    self._ascii_codepage = ascii_codepage
 
   @abc.abstractmethod
   def Close(self):
     """Closes the Windows Registry file."""
 
   @abc.abstractmethod
-  def GetKeyByPath(self, registry_path):
-    """Retrieves a specific key defined by the Registry path.
+  def GetKeyByPath(self, key_path):
+    """Retrieves the key for a specific path.
 
     Args:
-      path: the Registry path.
+      key_path: the Registry key path.
 
     Returns:
-      The key (instance of WinRegKey) if available or None otherwise.
+      A Registry key (instance of WinRegistryKey) or None if not available.
     """
+
+  @abc.abstractmethod
+  def GetRootKey(self):
+    """Retrieves the root key.
+
+    Yields:
+      A Registry key (instance of WinRegistryKey).
+    """
+
+  @abc.abstractmethod
+  def Open(self, file_object):
+    """Opens the Windows Registry file using a file-like object.
+
+    Args:
+      file_object: the file-like object.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+
+
+# TODO: add WinRegistryFileReader.
