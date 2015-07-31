@@ -804,9 +804,7 @@ class PregRegistryHelper(object):
       return
 
     try:
-      # TODO: refactor this reg_cache is used for path_attributes here.
-      # It looks like the functionality of the cache is overloaded hence
-      # is unclear what the actual role of the cache is.
+      # TODO: remove cache in follow up winreg refactor step.
       expanded_key_path = self._win_registry.ExpandKeyPath(
           key_path, self.reg_cache.attributes)
     except KeyError:

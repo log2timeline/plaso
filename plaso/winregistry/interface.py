@@ -78,6 +78,7 @@ class WinRegKey(object):
 class WinRegValue(object):
   """Abstract class to represent the Windows Registry value interface."""
 
+  # TODO: move to definitions, currently kept for backwards compatibility.
   REG_NONE = 0
   REG_SZ = 1
   REG_EXPAND_SZ = 2
@@ -92,6 +93,7 @@ class WinRegValue(object):
   REG_RESOURCE_REQUIREMENT_LIST = 10
   REG_QWORD = 11
 
+  # TODO: move to definitions, currently kept for backwards compatibility.
   _DATA_TYPE_STRINGS = {
       0: u'REG_NONE',
       1: u'REG_SZ',
