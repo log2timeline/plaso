@@ -96,6 +96,16 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     self._analysis_plugins = analysis_plugin_string
 
+  def _ParseExperimentalOptions(self, options):
+    """Parses the experimental plugin options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    use_zeromq = getattr(options, u'use_zeromq', False)
+    if use_zeromq:
+      self._front_end.SetZeroMQUsage(use_zeromq)
+
   def _ParseFilterOptions(self, options):
     """Parses the filter options.
 
@@ -269,6 +279,17 @@ class PsortTool(analysis_tool.AnalysisTool):
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, u'analysis')
 
+  def AddExperimentalOptions(self, argument_group):
+    """Adds experimental options to the argument group
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
+            u'Enables experimental queueing using ZeroMQ'))
+
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
 
@@ -414,6 +435,9 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'A comma separated list of analysis plugin names to be loaded '
             u'or "--analysis list" to see a list of available plugins.'))
 
+    experimental_group = argument_parser.add_argument_group(u'Experimental')
+    self.AddExperimentalOptions(experimental_group)
+
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
     self.AddLogFileOptions(info_group)
@@ -549,6 +573,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     super(PsortTool, self).ParseOptions(options)
     self._ParseDataLocationOption(options)
     self._ParseAnalysisPluginOptions(options)
+    self._ParseExperimentalOptions(options)
     self._ParseFilterOptions(options)
     self._front_end.SetStorageFile(self._storage_file_path)
 

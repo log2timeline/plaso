@@ -205,7 +205,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         event_buffer = TestEventBuffer(
             output_module, check_dedups=False, store=storage_file)
 
-        self._front_end.ProcessOutput(storage_file, event_buffer)
+        self._front_end.ProcessEventsFromStorage(storage_file, event_buffer)
 
     event_buffer.Flush()
     lines = []
