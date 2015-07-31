@@ -948,9 +948,13 @@ class PregMagics(magic.Magics):
     if match and u'{0:s}{0:s}'.format(
         self.EXPANSION_KEY_OPEN) not in match.group(0):
       pre_obj = self.console.preg_front_end.knowledge_base_object.pre_obj
+
+      # TODO: deprecate usage of pre_obj.
+      path_attributes = pre_obj.__dict__
+
       try:
         # TODO: create an ExpandKeyPath function.
-        key = loaded_helper._win_registry.ExpandKeyPath(key, pre_obj=pre_obj)
+        key = loaded_helper._win_registry.ExpandKeyPath(key, path_attributes)
       except (KeyError, IndexError):
         pass
 
