@@ -12,6 +12,7 @@ BROWSER_PARAM="";
 USE_CL_FILE=1;
 CL_FILENAME="";
 BRANCH="";
+SHOW_HELP=0;
 
 if test -e ".review" && ! test -d ".review";
 then
@@ -71,6 +72,11 @@ do
     shift;
     ;;
 
+  -h | --help )
+    SHOW_HELP=1;
+    shift;
+    ;;
+
   *)
     REVIEWERS=$1;
     shift
@@ -78,12 +84,9 @@ do
   esac
 done
 
-if test -z "${REVIEWERS}";
+if test ${SHOW_HELP} -ne 0;
 then
-  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [--noclfile] REVIEWERS";
-  echo "";
-  echo "  REVIEWERS: the email address of the reviewers that are registered"
-  echo "             with Rietveld (https://codereview.appspot.com)";
+  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [--noclfile]";
   echo "";
   echo "  --nobrowser: forces upload.py not to open a separate browser";
   echo "               process to obtain OAuth2 credentials for Rietveld";
@@ -93,7 +96,14 @@ then
   echo "              stored in .review/";
   echo "";
 
-  exit ${EXIT_MISSING_ARGS};
+  exit ${EXIT_SUCCESS};
+fi
+
+if ! test -z ${REVIEWERS};
+then
+  echo "The need to explicitly pass reviewers to this script has been removed.";
+  echo "The script will now default to: log2timeline-maintainers@googlegroups.com";
+  echo "";
 fi
 
 if ! ${HAVE_REMOTE_ORIGIN};
@@ -234,7 +244,8 @@ then
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} \
-      --send_mail -r ${REVIEWERS} --cc log2timeline-dev@googlegroups.com \
+      --send_mail -r log2timeline-maintainers@googlegroups.com \
+      --cc log2timeline-dev@googlegroups.com \
       -t "${DESCRIPTION}" -y -- upstream/master | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;
@@ -256,7 +267,7 @@ then
   ORGANIZATION=`git remote -v | grep 'origin' | sed 's?^.*https://github.com/\([^/]*\)/.*$?\1?' | sort | uniq`;
 
   POST_DATA="{
-  \"title\": \"${DESCRIPTION}\",
+  \"title\": \"${CL}: ${DESCRIPTION}\",
   \"body\": \"[Code review: ${CL}: ${DESCRIPTION}](https://codereview.appspot.com/${CL}/)\",
   \"head\": \"${ORGANIZATION}:${BRANCH}\",
   \"base\": \"master\"
@@ -305,7 +316,8 @@ else
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} ${CACHE_PARAM} \
-      --send_mail -r ${REVIEWERS} --cc log2timeline-dev@googlegroups.com \
+      --send_mail -r log2timeline-maintainers@googlegroups.com \
+      --cc log2timeline-dev@googlegroups.com \
       -m "${DESCRIPTION}" -t "${DESCRIPTION}" -y | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;
