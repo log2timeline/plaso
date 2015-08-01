@@ -4,9 +4,9 @@
 
 import unittest
 
-from plaso.winreg import winregistry
+from plaso.winregistry import registry as winregistry
 
-from tests.winreg import test_lib
+from tests.winregistry import test_lib
 
 
 class RegistryUnitTest(test_lib.WinRegTestCase):

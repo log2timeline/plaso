@@ -47,7 +47,6 @@ class WinRegistryKeyPathExpander(object):
                 either the Registry objects cache nor in the preprocessing
                 object a KeyError will be raised.
     """
-    expanded_key_path = u''
     key_dict = {}
     # TODO: remove self._reg_cache
     if not reg_cache:
@@ -59,6 +58,8 @@ class WinRegistryKeyPathExpander(object):
     if pre_obj:
       key_dict.update(pre_obj.__dict__.items())
 
+    # TODO: make case insensitive.
+    expanded_key_path = u''
     try:
       expanded_key_path = key_path.format(**key_dict)
     except KeyError as exception:

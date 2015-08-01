@@ -7,10 +7,10 @@ import unittest
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import lfu
-from plaso.winreg import cache
+from plaso.winregistry import cache
 
 from tests.parsers.winreg_plugins import test_lib
-from tests.winreg import test_lib as winreg_test_lib
+from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):

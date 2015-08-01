@@ -9,7 +9,7 @@ from plaso.formatters import winreg as winreg_formatter
 from plaso.parsers.winreg_plugins import outlook
 
 from tests.parsers.winreg_plugins import test_lib
-from tests.winreg import test_lib as winreg_test_lib
+from tests.winregistry import test_lib as winreg_test_lib
 
 
 class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):

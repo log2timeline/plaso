@@ -4,10 +4,10 @@
 
 import unittest
 
-from plaso.winreg import cache
-from plaso.winreg import winregistry
+from plaso.winregistry import cache
+from plaso.winregistry import registry as winregistry
 
-from tests.winreg import test_lib
+from tests.winregistry import test_lib
 
 
 class CacheTest(test_lib.WinRegTestCase):
@@ -20,7 +20,7 @@ class CacheTest(test_lib.WinRegTestCase):
 
     test_file = self._GetTestFilePath([u'SYSTEM'])
     file_entry = self._GetTestFileEntry(test_file)
-    winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
+    winreg_file = registry.OpenFileEntry(file_entry, codepage=u'cp1252')
 
     winreg_cache = cache.WinRegistryCache()
 

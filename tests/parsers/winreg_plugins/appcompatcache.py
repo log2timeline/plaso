@@ -11,7 +11,7 @@ from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
 
 from tests.parsers.winreg_plugins import test_lib
-from tests.winreg import test_lib as winreg_test_lib
+from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestFileEntry(object):

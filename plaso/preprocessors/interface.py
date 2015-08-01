@@ -89,7 +89,7 @@ class PreprocessPlugin(object):
 
   @abc.abstractmethod
   def GetValue(self, searcher, knowledge_base):
-    """Return the value for the attribute.
+    """Retrieves the attribute value.
 
     Args:
       searcher: The file system searcher object (instance of
@@ -97,6 +97,9 @@ class PreprocessPlugin(object):
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
+
+    Returns:
+      The attribute value.
     """
     raise NotImplementedError
 

@@ -5,7 +5,7 @@ import abc
 import logging
 
 from plaso.parsers import plugins
-from plaso.winreg import path_expander as winreg_path_expander
+from plaso.winregistry import path_expander as winreg_path_expander
 
 
 class RegistryPlugin(plugins.BasePlugin):
