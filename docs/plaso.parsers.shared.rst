@@ -1,22 +1,19 @@
-plaso.parsers.shared package
-============================
+shared Package
+==============
 
-Submodules
-----------
+:mod:`shared` Package
+---------------------
 
-plaso.parsers.shared.shell_items module
----------------------------------------
+.. automodule:: plaso.parsers.shared
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`shell_items` Module
+-------------------------
 
 .. automodule:: plaso.parsers.shared.shell_items
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.parsers.shared
-    :members:
-    :undoc-members:
-    :show-inheritance:

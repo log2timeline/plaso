@@ -6,7 +6,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import single_process
-from plaso.winreg import winregistry
+from plaso.winregistry import registry as winregistry
 
 from tests.parsers import test_lib
 
@@ -41,7 +41,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     registry = winregistry.WinRegistry(
         backend=winregistry.WinRegistry.BACKEND_PYREGF)
-    winreg_file = registry.OpenFile(file_entry, codepage=u'cp1252')
+    winreg_file = registry.OpenFileEntry(file_entry, codepage=u'cp1252')
     return winreg_file.GetKeyByPath(key_path)
 
   def _ParseKeyWithPlugin(

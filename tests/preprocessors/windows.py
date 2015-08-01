@@ -10,7 +10,7 @@ from dfvfs.path import fake_path_spec
 from plaso.engine import knowledge_base
 from plaso.lib import event
 from plaso.preprocessors import windows
-from plaso.winreg import winregistry
+from plaso.winregistry import registry as winregistry
 
 from tests.preprocessors import test_lib
 
@@ -21,7 +21,7 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    pre_obj.sysregistry = u'/Windows/System32/config'
+    pre_obj.systemroot = u'/Windows'
 
     file_data = self._ReadTestFile([u'SOFTWARE'])
     self._fake_file_system = self._BuildSingleFileFakeFileSystem(
@@ -44,7 +44,7 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    pre_obj.sysregistry = u'/Windows/System32/config'
+    pre_obj.systemroot = u'/Windows'
 
     file_data = self._ReadTestFile([u'SYSTEM'])
     self._fake_file_system = self._BuildSingleFileFakeFileSystem(
@@ -98,7 +98,7 @@ class WindowsProgramFilesPath(WindowsSoftwareRegistryTest):
     plugin.Run(self._win_registry, knowledge_base_object)
 
     path = knowledge_base_object.GetValue(u'programfiles')
-    self.assertEqual(path, u'Program Files')
+    self.assertEqual(path, u'\\Program Files')
 
 
 class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):

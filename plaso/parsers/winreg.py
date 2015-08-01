@@ -7,8 +7,8 @@ from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.winreg import cache
-from plaso.winreg import winregistry
+from plaso.winregistry import cache
+from plaso.winregistry import registry as winregistry
 
 
 # TODO: add tests for this class.
@@ -335,7 +335,7 @@ class WinRegistryParser(interface.BasePluginsParser):
 
     file_entry = parser_mediator.GetFileEntry()
     try:
-      winreg_file = registry.OpenFile(
+      winreg_file = registry.OpenFileEntry(
           file_entry, codepage=parser_mediator.codepage)
     except IOError as exception:
       raise errors.UnableToParseFile(
