@@ -111,6 +111,9 @@ class WinRegistry(object):
       (u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet',
        u'_GetCurrentControlSet')]
 
+  # TODO: remove. This definition is a left over from previous times
+  # where on instantiation the backend was defined. This has been superseded
+  # by the registry_file_reader.
   BACKEND_PYREGF = 1
 
   # TODO: replace backend by registry_file_reader.
