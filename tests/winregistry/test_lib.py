@@ -9,7 +9,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.winreg import interface
+from plaso.winregistry import interface
 
 
 class TestRegKey(interface.WinRegKey):

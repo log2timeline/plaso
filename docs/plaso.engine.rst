@@ -1,86 +1,83 @@
-plaso.engine package
-====================
+engine Package
+==============
 
-Submodules
-----------
+:mod:`engine` Package
+---------------------
 
-plaso.engine.collector module
------------------------------
+.. automodule:: plaso.engine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`collector` Module
+-----------------------
 
 .. automodule:: plaso.engine.collector
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.engine module
---------------------------
+:mod:`engine` Module
+--------------------
 
 .. automodule:: plaso.engine.engine
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.knowledge_base module
-----------------------------------
+:mod:`knowledge_base` Module
+----------------------------
 
 .. automodule:: plaso.engine.knowledge_base
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.processing_status module
--------------------------------------
+:mod:`processing_status` Module
+-------------------------------
 
 .. automodule:: plaso.engine.processing_status
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.profiler module
-----------------------------
+:mod:`profiler` Module
+----------------------
 
 .. automodule:: plaso.engine.profiler
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.queue module
--------------------------
+:mod:`queue` Module
+-------------------
 
 .. automodule:: plaso.engine.queue
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.single_process module
-----------------------------------
+:mod:`single_process` Module
+----------------------------
 
 .. automodule:: plaso.engine.single_process
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.utils module
--------------------------
+:mod:`utils` Module
+-------------------
 
 .. automodule:: plaso.engine.utils
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.worker module
---------------------------
+:mod:`worker` Module
+--------------------
 
 .. automodule:: plaso.engine.worker
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.engine
-    :members:
-    :undoc-members:
-    :show-inheritance:

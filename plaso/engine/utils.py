@@ -5,7 +5,7 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.winreg import path_expander
+from plaso.winregistry import path_expander
 
 
 def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
