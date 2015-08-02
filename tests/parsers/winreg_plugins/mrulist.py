@@ -4,12 +4,13 @@
 
 import unittest
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulist
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
@@ -24,22 +25,22 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'MRUList', u'acb'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=123))
-    values.append(winreg_test_lib.TestRegValue(
+        dfwinreg_definitions.REG_SZ, offset=123))
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'a', u'Some random text here'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
-    values.append(winreg_test_lib.TestRegValue(
+        dfwinreg_definitions.REG_SZ, offset=1892))
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'b', u'c:/evil.exe'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
-    values.append(winreg_test_lib.TestRegValue(
+        dfwinreg_definitions.REG_BINARY, offset=612))
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'c', u'C:/looks_legit.exe'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=1001))
+        dfwinreg_definitions.REG_SZ, offset=1001))
 
     timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -98,15 +99,15 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         0x00, 0x00, 0x00, 0x2e, 0x3e, 0xe4, 0x62, 0x10, 0x00, 0x44, 0x65, 0x73,
         0x6b, 0x74, 0x6f, 0x70, 0x00, 0x00, 0x00, 0x00]))
 
-    values.append(winreg_test_lib.TestRegValue(
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'MRUList', u'a'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=123))
-    values.append(winreg_test_lib.TestRegValue(
-        u'a', data, winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
+        dfwinreg_definitions.REG_SZ, offset=123))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'a', data, dfwinreg_definitions.REG_BINARY, offset=612))
 
     timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)

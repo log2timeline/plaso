@@ -4,13 +4,14 @@
 
 import unittest
 
+from plaso.dfwinreg import cache as dfwinreg_cache
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import lfu
-from plaso.winregistry import cache
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
@@ -18,7 +19,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    registry_cache = cache.WinRegistryCache()
+    registry_cache = dfwinreg_cache.WinRegistryCache()
     registry_cache.attributes[u'current_control_set'] = u'ControlSet001'
     self._plugin = lfu.BootExecutePlugin(reg_cache=registry_cache)
 
@@ -27,28 +28,52 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     key_path = u'\\ControlSet001\\Control\\Session Manager'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
-        u'BootExecute', u'autocheck autochk *\x00'.encode(u'utf_16_le'),
-        7, 123))
-    values.append(winreg_test_lib.TestRegValue(
-        u'CriticalSectionTimeout', u'2592000'.encode(u'utf_16_le'), 1, 153))
-    values.append(winreg_test_lib.TestRegValue(
-        u'ExcludeFromKnownDlls', u'\x00'.encode(u'utf_16_le'), 7, 163))
-    values.append(winreg_test_lib.TestRegValue(
-        u'GlobalFlag', u'0'.encode(u'utf_16_le'), 1, 173))
-    values.append(winreg_test_lib.TestRegValue(
-        u'HeapDeCommitFreeBlockThreshold', u'0'.encode(u'utf_16_le'), 1, 183))
-    values.append(winreg_test_lib.TestRegValue(
-        u'HeapDeCommitTotalFreeThreshold', u'0'.encode(u'utf_16_le'), 1, 203))
-    values.append(winreg_test_lib.TestRegValue(
-        u'HeapSegmentCommit', u'0'.encode(u'utf_16_le'), 1, 213))
-    values.append(winreg_test_lib.TestRegValue(
-        u'HeapSegmentReserve', u'0'.encode(u'utf_16_le'), 1, 223))
-    values.append(winreg_test_lib.TestRegValue(
-        u'NumberOfInitialSessions', u'2'.encode(u'utf_16_le'), 1, 243))
+    value_data = u'autocheck autochk *\x00'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'BootExecute', value_data, dfwinreg_definitions.REG_MULTI_SZ,
+        offset=123))
+
+    value_data = u'2592000'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'CriticalSectionTimeout', value_data, dfwinreg_definitions.REG_SZ,
+        offset=153))
+
+    value_data = u'\x00'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'ExcludeFromKnownDlls', value_data, dfwinreg_definitions.REG_MULTI_SZ,
+        offset=163))
+
+    value_data = u'0'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'GlobalFlag', value_data, dfwinreg_definitions.REG_SZ, offset=173))
+
+    value_data = u'0'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'HeapDeCommitFreeBlockThreshold', value_data,
+        dfwinreg_definitions.REG_SZ, offset=183))
+
+    value_data = u'0'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'HeapDeCommitTotalFreeThreshold', value_data,
+        dfwinreg_definitions.REG_SZ, offset=203))
+
+    value_data = u'0'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'HeapSegmentCommit', value_data, dfwinreg_definitions.REG_SZ,
+        offset=213))
+
+    value_data = u'0'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'HeapSegmentReserve', value_data, dfwinreg_definitions.REG_SZ,
+        offset=223))
+
+    value_data = u'2'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'NumberOfInitialSessions', value_data, dfwinreg_definitions.REG_SZ,
+        offset=243))
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:45:29')
-    winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
+    winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -94,7 +119,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    registry_cache = cache.WinRegistryCache()
+    registry_cache = dfwinreg_cache.WinRegistryCache()
     registry_cache.attributes[u'current_control_set'] = u'ControlSet001'
     self._plugin = lfu.BootVerificationPlugin(reg_cache=registry_cache)
 
@@ -103,13 +128,13 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     key_path = u'\\ControlSet001\\Control\\BootVerificationProgram'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
-        u'ImagePath',
-        u'C:\\WINDOWS\\system32\\googleupdater.exe'.encode(u'utf_16_le'),
-        1, 123))
+    value_data = u'C:\\WINDOWS\\system32\\googleupdater.exe'.encode(
+        u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'ImagePath', value_data, dfwinreg_definitions.REG_SZ, offset=123))
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:45:29')
-    winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
+    winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

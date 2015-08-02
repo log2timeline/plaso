@@ -4,9 +4,9 @@
 
 import unittest
 
-from plaso.winregistry import regf
+from plaso.dfwinreg import regf
 
-from tests.winregistry import test_lib
+from tests.dfwinreg import test_lib
 
 
 class WinPyregfFileTest(test_lib.WinRegTestCase):

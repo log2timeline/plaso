@@ -6,9 +6,9 @@ import logging
 import pyregf
 
 from plaso import dependencies
+from plaso.dfwinreg import interface
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.winregistry import interface
 
 
 dependencies.CheckModuleVersion(u'pyregf')

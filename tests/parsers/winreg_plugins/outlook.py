@@ -4,12 +4,12 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
+from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import outlook
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
@@ -24,12 +24,12 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
+    values.append(dfwinreg_test_lib.TestRegValue(
         (u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
          u'username@example.com.ost'), b'\xcf\x2b\x37\x00',
-        winreg_test_lib.TestRegValue.REG_DWORD, offset=1892))
+        dfwinreg_definitions.REG_DWORD, offset=1892))
 
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, 1346145829002031, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -74,12 +74,12 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #         u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog')
 #     values = []
 #
-#     values.append(winreg_test_lib.TestRegValue(
+#     values.append(dfwinreg_test_lib.TestRegValue(
 #         (u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
 #          u'username@example.com.ost'), b'\x94\x01\x00\x00\x00\x00',
-#         winreg_test_lib.TestRegValue.REG_BINARY, offset=827))
+#         dfwinreg_definitions.REG_BINARY, offset=827))
 #
-#     winreg_key = winreg_test_lib.TestRegKey(
+#     winreg_key = dfwinreg_test_lib.TestRegKey(
 #         key_path, 1346145829002031, values, 3421)
 #
 #     # TODO: add test for Catalog key.

@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import run
 
 from tests.parsers.winreg_plugins import test_lib
