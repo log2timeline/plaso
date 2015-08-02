@@ -16,7 +16,7 @@ from plaso.frontend import extraction_frontend
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
-from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
+from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 from plaso.preprocessors import manager as preprocess_manager
 
 
@@ -177,7 +177,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
         if file_entry.IsFile():
           yield PregRegistryHelper(
-              file_entry=file_entry, collector_name=u'OS', codepage=codepage)
+              file_entry, u'OS', self.knowledge_base_object, codepage=codepage)
           continue
         # TODO: Change this into an actual mount point path spec.
         self._mount_path_spec = source_path_spec
@@ -194,7 +194,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       for registry_file_path in self._FindRegistryPaths(searcher, path):
         file_entry = searcher.GetFileEntryByPathSpec(registry_file_path)
         yield PregRegistryHelper(
-            file_entry=file_entry, collector_name=collector_name,
+            file_entry, collector_name, self.knowledge_base_object,
             codepage=codepage)
 
   def _GetRegistryTypes(self, plugin_name):
@@ -237,7 +237,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           # If a plugin is available for every Registry type
           # we need to make sure all Registry files are included.
           if plugin_class.REG_TYPE == u'any':
-            registry_types.extend(dfwinreg_definitions.REGISTRY_TYPES)
+            registry_types.extend(dfwinreg_definitions.REGISTRY_FILE_TYPES)
 
           else:
             registry_types.add(plugin_class.REG_TYPE)
@@ -360,33 +360,33 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     paths = []
 
     for reg_type in types:
-      if reg_type == dfwinreg_definitions.REGISTRY_TYPE_NTUSER:
+      if reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_NTUSER:
         paths.append(u'/Documents And Settings/.+/NTUSER.DAT')
         paths.append(u'/Users/.+/NTUSER.DAT')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SAM:
+      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SAM:
         paths.append(u'{sysregistry}/SAM')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SECURITY:
+      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SECURITY:
         paths.append(u'{sysregistry}/SECURITY')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SOFTWARE:
+      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SOFTWARE:
         paths.append(u'{sysregistry}/SOFTWARE')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SYSTEM:
+      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SYSTEM:
         paths.append(u'{sysregistry}/SYSTEM')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_USRCLASS:
+      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_USRCLASS:
         paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
     # Expand all the paths.
@@ -577,20 +577,21 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       return_dict[key_path][u'subkeys'] = list(key.GetSubkeys())
 
       return_dict[key_path][u'data'] = self.ParseRegistryKey(
-          key=key, registry_helper=registry_helper, use_plugins=use_plugins)
+          key, registry_helper, use_plugins=use_plugins)
 
     return return_dict
 
-  def ParseRegistryKey(
-      self, key, registry_helper, use_plugins=None):
+  def ParseRegistryKey(self, key, registry_helper, use_plugins=None):
     """Parse a single Registry key and return parsed information.
 
     Parses the Registry key either using the supplied plugin or trying against
     all available plugins.
 
     Args:
-      key: the Registry key to parse, WinRegKey object or a string.
-      registry_helper: Registry helper object (instance of PregRegistryHelper)
+      key: the Registry key to parse (instance of WinRegKey or a string
+           containing key path).
+      registry_helper: the Registry helper object (instance of
+                       PregRegistryHelper).
       use_plugins: optional list of plugin names to use. The default is None
                    which uses all available plugins.
 
@@ -618,13 +619,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       plugin_list = plugins_list.GetWeightPlugins(weight, registry_type)
       plugins[weight] = []
       for plugin in plugin_list:
+        plugin_object = plugin()
         if use_plugins:
-          plugin_obj = plugin(reg_cache=registry_helper.reg_cache)
-          if plugin_obj.NAME in use_plugins:
-            plugins[weight].append(plugin_obj)
+          if plugin_object.NAME in use_plugins:
+            plugins[weight].append(plugin_object)
         else:
-          plugins[weight].append(plugin(
-              reg_cache=registry_helper.reg_cache))
+          plugins[weight].append(plugin_object)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = PregItemQueueConsumer(event_queue)
@@ -685,25 +685,30 @@ class PregRegistryHelper(object):
 
   Attributes:
     file_entry: file entry object (instance of dfvfs.FileEntry).
-    reg_cache: Registry objects cache (instance of WinRegistryCache).
   """
 
-  def __init__(self, file_entry, collector_name, codepage=u'cp1252'):
+  def __init__(
+      self, file_entry, collector_name, knowledge_base_object,
+      codepage=u'cp1252'):
     """Initialize the Registry helper.
 
     Args:
       file_entry: file entry object (instance of dfvfs.FileEntry).
       collector_name: the name of the collector, eg. TSK.
-      codepage: the codepage used for the Registry file. The default is cp1252.
+      knowledge_base_object: A knowledge base object (instance of
+                             KnowledgeBase), which contains information from
+                             the source data needed for parsing.
+      codepage: optional codepage value used for the Registry file. The default
+                is cp1252.
     """
     self._Reset()
     self._codepage = codepage
     self._collector_name = collector_name
+    self._knowledge_base_object = knowledge_base_object
     self._win_registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
     self.file_entry = file_entry
-    self.reg_cache = None
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -747,9 +752,7 @@ class PregRegistryHelper(object):
     """Reset all attributes of the Registry helper."""
     self._currently_loaded_registry_key = u''
     self._registry_file = None
-    self._registry_type = dfwinreg_definitions.REGISTRY_TYPE_UNKNOWN
-
-    self.reg_cache = None
+    self._registry_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
 
   def Close(self):
     """Closes the helper."""
@@ -803,10 +806,12 @@ class PregRegistryHelper(object):
     if not key_path:
       return
 
+    # TODO: deprecate usage of pre_obj.
+    path_attributes = self._knowledge_base_object.pre_obj.__dict__
+
     try:
-      # TODO: remove cache in follow up winreg refactor step.
       expanded_key_path = self._win_registry.ExpandKeyPath(
-          key_path, self.reg_cache.attributes)
+          key_path, path_attributes)
     except KeyError:
       expanded_key_path = key_path
 
@@ -832,10 +837,8 @@ class PregRegistryHelper(object):
       self.Close()
       raise
 
-    self._registry_type = self._win_registry.DetectRegistryType(
+    self._registry_type = self._win_registry.GetRegistryFileType(
         self._registry_file)
-    self.reg_cache = self._win_registry.CreateCache(
-        self._registry_file, self._registry_type)
 
     # Retrieve the Registry file root key because the Registry helper
     # expects self._currently_loaded_registry_key to be set after

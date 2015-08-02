@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.dfwinreg import cache as dfwinreg_cache
 from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
@@ -19,9 +18,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    registry_cache = dfwinreg_cache.WinRegistryCache()
-    registry_cache.attributes[u'current_control_set'] = u'ControlSet001'
-    self._plugin = lfu.BootExecutePlugin(reg_cache=registry_cache)
+    self._plugin = lfu.BootExecutePlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -75,7 +72,9 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:45:29')
     winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)
@@ -119,9 +118,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    registry_cache = dfwinreg_cache.WinRegistryCache()
-    registry_cache.attributes[u'current_control_set'] = u'ControlSet001'
-    self._plugin = lfu.BootVerificationPlugin(reg_cache=registry_cache)
+    self._plugin = lfu.BootVerificationPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -136,7 +133,9 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:45:29')
     winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)

@@ -17,8 +17,13 @@ from tests.frontend import test_lib
 class PregFrontendTest(test_lib.FrontendTestCase):
   """Tests for the preg front-end."""
 
-  def _ConfigureSingleFileTest(self):
-    """Configure a single file test."""
+  def _ConfigureSingleFileTest(self, knowledge_base_values=None):
+    """Configure a single file test.
+
+    Args:
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
+    """
     self._front_end = preg.PregFrontend()
     self._front_end.SetSingleFile(True)
     registry_file_path = self._GetTestFilePath([u'SYSTEM'])
@@ -27,7 +32,12 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     self._front_end.SetSourcePath(registry_file_path)
     self._front_end.SetSourcePathSpecs([path_spec])
+
     self._knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        self._knowledge_base_object.SetValue(identifier, value)
+
     self._front_end.SetKnowledgeBase(self._knowledge_base_object)
 
   def _ConfigureStorageMediaFileTest(self):
@@ -145,7 +155,9 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
   def testParseRegistry(self):
     """Test the ParseRegistryFile and ParseRegistryKey functions."""
-    self._ConfigureSingleFileTest()
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    self._ConfigureSingleFileTest(knowledge_base_values=knowledge_base_values)
+
     registry_helpers = self._front_end.GetRegistryHelpers(
         registry_types=[u'SYSTEM'])
     registry_helper = registry_helpers[0]
@@ -158,6 +170,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
       key_list.extend(plugin.REG_KEYS)
 
     self._front_end.ExpandKeysRedirect(key_list)
+
     parsed_data = self._front_end.ParseRegistryFile(
         registry_helper, key_paths=key_list, use_plugins=plugin_list)
     for key_parsed in parsed_data:
