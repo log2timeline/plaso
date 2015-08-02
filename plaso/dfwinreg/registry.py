@@ -5,7 +5,6 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.dfwinreg import cache
 from plaso.dfwinreg import definitions
 from plaso.dfwinreg import path_expander
 from plaso.dfwinreg import regf
@@ -35,17 +34,17 @@ class WinRegistry(object):
   """Class to provided a uniform way to access the Windows Registry."""
 
   _KEY_PATHS_PER_REGISTRY_TYPE = {
-      definitions.REGISTRY_TYPE_NTUSER: frozenset([
+      definitions.REGISTRY_FILE_TYPE_NTUSER: frozenset([
           u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer']),
-      definitions.REGISTRY_TYPE_SAM: frozenset([
+      definitions.REGISTRY_FILE_TYPE_SAM: frozenset([
           u'\\SAM\\Domains\\Account\\Users']),
-      definitions.REGISTRY_TYPE_SECURITY: frozenset([
+      definitions.REGISTRY_FILE_TYPE_SECURITY: frozenset([
           u'\\Policy\\PolAdtEv']),
-      definitions.REGISTRY_TYPE_SOFTWARE: frozenset([
+      definitions.REGISTRY_FILE_TYPE_SOFTWARE: frozenset([
           u'\\Microsoft\\Windows\\CurrentVersion\\App Paths']),
-      definitions.REGISTRY_TYPE_SYSTEM: frozenset([
+      definitions.REGISTRY_FILE_TYPE_SYSTEM: frozenset([
           u'\\Select']),
-      definitions.REGISTRY_TYPE_USRCLASS: frozenset([
+      definitions.REGISTRY_FILE_TYPE_USRCLASS: frozenset([
           u'\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion']),
   }
 
@@ -251,46 +250,6 @@ class WinRegistry(object):
     for mapping in candidate_mappings:
       yield mapping
 
-  # TODO: in the process of being deprecated.
-  def CreateCache(self, registry_file, registry_type):
-    """Creates a Registry cache.
-
-    Args:
-      registry_file: The Registry file object (instance of WinRegistyFile).
-      registry_type: The Registry type.
-
-    Returns:
-      A Registry cache object (instance of WinRegistryCache).
-    """
-    registry_cache = cache.WinRegistryCache()
-    registry_cache.BuildCache(registry_file, registry_type)
-    return registry_cache
-
-  def DetectRegistryType(self, registry_file):
-    """Detect the Registry type based on keys present in the file.
-
-    Args:
-      registry_file: the Registry file object (instance of WinRegistyFile).
-
-    Returns:
-      The Registry type.
-    """
-    registry_type = definitions.REGISTRY_TYPE_UNKNOWN
-    for registry_type, key_paths in iter(
-        self._KEY_PATHS_PER_REGISTRY_TYPE.items()):
-
-      # If all key paths are found we consider the file to match a certain
-      # Registry type.
-      match = True
-      for key_path in key_paths:
-        if not registry_file.GetKeyByPath(key_path):
-          match = False
-
-      if match:
-        break
-
-    return registry_type
-
   def ExpandKeyPath(self, key_path, path_attributes):
     """Expand a Registry key path based on path attributes.
 
@@ -314,9 +273,8 @@ class WinRegistry(object):
       A Registry key path that's expanded based on attribute values.
 
     Raises:
-      KeyError: If an attribute name is in the key path yet not set in
-                either the Registry objects cache nor in the preprocessing
-                object a KeyError will be raised.
+      KeyError: If an attribute name is in the key path not set in
+                the preprocessing object a KeyError will be raised.
     """
     try:
       expanded_key_path = key_path.format(**path_attributes)
@@ -377,6 +335,31 @@ class WinRegistry(object):
     key_path = key_path[len(key_path_prefix):]
     # TODO: wrap key to hide implementation specifics.
     return registry_file.GetKeyByPath(key_path)
+
+  def GetRegistryFileType(self, registry_file):
+    """Determines the Registry type based on keys present in the file.
+
+    Args:
+      registry_file: the Registry file object (instance of WinRegistyFile).
+
+    Returns:
+      The Registry type.
+    """
+    registry_type = definitions.REGISTRY_FILE_TYPE_UNKNOWN
+    for registry_type, key_paths in iter(
+        self._KEY_PATHS_PER_REGISTRY_TYPE.items()):
+
+      # If all key paths are found we consider the file to match a certain
+      # Registry type.
+      match = True
+      for key_path in key_paths:
+        if not registry_file.GetKeyByPath(key_path):
+          match = False
+
+      if match:
+        break
+
+    return registry_type
 
   # TODO: in the process of being deprecated.
   def OpenFileEntry(self, file_entry, codepage=u'cp1252'):
