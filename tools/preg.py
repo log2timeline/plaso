@@ -611,12 +611,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     plugin_list = self._front_end.registry_plugin_list
 
     self.PrintHeader(u'Supported Plugins', u'=')
-    self.PrintHeader(u'Key Plugins')
-    for plugin_class in plugin_list.GetAllKeyPlugins():
-      self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
-
-    self.PrintHeader(u'Value Plugins')
-    for plugin_class in plugin_list.GetAllValuePlugins():
+    for plugin_class in plugin_list.GetAllPlugins():
       self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
 
     self._output_writer.Write(u'\n')
@@ -1178,7 +1173,7 @@ class PregMagics(magic.Magics):
 
     helper_type = current_helper.type
     plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
-    plugin_object = plugins_list.GetKeyPluginByName(helper_type, plugin_name)
+    plugin_object = plugins_list.GetPluginObjectByName(helper_type, plugin_name)
     if not plugin_object:
       self.output_writer.Write(
           u'No plugin named: {0:s} available for Registry type {1:s}\n'.format(
@@ -1650,7 +1645,7 @@ def CommandCompleterPlugins(console, core_completer):
 
   plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
   # TODO: refactor this into PluginsList.
-  for plugin_cls in plugins_list.GetKeyPlugins(helper_type):
+  for plugin_cls in plugins_list.GetPlugins(helper_type):
     if plugin_cls.NAME == u'winreg_default':
       continue
     command_options.append(plugin_cls.NAME)

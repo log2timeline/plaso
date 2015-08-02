@@ -6,7 +6,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class MountPoints2Plugin(interface.KeyPlugin):
+class MountPoints2Plugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
   NAME = u'explorer_mountpoints2'

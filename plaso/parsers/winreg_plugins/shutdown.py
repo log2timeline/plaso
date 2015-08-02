@@ -12,7 +12,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 
 
-class ShutdownPlugin(interface.KeyPlugin):
+class ShutdownPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the last shutdown time of a system."""
 
   NAME = u'windows_shutdown'

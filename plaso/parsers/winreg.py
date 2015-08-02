@@ -17,14 +17,12 @@ class PluginList(object):
   def __init__(self):
     """Initializes the plugin list object."""
     super(PluginList, self).__init__()
-    self._key_plugins = {}
-    self._value_plugins = {}
+    self._plugins = {}
 
   def __iter__(self):
     """Return an iterator of all Windows Registry plugins."""
     ret = []
-    _ = map(ret.extend, self._key_plugins.values())
-    _ = map(ret.extend, self._value_plugins.values())
+    _ = map(ret.extend, self._plugins.values())
     for item in ret:
       yield item
 
@@ -51,24 +49,12 @@ class PluginList(object):
                    e.g. NTUSER, SOFTWARE.
       plugin_class: The plugin class that is being registered.
     """
-    # Cannot import the interface here otherwise this will create a cyclic
-    # dependency.
-    if hasattr(plugin_class, u'REG_VALUES'):
-      self._value_plugins.setdefault(plugin_type, []).append(plugin_class)
+    self._plugins.setdefault(plugin_type, []).append(plugin_class)
 
-    else:
-      self._key_plugins.setdefault(plugin_type, []).append(plugin_class)
-
-  def GetAllKeyPlugins(self):
+  def GetAllPlugins(self):
     """Return all key plugins as a list."""
     ret = []
-    _ = map(ret.extend, self._key_plugins.values())
-    return ret
-
-  def GetAllValuePlugins(self):
-    """Return a list of a all classes that implement value-based plugins."""
-    ret = []
-    _ = map(ret.extend, self._value_plugins.values())
+    _ = map(ret.extend, self._plugins.values())
     return ret
 
   def GetExpandedKeyPaths(self, parser_mediator, plugin_names=None):
@@ -84,22 +70,22 @@ class PluginList(object):
       A list of expanded Windows Registry key paths.
     """
     key_paths = []
-    for key_plugin_cls in self.GetAllKeyPlugins():
-      key_plugin = key_plugin_cls()
+    for plugin_cls in self.GetAllPlugins():
+      plugin_object = plugin_cls()
 
-      if plugin_names and key_plugin.NAME not in plugin_names:
+      if plugin_names and plugin_object.NAME not in plugin_names:
         continue
-      key_plugin.ExpandKeys(parser_mediator)
-      if not key_plugin.expanded_keys:
+      plugin_object.ExpandKeys(parser_mediator)
+      if not plugin_object.expanded_keys:
         continue
 
-      for key_path in key_plugin.expanded_keys:
+      for key_path in plugin_object.expanded_keys:
         if key_path not in key_paths:
           key_paths.append(key_path)
 
     return key_paths
 
-  def GetKeyPluginByName(self, plugin_type, plugin_name):
+  def GetPluginObjectByName(self, plugin_type, plugin_name):
     """Retrieves a Windows Registry key-based plugins for a specific name.
 
     Args:
@@ -111,11 +97,11 @@ class PluginList(object):
       The Windows Registry plugin (instance of RegistryPlugin) or None.
     """
     # TODO: make this a dict lookup instead of a list iteration.
-    for plugin_cls in self.GetKeyPlugins(plugin_type):
+    for plugin_cls in self.GetPlugins(plugin_type):
       if plugin_cls.NAME == plugin_name:
         return plugin_cls()
 
-  def GetKeyPlugins(self, plugin_type):
+  def GetPluginObjects(self, plugin_type):
     """Retrieves the Windows Registry key-based plugins of a specific type.
 
     Args:
@@ -126,59 +112,24 @@ class PluginList(object):
       A list containing the Windows Registry plugins (instances of
       RegistryPlugin) for the specific plugin type.
     """
-    return self._GetPluginsByType(self._key_plugins, plugin_type)
+    return [plugin_cls() for plugin_cls in self.GetPlugins(plugin_type)]
 
-  def GetTypes(self):
-    """Return a set of all plugins supported."""
-    return set(self._key_plugins).union(self._value_plugins)
-
-  def GetValuePlugins(self, plugin_type):
-    """Retrieves the Windows Registry value-based plugins of a specific type.
+  def GetPlugins(self, plugin_type):
+    """Retrieves the Windows Registry key-based plugins of a specific type.
 
     Args:
-      plugin_type: String containing the Windows Registry type,
+      plugin_type: a string containing the Windows Registry type,
                    e.g. NTUSER, SOFTWARE.
 
     Returns:
-      A list containing the Windows Registry plugins (instances of
+      A list containing the Windows Registry plugins (types of
       RegistryPlugin) for the specific plugin type.
     """
-    return self._GetPluginsByType(self._value_plugins, plugin_type)
+    return self._GetPluginsByType(self._plugins, plugin_type)
 
-  def GetWeights(self):
-    """Return a set of all weights/priority of the loaded plugins."""
-    return set(plugin.WEIGHT for plugin in self.GetAllValuePlugins()).union(
-        plugin.WEIGHT for plugin in self.GetAllKeyPlugins())
-
-  def GetWeightPlugins(self, weight, plugin_type=u''):
-    """Return a list of all plugins for a given weight or priority.
-
-    Each plugin defines a weight or a priority that defines in which order
-    it should be processed in the case of a parser that applies priority.
-
-    This method returns all plugins, whether they are key or value based
-    that use a defined weight or priority and are defined to parse keys
-    or values found in a certain Windows Registry type.
-
-    Args:
-      weight: An integer representing the weight or priority (usually a
-      number from 1 to 3).
-      plugin_type: A string that defines the Windows Registry type, eg. NTUSER,
-      SOFTWARE, etc.
-
-    Returns:
-      A list that contains all the plugins that fit the defined criteria.
-    """
-    ret = []
-    for reg_plugin in self.GetKeyPlugins(plugin_type):
-      if reg_plugin.WEIGHT == weight:
-        ret.append(reg_plugin)
-
-    for reg_plugin in self.GetValuePlugins(plugin_type):
-      if reg_plugin.WEIGHT == weight:
-        ret.append(reg_plugin)
-
-    return ret
+  def GetTypes(self):
+    """Return a set of all plugins supported."""
+    return set(self._plugins)
 
 
 class WinRegistryParser(interface.BasePluginsParser):
@@ -223,38 +174,25 @@ class WinRegistryParser(interface.BasePluginsParser):
       winreg_file: A Windows Registry file (instance of dfwinreg.WinRegFile).
       registry_file_type: The Registry file type.
     """
-    # TODO: move to separate function.
-    plugins = {}
-    number_of_plugins = 0
-    for weight in self._plugins.GetWeights():
-      plugins_list = self._plugins.GetWeightPlugins(weight, registry_file_type)
-      plugins[weight] = []
-      for plugin_class in plugins_list:
-        plugin_object = plugin_class()
-        plugins[weight].append(plugin_object)
-        number_of_plugins += 1
-
+    plugins = self._plugins.GetPluginObjects(registry_file_type)
     logging.debug(
         u'Number of plugins for this Windows Registry file: {0:d}.'.format(
-            number_of_plugins))
+            len(plugins)))
 
     # Recurse through keys in the file and apply the plugins in the order:
-    # 1. file type specific key-based plugins.
-    # 2. generic key-based plugins.
-    # 3. file type specific value-based plugins.
-    # 4. generic value-based plugins.
+    # 1. file type specific plugins.
+    # 2. generic plugins.
 
     for key in winreg_file.RecurseKeys():
-      for weight in iter(plugins.keys()):
+      for plugin_object in plugins:
         # TODO: determine if the plugin matches the key and continue
         # to the next key.
-        for plugin in plugins[weight]:
-          if parser_mediator.abort:
-            break
+        if parser_mediator.abort:
+          break
 
-          plugin.UpdateChainAndProcess(
-              parser_mediator, key=key, registry_type=registry_file_type,
-              codepage=parser_mediator.codepage)
+        plugin_object.UpdateChainAndProcess(
+            parser_mediator, key=key, registry_type=registry_file_type,
+            codepage=parser_mediator.codepage)
 
   @classmethod
   def GetFormatSpecification(cls):

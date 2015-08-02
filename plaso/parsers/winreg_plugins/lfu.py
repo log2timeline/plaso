@@ -6,7 +6,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class BootVerificationPlugin(interface.KeyPlugin):
+class BootVerificationPlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect the Boot Verification Key."""
 
   NAME = u'windows_boot_verify'
@@ -39,7 +39,7 @@ class BootVerificationPlugin(interface.KeyPlugin):
     parser_mediator.ProduceEvent(event_object)
 
 
-class BootExecutePlugin(interface.KeyPlugin):
+class BootExecutePlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect the BootExecute Value from the Session Manager key."""
 
   NAME = u'windows_boot_execute'

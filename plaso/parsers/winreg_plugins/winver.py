@@ -9,7 +9,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class WinVerPlugin(interface.KeyPlugin):
+class WinVerPlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows version."""
 
   NAME = u'windows_version'

@@ -209,7 +209,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     """
     types = set()
     for plugin in self.GetRegistryPlugins(plugin_name):
-      for key_plugin_class in self._registry_plugin_list.GetAllKeyPlugins():
+      for key_plugin_class in self._registry_plugin_list.GetAllPlugins():
         if plugin.NAME == key_plugin_class.NAME:
           types.add(key_plugin_class.REG_TYPE)
           break
@@ -232,7 +232,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     registry_types = set()
 
     for plugin_name in plugin_names:
-      for plugin_class in plugins_list.GetAllKeyPlugins():
+      for plugin_class in plugins_list.GetAllPlugins():
         if plugin_name == plugin_class.NAME.lower():
           # If a plugin is available for every Registry type
           # we need to make sure all Registry files are included.
@@ -482,7 +482,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       A list of Windows Registry plugins (instance of RegistryPlugin).
     """
     key_plugins = {}
-    for plugin in self._registry_plugin_list.GetAllKeyPlugins():
+    for plugin in self._registry_plugin_list.GetAllPlugins():
       key_plugins[plugin.NAME] = plugin
 
     if not plugin_name:
@@ -507,7 +507,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       A list of Windows Registry plugins (instance of RegistryPlugin).
     """
     key_plugins = {}
-    for plugin in self._registry_plugin_list.GetAllKeyPlugins():
+    for plugin in self._registry_plugin_list.GetAllPlugins():
       key_plugins.setdefault(plugin.REG_TYPE.lower(), []).append(plugin)
 
     if not registry_type:
@@ -599,32 +599,14 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       A dictionary with plugin objects as keys and extracted event objects from
       each plugin as values or an empty dict on error.
     """
-    return_dict = {}
     if not registry_helper:
-      return return_dict
+      return {}
 
     if isinstance(key, basestring):
       key = registry_helper.GetKeyByPath(key)
 
     if not key:
-      return return_dict
-
-    registry_type = registry_helper.type
-
-    plugins = {}
-    plugins_list = self._registry_plugin_list
-
-    # Compile a list of plugins we are about to use.
-    for weight in plugins_list.GetWeights():
-      plugin_list = plugins_list.GetWeightPlugins(weight, registry_type)
-      plugins[weight] = []
-      for plugin in plugin_list:
-        plugin_object = plugin()
-        if use_plugins:
-          if plugin_object.NAME in use_plugins:
-            plugins[weight].append(plugin_object)
-        else:
-          plugins[weight].append(plugin_object)
+      return {}
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = PregItemQueueConsumer(event_queue)
@@ -632,14 +614,18 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     parser_mediator = self.CreateParserMediator(event_queue)
     parser_mediator.SetFileEntry(registry_helper.file_entry)
 
-    for weight in plugins:
-      for plugin in plugins[weight]:
-        plugin.Process(parser_mediator, key=key)
-        event_queue_consumer.ConsumeItems()
-        event_objects = [
-            event_object for event_object in event_queue_consumer.GetItems()]
-        if event_objects:
-          return_dict[plugin] = event_objects
+    return_dict = {}
+    for plugin_object in self._registry_plugin_list.GetPluginObjects(
+        registry_helper.type):
+      if use_plugins and plugin_object.NAME not in use_plugins:
+        continue
+
+      plugin_object.Process(parser_mediator, key=key)
+      event_queue_consumer.ConsumeItems()
+      event_objects = [
+          event_object for event_object in event_queue_consumer.GetItems()]
+      if event_objects:
+        return_dict[plugin_object] = event_objects
 
     return return_dict
 

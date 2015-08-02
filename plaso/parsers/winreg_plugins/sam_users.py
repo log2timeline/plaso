@@ -13,7 +13,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 
 
-class UsersPlugin(interface.KeyPlugin):
+class UsersPlugin(interface.WindowsRegistryPlugin):
   """SAM Windows Registry plugin for Users Account information."""
 
   NAME = u'windows_sam_users'
