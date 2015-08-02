@@ -12,6 +12,7 @@ BROWSER_PARAM="";
 USE_CL_FILE=1;
 CL_FILENAME="";
 BRANCH="";
+DIFFBASE="upstream/master";
 
 if test -e ".review" && ! test -d ".review";
 then
@@ -61,6 +62,11 @@ HAVE_REMOTE_ORIGIN=have_remote_origin;
 while test $# -gt 0;
 do
   case $1 in
+  --diffbase )
+    DIFFBASE=$1;
+    shift;
+    ;;
+
   --nobrowser | --no-browser | --no_browser )
     BROWSER_PARAM="--no_oauth2_webbrowser";
     shift;
@@ -84,6 +90,9 @@ then
   echo "";
   echo "  REVIEWERS: the email address of the reviewers that are registered"
   echo "             with Rietveld (https://codereview.appspot.com)";
+  echo "";
+  echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
+  echo "              The default is upstream/master";
   echo "";
   echo "  --nobrowser: forces upload.py not to open a separate browser";
   echo "               process to obtain OAuth2 credentials for Rietveld";
@@ -235,7 +244,7 @@ then
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} \
       --send_mail -r ${REVIEWERS} --cc log2timeline-dev@googlegroups.com \
-      -t "${DESCRIPTION}" -y -- upstream/master | tee ${TEMP_FILE};
+      -t "${DESCRIPTION}" -y -- ${DIFFBASE} | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;
   cat ${TEMP_FILE};
