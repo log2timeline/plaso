@@ -8,6 +8,8 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.frontend import extraction_frontend
@@ -16,8 +18,6 @@ from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
 from plaso.preprocessors import manager as preprocess_manager
-from plaso.winregistry import definitions as winregistry_definitions
-from plaso.winregistry import registry as winregistry
 
 
 class PregItemQueueConsumer(queue.ItemQueueConsumer):
@@ -237,7 +237,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           # If a plugin is available for every Registry type
           # we need to make sure all Registry files are included.
           if plugin_class.REG_TYPE == u'any':
-            registry_types.extend(winregistry_definitions.REGISTRY_TYPES)
+            registry_types.extend(dfwinreg_definitions.REGISTRY_TYPES)
 
           else:
             registry_types.add(plugin_class.REG_TYPE)
@@ -360,37 +360,37 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     paths = []
 
     for reg_type in types:
-      if reg_type == winregistry_definitions.REGISTRY_TYPE_NTUSER:
+      if reg_type == dfwinreg_definitions.REGISTRY_TYPE_NTUSER:
         paths.append(u'/Documents And Settings/.+/NTUSER.DAT')
         paths.append(u'/Users/.+/NTUSER.DAT')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
 
-      elif reg_type == winregistry_definitions.REGISTRY_TYPE_SAM:
+      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SAM:
         paths.append(u'{sysregistry}/SAM')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
 
-      elif reg_type == winregistry_definitions.REGISTRY_TYPE_SECURITY:
+      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SECURITY:
         paths.append(u'{sysregistry}/SECURITY')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
 
-      elif reg_type == winregistry_definitions.REGISTRY_TYPE_SOFTWARE:
+      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SOFTWARE:
         paths.append(u'{sysregistry}/SOFTWARE')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
 
-      elif reg_type == winregistry_definitions.REGISTRY_TYPE_SYSTEM:
+      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_SYSTEM:
         paths.append(u'{sysregistry}/SYSTEM')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
 
-      elif reg_type == winregistry_definitions.REGISTRY_TYPE_USRCLASS:
+      elif reg_type == dfwinreg_definitions.REGISTRY_TYPE_USRCLASS:
         paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
     # Expand all the paths.
-    win_registry = winregistry.WinRegistry()
+    win_registry = dfwinreg_registry.WinRegistry()
 
     # TODO: deprecate usage of pre_obj.
     path_attributes = self.knowledge_base_object.pre_obj.__dict__
@@ -699,8 +699,8 @@ class PregRegistryHelper(object):
     self._Reset()
     self._codepage = codepage
     self._collector_name = collector_name
-    self._win_registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF)
+    self._win_registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
     self.file_entry = file_entry
     self.reg_cache = None
@@ -747,7 +747,7 @@ class PregRegistryHelper(object):
     """Reset all attributes of the Registry helper."""
     self._currently_loaded_registry_key = u''
     self._registry_file = None
-    self._registry_type = winregistry_definitions.REGISTRY_TYPE_UNKNOWN
+    self._registry_type = dfwinreg_definitions.REGISTRY_TYPE_UNKNOWN
 
     self.reg_cache = None
 

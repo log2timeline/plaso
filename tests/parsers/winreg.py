@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.parsers import winreg
-from plaso.winregistry import regf
+from plaso.dfwinreg import regf as dfwinreg_regf
 
 from tests.parsers import test_lib
 
@@ -43,7 +43,7 @@ class WinRegTest(test_lib.ParserTestCase):
       A Windows Registry file object (instance of WinRegFile).
     """
     file_entry = self._GetTestFileEntryFromPath([filename])
-    winreg_file = regf.WinPyregfFile()
+    winreg_file = dfwinreg_regf.WinPyregfFile()
     winreg_file.OpenFileEntry(file_entry)
 
     return winreg_file

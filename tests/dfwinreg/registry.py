@@ -4,9 +4,9 @@
 
 import unittest
 
-from plaso.winregistry import registry as winregistry
+from plaso.dfwinreg import registry as dfwinreg
 
-from tests.winregistry import test_lib
+from tests.dfwinreg import test_lib
 
 
 class RegistryUnitTest(test_lib.WinRegTestCase):
@@ -14,8 +14,8 @@ class RegistryUnitTest(test_lib.WinRegTestCase):
 
   def testInitialize(self):
     """Tests the initialization function."""
-    registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF)
+    registry = dfwinreg.WinRegistry(
+        backend=dfwinreg.WinRegistry.BACKEND_PYREGF)
 
     self.assertNotEqual(registry, None)
 

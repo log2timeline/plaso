@@ -3,12 +3,12 @@
 
 import logging
 
+from plaso.dfwinreg import cache as dfwinreg_cache
+from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.winregistry import cache
-from plaso.winregistry import registry as winregistry
 
 
 # TODO: add tests for this class.
@@ -79,7 +79,7 @@ class PluginList(object):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       reg_cache: Optional Windows Registry objects cache (instance of
-                 WinRegistryCache). The default is None.
+                 dfwinreg.WinRegistryCache). The default is None.
       plugin_names: Optional list of plugin names, if defined only keys from
                     these plugins will be expanded. The default is None which
                     means all key plugins will get expanded keys.
@@ -215,7 +215,7 @@ class WinRegistryParser(interface.BasePluginsParser):
     """Determines the Registry file type.
 
     Args:
-      winreg_file: A Windows Registry file (instance of WinRegFile).
+      winreg_file: A Windows Registry file (instance of dfwinreg.WinRegFile).
 
     Returns:
       The Registry file type.
@@ -244,8 +244,9 @@ class WinRegistryParser(interface.BasePluginsParser):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      winreg_file: A Windows Registry file (instance of WinRegFile).
-      registry_cache: The Registry cache object (instance of WinRegistryCache).
+      winreg_file: A Windows Registry file (instance of dfwinreg.WinRegFile).
+      registry_cache: The Registry cache object (instance of
+                      dfwinreg.WinRegistryCache).
       registry_type: The Registry file type.
     """
     plugins = {}
@@ -330,8 +331,8 @@ class WinRegistryParser(interface.BasePluginsParser):
           u'signature.').format(self.NAME, display_name))
 
     # TODO: refactor this.
-    registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+    registry = dfwinreg_registry.WinRegistry(
+        dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
     file_entry = parser_mediator.GetFileEntry()
     try:
@@ -348,7 +349,7 @@ class WinRegistryParser(interface.BasePluginsParser):
           u'Windows Registry file {0:s}: detected as: {1:s}'.format(
               display_name, registry_type))
 
-      registry_cache = cache.WinRegistryCache()
+      registry_cache = dfwinreg_cache.WinRegistryCache()
       registry_cache.BuildCache(winreg_file, registry_type)
 
       self._ParseRegistryFile(

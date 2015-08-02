@@ -4,10 +4,10 @@
 
 import unittest
 
-from plaso.winregistry import cache
-from plaso.winregistry import registry as winregistry
+from plaso.dfwinreg import cache
+from plaso.dfwinreg import registry
 
-from tests.winregistry import test_lib
+from tests.dfwinreg import test_lib
 
 
 class CacheTest(test_lib.WinRegTestCase):
@@ -15,12 +15,12 @@ class CacheTest(test_lib.WinRegTestCase):
 
   def testBuildCache(self):
     """Tests creating a Windows Registry objects cache."""
-    registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF)
+    test_registry = registry.WinRegistry(
+        backend=registry.WinRegistry.BACKEND_PYREGF)
 
     test_file = self._GetTestFilePath([u'SYSTEM'])
     file_entry = self._GetTestFileEntry(test_file)
-    winreg_file = registry.OpenFileEntry(file_entry, codepage=u'cp1252')
+    winreg_file = test_registry.OpenFileEntry(file_entry, codepage=u'cp1252')
 
     winreg_cache = cache.WinRegistryCache()
 

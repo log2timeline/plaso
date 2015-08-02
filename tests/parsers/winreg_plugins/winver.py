@@ -4,12 +4,13 @@
 
 import unittest
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winver
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class WinVerPluginTest(test_lib.RegistryPluginTestCase):
@@ -24,18 +25,27 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
-        u'ProductName', u'MyTestOS'.encode(u'utf_16_le'), 1, 123))
-    values.append(winreg_test_lib.TestRegValue(
-        u'CSDBuildNumber', u'5'.encode(u'utf_16_le'), 1, 1892))
-    values.append(winreg_test_lib.TestRegValue(
-        u'RegisteredOwner', u'A Concerned Citizen'.encode(u'utf_16_le'),
-        1, 612))
-    values.append(winreg_test_lib.TestRegValue(
-        u'InstallDate', b'\x13\x1aAP', 3, 1001))
+    value_data = u'MyTestOS'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'ProductName', value_data, dfwinreg_definitions.REG_SZ, offset=123))
 
-    winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346445929000000, values, 153)
+    value_data = u'5'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'CSDBuildNumber', value_data, dfwinreg_definitions.REG_SZ,
+        offset=1892))
+
+    value_data = u'A Concerned Citizen'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'RegisteredOwner', value_data, dfwinreg_definitions.REG_SZ,
+        offset=612))
+
+    value_data = b'\x13\x1aAP'
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'InstallDate', value_data, dfwinreg_definitions.REG_BINARY,
+        offset=1001))
+
+    timestamp = timelib.Timestamp.CopyFromString(u'2012-08-31 20:09:55')
+    winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

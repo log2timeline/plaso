@@ -5,10 +5,10 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.winregistry import cache
-from plaso.winregistry import definitions
-from plaso.winregistry import path_expander
-from plaso.winregistry import regf
+from plaso.dfwinreg import cache
+from plaso.dfwinreg import definitions
+from plaso.dfwinreg import path_expander
+from plaso.dfwinreg import regf
 
 
 class WinRegistryFileMapping(object):

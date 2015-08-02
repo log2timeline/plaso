@@ -4,8 +4,8 @@
 import abc
 import logging
 
+from plaso.dfwinreg import path_expander as dfwinreg_path_expander
 from plaso.parsers import plugins
-from plaso.winregistry import path_expander as winreg_path_expander
 
 
 class RegistryPlugin(plugins.BasePlugin):
@@ -50,7 +50,7 @@ class RegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
@@ -61,7 +61,7 @@ class RegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
 
     Raises:
@@ -97,7 +97,7 @@ class KeyPlugin(RegistryPlugin):
                  WinRegistryCache). The default is None.
     """
     super(KeyPlugin, self).__init__(reg_cache=reg_cache)
-    self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+    self._path_expander = dfwinreg_path_expander.WinRegistryKeyPathExpander(
         reg_cache=reg_cache)
     self.expanded_keys = None
 
@@ -146,7 +146,7 @@ class KeyPlugin(RegistryPlugin):
       parser_mediator: A parser context object (instance of ParserContext).
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
@@ -159,7 +159,7 @@ class KeyPlugin(RegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
@@ -196,7 +196,7 @@ class ValuePlugin(RegistryPlugin):
       parser_mediator: A parser context object (instance of ParserContext).
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
@@ -209,7 +209,7 @@ class ValuePlugin(RegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
