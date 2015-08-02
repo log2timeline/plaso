@@ -5,8 +5,8 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.lib import errors
 from plaso.dfwinreg import registry as dfwinreg_registry
+from plaso.lib import errors
 
 
 class PreprocessPluginsManager(object):
