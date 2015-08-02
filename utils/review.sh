@@ -64,6 +64,7 @@ while test $# -gt 0;
 do
   case $1 in
   --diffbase )
+    shift;
     DIFFBASE=$1;
     shift;
     ;;
