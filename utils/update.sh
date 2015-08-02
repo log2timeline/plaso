@@ -9,6 +9,7 @@ SCRIPTNAME=`basename $0`;
 
 BROWSER_PARAM="";
 CL_NUMBER="";
+DIFFBASE="upstream/master";
 
 if ! test -f "utils/common.sh";
 then
@@ -26,6 +27,11 @@ HAVE_REMOTE_ORIGIN=have_remote_origin;
 while test $# -gt 0;
 do
   case $1 in
+  --diffbase )
+    DIFFBASE=$1;
+    shift;
+    ;;
+
   --nobrowser | --no-browser | --no_browser )
     BROWSER_PARAM="--no_oauth2_webbrowser";
     shift;
@@ -66,6 +72,9 @@ then
   echo "  CL_NUMBER: optional change list (CL) number that is to be updated.";
   echo "             If no CL number is provided the value is read from the";
   echo "             corresponding file in: .review/";
+  echo "";
+  echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
+  echo "              The default is upstream/master";
   echo "";
   echo "  --nobrowser: forces upload.py not to open a separate browser";
   echo "               process to obtain OAuth2 credentials for Rietveld";
@@ -168,7 +177,7 @@ then
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} -i ${CL_NUMBER} -m "Code updated." \
-      -t "${DESCRIPTION}" -y -- upstream/master;
+      -t "${DESCRIPTION}" -y -- ${DIFFBASE};
 
 else
   CACHE_PARAM="";
