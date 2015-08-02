@@ -7,10 +7,10 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
+from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import knowledge_base
 from plaso.lib import event
 from plaso.preprocessors import windows
-from plaso.dfwinreg import registry as dfwinreg_registry
 
 from tests.preprocessors import test_lib
 
