@@ -3,6 +3,7 @@
 
 import binascii
 import os
+import plistlib
 
 from binplist import binplist
 
@@ -23,18 +24,31 @@ class PlistFile(object):
     """Retrieves a plist value by path.
 
     Args:
-      key: the plist key (instance of plistlib._InternalDict).
-      path_segments: a list of path segments relative from the root
+      path_segments: a list of path segments strings relative from the root
                      of the plist.
 
     Returns:
-      The value of the key specified by the path.
+      The value of the key specified by the path or None.
     """
     key = self.root_key
     for path_segment in path_segments:
-      key = key.get(path_segment)
+      if isinstance(key, (dict, plistlib._InternalDict)):
+        key = key.get(path_segment)
+
+      elif isinstance(key, list):
+        try:
+          list_index = int(path_segment, 10)
+        except ValueError:
+          return
+
+        key = key[list_index]
+
+      else:
+        return
+
       if not key:
-        break
+        return
+
     return key
 
   def Read(self, file_object):
