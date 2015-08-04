@@ -319,7 +319,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Sets whether the tool is using ZeroMQ for queueing or not.
 
     Args:
-      zero_mq = boolean, when True the tool will use ZeroMQ.
+      use_zeromq: boolean, when True the tool will use ZeroMQ for queuing.
     """
     self._use_zeromq = use_zeromq
     if self._use_zeromq:
@@ -349,8 +349,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
                        interest.
 
     Returns:
-      A counter (an instance of counter.Counter) that contains the analysis
-      plugin results or None.
+      A counter (an instance of collections.Counter) that tracks the number of
+      events extracted from storage, and the analysis plugin results.
 
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
@@ -437,9 +437,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       preferred_encoding: the preferred encoding to use for the preprocess
                           object.
       pre_obj: The preprocessor object (instance of PreprocessObject).
-      analysis_queue_port: Optional TCP port that the ZeroMQ analysis report
+      analysis_queue_port: optional TCP port that the ZeroMQ analysis report
                            queues should use.
-      analysis_report_incoming_queue: Optional queue (instance of Queue) that
+      analysis_report_incoming_queue: optional queue (instance of Queue) that
                                       reports should to pushed to, when ZeroMQ
                                       is not in use.
 
@@ -491,8 +491,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Sets analysis plugin options in a preprocessor object.
 
     Args:
-      analysis_plugins: The list of analysis plugins to add.
-      pre_obj: The preprocessor object (instance of PreprocessObject).
+      analysis_plugins: the list of analysis plugins to add.
+      pre_obj: the preprocessor object (instance of PreprocessObject).
       preferred_encoding: the preferred encoding to use for the preprocess
                           object.
     Returns:
@@ -517,12 +517,15 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return pre_obj
 
   def _GetLastGoodPreprocess(self, storage_file):
-    """Gets the last preprocessing object with time zone information.
+    """Gets the last stored preprocessing object with time zone information.
 
     Args:
-      storage_file: A Plaso storage file object.
+      storage_file: a Plaso storage file object.
+
+    Returns:
+      A preprocess object (instance of PreprocessObject).
     """
-    # Within all preprocessing objects, try to get the last one that has
+    # From all preprocessing objects, try to get the last one that has
     # time zone information stored in it, the highest chance of it
     # containing the information we are seeking (defaulting to the last
     # one).
@@ -540,13 +543,17 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Reads event objects from the storage to process and filter them.
 
     Args:
-      storage_file: The storage file object (instance of StorageFile).
-      output_buffer: The output buffer object (instance of EventBuffer).
-      my_filter: Optional filter object (instance of PFilter).
+      storage_file: the storage file object (instance of StorageFile).
+      output_buffer: the output buffer object (instance of EventBuffer).
+      my_filter: optional filter object (instance of PFilter).
                  The default is None.
-      filter_buffer: Optional filter buffer used to store previously discarded
+      filter_buffer: optional filter buffer used to store previously discarded
                      events to store time slice history. The default is None.
-      analysis_queues: Optional list of analysis queues. The default is None.
+      analysis_queues: optional list of analysis queues. The default is None.
+
+    Returns:
+      A Counter object, that tracks the number of unique events extracted from
+      storage.
     """
     counter = collections.Counter()
     my_limit = getattr(my_filter, u'limit', 0)
