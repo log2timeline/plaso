@@ -244,8 +244,6 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
   def testSetAnalysisPluginProcessInformation(self):
     """Test the _SetAnalysisPluginProcessInformation method."""
     test_front_end = psort.PsortFrontend()
-    storage_file_path = self._GetTestFilePath([u'psort_test.json.out'])
-    storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
     analysis_plugins = [test_lib.TestAnalysisPlugin(None)]
 
     preprocess_object = event.PreprocessObject()
@@ -255,7 +253,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     self.assertIsNotNone(new_preprocess_object)
     plugin_names = new_preprocess_object.collection_information[u'plugins']
     time_of_run = new_preprocess_object.collection_information[u'time_of_run']
-    method  = new_preprocess_object.collection_information[u'method']
+    method = new_preprocess_object.collection_information[u'method']
 
     for analysis_plugin in analysis_plugins:
       self.assertIn(analysis_plugin.NAME, plugin_names)
