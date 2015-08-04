@@ -429,7 +429,24 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
   def _StartAnalysisPlugins(
       self, analysis_plugins, preferred_encoding, pre_obj,
       analysis_queue_port=None, analysis_report_incoming_queue=None):
-    """Start all the analysis plugin."""
+    """Start all the analysis plugin.
+
+    Args:
+      analysis_plugins: list of analysis plugin objects (instance of
+                        AnalysisPlugin) that should be started.
+      preferred_encoding: the preferred encoding to use for the preprocess
+                          object.
+      pre_obj: The preprocessor object (instance of PreprocessObject).
+      analysis_queue_port: Optional TCP port that the ZeroMQ analysis report
+                           queues should use.
+      analysis_report_incoming_queue: Optional queue (instance of Queue) that
+                                      reports should to pushed to, when ZeroMQ
+                                      is not in use.
+
+    Returns:
+      The preprocess object (instance of PreprocessObject), updated with
+      information about the analysis plugins that were started.
+    """
     logging.info(u'Starting analysis plugins.')
     pre_obj = self._SetAnalysisPluginProcessInformation(
         analysis_plugins, pre_obj, preferred_encoding)
@@ -474,9 +491,13 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Sets analysis plugin options in a preprocessor object.
 
     Args:
-      analysis_plugins: A list of analysis plugins.
-      pre_obj: The preprocessor object.
-      preferred_encoding: The preferred encoding.
+      analysis_plugins: The list of analysis plugins to add.
+      pre_obj: The preprocessor object (instance of PreprocessObject).
+      preferred_encoding: the preferred encoding to use for the preprocess
+                          object.
+    Returns:
+      The preprocessor object, with all the correct analysis plugin options
+      set.
     """
     if preferred_encoding:
       cmd_line = u' '.join(sys.argv)
@@ -496,7 +517,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return pre_obj
 
   def _GetLastGoodPreprocess(self, storage_file):
-    """Gets the last prepreprocessing obect with time zone information.
+    """Gets the last preprocessing object with time zone information.
 
     Args:
       storage_file: A Plaso storage file object.

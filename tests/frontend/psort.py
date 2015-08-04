@@ -114,18 +114,21 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     self._front_end = psort.PsortFrontend()
 
     # TODO: have sample output generated from the test.
-    self._test_file = os.path.join(self._TEST_DATA_PATH, u'psort_test.out')
+    self._test_file_proto = os.path.join(
+        self._TEST_DATA_PATH, u'psort_test.proto.out')
+    self._test_file_json = os.path.join(
+        self._TEST_DATA_PATH, u'psort_test.json.out')
     self.first = timelib.Timestamp.CopyFromString(u'2012-07-24 21:45:24')
     self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
   def testReadEntries(self):
-    """Ensure returned EventObjects from the storage are within timebounds."""
+    """Ensure returned EventObjects from the storage are within time bounds."""
     timestamp_list = []
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
 
-    storage_file = storage.StorageFile(self._test_file, read_only=True)
+    storage_file = storage.StorageFile(self._test_file_proto, read_only=True)
     storage_file.SetStoreLimit()
 
     event_object = storage_file.GetSortedEntry()
@@ -147,7 +150,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     test_front_end.SetPreferredLanguageIdentifier(u'en-US')
     test_front_end.SetQuietMode(True)
 
-    storage_file_path = self._GetTestFilePath([u'psort_test.out'])
+    storage_file_path = self._GetTestFilePath([u'psort_test.proto.out'])
     storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
 
     output_writer = test_lib.StringIOOutputWriter()
@@ -227,6 +230,38 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         PsortTestEventFormatter)
+
+  def testGetLastGoodPreprocess(self):
+    """Tests the last good preprocess method."""
+    test_front_end = psort.PsortFrontend()
+    storage_file = test_front_end.OpenStorage(
+        self._test_file_json, read_only=True)
+    preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
+    self.assertIsNotNone(preprocessor_object)
+    timezone = getattr(preprocessor_object, u'zone')
+    self.assertEqual(timezone.zone, u'Iceland')
+
+  def testSetAnalysisPluginProcessInformation(self):
+    """Test the _SetAnalysisPluginProcessInformation method."""
+    test_front_end = psort.PsortFrontend()
+    storage_file_path = self._GetTestFilePath([u'psort_test.json.out'])
+    storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
+    analysis_plugins = [test_lib.TestAnalysisPlugin(None)]
+
+    preprocess_object = event.PreprocessObject()
+    preprocess_object.SetCollectionInformationValues({})
+    new_preprocess_object = test_front_end._SetAnalysisPluginProcessInformation(
+        analysis_plugins, preprocess_object, u'utf-8')
+    self.assertIsNotNone(new_preprocess_object)
+    plugin_names = new_preprocess_object.collection_information[u'plugins']
+    time_of_run = new_preprocess_object.collection_information[u'time_of_run']
+    method  = new_preprocess_object.collection_information[u'method']
+
+    for analysis_plugin in analysis_plugins:
+      self.assertIn(analysis_plugin.NAME, plugin_names)
+    self.assertAlmostEqual(timelib.Timestamp.GetNow(), time_of_run, 2000000)
+    self.assertIsNotNone(method)
+
 
   # TODO: add bogus data location test.
 
