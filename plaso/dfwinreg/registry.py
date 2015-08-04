@@ -343,10 +343,10 @@ class WinRegistry(object):
       registry_file: the Registry file object (instance of WinRegistyFile).
 
     Returns:
-      The Registry type.
+      The Windows Registry file type, e.g. NTUSER, SOFTWARE.
     """
-    registry_type = definitions.REGISTRY_FILE_TYPE_UNKNOWN
-    for registry_type, key_paths in iter(
+    registry_file_type = definitions.REGISTRY_FILE_TYPE_UNKNOWN
+    for registry_file_type, key_paths in iter(
         self._KEY_PATHS_PER_REGISTRY_TYPE.items()):
 
       # If all key paths are found we consider the file to match a certain
@@ -359,7 +359,7 @@ class WinRegistry(object):
       if match:
         break
 
-    return registry_type
+    return registry_file_type
 
   # TODO: in the process of being deprecated.
   def OpenFileEntry(self, file_entry, codepage=u'cp1252'):

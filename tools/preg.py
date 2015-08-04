@@ -810,7 +810,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     them, one by one.
     """
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[self.registry_file])
+        registry_file_types=[self.registry_file])
 
     for registry_helper in registry_helpers:
       try:
@@ -845,7 +845,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     all available plugins.
     """
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[self.registry_file], plugin_names=self.plugin_names)
+        registry_file_types=[self.registry_file],
+        plugin_names=self.plugin_names)
 
     key_paths = [self._key_path]
 
@@ -1036,15 +1037,15 @@ class PregMagics(magic.Magics):
     elif line.startswith(u'scan'):
       # Line contains: "scan REGISTRY_TYPES" where REGISTRY_TYPES is a comma
       # separated list.
-      registry_type_string = line[5:]
-      if not registry_type_string:
-        registry_types = preg.PregRegistryHelper.REG_TYPES.keys()
+      registry_file_type_string = line[5:]
+      if not registry_file_type_string:
+        registry_file_types = preg.PregRegistryHelper.REG_TYPES.keys()
       else:
-        registry_types = [
-            string.strip() for string in registry_type_string.split(u',')]
+        registry_file_types = [
+            string.strip() for string in registry_file_type_string.split(u',')]
 
       registry_helpers = self.console.preg_front_end.GetRegistryHelpers(
-          registry_types=registry_types)
+          registry_file_types=registry_file_types)
 
       for registry_helper in registry_helpers:
         self.console.AddRegistryHelper(registry_helper)
@@ -1522,15 +1523,16 @@ class PregConsole(object):
     """Runs the interactive console."""
     source_type = self.preg_tool.source_type
     if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
-      registry_types = []
+      registry_file_types = []
     elif self.preg_tool.registry_file:
-      registry_types = [self.preg_tool.registry_file]
+      registry_file_types = [self.preg_tool.registry_file]
     else:
       # No Registry type specified use all available types instead.
-      registry_types = preg.PregRegistryHelper.REG_TYPES.keys()
+      registry_file_types = preg.PregRegistryHelper.REG_TYPES.keys()
 
     registry_helpers = self.preg_front_end.GetRegistryHelpers(
-        registry_types=registry_types, plugin_names=self.preg_tool.plugin_names)
+        registry_file_types=registry_file_types,
+        plugin_names=self.preg_tool.plugin_names)
 
     for registry_helper in registry_helpers:
       self.AddRegistryHelper(registry_helper)

@@ -94,7 +94,8 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self._knowledge_base_object.pre_obj.sysregistry = u'C:/Windows/Foo'
     expected_paths = [u'C:/Windows/Foo/SOFTWARE']
 
-    paths = self._front_end.GetRegistryFilePaths(registry_type=u'SOFTWARE')
+    paths = self._front_end.GetRegistryFilePaths(
+        registry_file_type=u'SOFTWARE')
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
   def testGetRegistryHelpers(self):
@@ -104,7 +105,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
       _ = self._front_end.GetRegistryHelpers()
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SYSTEM'])
+        registry_file_types=[u'SYSTEM'])
 
     self.assertEquals(len(registry_helpers), 1)
 
@@ -115,7 +116,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     self._ConfigureStorageMediaFileTest()
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'NTUSER'])
+        registry_file_types=[u'NTUSER'])
 
     self.assertEquals(len(registry_helpers), 3)
 
@@ -131,7 +132,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertEquals(len(registry_helpers), 3)
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SAM'])
+        registry_file_types=[u'SAM'])
     self.assertEquals(len(registry_helpers), 1)
 
     # TODO: Add a test for getting Registry helpers from a storage media file
@@ -159,7 +160,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self._ConfigureSingleFileTest(knowledge_base_values=knowledge_base_values)
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SYSTEM'])
+        registry_file_types=[u'SYSTEM'])
     registry_helper = registry_helpers[0]
 
     plugins = self._front_end.GetRegistryPluginsFromRegistryType(u'SYSTEM')

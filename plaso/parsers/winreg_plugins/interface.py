@@ -31,15 +31,16 @@ class RegistryPlugin(plugins.BasePlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
 
@@ -57,7 +58,7 @@ class RegistryPlugin(plugins.BasePlugin):
     if key is None:
       raise ValueError(u'Key is not set.')
 
-    del kwargs[u'registry_type']
+    del kwargs[u'registry_file_type']
     del kwargs[u'codepage']
 
     # This will raise if unhandled keyword arguments are passed.
@@ -127,42 +128,43 @@ class KeyPlugin(RegistryPlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Processes a Windows Registry key.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     if self.expanded_keys is None:
       self.ExpandKeys(parser_mediator)
 
     super(KeyPlugin, self).Process(
-        parser_mediator, key=key, registry_type=registry_type,
+        parser_mediator, key=key, registry_file_type=registry_file_type,
         codepage=codepage)
 
     if key and key.path in self.expanded_keys:
       self.GetEntries(
-          parser_mediator, key=key, registry_type=registry_type, **kwargs)
+          parser_mediator, key=key, registry_file_type=registry_file_type,
+          **kwargs)
 
 
 class ValuePlugin(RegistryPlugin):
@@ -175,38 +177,38 @@ class ValuePlugin(RegistryPlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Processes a Windows Registry value.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     super(ValuePlugin, self).Process(
-        parser_mediator, key=key, registry_type=registry_type,
+        parser_mediator, key=key, registry_file_type=registry_file_type,
         codepage=codepage)
 
     values = frozenset([value.name for value in key.GetValues()])
     if self.REG_VALUES.issubset(values):
       self.GetEntries(
-          parser_mediator, key=key, registry_type=registry_type,
+          parser_mediator, key=key, registry_file_type=registry_file_type,
           codepage=codepage, **kwargs)
