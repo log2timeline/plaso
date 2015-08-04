@@ -19,7 +19,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testCompareStorageInformation(self):
     """Tests the CompareStorageInformation function."""
-    test_file1 = self._GetTestFilePath([u'psort_test.out'])
+    test_file1 = self._GetTestFilePath([u'psort_test.proto.out'])
     test_file2 = self._GetTestFilePath([u'pinfo_test.out'])
 
     options = cli_test_lib.TestOptions()
@@ -43,7 +43,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.out'])
+    test_file = self._GetTestFilePath([u'psort_test.proto.out'])
 
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file
@@ -113,9 +113,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'\trecursive = False\n'
         b'\tpreferred_encoding = UTF-8\n'
         b'\tworkers = 12\n'
-        b'\toutput_file = psort_test.out\n'
+        b'\toutput_file = psort_test.proto.out\n'
         b'\tversion = 1.1.0-dev_20140213\n'
-        b'\tcmd_line = /usr/local/bin/log2timeline.py psort_test.out syslog '
+        b'\tcmd_line = /usr/local/bin/log2timeline.py psort_test.proto.out syslog '
         b'--buffer_size=300\n'
         b'\tpreprocess = False\n'
         b'\truntime = multi threaded\n'

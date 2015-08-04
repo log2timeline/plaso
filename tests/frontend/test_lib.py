@@ -5,6 +5,8 @@ import io
 import os
 import unittest
 
+from plaso.analysis import interface as analysis_interface
+
 
 class StringIOOutputWriter(object):
   """Class that implements a StringIO output writer."""
@@ -36,6 +38,38 @@ class StringIOOutputWriter(object):
   def Write(self, string):
     """Writes a string to the StringIO object."""
     self._string_io.write(string)
+
+class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
+  """Test analysis plugin."""
+
+  NAME = u'test_analysis_plugin'
+
+  def CompileReport(self, unused_analysis_mediator):
+    """Compiles a report of the analysis.
+
+    After the plugin has received every copy of an event to
+    analyze this function will be called so that the report
+    can be assembled.
+
+    Args:
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
+
+    Returns:
+      The analysis report (instance of AnalysisReport).
+    """
+    return
+
+  def ExamineEvent(
+      self, unused_analysis_mediator, unused_event_object, **unused_kwargs):
+    """Analyzes an event object.
+
+    Args:
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
+      event_object: An event object (instance of EventObject).
+    """
+    return
 
 
 class FrontendTestCase(unittest.TestCase):

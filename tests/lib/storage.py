@@ -281,7 +281,7 @@ class StoreStorageTest(unittest.TestCase):
     # TODO: have sample output generated from the test.
     # TODO: Use input data with a defined year.  syslog parser chooses a
     # year based on system clock; forcing updates to test file if regenerated.
-    self.test_file = os.path.join(u'test_data', u'psort_test.out')
+    self.test_file = os.path.join(u'test_data', u'psort_test.proto.out')
     self.first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
     self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
