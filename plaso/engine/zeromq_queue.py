@@ -19,7 +19,7 @@ class ZeroMQQueue(queue.Queue):
   """Class that defines an interfaces for ZeroMQ backed Plaso queues.
 
   Attributes:
-    port: The tcp port that the queue is connected or bound to. If the queue is
+    port: The TCP port that the queue is connected or bound to. If the queue is
           not yet bound or connected to a port, this value will be None.
   """
   def __init__(
@@ -32,7 +32,9 @@ class ZeroMQQueue(queue.Queue):
                    ZeroMQ socket. This argument must be one of the ZeroMQ
                    socket types defined in zmq.
       connect: Whether this queue should connect or bind to the given port. The
-               default is False, which indicates that the queue should bind.
+               default is False, which indicates that the queue should bind. If
+               this argument is True, a value for the 'port' argument must be
+               specified.
       delay_start: whether a ZeroMQ socket should be created the first time the
                    queue is pushed to or popped from, rather than at queue
                    object initialization. This is useful if a queue needs to be
@@ -45,7 +47,7 @@ class ZeroMQQueue(queue.Queue):
             indicates that the queue should choose a random port to bind to.
       timeout_seconds: The number of seconds that calls to PopItem and PushItem
                        may block for, before returning queue.QueueEmpty.
-      """
+    """
     if connect and not port:
       raise AttributeError(u'No port specified to connect to.')
     self.port = port
@@ -83,13 +85,23 @@ class ZeroMQQueue(queue.Queue):
       logging.info(u'Bound to random port {0:d}'.format(self.port))
 
   def Start(self):
-    """Starts this queue, causing the creation of a ZeroMQ socket."""
+    """Starts this queue, causing the creation of a ZeroMQ socket.
+
+    Raises:
+      QueueAlreadyStarted: If the queue is already started, and a socket already
+      exists.
+    """
     if self._zmq_socket:
       raise QueueAlreadyStarted
     self._CreateZMQSocket()
 
   def Close(self):
-    """Closes the queue."""
+    """Closes the queue.
+
+    Raises:
+      QueueAlreadyClosed: If the queue is not started, or has already been
+      closed.
+    """
     if not self._zmq_socket:
       raise QueueAlreadyClosed
     self._zmq_socket.close(self._linger_seconds)
