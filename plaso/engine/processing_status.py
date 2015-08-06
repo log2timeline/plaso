@@ -13,6 +13,9 @@ class CollectorStatus(object):
     identifier: the extraction worker identifier.
     last_running_time: timestamp of the last update when the process
                        had a running process status.
+    path_spec_queue_port: the port that the path spec queue is bound to, or None
+                          if the queue is not yet bound, or  the queue does
+                          not use a port.
     pid: the collector process identifier (PID).
     process_status: string containing the process status.
     produced_number_of_path_specs: the total number of path specifications
@@ -27,6 +30,7 @@ class CollectorStatus(object):
     super(CollectorStatus, self).__init__()
     self.identifier = None
     self.last_running_time = 0
+    self.path_spec_queue_port = None
     self.pid = None
     self.process_status = None
     self.produced_number_of_path_specs = 0
@@ -80,11 +84,17 @@ class StorageWriterStatus(object):
   """The storage writer status.
 
   Attributes:
+    event_object_queue_port: the port that the event object queue is bound to,
+                             or None if the queue is not yet bound, or the
+                             queue does not use a port.
     identifier: the extraction worker identifier.
     last_running_time: timestamp of the last update when the process
                        had a running process status.
     number_of_events: the total number of events received
                       by the storage writer.
+    parse_error_queue_port: the port that the path spec queue is bound to, or
+                            None i the queue is not yet bound, or the the queue
+                            does not use a port.
     pid: the storage writer process identifier (PID).
     process_status: string containing the process status.
     status: string containing the storage writer status.

@@ -56,33 +56,47 @@ class ZeroMQQueue(queue.Queue):
     self._zmq_socket = None
     self._timeout_milliseconds = timeout_seconds * 1000
     self._socket_type = socket_type
+    self.name = u'Unnamed'
     if not delay_start:
       self._CreateZMQSocket()
 
+  @property
+  def timeout_seconds(self):
+    return self._timeout_milliseconds / 1000
+
+  @timeout_seconds.setter
+  def timeout_seconds(self, value):
+    """The number of seconds that a PopItem or PushItem call can block for."""
+    self._timeout_milliseconds = value * 1000
+    self._SetSocketTimeouts()
+
+  def _SetSocketTimeouts(self):
+    """Set the timeouts for the socket send/receive."""
+    if self._socket_type == zmq.PULL:
+      self._zmq_socket.setsockopt(
+          zmq.RCVTIMEO, self._timeout_milliseconds)
+    elif self._socket_type == zmq.PUSH:
+      self._zmq_socket.setsockopt(
+          zmq.SNDTIMEO, self._timeout_milliseconds)
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket to back this queue interface."""
     zmq_context = zmq.Context()
     self._zmq_socket = zmq_context.socket(self._socket_type)
-
-    if self._socket_type == zmq.PULL or self._socket_type == zmq.SUB:
-      self._zmq_socket.setsockopt(
-          zmq.RCVTIMEO, self._timeout_milliseconds)
-    elif self._socket_type == zmq.PUSH or self._socket_type == zmq.PUB:
-      self._zmq_socket.setsockopt(
-          zmq.SNDTIMEO, self._timeout_milliseconds)
+    self._SetSocketTimeouts()
 
     if self._connect:
       address = u'tcp://127.0.0.1:{0}'.format(self.port)
-      logging.debug(u'Connecting to {0:s}'.format(address))
+      logging.debug(u'{0:s} Connecting to {1:s}'.format(self.name, address))
       self._zmq_socket.connect(address)
     elif self.port:
       address = u'tcp://127.0.0.1:{0}'.format(self.port)
-      logging.debug(u'Binding to {0:s}'.format(address))
+      logging.debug(u'{0:s} Binding to {1:s}'.format(self.name, address))
       self._zmq_socket.bind(address)
     else:
       self.port = self._zmq_socket.bind_to_random_port(u'tcp://127.0.0.1')
-      logging.info(u'Bound to random port {0:d}'.format(self.port))
+      logging.info(u'{0:s} Bound to random port {1:d}'.format(
+          self.name, self.port))
 
   def Start(self):
     """Starts this queue, causing the creation of a ZeroMQ socket.
@@ -95,16 +109,31 @@ class ZeroMQQueue(queue.Queue):
       raise QueueAlreadyStarted
     self._CreateZMQSocket()
 
-  def Close(self):
+  def Close(self, abort=False):
     """Closes the queue.
+
+    Args:
+      abort: If the Close is the result of an abort condition.
 
     Raises:
       QueueAlreadyClosed: If the queue is not started, or has already been
       closed.
     """
+    if abort:
+      self._linger_seconds = 0
+
     if not self._zmq_socket:
+      # If we're aborting, things have already gone badly, so we won't throw
+      # an additional exception.
+      if abort:
+        return
       raise QueueAlreadyClosed
+
     self._zmq_socket.close(self._linger_seconds)
+
+  def Empty(self):
+    """Empties all items from the queue."""
+    return
 
   def IsEmpty(self):
     """Checks if the queue is empty.
@@ -157,12 +186,23 @@ class ZeroMQPullQueue(ZeroMQQueue):
         linger_seconds=linger_seconds, port=port,
         timeout_seconds=timeout_seconds)
 
+  def Empty(self):
+    """Empties the queue."""
+    try:
+      while True:
+        if self._zmq_socket:
+          self._zmq_socket.recv_pyobj()
+    except zmq.error.Again:
+      pass
+
   def PopItem(self):
     """Pops an item off the queue.
 
     Raises:
       errors.QueueEmpty: If the queue is empty, and no item could be popped.
     """
+    logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
+        self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
     try:
@@ -218,6 +258,8 @@ class ZeroMQPushQueue(ZeroMQQueue):
 
   def PushItem(self, item):
     """Push an item on to the queue."""
+    logging.debug(u'Push on {0:s} queue, port {1:d}'.format(
+        self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
     self._zmq_socket.send_pyobj(item)

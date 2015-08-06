@@ -135,6 +135,7 @@ class Collector(queue.ItemQueueProducer):
     return {
         u'processing_status': self._status,
         u'produced_number_of_path_specs': produced_number_of_path_specs,
+        u'path_spec_queue_port': getattr(self._queue, u'port', None),
         u'type': definitions.PROCESS_TYPE_COLLECTOR}
 
   def SetCollectDirectoryMetadata(self, collect_directory_metadata):
