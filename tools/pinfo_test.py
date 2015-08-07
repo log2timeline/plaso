@@ -19,7 +19,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testCompareStorageInformation(self):
     """Tests the CompareStorageInformation function."""
-    test_file1 = self._GetTestFilePath([u'psort_test.proto.out'])
+    test_file1 = self._GetTestFilePath([u'psort_test.proto.plaso'])
     test_file2 = self._GetTestFilePath([u'pinfo_test.out'])
 
     options = cli_test_lib.TestOptions()
@@ -43,7 +43,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.out'])
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
 
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file

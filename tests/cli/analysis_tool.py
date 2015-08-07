@@ -45,7 +45,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
-    options.storage_file = self._GetTestFilePath([u'psort_test.proto.out'])
+    options.storage_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
 
     test_tool.ParseOptions(options)
 

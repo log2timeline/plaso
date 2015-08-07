@@ -113,7 +113,7 @@ class PsortToolTest(test_lib.ToolTestCase):
   def testProcessStorageWithMissingParameters(self):
     """Test the ProcessStorage function with half-configured output module."""
     options = cli_test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath([u'psort_test.proto.out'])
+    options.storage_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
     options.output_format = u'test_missing'
 
     output_manager.OutputManager.RegisterOutput(
