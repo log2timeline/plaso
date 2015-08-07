@@ -112,6 +112,13 @@ class WrongPlistPlugin(Error):
   """Error reporting wrong plist plugin used."""
 
 
+class WrongQueueType(Error):
+  """Raised when an unsupported operation is attempted on a queue.
+
+   For example, attempting to Pop from a Push-only queue.
+  """
+
+
 class WrongPlugin(Error):
   """Raised when the plugin is of the wrong type."""
 

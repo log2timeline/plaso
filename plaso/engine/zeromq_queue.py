@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ZeroMQ implementations of the Plaso queue interface."""
 
+import abc
 import logging
 
 import zmq
@@ -20,17 +21,16 @@ class ZeroMQQueue(queue.Queue):
 
   _SOCKET_ADDRESS = u'tcp://127.0.0.1'
   _SOCKET_TYPE = None
+  SOCKET_CONNECTION_BIND = 1
+  SOCKET_CONNECTION_CONNECT = 2
+  SOCKET_CONNECTION_TYPE = None
 
   def __init__(
-      self, connect=False, delay_start=True, linger_seconds=10,
-      port=None, timeout_seconds=5, name=u'Unnamed'):
+      self, delay_start=True, linger_seconds=10, port=None, timeout_seconds=5,
+      name=u'Unnamed'):
     """Initializes a ZeroMQ backed queue.
 
     Args:
-      connect: Optional boolean that governs whether this queue should connect
-               or bind to the given port. The default is False, which indicates
-               that the queue should bind. If this argument is True, a value
-               for the 'port' argument must be specified.
       delay_start: Optional boolean that governs whether a ZeroMQ socket
                    should be created the first time the queue is pushed to or
                    popped from, rather than at queue object initialization.
@@ -45,15 +45,15 @@ class ZeroMQQueue(queue.Queue):
       timeout_seconds: Optional number of seconds that calls to PopItem and
                        PushItem may block for, before returning
                        queue.QueueEmpty.
-      name: Optional name used to identify the queue.
+      name: Optional name to identify the queue.
 
     Raises:
       AttributeError: If the queue is configured to connect to an endpoint,
                       but no port is specified.
     """
-    if connect and not port:
+    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
+        and not port):
       raise AttributeError(u'No port specified to connect to.')
-    self._connect = connect
     self._linger_seconds = linger_seconds
     self._timeout_milliseconds = timeout_seconds * 1000
     self._zmq_socket = None
@@ -89,8 +89,8 @@ class ZeroMQQueue(queue.Queue):
     self._SetSocketTimeouts()
 
     if self.port:
-      address = u'{0:s}:{0:d}'.format(self._SOCKET_ADDRESS, self.port)
-      if self._connect:
+      address = u'{0:s}:{1:d}'.format(self._SOCKET_ADDRESS, self.port)
+      if self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT:
         self._zmq_socket.connect(address)
         logging.debug(u'{0:s} Connected to {1:s}'.format(self.name, address))
       else:
@@ -113,6 +113,7 @@ class ZeroMQQueue(queue.Queue):
       raise errors.QueueAlreadyStarted
     self._CreateZMQSocket()
 
+  # pylint: disable=arguments-differ
   def Close(self, abort=False):
     """Closes the queue.
 
@@ -135,14 +136,9 @@ class ZeroMQQueue(queue.Queue):
 
     self._zmq_socket.close(self._linger_seconds)
 
+  @abc.abstractmethod
   def Empty(self):
-    """Empties all items from the queue.
-
-    Raises:
-      NotImplementedError: If the implementing class does not support
-                           emptying.
-    """
-    raise NotImplementedError
+    """Empties all items from the queue."""
 
   def IsEmpty(self):
     """Checks if the queue is empty.
@@ -159,31 +155,29 @@ class ZeroMQQueue(queue.Queue):
     """
     return False
 
-  def PushItem(self, item):
+  @abc.abstractmethod
+  def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
 
     Args:
       item: The item to push on the queue.
-
-    Raises:
-      NotImplementedError: If Push is not supported by the implementing
-                           class.
+      block: Optional argument to indicate whether the push should be performed
+             in blocking or non-block mode.
     """
-    raise NotImplementedError
 
+  @abc.abstractmethod
   def PopItem(self):
-    """Pops an item off the queue.
-
-    Raises:
-      NotImplementedError: If Pop is not supported by the implementing class.
-    """
-    raise NotImplementedError
+    """Pops an item off the queue."""
 
 
 class ZeroMQPullQueue(ZeroMQQueue):
-  """A Plaso queue backed by a ZeroMQ PULL socket.
+  """Parent class for Plaso queues backed by ZeroMQ PULL sockets.
 
-  This queue may only be used to pop items, not to push.
+  This class should not be instantiated directly, a subclass should be
+  instantiated instead.
+
+  Instances of this class or subclasses may only be used to pop items, not to
+  push.
   """
 
   _SOCKET_TYPE = zmq.PULL
@@ -216,24 +210,46 @@ class ZeroMQPullQueue(ZeroMQQueue):
     except zmq.error.Again:
       raise errors.QueueEmpty
 
-  def PushItem(self, item):
+  def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
 
     Provided for compatibility with the API, but doesn't actually work.
 
     Args:
       item: The item to push on to the queue.
+      block: Optional argument to indicate whether the push should be performed
+             in blocking or non-block mode.
 
     Raises:
-      NotImplementedError: As Push is not supported this queue.
+      WrongQueueType: As Push is not supported this queue.
     """
-    raise NotImplementedError
+    raise errors.WrongQueueType
+
+
+class ZeroMQPullBindQueue(ZeroMQPullQueue):
+  """A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.
+
+  This queue may only be used to pop items, not to push.
+  """
+  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
+
+
+class ZeroMQPullConnectQueue(ZeroMQPullQueue):
+  """A Plaso queue backed by a ZeroMQ PULL socket that connects to a port.
+
+  This queue may only be used to pop items, not to push.
+  """
+  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
 
 
 class ZeroMQPushQueue(ZeroMQQueue):
-  """A Plaso queue backed by a ZeroMQ PUSH socket.
+  """Parent class for Plaso queues backed by ZeroMQ PUSH sockets.
 
-  This queue may only be used to push items, not to pop.
+  This class should not be instantiated directly, a subclass should be
+  instantiated instead.
+
+  Instances of this class or subclasses may only be used to push items, not to
+  pop.
   """
 
   _SOCKET_TYPE = zmq.PUSH
@@ -244,11 +260,11 @@ class ZeroMQPushQueue(ZeroMQQueue):
     Provided for compatibility with the API, but doesn't actually work.
 
     Raises:
-      NotImplementedError: As Pull is not supported this queue.
+      WrongQueueType: As Pull is not supported this queue.
     """
-    raise NotImplementedError
+    raise errors.WrongQueueType
 
-  def PushItem(self, item):
+  def PushItem(self, item, block=True):
     """Push an item on to the queue.
 
     If no ZeroMQ socket has been created, one will be created the first time
@@ -256,6 +272,8 @@ class ZeroMQPushQueue(ZeroMQQueue):
 
     Args:
       item: The item to push on to the queue.
+      block: Optional argument to indicate whether the push should be performed
+             in blocking or non-block mode.
 
     Raises:
       QueueFull: If the push failed, due to the queue being full for the
@@ -266,6 +284,33 @@ class ZeroMQPushQueue(ZeroMQQueue):
     if not self._zmq_socket:
       self._CreateZMQSocket()
     try:
-      self._zmq_socket.send_pyobj(item)
+      if block:
+        self._zmq_socket.send_pyobj(item)
+      else:
+        self._zmq_socket.send_pyobj(item, zmq.DONTWAIT)
     except zmq.error.Again:
-      raise errors.QueueFull
+      if block:
+        raise errors.QueueFull
+
+  def Empty(self):
+    """Empties all items from the queue.
+
+    Raises:
+      WrongQueueType: As this queue type does not support emptying.
+    """
+    raise errors.WrongQueueType
+
+
+class ZeroMQPushBindQueue(ZeroMQPushQueue):
+  """A Plaso queue backed by a ZeroMQ PUSH socket that binds to a port.
+
+  This queue may only be used to push items, not to pop.
+  """
+  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
+
+class ZeroMQPushConnectQueue(ZeroMQPushQueue):
+  """A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.
+
+  This queue may only be used to push items, not to pop.
+  """
+  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT

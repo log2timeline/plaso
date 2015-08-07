@@ -39,6 +39,7 @@ class StringIOOutputWriter(object):
     """Writes a string to the StringIO object."""
     self._string_io.write(string)
 
+
 class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
   """Test analysis plugin."""
 
