@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ZeroMQ implementations of the Plaso queue interface."""
 
+import abc
 import logging
 
 import zmq
@@ -112,6 +113,7 @@ class ZeroMQQueue(queue.Queue):
       raise errors.QueueAlreadyStarted
     self._CreateZMQSocket()
 
+  # pylint: disable=arguments-differ
   def Close(self, abort=False):
     """Closes the queue.
 
@@ -134,14 +136,9 @@ class ZeroMQQueue(queue.Queue):
 
     self._zmq_socket.close(self._linger_seconds)
 
+  @abc.abstractmethod
   def Empty(self):
-    """Empties all items from the queue.
-
-    Raises:
-      NotImplementedError: If the implementing class does not support
-                           emptying.
-    """
-    raise NotImplementedError
+    """Empties all items from the queue."""
 
   def IsEmpty(self):
     """Checks if the queue is empty.
@@ -158,25 +155,19 @@ class ZeroMQQueue(queue.Queue):
     """
     return False
 
-  def PushItem(self, item):
+  @abc.abstractmethod
+  def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
 
     Args:
       item: The item to push on the queue.
-
-    Raises:
-      NotImplementedError: If Push is not supported by the implementing
-                           class.
+      block: Optional argument to indicate whether the push should be performed
+             in blocking or non-block mode.
     """
-    raise NotImplementedError
 
+  @abc.abstractmethod
   def PopItem(self):
-    """Pops an item off the queue.
-
-    Raises:
-      NotImplementedError: If Pop is not supported by the implementing class.
-    """
-    raise NotImplementedError
+    """Pops an item off the queue."""
 
 
 class ZeroMQPullQueue(ZeroMQQueue):
@@ -185,7 +176,8 @@ class ZeroMQPullQueue(ZeroMQQueue):
   This class should not be instantiated directly, a subclass should be
   instantiated instead.
 
-  Instances of this class may only be used to pop items, not to push.
+  Instances of this class or subclasses may only be used to pop items, not to
+  push.
   """
 
   _SOCKET_TYPE = zmq.PULL
@@ -218,18 +210,20 @@ class ZeroMQPullQueue(ZeroMQQueue):
     except zmq.error.Again:
       raise errors.QueueEmpty
 
-  def PushItem(self, item):
+  def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
 
     Provided for compatibility with the API, but doesn't actually work.
 
     Args:
       item: The item to push on to the queue.
+      block: Optional argument to indicate whether the push should be performed
+             in blocking or non-block mode.
 
     Raises:
-      NotImplementedError: As Push is not supported this queue.
+      WrongQueueType: As Push is not supported this queue.
     """
-    raise NotImplementedError
+    raise errors.WrongQueueType
 
 
 class ZeroMQPullBindQueue(ZeroMQPullQueue):
@@ -254,7 +248,8 @@ class ZeroMQPushQueue(ZeroMQQueue):
   This class should not be instantiated directly, a subclass should be
   instantiated instead.
 
-  Instances of this class may only be used to push items, not to pop.
+  Instances of this class or subclasses may only be used to push items, not to
+  pop.
   """
 
   _SOCKET_TYPE = zmq.PUSH
@@ -265,11 +260,11 @@ class ZeroMQPushQueue(ZeroMQQueue):
     Provided for compatibility with the API, but doesn't actually work.
 
     Raises:
-      NotImplementedError: As Pull is not supported this queue.
+      WrongQueueType: As Pull is not supported this queue.
     """
-    raise NotImplementedError
+    raise errors.WrongQueueType
 
-  def PushItem(self, item):
+  def PushItem(self, item, block=True):
     """Push an item on to the queue.
 
     If no ZeroMQ socket has been created, one will be created the first time
@@ -277,6 +272,8 @@ class ZeroMQPushQueue(ZeroMQQueue):
 
     Args:
       item: The item to push on to the queue.
+      block: Optional argument to indicate whether the push should be performed
+             in blocking or non-block mode.
 
     Raises:
       QueueFull: If the push failed, due to the queue being full for the
@@ -287,9 +284,21 @@ class ZeroMQPushQueue(ZeroMQQueue):
     if not self._zmq_socket:
       self._CreateZMQSocket()
     try:
-      self._zmq_socket.send_pyobj(item)
+      if block:
+        self._zmq_socket.send_pyobj(item)
+      else:
+        self._zmq_socket.send_pyobj(item, zmq.DONTWAIT)
     except zmq.error.Again:
-      raise errors.QueueFull
+      if block:
+        raise errors.QueueFull
+
+  def Empty(self):
+    """Empties all items from the queue.
+
+    Raises:
+      WrongQueueType: As this queue type does not support emptying.
+    """
+    raise errors.WrongQueueType
 
 
 class ZeroMQPushBindQueue(ZeroMQPushQueue):
