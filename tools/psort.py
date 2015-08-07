@@ -104,7 +104,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     use_zeromq = getattr(options, u'use_zeromq', False)
     if use_zeromq:
-      self._front_end.SetZeroMQUsage(use_zeromq)
+      self._front_end.SetUseZeroMQ(use_zeromq)
 
   def _ParseFilterOptions(self, options):
     """Parses the filter options.

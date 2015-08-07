@@ -17,7 +17,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
     """Tests the OpenStorage function."""
     test_front_end = analysis_frontend.AnalysisFrontend()
 
-    storage_file_path = self._GetTestFilePath([u'psort_test.proto.out'])
+    storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
     storage_file = test_front_end.OpenStorage(storage_file_path)
 
     self.assertIsInstance(storage_file, storage.StorageFile)
