@@ -36,8 +36,8 @@ class testZeroMQPushPullQueues(test_lib.EngineTestCase):
         delay_start=False, port=push_queue.port)
     item = u'This is an item.'
     push_queue.PushItem(item)
-    dequeued_item = pull_queue.PopItem()
-    self.assertEqual(item, dequeued_item)
+    popped_item = pull_queue.PopItem()
+    self.assertEqual(item, popped_item)
 
 
 if __name__ == '__main__':
