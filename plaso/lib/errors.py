@@ -48,6 +48,14 @@ class ProxyFailedToStart(Error):
   """Raised when unable to start a proxy."""
 
 
+class QueueAlreadyStarted(Error):
+  """Raised when an attempt is made to start queue that's already started."""
+
+
+class QueueAlreadyClosed(Error):
+  """Raised when an attempt is made to close a queue that's already closed."""
+
+
 class QueueClose(Error):
   """Class that implements a queue close exception."""
 
