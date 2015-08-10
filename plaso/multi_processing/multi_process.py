@@ -356,14 +356,14 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     self._use_zeromq = use_zeromq
     if use_zeromq:
-      path_spec_inbound_queue = zeromq_queue.ZeroMQPushQueue(
-        connect=False, delay_start=True, port=61878)
+      path_spec_inbound_queue = zeromq_queue.ZeroMQPushBindQueue(
+        delay_start=True, port=61878)
       path_spec_queue = path_spec_inbound_queue
-      event_object_inbound_queue = zeromq_queue.ZeroMQPullQueue(
-        connect=False, delay_start=True, timeout_seconds=60)
+      event_object_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
+        delay_start=True, timeout_seconds=60)
       event_object_queue = event_object_inbound_queue
-      parse_error_inbound_queue = zeromq_queue.ZeroMQPullQueue(
-        connect=False, delay_start=True)
+      parse_error_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
+         delay_start=True)
       parse_error_queue = parse_error_inbound_queue
     else:
       path_spec_queue = MultiProcessingQueue(
@@ -617,13 +617,13 @@ class MultiProcessEngine(engine.BaseEngine):
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
 
     if self._use_zeromq:
-      parse_error_queue = zeromq_queue.ZeroMQPushQueue(
-          connect=True, delay_start=True, port=self._parse_error_queue_port)
-      path_spec_queue = zeromq_queue.ZeroMQPullQueue(
-          connect=True, delay_start=True, port=self._path_spec_queue_port,
+      parse_error_queue = zeromq_queue.ZeroMQPushConnectQueue(
+           delay_start=True, port=self._parse_error_queue_port)
+      path_spec_queue = zeromq_queue.ZeroMQPullConnectQueue(
+          delay_start=True, port=self._path_spec_queue_port,
           timeout_seconds=20)
-      event_object_queue = zeromq_queue.ZeroMQPushQueue(
-          connect=True, delay_start=True, port=self._event_object_queue_port)
+      event_object_queue = zeromq_queue.ZeroMQPushConnectQueue(
+          delay_start=True, port=self._event_object_queue_port)
     else:
       parse_error_queue = self._parse_error_queue
       path_spec_queue = self._path_spec_queue
@@ -680,7 +680,8 @@ class MultiProcessEngine(engine.BaseEngine):
     for _ in range(self._number_of_extraction_workers):
       self._path_spec_queue.PushItem(queue.QueueAbort(), block=False)
 
-    self.event_object_queue.PushItem(queue.QueueAbort(), block=False)
+    if not self._use_zeromq:
+      self.event_object_queue.PushItem(queue.QueueAbort(), block=False)
     # TODO: enable this when the parse error queue consumer is operational.
     # self._parse_error_queue.PushItem(queue.QueueAbort(), block=False)
 
