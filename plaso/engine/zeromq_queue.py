@@ -209,6 +209,8 @@ class ZeroMQPullQueue(ZeroMQQueue):
       return self._zmq_socket.recv_pyobj()
     except zmq.error.Again:
       raise errors.QueueEmpty
+    except KeyboardInterrupt:
+      self.Close(abort=True)
 
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
@@ -291,6 +293,8 @@ class ZeroMQPushQueue(ZeroMQQueue):
     except zmq.error.Again:
       if block:
         raise errors.QueueFull
+    except KeyboardInterrupt:
+      self.Close(abort=True)
 
   def Empty(self):
     """Empties all items from the queue.
