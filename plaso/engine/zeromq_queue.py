@@ -211,6 +211,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except KeyboardInterrupt:
       self.Close(abort=True)
+      raise
 
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
@@ -295,6 +296,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
         raise errors.QueueFull
     except KeyboardInterrupt:
       self.Close(abort=True)
+      raise
 
   def Empty(self):
     """Empties all items from the queue.
