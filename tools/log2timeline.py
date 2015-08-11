@@ -486,6 +486,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     # Check the list options first otherwise required options will raise.
     self._ParseExtractionOptions(options)
+    self._front_end.SetUseOldPreprocess(self._old_preprocess)
     self._ParseTimezoneOption(options)
 
     self.show_info = getattr(options, u'show_info', False)
