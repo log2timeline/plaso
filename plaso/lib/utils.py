@@ -2,9 +2,16 @@
 """This file contains utility functions."""
 
 import logging
+import re
 
 from plaso.lib import errors
 from plaso.lib import lexer
+
+
+# Illegal Unicode characters for XML.
+ILLEGAL_XML_RE = re.compile(
+    ur'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f'
+    ur'\ud800-\udfff\ufdd0-\ufddf\ufffe-\uffff]')
 
 
 def IsText(bytes_in, encoding=None):
@@ -42,7 +49,7 @@ def IsText(bytes_in, encoding=None):
     return is_ascii
 
   # Is this already a unicode text?
-  if type(bytes_in) == unicode:
+  if isinstance(bytes_in, unicode):
     return True
 
   # Check if this is UTF-8
@@ -77,7 +84,7 @@ def IsText(bytes_in, encoding=None):
 
 def GetUnicodeString(string):
   """Converts the string to Unicode if necessary."""
-  if type(string) != unicode:
+  if not isinstance(string, unicode):
     return str(string).decode('utf8', 'ignore')
   return string
 
@@ -134,10 +141,10 @@ def GetInodeValue(inode_raw):
   Returns:
     An integer inode value.
   """
-  if type(inode_raw) in (int, long):
+  if isinstance(inode_raw, (int, long)):
     return inode_raw
 
-  if type(inode_raw) is float:
+  if isinstance(inode_raw, float):
     return int(inode_raw)
 
   try:
@@ -149,3 +156,20 @@ def GetInodeValue(inode_raw):
       return int(inode_string)
     except ValueError:
       return -1
+
+
+def RemoveIllegalXMLCharacters(string, replacement=u'\ufffd'):
+  """Removes illegal Unicode characters for XML.
+
+  Args:
+    string: A string to replace all illegal characters for XML.
+    replacement: A replacement character to use in replacement of all
+        found illegal characters.
+
+  Return:
+    A string where all illegal Unicode characters for XML have been removed.
+    If the input is not a string it will be returned unchanged."""
+  if isinstance(string, basestring):
+    return ILLEGAL_XML_RE.sub(replacement, string)
+  return string
+
