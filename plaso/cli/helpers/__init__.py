@@ -10,3 +10,4 @@ from plaso.cli.helpers import timesketch_out
 from plaso.cli.helpers import viper_analysis
 from plaso.cli.helpers import virustotal_analysis
 from plaso.cli.helpers import windows_services_analysis
+from plaso.cli.helpers import xlsx_output
