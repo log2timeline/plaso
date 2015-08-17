@@ -85,6 +85,8 @@ fi
 
 git pull --squash ${GITHUB_URL} ${FEATURE_BRANCH}
 
+# In case of an error before commit the pending changes are undone.
+
 if test $? -ne 0;
 then
   echo "Submit aborted - unable to 'git pull ${GITHUB_URL} ${FEATURE_BRANCH}'.";

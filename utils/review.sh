@@ -112,9 +112,12 @@ fi
 if ! test -z ${REVIEWERS};
 then
   echo "The need to explicitly pass reviewers to this script has been removed.";
-  echo "The script will now default to: log2timeline-maintainers@googlegroups.com";
+  echo "The script now defaults to the maintainers.";
   echo "";
 fi
+
+REVIEWERS="kiddi@kiddaland.net,joachim.metz@gmail.com,onager@deerpie.com";
+CC="log2timeline-dev@googlegroups.com";
 
 if ! ${HAVE_REMOTE_ORIGIN};
 then
@@ -254,8 +257,7 @@ then
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} \
-      --send_mail -r log2timeline-maintainers@googlegroups.com \
-      --cc log2timeline-dev@googlegroups.com \
+      --send_mail -r ${REVIEWERS} --cc ${CC} \
       -t "${DESCRIPTION}" -y -- ${DIFFBASE} | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;
@@ -326,8 +328,7 @@ else
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} ${CACHE_PARAM} \
-      --send_mail -r log2timeline-maintainers@googlegroups.com \
-      --cc log2timeline-dev@googlegroups.com \
+      --send_mail -r ${REVIEWERS} --cc ${CC} \
       -m "${DESCRIPTION}" -t "${DESCRIPTION}" -y | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;
