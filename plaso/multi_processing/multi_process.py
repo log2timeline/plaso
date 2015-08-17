@@ -12,6 +12,8 @@ import signal
 import sys
 import time
 
+import zmq
+
 from dfvfs.resolver import context
 
 from plaso.engine import collector
@@ -356,14 +358,14 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     self._use_zeromq = use_zeromq
     if use_zeromq:
-      path_spec_inbound_queue = zeromq_queue.ZeroMQPushBindQueue(
-        delay_start=True, port=61878)
+      path_spec_inbound_queue = zeromq_queue.ZeroMQBufferedRouterBindQueue(
+          delay_start=True)
       path_spec_queue = path_spec_inbound_queue
-      event_object_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
-        delay_start=True, timeout_seconds=60)
+      event_object_inbound_queue = zeromq_queue.ZeroMQRequestBindQueue(
+          delay_start=True, timeout_seconds=60)
       event_object_queue = event_object_inbound_queue
-      parse_error_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
-         delay_start=True)
+      parse_error_inbound_queue = zeromq_queue.ZeroMQRequestBindQueue(
+          delay_start=True, timeout_seconds=60)
       parse_error_queue = parse_error_inbound_queue
     else:
       path_spec_queue = MultiProcessingQueue(
@@ -617,13 +619,16 @@ class MultiProcessEngine(engine.BaseEngine):
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
 
     if self._use_zeromq:
-      parse_error_queue = zeromq_queue.ZeroMQPushConnectQueue(
-           delay_start=True, port=self._parse_error_queue_port)
-      path_spec_queue = zeromq_queue.ZeroMQPullConnectQueue(
+      path_spec_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_start=True, port=self._path_spec_queue_port,
-          timeout_seconds=20)
-      event_object_queue = zeromq_queue.ZeroMQPushConnectQueue(
-          delay_start=True, port=self._event_object_queue_port)
+          timeout_seconds=20,
+          name=u'{0:s} pathspec queue.'.format(process_name))
+      parse_error_queue = zeromq_queue.ZeroMQReplyConnectQueue(
+           delay_start=True, port=self._parse_error_queue_port,
+           name=u'{0:s} parse error queue.'.format(process_name))
+      event_object_queue = zeromq_queue.ZeroMQReplyConnectQueue(
+          delay_start=True, port=self._event_object_queue_port,
+          name=u'{0:s} event object queue.'.format(process_name))
     else:
       parse_error_queue = self._parse_error_queue
       path_spec_queue = self._path_spec_queue
@@ -668,9 +673,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
       # Wake the processes to make sure that they are not blocking
       # waiting for the queue not to be full.
-      self._path_spec_queue.Empty()
-      self.event_object_queue.Empty()
-      self._parse_error_queue.Empty()
+      if not self._use_zeromq:
+        self._path_spec_queue.Empty()
+        self.event_object_queue.Empty()
+        self._parse_error_queue.Empty()
 
     # On abort we need to have the collector process get a SIGTERM first.
     self._stop_collector_event.set()
@@ -752,7 +758,12 @@ class MultiProcessEngine(engine.BaseEngine):
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
   def _StorageQueuesBound(self):
-    """Checks if the storage queues are bound to ports."""
+    """Checks if the storage queues are bound to ports.
+
+    Returns:
+      True if both the event_object queue and the parse_error queues are bound
+      to ports. False otherwise.
+    """
     return (self._event_object_queue_port is not None and
             self._parse_error_queue_port is not None)
 
