@@ -1,59 +1,62 @@
-winregistry Package
-===================
+plaso.winregistry package
+=========================
 
-:mod:`winregistry` Package
---------------------------
+Submodules
+----------
 
-.. automodule:: plaso.winregistry
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`cache` Module
--------------------
+plaso.winregistry.cache module
+------------------------------
 
 .. automodule:: plaso.winregistry.cache
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`definitions` Module
--------------------------
+plaso.winregistry.definitions module
+------------------------------------
 
 .. automodule:: plaso.winregistry.definitions
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`interface` Module
------------------------
+plaso.winregistry.interface module
+----------------------------------
 
 .. automodule:: plaso.winregistry.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`path_expander` Module
----------------------------
+plaso.winregistry.path_expander module
+--------------------------------------
 
 .. automodule:: plaso.winregistry.path_expander
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`regf` Module
-------------------
+plaso.winregistry.regf module
+-----------------------------
 
 .. automodule:: plaso.winregistry.regf
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`registry` Module
-----------------------
+plaso.winregistry.registry module
+---------------------------------
 
 .. automodule:: plaso.winregistry.registry
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.winregistry
+    :members:
+    :undoc-members:
+    :show-inheritance:
