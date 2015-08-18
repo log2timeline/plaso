@@ -12,8 +12,6 @@ import signal
 import sys
 import time
 
-import zmq
-
 from dfvfs.resolver import context
 
 from plaso.engine import collector
@@ -38,7 +36,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
   _PROCESS_JOIN_TIMEOUT = 5.0
 
-  def __init__(self, process_type, enable_sigsegv_handler=False, **kwargs):
+  def __init__(self, process_type, enable_sigsegv_handler=True, **kwargs):
     """Initializes the process object.
 
     Args:
@@ -265,7 +263,6 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     self._path_spec_queue_port = None
     self._source_path_specs = source_path_specs
     self._stop_collector_event = stop_collector_event
-    self._workers_ready_event = workers_ready_event
     self._collector.SetCollectDirectoryMetadata(include_directory_stat)
 
     if filter_find_specs:
@@ -283,15 +280,13 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     """The main loop."""
     logging.debug(u'Collector (PID: {0:d}) started'.format(self._pid))
 
-    # The ZeroMQ backed queue should be started first, so we can save its port.
+    # The ZeroMQ backed queue must be started first, so we can save its port.
     if isinstance(self._path_spec_queue, zeromq_queue.ZeroMQQueue):
       self._path_spec_queue.name = u'Collector pathspec'
       self._path_spec_queue.Start()
       self._path_spec_queue_port = self._path_spec_queue.port
 
     abort = False
-    self._workers_ready_event.wait(self.WORKERS_READY_TIMEOUT)
-    time.sleep(3)
     try:
       logging.debug(u'Collector starting collection.')
       self._collector.Collect(self._source_path_specs)
@@ -310,7 +305,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     # is necessary since the queue uses a pipe under the hood. However
     # this behavior causes unwanted side effect for the abort code paths
     # hence we have the process wait for the stop process event and then
-    # close the queue with out the separate blocking thread.
+    # close the queue without the separate blocking thread.
 
     if not abort:
       self._stop_collector_event.wait()
@@ -348,7 +343,7 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
-  def __init__(self, maximum_number_of_queued_items=0, use_zeromq=True):
+  def __init__(self, maximum_number_of_queued_items=0, use_zeromq=False):
     """Initialize the multi-process engine object.
 
     Args:
@@ -358,13 +353,13 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     self._use_zeromq = use_zeromq
     if use_zeromq:
-      path_spec_inbound_queue = zeromq_queue.ZeroMQBufferedRouterBindQueue(
+      path_spec_inbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
           delay_start=True)
       path_spec_queue = path_spec_inbound_queue
-      event_object_inbound_queue = zeromq_queue.ZeroMQRequestBindQueue(
+      event_object_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
           delay_start=True, timeout_seconds=60)
       event_object_queue = event_object_inbound_queue
-      parse_error_inbound_queue = zeromq_queue.ZeroMQRequestBindQueue(
+      parse_error_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
           delay_start=True, timeout_seconds=60)
       parse_error_queue = parse_error_inbound_queue
     else:
@@ -623,12 +618,14 @@ class MultiProcessEngine(engine.BaseEngine):
           delay_start=True, port=self._path_spec_queue_port,
           timeout_seconds=20,
           name=u'{0:s} pathspec queue.'.format(process_name))
-      parse_error_queue = zeromq_queue.ZeroMQReplyConnectQueue(
+      parse_error_queue = zeromq_queue.ZeroMQPushConnectQueue(
            delay_start=True, port=self._parse_error_queue_port,
-           name=u'{0:s} parse error queue.'.format(process_name))
-      event_object_queue = zeromq_queue.ZeroMQReplyConnectQueue(
+           name=u'{0:s} parse error queue.'.format(process_name),
+           high_water_mark=2)
+      event_object_queue = zeromq_queue.ZeroMQPushConnectQueue(
           delay_start=True, port=self._event_object_queue_port,
-          name=u'{0:s} event object queue.'.format(process_name))
+          name=u'{0:s} event object queue.'.format(process_name),
+          high_water_mark=2)
     else:
       parse_error_queue = self._parse_error_queue
       path_spec_queue = self._path_spec_queue
@@ -1059,9 +1056,19 @@ class MultiProcessEngine(engine.BaseEngine):
     return self._processing_status
 
   def _GetCollectorStoragePorts(self, collector_process):
+    """Ensures that port number for the collector pathspec queue is captured.
+
+    Args:
+      collector_process: the collector process object, instance of
+                        MultiProcessCollectorProcess.
+
+    Raises:
+      RuntimeError: if the collector is not able to start its queue before the
+                    the timeout is reached.
+    """
     queue_start_wait_attempts = 0
     while (not self._CollectorQueueBound() and
-               queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
+           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
       status = self._GetProcessStatus(collector_process)
       self._path_spec_queue_port = status[u'path_spec_queue_port']
       queue_start_wait_attempts += 1
@@ -1070,16 +1077,26 @@ class MultiProcessEngine(engine.BaseEngine):
       raise RuntimeError(u'Collector queue did not bind in time.')
 
   def _GetStorageQueuePorts(self, storage_writer_process):
+    """Ensures that port numbers for the storage writer queues are captured.
+
+    Args:
+      storage_writer_process: the storage writer process object, instance of
+                              MultiProcessStorageWriterProcess.
+
+    Raises:
+      RuntimeError: if the storage writer process is not able to starts its
+                    queues before the timeout is reached.
+    """
     queue_start_wait_attempts = 0
     while (not self._StorageQueuesBound() and
-               queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
+           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
       status = self._GetProcessStatus(storage_writer_process)
       self._event_object_queue_port = status[u'event_object_queue_port']
       self._parse_error_queue_port = status[u'parse_error_queue_port']
       queue_start_wait_attempts += 1
       time.sleep(self._QUEUE_START_WAIT)
     if not self._StorageQueuesBound():
-      raise RuntimeError(u'Storage queue did not bind in time.')
+      raise RuntimeError(u'Storage queues did not bind in time.')
 
   def SignalAbort(self):
     """Signals the engine to abort."""

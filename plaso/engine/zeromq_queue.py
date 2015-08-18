@@ -3,7 +3,6 @@
 
 import abc
 import logging
-import pickle
 import Queue
 import threading
 
@@ -30,7 +29,7 @@ class ZeroMQQueue(queue.Queue):
 
   def __init__(
       self, delay_start=True, linger_seconds=10, port=None, timeout_seconds=5,
-      name=u'Unnamed'):
+      name=u'Unnamed', high_water_mark=1000):
     """Initializes a ZeroMQ backed queue.
 
     Args:
@@ -49,6 +48,10 @@ class ZeroMQQueue(queue.Queue):
                        PushItem may block for, before returning
                        queue.QueueEmpty.
       name: Optional name to identify the queue.
+      high_water_mark: Optional maximum number of items allowed in the queue
+                       at one time. Note that this limit only applies at one
+                       "end" of the queue. The default of 1000 is the ZeroMQ
+                       default value.
 
     Raises:
       AttributeError: If the queue is configured to connect to an endpoint,
@@ -57,6 +60,7 @@ class ZeroMQQueue(queue.Queue):
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
         and not port):
       raise AttributeError(u'No port specified to connect to.')
+    self._high_water_mark = high_water_mark
     self._linger_seconds = linger_seconds
     self._timeout_milliseconds = timeout_seconds * 1000
     self._zmq_socket = None
@@ -85,21 +89,20 @@ class ZeroMQQueue(queue.Queue):
       self._zmq_socket.setsockopt(
           zmq.SNDTIMEO, self._timeout_milliseconds)
 
-  def _SetSocketHighWaterMark(self, high_water_mark):
+  def _SetSocketHighWaterMark(self):
     """Sets the high water mark for the socket.
 
     This number is maximum number of items that will be queued on this end of
     the queue.
     """
-    self._zmq_socket.hwm = high_water_mark
-
-
+    self._zmq_socket.hwm = self._high_water_mark
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket."""
     zmq_context = zmq.Context()
     self._zmq_socket = zmq_context.socket(self._SOCKET_TYPE)
     self._SetSocketTimeouts()
+    self._SetSocketHighWaterMark()
 
     if self.port:
       address = u'{0:s}:{1:d}'.format(self._SOCKET_ADDRESS, self.port)
@@ -446,6 +449,7 @@ class ZeroMQReplyBindQueue(ZeroMQReplyQueue):
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
 
+
 class ZeroMQReplyConnectQueue(ZeroMQReplyQueue):
   """A Plaso queue backed by a ZeroMQ REP socket that connects to a port.
 
@@ -454,8 +458,8 @@ class ZeroMQReplyConnectQueue(ZeroMQReplyQueue):
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
 
 
-class ZeroMQBufferedRouterQueue(ZeroMQQueue):
-  """Parent class for Plaso queues backed by ZeroMQ ROUTER sockets.
+class ZeroMQBufferedReplyQueue(ZeroMQQueue):
+  """Parent class for buffered Plaso queues backed by ZeroMQ REP sockets.
 
   This class should not be instantiated directly, a subclass should be
   instantiated instead.
@@ -464,11 +468,12 @@ class ZeroMQBufferedRouterQueue(ZeroMQQueue):
   pop.
   """
 
-  _SOCKET_TYPE = zmq.ROUTER
+  _SOCKET_TYPE = zmq.REP
   _QUEUE_LENGTH = 10000
 
   def _CreateZMQSocket(self):
-    super(ZeroMQBufferedRouterQueue, self)._CreateZMQSocket()
+    """Creates a ZeroMQ socket as well as a regular queue and a thread."""
+    super(ZeroMQBufferedReplyQueue, self)._CreateZMQSocket()
     self._queue = Queue.Queue(maxsize=self._QUEUE_LENGTH)
     self._abort_event = threading.Event()
     self._zmq_thread = threading.Thread(
@@ -477,16 +482,32 @@ class ZeroMQBufferedRouterQueue(ZeroMQQueue):
     self._zmq_thread.start()
 
   def _RunZeroMQThread(self, source_queue, socket, abort_event):
-    """Listens for requests and replies to clients."""
-    logging.info(u'Router thread started')
+    """Listens for requests and replies to clients.
+
+    Args:
+      source_queue: The queue to uses to pull items from.
+      socket: The socket to listen to, and send responses to.
+      abort_event:
+
+    Raises:
+      QueueFull: If it was not possible to reply to the request for an item
+                 from the queue.
+    """
+    logging.info(u'ZeroMQ responder thread started')
     while not abort_event.isSet():
       try:
-        request = socket.recv_multipart()
-        item = source_queue.get(True, self.timeout_seconds)
+        _ = socket.recv()
+        try:
+          if self._closed:
+            item = source_queue.get_nowait()
+          else:
+            item = source_queue.get(True, self.timeout_seconds)
+        except Queue.Empty:
+          item = queue.QueueAbort()
         logging.info(u'ZeroMQ responder thread got request.')
-        item = pickle.dumps(item)
-        self._zmq_socket.send_multipart([request[0], b'', item])
+        self._zmq_socket.send_pyobj(item)
       except zmq.error.Again:
+        logging.error(u'Queue encountered exception.')
         raise errors.QueueFull
 
   def PushItem(self, item, block=True):
@@ -501,11 +522,15 @@ class ZeroMQBufferedRouterQueue(ZeroMQQueue):
              in blocking or non-block mode.
 
     Raises:
+      QueueAlreadyClosed: If there is an attempt to close a queue that's already
+                          closed.
       QueueFull: If the push failed, due to the queue being full for the
                  duration of the timeout.
     """
     logging.debug(u'Push on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
+    if self._closed:
+      raise errors.QueueAlreadyClosed
     if not self._zmq_socket:
       self._CreateZMQSocket()
     self._queue.put(item)
@@ -517,18 +542,20 @@ class ZeroMQBufferedRouterQueue(ZeroMQQueue):
 
   def Close(self, abort=False):
     """Close the queue."""
-    self.Empty()
-    self._abort_event.set()
+    if abort:
+      self.Empty()
+      self._abort_event.set()
+    self._closed = True
 
 
-class ZeroMQBufferedRouterBindQueue(ZeroMQBufferedRouterQueue):
+class ZeroMQBufferedReplyBindQueue(ZeroMQBufferedReplyQueue):
   """A Plaso queue backed by a ZeroMQ REP socket that binds to a port.
 
   This queue may only be used to pop items, not to push.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
 
-class ZeroMQBufferedRouterConnectQueue(ZeroMQBufferedRouterQueue):
+class ZeroMQBufferedReplyConnectQueue(ZeroMQBufferedReplyQueue):
   """A Plaso queue backed by a ZeroMQ REP socket that connects to a port.
 
   This queue may only be used to pop items, not to push.
