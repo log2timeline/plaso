@@ -85,9 +85,13 @@ fi
 
 git pull --squash ${GITHUB_URL} ${FEATURE_BRANCH}
 
+# In case of an error before commit the pending changes are undone.
+
 if test $? -ne 0;
 then
   echo "Submit aborted - unable to 'git pull ${GITHUB_URL} ${FEATURE_BRANCH}'.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
@@ -96,12 +100,16 @@ if ! linting_is_correct_remote_origin;
 then
   echo "Submit aborted - fix the issues reported by the linter.";
 
+  git stash && git stash drop;
+
   exit ${EXIT_FAILURE};
 fi
 
 if ! tests_pass;
 then
   echo "Submit aborted - fix the issues reported by the failing test.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
@@ -111,6 +119,8 @@ then
   if ! generate_api_documentation;
   then
     echo "Submit aborted - unable to generate API documentation";
+
+  git stash && git stash drop;
 
     exit ${EXIT_FAILURE};
   fi
@@ -133,6 +143,8 @@ if test -z "${DESCRIPTION}" || test "${DESCRIPTION}" = "${CODEREVIEW}";
 then
   echo "Submit aborted - unable to find change list with number: ${CL_NUMBER}.";
 
+  git stash && git stash drop;
+
   exit ${EXIT_FAILURE};
 fi
 
@@ -141,6 +153,8 @@ EMAIL_ADDRESS=`echo ${CODEREVIEW} | sed 's/^.*"owner_email":"\(.*\)","private.*$
 if test -z "${EMAIL_ADDRESS}" || test "${EMAIL_ADDRESS}" = "${CODEREVIEW}";
 then
   echo "Submit aborted - unable to determine author's email address.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
@@ -153,6 +167,8 @@ FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"name": "\(.*\)", "company.*$/\1/'
 if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}";
 then
   echo "Submit aborted - unable to determine author's full name";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
