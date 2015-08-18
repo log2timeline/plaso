@@ -14,9 +14,9 @@ class ZeroMQQueue(queue.Queue):
   """Class that defines an interfaces for ZeroMQ backed Plaso queues.
 
   Attributes:
+    name: A name to use to identify the queue.
     port: The TCP port that the queue is connected or bound to. If the queue is
           not yet bound or connected to a port, this value will be None.
-    name: A name to use to identify the queue.
   """
 
   _SOCKET_ADDRESS = u'tcp://127.0.0.1'
@@ -48,12 +48,12 @@ class ZeroMQQueue(queue.Queue):
       name: Optional name to identify the queue.
 
     Raises:
-      AttributeError: If the queue is configured to connect to an endpoint,
+      ValueError: If the queue is configured to connect to an endpoint,
                       but no port is specified.
     """
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
         and not port):
-      raise AttributeError(u'No port specified to connect to.')
+      raise ValueError(u'No port specified to connect to.')
     self._linger_seconds = linger_seconds
     self._timeout_milliseconds = timeout_seconds * 1000
     self._zmq_socket = None
@@ -65,7 +65,7 @@ class ZeroMQQueue(queue.Queue):
   @property
   def timeout_seconds(self):
     """Maximum number of seconds that calls to Pop or Push items can take."""
-    return self._timeout_milliseconds / 1000
+    return divmod(self._timeout_milliseconds, 1000)[0]
 
   @timeout_seconds.setter
   def timeout_seconds(self, value):
@@ -313,6 +313,7 @@ class ZeroMQPushBindQueue(ZeroMQPushQueue):
   This queue may only be used to push items, not to pop.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
+
 
 class ZeroMQPushConnectQueue(ZeroMQPushQueue):
   """A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.

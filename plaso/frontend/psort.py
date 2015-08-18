@@ -18,6 +18,7 @@ from plaso.engine import zeromq_queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
+from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
@@ -375,6 +376,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
             timeout=5)
 
       pre_obj = self._GetLastGoodPreprocess(storage_file)
+      if pre_obj is None:
+        pre_obj = event.PreprocessObject()
 
       if analysis_plugins:
         self._StartAnalysisPlugins(
@@ -484,6 +487,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       preferred_encoding: the preferred encoding to use for the preprocess
                           object.
     """
+    # TODO: We shouldn't be touching the command line here, move to tools
     if preferred_encoding:
       cmd_line = u' '.join(sys.argv)
       try:
@@ -505,16 +509,19 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     From all preprocessing objects, try to get the last one that has
     time zone information stored in it, the highest chance of it containing
-    the information we are seeking (defaulting to the last one).
+    the information we are seeking (defaulting to the last one). If there are
+    no preprocessing objects in the file, we'll make a new one
 
     Args:
       storage_file: a Plaso storage file object.
 
     Returns:
-      A preprocess object (instance of PreprocessObject).
+      A preprocess object (instance of PreprocessObject), or None if there are
+      no preprocess objects in the storage file.
     """
-
     pre_objs = storage_file.GetStorageInformation()
+    if not pre_objs:
+      return None
     pre_obj = pre_objs[-1]
     for obj in pre_objs:
       if getattr(obj, u'time_zone_str', u''):

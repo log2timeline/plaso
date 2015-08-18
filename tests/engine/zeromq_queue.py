@@ -10,13 +10,13 @@ from tests.engine import test_lib
 
 class testZeroMQPushPullQueues(test_lib.EngineTestCase):
   """Tests for the Push and Pull type ZeroMQ queues."""
+
   def testSocketCreation(self):
     """Tests that ZeroMQ sockets are created when a new queue is created."""
     push_queue = zeromq_queue.ZeroMQPushBindQueue(delay_start=False)
     pull_queue = zeromq_queue.ZeroMQPullBindQueue(delay_start=False)
     self.assertIsNotNone(push_queue._zmq_socket)
     self.assertIsNotNone(pull_queue._zmq_socket)
-
 
   def testQueueStart(self):
     """Tests that delayed creation of ZeroMQ sockets occurs correctly."""

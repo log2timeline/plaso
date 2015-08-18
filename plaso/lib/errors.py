@@ -48,12 +48,12 @@ class ProxyFailedToStart(Error):
   """Raised when unable to start a proxy."""
 
 
-class QueueAlreadyStarted(Error):
-  """Raised when an attempt is made to start queue that's already started."""
-
-
 class QueueAlreadyClosed(Error):
   """Raised when an attempt is made to close a queue that's already closed."""
+
+
+class QueueAlreadyStarted(Error):
+  """Raised when an attempt is made to start queue that's already started."""
 
 
 class QueueClose(Error):
@@ -115,7 +115,7 @@ class WrongPlistPlugin(Error):
 class WrongQueueType(Error):
   """Raised when an unsupported operation is attempted on a queue.
 
-   For example, attempting to Pop from a Push-only queue.
+  For example, attempting to Pop from a Push-only queue.
   """
 
 
