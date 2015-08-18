@@ -1,19 +1,22 @@
-proto Package
-=============
+plaso.proto package
+===================
 
-:mod:`proto` Package
---------------------
+Submodules
+----------
 
-.. automodule:: plaso.proto
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`plaso_storage_pb2` Module
--------------------------------
+plaso.proto.plaso_storage_pb2 module
+------------------------------------
 
 .. automodule:: plaso.proto.plaso_storage_pb2
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.proto
+    :members:
+    :undoc-members:
+    :show-inheritance:

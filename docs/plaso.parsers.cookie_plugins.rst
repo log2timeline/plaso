@@ -1,35 +1,38 @@
-cookie_plugins Package
-======================
+plaso.parsers.cookie_plugins package
+====================================
 
-:mod:`cookie_plugins` Package
------------------------------
+Submodules
+----------
 
-.. automodule:: plaso.parsers.cookie_plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`ganalytics` Module
-------------------------
+plaso.parsers.cookie_plugins.ganalytics module
+----------------------------------------------
 
 .. automodule:: plaso.parsers.cookie_plugins.ganalytics
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`interface` Module
------------------------
+plaso.parsers.cookie_plugins.interface module
+---------------------------------------------
 
 .. automodule:: plaso.parsers.cookie_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`manager` Module
----------------------
+plaso.parsers.cookie_plugins.manager module
+-------------------------------------------
 
 .. automodule:: plaso.parsers.cookie_plugins.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.parsers.cookie_plugins
+    :members:
+    :undoc-members:
+    :show-inheritance:

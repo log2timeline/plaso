@@ -48,13 +48,13 @@ class ExtractionFrontend(frontend.Frontend):
     self._filter_expression = None
     self._filter_object = None
     self._mount_path = None
-    self._old_preprocess = False
     self._operating_system = None
     self._output_module = None
     self._parser_names = None
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
+    self._use_old_preprocess = False
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = context.Context()
     self._single_process_mode = False
@@ -162,7 +162,7 @@ class ExtractionFrontend(frontend.Frontend):
     """
     pre_obj = None
 
-    if self._old_preprocess and os.path.isfile(self._storage_file_path):
+    if self._use_old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
       try:
         with storage.StorageFile(
@@ -594,6 +594,16 @@ class ExtractionFrontend(frontend.Frontend):
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate
     self._profiling_type = profiling_type
+
+  def SetUseOldPreprocess(self, use_old_preprocess):
+    """Set the use old preprocess flag.
+
+    Args:
+      use_old_preprocess: boolean value to indicate if the engine should
+                          use the old preprocessing information or run
+                          preprocessing again.
+    """
+    self._use_old_preprocess = use_old_preprocess
 
   def SetStorageFile(self, storage_file_path):
     """Sets the storage file path.

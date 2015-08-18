@@ -55,6 +55,7 @@ PYTHON_DEPENDENCIES = [
     (u'requests', u'__version__', u'2.2.1', None),
     (u'six', u'__version__', u'1.1.0', None),
     (u'sqlite3', u'sqlite_version', u'3.7.8', None),
+    (u'xlsxwriter', u'__version__', u'0.6.5', None),
     (u'yaml', u'__version__', u'3.10', None),
     (u'zmq', u'__version__', u'14.0.0', None)]
 
