@@ -1,62 +1,59 @@
-plaso.winnt package
-===================
+winnt Package
+=============
 
-Submodules
-----------
+:mod:`winnt` Package
+--------------------
 
-plaso.winnt.environ_expand module
----------------------------------
+.. automodule:: plaso.winnt
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`environ_expand` Module
+----------------------------
 
 .. automodule:: plaso.winnt.environ_expand
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.winnt.human_readable_service_enums module
------------------------------------------------
+:mod:`human_readable_service_enums` Module
+------------------------------------------
 
 .. automodule:: plaso.winnt.human_readable_service_enums
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.winnt.known_folder_ids module
------------------------------------
+:mod:`known_folder_ids` Module
+------------------------------
 
 .. automodule:: plaso.winnt.known_folder_ids
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.winnt.language_ids module
--------------------------------
+:mod:`language_ids` Module
+--------------------------
 
 .. automodule:: plaso.winnt.language_ids
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.winnt.shell_folder_ids module
------------------------------------
+:mod:`shell_folder_ids` Module
+------------------------------
 
 .. automodule:: plaso.winnt.shell_folder_ids
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.winnt.time_zones module
------------------------------
+:mod:`time_zones` Module
+------------------------
 
 .. automodule:: plaso.winnt.time_zones
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.winnt
-    :members:
-    :undoc-members:
-    :show-inheritance:
