@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""Tests for the binary library functions."""
+
 import os
 import unittest
 
@@ -9,60 +11,60 @@ from plaso.lib import binary
 class BinaryTests(unittest.TestCase):
   """A unit test for the binary helper functions."""
 
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
   def setUp(self):
-    """Set up the needed variables used througout."""
+    """Set up the needed variables used througout tests."""
     # String: "þrándur" - uses surrogate pairs to test four byte character
     # decoding.
     self._unicode_string_1 = (
-        '\xff\xfe\xfe\x00\x72\x00\xe1\x00\x6E\x00\x64\x00\x75\x00\x72\x00')
+        b'\xff\xfe\xfe\x00\x72\x00\xe1\x00\x6E\x00\x64\x00\x75\x00\x72\x00')
 
     # String: "What\x00is".
     self._ascii_string_1 = (
-        '\x57\x00\x68\x00\x61\x00\x74\x00\x00\x00\x69\x00\x73\x00')
+        b'\x57\x00\x68\x00\x61\x00\x74\x00\x00\x00\x69\x00\x73\x00')
 
     # String: "What is this?".
     self._ascii_string_2 = (
-        '\x57\x00\x68\x00\x61\x00\x74\x00\x20\x00\x69\x00\x73\x00'
-        '\x20\x00\x74\x00\x68\x00\x69\x00\x73\x00\x3F\x00')
-
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
+        b'\x57\x00\x68\x00\x61\x00\x74\x00\x20\x00\x69\x00\x73\x00'
+        b'\x20\x00\x74\x00\x68\x00\x69\x00\x73\x00\x3F\x00')
 
   def testReadUtf16Stream(self):
     """Test reading an UTF-16 stream from a file-like object."""
-    path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as fh:
+    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
+    with open(path, 'rb') as file_object:
       # Read a null char terminated string.
-      fh.seek(0x10)
-      self.assertEqual(binary.ReadUtf16Stream(fh), 'PING.EXE')
+      file_object.seek(0x10)
+      self.assertEqual(binary.ReadUtf16Stream(file_object), u'PING.EXE')
 
       # Read a fixed size string.
-      fh.seek(0x27f8)
+      file_object.seek(0x27f8)
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
-      string = binary.ReadUtf16Stream(fh, byte_size=44)
+      string = binary.ReadUtf16Stream(file_object, byte_size=44)
       self.assertEqual(string, expected_string)
 
-      fh.seek(0x27f8)
+      file_object.seek(0x27f8)
       expected_string = u'\\DEVICE\\HARDDISKVOLUME1'
-      string = binary.ReadUtf16Stream(fh, byte_size=46)
+      string = binary.ReadUtf16Stream(file_object, byte_size=46)
       self.assertEqual(string, expected_string)
 
       # Read another null char terminated string.
-      fh.seek(7236)
+      file_object.seek(7236)
       self.assertEqual(
-          binary.ReadUtf16Stream(fh),
+          binary.ReadUtf16Stream(file_object),
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
   def testUt16StreamCopyToString(self):
     """Test copying an UTF-16 byte stream to a string."""
-    path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as fh:
-      byte_stream = fh.read()
+    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
+    with open(path, 'rb') as file_object:
+      byte_stream = file_object.read()
 
       # Read a null char terminated string.
       self.assertEqual(
-          binary.Ut16StreamCopyToString(byte_stream[0x10:]), 'PING.EXE')
+          binary.Ut16StreamCopyToString(byte_stream[0x10:]), u'PING.EXE')
 
       # Read a fixed size string.
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
@@ -84,9 +86,9 @@ class BinaryTests(unittest.TestCase):
 
   def testArrayOfUt16StreamCopyToString(self):
     """Test copying an array of UTF-16 byte streams to strings."""
-    path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as fh:
-      byte_stream = fh.read()
+    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
+    with open(path, 'rb') as file_object:
+      byte_stream = file_object.read()
 
       strings_array = binary.ArrayOfUt16StreamCopyToString(
           byte_stream[0x1c44:], byte_stream_size=2876)
@@ -123,9 +125,9 @@ class BinaryTests(unittest.TestCase):
 
   def testArrayOfUt16StreamCopyToStringTable(self):
     """Test copying an array of UTF-16 byte streams to a string table."""
-    path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as fh:
-      byte_stream = fh.read()
+    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
+    with open(path, 'rb') as file_object:
+      byte_stream = file_object.read()
 
       string_table = binary.ArrayOfUt16StreamCopyToStringTable(
           byte_stream[0x1c44:], byte_stream_size=2876)
@@ -164,9 +166,9 @@ class BinaryTests(unittest.TestCase):
 
   def testStringParsing(self):
     """Test parsing the ASCII string."""
-    self.assertEqual(binary.ReadUtf16(self._ascii_string_1), 'Whatis')
+    self.assertEqual(binary.ReadUtf16(self._ascii_string_1), u'Whatis')
 
-    self.assertEqual(binary.ReadUtf16(self._ascii_string_2), 'What is this?')
+    self.assertEqual(binary.ReadUtf16(self._ascii_string_2), u'What is this?')
 
     uni_text = binary.ReadUtf16(self._unicode_string_1)
     self.assertEqual(uni_text, u'þrándur')
@@ -175,14 +177,14 @@ class BinaryTests(unittest.TestCase):
     """Test the hexadecimal representation of data."""
     hex_string_1 = binary.HexifyBuffer(self._ascii_string_1)
     hex_compare = (
-        '\\x57\\x00\\x68\\x00\\x61\\x00\\x74\\x00\\x00\\x00\\x69\\x00'
-        '\\x73\\x00')
+        b'\\x57\\x00\\x68\\x00\\x61\\x00\\x74\\x00\\x00\\x00\\x69\\x00'
+        b'\\x73\\x00')
     self.assertEqual(hex_string_1, hex_compare)
 
     hex_string_2 = binary.HexifyBuffer(self._unicode_string_1)
     hex_compare_unicode = (
-        '\\xff\\xfe\\xfe\\x00\\x72\\x00\\xe1\\x00\\x6e\\x00\\x64\\x00'
-        '\\x75\\x00\\x72\\x00')
+        b'\\xff\\xfe\\xfe\\x00\\x72\\x00\\xe1\\x00\\x6e\\x00\\x64\\x00'
+        b'\\x75\\x00\\x72\\x00')
 
     self.assertEqual(hex_string_2, hex_compare_unicode)
 

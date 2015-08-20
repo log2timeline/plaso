@@ -56,6 +56,7 @@ class PreprocessPlugin(object):
     """Return the name of the plugin."""
     return self.__class__.__name__
 
+  # TODO: refactor to PathPreprocessPlugin or equivalent.
   def _FindFileEntry(self, searcher, path):
     """Searches for a file entry that matches the path.
 
@@ -71,21 +72,33 @@ class PreprocessPlugin(object):
     Raises:
       errors.PreProcessFail: if the file entry cannot be found or opened.
     """
-    find_spec = file_system_searcher.FindSpec(
-        location=path, case_sensitive=False)
-
-    path_specs = list(searcher.Find(find_specs=[find_spec]))
+    path_specs = self._FindPathSpecs(searcher, path)
     if not path_specs or len(path_specs) != 1:
       raise errors.PreProcessFail(u'Unable to find: {0:s}'.format(path))
 
     try:
-      file_entry = searcher.GetFileEntryByPathSpec(path_specs[0])
+      return searcher.GetFileEntryByPathSpec(path_specs[0])
     except IOError as exception:
       raise errors.PreProcessFail(
           u'Unable to retrieve file entry: {0:s} with error: {1:s}'.format(
               path, exception))
 
-    return file_entry
+  # TODO: refactor to PathPreprocessPlugin or equivalent.
+  def _FindPathSpecs(self, searcher, path):
+    """Searches for path specifications that matches the path.
+
+    Args:
+      searcher: The file system searcher object (instance of
+                dfvfs.FileSystemSearcher).
+      path: The location of the file entry relative to the file system
+            of the searcher.
+
+    Returns:
+      A list of path specifcations.
+    """
+    find_spec = file_system_searcher.FindSpec(
+        location_regex=path, case_sensitive=False)
+    return list(searcher.Find(find_specs=[find_spec]))
 
   @abc.abstractmethod
   def GetValue(self, searcher, knowledge_base):
@@ -143,10 +156,7 @@ class PathPreprocessPlugin(PreprocessPlugin):
     Raises:
       PreProcessFail: if the path could not be found.
     """
-    find_spec = file_system_searcher.FindSpec(
-        location_regex=self.PATH, case_sensitive=False)
-    path_specs = list(searcher.Find(find_specs=[find_spec]))
-
+    path_specs = self._FindPathSpecs(searcher, self.PATH)
     if not path_specs:
       raise errors.PreProcessFail(
           u'Unable to find path: {0:s}'.format(self.PATH))
