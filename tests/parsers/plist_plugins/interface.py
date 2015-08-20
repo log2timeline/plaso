@@ -50,6 +50,25 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
 
     self.assertTrue(u'plist_default' in plugin_names)
 
+  def testGetKeys(self):
+    """Tests the _GetKeys function."""
+    # Ensure the plugin only processes if both filename and keys exist.
+    plugin_object = MockPlugin()
+
+    # Match DeviceCache from the root level.
+    key = [u'DeviceCache']
+    result = plugin_object._GetKeys(self._top_level_dict, key)
+    self.assertEqual(len(result), 1)
+
+    # Look for a key nested a layer beneath DeviceCache from root level.
+    # Note: overriding the default depth to look deeper.
+    key = [u'44-00-00-00-00-02']
+    result = plugin_object._GetKeys(self._top_level_dict, key, depth=2)
+    self.assertEqual(len(result), 1)
+
+    # Check the value of the result was extracted as expected.
+    self.assertTrue(u'test-macpro' == result[key[0]][u'Name'])
+
   def testProcess(self):
     """Tests the Process function."""
     # Ensure the plugin only processes if both filename and keys exist.
@@ -99,22 +118,6 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
       my_keys.append(key)
     expected = {u'DeviceCache', u'44-00-00-00-00-04', u'44-00-00-00-00-02'}
     self.assertTrue(expected == set(my_keys))
-
-  def testGetKeys(self):
-    """Tests the GetKeys function."""
-    # Match DeviceCache from the root level.
-    key = [u'DeviceCache']
-    result = interface.GetKeys(self._top_level_dict, key)
-    self.assertEqual(len(result), 1)
-
-    # Look for a key nested a layer beneath DeviceCache from root level.
-    # Note: overriding the default depth to look deeper.
-    key = [u'44-00-00-00-00-02']
-    result = interface.GetKeys(self._top_level_dict, key, depth=2)
-    self.assertEqual(len(result), 1)
-
-    # Check the value of the result was extracted as expected.
-    self.assertTrue(u'test-macpro' == result[key[0]][u'Name'])
 
 
 if __name__ == '__main__':
