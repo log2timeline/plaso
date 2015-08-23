@@ -8,6 +8,7 @@ from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
 
@@ -122,7 +123,8 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     registry_helper = registry_helpers[0]
     registry_helper.Open()
-    self.assertEquals(registry_helper.type, u'NTUSER')
+    expected_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_NTUSER
+    self.assertEquals(registry_helper.file_type, expected_file_type)
     self.assertEquals(registry_helper.name, u'NTUSER.DAT')
     self.assertEquals(registry_helper.collector_name, u'TSK')
     registry_helper.Close()

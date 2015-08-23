@@ -44,6 +44,7 @@ class RegistryPlugin(plugins.BasePlugin):
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
 
+  # TODO: check if key can be optional and fix docstring accordingly.
   def Process(self, parser_mediator, key=None, **kwargs):
     """Processes a Windows Registry key or value.
 

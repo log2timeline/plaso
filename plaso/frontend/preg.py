@@ -338,11 +338,14 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
   def GetRegistryFilePaths(self, plugin_name=None, registry_file_type=None):
     """Returns a list of Registry paths from a configuration object.
 
+    The Registry file type is not set it attempted to be determined based
+    on the precense of specific Registry keys.
+
     Args:
       plugin_name: optional string containing the name of the plugin or an empty
                    string or None for all the types. The default is None.
-      registry_file_type: optional Windows Registry files type string.
-                          The default is None.
+      registry_file_type: optional Windows Registry file type string.
+                          The default is None, which represents auto-detect.
 
     Returns:
       A list of path names for Registry files.
@@ -410,6 +413,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return expanded_key_paths
 
+  # TODO: refactor this function. Current implementation is too complex.
   def GetRegistryHelpers(
       self, registry_file_types=None, plugin_names=None, codepage=u'cp1252'):
     """Returns a list of discovered Registry helpers.
@@ -503,8 +507,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     """Retrieves the Windows Registry plugins based on a Registry type.
 
     Args:
-      registry_file_type: optional Windows Registry files type string.
-                          The default is None.
+      registry_file_type: the Windows Registry files type string.
 
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
@@ -612,14 +615,14 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not key:
       return return_dict
 
-    registry_file_type = registry_helper.type
+    registry_file_type = registry_helper.file_type
 
     plugins = {}
     plugins_list = self._registry_plugin_list
 
     # Compile a list of plugins we are about to use.
     for weight in plugins_list.GetWeights():
-      plugin_list = plugins_list.GetWeightPlugins(weight, registry_file_type)
+      plugin_list = plugins_list.GetPluginsByWeight(weight, registry_file_type)
       plugins[weight] = []
       for plugin in plugin_list:
         plugin_object = plugin()
@@ -727,6 +730,11 @@ class PregRegistryHelper(object):
     return self._collector_name
 
   @property
+  def file_type(self):
+    """The Registry file type."""
+    return self._registry_file_type
+
+  @property
   def name(self):
     """The name of the Registry file."""
     return getattr(self._registry_file, u'name', u'N/A')
@@ -745,11 +753,6 @@ class PregRegistryHelper(object):
     """The root key of the Registry file."""
     if self._registry_file:
       return self._registry_file.GetKeyByPath(u'\\')
-
-  @property
-  def type(self):
-    """The Registry type."""
-    return self._registry_file_type
 
   def _Reset(self):
     """Reset all attributes of the Registry helper."""

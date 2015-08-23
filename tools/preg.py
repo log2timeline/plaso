@@ -454,9 +454,10 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self.PrintHeader(u'Registry File', u'x')
     self._output_writer.Write(u'\n')
     self._output_writer.Write(
-        u'{0:>15} : {1:s}\n'.format(u'Registry File', registry_helper.path))
+        u'{0:>15} : {1:s}\n'.format(u'Registry file', registry_helper.path))
     self._output_writer.Write(
-        u'{0:>15} : {1:s}\n'.format(u'Registry Type', registry_helper.type))
+        u'{0:>15} : {1:s}\n'.format(
+            u'Registry file type', registry_helper.file_type))
     if registry_helper.collector_name:
       self._output_writer.Write(
           u'{0:>15} : {1:s}\n'.format(
@@ -818,7 +819,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
         self._PrintParsedRegistryFile({}, registry_helper)
         plugins_to_run = self._front_end.GetRegistryPluginsFromRegistryType(
-            registry_helper.type)
+            registry_helper.file_type)
 
         for plugin in plugins_to_run:
           key_paths = list(plugin.REG_KEYS)
@@ -1177,13 +1178,14 @@ class PregMagics(magic.Magics):
       else:
         plugin_name = items[0]
 
-    helper_type = current_helper.type
+    registry_file_type = current_helper.file_type
     plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
-    plugin_object = plugins_list.GetKeyPluginByName(helper_type, plugin_name)
+    plugin_object = plugins_list.GetKeyPluginByName(
+        registry_file_type, plugin_name)
     if not plugin_object:
       self.output_writer.Write(
           u'No plugin named: {0:s} available for Registry type {1:s}\n'.format(
-              plugin_name, helper_type))
+              plugin_name, registry_file_type))
       return
 
     if not hasattr(plugin_object, u'REG_KEYS'):
@@ -1648,11 +1650,11 @@ def CommandCompleterPlugins(console, core_completer):
     command_options.append(u'-h')
 
   registry_helper = magic_class.console.current_helper
-  helper_type = registry_helper.type
+  registry_file_type = registry_helper.file_type
 
   plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
   # TODO: refactor this into PluginsList.
-  for plugin_cls in plugins_list.GetKeyPlugins(helper_type):
+  for plugin_cls in plugins_list.GetKeyPlugins(registry_file_type):
     if plugin_cls.NAME == u'winreg_default':
       continue
     command_options.append(plugin_cls.NAME)

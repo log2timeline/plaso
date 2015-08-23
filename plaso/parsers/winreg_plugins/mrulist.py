@@ -165,7 +165,6 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListKey(
         parser_mediator, key, registry_file_type=registry_file_type,

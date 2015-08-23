@@ -130,6 +130,39 @@ class PluginList(object):
     """
     return self._GetPluginsByType(self._key_plugins, registry_file_type)
 
+  def GetPluginsByWeight(self, weight, registry_file_type=u''):
+    """Return a list of all plugins for a given weight or priority.
+
+    Each plugin defines a weight or a priority that defines in which order
+    it should be processed in the case of a parser that applies priority.
+
+    This method returns all plugins, whether they are key or value based
+    that use a defined weight or priority and are defined to parse keys
+    or values found in a certain Windows Registry type.
+
+    Args:
+      weight: An integer representing the weight or priority (usually a
+              number from 1 to 3).
+      registry_file_type: Optional string containing the Windows Registry
+                          file type, e.g. NTUSER, SOFTWARE. The default is
+                          an empty string that represents to return plugins
+                          of all available Registry file types.
+
+    Returns:
+      A list of all plugins (instances of RegistryPlugin) that fit the defined
+      criteria.
+    """
+    ret = []
+    for reg_plugin in self.GetKeyPlugins(registry_file_type):
+      if reg_plugin.WEIGHT == weight:
+        ret.append(reg_plugin)
+
+    for reg_plugin in self.GetValuePlugins(registry_file_type):
+      if reg_plugin.WEIGHT == weight:
+        ret.append(reg_plugin)
+
+    return ret
+
   def GetTypes(self):
     """Return a set of all plugins supported."""
     return set(self._key_plugins).union(self._value_plugins)
@@ -151,36 +184,6 @@ class PluginList(object):
     """Return a set of all weights/priority of the loaded plugins."""
     return set(plugin.WEIGHT for plugin in self.GetAllValuePlugins()).union(
         plugin.WEIGHT for plugin in self.GetAllKeyPlugins())
-
-  def GetWeightPlugins(self, weight, registry_file_type=u''):
-    """Return a list of all plugins for a given weight or priority.
-
-    Each plugin defines a weight or a priority that defines in which order
-    it should be processed in the case of a parser that applies priority.
-
-    This method returns all plugins, whether they are key or value based
-    that use a defined weight or priority and are defined to parse keys
-    or values found in a certain Windows Registry type.
-
-    Args:
-      weight: An integer representing the weight or priority (usually a
-              number from 1 to 3).
-      registry_file_type: String containing the Windows Registry file type,
-                          e.g. NTUSER, SOFTWARE.
-
-    Returns:
-      A list that contains all the plugins that fit the defined criteria.
-    """
-    ret = []
-    for reg_plugin in self.GetKeyPlugins(registry_file_type):
-      if reg_plugin.WEIGHT == weight:
-        ret.append(reg_plugin)
-
-    for reg_plugin in self.GetValuePlugins(registry_file_type):
-      if reg_plugin.WEIGHT == weight:
-        ret.append(reg_plugin)
-
-    return ret
 
 
 class WinRegistryParser(interface.BasePluginsParser):
@@ -230,7 +233,8 @@ class WinRegistryParser(interface.BasePluginsParser):
     plugins = {}
     number_of_plugins = 0
     for weight in self._plugins.GetWeights():
-      plugins_list = self._plugins.GetWeightPlugins(weight, registry_file_type)
+      plugins_list = self._plugins.GetPluginsByWeight(
+          weight, registry_file_type)
       plugins[weight] = []
       for plugin_class in plugins_list:
         plugin_object = plugin_class()
