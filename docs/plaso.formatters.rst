@@ -1,622 +1,619 @@
-plaso.formatters package
-========================
+formatters Package
+==================
 
-Submodules
-----------
+:mod:`formatters` Package
+-------------------------
 
-plaso.formatters.android_app_usage module
------------------------------------------
+.. automodule:: plaso.formatters
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`android_app_usage` Module
+-------------------------------
 
 .. automodule:: plaso.formatters.android_app_usage
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.android_calls module
--------------------------------------
+:mod:`android_calls` Module
+---------------------------
 
 .. automodule:: plaso.formatters.android_calls
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.android_sms module
------------------------------------
+:mod:`android_sms` Module
+-------------------------
 
 .. automodule:: plaso.formatters.android_sms
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.appcompatcache module
---------------------------------------
+:mod:`appcompatcache` Module
+----------------------------
 
 .. automodule:: plaso.formatters.appcompatcache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.appusage module
---------------------------------
+:mod:`appusage` Module
+----------------------
 
 .. automodule:: plaso.formatters.appusage
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.asl module
----------------------------
+:mod:`asl` Module
+-----------------
 
 .. automodule:: plaso.formatters.asl
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.bencode_parser module
---------------------------------------
+:mod:`bencode_parser` Module
+----------------------------
 
 .. automodule:: plaso.formatters.bencode_parser
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.bsm module
----------------------------
+:mod:`bsm` Module
+-----------------
 
 .. automodule:: plaso.formatters.bsm
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.chrome module
-------------------------------
+:mod:`chrome` Module
+--------------------
 
 .. automodule:: plaso.formatters.chrome
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.chrome_cache module
-------------------------------------
+:mod:`chrome_cache` Module
+--------------------------
 
 .. automodule:: plaso.formatters.chrome_cache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.chrome_cookies module
---------------------------------------
+:mod:`chrome_cookies` Module
+----------------------------
 
 .. automodule:: plaso.formatters.chrome_cookies
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.chrome_extension_activity module
--------------------------------------------------
+:mod:`chrome_extension_activity` Module
+---------------------------------------
 
 .. automodule:: plaso.formatters.chrome_extension_activity
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.chrome_preferences module
-------------------------------------------
+:mod:`chrome_preferences` Module
+--------------------------------
 
 .. automodule:: plaso.formatters.chrome_preferences
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.cups_ipp module
---------------------------------
+:mod:`cups_ipp` Module
+----------------------
 
 .. automodule:: plaso.formatters.cups_ipp
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.default module
--------------------------------
+:mod:`default` Module
+---------------------
 
 .. automodule:: plaso.formatters.default
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.file_history module
-------------------------------------
+:mod:`file_history` Module
+--------------------------
 
 .. automodule:: plaso.formatters.file_history
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.filestat module
---------------------------------
+:mod:`filestat` Module
+----------------------
 
 .. automodule:: plaso.formatters.filestat
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.firefox module
--------------------------------
+:mod:`firefox` Module
+---------------------
 
 .. automodule:: plaso.formatters.firefox
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.firefox_cache module
--------------------------------------
+:mod:`firefox_cache` Module
+---------------------------
 
 .. automodule:: plaso.formatters.firefox_cache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.firefox_cookies module
----------------------------------------
+:mod:`firefox_cookies` Module
+-----------------------------
 
 .. automodule:: plaso.formatters.firefox_cookies
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.ganalytics module
-----------------------------------
+:mod:`ganalytics` Module
+------------------------
 
 .. automodule:: plaso.formatters.ganalytics
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.gdrive module
-------------------------------
+:mod:`gdrive` Module
+--------------------
 
 .. automodule:: plaso.formatters.gdrive
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.hachoir module
--------------------------------
+:mod:`hachoir` Module
+---------------------
 
 .. automodule:: plaso.formatters.hachoir
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.iis module
----------------------------
+:mod:`iis` Module
+-----------------
 
 .. automodule:: plaso.formatters.iis
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.interface module
----------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.formatters.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.ipod module
-----------------------------
+:mod:`ipod` Module
+------------------
 
 .. automodule:: plaso.formatters.ipod
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.java_idx module
---------------------------------
+:mod:`java_idx` Module
+----------------------
 
 .. automodule:: plaso.formatters.java_idx
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.ls_quarantine module
--------------------------------------
+:mod:`ls_quarantine` Module
+---------------------------
 
 .. automodule:: plaso.formatters.ls_quarantine
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mac_appfirewall module
----------------------------------------
+:mod:`mac_appfirewall` Module
+-----------------------------
 
 .. automodule:: plaso.formatters.mac_appfirewall
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mac_document_versions module
----------------------------------------------
+:mod:`mac_document_versions` Module
+-----------------------------------
 
 .. automodule:: plaso.formatters.mac_document_versions
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mac_keychain module
-------------------------------------
+:mod:`mac_keychain` Module
+--------------------------
 
 .. automodule:: plaso.formatters.mac_keychain
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mac_securityd module
--------------------------------------
+:mod:`mac_securityd` Module
+---------------------------
 
 .. automodule:: plaso.formatters.mac_securityd
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mac_wifi module
---------------------------------
+:mod:`mac_wifi` Module
+----------------------
 
 .. automodule:: plaso.formatters.mac_wifi
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mackeeper_cache module
----------------------------------------
+:mod:`mackeeper_cache` Module
+-----------------------------
 
 .. automodule:: plaso.formatters.mackeeper_cache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mactime module
--------------------------------
+:mod:`mactime` Module
+---------------------
 
 .. automodule:: plaso.formatters.mactime
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.manager module
--------------------------------
+:mod:`manager` Module
+---------------------
 
 .. automodule:: plaso.formatters.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mcafeeav module
---------------------------------
+:mod:`mcafeeav` Module
+----------------------
 
 .. automodule:: plaso.formatters.mcafeeav
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.mediator module
---------------------------------
+:mod:`mediator` Module
+----------------------
 
 .. automodule:: plaso.formatters.mediator
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.msie_webcache module
--------------------------------------
+:mod:`msie_webcache` Module
+---------------------------
 
 .. automodule:: plaso.formatters.msie_webcache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.msiecf module
-------------------------------
+:mod:`msiecf` Module
+--------------------
 
 .. automodule:: plaso.formatters.msiecf
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.olecf module
------------------------------
+:mod:`olecf` Module
+-------------------
 
 .. automodule:: plaso.formatters.olecf
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.opera module
------------------------------
+:mod:`opera` Module
+-------------------
 
 .. automodule:: plaso.formatters.opera
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.oxml module
-----------------------------
+:mod:`oxml` Module
+------------------
 
 .. automodule:: plaso.formatters.oxml
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.pcap module
-----------------------------
+:mod:`pcap` Module
+------------------
 
 .. automodule:: plaso.formatters.pcap
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.pe module
---------------------------
+:mod:`pe` Module
+----------------
 
 .. automodule:: plaso.formatters.pe
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.plist module
------------------------------
+:mod:`plist` Module
+-------------------
 
 .. automodule:: plaso.formatters.plist
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.pls_recall module
-----------------------------------
+:mod:`pls_recall` Module
+------------------------
 
 .. automodule:: plaso.formatters.pls_recall
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.popcontest module
-----------------------------------
+:mod:`popcontest` Module
+------------------------
 
 .. automodule:: plaso.formatters.popcontest
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.recycler module
---------------------------------
+:mod:`recycler` Module
+----------------------
 
 .. automodule:: plaso.formatters.recycler
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.safari module
-------------------------------
+:mod:`safari` Module
+--------------------
 
 .. automodule:: plaso.formatters.safari
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.safari_cookies module
---------------------------------------
+:mod:`safari_cookies` Module
+----------------------------
 
 .. automodule:: plaso.formatters.safari_cookies
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.selinux module
--------------------------------
+:mod:`selinux` Module
+---------------------
 
 .. automodule:: plaso.formatters.selinux
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.shell_items module
------------------------------------
+:mod:`shell_items` Module
+-------------------------
 
 .. automodule:: plaso.formatters.shell_items
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.skydrivelog module
------------------------------------
+:mod:`skydrivelog` Module
+-------------------------
 
 .. automodule:: plaso.formatters.skydrivelog
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.skydrivelogerr module
---------------------------------------
+:mod:`skydrivelogerr` Module
+----------------------------
 
 .. automodule:: plaso.formatters.skydrivelogerr
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.skype module
------------------------------
+:mod:`skype` Module
+-------------------
 
 .. automodule:: plaso.formatters.skype
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.symantec module
---------------------------------
+:mod:`symantec` Module
+----------------------
 
 .. automodule:: plaso.formatters.symantec
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.syslog module
-------------------------------
+:mod:`syslog` Module
+--------------------
 
 .. automodule:: plaso.formatters.syslog
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.task_scheduler module
---------------------------------------
+:mod:`task_scheduler` Module
+----------------------------
 
 .. automodule:: plaso.formatters.task_scheduler
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.text module
-----------------------------
+:mod:`text` Module
+------------------
 
 .. automodule:: plaso.formatters.text
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.utmp module
-----------------------------
+:mod:`utmp` Module
+------------------
 
 .. automodule:: plaso.formatters.utmp
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.utmpx module
------------------------------
+:mod:`utmpx` Module
+-------------------
 
 .. automodule:: plaso.formatters.utmpx
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.windows module
--------------------------------
+:mod:`windows` Module
+---------------------
 
 .. automodule:: plaso.formatters.windows
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winevt module
-------------------------------
+:mod:`winevt` Module
+--------------------
 
 .. automodule:: plaso.formatters.winevt
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winevt_rc module
----------------------------------
+:mod:`winevt_rc` Module
+-----------------------
 
 .. automodule:: plaso.formatters.winevt_rc
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winevtx module
--------------------------------
+:mod:`winevtx` Module
+---------------------
 
 .. automodule:: plaso.formatters.winevtx
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winfirewall module
------------------------------------
+:mod:`winfirewall` Module
+-------------------------
 
 .. automodule:: plaso.formatters.winfirewall
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winjob module
-------------------------------
+:mod:`winjob` Module
+--------------------
 
 .. automodule:: plaso.formatters.winjob
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winlnk module
-------------------------------
+:mod:`winlnk` Module
+--------------------
 
 .. automodule:: plaso.formatters.winlnk
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winprefetch module
------------------------------------
+:mod:`winprefetch` Module
+-------------------------
 
 .. automodule:: plaso.formatters.winprefetch
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winreg module
-------------------------------
+:mod:`winreg` Module
+--------------------
 
 .. automodule:: plaso.formatters.winreg
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winregservice module
--------------------------------------
+:mod:`winregservice` Module
+---------------------------
 
 .. automodule:: plaso.formatters.winregservice
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.winrestore module
-----------------------------------
+:mod:`winrestore` Module
+------------------------
 
 .. automodule:: plaso.formatters.winrestore
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.xchatlog module
---------------------------------
+:mod:`xchatlog` Module
+----------------------
 
 .. automodule:: plaso.formatters.xchatlog
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.xchatscrollback module
----------------------------------------
+:mod:`xchatscrollback` Module
+-----------------------------
 
 .. automodule:: plaso.formatters.xchatscrollback
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.zeitgeist module
----------------------------------
+:mod:`zeitgeist` Module
+-----------------------
 
 .. automodule:: plaso.formatters.zeitgeist
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.formatters
-    :members:
-    :undoc-members:
-    :show-inheritance:

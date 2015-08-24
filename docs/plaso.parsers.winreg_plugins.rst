@@ -1,214 +1,211 @@
-plaso.parsers.winreg_plugins package
-====================================
+winreg_plugins Package
+======================
 
-Submodules
-----------
+:mod:`winreg_plugins` Package
+-----------------------------
 
-plaso.parsers.winreg_plugins.appcompatcache module
---------------------------------------------------
+.. automodule:: plaso.parsers.winreg_plugins
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`appcompatcache` Module
+----------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.appcompatcache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.bagmru module
-------------------------------------------
+:mod:`bagmru` Module
+--------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.bagmru
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.ccleaner module
---------------------------------------------
+:mod:`ccleaner` Module
+----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.ccleaner
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.default module
--------------------------------------------
+:mod:`default` Module
+---------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.default
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.interface module
----------------------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.lfu module
----------------------------------------
+:mod:`lfu` Module
+-----------------
 
 .. automodule:: plaso.parsers.winreg_plugins.lfu
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.mountpoints module
------------------------------------------------
+:mod:`mountpoints` Module
+-------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.mountpoints
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.mrulist module
--------------------------------------------
+:mod:`mrulist` Module
+---------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.mrulist
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.mrulistex module
----------------------------------------------
+:mod:`mrulistex` Module
+-----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.mrulistex
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.msie_zones module
-----------------------------------------------
+:mod:`msie_zones` Module
+------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.msie_zones
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.officemru module
----------------------------------------------
+:mod:`officemru` Module
+-----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.officemru
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.outlook module
--------------------------------------------
+:mod:`outlook` Module
+---------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.outlook
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.run module
----------------------------------------
+:mod:`run` Module
+-----------------
 
 .. automodule:: plaso.parsers.winreg_plugins.run
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.sam_users module
----------------------------------------------
+:mod:`sam_users` Module
+-----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.sam_users
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.services module
---------------------------------------------
+:mod:`services` Module
+----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.services
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.shutdown module
---------------------------------------------
+:mod:`shutdown` Module
+----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.shutdown
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.task_scheduler module
---------------------------------------------------
+:mod:`task_scheduler` Module
+----------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.task_scheduler
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.terminal_server module
----------------------------------------------------
+:mod:`terminal_server` Module
+-----------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.terminal_server
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.timezone module
---------------------------------------------
+:mod:`timezone` Module
+----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.timezone
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.typedurls module
----------------------------------------------
+:mod:`typedurls` Module
+-----------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.typedurls
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.usb module
----------------------------------------
+:mod:`usb` Module
+-----------------
 
 .. automodule:: plaso.parsers.winreg_plugins.usb
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.usbstor module
--------------------------------------------
+:mod:`usbstor` Module
+---------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.usbstor
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.userassist module
-----------------------------------------------
+:mod:`userassist` Module
+------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.userassist
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.winrar module
-------------------------------------------
+:mod:`winrar` Module
+--------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.winrar
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.winreg_plugins.winver module
-------------------------------------------
+:mod:`winver` Module
+--------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.winver
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.parsers.winreg_plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:
