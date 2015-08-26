@@ -34,7 +34,7 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
 
   def __init__(
       self, timestamp, key_name, value_dict, usage=None, offset=None,
-      registry_type=None, urls=None, source_append=None):
+      registry_file_type=None, urls=None, source_append=None):
     """Initializes a Windows registry event.
 
     Args:
@@ -46,7 +46,8 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
              The default is None.
       offset: Optional (data) offset of the Registry key or value.
               The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       urls: Optional list of URLs. The default is None.
       source_append: Optional string to append to the source_long of the event.
                      The default is None.
@@ -61,11 +62,11 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
 
     self.regvalue = value_dict
 
-    if offset or type(offset) in [int, long]:
+    if offset or isinstance(offset, (int, long)):
       self.offset = offset
 
-    if registry_type:
-      self.registry_type = registry_type
+    if registry_file_type:
+      self.registry_file_type = registry_file_type
 
     if urls:
       self.url = u' - '.join(urls)

@@ -1,99 +1,102 @@
-analysis Package
-================
+plaso.analysis package
+======================
 
-:mod:`analysis` Package
------------------------
+Submodules
+----------
 
-.. automodule:: plaso.analysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`browser_search` Module
-----------------------------
+plaso.analysis.browser_search module
+------------------------------------
 
 .. automodule:: plaso.analysis.browser_search
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`chrome_extension` Module
-------------------------------
+plaso.analysis.chrome_extension module
+--------------------------------------
 
 .. automodule:: plaso.analysis.chrome_extension
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`file_hashes` Module
--------------------------
+plaso.analysis.file_hashes module
+---------------------------------
 
 .. automodule:: plaso.analysis.file_hashes
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`interface` Module
------------------------
+plaso.analysis.interface module
+-------------------------------
 
 .. automodule:: plaso.analysis.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`manager` Module
----------------------
+plaso.analysis.manager module
+-----------------------------
 
 .. automodule:: plaso.analysis.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`mediator` Module
-----------------------
+plaso.analysis.mediator module
+------------------------------
 
 .. automodule:: plaso.analysis.mediator
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`tagging` Module
----------------------
+plaso.analysis.tagging module
+-----------------------------
 
 .. automodule:: plaso.analysis.tagging
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`unique_domains_visited` Module
-------------------------------------
+plaso.analysis.unique_domains_visited module
+--------------------------------------------
 
 .. automodule:: plaso.analysis.unique_domains_visited
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`viper` Module
--------------------
+plaso.analysis.viper module
+---------------------------
 
 .. automodule:: plaso.analysis.viper
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`virustotal` Module
-------------------------
+plaso.analysis.virustotal module
+--------------------------------
 
 .. automodule:: plaso.analysis.virustotal
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`windows_services` Module
-------------------------------
+plaso.analysis.windows_services module
+--------------------------------------
 
 .. automodule:: plaso.analysis.windows_services
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -4,12 +4,13 @@
 
 import unittest
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winrar
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
@@ -25,19 +26,19 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
     values = []
 
-    binary_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
+    value_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
         u'utf_16_le')
-    values.append(winreg_test_lib.TestRegValue(
-        u'0', binary_data, winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'0', value_data, dfwinreg_definitions.REG_SZ, offset=1892))
 
-    binary_data = u'C:\\Downloads\\plaso-static.rar'.encode(u'utf_16_le')
-    values.append(winreg_test_lib.TestRegValue(
-        u'1', binary_data, winreg_test_lib.TestRegValue.REG_SZ, offset=612))
+    value_data = u'C:\\Downloads\\plaso-static.rar'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'1', value_data, dfwinreg_definitions.REG_SZ, offset=612))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
 
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, expected_timestamp, values, offset=1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)

@@ -42,15 +42,17 @@ class WinRegTimezonePlugin(interface.KeyPlugin):
       return value.data
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Collect values and return an event.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     if key is None:
       return
@@ -60,7 +62,7 @@ class WinRegTimezonePlugin(interface.KeyPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-        registry_type=registry_type)
+        registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)
 

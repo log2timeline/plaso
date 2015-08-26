@@ -70,8 +70,9 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
     source_long = getattr(event_object, u'source_long', None)
     if not source_long:
-      registry_type = getattr(event_object, u'registry_type', u'UNKNOWN')
-      source_long = u'{0:s} key'.format(registry_type)
+      registry_file_type = getattr(
+          event_object, u'registry_file_type', u'UNKNOWN')
+      source_long = u'{0:s} key'.format(registry_file_type)
 
     if hasattr(event_object, u'source_append'):
       source_long += u' {0:s}'.format(event_object.source_append)

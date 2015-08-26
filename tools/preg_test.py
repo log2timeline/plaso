@@ -201,7 +201,8 @@ class PregConsoleTest(test_lib.ToolTestCase):
     self._test_console = preg.PregConsole(self._test_tool)
     file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     self._file_path = self._GetTestFilePath([u'NTUSER.DAT'])
-    self._registry_helper = preg_frontend.PregRegistryHelper(file_entry, u'OS')
+    self._registry_helper = preg_frontend.PregRegistryHelper(
+        file_entry, u'OS', self._test_tool._knowledge_base_object)
 
   def tearDown(self):
     """Tears down the needed ojects after a test."""
@@ -298,7 +299,7 @@ class PregMagicClassTest(test_lib.ToolTestCase):
 
     registry_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     self._registry_helper = preg_frontend.PregRegistryHelper(
-        registry_file_entry, u'OS')
+        registry_file_entry, u'OS', test_tool._knowledge_base_object)
 
     self._test_console.AddRegistryHelper(self._registry_helper)
     self._test_console.LoadRegistryFile(0)
