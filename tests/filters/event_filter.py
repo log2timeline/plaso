@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from plaso.filters import eventfilter
+from plaso.filters import event_filter
 
 from tests.filters import test_lib
 
@@ -12,7 +12,7 @@ class EventObjectFilterTest(test_lib.FilterTestHelper):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.test_filter = eventfilter.EventObjectFilter()
+    self.test_filter = event_filter.EventObjectFilter()
 
   def testFilterFail(self):
     """Run few tests that should not be a proper filter."""

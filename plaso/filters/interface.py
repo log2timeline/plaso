@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
-"""A definition of the filter interface for filters in plaso."""
+"""The filter interface classes."""
 
 import abc
 
 from plaso.lib import errors
-from plaso.lib import registry
 
 
 class FilterObject(object):
-  """The interface that each filter needs to implement in plaso."""
-
-  # TODO: Re-factor into filters/interface and use a manager instead
-  # of the registry library.
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
+  """The filter interface class."""
 
   @property
   def filter_expression(self):
@@ -29,13 +23,13 @@ class FilterObject(object):
   @property
   def last_decision(self):
     """Return the last matching decision."""
-    return getattr(self, '_decision', None)
+    return getattr(self, u'_decision', None)
 
   @property
   def last_reason(self):
     """Return the last reason for the match, if there was one."""
-    if getattr(self, 'last_decision', False):
-      return getattr(self, '_reason', '')
+    if getattr(self, u'last_decision', False):
+      return getattr(self, u'_reason', u'')
 
   @property
   def fields(self):
@@ -71,10 +65,9 @@ class FilterObject(object):
                             the filter class.
 
     Raises:
-      errors.WrongPlugin: If this filter string does not match the filter
-                          class.
+      WrongPlugin: If this filter string does not match the filter class.
     """
-    raise errors.WrongPlugin('Not the correct filter for this string.')
+    raise errors.WrongPlugin(u'Not the correct filter for this string.')
 
   def Match(self, unused_event_object):
     """Compare an EventObject to the filter expression and return a boolean.

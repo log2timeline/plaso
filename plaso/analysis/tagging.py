@@ -4,9 +4,11 @@
 import logging
 import os
 
+# The following import makes sure the filters are registered.
+from plaso import filters  # pylint: disable=unused-import
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso import filters
+from plaso.filters import manager as filters_manager
 from plaso.lib import event
 
 
@@ -120,20 +122,24 @@ class TaggingPlugin(interface.AnalysisPlugin):
         line_strip = line_rstrip.lstrip()
         if not line_strip or line_strip.startswith(u'#'):
           continue
+
         if not line_rstrip[0].isspace():
           current_tag = line_rstrip
           tags[current_tag] = []
         else:
           if not current_tag:
             continue
-          compiled_filter = filters.GetFilter(line_strip)
-          if compiled_filter:
-            if compiled_filter not in tags[current_tag]:
-              tags[current_tag].append(compiled_filter)
-          else:
+
+          compiled_filter = filters_manager.FiltersManager.GetFilterObject(
+              line_strip)
+          if not compiled_filter:
             logging.warning(
                 u'Tag "{0:s}" contains invalid filter: {1:s}'.format(
                     current_tag, line_strip))
+
+          elif compiled_filter not in tags[current_tag]:
+            tags[current_tag].append(compiled_filter)
+
     return tags
 
   def CompileReport(self, analysis_mediator):

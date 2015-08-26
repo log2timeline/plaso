@@ -5,9 +5,11 @@ import collections
 import logging
 import urllib
 
-from plaso import filters
+# The following import makes sure the filters are registered.
+from plaso import filters  # pylint: disable=unused-import
 from plaso.analysis import interface
 from plaso.analysis import manager
+from plaso.filters import manager as filters_manager
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 
@@ -194,7 +196,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     self._search_term_timeline = []
 
     for filter_str, call_back in self.FILTERS:
-      filter_obj = filters.GetFilter(filter_str)
+      filter_obj = filters_manager.FiltersManager.GetFilterObject(filter_str)
       call_back_obj = getattr(FilterClass, call_back, None)
       if filter_obj and call_back_obj:
         self._filter_dict[filter_obj] = (call_back, call_back_obj)

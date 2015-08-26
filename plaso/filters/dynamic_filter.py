@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+
+from plaso.filters import event_filter
+from plaso.filters import manager
 from plaso.lib import errors
 from plaso.lib import lexer
-from plaso.filters import eventfilter
 
 
 class SelectiveLexer(lexer.Lexer):
@@ -31,31 +33,47 @@ class SelectiveLexer(lexer.Lexer):
       lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
   def __init__(self, data=''):
-    """Initialize the lexer."""
+    """Initializes the selective lexer.
+
+    Args:
+      data: TODO
+    """
     self.fields = []
     self.limit = 0
     self.lex_filter = None
     self.separator = u','
     super(SelectiveLexer, self).__init__(data)
 
-  def SetFilter(self, match, **_):
-    """Set the filter query."""
+  def SetFilter(self, match, **unused_kwargs):
+    """Set the filter query.
+
+    Args:
+      match: TODO
+    """
     filter_match = match.group(1)
     if 'LIMIT' in filter_match:
       # This only occurs in the case where we have "LIMIT X SEPARATED BY".
       self.lex_filter, _, push_back = filter_match.rpartition('LIMIT')
-      self.PushBack('LIMIT {} SEPARATED BY '.format(push_back))
+      self.PushBack('LIMIT {0:s} SEPARATED BY '.format(push_back))
     else:
       self.lex_filter = filter_match
 
-  def SetSeparator(self, match, **_):
-    """Set the separator of the output, only uses the first char."""
+  def SetSeparator(self, match, **unused_kwargs):
+    """Set the separator of the output, only uses the first char.
+
+    Args:
+      match: TODO
+    """
     separator = match.group(1)
     if separator:
       self.separator = separator[0]
 
-  def SetLimit(self, match, **_):
-    """Set the row limit."""
+  def SetLimit(self, match, **unused_kwargs):
+    """Set the row limit.
+
+    Args:
+      match: TODO
+    """
     try:
       limit = int(match.group(1))
     except ValueError:
@@ -65,8 +83,12 @@ class SelectiveLexer(lexer.Lexer):
 
     self.limit = limit
 
-  def SetFields(self, match, **_):
-    """Set the selective fields."""
+  def SetFields(self, match, **unused_kwargs):
+    """Set the selective fields.
+
+    Args:
+      match: TODO
+    """
     text = match.group(1).lower()
     field_text, _, _ = text.partition(' from ')
 
@@ -77,8 +99,8 @@ class SelectiveLexer(lexer.Lexer):
       self.fields = [use_field_text]
 
 
-class DynamicFilter(eventfilter.EventObjectFilter):
-  """A twist to the EventObjectFilter allowing output fields to be selected.
+class DynamicFilter(event_filter.EventObjectFilter):
+  """Event object filter that supports for selective output fields.
 
   This filter is essentially the same as the EventObjectFilter except it wraps
   it in a selection of which fields should be included by an output module that
@@ -91,6 +113,13 @@ class DynamicFilter(eventfilter.EventObjectFilter):
   fields field_a and field_b to be used in the output.
   """
 
+  def __init__(self):
+    """Initialize the selective event object filter."""
+    super(DynamicFilter, self).__init__()
+    self._fields = []
+    self._limit = 0
+    self._separator = u','
+
   @property
   def fields(self):
     """Set the fields property."""
@@ -98,23 +127,23 @@ class DynamicFilter(eventfilter.EventObjectFilter):
 
   @property
   def limit(self):
-    """Return the limit of row counts."""
+    """The limit of row counts."""
     return self._limit
 
   @property
   def separator(self):
-    """Return the separator value."""
+    """The separator value."""
     return self._separator
 
-  def __init__(self):
-    """Initialize the selective EventObjectFilter."""
-    super(DynamicFilter, self).__init__()
-    self._fields = []
-    self._limit = 0
-    self._separator = u','
-
   def CompileFilter(self, filter_string):
-    """Compile the filter string into a EventObjectFilter matcher."""
+    """Compile the filter string into a EventObjectFilter matcher.
+
+    Args:
+      filter_string: TODO
+
+    Raises:
+      WrongPlugin: TODO
+    """
     lex = SelectiveLexer(filter_string)
 
     _ = lex.NextToken()
@@ -145,3 +174,5 @@ class DynamicFilter(eventfilter.EventObjectFilter):
       self._matcher = None
     self._filter_expression = filter_string
 
+
+manager.FiltersManager.RegisterFilter(DynamicFilter)

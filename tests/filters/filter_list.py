@@ -7,7 +7,7 @@ import logging
 import tempfile
 import unittest
 
-from plaso.filters import filterlist
+from plaso.filters import filter_list
 
 from tests.filters import test_lib
 
@@ -17,7 +17,7 @@ class ObjectFilterTest(test_lib.FilterTestHelper):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.test_filter = filterlist.ObjectFilterList()
+    self.test_filter = filter_list.ObjectFilterList()
 
   def testFilterFail(self):
     """Run few tests that should not be a proper filter."""
