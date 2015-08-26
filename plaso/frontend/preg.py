@@ -336,10 +336,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
 
   def GetRegistryFilePaths(self, plugin_name=None, registry_file_type=None):
-    """Returns a list of Registry paths from a configuration object.
+    """Returns a list of Registry paths.
 
-    The Registry file type is not set it attempted to be determined based
-    on the precense of specific Registry keys.
+    If the Registry file type is not set this functions attempts to determine
+    it based on the presence of specific Registry keys.
 
     Args:
       plugin_name: optional string containing the name of the plugin or an empty
