@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.parsers import winreg
-from plaso.winregistry import regf
 
 from tests.parsers import test_lib
 
@@ -32,41 +31,9 @@ class WinRegTest(test_lib.ParserTestCase):
 
     return parser_chains
 
-  def _OpenWinRegFile(self, filename):
-    """Opens a Windows Registry file.
-
-    Args:
-      filename: The filename of the Windows Registry file, relative to
-                the test data location.
-
-    Returns:
-      A Windows Registry file object (instance of WinRegFile).
-    """
-    file_entry = self._GetTestFileEntryFromPath([filename])
-    winreg_file = regf.WinPyregfFile()
-    winreg_file.OpenFileEntry(file_entry)
-
-    return winreg_file
-
   def _PluginNameToParserChain(self, plugin_name):
     """Generate the correct parser chain for a given plugin."""
     return u'winreg/{0:s}'.format(plugin_name)
-
-  def testGetRegistryFileType(self):
-    """Tests the _GetRegistryFileType function."""
-    winreg_file = self._OpenWinRegFile(u'NTUSER.DAT')
-
-    registry_type = self._parser._GetRegistryFileType(winreg_file)
-    self.assertEqual(registry_type, u'NTUSER')
-
-    winreg_file.Close()
-
-    winreg_file = self._OpenWinRegFile(u'SYSTEM')
-
-    registry_type = self._parser._GetRegistryFileType(winreg_file)
-    self.assertEqual(registry_type, u'SYSTEM')
-
-    winreg_file.Close()
 
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""

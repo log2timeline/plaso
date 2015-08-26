@@ -1,147 +1,150 @@
-output Package
-==============
+plaso.output package
+====================
 
-:mod:`output` Package
----------------------
+Submodules
+----------
 
-.. automodule:: plaso.output
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`dynamic` Module
----------------------
+plaso.output.dynamic module
+---------------------------
 
 .. automodule:: plaso.output.dynamic
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`elastic` Module
----------------------
+plaso.output.elastic module
+---------------------------
 
 .. automodule:: plaso.output.elastic
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`interface` Module
------------------------
+plaso.output.interface module
+-----------------------------
 
 .. automodule:: plaso.output.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`json_line` Module
------------------------
+plaso.output.json_line module
+-----------------------------
 
 .. automodule:: plaso.output.json_line
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`json_out` Module
-----------------------
+plaso.output.json_out module
+----------------------------
 
 .. automodule:: plaso.output.json_out
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`l2t_csv` Module
----------------------
+plaso.output.l2t_csv module
+---------------------------
 
 .. automodule:: plaso.output.l2t_csv
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`manager` Module
----------------------
+plaso.output.manager module
+---------------------------
 
 .. automodule:: plaso.output.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`mediator` Module
-----------------------
+plaso.output.mediator module
+----------------------------
 
 .. automodule:: plaso.output.mediator
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`mysql_4n6time` Module
----------------------------
+plaso.output.mysql_4n6time module
+---------------------------------
 
 .. automodule:: plaso.output.mysql_4n6time
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`null` Module
-------------------
+plaso.output.null module
+------------------------
 
 .. automodule:: plaso.output.null
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`pstorage` Module
-----------------------
+plaso.output.pstorage module
+----------------------------
 
 .. automodule:: plaso.output.pstorage
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`rawpy` Module
--------------------
+plaso.output.rawpy module
+-------------------------
 
 .. automodule:: plaso.output.rawpy
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`shared_4n6time` Module
-----------------------------
+plaso.output.shared_4n6time module
+----------------------------------
 
 .. automodule:: plaso.output.shared_4n6time
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`sqlite_4n6time` Module
-----------------------------
+plaso.output.sqlite_4n6time module
+----------------------------------
 
 .. automodule:: plaso.output.sqlite_4n6time
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`timesketch_out` Module
-----------------------------
+plaso.output.timesketch_out module
+----------------------------------
 
 .. automodule:: plaso.output.timesketch_out
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`tln` Module
------------------
+plaso.output.tln module
+-----------------------
 
 .. automodule:: plaso.output.tln
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`xlsx` Module
-------------------
+plaso.output.xlsx module
+------------------------
 
 .. automodule:: plaso.output.xlsx
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.output
+    :members:
+    :undoc-members:
+    :show-inheritance:

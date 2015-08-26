@@ -7,10 +7,10 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
+from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import knowledge_base
 from plaso.lib import event
 from plaso.preprocessors import windows
-from plaso.winregistry import registry as winregistry
 
 from tests.preprocessors import test_lib
 
@@ -31,10 +31,10 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
     self._searcher = file_system_searcher.FileSystemSearcher(
         self._fake_file_system, mount_point)
 
-    registry_file_reader = winregistry.WinRegistryFileReader(
+    registry_file_reader = dfwinreg_registry.WinRegistryFileReader(
         self._searcher, pre_obj=pre_obj)
-    self._win_registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF,
+    self._win_registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF,
         registry_file_reader=registry_file_reader)
 
 
@@ -54,10 +54,10 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
     self._searcher = file_system_searcher.FileSystemSearcher(
         self._fake_file_system, mount_point)
 
-    registry_file_reader = winregistry.WinRegistryFileReader(
+    registry_file_reader = dfwinreg_registry.WinRegistryFileReader(
         self._searcher, pre_obj=pre_obj)
-    self._win_registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF,
+    self._win_registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF,
         registry_file_reader=registry_file_reader)
 
 

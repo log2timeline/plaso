@@ -4,13 +4,13 @@
 
 import unittest
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
-from plaso.winregistry import interface as winreg_interface
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
@@ -26,21 +26,25 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     values = []
 
     # The order is: 201
-    values.append(winreg_test_lib.TestRegValue(
-        u'MRUListEx', b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00',
-        winreg_interface.WinRegValue.REG_BINARY, 123))
-    values.append(winreg_test_lib.TestRegValue(
-        u'0', u'Some random text here'.encode(u'utf_16_le'),
-        winreg_interface.WinRegValue.REG_SZ, 1892))
-    values.append(winreg_test_lib.TestRegValue(
-        u'1', u'c:\\evil.exe'.encode(u'utf_16_le'),
-        winreg_interface.WinRegValue.REG_BINARY, 612))
-    values.append(winreg_test_lib.TestRegValue(
-        u'2', u'C:\\looks_legit.exe'.encode(u'utf_16_le'),
-        winreg_interface.WinRegValue.REG_SZ, 1001))
+    value_data = b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00'
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'MRUListEx', value_data, dfwinreg_definitions.REG_BINARY,
+        offset=123))
 
-    winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, 1456)
+    value_data = u'Some random text here'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'0', value_data, dfwinreg_definitions.REG_SZ, offset=1892))
+
+    value_data = u'c:\\evil.exe'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'1', value_data, dfwinreg_definitions.REG_BINARY, offset=612))
+
+    value_data = u'C:\\looks_legit.exe'.encode(u'utf_16_le')
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'2', value_data, dfwinreg_definitions.REG_SZ, offset=1001))
+
+    timestamp = timelib.Timestamp.CopyFromString(u'2012-08-28 09:23:49.002031')
+    winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

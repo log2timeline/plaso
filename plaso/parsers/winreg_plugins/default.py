@@ -28,15 +28,17 @@ class DefaultPlugin(interface.KeyPlugin):
   WEIGHT = 3
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Returns an event object based on a Registry key name and values.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
 
@@ -74,7 +76,7 @@ class DefaultPlugin(interface.KeyPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
-        offset=key.offset, registry_type=registry_type)
+        offset=key.offset, registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)
 
@@ -83,17 +85,19 @@ class DefaultPlugin(interface.KeyPlugin):
   # plugin is available.
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None, **kwargs):
     """Process the key and return a generator to extract event objects.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     self.GetEntries(
-        parser_mediator, key=key, registry_type=registry_type, **kwargs)
+        parser_mediator, key=key, registry_file_type=registry_file_type,
+        **kwargs)
 
 
 winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

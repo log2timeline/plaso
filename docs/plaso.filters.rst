@@ -1,35 +1,38 @@
-filters Package
-===============
+plaso.filters package
+=====================
 
-:mod:`filters` Package
-----------------------
+Submodules
+----------
 
-.. automodule:: plaso.filters
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`dynamic_filter` Module
-----------------------------
+plaso.filters.dynamic_filter module
+-----------------------------------
 
 .. automodule:: plaso.filters.dynamic_filter
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`eventfilter` Module
--------------------------
+plaso.filters.eventfilter module
+--------------------------------
 
 .. automodule:: plaso.filters.eventfilter
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`filterlist` Module
-------------------------
+plaso.filters.filterlist module
+-------------------------------
 
 .. automodule:: plaso.filters.filterlist
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.filters
+    :members:
+    :undoc-members:
+    :show-inheritance:

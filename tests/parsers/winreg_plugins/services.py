@@ -4,12 +4,13 @@
 
 import unittest
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import services
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
@@ -24,26 +25,32 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\ControlSet001\\services\\TestDriver'
 
     values = []
-    values.append(winreg_test_lib.TestRegValue(
-        u'Type', b'\x02\x00\x00\x00', 4, 123))
-    values.append(winreg_test_lib.TestRegValue(
-        u'Start', b'\x02\x00\x00\x00', 4, 127))
-    values.append(winreg_test_lib.TestRegValue(
-        u'ErrorControl', b'\x01\x00\x00\x00', 4, 131))
-    values.append(winreg_test_lib.TestRegValue(
-        u'Group', u'Pnp Filter'.encode(u'utf_16_le'), 1, 140))
-    values.append(winreg_test_lib.TestRegValue(
-        u'DisplayName', u'Test Driver'.encode(u'utf_16_le'), 1, 160))
-    values.append(winreg_test_lib.TestRegValue(
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'Type', b'\x02\x00\x00\x00', dfwinreg_definitions.REG_DWORD,
+        offset=123))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'Start', b'\x02\x00\x00\x00', dfwinreg_definitions.REG_DWORD,
+        offset=127))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'ErrorControl', b'\x01\x00\x00\x00', dfwinreg_definitions.REG_DWORD,
+        offset=131))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'Group', u'Pnp Filter'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=140))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'DisplayName', u'Test Driver'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=160))
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'DriverPackageId',
-        u'testdriver.inf_x86_neutral_dd39b6b0a45226c4'.encode(u'utf_16_le'), 1,
-        180))
-    values.append(winreg_test_lib.TestRegValue(
-        u'ImagePath', u'C:\\Dell\\testdriver.sys'.encode(u'utf_16_le'), 1, 200))
+        u'testdriver.inf_x86_neutral_dd39b6b0a45226c4'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=180))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'ImagePath', u'C:\\Dell\\testdriver.sys'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=200))
 
     timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)

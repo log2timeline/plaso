@@ -5,8 +5,8 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
+from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.lib import errors
-from plaso.winregistry import registry as winregistry
 
 
 class PreprocessPluginsManager(object):
@@ -158,10 +158,10 @@ class PreprocessPluginsManager(object):
 
     # TODO: do not pass the full pre_obj here but just
     # the necessary values.
-    registry_file_reader = winregistry.WinRegistryFileReader(
+    registry_file_reader = dfwinreg_registry.WinRegistryFileReader(
         searcher, pre_obj=pre_obj)
-    win_registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF,
+    win_registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF,
         registry_file_reader=registry_file_reader)
 
     for weight in cls._GetWeights(cls._registry_plugin_classes, platform):

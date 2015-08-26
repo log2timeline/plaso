@@ -6,9 +6,9 @@ import logging
 import pyregf
 
 from plaso import dependencies
+from plaso.dfwinreg import interface
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.winregistry import interface
 
 
 dependencies.CheckModuleVersion(u'pyregf')
@@ -257,7 +257,7 @@ class WinPyregfFile(interface.WinRegistryFile):
     self._ascii_codepage = ascii_codepage
     self._base_key = None
     self._file_object = None
-    self._pyregf_file = pyregf.file()
+    self._regf_file = pyregf.file()
 
     self.name = u''
 
@@ -267,7 +267,7 @@ class WinPyregfFile(interface.WinRegistryFile):
     self.name = u''
 
     if self._file_object:
-      self._pyregf_file.close()
+      self._regf_file.close()
       self._file_object.close()
       self._file_object = None
 
@@ -306,7 +306,7 @@ class WinPyregfFile(interface.WinRegistryFile):
       A Registry key (instance of WinRegistryKey).
     """
     regf_key = self._regf_file.get_root_key()
-    return pyregf.WinPyregfKey(regf_key, u'', root=True)
+    return WinPyregfKey(regf_key, u'', root=True)
 
   def Open(self, file_object):
     """Opens the Windows Registry file.
@@ -322,15 +322,15 @@ class WinPyregfFile(interface.WinRegistryFile):
     # need to properly set the codepage so the library can properly interpret
     # values in the Registry.
     try:
-      self._pyregf_file.set_ascii_codepage(self._ascii_codepage)
+      self._regf_file.set_ascii_codepage(self._ascii_codepage)
 
     except (TypeError, IOError):
       logging.error((
           u'Unable to set the Windows Registry file codepage: {0:s}. '
           u'Ignoring provided value.').format(self._ascii_codepage))
 
-    self._pyregf_file.open_file_object(file_object)
-    self._base_key = self._pyregf_file.get_root_key()
+    self._regf_file.open_file_object(file_object)
+    self._base_key = self._regf_file.get_root_key()
     self._file_object = file_object
 
   def OpenFileEntry(self, file_entry):
@@ -352,6 +352,29 @@ class WinPyregfFile(interface.WinRegistryFile):
     except IOError:
       file_object.close()
       raise
+
+  # TODO: move to key.
+  def _RecurseKey(self, key):
+    """Recurses a Registry key.
+
+     Yields:
+       A Registry key (instance of WinPyregfKey).
+    """
+    if key:
+      yield key
+
+      for subkey in key.GetSubkeys():
+        for recursed_key in self._RecurseKey(subkey):
+          yield recursed_key
+
+  def RecurseKeys(self):
+    """Recurses the Registry file keys starting with the root key.
+
+    Yields:
+      A Registry key (instance of WinPyregfKey) generator.
+    """
+    root_key = self.GetRootKey()
+    return self._RecurseKey(root_key)
 
 
 class WinRegistryFileREGF(object):
@@ -395,7 +418,7 @@ class WinRegistryFileREGF(object):
     regf_key = self._regf_file.get_root_key()
     # TODO: refactor to WinRegistryKey, also remove parent key path or
     # use WinRegistry path.
-    return pyregf.WinPyregfKey(regf_key, u'', root=True)
+    return WinPyregfKey(regf_key, u'', root=True)
 
   def Open(self, file_object):
     """Opens the Windows Registry file using a file-like object.

@@ -8,6 +8,7 @@ from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
 
@@ -17,8 +18,13 @@ from tests.frontend import test_lib
 class PregFrontendTest(test_lib.FrontendTestCase):
   """Tests for the preg front-end."""
 
-  def _ConfigureSingleFileTest(self):
-    """Configure a single file test."""
+  def _ConfigureSingleFileTest(self, knowledge_base_values=None):
+    """Configure a single file test.
+
+    Args:
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
+    """
     self._front_end = preg.PregFrontend()
     self._front_end.SetSingleFile(True)
     registry_file_path = self._GetTestFilePath([u'SYSTEM'])
@@ -27,7 +33,12 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     self._front_end.SetSourcePath(registry_file_path)
     self._front_end.SetSourcePathSpecs([path_spec])
+
     self._knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        self._knowledge_base_object.SetValue(identifier, value)
+
     self._front_end.SetKnowledgeBase(self._knowledge_base_object)
 
   def _ConfigureStorageMediaFileTest(self):
@@ -84,7 +95,8 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self._knowledge_base_object.pre_obj.sysregistry = u'C:/Windows/Foo'
     expected_paths = [u'C:/Windows/Foo/SOFTWARE']
 
-    paths = self._front_end.GetRegistryFilePaths(registry_type=u'SOFTWARE')
+    paths = self._front_end.GetRegistryFilePaths(
+        registry_file_type=u'SOFTWARE')
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
   def testGetRegistryHelpers(self):
@@ -94,7 +106,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
       _ = self._front_end.GetRegistryHelpers()
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SYSTEM'])
+        registry_file_types=[u'SYSTEM'])
 
     self.assertEquals(len(registry_helpers), 1)
 
@@ -105,13 +117,14 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     self._ConfigureStorageMediaFileTest()
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'NTUSER'])
+        registry_file_types=[u'NTUSER'])
 
     self.assertEquals(len(registry_helpers), 3)
 
     registry_helper = registry_helpers[0]
     registry_helper.Open()
-    self.assertEquals(registry_helper.type, u'NTUSER')
+    expected_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_NTUSER
+    self.assertEquals(registry_helper.file_type, expected_file_type)
     self.assertEquals(registry_helper.name, u'NTUSER.DAT')
     self.assertEquals(registry_helper.collector_name, u'TSK')
     registry_helper.Close()
@@ -121,7 +134,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertEquals(len(registry_helpers), 3)
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SAM'])
+        registry_file_types=[u'SAM'])
     self.assertEquals(len(registry_helpers), 1)
 
     # TODO: Add a test for getting Registry helpers from a storage media file
@@ -145,9 +158,11 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
   def testParseRegistry(self):
     """Test the ParseRegistryFile and ParseRegistryKey functions."""
-    self._ConfigureSingleFileTest()
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    self._ConfigureSingleFileTest(knowledge_base_values=knowledge_base_values)
+
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SYSTEM'])
+        registry_file_types=[u'SYSTEM'])
     registry_helper = registry_helpers[0]
 
     plugins = self._front_end.GetRegistryPluginsFromRegistryType(u'SYSTEM')
@@ -158,6 +173,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
       key_list.extend(plugin.REG_KEYS)
 
     self._front_end.ExpandKeysRedirect(key_list)
+
     parsed_data = self._front_end.ParseRegistryFile(
         registry_helper, key_paths=key_list, use_plugins=plugin_list)
     for key_parsed in parsed_data:

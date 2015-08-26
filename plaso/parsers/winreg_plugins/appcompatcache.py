@@ -548,16 +548,13 @@ class AppCompatCachePlugin(interface.KeyPlugin):
     return cached_entry_object
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, codepage=u'cp1252', **unused_kwargs):
     """Extracts event objects from a Application Compatibility Cache key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     value = key.GetValue(u'AppCompatCache')
