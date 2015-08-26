@@ -4,12 +4,13 @@
 
 import unittest
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import terminal_server
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
@@ -24,19 +25,19 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\Software\\Microsoft\\Terminal Server Client\\Servers'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'UsernameHint', u'DOMAIN\\username'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
+        dfwinreg_definitions.REG_SZ, offset=1892))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
 
     server_key_path = (
         u'\\Software\\Microsoft\\Terminal Server Client\\Servers\\myserver.com')
-    server_key = winreg_test_lib.TestRegKey(
+    server_key = dfwinreg_test_lib.TestRegKey(
         server_key_path, expected_timestamp, values, offset=1456)
 
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, expected_timestamp, None, offset=865, subkeys=[server_key])
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -71,16 +72,16 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\Software\\Microsoft\\Terminal Server Client\\Default'
     values = []
 
-    values.append(winreg_test_lib.TestRegValue(
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'MRU0', u'192.168.16.60'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
-    values.append(winreg_test_lib.TestRegValue(
+        dfwinreg_definitions.REG_SZ, offset=1892))
+    values.append(dfwinreg_test_lib.TestRegValue(
         u'MRU1', u'computer.domain.com'.encode(u'utf_16_le'),
-        winreg_test_lib.TestRegValue.REG_SZ, 612))
+        dfwinreg_definitions.REG_SZ, 612))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
-    winreg_key = winreg_test_lib.TestRegKey(
+    winreg_key = dfwinreg_test_lib.TestRegKey(
         key_path, expected_timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)

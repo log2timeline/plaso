@@ -4,7 +4,7 @@
 import os
 import unittest
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -161,7 +161,7 @@ class ParserTestCase(unittest.TestCase):
     """
     path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _ParseFile(self, parser_object, path, knowledge_base_values=None):
@@ -178,7 +178,7 @@ class ParserTestCase(unittest.TestCase):
       TestItemQueueConsumer).
     """
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
         parser_object, path_spec, knowledge_base_values=knowledge_base_values)
 

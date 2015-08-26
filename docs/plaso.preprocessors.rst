@@ -1,51 +1,54 @@
-preprocessors Package
-=====================
+plaso.preprocessors package
+===========================
 
-:mod:`preprocessors` Package
-----------------------------
+Submodules
+----------
 
-.. automodule:: plaso.preprocessors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`interface` Module
------------------------
+plaso.preprocessors.interface module
+------------------------------------
 
 .. automodule:: plaso.preprocessors.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`linux` Module
--------------------
+plaso.preprocessors.linux module
+--------------------------------
 
 .. automodule:: plaso.preprocessors.linux
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`macosx` Module
---------------------
+plaso.preprocessors.macosx module
+---------------------------------
 
 .. automodule:: plaso.preprocessors.macosx
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`manager` Module
----------------------
+plaso.preprocessors.manager module
+----------------------------------
 
 .. automodule:: plaso.preprocessors.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`windows` Module
----------------------
+plaso.preprocessors.windows module
+----------------------------------
 
 .. automodule:: plaso.preprocessors.windows
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.preprocessors
+    :members:
+    :undoc-members:
+    :show-inheritance:

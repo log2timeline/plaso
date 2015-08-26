@@ -71,15 +71,17 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     version_value = key.GetValue(u'Version')
     count_subkey = key.GetSubkey(u'Count')
@@ -159,7 +161,8 @@ class UserAssistPlugin(interface.KeyPlugin):
             text_dict[value_name] = u'[Count: {0:d}]'.format(count)
             event_object = windows_events.WindowsRegistryEvent(
                 timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
-                text_dict, offset=value.offset, registry_type=registry_type)
+                text_dict, offset=value.offset,
+                registry_file_type=registry_file_type)
             parser_mediator.ProduceEvent(event_object)
 
         elif version_value.data == 5:
@@ -185,7 +188,7 @@ class UserAssistPlugin(interface.KeyPlugin):
           event_object = windows_events.WindowsRegistryEvent(
               timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
               text_dict, offset=count_subkey.offset,
-              registry_type=registry_type)
+              registry_file_type=registry_file_type)
           parser_mediator.ProduceEvent(event_object)
 
 

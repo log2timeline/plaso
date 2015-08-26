@@ -35,15 +35,17 @@ class ServicesPlugin(interface.ValuePlugin):
       return None
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
 
@@ -70,7 +72,7 @@ class ServicesPlugin(interface.ValuePlugin):
       # certain values when we're outputting the event.
       event_object = windows_events.WindowsRegistryServiceEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type, urls=self.URLS)
+          registry_file_type=registry_file_type, urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 

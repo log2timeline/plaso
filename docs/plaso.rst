@@ -1,21 +1,5 @@
-plaso Package
+plaso package
 =============
-
-:mod:`plaso` Package
---------------------
-
-.. automodule:: plaso.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`dependencies` Module
---------------------------
-
-.. automodule:: plaso.dependencies
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Subpackages
 -----------
@@ -24,6 +8,7 @@ Subpackages
 
     plaso.analysis
     plaso.cli
+    plaso.dfwinreg
     plaso.engine
     plaso.events
     plaso.filters
@@ -40,5 +25,23 @@ Subpackages
     plaso.storage
     plaso.unix
     plaso.winnt
-    plaso.winregistry
 
+Submodules
+----------
+
+plaso.dependencies module
+-------------------------
+
+.. automodule:: plaso.dependencies
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: plaso
+    :members:
+    :undoc-members:
+    :show-inheritance:

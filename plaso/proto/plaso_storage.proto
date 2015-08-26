@@ -151,8 +151,8 @@ message EventObject {
   optional string hostname = 17;
   // The name of the plugin that was used, if applicable.
   optional string plugin = 18;
-  // For Windows Registry files, defines the type of registry, eg: NTUSER, SAM.
-  optional string registry_type = 19;
+  // The Windows Registry file type, e.g.: NTUSER, SAM.
+  optional string registry_file_type = 19;
   // Boolean value that indicates whether the file was allocated or not.
   optional bool allocated = 20;
   // For filesystem records, defines the type of filesystem, eg: NTFS, FAT.

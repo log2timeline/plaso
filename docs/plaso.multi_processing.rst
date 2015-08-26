@@ -1,43 +1,46 @@
-multi_processing Package
-========================
+plaso.multi_processing package
+==============================
 
-:mod:`multi_processing` Package
--------------------------------
+Submodules
+----------
 
-.. automodule:: plaso.multi_processing
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`multi_process` Module
----------------------------
+plaso.multi_processing.multi_process module
+-------------------------------------------
 
 .. automodule:: plaso.multi_processing.multi_process
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`process_info` Module
---------------------------
+plaso.multi_processing.process_info module
+------------------------------------------
 
 .. automodule:: plaso.multi_processing.process_info
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`rpc` Module
------------------
+plaso.multi_processing.rpc module
+---------------------------------
 
 .. automodule:: plaso.multi_processing.rpc
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`xmlrpc` Module
---------------------
+plaso.multi_processing.xmlrpc module
+------------------------------------
 
 .. automodule:: plaso.multi_processing.xmlrpc
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.multi_processing
+    :members:
+    :undoc-members:
+    :show-inheritance:

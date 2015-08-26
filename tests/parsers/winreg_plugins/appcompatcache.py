@@ -6,12 +6,13 @@ import unittest
 
 from dfvfs.path import fake_path_spec
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestFileEntry(object):
@@ -55,13 +56,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
       A Windows Registry key object (instance of TestRegKey).
     """
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    values = [winreg_test_lib.TestRegValue(
-        u'AppCompatCache', binary_data,
-        winreg_test_lib.TestRegValue.REG_BINARY)]
+    timestamp = timelib.Timestamp.CopyFromString(time_string)
+    values = [dfwinreg_test_lib.TestRegValue(
+        u'AppCompatCache', binary_data, dfwinreg_definitions.REG_BINARY)]
 
-    return winreg_test_lib.TestRegKey(
-        key_path, expected_timestamp, values, offset=1456)
+    return dfwinreg_test_lib.TestRegKey(
+        key_path, timestamp, values, offset=1456)
 
   def _ParseAppCompatCacheKey(self, file_entry, winreg_key):
     """Parses the AppCompatCacheKey.
