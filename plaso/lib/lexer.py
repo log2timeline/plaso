@@ -47,7 +47,18 @@ class ParseError(Error):
 
 
 class Lexer(object):
-  """A generic feed lexer."""
+  """A generic feed lexer.
+
+  Attributes:
+    buffer: TODO
+    error: TODO
+    flags: TODO
+    processed: TODO
+    processed_buffer: TODO
+    state: TODO
+    state_stack: TODO
+    verbose: TODO
+  """
   _CONTINUE_STATE = 'CONTINUE'
   _INITIAL_STATE = 'INITIAL'
 
@@ -56,8 +67,13 @@ class Lexer(object):
   # A list of Token() instances.
   tokens = []
 
+  # TODO: what does an empty string represent?
   def __init__(self, data=''):
-    """Initializes the lexer object."""
+    """Initializes the lexer object.
+
+    Args:
+      data: optional data to be processed by the lexer.
+    """
     super(Lexer, self).__init__()
     self.buffer = data
     self.error = 0
@@ -118,30 +134,37 @@ class Lexer(object):
     self.buffer = self.buffer[1:]
     return self._ERROR_TOKEN
 
-  def Feed(self, data):
-    """Feed the buffer with data."""
-    self.buffer = ''.join([self.buffer, data])
-
-  def Empty(self):
-    """Return a boolean indicating if the buffer is empty."""
-    return not self.buffer
+  def Close(self):
+    """A convenience function to force us to parse all the data."""
+    while self.NextToken():
+      if not self.buffer:
+        return
 
   def Default(self, **kwarg):
     """The default callback handler."""
     logging.debug(u'Default handler: {0:s}'.format(kwarg))
 
+  def Empty(self):
+    """Returns a boolean indicating if the buffer is empty."""
+    return not self.buffer
+
   def Error(self, message=None, weight=1):
-    """Log an error down."""
+    """Log an error down.
+
+    Args:
+      message: optional TODO
+      weight: optional TODO
+    """
     logging.debug(u'Error({0:d}): {1:s}'.format(weight, message))
     # Keep a count of errors
     self.error += weight
 
-  def PushState(self, **_):
+  def PushState(self, **unused_kwargs):
     """Push the current state on the state stack."""
     logging.debug(u'Storing state {0:s}'.format(repr(self.state)))
     self.state_stack.append(self.state)
 
-  def PopState(self, **_):
+  def PopState(self, **unused_kwargs):
     """Pop the previous state from the stack."""
     try:
       self.state = self.state_stack.pop()
@@ -152,16 +175,22 @@ class Lexer(object):
       self.Error(
           u'Tried to pop the state but failed - possible recursion error')
 
-  def PushBack(self, string='', **_):
-    """Push the match back on the stream."""
+  def Feed(self, data):
+    """Feed the buffer with data.
+
+    Args:
+      data: data to be processed by the lexer.
+    """
+    self.buffer = ''.join([self.buffer, data])
+
+  def PushBack(self, string='', **unused_kwargs):
+    """Push the match back on the stream.
+
+    Args:
+      string: optional TODO
+    """
     self.buffer = string + self.buffer
     self.processed_buffer = self.processed_buffer[:-len(string)]
-
-  def Close(self):
-    """A convenience function to force us to parse all the data."""
-    while self.NextToken():
-      if not self.buffer:
-        return
 
 
 class SelfFeederMixIn(Lexer):
@@ -180,21 +209,29 @@ class SelfFeederMixIn(Lexer):
     super(SelfFeederMixIn, self).__init__()
     self.file_object = file_object
 
+  def Feed(self, size=512):
+    """Feed data into the buffer.
+
+    Args:
+      size: optional TODO
+    """
+    data = self.file_object.read(size)
+    Lexer.Feed(self, data)
+    return len(data)
+
   def NextToken(self):
-    """Return the next token."""
+    """Retrieves the next token.
+
+    Returns:
+      The next token (instance of Token) or None.
+    """
     # If we don't have enough data - feed ourselves: We assume
     # that we must have at least one sector in our buffer.
     if len(self.buffer) < 512:
       if self.Feed() == 0 and not self.buffer:
-        return None
+        return
 
     return Lexer.NextToken(self)
-
-  def Feed(self, size=512):
-    """Feed data into the buffer."""
-    data = self.file_object.read(size)
-    Lexer.Feed(self, data)
-    return len(data)
 
 
 class Expression(object):
@@ -210,13 +247,10 @@ class Expression(object):
     """Initializes the expression object."""
     self.args = []
 
-  def SetAttribute(self, attribute):
-    """Set the attribute."""
-    self.attribute = attribute
-
-  def SetOperator(self, operator):
-    """Set the operator."""
-    self.operator = operator
+  def __str__(self):
+    """Return a string representation of the expression."""
+    return 'Expression: ({0:s}) ({1:s}) {2:s}'.format(
+        self.attribute, self.operator, self.args)
 
   def AddArg(self, arg):
     """Adds a new arg to this expression.
@@ -239,20 +273,23 @@ class Expression(object):
 
     return False
 
-  def __str__(self):
-    """Return a string representation of the expression."""
-    return 'Expression: ({0:s}) ({1:s}) {2:s}'.format(
-        self.attribute, self.operator, self.args)
+  def Compile(self, unused_filter_implementation):
+    """Given a filter implementation, compile this expression."""
+    raise NotImplementedError(
+        u'{0:s} does not implement Compile.'.format(self.__class__.__name__))
 
   # TODO: rename this function to GetTreeAsString or equivalent.
   def PrintTree(self, depth=''):
     """Print the tree."""
     return u'{0:s} {1:s}'.format(depth, self)
 
-  def Compile(self, unused_filter_implementation):
-    """Given a filter implementation, compile this expression."""
-    raise NotImplementedError(
-        u'{0:s} does not implement Compile.'.format(self.__class__.__name__))
+  def SetAttribute(self, attribute):
+    """Set the attribute."""
+    self.attribute = attribute
+
+  def SetOperator(self, operator):
+    """Set the operator."""
+    self.operator = operator
 
 
 class BinaryExpression(Expression):
@@ -364,23 +401,23 @@ class SearchParser(Lexer):
     self.stack = []
     Lexer.__init__(self, data)
 
-  def BinaryOperator(self, string=None, **_):
+  def BinaryOperator(self, string=None, **unused_kwargs):
     """Set the binary operator."""
     self.stack.append(self.binary_expression_cls(string))
 
-  def BracketOpen(self, **_):
+  def BracketOpen(self, **unused_kwargs):
     """Define an open bracket."""
     self.stack.append('(')
 
-  def BracketClose(self, **_):
+  def BracketClose(self, **unused_kwargs):
     """Close the bracket."""
     self.stack.append(')')
 
-  def StringStart(self, **_):
+  def StringStart(self, **unused_kwargs):
     """Initialize the string."""
     self.string = ''
 
-  def StringEscape(self, string, match, **_):
+  def StringEscape(self, string, match, **unused_kwargs):
     """Escape backslashes found inside a string quote.
 
     Backslashes followed by anything other than ['"rnbt] will just be included
@@ -395,11 +432,11 @@ class SearchParser(Lexer):
     else:
       self.string += string
 
-  def StringInsert(self, string='', **_):
+  def StringInsert(self, string='', **unused_kwargs):
     """Add to the string."""
     self.string += string
 
-  def StringFinish(self, **_):
+  def StringFinish(self, **unused_kwargs):
     """Finish the string operation."""
     if self.state == 'ATTRIBUTE':
       return self.StoreAttribute(string=self.string)
@@ -407,7 +444,7 @@ class SearchParser(Lexer):
     elif self.state == 'ARG_LIST':
       return self.InsertArg(string=self.string)
 
-  def StoreAttribute(self, string='', **_):
+  def StoreAttribute(self, string='', **unused_kwargs):
     """Store the attribute."""
     logging.debug(u'Storing attribute {0:s}'.format(repr(string)))
 
@@ -419,12 +456,12 @@ class SearchParser(Lexer):
 
     return 'OPERATOR'
 
-  def StoreOperator(self, string='', **_):
+  def StoreOperator(self, string='', **unused_kwargs):
     """Store the operator."""
     logging.debug(u'Storing operator {0:s}'.format(repr(string)))
     self.current_expression.SetOperator(string)
 
-  def InsertArg(self, string='', **_):
+  def InsertArg(self, string='', **unused_kwargs):
     """Insert an arg to the current expression."""
     logging.debug(u'Storing Argument {0:s}'.format(string))
 

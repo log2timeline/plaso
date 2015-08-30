@@ -9,21 +9,25 @@ import yaml
 from plaso.filters import interface
 from plaso.filters import manager
 from plaso.lib import errors
-from plaso.lib import pfilter
 
 
 class ObjectFilterList(interface.FilterObject):
   """A list of filters with addtional metadata."""
 
   def _IncludeKeyword(self, loader, node):
-    """A constructor for the include keyword in YAML.
+    """Callback for YAML add_constructor.
+
+    The YAML constructor is a function that converts a YAML node to a native
+    Python object. A YAML constructor accepts an instance of Loader and a node
+    and returns a Python object. For more information see:
+    http://pyyaml.org/wiki/PyYAMLDocumentation
 
     Args:
-      loader: TODO
-      node: TODO
+      loader: the YAML loader object (instance of yaml.Loader).
+      node: a YAML node (instance of yaml.TODO).
 
     Returns:
-      A YAML string read from TODO or None.
+      A Python object or None.
     """
     filename = loader.construct_scalar(node)
     if not os.path.isfile(filename):
@@ -55,7 +59,7 @@ class ObjectFilterList(interface.FilterObject):
                 name))
 
       meta_filter = meta.get(u'filter')
-      matcher = pfilter.GetMatcher(meta_filter, True)
+      matcher = self._GetMatcher(meta_filter)
       if not matcher:
         raise errors.WrongPlugin(
             u'Filter entry [{0:s}] malformed for rule: <{1:s}>'.format(
@@ -63,16 +67,18 @@ class ObjectFilterList(interface.FilterObject):
 
       self.filters.append((name, matcher, meta))
 
-  def CompileFilter(self, filter_string):
-    """Compile a set of ObjectFilters defined in an YAML file.
+  def CompileFilter(self, filter_expression):
+    """Compiles the filter expression.
+
+    The filter expression contains the name of a YAML file.
 
     Args:
-      filter_string: YAML string that defines the object filters.
+      filter_expression: string that contains the filter expression.
 
     Raises:
-      WrongPlugin: if the filter cannot be compiled.
+      WrongPlugin: if the filter could not be compiled.
     """
-    if not os.path.isfile(filter_string):
+    if not os.path.isfile(filter_expression):
       raise errors.WrongPlugin((
           u'ObjectFilterList requires an YAML file to be passed on, '
           u'this filter string is not a file.'))
@@ -81,7 +87,7 @@ class ObjectFilterList(interface.FilterObject):
         u'!include', self._IncludeKeyword, Loader=yaml.loader.SafeLoader)
     results = None
 
-    with open(filter_string, 'rb') as file_object:
+    with open(filter_expression, 'rb') as file_object:
       try:
         results = yaml.safe_load(file_object)
       except (yaml.scanner.ScannerError, IOError) as exception:
@@ -103,7 +109,7 @@ class ObjectFilterList(interface.FilterObject):
       raise errors.WrongPlugin(
           u'Wrong format of YAML file, entry not a dict ({0:s})'.format(
               results_type))
-    self._filter_expression = filter_string
+    self._filter_expression = filter_expression
 
   def Match(self, event_object):
     """Determines if the filter matches an event object.

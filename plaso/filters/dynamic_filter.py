@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""The dynamic event object filter.
+
+The dynamic event object filter is a variant of the event object filter that
+supports for selective output fields.
+"""
 
 from plaso.filters import event_filter
 from plaso.filters import manager
@@ -6,6 +11,7 @@ from plaso.lib import errors
 from plaso.lib import lexer
 
 
+# TODO: move this to lib.lexer ?
 class SelectiveLexer(lexer.Lexer):
   """A simple selective filter lexer implementation."""
 
@@ -32,62 +38,25 @@ class SelectiveLexer(lexer.Lexer):
       lexer.Token('LIMIT_END', r'(.+) SEPARATED BY', 'SetLimit', 'SEPARATE'),
       lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
+  # TODO: what does an empty string represent?
   def __init__(self, data=''):
-    """Initializes the selective lexer.
+    """Initializes the selective lexer object.
 
     Args:
-      data: TODO
+      data: optional data to be processed by the lexer.
     """
     self.fields = []
     self.limit = 0
     self.lex_filter = None
     self.separator = u','
-    super(SelectiveLexer, self).__init__(data)
-
-  def SetFilter(self, match, **unused_kwargs):
-    """Set the filter query.
-
-    Args:
-      match: TODO
-    """
-    filter_match = match.group(1)
-    if 'LIMIT' in filter_match:
-      # This only occurs in the case where we have "LIMIT X SEPARATED BY".
-      self.lex_filter, _, push_back = filter_match.rpartition('LIMIT')
-      self.PushBack('LIMIT {0:s} SEPARATED BY '.format(push_back))
-    else:
-      self.lex_filter = filter_match
-
-  def SetSeparator(self, match, **unused_kwargs):
-    """Set the separator of the output, only uses the first char.
-
-    Args:
-      match: TODO
-    """
-    separator = match.group(1)
-    if separator:
-      self.separator = separator[0]
-
-  def SetLimit(self, match, **unused_kwargs):
-    """Set the row limit.
-
-    Args:
-      match: TODO
-    """
-    try:
-      limit = int(match.group(1))
-    except ValueError:
-      self.Error('Invalid limit value, should be int [{}] = {}'.format(
-          type(match.group(1)), match.group(1)))
-      limit = 0
-
-    self.limit = limit
+    # TODO: is there a reason why super is not the first statement?
+    super(SelectiveLexer, self).__init__(data=data)
 
   def SetFields(self, match, **unused_kwargs):
     """Set the selective fields.
 
     Args:
-      match: TODO
+      match: the match object (instance of re.MatchObject).
     """
     text = match.group(1).lower()
     field_text, _, _ = text.partition(' from ')
@@ -98,20 +67,61 @@ class SelectiveLexer(lexer.Lexer):
     else:
       self.fields = [use_field_text]
 
+  def SetFilter(self, match, **unused_kwargs):
+    """Set the filter query.
+
+    Args:
+      match: the match object (instance of re.MatchObject).
+    """
+    filter_match = match.group(1)
+    if 'LIMIT' in filter_match:
+      # This only occurs in the case where we have "LIMIT X SEPARATED BY".
+      self.lex_filter, _, push_back = filter_match.rpartition('LIMIT')
+      self.PushBack('LIMIT {0:s} SEPARATED BY '.format(push_back))
+    else:
+      self.lex_filter = filter_match
+
+  def SetLimit(self, match, **unused_kwargs):
+    """Set the row limit.
+
+    Args:
+      match: the match object (instance of re.MatchObject).
+    """
+    try:
+      limit = int(match.group(1))
+    except ValueError:
+      self.Error('Invalid limit value, should be int [{}] = {}'.format(
+          type(match.group(1)), match.group(1)))
+      limit = 0
+
+    self.limit = limit
+
+  def SetSeparator(self, match, **unused_kwargs):
+    """Set the separator of the output, only uses the first char.
+
+    Args:
+      match: the match object (instance of re.MatchObject).
+    """
+    separator = match.group(1)
+    if separator:
+      self.separator = separator[0]
+
 
 class DynamicFilter(event_filter.EventObjectFilter):
   """Event object filter that supports for selective output fields.
 
-  This filter is essentially the same as the EventObjectFilter except it wraps
+  This filter is essentially the same as the event object filter except it wraps
   it in a selection of which fields should be included by an output module that
   has support for selective fields. That is to say the filter:
 
     SELECT field_a, field_b WHERE attribute contains 'text'
 
-  Will use the EventObjectFilter "attribute contains 'text'" and at the same
+  Will use the event object filter "attribute contains 'text'" and at the same
   time indicate to the appropriate output module that the user wants only the
   fields field_a and field_b to be used in the output.
   """
+
+  _STATE_END = u'END'
 
   def __init__(self):
     """Initialize the selective event object filter."""
@@ -135,44 +145,46 @@ class DynamicFilter(event_filter.EventObjectFilter):
     """The separator value."""
     return self._separator
 
-  def CompileFilter(self, filter_string):
-    """Compile the filter string into a EventObjectFilter matcher.
+  def CompileFilter(self, filter_expression):
+    """Compiles the filter expression.
+
+    The filter expression contains an object filter expression extended
+    with selective field selection.
 
     Args:
-      filter_string: TODO
+      filter_expression: string that contains the filter expression.
 
     Raises:
-      WrongPlugin: TODO
+      WrongPlugin: if the filter could not be compiled.
     """
-    lex = SelectiveLexer(filter_string)
+    lexer_object = SelectiveLexer(filter_expression)
 
-    _ = lex.NextToken()
-    if lex.error:
-      raise errors.WrongPlugin('Malformed filter string.')
+    lexer_object.NextToken()
+    if lexer_object.error:
+      raise errors.WrongPlugin(u'Malformed filter string.')
 
-    _ = lex.NextToken()
-    if lex.error:
-      raise errors.WrongPlugin('No fields defined.')
+    lexer_object.NextToken()
+    if lexer_object.error:
+      raise errors.WrongPlugin(u'No fields defined.')
 
-    if lex.state is not 'END':
-      while lex.state is not 'END':
-        _ = lex.NextToken()
-        if lex.error:
-          raise errors.WrongPlugin('No filter defined for DynamicFilter.')
+    while lexer_object.state != self._STATE_END:
+      lexer_object.NextToken()
+      if lexer_object.error:
+        raise errors.WrongPlugin(u'No filter defined for DynamicFilter.')
 
-    if lex.state != 'END':
+    if lexer_object.state != self._STATE_END:
       raise errors.WrongPlugin(
-          'Malformed DynamicFilter, end state not reached.')
+          u'Malformed DynamicFilter, end state not reached.')
 
-    self._fields = lex.fields
-    self._limit = lex.limit
-    self._separator = unicode(lex.separator)
+    self._fields = lexer_object.fields
+    self._limit = lexer_object.limit
+    self._separator = u'{0:s}'.format(lexer_object.separator)
 
-    if lex.lex_filter:
-      super(DynamicFilter, self).CompileFilter(lex.lex_filter)
+    if lexer_object.lex_filter:
+      super(DynamicFilter, self).CompileFilter(lexer_object.lex_filter)
     else:
       self._matcher = None
-    self._filter_expression = filter_string
+    self._filter_expression = filter_expression
 
 
 manager.FiltersManager.RegisterFilter(DynamicFilter)

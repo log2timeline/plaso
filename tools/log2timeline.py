@@ -23,6 +23,7 @@ from plaso.cli import tools as cli_tools
 from plaso.frontend import log2timeline
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import objectfilter
 from plaso.lib import pfilter
 
 
@@ -144,6 +145,24 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # TODO: shorten display name to fit in 80 chars and show the filename.
     return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
         identifier, pid, status, events, display_name)
+
+  def _GetMatcher(self, filter_expression):
+    """Retrieves a filter object for a specific filter expression.
+
+    Args:
+      filter_expression: string that contains the filter expression.
+
+    Returns:
+      A filter object (instance of objectfilter.TODO) or None.
+    """
+    try:
+      parser = pfilter.BaseParser(filter_expression).Parse()
+      return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
+
+    except objectfilter.ParseError as exception:
+      logging.error(
+          u'Unable to create filter: {0:s} with error: {1:s}'.format(
+              filter_expression, exception))
 
   def _ParseOutputOptions(self, options):
     """Parses the output options.
@@ -534,7 +553,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._filter_expression = getattr(options, u'filter', None)
     if self._filter_expression:
       # TODO: refactor self._filter_object out the tool into the frontend.
-      self._filter_object = pfilter.GetMatcher(self._filter_expression)
+      self._filter_object = self._GetMatcher(self._filter_expression)
       if not self._filter_object:
         raise errors.BadConfigOption(
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))

@@ -159,6 +159,14 @@ class PlasoExpression(objectfilter.BasicExpression):
   }
 
   def Compile(self, filter_implementation):
+    """Compiles the filter implementation.
+
+    Args:
+      filter_implementation: TODO
+
+    Returns:
+      TODO
+    """
     self.attribute = self.swap_source.get(self.attribute, self.attribute)
     arguments = [self.attribute]
     op_str = self.operator.lower()
@@ -440,17 +448,3 @@ class TimeRangeCache(object):
       return first, last
     else:
       return last, first
-
-
-def GetMatcher(query, quiet=False):
-  """Return a filter match object for a given query."""
-  matcher = None
-  try:
-    parser = BaseParser(query).Parse()
-    matcher = parser.Compile(PlasoAttributeFilterImplementation)
-  except objectfilter.ParseError as exception:
-    if not quiet:
-      logging.error(u'Filter <{0:s}> malformed: {1:s}'.format(
-          query, exception))
-
-  return matcher

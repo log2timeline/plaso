@@ -4,8 +4,6 @@
 import logging
 import os
 
-# The following import makes sure the filters are registered.
-from plaso import filters  # pylint: disable=unused-import
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.filters import manager as filters_manager

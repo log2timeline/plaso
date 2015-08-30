@@ -3,11 +3,23 @@
 
 import abc
 
-from plaso.lib import errors
+from plaso.lib import objectfilter
+from plaso.lib import pfilter
 
 
 class FilterObject(object):
   """The filter interface class."""
+
+  def __init__(self):
+    """Initialize the filter object."""
+    super(FilterObject, self).__init__()
+    self._filter_expression = None
+    self._matcher = None
+
+  @property
+  def fields(self):
+    """Return a list of fields for adaptive output modules."""
+    return []
 
   @property
   def filter_expression(self):
@@ -32,42 +44,41 @@ class FilterObject(object):
       return getattr(self, u'_reason', u'')
 
   @property
-  def fields(self):
-    """Return a list of fields for adaptive output modules."""
-    return []
-
-  @property
-  def separator(self):
-    """Return a separator for adaptive output modules."""
-    return ','
-
-  @property
   def limit(self):
     """Returns the max number of records to return, or zero for all records."""
     return 0
 
-  def __init__(self):
-    """Initialize the filter object."""
-    super(FilterObject, self).__init__()
-    self._filter_expression = None
-    self._matcher = None
+  @property
+  def separator(self):
+    """Return a separator for adaptive output modules."""
+    return u','
 
-  @abc.abstractmethod
-  def CompileFilter(self, unused_filter_string):
-    """Verify filter string and prepare the filter for later usage.
-
-    This function verifies the filter string matches the definition of
-    the class and if necessary compiles or prepares the filter so it can start
-    matching against passed in EventObjects.
+  def _GetMatcher(self, filter_expression):
+    """Retrieves a filter object for a specific filter expression.
 
     Args:
-      unused_filter_string: A string passed in that should be recognized by
-                            the filter class.
+      filter_expression: string that contains the filter expression.
+
+    Returns:
+      A filter object (instance of objectfilter.TODO) or None.
+    """
+    try:
+      parser = pfilter.BaseParser(filter_expression).Parse()
+      return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
+
+    except objectfilter.ParseError:
+      pass
+
+  @abc.abstractmethod
+  def CompileFilter(self, filter_expression):
+    """Compiles the filter expression.
+
+    Args:
+      filter_expression: string that contains the filter expression.
 
     Raises:
-      WrongPlugin: If this filter string does not match the filter class.
+      WrongPlugin: if the filter could not be compiled.
     """
-    raise errors.WrongPlugin(u'Not the correct filter for this string.')
 
   def Match(self, unused_event_object):
     """Compare an EventObject to the filter expression and return a boolean.
