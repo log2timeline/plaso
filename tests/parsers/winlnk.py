@@ -101,16 +101,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
-        u'846ee3bb-7039-11de-9d20-001d09fa5a1c '
-        u'MAC address: 00:1d:09:fa:5a:1c '
-        u'Origin: OS:/home/lordyesta/Projects/plaso/test_data/example.lnk')
-
-    expected_msg_short = (
-        u'846ee3bb-7039-11de-9d20-001d09fa5a1c '
-        u'Origin: OS:/home/lordyesta/Projects/plas...')
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_uuid = u'846ee3bb-7039-11de-9d20-001d09fa5a1c'
+    self.assertEqual(event_object.uuid, expected_uuid)
+    self.assertEqual(event_object.mac_address, u'00:1d:09:fa:5a:1c')
 
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
