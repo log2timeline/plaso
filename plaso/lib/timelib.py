@@ -80,6 +80,9 @@ class Timestamp(object):
   # The difference between Jan 1, 1601 and Jan 1, 1970 in 100s of nanoseconds.
   FILETIME_TO_POSIX_BASE = 11644473600L * 10000000
 
+  # The difference between Nov 10, 1582 and Jan 1, 1970 in 100s of nanoseconds.
+  UUID_TIME_TO_POSIX_BASE = 12219292800L * 10000000
+
   # The number of seconds between January 1, 1904 and Jan 1, 1970.
   # Value confirmed with sleuthkit:
   #  http://svn.sleuthkit.org/repos/sleuthkit/trunk/tsk3/fs/tsk_hfs.h
@@ -668,6 +671,28 @@ class Timestamp(object):
       datetime_object = timezone.localize(datetime_object)
 
     return cls.FromPythonDatetime(datetime_object)
+
+  @classmethod
+  def FromUUIDTime(cls, uuid_time):
+    """Converts a UUID verion 1 time into a timestamp.
+
+    The UUID version 1 time is a 60-bit value containing:
+      100th nano seconds since 1582-10-15 00:00:00
+
+    Args:
+      uuid_time: The 60-bit UUID version 1 timestamp.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    # TODO: Add a handling for if the timestamp equals to zero.
+    if uuid_time < 0:
+      return 0
+    timestamp = (uuid_time - cls.UUID_TIME_TO_POSIX_BASE) / 10
+
+    if timestamp > cls.TIMESTAMP_MAX_MICRO_SECONDS:
+      return 0
+    return timestamp
 
   @classmethod
   def FromWebKitTime(cls, webkit_time):

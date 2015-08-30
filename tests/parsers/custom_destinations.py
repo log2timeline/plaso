@@ -26,11 +26,11 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 108)
+    self.assertEqual(len(event_objects), 126)
 
     # A shortcut event object.
     # The last accessed timestamp.
-    event_object = event_objects[105]
+    event_object = event_objects[121]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:55:56.248103')
@@ -39,7 +39,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
-    event_object = event_objects[106]
+    event_object = event_objects[122]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:55:56.248103')
@@ -48,7 +48,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
-    event_object = event_objects[107]
+    event_object = event_objects[123]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 01:39:11.388000')
@@ -76,7 +76,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # A shell item event object.
-    event_object = event_objects[16]
+    event_object = event_objects[18]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:41:04')
@@ -93,6 +93,24 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         u'Name: System32 '
         u'NTFS file reference: 2331-1 '
         u'Origin: 5afe4de1b92fc382.customDes...')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    # A distributed link tracking event object.
+    event_object = event_objects[12]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-11-10 19:08:32.656259')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_msg = (
+        u'e9215b24-ecfd-11df-a81c-000c29031e1e '
+        u'MAC address: 00:0c:29:03:1e:1e '
+        u'Origin: 5afe4de1b92fc382.customDestinations-ms')
+
+    expected_msg_short = (
+        u'e9215b24-ecfd-11df-a81c-000c29031e1e '
+        u'Origin: 5afe4de1b92fc382.customDestinati...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

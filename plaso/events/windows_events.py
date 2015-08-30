@@ -5,25 +5,21 @@ from plaso.events import time_events
 from plaso.lib import eventdata
 
 
-class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows volume creation event."""
+class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
+  """Convenience class for a Windows distributed link creation event."""
 
-  DATA_TYPE = 'windows:volume:creation'
+  DATA_TYPE = 'windows:distributed_link_tracking:creation'
 
-  def __init__(self, filetime, device_path, serial_number, origin):
+  def __init__(self, uuid, origin):
     """Initializes an event object.
 
     Args:
-      filetime: The FILETIME timestamp value.
-      device_path: A string containing the volume device path.
-      serial_number: A string containing the volume serial number.
+      uuid: A uuid object (instance of uuid.UUID).
       origin: A string containing the origin of the event (event source).
     """
-    super(WindowsVolumeCreationEvent, self).__init__(
-        filetime, eventdata.EventTimestamp.CREATION_TIME)
+    super(WindowsDistributedLinkTrackingCreationEvent, self).__init__(
+        uuid, eventdata.EventTimestamp.CREATION_TIME)
 
-    self.device_path = device_path
-    self.serial_number = serial_number
     self.origin = origin
 
 
@@ -78,3 +74,25 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
 class WindowsRegistryServiceEvent(WindowsRegistryEvent):
   """Convenience class for service entries retrieved from the registry."""
   DATA_TYPE = 'windows:registry:service'
+
+
+class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
+  """Convenience class for a Windows volume creation event."""
+
+  DATA_TYPE = 'windows:volume:creation'
+
+  def __init__(self, filetime, device_path, serial_number, origin):
+    """Initializes an event object.
+
+    Args:
+      filetime: The FILETIME timestamp value.
+      device_path: A string containing the volume device path.
+      serial_number: A string containing the volume serial number.
+      origin: A string containing the origin of the event (event source).
+    """
+    super(WindowsVolumeCreationEvent, self).__init__(
+        filetime, eventdata.EventTimestamp.CREATION_TIME)
+
+    self.device_path = device_path
+    self.serial_number = serial_number
+    self.origin = origin
