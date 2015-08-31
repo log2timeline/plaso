@@ -50,6 +50,16 @@ class WinRegTest(test_lib.ParserTestCase):
 
     self.assertEqual(parser_chains[expected_chain], 14)
 
+  def testParseNoRootKey(self):
+    """Test the parse function on a Registry file with no root key."""
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
+    event_queue_consumer = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEqual(len(event_objects), 0)
+
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
