@@ -38,6 +38,7 @@ RESERVED_VARIABLE_NAMES = frozenset([
     u'store_index',
     u'store_number',
     u'tag',
+    u'text_prepend',
     u'timestamp',
     u'timestamp_desc',
     u'timezone',
