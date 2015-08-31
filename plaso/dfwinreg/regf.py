@@ -302,10 +302,13 @@ class WinPyregfFile(interface.WinRegistryFile):
   def GetRootKey(self):
     """Retrieves the root keys.
 
-    Yields:
-      A Registry key (instance of WinRegistryKey).
+    Returns:
+      A Registry key (instance of WinRegistryKey) or None if not available.
     """
     regf_key = self._regf_file.get_root_key()
+    if not regf_key:
+      return
+
     return WinPyregfKey(regf_key, u'', root=True)
 
   def Open(self, file_object):
@@ -372,9 +375,16 @@ class WinPyregfFile(interface.WinRegistryFile):
 
     Yields:
       A Registry key (instance of WinPyregfKey) generator.
+
+    Raises:
+      StopIteration: when there is no root key to signal the generator is empty.
     """
     root_key = self.GetRootKey()
-    return self._RecurseKey(root_key)
+    if not root_key:
+      raise StopIteration
+
+    for key in self._RecurseKey(root_key):
+      yield key
 
 
 class WinRegistryFileREGF(object):
@@ -412,10 +422,13 @@ class WinRegistryFileREGF(object):
   def GetRootKey(self):
     """Retrieves the root keys.
 
-    Yields:
-      A Registry key (instance of WinRegistryKey).
+    Returns:
+      A Registry key (instance of WinRegistryKey) or None if not available.
     """
     regf_key = self._regf_file.get_root_key()
+    if not regf_key:
+      return
+
     # TODO: refactor to WinRegistryKey, also remove parent key path or
     # use WinRegistry path.
     return WinPyregfKey(regf_key, u'', root=True)
