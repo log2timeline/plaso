@@ -156,7 +156,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     self._output_module = getattr(options, u'output_module', None)
 
-    self._text_prepend = getattr(options, u'text_prepend', None)
+    text_prepend = getattr(options, u'text_prepend', None)
+    if text_prepend:
+      self._front_end.SetTextPrepend(text_prepend)
 
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.

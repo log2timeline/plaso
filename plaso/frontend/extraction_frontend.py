@@ -617,7 +617,7 @@ class ExtractionFrontend(frontend.Frontend):
     """Sets the storage serializer.
 
     Args:
-      storage_serializer_format: String denoting the type of serializer
+      storage_serializer_format: string denoting the type of serializer
                                  to be used in the storage. The values
                                  can be either "proto" or "json".
     """
@@ -632,8 +632,16 @@ class ExtractionFrontend(frontend.Frontend):
     """Sets a flag telling the worker monitor to show memory information.
 
     Args:
-      show_memory: A boolean (defaults to True) that indicates whether or not
+      show_memory: a boolean (defaults to True) that indicates whether or not
                    the foreman should include memory information as part of
                    the worker monitoring.
     """
     self._show_worker_memory_information = show_memory
+
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text prepend.
+
+    Args:
+      text_prepend: free form text that is prepended to each path.
+    """
+    self._text_prepend = text_prepend
