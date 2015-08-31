@@ -5,11 +5,16 @@ import logging
 
 import pyevt
 
+from plaso import dependencies
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
+
+
+dependencies.CheckModuleVersion(u'pyevt')
 
 
 class WinEvtRecordEvent(time_events.PosixTimeEvent):
@@ -24,7 +29,7 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
     Args:
       timestamp: The POSIX timestamp value.
       timestamp_description: A description string for the timestamp value.
-      evt_record: The EVT record (pyevt.record).
+      evt_record: The EVT record (instance of pyevt.record).
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
     """
@@ -75,12 +80,19 @@ class WinEvtParser(interface.SingleFileBaseParser):
   NAME = u'winevt'
   DESCRIPTION = u'Parser for Windows EventLog (EVT) files.'
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'LfLe', offset=4)
+    return format_specification
+
   def _ParseRecord(self, parser_mediator, evt_record, recovered=False):
     """Extract data from a Windows EventLog (EVT) record.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      evt_record: An event record (pyevt.record).
+      evt_record: An event record (instance of pyevt.record).
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
     """
@@ -122,7 +134,7 @@ class WinEvtParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_name = parser_mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(parser_mediator.codepage)
 
@@ -131,27 +143,27 @@ class WinEvtParser(interface.SingleFileBaseParser):
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, exception))
+              self.NAME, display_name, exception))
 
     for record_index in range(0, evt_file.number_of_records):
       try:
         evt_record = evt_file.get_record(record_index)
         self._ParseRecord(parser_mediator, evt_record,)
       except IOError as exception:
-        logging.warning((
+        parser_mediator.ProduceParseError((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
             u'with error: {3:s}').format(
-                self.NAME, record_index, file_name, exception))
+                self.NAME, record_index, display_name, exception))
 
     for record_index in range(0, evt_file.number_of_recovered_records):
       try:
         evt_record = evt_file.get_recovered_record(record_index)
         self._ParseRecord(parser_mediator, evt_record, recovered=True)
       except IOError as exception:
-        logging.info((
+        parser_mediator.ProduceParseError((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
             u'{2:s} with error: {3:s}').format(
-                self.NAME, record_index, file_name, exception))
+                self.NAME, record_index, display_name, exception))
 
     evt_file.close()
 

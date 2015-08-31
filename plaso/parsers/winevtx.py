@@ -9,6 +9,7 @@ from plaso import dependencies
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -18,13 +19,14 @@ dependencies.CheckModuleVersion(u'pyevtx')
 
 class WinEvtxRecordEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows XML EventLog (EVTX) record event."""
+
   DATA_TYPE = u'windows:evtx:record'
 
   def __init__(self, evtx_record, recovered=False):
     """Initializes the event.
 
     Args:
-      evtx_record: The EVTX record (pyevtx.record).
+      evtx_record: The EVTX record (instance of pyevtx.record).
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
     """
@@ -93,6 +95,13 @@ class WinEvtxParser(interface.SingleFileBaseParser):
   NAME = u'winevtx'
   DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'ElfFile\x00', offset=0)
+    return format_specification
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows XML EventLog (EVTX) file-like object.
 
@@ -103,6 +112,8 @@ class WinEvtxParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    display_name = parser_mediator.GetDisplayName()
+
     evtx_file = pyevtx.file()
     evtx_file.set_ascii_codepage(parser_mediator.codepage)
 
@@ -111,7 +122,7 @@ class WinEvtxParser(interface.SingleFileBaseParser):
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, parser_mediator.GetDisplayName(), exception))
+              self.NAME, display_name, exception))
 
     for record_index in range(0, evtx_file.number_of_records):
       try:
@@ -119,11 +130,10 @@ class WinEvtxParser(interface.SingleFileBaseParser):
         event_object = WinEvtxRecordEvent(evtx_record)
         parser_mediator.ProduceEvent(event_object)
       except IOError as exception:
-        logging.warning((
+        parser_mediator.ProduceParseError((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
             u'with error: {3:s}').format(
-                self.NAME, record_index, parser_mediator.GetDisplayName(),
-                exception))
+                self.NAME, record_index, display_name, exception))
 
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
@@ -131,11 +141,10 @@ class WinEvtxParser(interface.SingleFileBaseParser):
         event_object = WinEvtxRecordEvent(evtx_record, recovered=True)
         parser_mediator.ProduceEvent(event_object)
       except IOError as exception:
-        logging.debug((
+        parser_mediator.ProduceParseError((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
             u'{2:s} with error: {3:s}').format(
-                self.NAME, record_index, parser_mediator.GetDisplayName(),
-                exception))
+                self.NAME, record_index, display_name, exception))
 
     evtx_file.close()
 
