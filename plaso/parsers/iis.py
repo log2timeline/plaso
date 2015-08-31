@@ -74,11 +74,18 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   PORT = pyparsing.Word(pyparsing.nums, min=1, max=6) | BLANK
   URI = pyparsing.Word(pyparsing.alphanums + u'/.?&+;_=()-:,%') | BLANK
 
+  DATE_TIME = (
+      pyparsing.Literal(u'#') + pyparsing.Literal(u'Date:') +
+      text_parser.PyparsingConstants.DATE.setResultsName(u'date') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time'))
+
+  COMMENT = DATE_TIME | text_parser.PyparsingConstants.COMMENT_LINE_HASH
+
   # Define how a log line should look like for version 6.0.
   LOG_LINE_6_0 = (
       text_parser.PyparsingConstants.DATE.setResultsName(u'date') +
       text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
-      WORD.setResultsName(u's_sitename') + IP.setResultsName(u'dest_ip') +
+      URI.setResultsName(u's_sitename') + IP.setResultsName(u'dest_ip') +
       WORD.setResultsName(u'http_method') + URI.setResultsName(u'cs_uri_stem') +
       URI.setResultsName(u'cs_uri_query') + PORT.setResultsName(u'dest_port') +
       WORD.setResultsName(u'cs_username') + IP.setResultsName(u'source_ip') +
@@ -94,7 +101,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.DATE.setResultsName(u'date'))
   _LOG_LINE_STRUCTURES[u'time'] = (
       text_parser.PyparsingConstants.TIME.setResultsName(u'time'))
-  _LOG_LINE_STRUCTURES[u's-sitename'] = WORD.setResultsName(u's_sitename')
+  _LOG_LINE_STRUCTURES[u's-sitename'] = URI.setResultsName(u's_sitename')
   _LOG_LINE_STRUCTURES[u's-ip'] = IP.setResultsName(u'dest_ip')
   _LOG_LINE_STRUCTURES[u'cs-method'] = WORD.setResultsName(u'http_method')
   _LOG_LINE_STRUCTURES[u'cs-uri-stem'] = URI.setResultsName(
@@ -115,15 +122,16 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _LOG_LINE_STRUCTURES[u'sc-bytes'] = INT.setResultsName(u'sent_bytes')
   _LOG_LINE_STRUCTURES[u'cs-bytes'] = INT.setResultsName(u'received_bytes')
   _LOG_LINE_STRUCTURES[u'time-taken'] = INT.setResultsName(u'time_taken')
-  _LOG_LINE_STRUCTURES[u'cs-version'] = WORD.setResultsName(u'protocol_version')
-  _LOG_LINE_STRUCTURES[u'cs-host'] = WORD.setResultsName(u'cs_host')
+  _LOG_LINE_STRUCTURES[u'cs-version'] = URI.setResultsName(u'protocol_version')
+  _LOG_LINE_STRUCTURES[u'cs-host'] = URI.setResultsName(u'cs_host')
   _LOG_LINE_STRUCTURES[u'cs(Cookie)'] = URI.setResultsName(u'cs_cookie')
   _LOG_LINE_STRUCTURES[u'cs(Referrer)'] = URI.setResultsName(u'cs_referrer')
+  _LOG_LINE_STRUCTURES[u'cs(Referer)'] = URI.setResultsName(u'cs_referrer')
 
   # Define the available log line structures. Default to the IIS v. 6.0
   # common format.
   LINE_STRUCTURES = [
-      (u'comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
+      (u'comment', COMMENT),
       (u'logline', LOG_LINE_6_0)]
 
   # Define a signature value for the log file.
@@ -132,25 +140,63 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a parser object."""
     super(WinIISParser, self).__init__()
-    self.version = None
+    self._date = None
+    self._time = None
     self.software = None
+    self.version = None
 
-  def VerifyStructure(self, unused_parser_mediator, line):
-    """Verify that this file is an IIS log file.
+  def _ConvertToTimestamp(self, date=None, time=None):
+    """Converts the given parsed date and time to a timestamp.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      date: A tuple or list of 3 elements for year, month, and day.
+      time: A tuple or list of 3 elements for hour, minute, and second.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      A plaso timestamp value, micro seconds since Epoch in UTC.
     """
-    # TODO: Examine other versions of the file format and if this parser should
-    # support them. For now just checking if it contains the IIS header.
-    if self.SIGNATURE in line:
-      return True
+    if date:
+      year, month, day = date[:3]
+    else:
+      return timelib.Timestamp.NONE_TIMESTAMP
 
-    return False
+    if time:
+      hour, minute, second = time[:3]
+    else:
+      hour, minute, second = (None, None, None)
+
+    return timelib.Timestamp.FromTimeParts(
+        year, month, day, hour, minute, second)
+
+  def _ParseCommentRecord(self, structure):
+    """Parse a comment and store appropriate attributes."""
+    comment = structure[1]
+    if comment.startswith(u'Version'):
+      _, _, self.version = comment.partition(u':')
+    elif comment.startswith(u'Software'):
+      _, _, self.software = comment.partition(u':')
+    elif comment.startswith(u'Date'):
+      self._date = structure.get(u'date', None)
+      self._time = structure.get(u'time', None)
+
+    # Check if there's a Fields line. If not, LOG_LINE defaults to IIS 6.0
+    # common format.
+    elif comment.startswith(u'Fields'):
+      log_line = pyparsing.Empty()
+      for member in comment[7:].split():
+        log_line += self._LOG_LINE_STRUCTURES.get(member, self.URI)
+      # TODO: self._line_structures is a work-around and this needs
+      # a structural fix.
+      self._line_structures[1] = (u'logline', log_line)
+
+  def _ParseLogLine(self, structure):
+    """Parse a single log line and return an EventObject."""
+    date = structure.get(u'date', self._date)
+    time = structure.get(u'time', self._time)
+
+    timestamp = self._ConvertToTimestamp(date, time)
+
+    return IISEventObject(timestamp, structure)
 
   def ParseRecord(self, unused_parser_mediator, key, structure):
     """Parse each record structure and return an event object if applicable.
@@ -173,48 +219,22 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def _ParseCommentRecord(self, structure):
-    """Parse a comment and store appropriate attributes."""
-    comment = structure[1]
-    if comment.startswith(u'Version'):
-      _, _, self.version = comment.partition(u':')
-    elif comment.startswith(u'Software'):
-      _, _, self.software = comment.partition(u':')
-    elif comment.startswith(u'Date'):
-      # TODO: fix this date is not used here.
-      _, _, unused_date = comment.partition(u':')
+  def VerifyStructure(self, unused_parser_mediator, line):
+    """Verify that this file is an IIS log file.
 
-    # Check if there's a Fields line. If not, LOG_LINE defaults to IIS 6.0
-    # common format.
-    elif comment.startswith(u'Fields'):
-      log_line = pyparsing.Empty()
-      for member in comment[7:].split():
-        log_line += self._LOG_LINE_STRUCTURES.get(member, self.URI)
-      # TODO: self._line_structures is a work-around and this needs
-      # a structural fix.
-      self._line_structures[1] = (u'logline', log_line)
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      line: A single line from the text file.
 
-  def _ParseLogLine(self, structure):
-    """Parse a single log line and return an EventObject."""
-    date = structure.get(u'date', None)
-    time = structure.get(u'time', None)
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
+    # TODO: Examine other versions of the file format and if this parser should
+    # support them. For now just checking if it contains the IIS header.
+    if self.SIGNATURE in line:
+      return True
 
-    if not (date and time):
-      logging.warning((
-          u'Unable to extract timestamp from IIS log line with structure: '
-          u'{0:s}.').format(structure))
-      return
-
-    year, month, day = date
-    hour, minute, second = time
-
-    timestamp = timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second)
-
-    if not timestamp:
-      return
-
-    return IISEventObject(timestamp, structure)
+    return False
 
 
 manager.ParsersManager.RegisterParser(WinIISParser)
