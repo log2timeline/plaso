@@ -186,7 +186,7 @@ class PluginList(object):
         plugin.WEIGHT for plugin in self.GetAllKeyPlugins())
 
 
-class WinRegistryParser(interface.BasePluginsParser):
+class WinRegistryParser(interface.BaseParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = u'winreg'

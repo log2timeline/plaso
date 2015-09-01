@@ -1,54 +1,51 @@
-plaso.hashers package
-=====================
+hashers Package
+===============
 
-Submodules
-----------
+:mod:`hashers` Package
+----------------------
 
-plaso.hashers.interface module
-------------------------------
+.. automodule:: plaso.hashers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.hashers.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.hashers.manager module
-----------------------------
+:mod:`manager` Module
+---------------------
 
 .. automodule:: plaso.hashers.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.hashers.md5 module
-------------------------
+:mod:`md5` Module
+-----------------
 
 .. automodule:: plaso.hashers.md5
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.hashers.sha1 module
--------------------------
+:mod:`sha1` Module
+------------------
 
 .. automodule:: plaso.hashers.sha1
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.hashers.sha256 module
----------------------------
+:mod:`sha256` Module
+--------------------
 
 .. automodule:: plaso.hashers.sha256
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.hashers
-    :members:
-    :undoc-members:
-    :show-inheritance:

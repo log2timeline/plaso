@@ -1,118 +1,115 @@
-plaso.parsers.plist_plugins package
-===================================
+plist_plugins Package
+=====================
 
-Submodules
-----------
+:mod:`plist_plugins` Package
+----------------------------
 
-plaso.parsers.plist_plugins.airport module
-------------------------------------------
+.. automodule:: plaso.parsers.plist_plugins
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`airport` Module
+---------------------
 
 .. automodule:: plaso.parsers.plist_plugins.airport
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.appleaccount module
------------------------------------------------
+:mod:`appleaccount` Module
+--------------------------
 
 .. automodule:: plaso.parsers.plist_plugins.appleaccount
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.bluetooth module
---------------------------------------------
+:mod:`bluetooth` Module
+-----------------------
 
 .. automodule:: plaso.parsers.plist_plugins.bluetooth
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.default module
-------------------------------------------
+:mod:`default` Module
+---------------------
 
 .. automodule:: plaso.parsers.plist_plugins.default
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.install_history module
---------------------------------------------------
+:mod:`install_history` Module
+-----------------------------
 
 .. automodule:: plaso.parsers.plist_plugins.install_history
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.interface module
---------------------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.parsers.plist_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.ipod module
----------------------------------------
+:mod:`ipod` Module
+------------------
 
 .. automodule:: plaso.parsers.plist_plugins.ipod
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.macuser module
-------------------------------------------
+:mod:`macuser` Module
+---------------------
 
 .. automodule:: plaso.parsers.plist_plugins.macuser
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.safari module
------------------------------------------
+:mod:`safari` Module
+--------------------
 
 .. automodule:: plaso.parsers.plist_plugins.safari
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.softwareupdate module
--------------------------------------------------
+:mod:`softwareupdate` Module
+----------------------------
 
 .. automodule:: plaso.parsers.plist_plugins.softwareupdate
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.spotlight module
---------------------------------------------
+:mod:`spotlight` Module
+-----------------------
 
 .. automodule:: plaso.parsers.plist_plugins.spotlight
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.spotlight_volume module
----------------------------------------------------
+:mod:`spotlight_volume` Module
+------------------------------
 
 .. automodule:: plaso.parsers.plist_plugins.spotlight_volume
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.plist_plugins.timemachine module
-----------------------------------------------
+:mod:`timemachine` Module
+-------------------------
 
 .. automodule:: plaso.parsers.plist_plugins.timemachine
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.parsers.plist_plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:

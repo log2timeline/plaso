@@ -1,54 +1,51 @@
-plaso.dfwinreg package
-======================
+dfwinreg Package
+================
 
-Submodules
-----------
+:mod:`dfwinreg` Package
+-----------------------
 
-plaso.dfwinreg.definitions module
----------------------------------
+.. automodule:: plaso.dfwinreg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`definitions` Module
+-------------------------
 
 .. automodule:: plaso.dfwinreg.definitions
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.dfwinreg.interface module
--------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.dfwinreg.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.dfwinreg.path_expander module
------------------------------------
+:mod:`path_expander` Module
+---------------------------
 
 .. automodule:: plaso.dfwinreg.path_expander
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.dfwinreg.regf module
---------------------------
+:mod:`regf` Module
+------------------
 
 .. automodule:: plaso.dfwinreg.regf
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.dfwinreg.registry module
-------------------------------
+:mod:`registry` Module
+----------------------
 
 .. automodule:: plaso.dfwinreg.registry
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.dfwinreg
-    :members:
-    :undoc-members:
-    :show-inheritance:
