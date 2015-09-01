@@ -162,10 +162,13 @@ class PlasoExpression(objectfilter.BasicExpression):
     """Compiles the filter implementation.
 
     Args:
-      filter_implementation: TODO
+      filter_implementation: a filter object (instance of objectfilter.TODO).
 
     Returns:
-      TODO
+      A filter operator (instance of TODO).
+
+    Raises:
+      ParserError: if an unknown operator is provided.
     """
     self.attribute = self.swap_source.get(self.attribute, self.attribute)
     arguments = [self.attribute]
@@ -173,7 +176,7 @@ class PlasoExpression(objectfilter.BasicExpression):
     operator = filter_implementation.OPS.get(op_str, None)
 
     if not operator:
-      raise objectfilter.ParseError(u'Unknown operator {0:s} provided.'.format(
+      raise errors.ParseError(u'Unknown operator {0:s} provided.'.format(
           self.operator))
 
     # Plaso specific implementation - if we are comparing a timestamp

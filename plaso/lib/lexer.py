@@ -8,6 +8,8 @@ https://code.google.com/p/grr
 import logging
 import re
 
+from plaso.lib import errors
+
 
 class Token(object):
   """A token action."""
@@ -34,31 +36,13 @@ class Token(object):
 
     self.next_state = next_state
 
-  def Action(self, lexer):
+  def Action(self, unused_lexer):
     """Method is called when the token matches."""
-
-
-class Error(Exception):
-  """Module exception."""
-
-
-class ParseError(Error):
-  """A parse error occurred."""
+    pass
 
 
 class Lexer(object):
-  """A generic feed lexer.
-
-  Attributes:
-    buffer: TODO
-    error: TODO
-    flags: TODO
-    processed: TODO
-    processed_buffer: TODO
-    state: TODO
-    state_stack: TODO
-    verbose: TODO
-  """
+  """A generic feed lexer."""
   _CONTINUE_STATE = 'CONTINUE'
   _INITIAL_STATE = 'INITIAL'
 
@@ -67,12 +51,11 @@ class Lexer(object):
   # A list of Token() instances.
   tokens = []
 
-  # TODO: what does an empty string represent?
   def __init__(self, data=''):
     """Initializes the lexer object.
 
     Args:
-      data: optional data to be processed by the lexer.
+      data: optional initial data to be processed by the lexer.
     """
     super(Lexer, self).__init__()
     self.buffer = data
@@ -118,7 +101,7 @@ class Lexer(object):
           # Override the state from the Token
           elif possible_next_state:
             next_state = possible_next_state
-        except ParseError as exception:
+        except errors.ParseError as exception:
           self.Error(exception)
 
       # Update the next state
@@ -152,8 +135,8 @@ class Lexer(object):
     """Log an error down.
 
     Args:
-      message: optional TODO
-      weight: optional TODO
+      message: optional error message.
+      weight: optional error weight.
     """
     logging.debug(u'Error({0:d}): {1:s}'.format(weight, message))
     # Keep a count of errors
@@ -187,7 +170,7 @@ class Lexer(object):
     """Push the match back on the stream.
 
     Args:
-      string: optional TODO
+      string: optional data.
     """
     self.buffer = string + self.buffer
     self.processed_buffer = self.processed_buffer[:-len(string)]
@@ -213,7 +196,7 @@ class SelfFeederMixIn(Lexer):
     """Feed data into the buffer.
 
     Args:
-      size: optional TODO
+      size: optional data size to read form the file-like object.
     """
     data = self.file_object.read(size)
     Lexer.Feed(self, data)
@@ -266,7 +249,7 @@ class Expression(object):
     """
     self.args.append(arg)
     if len(self.args) > self.number_of_args:
-      raise ParseError(u'Too many args for this expression.')
+      raise errors.ParseError(u'Too many args for this expression.')
 
     elif len(self.args) == self.number_of_args:
       return True
@@ -313,8 +296,9 @@ class BinaryExpression(Expression):
     if isinstance(lhs, Expression) and isinstance(rhs, Expression):
       self.args = [lhs, rhs]
     else:
-      raise ParseError(u'Expected expression, got {0:s} {1:s} {2:s}'.format(
-          lhs, self.operator, rhs))
+      raise errors.ParseError(
+          u'Expected expression, got {0:s} {1:s} {2:s}'.format(
+              lhs, self.operator, rhs))
 
   # TODO: rename this function to GetTreeAsString or equivalent.
   def PrintTree(self, depth=''):
@@ -333,7 +317,8 @@ class BinaryExpression(Expression):
     elif operator == 'or' or operator == '||':
       method = 'OrFilter'
     else:
-      raise ParseError(u'Invalid binary operator {0:s}'.format(operator))
+      raise errors.ParseError(
+          u'Invalid binary operator {0:s}'.format(operator))
 
     args = [x.Compile(filter_implementation) for x in self.args]
     return getattr(filter_implementation, method)(*args)
@@ -424,8 +409,9 @@ class SearchParser(Lexer):
     in the string.
 
     Args:
-       string: The string that matched.
-       match: The match object (m.group(1) is the escaped code)
+      string: The string that matched.
+      match: the match object (instance of re.MatchObject).
+             Where match.group(1) contains the escaped code.
     """
     if match.group(1) in '\'"rnbt':
       self.string += string.decode('string_escape')
@@ -452,7 +438,7 @@ class SearchParser(Lexer):
     try:
       self.current_expression.SetAttribute(string)
     except AttributeError:
-      raise ParseError(u'Invalid attribute \'{0:s}\''.format(string))
+      raise errors.ParseError(u'Invalid attribute \'{0:s}\''.format(string))
 
     return 'OPERATOR'
 
@@ -522,9 +508,10 @@ class SearchParser(Lexer):
 
   def Error(self, message=None, unused_weight=1):
     """Raise an error message."""
-    raise ParseError(u'{0:s} in position {1:s}: {2:s} <----> {3:s} )'.format(
-        message, len(self.processed_buffer), self.processed_buffer,
-        self.buffer))
+    raise errors.ParseError(
+        u'{0:s} in position {1:s}: {2:s} <----> {3:s} )'.format(
+            message, len(self.processed_buffer), self.processed_buffer,
+            self.buffer))
 
   def Parse(self):
     """Parse."""

@@ -38,19 +38,17 @@ class SelectiveLexer(lexer.Lexer):
       lexer.Token('LIMIT_END', r'(.+) SEPARATED BY', 'SetLimit', 'SEPARATE'),
       lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
-  # TODO: what does an empty string represent?
   def __init__(self, data=''):
     """Initializes the selective lexer object.
 
     Args:
-      data: optional data to be processed by the lexer.
+      data: optional initial data to be processed by the lexer.
     """
+    super(SelectiveLexer, self).__init__(data=data)
     self.fields = []
     self.limit = 0
     self.lex_filter = None
     self.separator = u','
-    # TODO: is there a reason why super is not the first statement?
-    super(SelectiveLexer, self).__init__(data=data)
 
   def SetFields(self, match, **unused_kwargs):
     """Set the selective fields.

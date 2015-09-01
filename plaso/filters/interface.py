@@ -3,7 +3,7 @@
 
 import abc
 
-from plaso.lib import objectfilter
+from plaso.lib import errors
 from plaso.lib import pfilter
 
 
@@ -66,7 +66,7 @@ class FilterObject(object):
       parser = pfilter.BaseParser(filter_expression).Parse()
       return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
 
-    except objectfilter.ParseError:
+    except errors.ParseError:
       pass
 
   @abc.abstractmethod

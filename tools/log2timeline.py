@@ -23,7 +23,6 @@ from plaso.cli import tools as cli_tools
 from plaso.frontend import log2timeline
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import objectfilter
 from plaso.lib import pfilter
 
 
@@ -159,7 +158,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       parser = pfilter.BaseParser(filter_expression).Parse()
       return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
 
-    except objectfilter.ParseError as exception:
+    except errors.ParseError as exception:
       logging.error(
           u'Unable to create filter: {0:s} with error: {1:s}'.format(
               filter_expression, exception))
