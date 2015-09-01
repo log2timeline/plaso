@@ -7,6 +7,7 @@ import logging
 import os
 import socket
 
+from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -50,7 +51,7 @@ def _BsmTokenGetSocketDomain(context):
   return context.socket_domain
 
 
-class MacBsmEvent(event.EventObject):
+class MacBsmEvent(time_events.PosixTimeEvent):
   """Convenience class for a Mac OS X BSM event."""
 
   DATA_TYPE = u'mac:bsm:event'
@@ -62,15 +63,14 @@ class MacBsmEvent(event.EventObject):
 
     Args:
       event_type: String with the text and ID that represents the event type.
-      timestamp: Entry Epoch timestamp in UTC.
+      timestamp: The timestamp value.
       extra_tokens: List of the extra tokens of the entry.
       return_value: String with the process return value and exit status.
       record_length: Record length in bytes (trailer number).
       offset: The offset in bytes to where the record starts in the file.
     """
-    super(MacBsmEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
+    super(MacBsmEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.CREATION_TIME)
     self.event_type = event_type
     self.extra_tokens = extra_tokens
     self.return_value = return_value
@@ -181,8 +181,9 @@ class BsmParser(interface.SingleFileBaseParser):
       construct.UBInt16(u'modifier'))
 
   # First token of one entry.
-  # timestamp: integer, Epoch timestamp of the entry.
-  # microsecond: integer, the microsecond of the entry.
+  # timestamp: unsigned integer, number of seconds since
+  #            January 1, 1970 00:00:00 UTC.
+  # microsecond: unsigned integer, number of micro seconds.
   BSM_HEADER32 = construct.Struct(
       u'bsm_header32',
       BSM_HEADER,

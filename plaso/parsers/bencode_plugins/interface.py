@@ -126,7 +126,8 @@ class BencodePlugin(plugins.BasePlugin):
     The attributes for a BencodeEvent should include the following:
       root = Root key this event was extracted from.
       key = Key the value resided in.
-      time = Date this artifact was created in microseconds(usec) from epoch.
+      time = Date this artifact was created in micro seconds (usec) from
+             January 1, 1970 00:00:00 UTC.
       desc = Short description.
 
     Args:

@@ -30,7 +30,8 @@ class IISEventObject(time_events.TimestampEvent):
     """Initializes the IIS event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp value, contains the number of micro seconds
+                 since January 1, 1970, 00:00:00 UTC.
       structure: The structure with any parsed log values to iterate over.
     """
     super(IISEventObject, self).__init__(
@@ -149,11 +150,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     """Converts the given parsed date and time to a timestamp.
 
     Args:
-      date: A tuple or list of 3 elements for year, month, and day.
-      time: A tuple or list of 3 elements for hour, minute, and second.
+      date: optional tuple or list of 3 elements for year, month, and day.
+      time: optional tuple or list of 3 elements for hour, minute, and second.
 
     Returns:
-      A plaso timestamp value, micro seconds since Epoch in UTC.
+      A timestamp value, contains the number of micro seconds since
+      January 1, 1970, 00:00:00 UTC.
     """
     if date:
       year, month, day = date[:3]
@@ -169,7 +171,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
         year, month, day, hour, minute, second)
 
   def _ParseCommentRecord(self, structure):
-    """Parse a comment and store appropriate attributes."""
+    """Parse a comment and store appropriate attributes.
+
+    Args:
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     comment = structure[1]
     if comment.startswith(u'Version'):
       _, _, self.version = comment.partition(u':')
@@ -190,7 +197,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       self._line_structures[1] = (u'logline', log_line)
 
   def _ParseLogLine(self, structure):
-    """Parse a single log line and return an EventObject."""
+    """Parse a single log line and return an EventObject.
+
+    Args:
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     date = structure.get(u'date', self._date)
     time = structure.get(u'time', self._time)
 
