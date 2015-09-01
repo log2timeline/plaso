@@ -1,38 +1,35 @@
-plaso.parsers.esedb_plugins package
-===================================
+esedb_plugins Package
+=====================
 
-Submodules
-----------
+:mod:`esedb_plugins` Package
+----------------------------
 
-plaso.parsers.esedb_plugins.file_history module
------------------------------------------------
+.. automodule:: plaso.parsers.esedb_plugins
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`file_history` Module
+--------------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.file_history
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.esedb_plugins.interface module
---------------------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.esedb_plugins.msie_webcache module
-------------------------------------------------
+:mod:`msie_webcache` Module
+---------------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.msie_webcache
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.parsers.esedb_plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:

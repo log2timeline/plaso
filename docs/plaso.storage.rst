@@ -1,30 +1,27 @@
-plaso.storage package
-=====================
+storage Package
+===============
 
-Submodules
-----------
+:mod:`storage` Package
+----------------------
 
-plaso.storage.collection module
--------------------------------
+.. automodule:: plaso.storage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`collection` Module
+------------------------
 
 .. automodule:: plaso.storage.collection
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.factory module
-----------------------------
+:mod:`factory` Module
+---------------------
 
 .. automodule:: plaso.storage.factory
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.storage
-    :members:
-    :undoc-members:
-    :show-inheritance:

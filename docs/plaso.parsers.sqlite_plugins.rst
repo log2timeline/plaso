@@ -1,134 +1,131 @@
-plaso.parsers.sqlite_plugins package
-====================================
+sqlite_plugins Package
+======================
 
-Submodules
-----------
+:mod:`sqlite_plugins` Package
+-----------------------------
 
-plaso.parsers.sqlite_plugins.android_calls module
--------------------------------------------------
+.. automodule:: plaso.parsers.sqlite_plugins
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`android_calls` Module
+---------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.android_calls
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.android_sms module
------------------------------------------------
+:mod:`android_sms` Module
+-------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.android_sms
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.appusage module
---------------------------------------------
+:mod:`appusage` Module
+----------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.appusage
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.chrome module
-------------------------------------------
+:mod:`chrome` Module
+--------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.chrome
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.chrome_cookies module
---------------------------------------------------
+:mod:`chrome_cookies` Module
+----------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.chrome_cookies
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.chrome_extension_activity module
--------------------------------------------------------------
+:mod:`chrome_extension_activity` Module
+---------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.chrome_extension_activity
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.firefox module
--------------------------------------------
+:mod:`firefox` Module
+---------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.firefox
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.firefox_cookies module
----------------------------------------------------
+:mod:`firefox_cookies` Module
+-----------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.firefox_cookies
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.gdrive module
-------------------------------------------
+:mod:`gdrive` Module
+--------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.gdrive
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.interface module
----------------------------------------------
+:mod:`interface` Module
+-----------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.ls_quarantine module
--------------------------------------------------
+:mod:`ls_quarantine` Module
+---------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.ls_quarantine
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.mac_document_versions module
----------------------------------------------------------
+:mod:`mac_document_versions` Module
+-----------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.mac_document_versions
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.mackeeper_cache module
----------------------------------------------------
+:mod:`mackeeper_cache` Module
+-----------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.mackeeper_cache
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.skype module
------------------------------------------
+:mod:`skype` Module
+-------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.skype
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.sqlite_plugins.zeitgeist module
----------------------------------------------
+:mod:`zeitgeist` Module
+-----------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.zeitgeist
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: plaso.parsers.sqlite_plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:
