@@ -139,7 +139,11 @@ CODEREVIEW=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER}`;
 
 DESCRIPTION=`echo ${CODEREVIEW} | sed 's/^.*"subject":"\(.*\)","created.*$/\1/'`;
 
-if test -z "${DESCRIPTION}" || test "${DESCRIPTION}" = "${CODEREVIEW}";
+echo "${DESCRIPTION}" | grep -e '[{}":]';
+
+RESULT=$?;
+
+if test -z "${DESCRIPTION}" || test "${DESCRIPTION}" = "${CODEREVIEW}" || test ${RESULT} -eq 0;
 then
   echo "Submit aborted - unable to find change list with number: ${CL_NUMBER}.";
 
@@ -150,7 +154,11 @@ fi
 
 EMAIL_ADDRESS=`echo ${CODEREVIEW} | sed 's/^.*"owner_email":"\(.*\)","private.*$/\1/'`;
 
-if test -z "${EMAIL_ADDRESS}" || test "${EMAIL_ADDRESS}" = "${CODEREVIEW}";
+echo "${EMAIL_ADDRESS}" | grep -e '[{}":]';
+
+RESULT=$?;
+
+if test -z "${EMAIL_ADDRESS}" || test "${EMAIL_ADDRESS}" = "${CODEREVIEW}" || test ${RESULT} -eq 0;
 then
   echo "Submit aborted - unable to determine author's email address.";
 
@@ -162,9 +170,24 @@ fi
 # This will convert newlines into spaces.
 GITHUB_USERINFO=`curl -s https://api.github.com/users/${USERNAME}`;
 
+# Note that name is null when not set.
 FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"name": "\(.*\)", "company.*$/\1/'`;
 
-if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}";
+echo "${FULLNAME}" | grep -e '[{}":]';
+
+RESULT=$?;
+
+# If name is not set use company instead.
+if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}" || test ${RESULT} -eq 0;
+then
+  FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"company": "\(.*\)", "blog*$/\1/'`;
+fi
+
+echo "${FULLNAME}" | grep -e '[{}":]';
+
+RESULT=$?;
+
+if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}" || test ${RESULT} -eq 0;
 then
   echo "Submit aborted - unable to determine author's full name";
 
