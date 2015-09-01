@@ -139,7 +139,7 @@ CODEREVIEW=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER}`;
 
 DESCRIPTION=`echo ${CODEREVIEW} | sed 's/^.*"subject":"\(.*\)","created.*$/\1/'`;
 
-echo "${DESCRIPTION}" | grep -e '[{}":]';
+echo "${DESCRIPTION}" | grep -e '[{}":]' > /dev/null;
 
 RESULT=$?;
 
@@ -154,7 +154,7 @@ fi
 
 EMAIL_ADDRESS=`echo ${CODEREVIEW} | sed 's/^.*"owner_email":"\(.*\)","private.*$/\1/'`;
 
-echo "${EMAIL_ADDRESS}" | grep -e '[{}":]';
+echo "${EMAIL_ADDRESS}" | grep -e '[{}":]' > /dev/null;
 
 RESULT=$?;
 
@@ -173,7 +173,7 @@ GITHUB_USERINFO=`curl -s https://api.github.com/users/${USERNAME}`;
 # Note that name is null when not set.
 FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"name": "\(.*\)", "company.*$/\1/'`;
 
-echo "${FULLNAME}" | grep -e '[{}":]';
+echo "${FULLNAME}" | grep -e '[{}":]' > /dev/null;
 
 RESULT=$?;
 
@@ -183,7 +183,7 @@ then
   FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"company": "\(.*\)", "blog*$/\1/'`;
 fi
 
-echo "${FULLNAME}" | grep -e '[{}":]';
+echo "${FULLNAME}" | grep -e '[{}":]' > /dev/null;
 
 RESULT=$?;
 
