@@ -34,23 +34,23 @@ class FilterObject(object):
 
   @property
   def last_decision(self):
-    """Return the last matching decision."""
+    """The last matching decision or None."""
     return getattr(self, u'_decision', None)
 
   @property
   def last_reason(self):
-    """Return the last reason for the match, if there was one."""
-    if getattr(self, u'last_decision', False):
+    """The last reason for the match or None."""
+    if getattr(self, u'_decision', False):
       return getattr(self, u'_reason', u'')
 
   @property
   def limit(self):
-    """Returns the max number of records to return, or zero for all records."""
+    """The row limit."""
     return 0
 
   @property
   def separator(self):
-    """Return a separator for adaptive output modules."""
+    """The output field separator value."""
     return u','
 
   def _GetMatcher(self, filter_expression):
@@ -81,16 +81,12 @@ class FilterObject(object):
     """
 
   def Match(self, unused_event_object):
-    """Compare an EventObject to the filter expression and return a boolean.
-
-    This function returns True if the filter should be passed through the filter
-    and False otherwise.
+    """Determines if an event object matches the filter.
 
     Args:
-      unused_event_object: An event object (instance of EventObject) that
-                           should be evaluated against the filter.
+      event_object: an event object (instance of EventObject).
 
     Returns:
-      Boolean indicating whether the filter matches the object or not.
+      A boolean value that indicates a match.
     """
     return False

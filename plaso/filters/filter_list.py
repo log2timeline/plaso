@@ -112,7 +112,7 @@ class ObjectFilterList(interface.FilterObject):
     self._filter_expression = filter_expression
 
   def Match(self, event_object):
-    """Determines if the filter matches an event object.
+    """Determines if an event object matches the filter.
 
     Args:
       event_object: an event object (instance of EventObject).

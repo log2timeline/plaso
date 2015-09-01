@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The dynamic event object filter.
-
-The dynamic event object filter is a variant of the event object filter that
-supports for selective output fields.
-"""
+"""The dynamic event object filter."""
 
 from plaso.filters import event_filter
 from plaso.filters import manager
@@ -13,7 +9,12 @@ from plaso.lib import lexer
 
 # TODO: move this to lib.lexer ?
 class SelectiveLexer(lexer.Lexer):
-  """A simple selective filter lexer implementation."""
+  """Selective filter lexer implementation.
+
+  The selective (or dynamic) filter allow to construct filter expressions
+  like:
+    SELECT field_a, field_b WHERE attribute contains 'text'
+  """
 
   tokens = [
       lexer.Token('INITIAL', r'SELECT', '', 'FIELDS'),
@@ -39,7 +40,7 @@ class SelectiveLexer(lexer.Lexer):
       lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
   def __init__(self, data=''):
-    """Initializes the selective lexer object.
+    """Initializes a selective lexer object.
 
     Args:
       data: optional initial data to be processed by the lexer.
@@ -51,10 +52,14 @@ class SelectiveLexer(lexer.Lexer):
     self.separator = u','
 
   def SetFields(self, match, **unused_kwargs):
-    """Set the selective fields.
+    """Sets the output fields.
+
+    The output fields is the part of the filter expression directly following
+    the SELECT statement.
 
     Args:
-      match: the match object (instance of re.MatchObject).
+      match: the match object (instance of re.MatchObject) that contains the
+             output field names.
     """
     text = match.group(1).lower()
     field_text, _, _ = text.partition(' from ')
@@ -68,8 +73,12 @@ class SelectiveLexer(lexer.Lexer):
   def SetFilter(self, match, **unused_kwargs):
     """Set the filter query.
 
+    The filter query is the part of the filter expression directly following
+    the WHERE statement.
+
     Args:
-      match: the match object (instance of re.MatchObject).
+      match: the match object (instance of re.MatchObject) that contains the
+             filter query.
     """
     filter_match = match.group(1)
     if 'LIMIT' in filter_match:
@@ -80,10 +89,11 @@ class SelectiveLexer(lexer.Lexer):
       self.lex_filter = filter_match
 
   def SetLimit(self, match, **unused_kwargs):
-    """Set the row limit.
+    """Sets the row limit.
 
     Args:
-      match: the match object (instance of re.MatchObject).
+      match: the match object (instance of re.MatchObject) that contains the
+             row limit.
     """
     try:
       limit = int(match.group(1))
@@ -95,10 +105,11 @@ class SelectiveLexer(lexer.Lexer):
     self.limit = limit
 
   def SetSeparator(self, match, **unused_kwargs):
-    """Set the separator of the output, only uses the first char.
+    """Sets the output field separator.
 
     Args:
-      match: the match object (instance of re.MatchObject).
+      match: the match object (instance of re.MatchObject) that contains the
+             output field separate. Note that only the first character is used.
     """
     separator = match.group(1)
     if separator:
@@ -106,11 +117,11 @@ class SelectiveLexer(lexer.Lexer):
 
 
 class DynamicFilter(event_filter.EventObjectFilter):
-  """Event object filter that supports for selective output fields.
+  """Event object filter that supports selective output fields.
 
   This filter is essentially the same as the event object filter except it wraps
   it in a selection of which fields should be included by an output module that
-  has support for selective fields. That is to say the filter:
+  supports selective fields, e.g.
 
     SELECT field_a, field_b WHERE attribute contains 'text'
 
@@ -122,7 +133,7 @@ class DynamicFilter(event_filter.EventObjectFilter):
   _STATE_END = u'END'
 
   def __init__(self):
-    """Initialize the selective event object filter."""
+    """Initializes a filter object."""
     super(DynamicFilter, self).__init__()
     self._fields = []
     self._limit = 0
@@ -130,17 +141,17 @@ class DynamicFilter(event_filter.EventObjectFilter):
 
   @property
   def fields(self):
-    """Set the fields property."""
+    """The output fields."""
     return self._fields
 
   @property
   def limit(self):
-    """The limit of row counts."""
+    """The row limit."""
     return self._limit
 
   @property
   def separator(self):
-    """The separator value."""
+    """The output field separator value."""
     return self._separator
 
   def CompileFilter(self, filter_expression):
