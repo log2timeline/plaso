@@ -4,6 +4,7 @@
 
 import datetime
 import unittest
+import uuid
 
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -232,23 +233,6 @@ class TimeLibTest(unittest.TestCase):
     fat_date_time = (0xa8d03d0c & ~(0x0f << 5)) | ((13 & 0x0f) << 5)
     self.assertEqual(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
-  def testTimestampFromWebKitTime(self):
-    """Test the WebKit time conversion."""
-    timestamp = timelib.Timestamp.FromWebKitTime(0x2dec3d061a9bfb)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-08-12 21:06:31.546875')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    webkit_time = 86400 * 1000000
-    timestamp = timelib.Timestamp.FromWebKitTime(webkit_time)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'1601-01-02 00:00:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # WebKit time that exceeds lower bound.
-    webkit_time = -((1 << 63L) - 1)
-    self.assertEqual(timelib.Timestamp.FromWebKitTime(webkit_time), 0)
-
   def testTimestampFromFiletime(self):
     """Test the FILETIME conversion."""
     timestamp = timelib.Timestamp.FromFiletime(0x01cb3a623d0a17ce)
@@ -283,6 +267,42 @@ class TimeLibTest(unittest.TestCase):
 
     # POSIX time that exceeds lower bound.
     self.assertEqual(timelib.Timestamp.FromPosixTime(-9223372036855), 0)
+
+  def testTimestampFromUUIDTime(self):
+    """Test the UUID time conversion."""
+    uuid_object = uuid.UUID(u'00911b54-9ef4-11e1-be53-525400123456')
+
+    timestamp = timelib.Timestamp.FromUUIDTime(uuid_object.time)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-05-16 01:11:01.654408')
+    self.assertEqual(timestamp, expected_timestamp)
+
+    uuid_time = 86400 * 10000000
+    timestamp = timelib.Timestamp.FromUUIDTime(uuid_time)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'1582-10-16 00:00:00')
+    self.assertEqual(timestamp, expected_timestamp)
+
+    # UUID time that exceeds lower bound.
+    uuid_time = -1
+    self.assertEqual(timelib.Timestamp.FromUUIDTime(uuid_time), 0)
+
+  def testTimestampFromWebKitTime(self):
+    """Test the WebKit time conversion."""
+    timestamp = timelib.Timestamp.FromWebKitTime(0x2dec3d061a9bfb)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-08-12 21:06:31.546875')
+    self.assertEqual(timestamp, expected_timestamp)
+
+    webkit_time = 86400 * 1000000
+    timestamp = timelib.Timestamp.FromWebKitTime(webkit_time)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'1601-01-02 00:00:00')
+    self.assertEqual(timestamp, expected_timestamp)
+
+    # WebKit time that exceeds lower bound.
+    webkit_time = -((1 << 63L) - 1)
+    self.assertEqual(timelib.Timestamp.FromWebKitTime(webkit_time), 0)
 
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""
