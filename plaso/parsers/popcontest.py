@@ -99,22 +99,23 @@ class PopularityContestSessionEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'popularity_contest:session:event'
 
-  def __init__(self, timestamp, session, status, hostid=None, details=None):
+  def __init__(self, posix_time, session, status, details=None, hostid=None):
     """Initializes the event object.
 
     Args:
-      timestamp: microseconds since epoch in UTC, it's the start/end time.
+      posix_time: the the start/end POSIX time value, which contains the
+                  number of seconds since January 1, 1970 00:00:00 UTC.
       session: the session number.
       status: start or end of the session.
-      hostid: the host uuid.
-      details: the popularity contest version and host architecture.
+      details: optional popularity contest version and host architecture.
+      hostid: optional host uuid.
     """
     super(PopularityContestSessionEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
+        posix_time, eventdata.EventTimestamp.ADDED_TIME)
+    self.details = details
+    self.hostid = hostid
     self.session = session
     self.status = status
-    self.hostid = hostid
-    self.details = details
 
 
 class PopularityContestEvent(time_events.PosixTimeEvent):
@@ -122,22 +123,23 @@ class PopularityContestEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'popularity_contest:log:event'
 
-  def __init__(self, timestamp, ctime, package, mru, tag=None):
+  def __init__(self, posix_time, ctime, package, mru, tag=None):
     """Initializes the event object.
 
     Args:
-      timestamp: microseconds since epoch in UTC, it's the <atime>.
+      posix_time: the access POSIX time value, which contains the
+                  number of seconds since January 1, 1970 00:00:00 UTC.
       ctime: seconds since epoch in UTC, it's the <ctime>.
       package: the installed packaged name, whom mru belongs to.
       mru: the recently used app/library from package.
-      tag: the popularity context tag.
+      tag: optional popularity context tag.
     """
     super(PopularityContestEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ACCESS_TIME)
+        posix_time, eventdata.EventTimestamp.ACCESS_TIME)
     # TODO: adding ctime as is, reconsider a conversion to human readable form.
     self.ctime = ctime
-    self.package = package
     self.mru = mru
+    self.package = package
     self.record_tag = tag
 
 
@@ -212,48 +214,56 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     # timestamp is greater than the session start.
     if key == u'logline':
       return self._ParseLogLine(structure)
-    elif key == u'header':
+
+    if key == u'header':
       if not structure.epoch:
         logging.debug(u'PopularityContestParser, header with invalid epoch.')
         return
+
       return PopularityContestSessionEvent(
-          structure.epoch, unicode(structure.session), u'start', structure.id,
-          structure.details)
-    elif key == u'footer':
+          structure.epoch, unicode(structure.session), u'start',
+          details=structure.details, hostid=structure.id)
+
+    if key == u'footer':
       if not structure.epoch:
         logging.debug(u'PopularityContestParser, footer with invalid epoch.')
         return
+
       return PopularityContestSessionEvent(
           structure.epoch, unicode(structure.session), u'end')
-    else:
-      logging.warning(
-          u'PopularityContestParser, unknown structure: {}.'.format(key))
+
+    logging.warning(
+        u'PopularityContestParser, unknown structure: {0:s}.'.format(key))
 
   def _ParseLogLine(self, structure):
-    """Gets an event_object or None from the pyparsing ParseResults.
+    """Parses an event object from the log line.
 
     Args:
-      structure: the pyparsing ParseResults object.
+      structure: the log line structure object (instance of
+                 pyparsing.ParseResults).
 
     Returns:
-      event_object: a plaso event or None.
+      An event object (instance of PopularityContestEvent) or None.
     """
     # Required fields are <mru> and <atime> and we are not interested in
     # log lines without <mru>.
     if not structure.mru:
       return
+
     # The <atime> field (as <ctime>) is always present but could be 0.
     # In case of <atime> equal to 0, we are in <NOFILES> case, safely return
     # without logging.
     if not structure.atime:
       return
+
     # TODO: not doing any check on <tag> fields, even if only informative
     # probably it could be better to check for the expected values.
     # TODO: ctime is a numeric string representing seconds since epoch UTC,
     # reconsider a conversion to integer together with microseconds usage.
+    # TODO: move ctime to a seperate event object.
     return PopularityContestEvent(
         structure.atime, structure.ctime, structure.package, structure.mru,
-        structure.tag)
+        tag=structure.tag)
 
 
 manager.ParsersManager.RegisterParser(PopularityContestParser)

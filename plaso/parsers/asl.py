@@ -78,7 +78,8 @@ class AslParser(interface.SingleFileBaseParser):
   # magic: magic number that identify ASL files.
   # version: version of the file.
   # offset: first record in the file.
-  # timestamp: epoch time when the first entry was written.
+  # timestamp: time when the first entry was written.
+  #     Contains the number of seconds since January 1, 1970 00:00:00 UTC.
   # last_offset: last record in the file.
   ASL_HEADER_STRUCT = construct.Struct(
       u'asl_header_struct',
@@ -97,7 +98,8 @@ class AslParser(interface.SingleFileBaseParser):
   #            until the end of the record, without counts itself.
   # next_offset: next record. If is equal to 0x00, it is the last record.
   # asl_message_id: integer that has the numeric identification of the event.
-  # timestamp: Epoch integer that has the time when the entry was created.
+  # timestamp: the entry creation date and time.
+  #     Contains the number of seconds since January 1, 1970 00:00:00 UTC.
   # nanosecond: nanosecond to add to the timestamp.
   # level: level of priority.
   # pid: process identification that ask to save the record.

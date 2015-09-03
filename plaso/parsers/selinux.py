@@ -10,9 +10,9 @@
    comm="httpd" path="/home/auser/public_html" dev=sdb2 ino=921135
 
    The Parser will extract the 'type' value, the timestamp abd the 'pid'.
-   In the previous example, the timestamp is '1105758604.519', and it
-   represents the EPOCH time (seconds since Jan 1, 1970) plus the
-   milliseconds past current time (epoch: 1105758604, milliseconds: 519).
+   In the previous example, the timestamp is '1105758604.519', it
+   contains the number of seconds since January 1, 1970 and the number of
+   milli seconds after the dot e.g. seconds: 1105758604, milli seconds: 519.
 
    The number after the timestamp (420 in the example) is a 'serial number'
    that can be used to correlate multiple logs generated from the same event.

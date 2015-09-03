@@ -104,7 +104,8 @@ class JavaTimeEvent(TimestampEvent):
 class PosixTimeEvent(TimestampEvent):
   """Convenience class for a POSIX time-based event."""
 
-  def __init__(self, posix_time, timestamp_description, data_type=None):
+  def __init__(
+      self, posix_time, timestamp_description, data_type=None, micro_seconds=0):
     """Initializes an event object.
 
     Args:
@@ -113,10 +114,16 @@ class PosixTimeEvent(TimestampEvent):
       timestamp_description: The usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
+      micro_seconds: optional number of micro seconds.
     """
+    if micro_seconds:
+      timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
+          posix_time, micro_seconds)
+    else:
+      timestamp = timelib.Timestamp.FromPosixTime(posix_time)
+
     super(PosixTimeEvent, self).__init__(
-        timelib.Timestamp.FromPosixTime(posix_time), timestamp_description,
-        data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class PythonDatetimeEvent(TimestampEvent):
