@@ -24,11 +24,12 @@ the tab name, selecting Settings, and then unchecking Reload scrollback'
 
 The log file format differs from logging format, but it's quite simple
 'T 1232315916 Python interface unloaded'
-<T><space><decimal epoch><space><text><\n>
+<T><space><decimal timestamp><space><text><\n>
 
-The time reported in the log is Unix Epoch (from source code, time(0)).
-The <text> part could contain some 'decorators' (bold, underline, colors
-indication, etc.), so the parser should strip those control fields.
+The time reported in the log is the number of seconds since January 1, 1970
+00:00:00 UTC (from source code, time(0)). The <text> part could contain some
+'decorators' (bold, underline, colors indication, etc.), so the parser
+should strip those control fields.
 
 References
 http://xchat.org
@@ -52,17 +53,18 @@ class XChatScrollbackEvent(time_events.PosixTimeEvent):
   """Convenience class for a XChat Scrollback line event."""
   DATA_TYPE = u'xchat:scrollback:line'
 
-  def __init__(self, timestamp, offset, nickname, text):
+  def __init__(self, posix_time, offset, nickname, text):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
       offset: The offset of the event.
       nickname: The nickname used.
       text: The text sent by nickname or other text (server, messages, etc.).
     """
     super(XChatScrollbackEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
+        posix_time, eventdata.EventTimestamp.ADDED_TIME)
     self.offset = offset
     self.nickname = nickname
     self.text = text
@@ -79,7 +81,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   # Define how a log line should look like.
   LOG_LINE = (
       pyparsing.Literal(u'T').suppress() +
-      pyparsing.Word(pyparsing.nums).setResultsName(u'epoch') +
+      pyparsing.Word(pyparsing.nums).setResultsName(u'timestamp') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'text'))
   LOG_LINE.parseWithTabs()
 
@@ -119,21 +121,24 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       True if this is the correct parser, False otherwise.
     """
     structure = self.LOG_LINE
-    parsed_structure = None
-    epoch = None
+
     try:
       parsed_structure = structure.parseString(line)
     except pyparsing.ParseException:
       logging.debug(u'Not a XChat scrollback log file')
       return False
+
     try:
-      epoch = int(parsed_structure.epoch)
+      posix_time = int(parsed_structure.timestamp)
     except ValueError:
-      logging.debug(u'Not a XChat scrollback log file, invalid epoch string')
+      logging.debug(
+          u'Not a XChat scrollback log file, invalid timestamp string')
       return False
-    if not timelib.Timestamp.FromPosixTime(epoch):
+
+    if not timelib.Timestamp.FromPosixTime(posix_time):
       logging.debug(u'Not a XChat scrollback log file, invalid timestamp')
       return False
+
     return True
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -155,10 +160,10 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     try:
-      epoch = int(structure.epoch)
+      posix_time = int(structure.timestamp)
     except ValueError:
-      logging.debug(u'Invalid epoch string {0:s}, skipping record'.format(
-          structure.epoch))
+      logging.debug(u'Invalid timestamp string {0:s}, skipping record'.format(
+          structure.timestamp))
       return
 
     try:
@@ -167,7 +172,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       logging.debug(u'Error parsing entry at offset {0:d}'.format(self.offset))
       return
 
-    return XChatScrollbackEvent(epoch, self.offset, nickname, text)
+    return XChatScrollbackEvent(posix_time, self.offset, nickname, text)
 
   def _StripThenGetNicknameAndText(self, text):
     """Strips decorators from text and gets <nickname> if available.

@@ -35,13 +35,14 @@ class KeychainInternetRecordEvent(event.EventObject):
   DATA_TYPE = u'mac:keychain:internet'
 
   def __init__(
-      self, timestamp, timestamp_desc, entry_name, account_name,
+      self, timestamp, timestamp_description, entry_name, account_name,
       text_description, comments, where, protocol, type_protocol, ssgp_hash):
     """Initializes the event object.
 
     Args:
-      timestamp: Description of the timestamp value.
-      timestamp_desc: Timelib type of the timestamp.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       entry_name: Name of the entry.
       account_name: Name of the account.
       text_description: Short description about the entry.
@@ -53,7 +54,7 @@ class KeychainInternetRecordEvent(event.EventObject):
     """
     super(KeychainInternetRecordEvent, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = timestamp_desc
+    self.timestamp_desc = timestamp_description
     self.entry_name = entry_name
     self.account_name = account_name
     self.text_description = text_description
@@ -69,13 +70,14 @@ class KeychainApplicationRecordEvent(event.EventObject):
   DATA_TYPE = u'mac:keychain:application'
 
   def __init__(
-      self, timestamp, timestamp_desc, entry_name,
+      self, timestamp, timestamp_description, entry_name,
       account_name, text_description, comments, ssgp_hash):
     """Initializes the event object.
 
     Args:
-      timestamp: Description of the timestamp value.
-      timestamp_desc: Timelib type of the timestamp.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       entry_name: Name of the entry.
       account_name: Name of the account.
       text_description: Short description about the entry.
@@ -84,7 +86,7 @@ class KeychainApplicationRecordEvent(event.EventObject):
     """
     super(KeychainApplicationRecordEvent, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = timestamp_desc
+    self.timestamp_desc = timestamp_description
     self.entry_name = entry_name
     self.account_name = account_name
     self.text_description = text_description
@@ -186,11 +188,10 @@ class KeychainParser(interface.SingleFileBaseParser):
       u'http': u'http'}
 
   def _GetTimestampFromEntry(self, parser_mediator, structure):
-    """Parse a time entry structure into a microseconds since Epoch in UTC.
+    """Parses a timestamp from a TIME entry structure.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
       structure: TIME entry structure:
                  year: String with the number of the year.
                  month: String with the number of the month.
@@ -200,7 +201,8 @@ class KeychainParser(interface.SingleFileBaseParser):
                  second: String with the number of the second.
 
     Returns:
-      Microseconds since Epoch in UTC.
+      The timestamp which is an interger containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
     try:
       return timelib.Timestamp.FromTimeParts(
@@ -261,7 +263,7 @@ class KeychainParser(interface.SingleFileBaseParser):
       offset: First byte of the record.
 
     Returns:
-      A list of:
+      A tuple containing:
         ssgp_hash: Hash of the encrypted data (passwd, cert, note).
         creation_time: When the entry was created.
         last_mod_time: Last time the entry was updated.
@@ -326,8 +328,7 @@ class KeychainParser(interface.SingleFileBaseParser):
         ssgp_hash, creation_time, last_mod_time,
         text_description, comments, entry_name, account_name)
 
-  def _ReadEntryInternet(
-      self, parser_mediator, file_object):
+  def _ReadEntryInternet(self, parser_mediator, file_object):
     """Extracts the information from an Internet password entry.
 
     Args:

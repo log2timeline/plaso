@@ -26,9 +26,10 @@ class MacWifiLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
-      source_code: Details of the source code file generating the event.
-      log_level: The log level used for the event.
+      timestamp: the timestamp, contains the number of microseconds from
+                 January 1, 1970 00:00:00 UTC.
+      agent: TODO
+      function: TODO
       text: The log message
       action: A string containing known WiFI actions, eg: connected to
               an AP, configured, etc. If the action is not known,

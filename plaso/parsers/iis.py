@@ -30,8 +30,8 @@ class IISEventObject(time_events.TimestampEvent):
     """Initializes the IIS event object.
 
     Args:
-      timestamp: The timestamp value, contains the number of micro seconds
-                 since January 1, 1970, 00:00:00 UTC.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       structure: The structure with any parsed log values to iterate over.
     """
     super(IISEventObject, self).__init__(
@@ -154,8 +154,8 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       time: optional tuple or list of 3 elements for hour, minute, and second.
 
     Returns:
-      A timestamp value, contains the number of micro seconds since
-      January 1, 1970, 00:00:00 UTC.
+      The timestamp which is an interger containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
     if date:
       year, month, day = date[:3]

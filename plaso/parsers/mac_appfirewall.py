@@ -25,7 +25,8 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       structure: structure with the parse fields.
           computer_name: string with the name of the computer.
           agent: string with the agent that save the log.
@@ -35,12 +36,11 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
     """
     super(MacAppFirewallLogEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.timestamp = timestamp
-    self.computer_name = structure.computer_name
-    self.agent = structure.agent
-    self.status = structure.status
-    self.process_name = process_name
     self.action = action
+    self.agent = structure.agent
+    self.computer_name = structure.computer_name
+    self.process_name = process_name
+    self.status = structure.status
 
 
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
@@ -140,7 +140,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       key: type of line log (normal or repeated).
 
     Returns:
-      Return an object MacAppFirewallLogEvent.
+      An event object (instance of MacAppFirewallLogEvent).
     """
     # TODO: improve this to get a valid year.
     if not self._year_use:

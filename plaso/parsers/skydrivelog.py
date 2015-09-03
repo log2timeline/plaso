@@ -23,16 +23,17 @@ class SkyDriveLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       source_code: Details of the source code file generating the event.
       log_level: The log level used for the event.
       text: The log message.
     """
     super(SkyDriveLogEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
+    self.log_level = log_level
     self.offset = offset
     self.source_code = source_code
-    self.log_level = log_level
     self.text = text
 
 
@@ -146,23 +147,23 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
-    evt = SkyDriveLogEvent(
+    event_object = SkyDriveLogEvent(
         timestamp, self.offset, structure.source_code, structure.log_level,
         structure.text)
-    self.last_event = evt
-    return evt
+    self.last_event = event_object
+    return event_object
 
   def _ParseNoHeaderSingleLine(self, structure):
     """Parse an isolated line and store appropriate attributes."""
     if not self.last_event:
       logging.debug(u'SkyDrive, found isolated line with no previous events')
       return
-    evt = SkyDriveLogEvent(
+    event_object = SkyDriveLogEvent(
         self.last_event.timestamp, self.last_event.offset, None, None,
         structure.text)
     # TODO think to a possible refactoring for the non-header lines.
     self.last_event = None
-    return evt
+    return event_object
 
   def _GetTimestamp(self, timestamp_pypr):
     """Gets a timestamp from a pyparsing ParseResults timestamp.
@@ -175,19 +176,20 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
       timestamp_string: The pyparsing ParseResults object
 
     Returns:
-      timestamp: A plaso timelib timestamp event or 0.
+      The timestamp which is an interger containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
-    timestamp = 0
+    month, day, year = timestamp_pypr[0]
+    hour, minute, second = timestamp_pypr[1]
+    millisecond = timestamp_pypr[2]
     try:
-      month, day, year = timestamp_pypr[0]
-      hour, minute, second = timestamp_pypr[1]
-      millisecond = timestamp_pypr[2]
-      timestamp = timelib.Timestamp.FromTimeParts(
+      return timelib.Timestamp.FromTimeParts(
           year, month, day, hour, minute, second,
           microseconds=(millisecond * 1000))
     except ValueError:
-      timestamp = 0
-    return timestamp
+      pass
+
+    return 0
 
 
 manager.ParsersManager.RegisterParser(SkyDriveLogParser)
