@@ -1,35 +1,38 @@
-bencode_plugins Package
-=======================
+plaso.parsers.bencode_plugins package
+=====================================
 
-:mod:`bencode_plugins` Package
-------------------------------
+Submodules
+----------
 
-.. automodule:: plaso.parsers.bencode_plugins
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`interface` Module
------------------------
+plaso.parsers.bencode_plugins.interface module
+----------------------------------------------
 
 .. automodule:: plaso.parsers.bencode_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`transmission` Module
---------------------------
+plaso.parsers.bencode_plugins.transmission module
+-------------------------------------------------
 
 .. automodule:: plaso.parsers.bencode_plugins.transmission
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`utorrent` Module
-----------------------
+plaso.parsers.bencode_plugins.utorrent module
+---------------------------------------------
 
 .. automodule:: plaso.parsers.bencode_plugins.utorrent
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.parsers.bencode_plugins
+    :members:
+    :undoc-members:
+    :show-inheritance:

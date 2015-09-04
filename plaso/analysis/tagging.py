@@ -146,7 +146,6 @@ class TaggingPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    logging.info(u'Compiling a report.')
     report = event.AnalysisReport(self.NAME)
     report.SetTags(self._tags)
     report.SetText([u'Tagging plugin produced {0:d} tags.'.format(
