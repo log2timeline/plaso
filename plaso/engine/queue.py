@@ -31,7 +31,7 @@ class Queue(object):
 
   @abc.abstractmethod
   def PopItem(self):
-    """Pops an item off the queue or None on timeout.
+    """Pops an item off the queue.
 
     Raises:
       QueueEmpty: when the queue is empty.

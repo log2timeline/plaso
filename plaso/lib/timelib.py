@@ -714,7 +714,7 @@ class Timestamp(object):
 
   @classmethod
   def GetNow(cls):
-    """Retrieves the current time (now) as a timestamp in UTC."""
+    """Current number of microseconds since the Unix epoch in UTC."""
     time_elements = time.gmtime()
     return calendar.timegm(time_elements) * 1000000
 
@@ -722,8 +722,7 @@ class Timestamp(object):
   def IsLeapYear(cls, year):
     """Determines if a year is a leap year.
 
-       A leap year is dividable by 4 and not by 100 or by 400
-       without a remainder.
+       A leap year is divisible by 4 and not by 100 or by 400.
 
     Args:
       year: The year as in 1970.

@@ -1278,10 +1278,12 @@ class MultiProcessingQueue(queue.Queue):
       pass
 
   def PopItem(self):
-    """Pops an item off the queue or None on timeout.
+    """Pops an item off the queue.
 
     Raises:
-      QueueEmpty: when the queue is empty.
+      QueueClose: if the queue has already been closed.
+      QueueEmpty: if no item could be retrieved from the queue within the
+                  specified timeout.
     """
     try:
       # If no timeout is specified the queue will block if empty otherwise

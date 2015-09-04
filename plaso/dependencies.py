@@ -56,7 +56,8 @@ PYTHON_DEPENDENCIES = [
     (u'six', u'__version__', u'1.1.0', None),
     (u'sqlite3', u'sqlite_version', u'3.7.8', None),
     (u'xlsxwriter', u'__version__', u'0.6.5', None),
-    (u'yaml', u'__version__', u'3.10', None)]
+    (u'yaml', u'__version__', u'3.10', None),
+    (u'zmq', u'__version__', u'2.1.11', None)]
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
