@@ -19,7 +19,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Sets up the objects needed for this test."""
-    self.test_filename = os.path.join(u'test_data', u'psort_test.out')
+    self.test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.

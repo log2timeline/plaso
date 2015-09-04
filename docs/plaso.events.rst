@@ -1,51 +1,54 @@
-events Package
-==============
+plaso.events package
+====================
 
-:mod:`events` Package
----------------------
+Submodules
+----------
 
-.. automodule:: plaso.events
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`plist_event` Module
--------------------------
+plaso.events.plist_event module
+-------------------------------
 
 .. automodule:: plaso.events.plist_event
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`shell_item_events` Module
--------------------------------
+plaso.events.shell_item_events module
+-------------------------------------
 
 .. automodule:: plaso.events.shell_item_events
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`text_events` Module
--------------------------
+plaso.events.text_events module
+-------------------------------
 
 .. automodule:: plaso.events.text_events
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`time_events` Module
--------------------------
+plaso.events.time_events module
+-------------------------------
 
 .. automodule:: plaso.events.time_events
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`windows_events` Module
-----------------------------
+plaso.events.windows_events module
+----------------------------------
 
 .. automodule:: plaso.events.windows_events
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: plaso.events
+    :members:
+    :undoc-members:
+    :show-inheritance:
