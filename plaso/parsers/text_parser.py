@@ -728,11 +728,11 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       file_entry: a file entry object (instance of dfvfs.FileEntry).
       text_file_object: a text file object (instance of dfvfs.TextFile).
-      max_len: if defined determines the maximum number of bytes a single line
-               can take.
-      quiet: if True then a decode warning is not displayed.
-      depth: a threshold of how many newlines we can encounter before bailing
-             out.
+      max_len: optional maximum number of bytes a single line can take.
+      quiet: optional boolean value to indicate parse warning should not be
+             displayed.
+      depth: optional number of new lines the parser can encounter before
+             bailing out.
 
     Returns:
       A single line read from the file-like object, or the maximum number of
@@ -1076,11 +1076,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
-        parsed_event = self.ParseRecord(parser_mediator, key, tokens)
-        if parsed_event:
-          # TODO: need a reliable way to handle this.
-          # parsed_event.offset = self._text_reader.line_offset
-          parser_mediator.ProduceEvent(parsed_event)
+        self.ParseRecord(parser_mediator, key, tokens)
 
         self._text_reader.SkipAhead(file_object, end)
 

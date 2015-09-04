@@ -150,9 +150,6 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key != u'logline':
       logging.warning(
@@ -172,7 +169,8 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       logging.debug(u'Error parsing entry at offset {0:d}'.format(self.offset))
       return
 
-    return XChatScrollbackEvent(posix_time, self.offset, nickname, text)
+    event_object = XChatScrollbackEvent(posix_time, self.offset, nickname, text)
+    parser_mediator.ProduceEvent(event_object)
 
   def _StripThenGetNicknameAndText(self, text):
     """Strips decorators from text and gets <nickname> if available.

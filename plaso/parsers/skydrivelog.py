@@ -129,41 +129,54 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'logline':
-      return self._ParseLogline(structure)
+      self._ParseLogLine(parser_mediator, structure)
     elif key == u'no_header_single_line':
-      return self._ParseNoHeaderSingleLine(structure)
+      self._ParseNoHeaderSingleLine(parser_mediator, structure)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def _ParseLogline(self, structure):
-    """Parse a logline and store appropriate attributes."""
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parse a single log line and produce an event object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     timestamp = self._GetTimestamp(structure.timestamp)
     if not timestamp:
       logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
+
     event_object = SkyDriveLogEvent(
         timestamp, self.offset, structure.source_code, structure.log_level,
         structure.text)
-    self.last_event = event_object
-    return event_object
+    parser_mediator.ProduceEvent(event_object)
 
-  def _ParseNoHeaderSingleLine(self, structure):
-    """Parse an isolated line and store appropriate attributes."""
+    self.last_event = event_object
+
+  def _ParseNoHeaderSingleLine(self, parser_mediator, structure):
+    """Parse an isolated line and and produce an event object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     if not self.last_event:
       logging.debug(u'SkyDrive, found isolated line with no previous events')
       return
+
     event_object = SkyDriveLogEvent(
         self.last_event.timestamp, self.last_event.offset, None, None,
         structure.text)
+    parser_mediator.ProduceEvent(event_object)
+
     # TODO think to a possible refactoring for the non-header lines.
     self.last_event = None
-    return event_object
 
   def _GetTimestamp(self, timestamp_pypr):
     """Gets a timestamp from a pyparsing ParseResults timestamp.

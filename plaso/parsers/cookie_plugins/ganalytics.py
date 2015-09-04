@@ -74,13 +74,14 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
       raise errors.WrongPlugin(u'Wrong number of fields. [{0:d} vs. 6]'.format(
           len(fields)))
 
-    domain_hash, visitor_id, first_visit, previous, last, sessions = fields
+    domain_hash, visitor_id, first_visit, previous_visit, last, sessions = (
+        fields)
 
     # TODO: Double check this time is stored in UTC and not local time.
     try:
-      first_epoch = int(first_visit, 10)
+      first_posix_time = int(first_visit, 10)
     except ValueError:
-      first_epoch = 0
+      first_posix_time = None
 
     try:
       sessions = int(sessions, 10)
@@ -88,24 +89,26 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
       sessions = 0
 
     try:
-      previous = int(previous, 10)
+      previous_posix_time = int(previous_visit, 10)
     except ValueError:
-      previous = 0
+      previous_posix_time = None
 
     try:
       last = int(last, 10)
     except ValueError:
       last = 0
 
-    event_object = GoogleAnalyticsEvent(
-        first_epoch, u'Analytics Creation Time', url, u'utma',
-        domain_hash=domain_hash, visitor_id=visitor_id, sessions=sessions)
-    parser_mediator.ProduceEvent(event_object)
+    if first_posix_time is not None:
+      event_object = GoogleAnalyticsEvent(
+          first_posix_time, u'Analytics Creation Time', url, u'utma',
+          domain_hash=domain_hash, visitor_id=visitor_id, sessions=sessions)
+      parser_mediator.ProduceEvent(event_object)
 
-    event_object = GoogleAnalyticsEvent(
-        previous, u'Analytics Previous Time', url, u'utma',
-        domain_hash=domain_hash, visitor_id=visitor_id, sessions=sessions)
-    parser_mediator.ProduceEvent(event_object)
+    if previous_posix_time is not None:
+      event_object = GoogleAnalyticsEvent(
+          previous_posix_time, u'Analytics Previous Time', url, u'utma',
+          domain_hash=domain_hash, visitor_id=visitor_id, sessions=sessions)
+      parser_mediator.ProduceEvent(event_object)
 
     event_object = GoogleAnalyticsEvent(
         last, eventdata.EventTimestamp.LAST_VISITED_TIME, url, u'utma',

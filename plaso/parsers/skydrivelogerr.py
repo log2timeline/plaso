@@ -23,7 +23,8 @@ class SkyDriveLogErrorEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: Milliseconds since epoch in UTC.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       module: The module name that generated the log line.
       source_code: Logging source file and line number.
       text: The error text message.
