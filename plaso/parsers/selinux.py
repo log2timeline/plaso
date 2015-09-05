@@ -107,7 +107,7 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       logging.error(
           u'Unable to retrieve timestamp with error: {0:s}'.format(exception))
       self.timestamp = 0
-      raise lexer.ParseError(u'Not a valid timestamp.')
+      raise errors.ParseError(u'Not a valid timestamp.')
 
   def ParseString(self, match=None, **unused_kwargs):
     """Add a string to the body attribute.
@@ -132,7 +132,7 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
 
   def ParseFailed(self, **unused_kwargs):
     """Entry parsing failed callback."""
-    raise lexer.ParseError(u'Unable to parse SELinux log line.')
+    raise errors.ParseError(u'Unable to parse SELinux log line.')
 
   def ParseLine(self, parser_mediator):
     """Parse a single line from the SELinux audit file.

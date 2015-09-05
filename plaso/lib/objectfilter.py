@@ -100,23 +100,12 @@ import binascii
 import logging
 import re
 
+from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import utils
 
 
-class Error(Exception):
-  """Base module exception."""
-
-
-class MalformedQueryError(Error):
-  """The provided filter query is malformed."""
-
-
-class ParseError(Error):
-  """The parser for textual queries returned invalid results."""
-
-
-class InvalidNumberOfOperands(Error):
+class InvalidNumberOfOperands(errors.Error):
   """The number of operands provided to this operator is wrong."""
 
 
@@ -133,13 +122,13 @@ class Filter(object):
       subclassing ValueExpander.
 
     Raises:
-      Error: If the given value_expander is not a subclass of ValueExpander
+      ValueError: If the given value_expander is not a subclass of ValueExpander
     """
     self.value_expander = None
     self.value_expander_cls = value_expander
     if self.value_expander_cls:
       if not issubclass(self.value_expander_cls, ValueExpander):
-        raise Error(u'{0:s} is not a valid value expander'.format(
+        raise ValueError(u'{0:s} is not a valid value expander'.format(
             self.value_expander_cls))
       self.value_expander = self.value_expander_cls()
     self.args = arguments or []
@@ -584,7 +573,7 @@ class BasicExpression(lexer.Expression):
     operator = filter_implementation.OPS.get(op_str, None)
 
     if not operator:
-      raise ParseError(u'Unknown operator {0:s} provided.'.format(
+      raise errors.ParseError(u'Unknown operator {0:s} provided.'.format(
           self.operator))
 
     arguments.extend(self.args)
@@ -616,7 +605,8 @@ class ContextExpression(lexer.Expression):
     if isinstance(expression, lexer.Expression):
       self.args = [expression]
     else:
-      raise ParseError(u'Expected expression, got {0:s}.'.format(expression))
+      raise errors.ParseError(
+          u'Expected expression, got {0:s}.'.format(expression))
 
   def Compile(self, filter_implementation):
     """Compile the expression."""
@@ -638,7 +628,8 @@ class BinaryExpression(lexer.BinaryExpression):
     elif operator == 'or' or operator == '||':
       method = 'OrFilter'
     else:
-      raise ParseError(u'Invalid binary operator {0:s}.'.format(operator))
+      raise errors.ParseError(
+          u'Invalid binary operator {0:s}.'.format(operator))
 
     args = [x.Compile(filter_implementation) for x in self.args]
     return filter_implementation.FILTERS[method](arguments=args)
@@ -712,7 +703,7 @@ class Parser(lexer.SearchParser):
   def FlipAllowed(self):
     """Raise an error if the not keyword is used where it is not allowed."""
     if not hasattr(self, 'flipped'):
-      raise ParseError(u'Not defined.')
+      raise errors.ParseError(u'Not defined.')
 
     if not self.flipped:
       return
@@ -720,7 +711,7 @@ class Parser(lexer.SearchParser):
     if self.current_expression.operator:
       if not self.current_expression.operator.lower() in (
           'is', 'contains', 'inset', 'equals'):
-        raise ParseError(
+        raise errors.ParseError(
             u'Keyword \'not\' does not work against operator: {0:s}'.format(
                 self.current_expression.operator))
 
@@ -731,10 +722,11 @@ class Parser(lexer.SearchParser):
     is met this logic will flip that to False, and vice versa.
     """
     if hasattr(self, 'flipped') and self.flipped:
-      raise ParseError(u'The operator \'not\' can only be expressed once.')
+      raise errors.ParseError(
+          u'The operator \'not\' can only be expressed once.')
 
     if self.current_expression.args:
-      raise ParseError(
+      raise errors.ParseError(
           u'Unable to place the keyword \'not\' after an argument.')
 
     self.flipped = True
@@ -769,7 +761,7 @@ class Parser(lexer.SearchParser):
     try:
       float_value = float(string)
     except (TypeError, ValueError):
-      raise ParseError(u'{0:s} is not a valid float.'.format(string))
+      raise errors.ParseError(u'{0:s} is not a valid float.'.format(string))
     return self.InsertArg(float_value)
 
   def InsertIntArg(self, string='', **unused_kwargs):
@@ -777,7 +769,7 @@ class Parser(lexer.SearchParser):
     try:
       int_value = int(string)
     except (TypeError, ValueError):
-      raise ParseError(u'{0:s} is not a valid integer.'.format(string))
+      raise errors.ParseError(u'{0:s} is not a valid integer.'.format(string))
     return self.InsertArg(int_value)
 
   def InsertInt16Arg(self, string='', **unused_kwargs):
@@ -785,7 +777,8 @@ class Parser(lexer.SearchParser):
     try:
       int_value = int(string, 16)
     except (TypeError, ValueError):
-      raise ParseError(u'{0:s} is not a valid base16 integer.'.format(string))
+      raise errors.ParseError(
+          u'{0:s} is not a valid base16 integer.'.format(string))
     return self.InsertArg(int_value)
 
   def StringFinish(self, **unused_kwargs):
@@ -803,7 +796,8 @@ class Parser(lexer.SearchParser):
 
     Args:
       string: The string that matched.
-      match: The match object (m.group(1) is the escaped code)
+      match: the match object (instance of re.MatchObject).
+             Where match.group(1) contains the escaped code.
 
     Raises:
       ParseError: When the escaped string is not one of [\'"rnbt]
@@ -811,7 +805,7 @@ class Parser(lexer.SearchParser):
     if match.group(1) in '\\\'"rnbt\\.ws':
       self.string += string.decode('string_escape')
     else:
-      raise ParseError(u'Invalid escape character {0:s}.'.format(string))
+      raise errors.ParseError(u'Invalid escape character {0:s}.'.format(string))
 
   def HexEscape(self, string, match, **unused_kwargs):
     """Converts a hex escaped string."""
@@ -820,7 +814,7 @@ class Parser(lexer.SearchParser):
     try:
       self.string += binascii.unhexlify(hex_string)
     except TypeError:
-      raise ParseError(u'Invalid hex escape {0:s}.'.format(string))
+      raise errors.ParseError(u'Invalid hex escape {0:s}.'.format(string))
 
   def ContextOperator(self, string='', **unused_kwargs):
     self.stack.append(self.context_cls(string[1:]))
@@ -845,15 +839,16 @@ class Parser(lexer.SearchParser):
       length = len(self.stack)
 
     if length != 1:
-      self.Error(u'Illegal query expression.')
+      self.Error(u'Illegal query expression')
 
     return self.stack[0]
 
   def Error(self, message=None, _=None):
     # Note that none of the values necessarily are strings.
-    raise ParseError(u'{0!s} in position {1!s}: {2!s} <----> {3!s} )'.format(
-        message, len(self.processed_buffer), self.processed_buffer,
-        self.buffer))
+    raise errors.ParseError(
+        u'{0!s} in position {1!s}: {2!s} <----> {3!s} )'.format(
+            message, len(self.processed_buffer), self.processed_buffer,
+            self.buffer))
 
   def _CombineBinaryExpressions(self, operator):
     for i in range(1, len(self.stack)-1):

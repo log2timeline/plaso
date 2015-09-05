@@ -24,6 +24,7 @@ class ConnectionError(Error):
 class EngineAbort(Error):
   """Class that defines an engine initiated abort exception."""
 
+
 class FileSystemScannerError(Error):
   """Raised when a there is an issue scanning for a file system."""
 
@@ -34,6 +35,10 @@ class NotAText(Error):
 
 class NoFormatterFound(Error):
   """Raised when no formatter is found for a particular event."""
+
+
+class ParseError(Error):
+  """Raised when a parse error occurred."""
 
 
 class PathNotFound(Error):
