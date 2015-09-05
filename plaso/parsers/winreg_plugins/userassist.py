@@ -13,7 +13,7 @@ from plaso.winnt import environ_expand
 from plaso.winnt import known_folder_ids
 
 
-class UserAssistPlugin(interface.KeyPlugin):
+class UserAssistPlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses an UserAssist key."""
 
   NAME = u'userassist'

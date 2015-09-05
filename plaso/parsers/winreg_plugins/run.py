@@ -6,7 +6,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class RunUserPlugin(interface.KeyPlugin):
+class RunUserPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing user specific auto runs."""
 
   NAME = u'windows_run'

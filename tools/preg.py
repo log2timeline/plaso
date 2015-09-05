@@ -612,12 +612,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     plugin_list = self._front_end.registry_plugin_list
 
     self.PrintHeader(u'Supported Plugins', u'=')
-    self.PrintHeader(u'Key Plugins')
-    for plugin_class in plugin_list.GetAllKeyPlugins():
-      self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
-
-    self.PrintHeader(u'Value Plugins')
-    for plugin_class in plugin_list.GetAllValuePlugins():
+    for plugin_class in plugin_list.GetAllPlugins():
       self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
 
     self._output_writer.Write(u'\n')
@@ -1180,7 +1175,7 @@ class PregMagics(magic.Magics):
 
     registry_file_type = current_helper.file_type
     plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
-    plugin_object = plugins_list.GetKeyPluginByName(
+    plugin_object = plugins_list.GetPluginObjectByName(
         registry_file_type, plugin_name)
     if not plugin_object:
       self.output_writer.Write(

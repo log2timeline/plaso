@@ -7,7 +7,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class DefaultPlugin(interface.KeyPlugin):
+class DefaultPlugin(interface.WindowsRegistryPlugin):
   """Default plugin that extracts minimum information from every registry key.
 
   The default plugin will parse every registry key that is passed to it and
@@ -21,11 +21,6 @@ class DefaultPlugin(interface.KeyPlugin):
 
   REG_TYPE = u'any'
   REG_KEYS = []
-
-  # This is a special case, plugins normally never overwrite the priority.
-  # However the default plugin should only run when all others plugins have
-  # tried and failed.
-  WEIGHT = 3
 
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
@@ -80,9 +75,9 @@ class DefaultPlugin(interface.KeyPlugin):
 
     parser_mediator.ProduceEvent(event_object)
 
-  # Even though the DefaultPlugin is derived from KeyPlugin it needs to
-  # overwrite the Process function to make sure it is called when no other
-  # plugin is available.
+  # Even though the DefaultPlugin is derived from WindowsRegistryPlugin
+  # it needs to overwrite the Process function to make sure it is called
+  # when no other plugin is available.
 
   def Process(
       self, parser_mediator, key=None, registry_file_type=None, **kwargs):

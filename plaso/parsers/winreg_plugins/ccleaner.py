@@ -11,7 +11,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Marc Seguin (segumarc@gmail.com)'
 
 
-class CCleanerPlugin(interface.KeyPlugin):
+class CCleanerPlugin(interface.WindowsRegistryPlugin):
   """Gathers the CCleaner Keys for NTUSER hive."""
 
   NAME = u'ccleaner'

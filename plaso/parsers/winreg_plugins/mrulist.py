@@ -13,13 +13,7 @@ from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
 
-# A mixin class is used here to not to have the duplicate functionality
-# to parse the MRUList Registry values. However multiple inheritance
-# and thus mixins are to be used sparsely in this codebase, hence we need
-# to find a better solution in not needing to distinguish between key and
-# value plugins.
-# TODO: refactor Registry key and value plugin to rid ourselves of the mixin.
-class MRUListPluginMixin(object):
+class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
   """Class for common MRUList Windows Registry plugin functionality."""
 
   _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16(u'entry_letter'))
@@ -101,7 +95,7 @@ class MRUListPluginMixin(object):
     parser_mediator.ProduceEvent(event_object)
 
 
-class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
+class MRUListStringPlugin(BaseMRUListPlugin):
   """Windows Registry plugin to parse a string MRUList."""
 
   NAME = u'mrulist_string'
@@ -192,7 +186,7 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
         codepage=codepage)
 
 
-class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
+class MRUListShellItemListPlugin(BaseMRUListPlugin):
   """Windows Registry plugin to parse a shell item list MRUList."""
 
   NAME = u'mrulist_shell_item_list'

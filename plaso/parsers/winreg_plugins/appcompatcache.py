@@ -62,7 +62,7 @@ class AppCompatCacheCachedEntry(object):
     self.path = None
 
 
-class AppCompatCachePlugin(interface.KeyPlugin):
+class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   """Class that parses the Application Compatibility Cache Registry data."""
 
   NAME = u'appcompatcache'

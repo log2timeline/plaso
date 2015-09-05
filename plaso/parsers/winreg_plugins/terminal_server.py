@@ -9,7 +9,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class TerminalServerClientPlugin(interface.KeyPlugin):
+class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection keys."""
 
   NAME = u'mstsc_rdp'
@@ -52,7 +52,7 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       parser_mediator.ProduceEvent(event_object)
 
 
-class TerminalServerClientMRUPlugin(interface.KeyPlugin):
+class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
   NAME = u'mstsc_rdp_mru'
