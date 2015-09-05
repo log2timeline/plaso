@@ -8,8 +8,7 @@ from plaso.formatters import manager
 from plaso.formatters import mediator
 from plaso.formatters import winreg  # pylint: disable=unused-import
 
-# TODO: refactor to event_test_lib.
-from tests.lib import event as event_test
+from tests.lib import event as event_test_lib
 from tests.formatters import test_lib
 
 
@@ -18,7 +17,7 @@ class FormattersManagerTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._event_objects = event_test.GetEventObjects()
+    self._event_objects = event_test_lib.GetEventObjects()
 
   def testFormatterRegistration(self):
     """Tests the RegisterFormatter and DeregisterFormatter functions."""
