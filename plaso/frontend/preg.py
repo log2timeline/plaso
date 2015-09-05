@@ -487,17 +487,17 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
     """
-    key_plugins = {}
+    plugins = {}
     for plugin in self._registry_plugin_list.GetAllPlugins():
-      key_plugins[plugin.NAME] = plugin
+      plugins[plugin.NAME] = plugin
 
     if not plugin_name:
-      return key_plugins.values()
+      return plugins.values()
 
     plugin_name = plugin_name.lower()
 
     plugins_to_run = []
-    for key_plugin_name, key_plugin in iter(key_plugins.items()):
+    for key_plugin_name, key_plugin in iter(plugins.items()):
       if plugin_name in key_plugin_name.lower():
         plugins_to_run.append(key_plugin)
 
@@ -512,17 +512,17 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
     """
-    key_plugins = {}
+    plugins = {}
     for plugin in self._registry_plugin_list.GetAllPlugins():
-      key_plugins.setdefault(plugin.REG_TYPE.lower(), []).append(plugin)
+      plugins.setdefault(plugin.REG_TYPE.lower(), []).append(plugin)
 
     if not registry_file_type:
-      return key_plugins.values()
+      return plugins.values()
 
     registry_file_type = registry_file_type.lower()
 
     plugins_to_run = []
-    for key_plugin_type, key_plugin_list in iter(key_plugins.items()):
+    for key_plugin_type, key_plugin_list in iter(plugins.items()):
       if registry_file_type == key_plugin_type:
         plugins_to_run.extend(key_plugin_list)
       elif key_plugin_type == u'any':
