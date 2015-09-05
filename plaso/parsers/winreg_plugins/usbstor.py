@@ -24,15 +24,17 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
   URLS = [u'http://www.forensicswiki.org/wiki/USB_History_Viewing']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Collect Values under USBStor and return an event object for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for subkey in key.GetSubkeys():
       text_dict = {}
@@ -42,7 +44,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_timestamp, key.path, text_dict,
           usage=eventdata.EventTimestamp.FIRST_CONNECTED, offset=key.offset,
-          registry_type=registry_type,
+          registry_file_type=registry_file_type,
           source_append=u': USBStor Entries')
       parser_mediator.ProduceEvent(event_object)
 
@@ -84,7 +86,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
         event_object = windows_events.WindowsRegistryEvent(
             devicekey.last_written_timestamp, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
-            registry_type=registry_type,
+            registry_file_type=registry_file_type,
             source_append=u': USBStor Entries')
         parser_mediator.ProduceEvent(event_object)
 
@@ -109,7 +111,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
           event_object = windows_events.WindowsRegistryEvent(
               timestamp, key.path, text_dict,
               usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
-              registry_type=registry_type,
+              registry_file_type=registry_file_type,
               source_append=u': USBStor Entries')
           parser_mediator.ProduceEvent(event_object)
 

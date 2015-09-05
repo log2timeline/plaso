@@ -123,6 +123,9 @@ Thanks to contributors (alphabetically based on last name):
 
 Test data:
 
+* the contents of the *.exe and *.exe.mui files on bdetogo.raw has been
+  filled with 0-byte values.
+
 Copied with permission from the GRR project: https://github.com/google/grr
 * History
 * index.dat

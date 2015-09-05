@@ -21,15 +21,17 @@ class RunUserPlugin(interface.WindowsRegistryPlugin):
   URLS = [u'http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Collect the Values under the Run Key and return an event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for value in key.GetValues():
       # Ignore the default value.
@@ -45,7 +47,7 @@ class RunUserPlugin(interface.WindowsRegistryPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          urls=self.URLS, registry_type=registry_type,
+          urls=self.URLS, registry_file_type=registry_file_type,
           source_append=': Run Key')
       parser_mediator.ProduceEvent(event_object)
 

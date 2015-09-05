@@ -85,9 +85,13 @@ fi
 
 git pull --squash ${GITHUB_URL} ${FEATURE_BRANCH}
 
+# In case of an error before commit the pending changes are undone.
+
 if test $? -ne 0;
 then
   echo "Submit aborted - unable to 'git pull ${GITHUB_URL} ${FEATURE_BRANCH}'.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
@@ -96,12 +100,16 @@ if ! linting_is_correct_remote_origin;
 then
   echo "Submit aborted - fix the issues reported by the linter.";
 
+  git stash && git stash drop;
+
   exit ${EXIT_FAILURE};
 fi
 
 if ! tests_pass;
 then
   echo "Submit aborted - fix the issues reported by the failing test.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
@@ -111,6 +119,8 @@ then
   if ! generate_api_documentation;
   then
     echo "Submit aborted - unable to generate API documentation";
+
+  git stash && git stash drop;
 
     exit ${EXIT_FAILURE};
   fi
@@ -129,18 +139,30 @@ CODEREVIEW=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER}`;
 
 DESCRIPTION=`echo ${CODEREVIEW} | sed 's/^.*"subject":"\(.*\)","created.*$/\1/'`;
 
-if test -z "${DESCRIPTION}" || test "${DESCRIPTION}" = "${CODEREVIEW}";
+echo "${DESCRIPTION}" | grep -e '[{}":]' > /dev/null;
+
+RESULT=$?;
+
+if test -z "${DESCRIPTION}" || test "${DESCRIPTION}" = "${CODEREVIEW}" || test ${RESULT} -eq 0;
 then
   echo "Submit aborted - unable to find change list with number: ${CL_NUMBER}.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
 
 EMAIL_ADDRESS=`echo ${CODEREVIEW} | sed 's/^.*"owner_email":"\(.*\)","private.*$/\1/'`;
 
-if test -z "${EMAIL_ADDRESS}" || test "${EMAIL_ADDRESS}" = "${CODEREVIEW}";
+echo "${EMAIL_ADDRESS}" | grep -e '[{}":]' > /dev/null;
+
+RESULT=$?;
+
+if test -z "${EMAIL_ADDRESS}" || test "${EMAIL_ADDRESS}" = "${CODEREVIEW}" || test ${RESULT} -eq 0;
 then
   echo "Submit aborted - unable to determine author's email address.";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi
@@ -148,11 +170,28 @@ fi
 # This will convert newlines into spaces.
 GITHUB_USERINFO=`curl -s https://api.github.com/users/${USERNAME}`;
 
+# Note that name is null when not set.
 FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"name": "\(.*\)", "company.*$/\1/'`;
 
-if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}";
+echo "${FULLNAME}" | grep -e '[{}":]' > /dev/null;
+
+RESULT=$?;
+
+# If name is not set use company instead.
+if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}" || test ${RESULT} -eq 0;
+then
+  FULLNAME=`echo ${GITHUB_USERINFO} | sed 's/^.*"company": "\(.*\)", "blog*$/\1/'`;
+fi
+
+echo "${FULLNAME}" | grep -e '[{}":]' > /dev/null;
+
+RESULT=$?;
+
+if test -z "${FULLNAME}" || test "${FULLNAME}" = "${GITHUB_USERINFO}" || test ${RESULT} -eq 0;
 then
   echo "Submit aborted - unable to determine author's full name";
+
+  git stash && git stash drop;
 
   exit ${EXIT_FAILURE};
 fi

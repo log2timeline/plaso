@@ -17,7 +17,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyevtx': 20141112,
     u'pyewf': 20131210,
     u'pyfwsi': 20150606,
-    u'pylnk': 20141026,
+    u'pylnk': 20150830,
     u'pymsiecf': 20150314,
     u'pyolecf': 20150413,
     u'pyqcow': 20131204,
@@ -55,7 +55,9 @@ PYTHON_DEPENDENCIES = [
     (u'requests', u'__version__', u'2.2.1', None),
     (u'six', u'__version__', u'1.1.0', None),
     (u'sqlite3', u'sqlite_version', u'3.7.8', None),
-    (u'yaml', u'__version__', u'3.10', None)]
+    (u'xlsxwriter', u'__version__', u'0.6.5', None),
+    (u'yaml', u'__version__', u'3.10', None),
+    (u'zmq', u'__version__', u'2.1.11', None)]
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version

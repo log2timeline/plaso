@@ -229,7 +229,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       return []
 
     plugins_list = self._registry_plugin_list
-    registry_types = set()
+    registry_file_types = set()
 
     for plugin_name in plugin_names:
       for plugin_class in plugins_list.GetAllPlugins():
@@ -237,12 +237,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           # If a plugin is available for every Registry type
           # we need to make sure all Registry files are included.
           if plugin_class.REG_TYPE == u'any':
-            registry_types.extend(dfwinreg_definitions.REGISTRY_FILE_TYPES)
+            registry_file_types.extend(dfwinreg_definitions.REGISTRY_FILE_TYPES)
 
           else:
-            registry_types.add(plugin_class.REG_TYPE)
+            registry_file_types.add(plugin_class.REG_TYPE)
 
-    return list(registry_types)
+    return list(registry_file_types)
 
   def _GetSearcher(self):
     """Retrieve a searcher for the first source path specification.
@@ -335,13 +335,17 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         _, first, second = key.partition(u'\\Software')
         keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
 
-  def GetRegistryFilePaths(self, plugin_name=None, registry_type=None):
-    """Returns a list of Registry paths from a configuration object.
+  def GetRegistryFilePaths(self, plugin_name=None, registry_file_type=None):
+    """Returns a list of Registry paths.
+
+    If the Registry file type is not set this functions attempts to determine
+    it based on the presence of specific Registry keys.
 
     Args:
       plugin_name: optional string containing the name of the plugin or an empty
                    string or None for all the types. The default is None.
-      registry_type: optional Registry type string. The default is None.
+      registry_file_type: optional Windows Registry file type string.
+                          The default is None, which represents auto-detect.
 
     Returns:
       A list of path names for Registry files.
@@ -351,8 +355,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     else:
       restore_path = u''
 
-    if registry_type:
-      types = [registry_type]
+    if registry_file_type:
+      types = [registry_file_type]
     else:
       types = self._GetRegistryTypes(plugin_name)
 
@@ -409,13 +413,15 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return expanded_key_paths
 
+  # TODO: refactor this function. Current implementation is too complex.
   def GetRegistryHelpers(
-      self, registry_types=None, plugin_names=None, codepage=u'cp1252'):
+      self, registry_file_types=None, plugin_names=None, codepage=u'cp1252'):
     """Returns a list of discovered Registry helpers.
 
     Args:
-      registry_types: optional list of Registry types, eg: NTUSER, SAM, etc
-                      that should be included. The default is None.
+      registry_file_types: optional list of Windows Registry file types,
+                           e.g.: NTUSER, SAM, etc that should be included.
+                           The default is None.
       plugin_names: optional list of strings containing the name of the
                     plugin(s) or an empty string for all the types. The default
                     is None.
@@ -425,12 +431,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       A list of Registry helper objects (instance of PregRegistryHelper).
 
     Raises:
-      ValueError: If neither registry_types nor plugin name is passed
+      ValueError: If neither registry_file_types nor plugin name is passed
                   as a parameter.
     """
-    if registry_types is None and plugin_names is None:
+    if registry_file_types is None and plugin_names is None:
       raise ValueError(
-          u'Missing Registry_types or plugin_name value.')
+          u'Missing registry_file_types or plugin_name value.')
 
     if plugin_names is None:
       plugin_names = []
@@ -446,19 +452,19 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       self._preprocess_completed = True
       file_system.Close()
 
-    if registry_types is None:
-      registry_types = []
+    if registry_file_types is None:
+      registry_file_types = []
 
     types_from_plugins = self._GetRegistryTypesFromPlugins(plugin_names)
-    registry_types.extend(types_from_plugins)
+    registry_file_types.extend(types_from_plugins)
 
     paths = []
     if self._single_file:
       paths = [self._source_path]
-    elif registry_types:
-      for registry_type in registry_types:
+    elif registry_file_types:
+      for registry_file_type in registry_file_types:
         paths.extend(self.GetRegistryFilePaths(
-            registry_type=registry_type.upper()))
+            registry_file_type=registry_file_type.upper()))
     else:
       for plugin_name in plugin_names:
         paths.extend(self.GetRegistryFilePaths(plugin_name=plugin_name))
@@ -497,11 +503,11 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return plugins_to_run
 
-  def GetRegistryPluginsFromRegistryType(self, registry_type):
+  def GetRegistryPluginsFromRegistryType(self, registry_file_type):
     """Retrieves the Windows Registry plugins based on a Registry type.
 
     Args:
-      registry_type: string containing the Registry type.
+      registry_file_type: the Windows Registry files type string.
 
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
@@ -510,14 +516,14 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     for plugin in self._registry_plugin_list.GetAllPlugins():
       key_plugins.setdefault(plugin.REG_TYPE.lower(), []).append(plugin)
 
-    if not registry_type:
+    if not registry_file_type:
       return key_plugins.values()
 
-    registry_type = registry_type.lower()
+    registry_file_type = registry_file_type.lower()
 
     plugins_to_run = []
     for key_plugin_type, key_plugin_list in iter(key_plugins.items()):
-      if registry_type == key_plugin_type:
+      if registry_file_type == key_plugin_type:
         plugins_to_run.extend(key_plugin_list)
       elif key_plugin_type == u'any':
         plugins_to_run.extend(key_plugin_list)
@@ -616,7 +622,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return_dict = {}
     for plugin_object in self._registry_plugin_list.GetPluginObjects(
-        registry_helper.type):
+        registry_helper.file_type):
       if use_plugins and plugin_object.NAME not in use_plugins:
         continue
 
@@ -710,6 +716,11 @@ class PregRegistryHelper(object):
     return self._collector_name
 
   @property
+  def file_type(self):
+    """The Registry file type."""
+    return self._registry_file_type
+
+  @property
   def name(self):
     """The name of the Registry file."""
     return getattr(self._registry_file, u'name', u'N/A')
@@ -729,16 +740,11 @@ class PregRegistryHelper(object):
     if self._registry_file:
       return self._registry_file.GetKeyByPath(u'\\')
 
-  @property
-  def type(self):
-    """The Registry type."""
-    return self._registry_type
-
   def _Reset(self):
     """Reset all attributes of the Registry helper."""
     self._currently_loaded_registry_key = u''
     self._registry_file = None
-    self._registry_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
+    self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
 
   def Close(self):
     """Closes the helper."""
@@ -823,7 +829,7 @@ class PregRegistryHelper(object):
       self.Close()
       raise
 
-    self._registry_type = self._win_registry.GetRegistryFileType(
+    self._registry_file_type = self._win_registry.GetRegistryFileType(
         self._registry_file)
 
     # Retrieve the Registry file root key because the Registry helper

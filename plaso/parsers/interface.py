@@ -17,73 +17,12 @@ class BaseParser(object):
   NAME = u'base_parser'
   DESCRIPTION = u''
 
-  @classmethod
-  def GetFormatSpecification(cls):
-    """Retrieves the format specification.
-
-    Returns:
-      The format specification (instance of FormatSpecification) or
-      None if not available."""
-    return
-
-  @abc.abstractmethod
-  def Parse(self, parser_mediator, **kwargs):
-    """Parsers the file entry and extracts event objects.
-
-    This is the main function of the class, the one that actually
-    goes through the log file and parses each line of it to
-    produce a parsed line and a timestamp.
-
-    It also tries to verify the file structure and see if the class is capable
-    of parsing the file passed to the module. It will do so with series of tests
-    that should determine if the file is of the correct structure.
-
-    If the class is not capable of parsing the file passed to it an exception
-    should be raised, an exception of the type UnableToParseFile that indicates
-    the reason why the class does not parse it.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Raises:
-      NotImplementedError when not implemented.
-    """
-    raise NotImplementedError
-
-  @classmethod
-  def SupportsPlugins(cls):
-    """Determines if a parser supports plugins.
-
-    Returns:
-      A boolean value indicating whether the parser supports plugins.
-    """
-    return False
-
-  def UpdateChainAndParse(self, parser_mediator, **kwargs):
-    """Wrapper for Parse() to synchronize the parser chain.
-
-    This convenience method updates the parser chain object held by the
-    mediator, transfers control to the parser-specific Parse() method,
-    and updates the chain again once the parsing is complete. It provides a
-    simpler parser API in most cases.
-    """
-    parser_mediator.AppendToParserChain(self)
-    try:
-      self.Parse(parser_mediator, **kwargs)
-    finally:
-      parser_mediator.PopFromParserChain()
-
-
-class BasePluginsParser(BaseParser):
-  """Class that implements the parser with plugins object interface."""
-
-  NAME = u'base_plugin_parser'
-  DESCRIPTION = u''
-
-  # Every child class should define its own _plugin_classes dict.
-  # We don't define it here to make sure the plugins of different
-  # classes don't end up in the same dict.
+  # Every derived parser class that implements plugins should define
+  # its own _plugin_classes dict:
   # _plugin_classes = {}
+
+  # We deliberately don't define it here to make sure the plugins of
+  # different parser classes don't end up in the same dict.
   _plugin_classes = None
 
   @classmethod
@@ -105,6 +44,15 @@ class BasePluginsParser(BaseParser):
               plugin_class.NAME))
 
     del cls._plugin_classes[plugin_name]
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      The format specification (instance of FormatSpecification) or
+      None if not available."""
+    return
 
   @classmethod
   def GetPluginNames(cls, parser_filter_string=None):
@@ -187,12 +135,8 @@ class BasePluginsParser(BaseParser):
     the reason why the class does not parse it.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserMediator).
-
-    Raises:
-      NotImplementedError when not implemented.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    raise NotImplementedError
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):
@@ -234,44 +178,28 @@ class BasePluginsParser(BaseParser):
     Returns:
       A boolean value indicating whether the parser supports plugins.
     """
-    return True
+    return cls._plugin_classes is not None
+
+  def UpdateChainAndParse(self, parser_mediator, **kwargs):
+    """Wrapper for Parse() to synchronize the parser chain.
+
+    This convenience method updates the parser chain object held by the
+    mediator, transfers control to the parser-specific Parse() method,
+    and updates the chain again once the parsing is complete. It provides a
+    simpler parser API in most cases.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    parser_mediator.AppendToParserChain(self)
+    try:
+      self.Parse(parser_mediator, **kwargs)
+    finally:
+      parser_mediator.PopFromParserChain()
 
 
 class SingleFileBaseParser(BaseParser):
   """Class that implements the single file parser base."""
-
-  # The initial file offset set to None if not set.
-  _INITIAL_FILE_OFFSET = 0
-
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a single file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    # TODO: Merge with UpdateChainAndParse for less overhead.
-    file_object = parser_mediator.GetFileObject(
-        offset=self._INITIAL_FILE_OFFSET)
-    try:
-      self.ParseFileObject(parser_mediator, file_object, **kwargs)
-    finally:
-      file_object.close()
-
-  @abc.abstractmethod
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a file-like object.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-
-
-class SingleFileBasePluginsParser(BasePluginsParser):
-  """Class that implements the single file parser with plugins base."""
 
   # The initial file offset set to None if not set.
   _INITIAL_FILE_OFFSET = 0

@@ -26,30 +26,31 @@ class PluginList(object):
     for item in ret:
       yield item
 
-  def _GetPluginsByType(self, plugins_dict, plugin_type):
+  def _GetPluginsByType(self, plugins_dict, registry_file_type):
     """Retrieves the Windows Registry plugins of a specific type.
 
     Args:
       plugins_dict: Dictionary containing the Windows Registry plugins
                     by plugin type.
-      plugin_type: String containing the Windows Registry type,
-                   e.g. NTUSER, SOFTWARE.
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
 
     Returns:
       A list containing the Windows Registry plugins (instances of
       RegistryPlugin) for the specific plugin type.
     """
-    return plugins_dict.get(plugin_type, []) + plugins_dict.get(u'any', [])
+    return plugins_dict.get(
+        registry_file_type, []) + plugins_dict.get(u'any', [])
 
-  def AddPlugin(self, plugin_type, plugin_class):
+  def AddPlugin(self, registry_file_type, plugin_class):
     """Add a Windows Registry plugin to the plugin list.
 
     Args:
-      plugin_type: String containing the Windows Registry type,
-                   e.g. NTUSER, SOFTWARE.
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
       plugin_class: The plugin class that is being registered.
     """
-    self._plugins.setdefault(plugin_type, []).append(plugin_class)
+    self._plugins.setdefault(registry_file_type, []).append(plugin_class)
 
   def GetAllPlugins(self):
     """Return all key plugins as a list."""
@@ -85,54 +86,72 @@ class PluginList(object):
 
     return key_paths
 
-  def GetPluginObjectByName(self, plugin_type, plugin_name):
+  def GetPluginObjectByName(self, registry_file_type, plugin_name):
     """Retrieves a Windows Registry key-based plugins for a specific name.
 
     Args:
-      plugin_type: a string containing the Windows Registry type,
-                   e.g. NTUSER, SOFTWARE.
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
       plugin_name: the name of the plugin.
 
     Returns:
       The Windows Registry plugin (instance of RegistryPlugin) or None.
     """
     # TODO: make this a dict lookup instead of a list iteration.
-    for plugin_cls in self.GetPlugins(plugin_type):
+    for plugin_cls in self.GetPlugins(registry_file_type):
       if plugin_cls.NAME == plugin_name:
         return plugin_cls()
 
-  def GetPluginObjects(self, plugin_type):
+  def GetPluginObjects(self, registry_file_type):
     """Retrieves the Windows Registry key-based plugins of a specific type.
 
     Args:
-      plugin_type: a string containing the Windows Registry type,
-                   e.g. NTUSER, SOFTWARE.
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
 
     Returns:
       A list containing the Windows Registry plugins (instances of
       RegistryPlugin) for the specific plugin type.
     """
-    return [plugin_cls() for plugin_cls in self.GetPlugins(plugin_type)]
+    return [plugin_cls() for plugin_cls in self.GetPlugins(registry_file_type)]
 
-  def GetPlugins(self, plugin_type):
+  def GetPlugins(self, registry_file_type):
     """Retrieves the Windows Registry key-based plugins of a specific type.
 
     Args:
-      plugin_type: a string containing the Windows Registry type,
-                   e.g. NTUSER, SOFTWARE.
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
 
     Returns:
       A list containing the Windows Registry plugins (types of
       RegistryPlugin) for the specific plugin type.
     """
-    return self._GetPluginsByType(self._plugins, plugin_type)
+    return self._GetPluginsByType(self._plugins, registry_file_type)
 
   def GetTypes(self):
     """Return a set of all plugins supported."""
     return set(self._plugins)
 
+  def GetValuePlugins(self, registry_file_type):
+    """Retrieves the Windows Registry value-based plugins of a specific type.
 
-class WinRegistryParser(interface.BasePluginsParser):
+    Args:
+      registry_file_type: string containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list containing the Windows Registry plugins (instances of
+      RegistryPlugin) for the specific plugin type.
+    """
+    return self._GetPluginsByType(self._value_plugins, registry_file_type)
+
+  def GetWeights(self):
+    """Return a set of all weights/priority of the loaded plugins."""
+    return set(plugin.WEIGHT for plugin in self.GetAllValuePlugins()).union(
+        plugin.WEIGHT for plugin in self.GetAllKeyPlugins())
+
+
+class WinRegistryParser(interface.BaseParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = u'winreg'
@@ -191,7 +210,7 @@ class WinRegistryParser(interface.BasePluginsParser):
           break
 
         plugin_object.UpdateChainAndProcess(
-            parser_mediator, key=key, registry_type=registry_file_type,
+            parser_mediator, key=key, registry_file_type=registry_file_type,
             codepage=parser_mediator.codepage)
 
   @classmethod

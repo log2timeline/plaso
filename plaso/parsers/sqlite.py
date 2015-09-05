@@ -216,7 +216,7 @@ class SQLiteDatabase(object):
     self._open = True
 
 
-class SQLiteParser(interface.BasePluginsParser):
+class SQLiteParser(interface.BaseParser):
   """A SQLite parser for Plaso."""
 
   # Name of the parser, which enables all plugins by default.

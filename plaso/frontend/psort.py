@@ -14,9 +14,11 @@ from plaso.analysis import manager as analysis_manager
 from plaso.analysis import mediator as analysis_mediator
 from plaso.engine import knowledge_base
 from plaso.engine import queue
+from plaso.engine import zeromq_queue
 from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
+from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
@@ -50,6 +52,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._output_format = None
     self._preferred_language = u'en-US'
     self._quiet_mode = False
+    self._use_zeromq = False
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
     """Appends an event object to an output buffer and queues.
@@ -129,13 +132,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return frontend.TimeSlice(event_timestamp, duration=duration)
 
   def _ProcessAnalysisPlugins(
-      self, analysis_plugins, analysis_output_queue, storage_file, counter,
-      preferred_encoding=u'utf-8'):
+      self, analysis_plugins, analysis_report_incoming_queue, storage_file,
+      counter, preferred_encoding=u'utf-8'):
     """Runs the analysis plugins.
 
     Args:
       analysis_plugins: the analysis plugins.
-      analysis_output_queue: the analysis output queue (instance of Queue).
+      analysis_report_incoming_queue: the analysis output queue (instance of
+                                      Queue).
       storage_file: a storage file object (instance of StorageFile).
       counter: a counter object (instance of collections.Counter).
       preferred_encoding: optional preferred encoding. The default is "utf-8".
@@ -170,7 +174,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # Go over each output.
     analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
-        analysis_output_queue, storage_file, self._filter_expression,
+        analysis_report_incoming_queue, storage_file, self._filter_expression,
         preferred_encoding=preferred_encoding)
 
     analysis_queue_consumer.ConsumeItems()
@@ -274,25 +278,34 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     if not analysis_plugins_string:
       return [], []
 
-    # Start queues and load up plugins.
-    event_queue_producers = []
-    event_queues = []
+    event_producers = []
+    # These are the queues analysis plugins will read from.
+    analysis_plugin_input_queues = []
     analysis_plugins_list = [
         name.strip() for name in analysis_plugins_string.split(u',')]
 
     for _ in range(0, len(analysis_plugins_list)):
-      # TODO: add upper queue limit.
-      analysis_plugin_queue = multi_process.MultiProcessingQueue(timeout=5)
-      event_queues.append(analysis_plugin_queue)
-      event_queue_producers.append(
-          queue.ItemQueueProducer(event_queues[-1]))
+      if self._use_zeromq:
+        output_queue = zeromq_queue.ZeroMQPushBindQueue()
+        # Start the queue so it can bind to a random port, and we can get the
+        # port number to use in the input queue.
+        output_queue.Start()
+        queue_port = output_queue.port
+        input_queue = zeromq_queue.ZeroMQPullConnectQueue(
+            port=queue_port, delay_start=True)
+        analysis_plugin_input_queues.append(input_queue)
+      else:
+        input_queue = multi_process.MultiProcessingQueue(timeout=5)
+        analysis_plugin_input_queues.append(input_queue)
+        output_queue = input_queue
+      event_producers.append(queue.ItemQueueProducer(output_queue))
 
     analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
-        analysis_plugins_list, event_queues)
+        analysis_plugins_list, analysis_plugin_input_queues)
 
     analysis_plugins = list(analysis_plugins)
 
-    return analysis_plugins, event_queue_producers
+    return analysis_plugins, event_producers
 
   def SetQuietMode(self, quiet_mode=False):
     """Sets whether tools is in quiet mode or not.
@@ -301,6 +314,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       quiet_mode: boolean, when True the tool is in quiet mode.
     """
     self._quiet_mode = quiet_mode
+
+  def SetUseZeroMQ(self, use_zeromq=False):
+    """Sets whether the tool is using ZeroMQ for queueing or not.
+
+    Args:
+      use_zeromq: boolean, when True the tool will use ZeroMQ for queuing.
+    """
+    self._use_zeromq = use_zeromq
 
   def ProcessStorage(
       self, output_module, storage_file, analysis_plugins,
@@ -326,8 +347,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
                        interest.
 
     Returns:
-      A counter (an instance of counter.Counter) that contains the analysis
-      plugin results or None.
+      A counter (an instance of collections.Counter) that tracks the number of
+      events extracted from storage, and the analysis plugin results.
 
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
@@ -345,39 +366,23 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       # TODO: allow for single processing.
       # TODO: add upper queue limit.
-      analysis_output_queue = multi_process.MultiProcessingQueue(timeout=5)
+      analysis_queue_port = None
+      if self._use_zeromq:
+        analysis_report_incoming_queue = zeromq_queue.ZeroMQPullBindQueue(
+            delay_start=False, port=None, linger_seconds=5)
+        analysis_queue_port = analysis_report_incoming_queue.port
+      else:
+        analysis_report_incoming_queue = multi_process.MultiProcessingQueue(
+            timeout=5)
+
+      pre_obj = self._GetLastGoodPreprocess(storage_file)
+      if pre_obj is None:
+        pre_obj = event.PreprocessObject()
 
       if analysis_plugins:
-        logging.info(u'Starting analysis plugins.')
-        # Within all preprocessing objects, try to get the last one that has
-        # time zone information stored in it, the highest chance of it
-        # containing the information we are seeking (defaulting to the last
-        # one).
-        pre_objs = storage_file.GetStorageInformation()
-        pre_obj = pre_objs[-1]
-        for obj in pre_objs:
-          if getattr(obj, u'time_zone_str', u''):
-            pre_obj = obj
-
-        # Fill in the collection information.
-        pre_obj.collection_information = {}
-        if preferred_encoding:
-          cmd_line = u' '.join(sys.argv)
-          try:
-            pre_obj.collection_information[u'cmd_line'] = cmd_line.decode(
-                preferred_encoding)
-          except UnicodeDecodeError:
-            pass
-        pre_obj.collection_information[u'file_processed'] = (
-            self._storage_file)
-        pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
-        analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
-        pre_obj.collection_information[u'plugins'] = analysis_plugin_names
-        time_of_run = timelib.Timestamp.GetNow()
-        pre_obj.collection_information[u'time_of_run'] = time_of_run
-
-        pre_obj.counter = collections.Counter()
-
+        self._StartAnalysisPlugins(
+            analysis_plugins, pre_obj, preferred_encoding, analysis_queue_port,
+            analysis_report_incoming_queue)
         # Assign the preprocessing object to the storage.
         # This is normally done in the construction of the storage object,
         # however we cannot do that here since the preprocessing object is
@@ -386,37 +391,13 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         # to access this protected member of the class.
         # pylint: disable=protected-access
         storage_file._pre_obj = pre_obj
-
-        knowledge_base_object = knowledge_base.KnowledgeBase(pre_obj=pre_obj)
-
-        # Now we need to start all the plugins.
-        for analysis_plugin in analysis_plugins:
-          analysis_report_queue_producer = queue.ItemQueueProducer(
-              analysis_output_queue)
-
-          completion_event = multiprocessing.Event()
-          analysis_mediator_object = analysis_mediator.AnalysisMediator(
-              analysis_report_queue_producer, knowledge_base_object,
-              data_location=self._data_location,
-              completion_event=completion_event)
-          analysis_process = multiprocessing.Process(
-              name=u'Analysis {0:s}'.format(analysis_plugin.plugin_name),
-              target=analysis_plugin.RunPlugin,
-              args=(analysis_mediator_object,))
-          process_info = PsortAnalysisProcess(
-              completion_event, analysis_plugin, analysis_process)
-          self._analysis_process_info.append(process_info)
-
-          analysis_process.start()
-          logging.info(
-              u'Plugin: [{0:s}] started.'.format(analysis_plugin.plugin_name))
       else:
         event_queue_producers = []
 
       output_buffer = output_interface.EventBuffer(
           output_module, deduplicate_events)
       with output_buffer:
-        counter = self.ProcessOutput(
+        counter = self.ProcessEventsFromStorage(
             storage_file, output_buffer, my_filter=self._filter_object,
             filter_buffer=self._filter_buffer,
             analysis_queues=event_queue_producers)
@@ -430,8 +411,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       # Get all reports and tags from analysis plugins.
       self._ProcessAnalysisPlugins(
-          analysis_plugins, analysis_output_queue, storage_file, counter,
-          preferred_encoding=preferred_encoding)
+          analysis_plugins, analysis_report_incoming_queue, storage_file,
+          counter, preferred_encoding=preferred_encoding)
 
     if self._output_file_object:
       self._output_file_object.close()
@@ -444,19 +425,127 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return counter
 
-  def ProcessOutput(
+  def _StartAnalysisPlugins(
+      self, analysis_plugins, pre_obj, preferred_encoding=u'utf-8',
+      analysis_queue_port=None, analysis_report_incoming_queue=None):
+    """Start all the analysis plugin.
+
+    Args:
+      analysis_plugins: list of analysis plugin objects (instance of
+                        AnalysisPlugin) that should be started.
+      pre_obj: The preprocessor object (instance of PreprocessObject).
+      preferred_encoding: optional preferred encoding to use for the preprocess
+                          object.
+      analysis_queue_port: optional TCP port that the ZeroMQ analysis report
+                           queues should use.
+      analysis_report_incoming_queue: optional queue (instance of Queue) that
+                                      reports should to pushed to, when ZeroMQ
+                                      is not in use.
+    """
+    logging.info(u'Starting analysis plugins.')
+    self._SetAnalysisPluginProcessInformation(
+        analysis_plugins, pre_obj, preferred_encoding)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase(pre_obj=pre_obj)
+    for analysis_plugin in analysis_plugins:
+      if self._use_zeromq:
+        analysis_plugin_output_queue = zeromq_queue.ZeroMQPushConnectQueue(
+            delay_start=True, port=analysis_queue_port)
+      else:
+        analysis_plugin_output_queue = analysis_report_incoming_queue
+
+      analysis_report_queue_producer = queue.ItemQueueProducer(
+          analysis_plugin_output_queue)
+
+      completion_event = multiprocessing.Event()
+      analysis_mediator_object = analysis_mediator.AnalysisMediator(
+          analysis_report_queue_producer, knowledge_base_object,
+          data_location=self._data_location,
+          completion_event=completion_event)
+      analysis_process = multiprocessing.Process(
+          name=u'Analysis {0:s}'.format(analysis_plugin.plugin_name),
+          target=analysis_plugin.RunPlugin,
+          args=(analysis_mediator_object,))
+
+      process_info = PsortAnalysisProcess(
+          completion_event, analysis_plugin, analysis_process)
+      self._analysis_process_info.append(process_info)
+
+      analysis_process.start()
+      logging.info(
+          u'Plugin: [{0:s}] started.'.format(analysis_plugin.plugin_name))
+
+    logging.info(u'Analysis plugins running')
+
+  def _SetAnalysisPluginProcessInformation(
+      self, analysis_plugins, pre_obj, preferred_encoding):
+    """Sets analysis plugin options in a preprocessor object.
+
+    Args:
+      analysis_plugins: the list of analysis plugins to add.
+      pre_obj: the preprocessor object (instance of PreprocessObject).
+      preferred_encoding: the preferred encoding to use for the preprocess
+                          object.
+    """
+    # TODO: We shouldn't be touching the command line here, move to tools
+    if preferred_encoding:
+      cmd_line = u' '.join(sys.argv)
+      try:
+        pre_obj.collection_information[u'cmd_line'] = cmd_line.decode(
+            preferred_encoding)
+      except UnicodeDecodeError:
+        pass
+    pre_obj.collection_information[u'file_processed'] = (
+        self._storage_file)
+    pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
+    analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
+    pre_obj.collection_information[u'plugins'] = analysis_plugin_names
+    time_of_run = timelib.Timestamp.GetNow()
+    pre_obj.collection_information[u'time_of_run'] = time_of_run
+    pre_obj.counter = collections.Counter()
+
+  def _GetLastGoodPreprocess(self, storage_file):
+    """Gets the last stored preprocessing object with time zone information.
+
+    From all preprocessing objects, try to get the last one that has
+    time zone information stored in it, the highest chance of it containing
+    the information we are seeking (defaulting to the last one). If there are
+    no preprocessing objects in the file, we'll make a new one
+
+    Args:
+      storage_file: a Plaso storage file object.
+
+    Returns:
+      A preprocess object (instance of PreprocessObject), or None if there are
+      no preprocess objects in the storage file.
+    """
+    pre_objs = storage_file.GetStorageInformation()
+    if not pre_objs:
+      return None
+    pre_obj = pre_objs[-1]
+    for obj in pre_objs:
+      if getattr(obj, u'time_zone_str', u''):
+        pre_obj = obj
+
+    return pre_obj
+
+  def ProcessEventsFromStorage(
       self, storage_file, output_buffer, my_filter=None, filter_buffer=None,
       analysis_queues=None):
     """Reads event objects from the storage to process and filter them.
 
     Args:
-      storage_file: The storage file object (instance of StorageFile).
-      output_buffer: The output buffer object (instance of EventBuffer).
-      my_filter: Optional filter object (instance of PFilter).
+      storage_file: the storage file object (instance of StorageFile).
+      output_buffer: the output buffer object (instance of EventBuffer).
+      my_filter: optional filter object (instance of PFilter).
                  The default is None.
-      filter_buffer: Optional filter buffer used to store previously discarded
+      filter_buffer: optional filter buffer used to store previously discarded
                      events to store time slice history. The default is None.
-      analysis_queues: Optional list of analysis queues. The default is None.
+      analysis_queues: optional list of analysis queues. The default is None.
+
+    Returns:
+      A Counter object (instance of collections.Counter), that tracks the
+       number of unique events extracted from storage.
     """
     counter = collections.Counter()
     my_limit = getattr(my_filter, u'limit', 0)

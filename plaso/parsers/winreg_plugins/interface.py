@@ -81,8 +81,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key.
 
     Args:
@@ -91,20 +91,22 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
                   The default is None.
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Processes a Windows Registry key or value.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of dfwinreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
 
     Raises:
@@ -123,10 +125,11 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       values = frozenset([value.name for value in key.GetValues()])
       if self.REG_VALUES.issubset(values):
         self.GetEntries(
-            parser_mediator, key=key, registry_type=registry_type,
+            parser_mediator, key=key, registry_file_type=registry_file_type,
             codepage=codepage, **kwargs)
 
     else:
       if key and key.path in self.expanded_keys:
         self.GetEntries(
-            parser_mediator, key=key, registry_type=registry_type, **kwargs)
+            parser_mediator, key=key, registry_file_type=registry_file_type,
+            **kwargs)

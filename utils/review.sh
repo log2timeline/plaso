@@ -13,6 +13,7 @@ USE_CL_FILE=1;
 CL_FILENAME="";
 BRANCH="";
 DIFFBASE="upstream/master";
+SHOW_HELP=0;
 
 if test -e ".review" && ! test -d ".review";
 then
@@ -78,6 +79,11 @@ do
     shift;
     ;;
 
+  -h | --help )
+    SHOW_HELP=1;
+    shift;
+    ;;
+
   *)
     REVIEWERS=$1;
     shift
@@ -85,12 +91,12 @@ do
   esac
 done
 
-if test -z "${REVIEWERS}";
+if test ${SHOW_HELP} -ne 0;
 then
-  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [--noclfile] REVIEWERS";
+  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [--noclfile]";
   echo "";
-  echo "  REVIEWERS: the email address of the reviewers that are registered"
-  echo "             with Rietveld (https://codereview.appspot.com)";
+  echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
+  echo "              The default is upstream/master";
   echo "";
   echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
   echo "              The default is upstream/master";
@@ -103,8 +109,18 @@ then
   echo "              stored in .review/";
   echo "";
 
-  exit ${EXIT_MISSING_ARGS};
+  exit ${EXIT_SUCCESS};
 fi
+
+if ! test -z ${REVIEWERS};
+then
+  echo "The need to explicitly pass reviewers to this script has been removed.";
+  echo "The script now defaults to the maintainers.";
+  echo "";
+fi
+
+REVIEWERS="kiddi@kiddaland.net,joachim.metz@gmail.com,onager@deerpie.com";
+CC="log2timeline-dev@googlegroups.com";
 
 if ! ${HAVE_REMOTE_ORIGIN};
 then
@@ -244,7 +260,7 @@ then
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} \
-      --send_mail -r ${REVIEWERS} --cc log2timeline-dev@googlegroups.com \
+      --send_mail -r ${REVIEWERS} --cc ${CC} \
       -t "${DESCRIPTION}" -y -- ${DIFFBASE} | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;
@@ -266,7 +282,7 @@ then
   ORGANIZATION=`git remote -v | grep 'origin' | sed 's?^.*https://github.com/\([^/]*\)/.*$?\1?' | sort | uniq`;
 
   POST_DATA="{
-  \"title\": \"${DESCRIPTION}\",
+  \"title\": \"${CL}: ${DESCRIPTION}\",
   \"body\": \"[Code review: ${CL}: ${DESCRIPTION}](https://codereview.appspot.com/${CL}/)\",
   \"head\": \"${ORGANIZATION}:${BRANCH}\",
   \"base\": \"master\"
@@ -315,7 +331,7 @@ else
 
   python utils/upload.py \
       --oauth2 ${BROWSER_PARAM} ${CACHE_PARAM} \
-      --send_mail -r ${REVIEWERS} --cc log2timeline-dev@googlegroups.com \
+      --send_mail -r ${REVIEWERS} --cc ${CC} \
       -m "${DESCRIPTION}" -t "${DESCRIPTION}" -y | tee ${TEMP_FILE};
 
   CL=`cat ${TEMP_FILE} | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`;

@@ -8,6 +8,7 @@ from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
 
@@ -94,7 +95,8 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self._knowledge_base_object.pre_obj.sysregistry = u'C:/Windows/Foo'
     expected_paths = [u'C:/Windows/Foo/SOFTWARE']
 
-    paths = self._front_end.GetRegistryFilePaths(registry_type=u'SOFTWARE')
+    paths = self._front_end.GetRegistryFilePaths(
+        registry_file_type=u'SOFTWARE')
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
   def testGetRegistryHelpers(self):
@@ -104,7 +106,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
       _ = self._front_end.GetRegistryHelpers()
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SYSTEM'])
+        registry_file_types=[u'SYSTEM'])
 
     self.assertEquals(len(registry_helpers), 1)
 
@@ -115,13 +117,14 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     self._ConfigureStorageMediaFileTest()
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'NTUSER'])
+        registry_file_types=[u'NTUSER'])
 
     self.assertEquals(len(registry_helpers), 3)
 
     registry_helper = registry_helpers[0]
     registry_helper.Open()
-    self.assertEquals(registry_helper.type, u'NTUSER')
+    expected_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_NTUSER
+    self.assertEquals(registry_helper.file_type, expected_file_type)
     self.assertEquals(registry_helper.name, u'NTUSER.DAT')
     self.assertEquals(registry_helper.collector_name, u'TSK')
     registry_helper.Close()
@@ -131,7 +134,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertEquals(len(registry_helpers), 3)
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SAM'])
+        registry_file_types=[u'SAM'])
     self.assertEquals(len(registry_helpers), 1)
 
     # TODO: Add a test for getting Registry helpers from a storage media file
@@ -159,7 +162,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self._ConfigureSingleFileTest(knowledge_base_values=knowledge_base_values)
 
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[u'SYSTEM'])
+        registry_file_types=[u'SYSTEM'])
     registry_helper = registry_helpers[0]
 
     plugins = self._front_end.GetRegistryPluginsFromRegistryType(u'SYSTEM')

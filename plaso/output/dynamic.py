@@ -31,7 +31,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
   # a callback function that formats the field value.
   # They should be documented here:
   #   http://plaso.kiddaland.net/usage/psort/output
-  _FIELD_FORMAT_CALLBACKS = {
+  FIELD_FORMAT_CALLBACKS = {
       u'date': u'_FormatDate',
       u'datetime': u'_FormatDateTime',
       u'description': u'_FormatMessage',
@@ -348,7 +348,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """
     row = []
     for field in self._fields:
-      callback_name = self._FIELD_FORMAT_CALLBACKS.get(field, None)
+      callback_name = self.FIELD_FORMAT_CALLBACKS.get(field, None)
       callback_function = None
       if callback_name:
         callback_function = getattr(self, callback_name, None)

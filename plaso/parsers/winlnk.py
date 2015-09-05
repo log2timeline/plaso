@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Shortcut (LNK) files."""
 
+import uuid
+
 import pylnk
 
 from plaso import dependencies
 from plaso.events import time_events
+from plaso.events import windows_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
@@ -17,7 +20,33 @@ dependencies.CheckModuleVersion(u'pylnk')
 
 
 class WinLnkLinkEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows Shortcut (LNK) link event."""
+  """Convenience class for a Windows Shortcut (LNK) link event.
+
+  Attributes:
+    birth_droid_file_identifier: the distributed link tracking brith droid
+                                 file identifier.
+    birth_droid_volume_identifier: the distributed link tracking brith droid
+                                   volume identifier.
+    command_line_arguments: the command line arguments.
+    description: the description of the linked item.
+    drive_serial_number: the drive serial number where the linked item resides.
+    drive_type: the drive type where the linked item resided.
+    droid_file_identifier: the distributed link tracking droid file
+                           identifier.
+    droid_volume_identifier: the distributed link tracking droid volume
+                             identifier.
+    env_var_location: the evironment variables loction.
+    file_attribute_flags: the file attribute flags of the linked item.
+    file_size: the size of the linked item.
+    icon_location: the icon location..
+    link_target: shell item list of the link target.
+    local_path: the local path of the linked item.
+    network_path: the local path of the linked item.
+    offset: the data offset of the event.
+    relative_path: the relative path.
+    volume_label: the volume label where the linked item resided.
+    working_directory: the working directory.
+  """
 
   DATA_TYPE = u'windows:lnk:link'
 
@@ -50,6 +79,11 @@ class WinLnkLinkEvent(time_events.FiletimeEvent):
 
     if link_target:
       self.link_target = link_target
+
+    self.droid_volume_identifier = lnk_file.droid_volume_identifier
+    self.droid_file_identifier = lnk_file.droid_file_identifier
+    self.birth_droid_volume_identifier = lnk_file.birth_droid_volume_identifier
+    self.birth_droid_file_identifier = lnk_file.birth_droid_file_identifier
 
 
 class WinLnkParser(interface.SingleFileBaseParser):
@@ -119,7 +153,25 @@ class WinLnkParser(interface.SingleFileBaseParser):
              eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file,
              link_target)])
 
-    # TODO: add support for the distributed link tracker.
+    try:
+      uuid_object = uuid.UUID(lnk_file.droid_file_identifier)
+      if uuid_object.version == 1:
+        event_object = (
+            windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                uuid_object, display_name))
+        parser_mediator.ProduceEvent(event_object)
+    except (TypeError, ValueError):
+      pass
+
+    try:
+      uuid_object = uuid.UUID(lnk_file.birth_droid_file_identifier)
+      if uuid_object.version == 1:
+        event_object = (
+            windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                uuid_object, display_name))
+        parser_mediator.ProduceEvent(event_object)
+    except (TypeError, ValueError):
+      pass
 
     lnk_file.close()
 
