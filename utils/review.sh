@@ -98,9 +98,6 @@ then
   echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
   echo "              The default is upstream/master";
   echo "";
-  echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
-  echo "              The default is upstream/master";
-  echo "";
   echo "  --nobrowser: forces upload.py not to open a separate browser";
   echo "               process to obtain OAuth2 credentials for Rietveld";
   echo "               (https://codereview.appspot.com).";

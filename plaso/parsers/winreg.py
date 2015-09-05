@@ -110,8 +110,7 @@ class PluginList(object):
                           e.g. NTUSER, SOFTWARE.
 
     Returns:
-      A list containing the Windows Registry plugins (instances of
-      RegistryPlugin) for the specific plugin type.
+      The Windows Registry plugin (instance of RegistryPlugin) or None.
     """
     return [plugin_cls() for plugin_cls in self.GetPlugins(registry_file_type)]
 
