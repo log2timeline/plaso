@@ -87,7 +87,7 @@ class PluginList(object):
     return key_paths
 
   def GetPluginObjectByName(self, registry_file_type, plugin_name):
-    """Retrieves a Windows Registry key-based plugins for a specific name.
+    """Creates a new instance of a specific Windows Registry plugin.
 
     Args:
       registry_file_type: String containing the Windows Registry file type,

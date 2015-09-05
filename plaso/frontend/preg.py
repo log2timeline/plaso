@@ -477,12 +477,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           helper for helper in self._GetRegistryHelperFromPath(path, codepage)])
     return registry_helpers
 
-  def GetRegistryPlugins(self, plugin_name):
+  def GetRegistryPlugins(self, filter_string):
     """Retrieves the Windows Registry plugins based on a filter string.
 
     Args:
-      plugin_name: string containing the name of the plugin or an empty
-                   string for all the plugins.
+      filter_string: string containing the name of the plugin or an empty
+                     string for all the plugins.
 
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
@@ -491,14 +491,14 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     for plugin in self._registry_plugin_list.GetAllPlugins():
       plugins[plugin.NAME] = plugin
 
-    if not plugin_name:
+    if not filter_string:
       return plugins.values()
 
-    plugin_name = plugin_name.lower()
+    filter_string = filter_string.lower()
 
     plugins_to_run = []
-    for key_plugin_name, plugin in iter(plugins.items()):
-      if plugin_name in key_plugin_name.lower():
+    for plugin_name, plugin in iter(plugins.items()):
+      if filter_string in plugin_name.lower():
         plugins_to_run.append(plugin)
 
     return plugins_to_run
