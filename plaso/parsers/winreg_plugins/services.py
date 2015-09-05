@@ -6,7 +6,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class ServicesPlugin(interface.ValuePlugin):
+class ServicesPlugin(interface.WindowsRegistryPlugin):
   """Plug-in to format the Services and Drivers keys having Type and Start."""
 
   NAME = u'windows_services'
@@ -15,7 +15,6 @@ class ServicesPlugin(interface.ValuePlugin):
   REG_VALUES = frozenset([u'Type', u'Start'])
   REG_TYPE = u'SYSTEM'
   URLS = [u'http://support.microsoft.com/kb/103000']
-
 
   def GetServiceDll(self, key):
     """Get the Service DLL for a service, if it exists.

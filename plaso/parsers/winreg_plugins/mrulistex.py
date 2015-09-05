@@ -13,13 +13,7 @@ from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
 
-# A mixin class is used here to not to have the duplicate functionality
-# to parse the MRUListEx Registry values. However multiple inheritance
-# and thus mixins are to be used sparsely in this codebase, hence we need
-# to find a better solution in not needing to distinguish between key and
-# value plugins.
-# TODO: refactor Registry key and value plugin to rid ourselves of the mixin.
-class MRUListExPluginMixin(object):
+class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 
   _MRULISTEX_STRUCT = construct.Range(
@@ -100,7 +94,7 @@ class MRUListExPluginMixin(object):
     parser_mediator.ProduceEvent(event_object)
 
 
-class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
+class MRUListExStringPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a string MRUListEx."""
 
   NAME = u'mrulistex_string'
@@ -196,7 +190,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
         parser_mediator, key=key, codepage=codepage)
 
 
-class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
+class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a shell item list MRUListEx."""
 
   NAME = u'mrulistex_shell_item_list'
@@ -275,8 +269,7 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
             codepage=codepage)
 
 
-class MRUListExStringAndShellItemPlugin(
-    interface.KeyPlugin, MRUListExPluginMixin):
+class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
   NAME = u'mrulistex_string_and_shell_item'
@@ -379,8 +372,7 @@ class MRUListExStringAndShellItemPlugin(
             codepage=codepage)
 
 
-class MRUListExStringAndShellItemListPlugin(
-    interface.KeyPlugin, MRUListExPluginMixin):
+class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
   NAME = u'mrulistex_string_and_shell_item_list'

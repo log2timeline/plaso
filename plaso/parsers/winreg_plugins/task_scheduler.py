@@ -31,7 +31,7 @@ class TaskCacheEvent(time_events.FiletimeEvent):
     self.task_identifier = task_identifier
 
 
-class TaskCachePlugin(interface.KeyPlugin):
+class TaskCachePlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses a Task Cache key."""
 
   NAME = u'windows_task_cache'

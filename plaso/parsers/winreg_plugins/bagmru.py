@@ -9,7 +9,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class BagMRUPlugin(interface.KeyPlugin):
+class BagMRUPlugin(interface.WindowsRegistryPlugin):
   """Class that defines a BagMRU Windows Registry plugin."""
 
   NAME = u'bagmru'
