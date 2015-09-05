@@ -209,9 +209,9 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     """
     types = set()
     for plugin in self.GetRegistryPlugins(plugin_name):
-      for key_plugin_class in self._registry_plugin_list.GetAllPlugins():
-        if plugin.NAME == key_plugin_class.NAME:
-          types.add(key_plugin_class.REG_TYPE)
+      for plugin_class in self._registry_plugin_list.GetAllPlugins():
+        if plugin.NAME == plugin_class.NAME:
+          types.add(plugin_class.REG_TYPE)
           break
 
     return list(types)
@@ -497,9 +497,9 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     plugin_name = plugin_name.lower()
 
     plugins_to_run = []
-    for key_plugin_name, key_plugin in iter(plugins.items()):
+    for key_plugin_name, plugin in iter(plugins.items()):
       if plugin_name in key_plugin_name.lower():
-        plugins_to_run.append(key_plugin)
+        plugins_to_run.append(plugin)
 
     return plugins_to_run
 
@@ -522,11 +522,11 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     registry_file_type = registry_file_type.lower()
 
     plugins_to_run = []
-    for key_plugin_type, key_plugin_list in iter(plugins.items()):
-      if registry_file_type == key_plugin_type:
-        plugins_to_run.extend(key_plugin_list)
-      elif key_plugin_type == u'any':
-        plugins_to_run.extend(key_plugin_list)
+    for plugin_type, plugin_list in iter(plugins.items()):
+      if registry_file_type == plugin_type:
+        plugins_to_run.extend(plugin_list)
+      elif plugin_type == u'any':
+        plugins_to_run.extend(plugin_list)
 
     return plugins_to_run
 
