@@ -44,6 +44,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+    print "E", event_object
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:20.000381')
     self.assertEqual(event_object.timestamp, expected_timestamp)

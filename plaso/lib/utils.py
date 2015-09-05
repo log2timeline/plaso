@@ -4,9 +4,6 @@
 import logging
 import re
 
-from plaso.lib import errors
-from plaso.lib import lexer
-
 
 # Illegal Unicode characters for XML.
 ILLEGAL_XML_RE = re.compile(
@@ -87,49 +84,6 @@ def GetUnicodeString(string):
   if not isinstance(string, unicode):
     return str(string).decode('utf8', 'ignore')
   return string
-
-
-class PathReplacer(lexer.Lexer):
-  """Replace path variables with values gathered from earlier preprocessing."""
-
-  tokens = [
-      lexer.Token('.', '{{([^}]+)}}', 'ReplaceVariable', ''),
-      lexer.Token('.', '{([^}]+)}', 'ReplaceString', ''),
-      lexer.Token('.', '([^{])', 'ParseString', ''),
-      ]
-
-  def __init__(self, pre_obj, data=''):
-    """Constructor for a path replacer."""
-    super(PathReplacer, self).__init__(data)
-    self._path = []
-    self._pre_obj = pre_obj
-
-  def GetPath(self):
-    """Run the lexer and replace path."""
-    while True:
-      _ = self.NextToken()
-      if self.Empty():
-        break
-
-    return u''.join(self._path)
-
-  def ParseString(self, match, **_):
-    """Append a string to the path."""
-    self._path.append(match.group(1))
-
-  def ReplaceVariable(self, match, **_):
-    """Replace a string that should not be a variable."""
-    self._path.append(u'{{{0:s}}}'.format(match.group(1)))
-
-  def ReplaceString(self, match, **_):
-    """Replace a variable with a given attribute."""
-    replace = getattr(self._pre_obj, match.group(1), None)
-
-    if replace:
-      self._path.append(replace)
-    else:
-      raise errors.PathNotFound(
-          u'Path variable: {} not discovered yet.'.format(match.group(1)))
 
 
 def GetInodeValue(inode_raw):

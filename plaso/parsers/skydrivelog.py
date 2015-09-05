@@ -94,49 +94,31 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     self.offset = 0
     self.last_event = None
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a SkyDrive log file.
+  def _GetTimestamp(self, timestamp_pypr):
+    """Gets a timestamp from a pyparsing ParseResults timestamp.
+
+    This is a timestamp_string as returned by using
+    text_parser.PyparsingConstants structures:
+    [[8, 1, 2013], [21, 22, 28], 999]
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      timestamp_string: The pyparsing ParseResults object
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      The timestamp which is an interger containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
-    structure = self.SDL_LINE
-    parsed_structure = None
-    timestamp = None
+    month, day, year = timestamp_pypr[0]
+    hour, minute, second = timestamp_pypr[1]
+    millisecond = timestamp_pypr[2]
     try:
-      parsed_structure = structure.parseString(line)
-    except pyparsing.ParseException:
-      logging.debug(u'Not a SkyDrive log file')
-      return False
-    else:
-      timestamp = self._GetTimestamp(parsed_structure.timestamp)
-    if not timestamp:
-      logging.debug(u'Not a SkyDrive log file, invalid timestamp {0:s}'.format(
-          parsed_structure.timestamp))
-      return False
-    return True
+      return timelib.Timestamp.FromTimeParts(
+          year, month, day, hour, minute, second,
+          microseconds=(millisecond * 1000))
+    except ValueError:
+      pass
 
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
-    """
-    if key == u'logline':
-      self._ParseLogLine(parser_mediator, structure)
-    elif key == u'no_header_single_line':
-      self._ParseNoHeaderSingleLine(parser_mediator, structure)
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+    return 0
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
@@ -178,31 +160,49 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO think to a possible refactoring for the non-header lines.
     self.last_event = None
 
-  def _GetTimestamp(self, timestamp_pypr):
-    """Gets a timestamp from a pyparsing ParseResults timestamp.
-
-    This is a timestamp_string as returned by using
-    text_parser.PyparsingConstants structures:
-    [[8, 1, 2013], [21, 22, 28], 999]
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parse each record structure and return an EventObject if applicable.
 
     Args:
-      timestamp_string: The pyparsing ParseResults object
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
+    if key == u'logline':
+      self._ParseLogLine(parser_mediator, structure)
+    elif key == u'no_header_single_line':
+      self._ParseNoHeaderSingleLine(parser_mediator, structure)
+    else:
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify that this file is a SkyDrive log file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      line: A single line from the text file.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
+      True if this is the correct parser, False otherwise.
     """
-    month, day, year = timestamp_pypr[0]
-    hour, minute, second = timestamp_pypr[1]
-    millisecond = timestamp_pypr[2]
+    structure = self.SDL_LINE
+    parsed_structure = None
+    timestamp = None
     try:
-      return timelib.Timestamp.FromTimeParts(
-          year, month, day, hour, minute, second,
-          microseconds=(millisecond * 1000))
-    except ValueError:
-      pass
-
-    return 0
+      parsed_structure = structure.parseString(line)
+    except pyparsing.ParseException:
+      logging.debug(u'Not a SkyDrive log file')
+      return False
+    else:
+      timestamp = self._GetTimestamp(parsed_structure.timestamp)
+    if not timestamp:
+      logging.debug(u'Not a SkyDrive log file, invalid timestamp {0:s}'.format(
+          parsed_structure.timestamp))
+      return False
+    return True
 
 
 manager.ParsersManager.RegisterParser(SkyDriveLogParser)

@@ -51,19 +51,20 @@ def _BsmTokenGetSocketDomain(context):
   return context.socket_domain
 
 
-class MacBsmEvent(time_events.PosixTimeEvent):
+class MacBsmEvent(time_events.TimestampEvent):
   """Convenience class for a Mac OS X BSM event."""
 
   DATA_TYPE = u'mac:bsm:event'
 
   def __init__(
-      self, event_type, timestamp, extra_tokens,
-      return_value, record_length, offset):
+      self, event_type, timestamp, extra_tokens, return_value, record_length,
+      offset):
     """Initializes the event object.
 
     Args:
       event_type: String with the text and ID that represents the event type.
-      timestamp: The timestamp value.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       extra_tokens: List of the extra tokens of the entry.
       return_value: String with the process return value and exit status.
       record_length: Record length in bytes (trailer number).
@@ -78,7 +79,7 @@ class MacBsmEvent(time_events.PosixTimeEvent):
     self.offset = offset
 
 
-class BsmEvent(event.EventObject):
+class BsmEvent(time_events.TimestampEvent):
   """Convenience class for a Generic BSM event."""
 
   DATA_TYPE = u'bsm:event'
@@ -89,14 +90,14 @@ class BsmEvent(event.EventObject):
 
     Args:
       event_type: Text and integer ID that represents the type of the event.
-      timestamp: Timestamp of the entry.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       extra_tokens: List of the extra tokens of the entry.
       record_length: Record length in bytes (trailer number).
       offset: The offset in bytes to where the record starts in the file.
     """
-    super(BsmEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
+    super(BsmEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.CREATION_TIME)
     self.event_type = event_type
     self.extra_tokens = extra_tokens
     self.record_length = record_length
@@ -532,6 +533,96 @@ class BsmParser(interface.SingleFileBaseParser):
     # Create the dictionary with all token IDs: tested and untested.
     self.bsm_type_list_all = self.BSM_TYPE_LIST.copy()
     self.bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)
+
+  def _CopyByteArrayToBase16String(self, byte_array):
+    """Copies a byte array into a base-16 encoded Unicode string.
+
+    Args:
+      byte_array: A byte array.
+
+    Returns:
+      A base-16 encoded Unicode string.
+    """
+    return u''.join([u'{0:02x}'.format(byte) for byte in byte_array])
+
+  def _CopyUtf8ByteArrayToString(self, byte_array):
+    """Copies a UTF-8 encoded byte array into a Unicode string.
+
+    Args:
+      byte_array: A byte array containing an UTF-8 encoded string.
+
+    Returns:
+      A Unicode string.
+    """
+    byte_stream = b''.join(map(chr, byte_array))
+
+    try:
+      string = byte_stream.decode(u'utf-8')
+    except UnicodeDecodeError:
+      logging.warning(u'Unable to decode UTF-8 formatted byte array.')
+      string = byte_stream.decode(u'utf-8', errors=u'ignore')
+
+    string, _, _ = string.partition(b'\x00')
+    return string
+
+  def _IPv4Format(self, address):
+    """Change an integer IPv4 address value for its 4 octets representation.
+
+    Args:
+      address: integer with the IPv4 address.
+
+    Returns:
+      IPv4 address in 4 octet representation (class A, B, C, D).
+    """
+    ipv4_string = self.IPV4_STRUCT.build(address)
+    return socket.inet_ntoa(ipv4_string)
+
+  def _IPv6Format(self, high, low):
+    """Provide a readable IPv6 IP having the high and low part in 2 integers.
+
+    Args:
+      high: 64 bits integers number with the high part of the IPv6.
+      low: 64 bits integers number with the low part of the IPv6.
+
+    Returns:
+      String with a well represented IPv6.
+    """
+    ipv6_string = self.IPV6_STRUCT.build(
+        construct.Container(high=high, low=low))
+    # socket.inet_ntop not supported in Windows.
+    if hasattr(socket, u'inet_ntop'):
+      return socket.inet_ntop(socket.AF_INET6, ipv6_string)
+
+    # TODO: this approach returns double "::", illegal IPv6 addr.
+    str_address = binascii.hexlify(ipv6_string)
+    address = []
+    blank = False
+    for pos in range(0, len(str_address), 4):
+      if str_address[pos:pos + 4] == u'0000':
+        if not blank:
+          address.append(u'')
+          blank = True
+      else:
+        blank = False
+        address.append(str_address[pos:pos + 4].lstrip(u'0'))
+    return u':'.join(address)
+
+  def _RawToUTF8(self, byte_stream):
+    """Copies a UTF-8 byte stream into a Unicode string.
+
+    Args:
+      byte_stream: A byte stream containing an UTF-8 encoded string.
+
+    Returns:
+      A Unicode string.
+    """
+    try:
+      string = byte_stream.decode(u'utf-8')
+    except UnicodeDecodeError:
+      logging.warning(
+          u'Decode UTF8 failed, the message string may be cut short.')
+      string = byte_stream.decode(u'utf-8', errors=u'ignore')
+    return string.partition(b'\x00')[0]
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a BSM file-like object.
@@ -1018,96 +1109,6 @@ class BsmParser(interface.SingleFileBaseParser):
 
     elif bsm_type == u'BSM_TOKEN_SEQUENCE':
       return u'[{0}: {1}]'.format(bsm_type, token)
-
-  def _IPv6Format(self, high, low):
-    """Provide a readable IPv6 IP having the high and low part in 2 integers.
-
-    Args:
-      high: 64 bits integers number with the high part of the IPv6.
-      low: 64 bits integers number with the low part of the IPv6.
-
-    Returns:
-      String with a well represented IPv6.
-    """
-    ipv6_string = self.IPV6_STRUCT.build(
-        construct.Container(high=high, low=low))
-    # socket.inet_ntop not supported in Windows.
-    if hasattr(socket, u'inet_ntop'):
-      return socket.inet_ntop(socket.AF_INET6, ipv6_string)
-    else:
-      # TODO: this approach returns double "::", illegal IPv6 addr.
-      str_address = binascii.hexlify(ipv6_string)
-      address = []
-      blank = False
-      for pos in range(0, len(str_address), 4):
-        if str_address[pos:pos + 4] == u'0000':
-          if not blank:
-            address.append(u'')
-            blank = True
-        else:
-          blank = False
-          address.append(str_address[pos:pos + 4].lstrip(u'0'))
-      return u':'.join(address)
-
-  def _IPv4Format(self, address):
-    """Change an integer IPv4 address value for its 4 octets representation.
-
-    Args:
-      address: integer with the IPv4 address.
-
-    Returns:
-      IPv4 address in 4 octect representation (class A, B, C, D).
-    """
-    ipv4_string = self.IPV4_STRUCT.build(address)
-    return socket.inet_ntoa(ipv4_string)
-
-  def _RawToUTF8(self, byte_stream):
-    """Copies a UTF-8 byte stream into a Unicode string.
-
-    Args:
-      byte_stream: A byte stream containing an UTF-8 encoded string.
-
-    Returns:
-      A Unicode string.
-    """
-    try:
-      string = byte_stream.decode(u'utf-8')
-    except UnicodeDecodeError:
-      logging.warning(
-          u'Decode UTF8 failed, the message string may be cut short.')
-      string = byte_stream.decode(u'utf-8', errors=u'ignore')
-    return string.partition(b'\x00')[0]
-
-  def _CopyByteArrayToBase16String(self, byte_array):
-    """Copies a byte array into a base-16 encoded Unicode string.
-
-    Args:
-      byte_array: A byte array.
-
-    Returns:
-      A base-16 encoded Unicode string.
-    """
-    return u''.join([u'{0:02x}'.format(byte) for byte in byte_array])
-
-  def _CopyUtf8ByteArrayToString(self, byte_array):
-    """Copies a UTF-8 encoded byte array into a Unicode string.
-
-    Args:
-      byte_array: A byte array containing an UTF-8 encoded string.
-
-    Returns:
-      A Unicode string.
-    """
-    byte_stream = b''.join(map(chr, byte_array))
-
-    try:
-      string = byte_stream.decode(u'utf-8')
-    except UnicodeDecodeError:
-      logging.warning(u'Unable to decode UTF-8 formatted byte array.')
-      string = byte_stream.decode(u'utf-8', errors=u'ignore')
-
-    string, _, _ = string.partition(b'\x00')
-    return string
 
 
 manager.ParsersManager.RegisterParser(BsmParser)
