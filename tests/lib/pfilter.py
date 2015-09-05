@@ -7,7 +7,7 @@ import unittest
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
-from plaso.lib import objectfilter
+from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
 
@@ -82,9 +82,7 @@ class PFilterTest(unittest.TestCase):
     # as a positive one.
     query = 'filename not not contains \'GoodFella\''
     my_parser = pfilter.BaseParser(query)
-    self.assertRaises(
-        objectfilter.ParseError,
-        my_parser.Parse)
+    self.assertRaises(errors.ParseError, my_parser.Parse)
 
     # Test date filtering.
     query = 'date >= \'2015-11-18\''

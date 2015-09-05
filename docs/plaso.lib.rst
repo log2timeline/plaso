@@ -52,14 +52,6 @@ plaso.lib.eventdata module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.filter_interface module
----------------------------------
-
-.. automodule:: plaso.lib.filter_interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.lexer module
 ----------------------
 
@@ -104,14 +96,6 @@ plaso.lib.py2to3 module
 -----------------------
 
 .. automodule:: plaso.lib.py2to3
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.lib.registry module
--------------------------
-
-.. automodule:: plaso.lib.registry
     :members:
     :undoc-members:
     :show-inheritance:

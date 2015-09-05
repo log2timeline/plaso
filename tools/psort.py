@@ -15,12 +15,14 @@ import pdb
 import sys
 import time
 
-from plaso import filters
+# The following import makes sure the filters are registered.
+from plaso import filters  # pylint: disable=unused-import
 # TODO: remove after psort options refactor.
 from plaso.analysis import interface as analysis_interface
 from plaso.cli import analysis_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.filters import manager as filters_manager
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
@@ -117,7 +119,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     self._filter_expression = getattr(options, u'filter', None)
     if self._filter_expression:
-      self._filter_object = filters.GetFilter(self._filter_expression)
+      self._filter_object = filters_manager.FiltersManager.GetFilterObject(
+          self._filter_expression)
       if not self._filter_object:
         raise errors.BadConfigOption(
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))

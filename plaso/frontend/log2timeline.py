@@ -6,13 +6,14 @@ import sys
 
 import plaso
 # The following import makes sure the filters are registered.
-from plaso import filters
+from plaso import filters  # pylint: disable=unused-import
 # The following import makes sure the hashers are registered.
 from plaso import hashers  # pylint: disable=unused-import
 # The following import makes sure the parsers are registered.
 from plaso import parsers  # pylint: disable=unused-import
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
+from plaso.filters import manager as filters_manager
 from plaso.frontend import extraction_frontend
 from plaso.output import manager as output_manager
 
@@ -44,7 +45,8 @@ class Log2TimelineFrontend(extraction_frontend.ExtractionFrontend):
       A list of tuples of filter names and docstrings.
     """
     filters_information = []
-    for filter_object in sorted(filters.ListFilters()):
+    for filter_object in sorted(
+        filters_manager.FiltersManager.GetFilterObjects()):
       # TODO: refactor to use DESCRIPTION instead of docstring.
       doc_string, _, _ = filter_object.__doc__.partition(u'\n')
       filters_information.append((filter_object.filter_name, doc_string))

@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.lib import errors
 from plaso.lib import objectfilter
 
 
@@ -338,7 +339,7 @@ class ObjectFilterTest(unittest.TestCase):
     self.assertEqual(parser.args[0], '\n')
     # Invalid escape sequence.
     parser = objectfilter.Parser(r'a is "\z"')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Can escape the backslash.
@@ -349,7 +350,7 @@ class ObjectFilterTest(unittest.TestCase):
 
     # This fails as it's not really a hex escaped string.
     parser = objectfilter.Parser(r'a is "\xJZ"')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Instead, this is what one should write.
@@ -370,55 +371,55 @@ class ObjectFilterTest(unittest.TestCase):
     objectfilter.Parser('attribute == 1').Parse()
     objectfilter.Parser('attribute == 0x10').Parse()
     parser = objectfilter.Parser('attribute == 1a')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     objectfilter.Parser('attribute == 1.2').Parse()
     objectfilter.Parser('attribute == \'bla\'').Parse()
     objectfilter.Parser('attribute == "bla"').Parse()
     parser = objectfilter.Parser('something == red')
-    self.assertRaises(objectfilter.ParseError, parser.Parse)
+    self.assertRaises(errors.ParseError, parser.Parse)
 
     # Can't start with AND.
     parser = objectfilter.Parser('and something is \'Blue\'')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Test negative filters.
     parser = objectfilter.Parser('attribute not == \'dancer\'')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     parser = objectfilter.Parser('attribute == not \'dancer\'')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     parser = objectfilter.Parser('attribute not not equals \'dancer\'')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     parser = objectfilter.Parser('attribute not > 23')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Need to close braces.
     objectfilter.Parser('(a is 3)').Parse()
     parser = objectfilter.Parser('(a is 3')
-    self.assertRaises(objectfilter.ParseError, parser.Parse)
+    self.assertRaises(errors.ParseError, parser.Parse)
     # Need to open braces to close them.
     parser = objectfilter.Parser('a is 3)')
-    self.assertRaises(objectfilter.ParseError, parser.Parse)
+    self.assertRaises(errors.ParseError, parser.Parse)
 
     # Context Operator alone is not accepted.
     parser = objectfilter.Parser('@attributes')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Accepted only with braces.
     objectfilter.Parser('@attributes( name is \'adrien\')').Parse()
     # Not without them.
     parser = objectfilter.Parser('@attributes name is \'adrien\'')
-    with self.assertRaises(objectfilter.ParseError):
+    with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Can nest context operators.
