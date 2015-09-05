@@ -11,7 +11,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class TypedURLsPlugin(interface.KeyPlugin):
+class TypedURLsPlugin(interface.WindowsRegistryPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
   NAME = u'windows_typed_urls'

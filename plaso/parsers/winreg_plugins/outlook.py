@@ -9,7 +9,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class OutlookSearchMRUPlugin(interface.KeyPlugin):
+class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin parsing Outlook Search MRU keys."""
 
   NAME = u'microsoft_outlook_mru'

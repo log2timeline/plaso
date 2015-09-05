@@ -9,7 +9,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Elizabeth Schweinsberg (beth@bethlogic.net)'
 
 
-class MsieZoneSettingsPlugin(interface.KeyPlugin):
+class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MSIE Zones settings."""
 
   NAME = u'msie_zone'

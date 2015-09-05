@@ -11,7 +11,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class WinRarHistoryPlugin(interface.KeyPlugin):
+class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
   # TODO: Create NTUSER.DAT test file with WinRAR data.
 
