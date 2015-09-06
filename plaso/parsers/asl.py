@@ -5,10 +5,9 @@ import construct
 import logging
 import os
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -18,19 +17,20 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # TODO: get the real name for the user of the group having the uid or gid.
 
 
-class AslEvent(event.EventObject):
+class AslEvent(time_events.PosixTimeEvent):
   """Convenience class for an asl event."""
 
   DATA_TYPE = u'mac:asl:event'
 
   def __init__(
-      self, timestamp, record_position, message_id,
-      level, record_header, read_uid, read_gid, computer_name,
-      sender, facility, message, extra_information):
+      self, posix_time, record_position, message_id, level, record_header,
+      read_uid, read_gid, computer_name, sender, facility, message,
+      extra_information, micro_seconds=0):
     """Initializes the event object.
 
     Args:
-      timestamp: timestamp of the entry.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
       record_position: position where the record start.
       message_id: Identification value for an ASL message.
       level: level of criticality.
@@ -45,23 +45,24 @@ class AslEvent(event.EventObject):
       facility: the part of the sender that create the event.
       message: message of the event.
       extra_information: extra fields associated to each entry.
+      micro_seconds: optional number of micro seconds.
     """
-    super(AslEvent, self).__init__()
-    self.pid = record_header.pid
-    self.user_sid = unicode(record_header.uid)
-    self.group_id = record_header.gid
-    self.timestamp = timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
-    self.record_position = record_position
-    self.message_id = message_id
-    self.level = level
-    self.read_uid = read_uid
-    self.read_gid = read_gid
+    super(AslEvent, self).__init__(
+        posix_time, eventdata.EventTimestamp.CREATION_TIME,
+        micro_seconds=micro_seconds)
     self.computer_name = computer_name
-    self.sender = sender
-    self.facility = facility
-    self.message = message
     self.extra_information = extra_information
+    self.facility = facility
+    self.group_id = record_header.gid
+    self.level = level
+    self.message_id = message_id
+    self.message = message
+    self.pid = record_header.pid
+    self.read_gid = read_gid
+    self.read_uid = read_uid
+    self.record_position = record_position
+    self.sender = sender
+    self.user_sid = unicode(record_header.uid)
 
 
 class AslParser(interface.SingleFileBaseParser):
@@ -338,9 +339,7 @@ class AslParser(interface.SingleFileBaseParser):
     _ = file_object.read(8)
 
     # Parsed section, we translate the read data to an appropriate format.
-    microsecond, _ = divmod(record_header.nanosec, 1000)
-    timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
-        record_header.timestamp, microsecond)
+    micro_seconds, _ = divmod(record_header.nanosec, 1000)
     record_position = offset
     message_id = record_header.asl_message_id
 
@@ -387,12 +386,12 @@ class AslParser(interface.SingleFileBaseParser):
             u'Unable to decode all ASL values in the extra information fields.')
 
     # Return the event and the offset for the next entry.
-    return (
-        AslEvent(
-            timestamp, record_position, message_id, record_header.level,
-            record_header, record_header.read_uid, record_header.read_gid,
-            computer_name, sender, facility, message, extra_information),
-        record_header.next_offset)
+    event_object = AslEvent(
+        record_header.timestamp, record_position, message_id,
+        record_header.level, record_header, record_header.read_uid,
+        record_header.read_gid, computer_name, sender, facility, message,
+        extra_information, micro_seconds=micro_seconds)
+    return (event_object, record_header.next_offset)
 
 
 manager.ParsersManager.RegisterParser(AslParser)

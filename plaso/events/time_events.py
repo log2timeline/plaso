@@ -50,6 +50,23 @@ class CocoaTimeEvent(TimestampEvent):
         data_type=data_type)
 
 
+class DelphiTimeEvent(TimestampEvent):
+  """Convenience class for a Delphi time-based event."""
+
+  def __init__(self, delphi_time, timestamp_description, data_type=None):
+    """Initializes an event object.
+
+    Args:
+      delphi_time: the Delphi time value.
+      timestamp_description: The usage string for the timestamp value.
+      data_type: optional event data type. If not set data_type is
+                 derived from the DATA_TYPE attribute.
+    """
+    super(DelphiTimeEvent, self).__init__(
+        timelib.Timestamp.FromDelphiTime(delphi_time), timestamp_description,
+        data_type=data_type)
+
+
 class FatDateTimeEvent(TimestampEvent):
   """Convenience class for a FAT date time-based event."""
 

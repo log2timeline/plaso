@@ -23,10 +23,9 @@ import logging
 
 import construct
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -39,18 +38,18 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # TODO: Only tested against CUPS IPP Mac OS X.
 
 
-class CupsIppEvent(event.EventObject):
+class CupsIppEvent(time_events.PosixTimeEvent):
   """Convenience class for an cups ipp event."""
 
   DATA_TYPE = u'cups:ipp:event'
 
-  def __init__(
-      self, timestamp, timestamp_desc, data_dict):
+  def __init__(self, posix_time, timestamp_description, data_dict):
     """Initializes the event object.
 
     Args:
-      timestamp: Timestamp of the entry.
-      timestamp_desc: Description of the timestamp.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       data_dict: Dictionary with all the pairs coming from IPP file.
         user: String with the system user name.
         owner: String with the real name of the user.
@@ -64,9 +63,7 @@ class CupsIppEvent(event.EventObject):
         doc_type: String with the type of document.
         data_dict: Dictionary with all the parsed data coming from the file.
     """
-    super(CupsIppEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
-    self.timestamp_desc = timestamp_desc
+    super(CupsIppEvent, self).__init__(posix_time, timestamp_description)
     # TODO: Find a better solution than to have join for each attribute.
     self.user = self._ListToString(data_dict.get(u'user', None))
     self.owner = self._ListToString(data_dict.get(u'owner', None))

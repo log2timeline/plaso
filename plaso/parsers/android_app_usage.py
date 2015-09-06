@@ -3,18 +3,17 @@
 
 import os
 
-from xml.etree import ElementTree
 from dfvfs.helpers import text_file
+from xml.etree import ElementTree
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class AndroidAppUsageEvent(event.EventObject):
+class AndroidAppUsageEvent(time_events.JavaTimeEvent):
   """EventObject for an Android Application Last Resumed event."""
 
   DATA_TYPE = u'android:event:last_resume_time'
@@ -25,16 +24,14 @@ class AndroidAppUsageEvent(event.EventObject):
     Args:
       last_resume_time: The Last Resume Time of an Android App with details of
            individual components. The timestamp contains the number of
-           milliseconds since Jan 1, 1970 00:00:00 UTC.
+           milli seconds since Jan 1, 1970 00:00:00 UTC.
       package: The name of the Android App.
       component: The individual component of the App.
     """
-    super(AndroidAppUsageEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromJavaTime(last_resume_time)
-    self.package = package
+    super(AndroidAppUsageEvent, self).__init__(
+        last_resume_time, eventdata.EventTimestamp.LAST_RESUME_TIME)
     self.component = component
-
-    self.timestamp_desc = eventdata.EventTimestamp.LAST_RESUME_TIME
+    self.package = package
 
 
 class AndroidAppUsageParser(interface.SingleFileBaseParser):

@@ -8,10 +8,9 @@ import logging
 
 import construct
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -19,27 +18,30 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class UtmpxMacOsXEvent(event.EventObject):
+class UtmpxMacOsXEvent(time_events.PosixTimeEvent):
   """Convenience class for an event utmpx."""
   DATA_TYPE = u'mac:utmpx:event'
 
-  def __init__(self, timestamp, user, terminal, status, computer_name):
+  def __init__(
+      self, posix_time, user, terminal, status, computer_name, micro_seconds=0):
     """Initializes the event object.
 
     Args:
-      timestamp: when the terminal was started
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
       user: active user name
       terminal: name of the terminal
       status: terminal status
       computer_name: name of the host or IP.
+      micro_seconds: optional number of micro seconds.
     """
-    super(UtmpxMacOsXEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.START_TIME
-    self.user = user
-    self.terminal = terminal
-    self.status = status
+    super(UtmpxMacOsXEvent, self).__init__(
+        posix_time, eventdata.EventTimestamp.START_TIME,
+        micro_seconds=micro_seconds)
     self.computer_name = computer_name
+    self.status = status
+    self.terminal = terminal
+    self.user = user
 
 
 class UtmpxParser(interface.SingleFileBaseParser):
@@ -88,7 +90,7 @@ class UtmpxParser(interface.SingleFileBaseParser):
       file_object: a file-like object that points to an UTMPX file.
 
     Returns:
-      An event object constructed from the UTMPX entry.
+      An event object (instance of UtmpxMacOsXEvent) or None.
     """
     data = file_object.read(self.MAC_UTMPX_ENTRY_SIZE)
     if len(data) != self.MAC_UTMPX_ENTRY_SIZE:
@@ -105,9 +107,11 @@ class UtmpxParser(interface.SingleFileBaseParser):
     user, _, _ = entry.user.partition(b'\x00')
     if not user:
       user = u'N/A'
+
     terminal, _, _ = entry.tty_name.partition(b'\x00')
     if not terminal:
       terminal = u'N/A'
+
     computer_name, _, _ = entry.hostname.partition(b'\x00')
     if not computer_name:
       computer_name = u'localhost'
@@ -115,10 +119,9 @@ class UtmpxParser(interface.SingleFileBaseParser):
     value_status = self.MAC_STATUS_TYPE.get(entry.status_type, u'N/A')
     status = u'{0}'.format(value_status)
 
-    timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
-        entry.timestamp, entry.microsecond)
-
-    return UtmpxMacOsXEvent(timestamp, user, terminal, status, computer_name)
+    return UtmpxMacOsXEvent(
+        entry.timestamp, user, terminal, status, computer_name,
+        micro_seconds=entry.microsecond)
 
   def _VerifyStructure(self, file_object):
     """Verify that we are dealing with an UTMPX entry.

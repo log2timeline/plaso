@@ -18,8 +18,8 @@ import construct
 import logging
 import os
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
@@ -29,7 +29,7 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class KeychainInternetRecordEvent(event.EventObject):
+class KeychainInternetRecordEvent(time_events.TimestampEvent):
   """Convenience class for an keychain internet record event."""
 
   DATA_TYPE = u'mac:keychain:internet'
@@ -52,26 +52,25 @@ class KeychainInternetRecordEvent(event.EventObject):
       type_protocol: The sub-protocol used (eg. form).
       ssgp_hash: String with hexadecimal values from the password / cert hash.
     """
-    super(KeychainInternetRecordEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = timestamp_description
-    self.entry_name = entry_name
+    super(KeychainInternetRecordEvent, self).__init__(
+        timestamp, timestamp_description)
     self.account_name = account_name
-    self.text_description = text_description
-    self.where = where
-    self.protocol = protocol
-    self.type_protocol = type_protocol
     self.comments = comments
+    self.entry_name = entry_name
+    self.protocol = protocol
     self.ssgp_hash = ssgp_hash
+    self.text_description = text_description
+    self.type_protocol = type_protocol
+    self.where = where
 
 
-class KeychainApplicationRecordEvent(event.EventObject):
+class KeychainApplicationRecordEvent(time_events.TimestampEvent):
   """Convenience class for an keychain application password record event."""
   DATA_TYPE = u'mac:keychain:application'
 
   def __init__(
-      self, timestamp, timestamp_description, entry_name,
-      account_name, text_description, comments, ssgp_hash):
+      self, timestamp, timestamp_description, entry_name, account_name,
+      text_description, comments, ssgp_hash):
     """Initializes the event object.
 
     Args:
@@ -84,14 +83,13 @@ class KeychainApplicationRecordEvent(event.EventObject):
       comments: String that contains the comments added by the user.
       ssgp_hash: String with hexadecimal values from the password / cert hash.
     """
-    super(KeychainApplicationRecordEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = timestamp_description
-    self.entry_name = entry_name
+    super(KeychainApplicationRecordEvent, self).__init__(
+        timestamp, timestamp_description)
     self.account_name = account_name
-    self.text_description = text_description
     self.comments = comments
+    self.entry_name = entry_name
     self.ssgp_hash = ssgp_hash
+    self.text_description = text_description
 
 
 class KeychainParser(interface.SingleFileBaseParser):
@@ -124,6 +122,7 @@ class KeychainParser(interface.SingleFileBaseParser):
       u'db_schema',
       construct.UBInt32(u'size'),
       construct.UBInt32(u'number_of_tables'))
+
   # For each number_of_tables, the schema has a TABLE_OFFSET with the
   # offset starting in the DB_SCHEMA.
   TABLE_OFFSET = construct.UBInt32(u'table_offset')
@@ -154,10 +153,12 @@ class KeychainParser(interface.SingleFileBaseParser):
       construct.Padding(20),
       construct.UBInt32(u'account_name'),
       construct.Padding(4))
+
   RECORD_HEADER_APP = construct.Struct(
       u'record_entry_app',
       RECORD_HEADER,
       construct.Padding(4))
+
   RECORD_HEADER_INET = construct.Struct(
       u'record_entry_inet',
       RECORD_HEADER,
@@ -169,6 +170,7 @@ class KeychainParser(interface.SingleFileBaseParser):
 
   TEXT = construct.PascalString(
       u'text', length_field=construct.UBInt32(u'length'))
+
   TIME = construct.Struct(
       u'timestamp',
       construct.String(u'year', 4),
@@ -178,6 +180,7 @@ class KeychainParser(interface.SingleFileBaseParser):
       construct.String(u'minute', 2),
       construct.String(u'second', 2),
       construct.Padding(2))
+
   TYPE_TEXT = construct.String(u'type', 4)
 
   # TODO: add more protocols.
@@ -237,9 +240,10 @@ class KeychainParser(interface.SingleFileBaseParser):
          parser_mediator, file_object, record.record_header, offset)
 
     # Move to the end of the record, and then, prepared for the next record.
-    file_object.seek(
-        record.record_header.entry_length + offset - file_object.tell(),
-        os.SEEK_CUR)
+    next_record_offset = (
+        record.record_header.entry_length + offset - file_object.tell())
+    file_object.seek(next_record_offset, os.SEEK_CUR)
+
     event_object = KeychainApplicationRecordEvent(
         creation_time, eventdata.EventTimestamp.CREATION_TIME,
         entry_name, account_name, text_description, comments, ssgp_hash)

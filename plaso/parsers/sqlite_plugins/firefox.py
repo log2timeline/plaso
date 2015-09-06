@@ -4,7 +4,6 @@
 import sqlite3
 
 from plaso.events import time_events
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -21,24 +20,25 @@ class FirefoxPlacesBookmarkAnnotation(time_events.TimestampEvent):
 
   DATA_TYPE = u'firefox:places:bookmark_annotation'
 
-  def __init__(self, timestamp, usage, row_id, title, url, content):
+  def __init__(
+      self, timestamp, timestamp_description, row_id, title, url, content):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp value.
-      usage: Timestamp description string.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
       title: The title of the bookmark folder.
       url: The bookmarked URL.
       content: The content of the annotation.
     """
     super(FirefoxPlacesBookmarkAnnotation, self).__init__(
-        timestamp, usage)
-
+        timestamp, timestamp_description)
+    self.content = content
     self.offset = row_id
     self.title = title
     self.url = url
-    self.content = content
 
 
 class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
@@ -46,18 +46,18 @@ class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
 
   DATA_TYPE = u'firefox:places:bookmark_folder'
 
-  def __init__(self, timestamp, usage, row_id, title):
+  def __init__(self, timestamp, timestamp_description, row_id, title):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp value.
-      usage: Timestamp description string.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
       title: The title of the bookmark folder.
     """
     super(FirefoxPlacesBookmarkFolder, self).__init__(
-        timestamp, usage)
-
+        timestamp, timestamp_description)
     self.offset = row_id
     self.title = title
 
@@ -76,13 +76,14 @@ class FirefoxPlacesBookmark(time_events.TimestampEvent):
   _TYPES.setdefault(u'N/A')
 
   def __init__(
-      self, timestamp, usage, row_id, bookmark_type, title, url, places_title,
-      hostname, visit_count):
+      self, timestamp, timestamp_description, row_id, bookmark_type, title,
+      url, places_title, hostname, visit_count):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp value.
-      usage: Timestamp description string.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
       bookmark_type: Integer value containing the bookmark type.
       title: The title of the bookmark folder.
@@ -91,18 +92,18 @@ class FirefoxPlacesBookmark(time_events.TimestampEvent):
       hostname: The hostname.
       visit_count: The visit count.
     """
-    super(FirefoxPlacesBookmark, self).__init__(timestamp, usage)
-
-    self.offset = row_id
-    self.type = self._TYPES[bookmark_type]
-    self.title = title
-    self.url = url
-    self.places_title = places_title
+    super(FirefoxPlacesBookmark, self).__init__(
+        timestamp, timestamp_description)
     self.host = hostname
+    self.offset = row_id
+    self.places_title = places_title
+    self.title = title
+    self.type = self._TYPES[bookmark_type]
+    self.url = url
     self.visit_count = visit_count
 
 
-class FirefoxPlacesPageVisitedEvent(event.EventObject):
+class FirefoxPlacesPageVisitedEvent(time_events.TimestampEvent):
   """Convenience class for a Firefox page visited event."""
 
   DATA_TYPE = u'firefox:places:page_visited'
@@ -112,8 +113,8 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       row_id: The identifier of the corresponding row.
       url: The URL of the visited page.
       title: The title of the visited page.
@@ -122,10 +123,8 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
       visit_type: The transition type for the event.
       extra: A list containing extra event data (TODO refactor).
     """
-    super(FirefoxPlacesPageVisitedEvent, self).__init__()
-
-    self.timestamp = timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.PAGE_VISITED
+    super(FirefoxPlacesPageVisitedEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.PAGE_VISITED)
 
     self.offset = row_id
     self.url = url
@@ -142,13 +141,15 @@ class FirefoxDownload(time_events.TimestampEvent):
 
   DATA_TYPE = u'firefox:downloads:download'
 
-  def __init__(self, timestamp, usage, row_id, name, url, referrer, full_path,
-               temporary_location, received_bytes, total_bytes, mime_type):
+  def __init__(
+      self, timestamp, timestamp_description, row_id, name, url, referrer,
+      full_path, temporary_location, received_bytes, total_bytes, mime_type):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp value.
-      usage: Timestamp description string.
+      timestamp: The timestamp which is an interger containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
       name: The name of the download.
       url: The source URL of the download.
@@ -159,17 +160,16 @@ class FirefoxDownload(time_events.TimestampEvent):
       total_bytes: The total number of bytes of the download.
       mime_type: The mime type of the download.
     """
-    super(FirefoxDownload, self).__init__(timestamp, usage)
-
-    self.offset = row_id
-    self.name = name
-    self.url = url
-    self.referrer = referrer
+    super(FirefoxDownload, self).__init__(timestamp, timestamp_description)
     self.full_path = full_path
-    self.temporary_location = temporary_location
-    self.received_bytes = received_bytes
-    self.total_bytes = total_bytes
     self.mime_type = mime_type
+    self.name = name
+    self.offset = row_id
+    self.received_bytes = received_bytes
+    self.referrer = referrer
+    self.temporary_location = temporary_location
+    self.total_bytes = total_bytes
+    self.url = url
 
 
 class FirefoxHistoryPlugin(interface.SQLitePlugin):
