@@ -41,7 +41,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
@@ -91,7 +91,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUListEx value.
 
     Yields:
@@ -132,7 +132,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: the Registry key (instance of dfwinreg.WinRegistryKey).
       parent_path_segments: list containing the parent shell item path segments.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
@@ -188,7 +188,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.

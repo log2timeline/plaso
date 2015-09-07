@@ -57,11 +57,12 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
     """Retrieves the Id value from Task Cache Tree key.
 
     Args:
-      key: A Windows Registry key (instance of WinRegKey).
+      key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
 
     Yields:
-      A tuple containing a Windows Registry Key (instance of WinRegKey) and
-      a Windows Registry value (instance of WinRegValue).
+      A tuple containing a Windows Registry Key (instance of
+      dfwinreg.WinRegistryKey) and a Windows Registry value (instance of
+      dfwinreg.WinRegistryValue).
     """
     id_value = key.GetValue(u'Id')
     if id_value:
@@ -78,7 +79,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.

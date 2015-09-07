@@ -22,7 +22,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       key_path: The path of the key to parse.
 
     Returns:
-      A Windows Registry key (instance of WinRegKey).
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
@@ -37,7 +37,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       key_path: The path of the key to parse.
 
     Returns:
-      A Windows Registry key (instance of WinRegKey).
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
     registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)

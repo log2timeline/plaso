@@ -4,10 +4,19 @@
 import abc
 
 
-class WinRegKey(object):
-  """Abstract class to represent the Windows Registry key interface."""
+class WinRegistryKey(object):
+  """Class to represent the Windows Registry key interface."""
 
   PATH_SEPARATOR = u'\\'
+
+  def __init__(self, key_path=u''):
+    """Initializes a Windows Registry key object.
+
+    Args:
+      key_path: the Windows Registry key path.
+    """
+    super(WinRegistryKey, self).__init__()
+    self._key_path = key_path
 
   @abc.abstractproperty
   def last_written_timestamp(self):
@@ -29,40 +38,21 @@ class WinRegKey(object):
   def offset(self):
     """The offset of the key within the Windows Registry file."""
 
-  @abc.abstractproperty
+  @property
   def path(self):
-    """The path of the key."""
+    """The Windows Registry key path."""
+    return self._key_path
 
   @abc.abstractmethod
-  def GetValue(self, name):
-    """Retrieves a value by name.
+  def GetSubkeyByName(self, name):
+    """Retrieves a subkey by name.
 
     Args:
-      name: Name of the value or an empty string for the default value.
+      name: The name of the subkey.
 
     Returns:
-      An instance of a Windows Registry value object (WinRegValue) if
-      a corresponding value was found or None if not.
-    """
-
-  @abc.abstractmethod
-  def GetValues(self):
-    """Retrieves all values within the key.
-
-    Yields:
-      Windows Registry value objects (instances of WinRegValue) that represent
-      the values stored within the key.
-    """
-
-  @abc.abstractmethod
-  def GetSubkey(self, name):
-    """Retrive a subkey by name.
-
-    Args:
-      name: The relative path of the current key to the desired one.
-
-    Returns:
-      The subkey with the relative path of name or None if not found.
+      The Windows Registry subkey (instances of WinRegistryKey) or
+      None if not found.
     """
 
   @abc.abstractmethod
@@ -70,13 +60,47 @@ class WinRegKey(object):
     """Retrieves all subkeys within the key.
 
     Yields:
-      Windows Registry key objects (instances of WinRegKey) that represent
+      Windows Registry key objects (instances of WinRegistryKey) that represent
       the subkeys stored within the key.
     """
 
+  @abc.abstractmethod
+  def GetValueByName(self, name):
+    """Retrieves a value by name.
 
-class WinRegValue(object):
-  """Abstract class to represent the Windows Registry value interface."""
+    Args:
+      name: the name of the value or an empty string for the default value.
+
+    Returns:
+      An instance of a Windows Registry value object (instance of
+      WinRegistryValue) if a corresponding value was found or None if not.
+    """
+
+  @abc.abstractmethod
+  def GetValues(self):
+    """Retrieves all values within the key.
+
+    Yields:
+      Windows Registry value objects (instances of WinRegistryValue) that
+      represent the values stored within the key.
+    """
+
+  def RecurseKeys(self):
+    """Recurses the Windows Registry keys starting with the root key.
+
+    Args:
+      key_path_prefix: optional Windows Registry key path prefix.
+
+    Yields:
+      A Windows Registry key (instance of WinRegistryKey).
+    """
+    for subkey in self.GetSubKeys():
+      for key in subkey.RecurseKeys():
+        yield key
+
+
+class WinRegistryValue(object):
+  """Class to represent the Windows Registry value interface."""
 
   # TODO: move to definitions, currently kept for backwards compatibility.
   REG_NONE = 0
@@ -203,18 +227,23 @@ class WinRegistryFile(object):
     """Retrieves the key for a specific path.
 
     Args:
-      key_path: the Registry key path.
+      key_path: the Windows Registry key path.
 
     Returns:
-      A Registry key (instance of WinRegistryKey) or None if not available.
+      A Windows Registry key (instance of WinRegistryKey) or None if
+      not available.
     """
 
   @abc.abstractmethod
-  def GetRootKey(self):
+  def GetRootKey(self, key_path_prefix=u''):
     """Retrieves the root key.
 
-    Yields:
-      A Registry key (instance of WinRegistryKey).
+    Args:
+      key_path_prefix: optional Windows Registry key path prefix.
+
+    Returns:
+      The Windows Registry root key (instance of WinRegistryKey) or
+      None if not available.
     """
 
   @abc.abstractmethod
@@ -228,5 +257,33 @@ class WinRegistryFile(object):
       A boolean containing True if successful or False if not.
     """
 
+  def RecurseKeys(self, key_path_prefix=u''):
+    """Recurses the Windows Registry keys starting with the root key.
 
-# TODO: add WinRegistryFileReader.
+    Args:
+      key_path_prefix: optional Windows Registry key path prefix.
+
+    Yields:
+      A Windows Registry key (instance of WinRegistryKey).
+    """
+    root_key = self.GetRootKey(key_path_prefix=key_path_prefix)
+    if root_key:
+      for registry_key in root_key.RecurseKeys():
+        yield registry_key
+
+
+class WinRegistryFileReader(object):
+  """Class to represent the Windows Registry file reader interface."""
+
+  @abc.abstractmethod
+  def Open(self, path, ascii_codepage=u'cp1252'):
+    """Opens the Windows Registry file specificed by the path.
+
+    Args:
+      path: the path of the Windows Registry file.
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+
+    Returns:
+      The Windows Registry file (instance of WinRegistryFile) or None.
+    """

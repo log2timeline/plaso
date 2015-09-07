@@ -44,7 +44,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
@@ -119,7 +119,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
     """Parses V value and returns name, fullname, and comments data.
 
     Args:
-      key: Registry key (instance of winreg.WinRegKey).
+      key: Registry key (instance of dfwinreg.WinRegistryKey).
 
     Returns:
       name: Name data parsed with name start and length values.
@@ -154,7 +154,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
     """Parses F value and returns parsed F data construct object.
 
     Args:
-      key: Registry key (instance of winreg.WinRegKey).
+      key: Registry key (instance of dfwinreg.WinRegistryKey).
 
     Returns:
       f_data: Construct parsed F value containing rid, login count,

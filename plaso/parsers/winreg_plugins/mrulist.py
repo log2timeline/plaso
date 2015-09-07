@@ -25,7 +25,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
@@ -38,7 +38,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
     """Parses the MRUList value in a given Registry key.
 
     Args:
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
 
     Returns:
@@ -66,7 +66,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: the Registry key (instance of dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
@@ -111,7 +111,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
@@ -154,7 +154,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
@@ -171,7 +171,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
@@ -206,7 +206,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
@@ -245,7 +245,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.

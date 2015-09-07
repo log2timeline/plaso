@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Pyregf specific implementation for the Windows Registry file access."""
 
-import logging
-
 import pyregf
 
 from plaso import dependencies
@@ -14,29 +12,18 @@ from plaso.lib import timelib
 dependencies.CheckModuleVersion(u'pyregf')
 
 
-class WinPyregfKey(interface.WinRegKey):
+class WinPyregfKey(interface.WinRegistryKey):
   """Implementation of a Windows Registry key using pyregf."""
 
-  def __init__(self, pyregf_key, parent_path=u'', root=False):
+  def __init__(self, pyregf_key, key_path=u''):
     """Initializes a Windows Registry key object.
 
     Args:
-      pyregf_key: An instance of a pyregf.key object.
-      parent_path: The path of the parent key.
-      root: A boolean value indicating we are dealing with a root key.
+      pyregf_key: a pyreg key object (instance of a pyregf.key).
+      key_path: the Windows Registry key path.
     """
-    super(WinPyregfKey, self).__init__()
+    super(WinPyregfKey, self).__init__(key_path=key_path)
     self._pyregf_key = pyregf_key
-    # Adding few checks to make sure the root key is not
-    # invalid in plugin checks (root key is equal to the
-    # path separator).
-    if parent_path == self.PATH_SEPARATOR:
-      parent_path = u''
-    if root:
-      self._path = self.PATH_SEPARATOR
-    else:
-      self._path = self.PATH_SEPARATOR.join([
-          parent_path, self._pyregf_key.name])
 
   @property
   def last_written_timestamp(self):
@@ -64,57 +51,32 @@ class WinPyregfKey(interface.WinRegKey):
     """The offset of the key within the Windows Registry file."""
     return self._pyregf_key.offset
 
-  @property
-  def path(self):
-    """The path of the key."""
-    return self._path
-
-  # pylint: disable=arguments-differ
-  @path.setter
-  def path(self, value):
-    """Set the value of the path explicitly."""
-    self._path = value
-
-  def GetSubkey(self, name):
-    """Retrive a subkey by name.
+  def GetSubkeyByName(self, name):
+    """Retrieves a subkey by name.
 
     Args:
-      name: The relative path of the current key to the desired one.
+      name: The name of the subkey.
 
     Returns:
-      The subkey with the relative path of name or None if not found.
+      The Windows Registry subkey (instances of WinRegistryKey) or
+      None if not found.
     """
     subkey = self._pyregf_key.get_sub_key_by_name(name)
     if subkey:
-      return WinPyregfKey(subkey, self.path)
+      return
 
-    path_subkey = self._pyregf_key.get_sub_key_by_path(name)
-    if path_subkey:
-      # Split all the path segments based on the path (segment) separator.
-      path_segments = self.path.split(self.PATH_SEPARATOR)
-      path_segments.extend(name.split(self.PATH_SEPARATOR))
-
-      # Flatten the sublists into one list.
-      path_segments = [
-          element for sublist in path_segments for element in sublist]
-
-      # Remove empty path segments.
-      path_segments = filter(None, path_segments)
-
-      path = u'{0:s}{1:s}'.format(
-          self.PATH_SEPARATOR, self.PATH_SEPARATOR.join(path_segments))
-
-      return WinPyregfKey(path_subkey, path)
+    key_path = self.PATH_SEPARATOR.join([self._key_path, name])
+    return WinPyregfKey(subkey, key_path=key_path)
 
   def GetSubkeys(self):
     """Retrieves all subkeys within the key.
 
     Yields:
-      Windows Registry key objects (instances of WinRegKey) that represent
+      Windows Registry key objects (instances of WinRegistryKey) that represent
       the subkeys stored within the key.
     """
     for pyregf_key in self._pyregf_key.sub_keys:
-      yield WinPyregfKey(pyregf_key, self.path)
+      yield WinPyregfKey(pyregf_key, key_path=self.path)
 
   # TODO: in the process of being deprecated.
   def GetValue(self, name):
@@ -124,7 +86,7 @@ class WinPyregfKey(interface.WinRegKey):
       name: Name of the value or an empty string for the default value.
 
     Returns:
-      A Windows Registry value object (instance of WinRegValue) if
+      A Windows Registry value object (instance of WinRegistryValue) if
       a corresponding value was found or None if not.
     """
     # Value names are not unique and pyregf provides first match for
@@ -147,7 +109,7 @@ class WinPyregfKey(interface.WinRegKey):
       name: Name of the value or an empty string for the default value.
 
     Returns:
-      A Windows Registry value object (instance of WinRegValue) if
+      A Windows Registry value object (instance of WinRegistryValue) if
       a corresponding value was found or None if not.
     """
     pyregf_value = self._pyregf_key.get_value_by_name(name)
@@ -160,14 +122,14 @@ class WinPyregfKey(interface.WinRegKey):
     """Retrieves all values within the key.
 
     Yields:
-      Windows Registry value objects (instances of WinRegValue) that represent
-      the values stored within the key.
+      Windows Registry value objects (instances of WinRegistryValue) that
+      represent the values stored within the key.
     """
     for pyregf_value in self._pyregf_key.values:
       yield WinPyregfValue(pyregf_value)
 
 
-class WinPyregfValue(interface.WinRegValue):
+class WinPyregfValue(interface.WinRegistryValue):
   """Implementation of a Windows Registry value using pyregf."""
 
   def __init__(self, pyregf_value):
@@ -239,155 +201,7 @@ class WinPyregfValue(interface.WinRegValue):
     return self._pyregf_value.data
 
 
-class WinPyregfFile(interface.WinRegistryFile):
-  """Implementation of a Windows Registry file pyregf.
-
-  Attributes:
-    name: the name of the Windows Registry file.
-  """
-
-  def __init__(self, ascii_codepage=u'cp1252'):
-    """Initializes the Windows Registry file.
-
-    Args:
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
-    """
-    super(WinPyregfFile, self).__init__()
-    self._ascii_codepage = ascii_codepage
-    self._base_key = None
-    self._file_object = None
-    self._regf_file = pyregf.file()
-
-    self.name = u''
-
-  def Close(self):
-    """Closes the Windows Registry file."""
-    self._base_key = None
-    self.name = u''
-
-    if self._file_object:
-      self._regf_file.close()
-      self._file_object.close()
-      self._file_object = None
-
-  def GetKeyByPath(self, key_path):
-    """Retrieves a specific key defined by the Registry path.
-
-    Args:
-      key_path: the Registry key path.
-
-    Returns:
-      The key (instance of WinRegKey) if available or None otherwise.
-    """
-    if not key_path:
-      return None
-
-    if not self._base_key:
-      return None
-
-    pyregf_key = self._base_key.get_sub_key_by_path(key_path)
-    if not pyregf_key:
-      return None
-
-    if pyregf_key.name == self._base_key.name:
-      root = True
-    else:
-      root = False
-
-    parent_key_path, _, _ = key_path.rpartition(
-        interface.WinRegKey.PATH_SEPARATOR)
-    return WinPyregfKey(pyregf_key, parent_key_path, root=root)
-
-  def GetRootKey(self):
-    """Retrieves the root keys.
-
-    Returns:
-      A Registry key (instance of WinRegistryKey) or None if not available.
-    """
-    regf_key = self._regf_file.get_root_key()
-    if not regf_key:
-      return
-
-    return WinPyregfKey(regf_key, u'', root=True)
-
-  def Open(self, file_object):
-    """Opens the Windows Registry file.
-
-    Args:
-      file_object: the file-like object.
-
-    Raises:
-      IOError: if there is an error opening or reading the Registry file.
-    """
-    # TODO: Add a more elegant error handling to this issue. There are some
-    # code pages that are not supported by the parent library. However we
-    # need to properly set the codepage so the library can properly interpret
-    # values in the Registry.
-    try:
-      self._regf_file.set_ascii_codepage(self._ascii_codepage)
-
-    except (TypeError, IOError):
-      logging.error((
-          u'Unable to set the Windows Registry file codepage: {0:s}. '
-          u'Ignoring provided value.').format(self._ascii_codepage))
-
-    self._regf_file.open_file_object(file_object)
-    self._base_key = self._regf_file.get_root_key()
-    self._file_object = file_object
-
-  def OpenFileEntry(self, file_entry):
-    """Opens the Windows Registry file.
-
-    Args:
-      file_entry: The file entry object (instance of dfvfs.FileEntry).
-
-    Raises:
-      IOError: if there is an error opening or reading the Registry file.
-    """
-    file_object = file_entry.GetFileObject()
-    try:
-      self.Open(file_object)
-
-      # TODO: move to a dfVFS like Registry sub-system.
-      self.name = file_entry.name
-
-    except IOError:
-      file_object.close()
-      raise
-
-  # TODO: move to key.
-  def _RecurseKey(self, key):
-    """Recurses a Registry key.
-
-     Yields:
-       A Registry key (instance of WinPyregfKey).
-    """
-    if key:
-      yield key
-
-      for subkey in key.GetSubkeys():
-        for recursed_key in self._RecurseKey(subkey):
-          yield recursed_key
-
-  def RecurseKeys(self):
-    """Recurses the Registry file keys starting with the root key.
-
-    Yields:
-      A Registry key (instance of WinPyregfKey) generator.
-
-    Raises:
-      StopIteration: when there is no root key to signal the generator is empty.
-    """
-    root_key = self.GetRootKey()
-    if not root_key:
-      raise StopIteration
-
-    for key in self._RecurseKey(root_key):
-      yield key
-
-
-class WinRegistryFileREGF(object):
+class WinRegistryFileREGF(interface.WinRegistryFile):
   """Class that defines a Windows Registry file using pyregf."""
 
   def __init__(self, ascii_codepage=u'cp1252'):
@@ -417,13 +231,21 @@ class WinRegistryFileREGF(object):
     Returns:
       A Registry key (instance of WinRegistryKey) or None if not available.
     """
-    return self._regf_file.get_key_by_path(key_path)
+    regf_key = self._regf_file.get_key_by_path(key_path)
+    if not regf_key:
+      return
 
-  def GetRootKey(self):
-    """Retrieves the root keys.
+    return WinPyregfKey(regf_key, key_path=key_path)
+
+  def GetRootKey(self, key_path_prefix=u''):
+    """Retrieves the root key.
+
+    Args:
+      key_path_prefix: optional Windows Registry key path prefix.
 
     Returns:
-      A Registry key (instance of WinRegistryKey) or None if not available.
+      The Windows Registry root key (instance of WinRegistryKey) or
+      None if not available.
     """
     regf_key = self._regf_file.get_root_key()
     if not regf_key:
@@ -431,7 +253,7 @@ class WinRegistryFileREGF(object):
 
     # TODO: refactor to WinRegistryKey, also remove parent key path or
     # use WinRegistry path.
-    return WinPyregfKey(regf_key, u'', root=True)
+    return WinPyregfKey(regf_key, key_path=key_path_prefix)
 
   def Open(self, file_object):
     """Opens the Windows Registry file using a file-like object.

@@ -3,6 +3,7 @@
 
 import logging
 
+from plaso.dfwinreg import regf as dfwinreg_regf
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.lib import errors
 from plaso.lib import specification
@@ -132,7 +133,7 @@ class PluginList(object):
     return set(self._plugins)
 
 
-class WinRegistryParser(interface.BaseParser):
+class WinRegistryParser(interface.SingleFileBaseParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = u'winreg'
@@ -147,31 +148,14 @@ class WinRegistryParser(interface.BaseParser):
     self._win_registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
-  def _CheckSignature(self, parser_mediator):
-    """Checks if the file matches the signature of a REGF file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Returns:
-      A boolean value indicating if the file matches the signature of
-      a REGF file.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      data = file_object.read(4)
-    finally:
-      file_object.close()
-
-    return data == b'regf'
-
   def _ParseRegistryFile(
       self, parser_mediator, winreg_file, registry_file_type):
     """Parses a Windows Registry file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      winreg_file: A Windows Registry file (instance of dfwinreg.WinRegFile).
+      winreg_file: A Windows Registry file (instance of
+                   dfwinreg.WinRegistryFile).
       registry_file_type: The Registry file type.
     """
     plugins = self._plugins.GetPluginObjects(registry_file_type)
@@ -213,43 +197,34 @@ class WinRegistryParser(interface.BaseParser):
       plugins_list.AddPlugin(plugin_class.REG_TYPE, plugin_class)
     return plugins_list
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Windows Registry file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Windows Registry file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     display_name = parser_mediator.GetDisplayName()
 
-    # TODO: Remove this magic reads when the classifier has been
-    # implemented, until then we need to make sure we are dealing with
-    # a Windows NT Registry file before proceeding.
+    winreg_file = dfwinreg_regf.WinRegistryFileREGF(
+        ascii_codepage=parser_mediator.codepage)
 
-    if not self._CheckSignature(parser_mediator):
-      raise errors.UnableToParseFile((
-          u'[{0:s}] unable to parse file: {1:s} with error: invalid '
-          u'signature.').format(self.NAME, display_name))
-
-    # TODO: refactor this.
-    file_entry = parser_mediator.GetFileEntry()
     try:
-      winreg_file = self._win_registry.OpenFileEntry(
-          file_entry, codepage=parser_mediator.codepage)
+      winreg_file.Open(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, display_name, exception))
 
-    try:
-      registry_file_type = self._win_registry.GetRegistryFileType(winreg_file)
-      logging.debug(
-          u'Windows Registry file {0:s}: detected as: {1:s}'.format(
-              display_name, registry_file_type))
+    registry_file_type = self._win_registry.GetRegistryFileType(winreg_file)
+    logging.debug(
+        u'Windows Registry file {0:s}: detected as: {1:s}'.format(
+            display_name, registry_file_type))
 
-      self._ParseRegistryFile(parser_mediator, winreg_file, registry_file_type)
-
-    finally:
-      winreg_file.Close()
+    self._ParseRegistryFile(parser_mediator, winreg_file, registry_file_type)
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)

@@ -12,11 +12,12 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.dfwinreg import interface
 
 
-class TestRegKey(interface.WinRegKey):
+class TestRegKey(interface.WinRegistryKey):
   """Implementation of the Registry key interface for testing."""
 
-  def __init__(self, path, last_written_timestamp, values, offset=0,
-               subkeys=None):
+  def __init__(
+      self, path, last_written_timestamp, values, offset=0,
+      subkeys=None):
     """An abstract object for a Windows Registry key.
 
        This implementation is more a manual one, so it can be used for
@@ -24,72 +25,57 @@ class TestRegKey(interface.WinRegKey):
        Windows Registry file to extract key values.
 
     Args:
-      path: The full key name and path.
+      path: The Windows Registry key path.
       last_written_timestamp: An integer containing the the last written
                               timestamp of the Registry key.
       values: A list of TestRegValue values this key holds.
       offset: A byte offset into the Windows Registry file where the entry lies.
       subkeys: A list of subkeys this key has.
     """
-    super(TestRegKey, self).__init__()
-    self._name = None
-    self._path = path
+    super(TestRegKey, self).__init__(key_path=path)
     self._last_written_timestamp = last_written_timestamp
-    self._values = values
+    self._name = None
     self._offset = offset
+    self._values = values
     if subkeys is None:
       self._subkeys = []
     else:
       self._subkeys = subkeys
 
   @property
-  def path(self):
-    """The path of the key."""
-    return self._path
-
-  @property
   def name(self):
     """The name of the key."""
-    if not self._name and self._path:
-      self._name = self._path.split(self.PATH_SEPARATOR)[-1]
+    if not self._name and self._key_path:
+      self._name = self._key_path.split(self.PATH_SEPARATOR)[-1]
     return self._name
-
-  @property
-  def offset(self):
-    """The offset of the key within the Windows Registry file."""
-    return self._offset
 
   @property
   def last_written_timestamp(self):
     """The last written time of the key represented as a timestamp."""
     return self._last_written_timestamp
 
-  def number_of_values(self):
-    """The number of values within the key."""
-    return len(self._values)
-
-  def GetValue(self, name):
-    """Return a WinRegValue object for a specific Registry key path."""
-    for value in self._values:
-      if value.name == name:
-        return value
-
-  def GetValues(self):
-    """Return a list of all values from the Registry key."""
-    return self._values
-
   def number_of_subkeys(self):
     """The number of subkeys within the key."""
     return len(self._subkeys)
 
-  def GetSubkey(self, name):
-    """Retrieve a subkey by name.
+  def number_of_values(self):
+    """The number of values within the key."""
+    return len(self._values)
+
+  @property
+  def offset(self):
+    """The offset of the key within the Windows Registry file."""
+    return self._offset
+
+  def GetSubkeyByName(self, name):
+    """Retrieves a subkey by name.
 
     Args:
-      name: The relative path of the current key to the desired one.
+      name: The name of the subkey.
 
     Returns:
-      The subkey with the relative path of name or None if not found.
+      The Windows Registry subkey (instances of WinRegistryKey) or
+      None if not found.
     """
     for subkey in self._subkeys:
       if subkey.name == name:
@@ -100,8 +86,22 @@ class TestRegKey(interface.WinRegKey):
     """Return a list of all subkeys."""
     return self._subkeys
 
+  def GetValueByName(self, name):
+    """Returns a Windows Registry value object for a specific name.
 
-class TestRegValue(interface.WinRegValue):
+    Returns:
+      A Windows Registry value (instance of dfwinreg.WinRegistryValue).
+    """
+    for value in self._values:
+      if value.name == name:
+        return value
+
+  def GetValues(self):
+    """Return a list of all values from the Registry key."""
+    return self._values
+
+
+class TestRegValue(interface.WinRegistryValue):
   """Implementation of the Registry value interface for testing."""
 
   _INT32_BIG_ENDIAN = construct.SBInt32('value')
@@ -111,31 +111,11 @@ class TestRegValue(interface.WinRegValue):
   def __init__(self, name, data, data_type, offset=0):
     """Set up the test reg value object."""
     super(TestRegValue, self).__init__()
-    self._name = name
     self._data = data
     self._data_type = data_type
+    self._name = name
     self._offset = offset
     self._type_str = ''
-
-  @property
-  def name(self):
-    """The name of the value."""
-    return self._name
-
-  @property
-  def offset(self):
-    """The offset of the value within the Windows Registry file."""
-    return self._offset
-
-  @property
-  def data_type(self):
-    """Numeric value that contains the data type."""
-    return self._data_type
-
-  @property
-  def raw_data(self):
-    """The value data as a byte string."""
-    return self._data
 
   @property
   def data(self):
@@ -165,6 +145,26 @@ class TestRegValue(interface.WinRegValue):
       except UnicodeError:
         pass
 
+    return self._data
+
+  @property
+  def data_type(self):
+    """Numeric value that contains the data type."""
+    return self._data_type
+
+  @property
+  def name(self):
+    """The name of the value."""
+    return self._name
+
+  @property
+  def offset(self):
+    """The offset of the value within the Windows Registry file."""
+    return self._offset
+
+  @property
+  def raw_data(self):
+    """The value data as a byte string."""
     return self._data
 
 

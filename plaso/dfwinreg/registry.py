@@ -6,6 +6,7 @@ import logging
 from dfvfs.helpers import file_system_searcher
 
 from plaso.dfwinreg import definitions
+from plaso.dfwinreg import interface
 from plaso.dfwinreg import path_expander
 from plaso.dfwinreg import regf
 
@@ -14,16 +15,16 @@ class WinRegistryFileMapping(object):
   """Class that defines a Windows Registry file mapping.
 
   Attributes:
-    key_path_prefix: the Registry key path prefix.
-    windows_path: the Windows path to the Registry file.
+    key_path_prefix: the Windows Registry key path prefix.
+    windows_path: the Windows path to the Windows Registry file.
   """
 
   def __init__(self, key_path_prefix, windows_path):
     """Initializes the Windows Registry file mapping.
 
     Args:
-      key_path_prefix: the Registry key path prefix.
-      windows_path: the Windows path to the Registry file.
+      key_path_prefix: the Windows Registry key path prefix.
+      windows_path: the Windows path to the Windows Registry file.
     """
     super(WinRegistryFileMapping, self).__init__()
     self.key_path_prefix = key_path_prefix.upper()
@@ -31,7 +32,7 @@ class WinRegistryFileMapping(object):
 
 
 class WinRegistry(object):
-  """Class to provided a uniform way to access the Windows Registry."""
+  """Class to provide a uniform way to access the Windows Registry."""
 
   _KEY_PATHS_PER_REGISTRY_TYPE = {
       definitions.REGISTRY_FILE_TYPE_NTUSER: frozenset([
@@ -123,10 +124,10 @@ class WinRegistry(object):
     Args:
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
-      backend: The back-end to use to read the Registry structures, the
+      backend: The back-end to use to read the Windows Registry structures, the
                default is 1 (pyregf).
-      registry_file_reader: optional Registry file reader (instance of
-                            RegistryFileReader). The default is None.
+      registry_file_reader: optional Windows Registry file reader (instance of
+                            WinRegistryFileReader). The default is None.
     """
     super(WinRegistry, self).__init__()
     self._ascii_codepage = ascii_codepage
@@ -142,15 +143,15 @@ class WinRegistry(object):
         registry_file.Close()
 
   def _GetCachedFileByPath(self, safe_key_path):
-    """Retrieves a cached Registry file for a specific path.
+    """Retrieves a cached Windows Registry file for a specific path.
 
     Args:
-      safe_key_path: the Registry key path, in upper case with a resolved
-                     root key alias.
+      safe_key_path: the Windows Registry key path, in upper case with
+                     a resolved root key alias.
 
     Returns:
-      A tuple of the key path prefix and the corresponding Registry file object
-      (instance of RegistryFile) or None if not available.
+      A tuple of the key path prefix and the corresponding Windows Registry
+      file object (instance of WinRegistryFile) or None if not available.
     """
     longest_key_path_prefix = u''
     longest_key_path_prefix_length = len(longest_key_path_prefix)
@@ -200,25 +201,26 @@ class WinRegistry(object):
     return u'HKEY_LOCAL_MACHINE\\System\\ControlSet{0:03d}'.format(control_set)
 
   def _GetFileByPath(self, safe_key_path):
-    """Retrieves the Registry file for a specific path.
+    """Retrieves the Windows Registry file for a specific path.
 
     Args:
-      safe_key_path: the Registry key path, in upper case with a resolved
-                     root key alias.
+      safe_key_path: the Windows Registry key path, in upper case with
+                     a resolved root key alias.
 
     Returns:
-      A tuple of the key path prefix and the corresponding Registry file object
-      (instance of RegistryFile) or None if not available.
+      A tuple of the key path prefix and the corresponding Windows Registry
+      file object (instance of WinRegistryFile) or None if not available.
     """
+    if not self._registry_file_reader:
+      return None, None
+
     # TODO: handle HKEY_USERS in both 9X and NT.
 
     key_path_prefix, registry_file = self._GetCachedFileByPath(safe_key_path)
     if not registry_file:
       for mapping in self._GetFileMappingsByPath(safe_key_path):
-        # TODO: refactor to pass single path.
-        path, _, filename = mapping.windows_path.rpartition(u'/')
         registry_file = self._registry_file_reader.Open(
-            path, filename, ascii_codepage=self._ascii_codepage)
+            mapping.windows_path, ascii_codepage=self._ascii_codepage)
         if registry_file:
           if not key_path_prefix:
             key_path_prefix = mapping.key_path_prefix
@@ -230,14 +232,14 @@ class WinRegistry(object):
     return key_path_prefix, registry_file
 
   def _GetFileMappingsByPath(self, safe_key_path):
-    """Retrieves the Registry file mappings for a specific path.
+    """Retrieves the Windows Registry file mappings for a specific path.
 
     Args:
-      safe_key_path: the Registry key path, in upper case with a resolved
-                     root key alias.
+      safe_key_path: the Windows Registry key path, in upper case with
+                     a resolved root key alias.
 
     Yields:
-      Registry file mapping objects (instances of RegistryFileMapping).
+      Registry file mapping objects (instances of WinRegistryFileMapping).
     """
     candidate_mappings = []
     for mapping in self._REGISTRY_FILE_MAPPINGS_NT:
@@ -251,26 +253,26 @@ class WinRegistry(object):
       yield mapping
 
   def ExpandKeyPath(self, key_path, path_attributes):
-    """Expand a Registry key path based on path attributes.
+    """Expand a Windows Registry key path based on path attributes.
 
-     A Registry key path may contain path attributes. A path attribute is
-     defined as anything within a curly bracket, e.g.
+     A Windows Registry key path may contain path attributes. A path
+     attribute is defined as anything within a curly bracket, e.g.
      "\\System\\{my_attribute}\\Path\\Keyname".
 
      If the path attribute my_attribute is defined it's value will be replaced
      with the attribute name, e.g. "\\System\\MyValue\\Path\\Keyname".
 
-     If the Registry path needs to have curly brackets in the path then
-     they need to be escaped with another curly bracket, e.g.
+     If the Windows Registry key path needs to have curly brackets in the path
+     then they need to be escaped with another curly bracket, e.g.
      "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
      case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
 
     Args:
-      key_path: the Registry key path before being expanded.
+      key_path: the Windows Registry key path before being expanded.
       path_attributes: a dictionary containing the path attributes.
 
     Returns:
-      A Registry key path that's expanded based on attribute values.
+      A Windows Registry key path that's expanded based on attribute values.
 
     Raises:
       KeyError: If an attribute name is in the key path not set in
@@ -291,10 +293,11 @@ class WinRegistry(object):
     """Retrieves the key for a specific path.
 
     Args:
-      key_path: the Registry key path.
+      key_path: the Windows Registry key path.
 
     Returns:
-      A Registry key (instance of RegistryKey) or None if not available.
+      A Windows Registry key (instance of WinRegistryKey) or None if
+      not available.
 
     Raises:
       RuntimeError: if the root key is not supported.
@@ -337,10 +340,11 @@ class WinRegistry(object):
     return registry_file.GetKeyByPath(key_path)
 
   def GetRegistryFileType(self, registry_file):
-    """Determines the Registry type based on keys present in the file.
+    """Determines the Windows Registry type based on keys present in the file.
 
     Args:
-      registry_file: the Registry file object (instance of WinRegistyFile).
+      registry_file: the Windows Registry file object (instance of
+                     WinRegistyFile).
 
     Returns:
       The Windows Registry file type, e.g. NTUSER, SOFTWARE.
@@ -361,59 +365,51 @@ class WinRegistry(object):
 
     return registry_file_type
 
-  # TODO: in the process of being deprecated.
-  def OpenFileEntry(self, file_entry, codepage=u'cp1252'):
-    """Opens a Registry file.
+  def RecurseKeys(self):
+    """Recurses the Windows Registry keys.
 
-    Args:
-      file_entry: The file entry object (instance of dfvfs.FileEntry).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Returns:
-      The a Windows Registry file (instance of WinRegistyFile) if successful
-      or None otherwise.
-
-    Raises:
-      ValueError: if the back-end is not supported.
+    Yields:
+      A Windows Registry key (instance of WinRegistryKey).
     """
-    if self._backend != self.BACKEND_PYREGF:
-      raise ValueError(u'Unsupported back-end')
+    for key_path_prefix in sorted(self._registry_files.keys()):
+      registry_file = self._registry_files[key_path_prefix]
+      for registry_key in registry_file.RecurseKeys(
+          key_path_prefix=key_path_prefix):
+        yield registry_key
 
-    registry_file = regf.WinPyregfFile(ascii_codepage=codepage)
-    registry_file.OpenFileEntry(file_entry)
-    return registry_file
 
-
-class WinRegistryFileReader(object):
-  """Class to read a Windows Registry file."""
+class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
+  """A file system searcher-based Windows Registry file reader."""
 
   def __init__(self, searcher, pre_obj=None):
-    """Initializes the Windows Registry file reader.
+    """Initializes a Windows Registry file reader object.
 
     Args:
-      searcher: The file system searcher object (instance of
+      searcher: the file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
-      pre_obj: Optional preprocess object that contains stored values from
+      pre_obj: optional preprocess object that contains stored values from
                the image.
     """
-    super(WinRegistryFileReader, self).__init__()
+    super(SearcherWinRegistryFileReader, self).__init__()
     self._file_path_expander = path_expander.WinRegistryKeyPathExpander()
     self._pre_obj = pre_obj
     self._searcher = searcher
 
-  def _FindPathSpec(self, path, filename):
-    """Searches for a path specification of the path.
+  def _FindPathSpec(self, path):
+    """Searches for a path specification.
 
     Args:
-      path: the path of the Registry file.
-      filename: the name of the Registry file.
+      path: the path of the Windows Registry file.
 
     Returns:
-      A path specification (instance of dfvfs.PathSpec) of the Registry file.
+      A path specification (instance of dfvfs.PathSpec) of
+      the Windows Registry file.
 
     Raises:
-      IOError: If the preprocessing failed.
+      IOError: If the Windows Registry file cannot be found.
     """
+    path, _, filename = path.rpartition(u'/')
+
     # TODO: determine why this first find is used add comment or remove.
     # It does not appear to help with making sure path segment separate
     # is correct.
@@ -455,18 +451,16 @@ class WinRegistryFileReader(object):
 
     return path_specs[0]
 
-  # TODO: refactor to single path.
-  def Open(self, path, filename, ascii_codepage=u'cp1252'):
-    """Opens the Registry file specificed by the path.
+  def Open(self, path, ascii_codepage=u'cp1252'):
+    """Opens the Windows Registry file specificed by the path.
 
     Args:
-      path: the path of the Registry file.
-      filename: the name of the Registry file.
+      path: the path of the Windows Registry file.
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
 
     Returns:
-      The Registry file (instance of WinRegistryFile) or None.
+      The Windows Registry file (instance of WinRegistryFile) or None.
     """
     try:
       # TODO: do not pass the full pre_obj here but just
@@ -480,7 +474,7 @@ class WinRegistryFileReader(object):
               path, exception))
       expanded_path = path
 
-    path_spec = self._FindPathSpec(expanded_path, filename)
+    path_spec = self._FindPathSpec(expanded_path)
     if not path_spec:
       return
 
@@ -492,16 +486,49 @@ class WinRegistryFileReader(object):
     if file_object is None:
       return
 
-    registry_file = regf.WinPyregfFile(ascii_codepage=ascii_codepage)
-    # TODO: replace by:
-    # registry_file = regf.WinRegistryFileREGF(ascii_codepage=ascii_codepage)
+    registry_file = regf.WinRegistryFileREGF(ascii_codepage=ascii_codepage)
     try:
       registry_file.Open(file_object)
-    except IOError:
-      logging.warning(
-          u'Unable to open Registry file: {0:s} with error: {1:s}'.format(
-              path, exception))
+    except IOError as exception:
+      logging.warning((
+          u'Unable to open Windows Registry file: {0:s} with error: '
+          u'{1:s}').format(path, exception))
       file_object.close()
+      return
+
+    return registry_file
+
+
+class SingleWinRegistryFileReader(interface.WinRegistryFileReader):
+  """A single file Windows Registry file reader."""
+
+  def __init__(self, file_object):
+    """Initializes a Windows Registry file reader object.
+
+    Args:
+      file_object: the Windows Registry file-like object.
+    """
+    super(SingleWinRegistryFileReader, self).__init__()
+    self._file_object = file_object
+
+  def Open(self, unused_path, ascii_codepage=u'cp1252'):
+    """Opens the Windows Registry file specificed by the path.
+
+    Args:
+      path: the path of the Windows Registry file.
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+
+    Returns:
+      The Windows Registry file (instance of WinRegistryFile) or None.
+    """
+    registry_file = regf.WinRegistryFileREGF(ascii_codepage=ascii_codepage)
+    try:
+      registry_file.Open(self._file_object)
+    except IOError as exception:
+      logging.warning(
+          u'Unable to open Windows Registry file with error: {0:s}'.format(
+              exception))
       return
 
     return registry_file

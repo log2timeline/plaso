@@ -394,7 +394,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
     # Expand all the paths.
-    win_registry = dfwinreg_registry.WinRegistry()
+    win_registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
     # TODO: deprecate usage of pre_obj.
     path_attributes = self.knowledge_base_object.pre_obj.__dict__
@@ -549,8 +550,9 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A dict that contains the following structure:
           key_path:
-              key: a Registry key (instance of WinRegKey)
-              subkeys: a list of Registry keys (instance of WinRegKey).
+              key: a Registry key (instance of dfwinreg.WinRegistryKey)
+              subkeys: a list of Registry keys (instance of
+                       dfwinreg.WinRegistryKey).
               data:
                 plugin: a plugin object (instance of RegistryPlugin)
                   event_objects: List of event objects extracted.
@@ -594,8 +596,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     all available plugins.
 
     Args:
-      key: the Registry key to parse (instance of WinRegKey or a string
-           containing key path).
+      key: the Registry key to parse (instance of dfwinreg.WinRegistryKey or
+           a string containing key path).
       registry_helper: the Registry helper object (instance of
                        PregRegistryHelper).
       use_plugins: optional list of plugin names to use. The default is None
@@ -793,7 +795,8 @@ class PregRegistryHelper(object):
       key_path: the Registry key path.
 
     Returns:
-      The key (instance of WinRegKey) if available or None otherwise.
+      The key (instance of dfwinreg.WinRegistryKey) if available or
+      None otherwise.
     """
     if not key_path:
       return

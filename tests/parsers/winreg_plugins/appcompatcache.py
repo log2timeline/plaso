@@ -68,7 +68,8 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     Args:
       file_entry: the file entry object (instance of dfvfs.FileEntry).
-      winreg_key: the Windows Registry key object (instance of WinRegKey).
+      winreg_key: the Windows Registry key object (instance of
+                  dfwinreg.WinRegistryKey).
 
     Returns:
       A list of event objects (instances of EventObjects).

@@ -89,7 +89,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       parser_mediator: A parser context object (instance of ParserContext).
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-      key: Optional Registry key (instance of dfwinreg.WinRegKey).
+      key: Optional Registry key (instance of dfdfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
@@ -103,7 +103,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of dfwinreg.WinRegKey).
+      key: Optional Registry key (instance of dfdfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.

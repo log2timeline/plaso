@@ -553,7 +553,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """

@@ -26,7 +26,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
     """Retrieves a specific string value from the Registry key.
 
     Args:
-      key: A Windows Registry key (instance of WinRegKey).
+      key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
       value_name: The name of the value.
 
     Returns:
@@ -48,7 +48,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
