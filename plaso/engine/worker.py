@@ -489,6 +489,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'Unhandled exception while processing path spec: {0:s}.'.format(
               path_spec.comparable))
       logging.exception(exception)
+      # TODO: Issue #314 - add a signal to the worker to indicate that
+      # the tool is run in single process mode with debug turned on and
+      # in that case start a pdb debugger here instead of just logging
+      # the exception.
 
     # Make sure frame.f_locals does not keep a reference to file_entry.
     file_entry = None

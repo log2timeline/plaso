@@ -4,9 +4,9 @@
 
 import unittest
 
-from plaso.winregistry import regf
+from plaso.dfwinreg import regf
 
-from tests.winregistry import test_lib
+from tests.dfwinreg import test_lib
 
 
 class WinPyregfFileTest(test_lib.WinRegTestCase):
@@ -35,6 +35,19 @@ class WinPyregfFileTest(test_lib.WinRegTestCase):
     self._KeyPathCompare(winreg_file, u'\\Software')
 
     winreg_file.Close()
+
+  def testOpenCloseNoRootKey(self):
+    """Test opening up a Registry file with no root key."""
+    test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
+    file_entry = self._GetTestFileEntry(test_file)
+    winreg_file = regf.WinPyregfFile()
+    winreg_file.OpenFileEntry(file_entry)
+
+    root_key = winreg_file.GetRootKey()
+    self.assertIsNone(root_key)
+
+    keys = list(winreg_file.RecurseKeys())
+    self.assertEqual(keys, [])
 
 
 if __name__ == '__main__':

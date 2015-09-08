@@ -5,7 +5,7 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.winregistry import path_expander
+from plaso.dfwinreg import path_expander as dfwinreg_path_expander
 
 
 def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
@@ -19,7 +19,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
   find_specs = []
 
   if pre_obj:
-    expander = path_expander.WinRegistryKeyPathExpander()
+    expander = dfwinreg_path_expander.WinRegistryKeyPathExpander()
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:

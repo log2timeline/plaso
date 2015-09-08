@@ -4,12 +4,13 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
+from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import default
 
+from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
-from tests.winregistry import test_lib as winreg_test_lib
 
 
 class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
@@ -23,17 +24,21 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
     values = []
-    values.append(winreg_test_lib.TestRegValue(
-        u'MRUList', u'acb'.encode(u'utf_16_le'), 1, 123))
-    values.append(winreg_test_lib.TestRegValue(
-        u'a', u'Some random text here'.encode(u'utf_16_le'), 1, 1892))
-    values.append(winreg_test_lib.TestRegValue(
-        u'b', u'c:/evil.exe'.encode(u'utf_16_le'), 3, 612))
-    values.append(winreg_test_lib.TestRegValue(
-        u'c', u'C:/looks_legit.exe'.encode(u'utf_16_le'), 1, 1001))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'MRUList', u'acb'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=123))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'a', u'Some random text here'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=1892))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'b', u'c:/evil.exe'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_BINARY, offset=612))
+    values.append(dfwinreg_test_lib.TestRegValue(
+        u'c', u'C:/looks_legit.exe'.encode(u'utf_16_le'),
+        dfwinreg_definitions.REG_SZ, offset=1001))
 
-    winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, 1456)
+    timestamp = timelib.Timestamp.CopyFromString(u'2012-08-28 09:23:49.002031')
+    winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -46,7 +51,9 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEqual(event_object.timestamp, 1346145829002031)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '

@@ -11,3 +11,4 @@ from plaso.output import rawpy
 from plaso.output import sqlite_4n6time
 from plaso.output import timesketch_out
 from plaso.output import tln
+from plaso.output import xlsx

@@ -6,7 +6,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class MountPoints2Plugin(interface.KeyPlugin):
+class MountPoints2Plugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
   NAME = u'explorer_mountpoints2'
@@ -21,15 +21,17 @@ class MountPoints2Plugin(interface.KeyPlugin):
   URLS = [u'http://support.microsoft.com/kb/932463']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Retrieves information from the MountPoints2 registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for subkey in key.GetSubkeys():
       name = subkey.name
@@ -60,7 +62,8 @@ class MountPoints2Plugin(interface.KeyPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_timestamp, key.path, text_dict,
-          offset=subkey.offset, registry_type=registry_type, urls=self.URLS)
+          offset=subkey.offset, registry_file_type=registry_file_type,
+          urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 

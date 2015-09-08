@@ -9,7 +9,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class TerminalServerClientPlugin(interface.KeyPlugin):
+class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection keys."""
 
   NAME = u'mstsc_rdp'
@@ -21,15 +21,17 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Collect Values in Servers and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for subkey in key.GetSubkeys():
       username_value = subkey.GetValue(u'UsernameHint')
@@ -45,12 +47,12 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type,
+          registry_file_type=registry_file_type,
           source_append=u': RDP Connection')
       parser_mediator.ProduceEvent(event_object)
 
 
-class TerminalServerClientMRUPlugin(interface.KeyPlugin):
+class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
   NAME = u'mstsc_rdp_mru'
@@ -62,19 +64,17 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Collect MRU Values and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-              point. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for value in key.GetValues():
       # TODO: add a check for the value naming scheme.
@@ -96,7 +96,7 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type,
+          registry_file_type=registry_file_type,
           source_append=u': RDP Connection')
       parser_mediator.ProduceEvent(event_object)
 

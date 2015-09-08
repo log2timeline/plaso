@@ -27,10 +27,10 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         test_file, self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 44)
+    self.assertEqual(len(event_objects), 66)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
-    event_object = event_objects[3]
+    event_object = event_objects[5]
 
     self.assertEqual(event_object.offset, 32)
 

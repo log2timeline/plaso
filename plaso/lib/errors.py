@@ -24,6 +24,7 @@ class ConnectionError(Error):
 class EngineAbort(Error):
   """Class that defines an engine initiated abort exception."""
 
+
 class FileSystemScannerError(Error):
   """Raised when a there is an issue scanning for a file system."""
 
@@ -34,6 +35,10 @@ class NotAText(Error):
 
 class NoFormatterFound(Error):
   """Raised when no formatter is found for a particular event."""
+
+
+class ParseError(Error):
+  """Raised when a parse error occurred."""
 
 
 class PathNotFound(Error):
@@ -48,12 +53,12 @@ class ProxyFailedToStart(Error):
   """Raised when unable to start a proxy."""
 
 
-class QueueAlreadyStarted(Error):
-  """Raised when an attempt is made to start queue that's already started."""
-
-
 class QueueAlreadyClosed(Error):
   """Raised when an attempt is made to close a queue that's already closed."""
+
+
+class QueueAlreadyStarted(Error):
+  """Raised when an attempt is made to start queue that's already started."""
 
 
 class QueueClose(Error):
@@ -115,7 +120,7 @@ class WrongPlistPlugin(Error):
 class WrongQueueType(Error):
   """Raised when an unsupported operation is attempted on a queue.
 
-   For example, attempting to Pop from a Push-only queue.
+  For example, attempting to Pop from a Push-only queue.
   """
 
 

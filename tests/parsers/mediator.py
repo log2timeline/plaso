@@ -65,6 +65,11 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     expected_display_name = u'VSS2:TSK:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
 
+    parsers_mediator.SetTextPrepend(u'C:')
+    display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
+    expected_display_name = u'VSS2:TSK:C:/syslog.gz'
+    self.assertEqual(display_name, expected_display_name)
+
     # TODO: add test with relative path.
 
   # TODO: add more tests.

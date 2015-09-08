@@ -13,13 +13,7 @@ from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
 
-# A mixin class is used here to not to have the duplicate functionality
-# to parse the MRUListEx Registry values. However multiple inheritance
-# and thus mixins are to be used sparsely in this codebase, hence we need
-# to find a better solution in not needing to distinguish between key and
-# value plugins.
-# TODO: refactor Registry key and value plugin to rid ourselves of the mixin.
-class MRUListExPluginMixin(object):
+class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 
   _MRULISTEX_STRUCT = construct.Range(
@@ -68,13 +62,14 @@ class MRUListExPluginMixin(object):
     return enumerate(mru_list)
 
   def _ParseMRUListExKey(
-      self, parser_mediator, key, registry_type=None, codepage=u'cp1252'):
+      self, parser_mediator, key, registry_file_type=None, codepage=u'cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of winreg.WinRegKey).
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
@@ -94,12 +89,12 @@ class MRUListExPluginMixin(object):
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
-        offset=key.offset, registry_type=registry_type,
-        source_append=': MRUListEx')
+        offset=key.offset, registry_file_type=registry_file_type,
+        source_append=u': MRUListEx')
     parser_mediator.ProduceEvent(event_object)
 
 
-class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
+class MRUListExStringPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a string MRUListEx."""
 
   NAME = u'mrulistex_string'
@@ -160,19 +155,21 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListExKey(
-        parser_mediator, key, registry_type=registry_type, codepage=codepage)
+        parser_mediator, key, registry_file_type=registry_file_type,
+        codepage=codepage)
 
   def Process(self, parser_mediator, key=None, codepage=u'cp1252', **kwargs):
     """Determine if we can process this Registry key or not.
@@ -193,7 +190,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
         parser_mediator, key=key, codepage=codepage)
 
 
-class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
+class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a shell item list MRUListEx."""
 
   NAME = u'mrulistex_shell_item_list'
@@ -246,32 +243,33 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     if key.name != u'OpenSavePidlMRU':
       self._ParseMRUListExKey(
-          parser_mediator, key, registry_type=registry_type, codepage=codepage)
+          parser_mediator, key, registry_file_type=registry_file_type,
+          codepage=codepage)
 
     if key.name == u'OpenSavePidlMRU':
       # For the OpenSavePidlMRU MRUListEx we also need to parse its subkeys
       # since the Registry key path does not support wildcards yet.
       for subkey in key.GetSubkeys():
         self._ParseMRUListExKey(
-            parser_mediator, subkey, registry_type=registry_type,
+            parser_mediator, subkey, registry_file_type=registry_file_type,
             codepage=codepage)
 
 
-class MRUListExStringAndShellItemPlugin(
-    interface.KeyPlugin, MRUListExPluginMixin):
+class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
   NAME = u'mrulistex_string_and_shell_item'
@@ -349,31 +347,32 @@ class MRUListExStringAndShellItemPlugin(
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListExKey(
-        parser_mediator, key, registry_type=registry_type, codepage=codepage)
+        parser_mediator, key, registry_file_type=registry_file_type,
+        codepage=codepage)
 
     if key.name == u'RecentDocs':
       # For the RecentDocs MRUListEx we also need to parse its subkeys
       # since the Registry key path does not support wildcards yet.
       for subkey in key.GetSubkeys():
         self._ParseMRUListExKey(
-            parser_mediator, subkey, registry_type=registry_type,
+            parser_mediator, subkey, registry_file_type=registry_file_type,
             codepage=codepage)
 
 
-class MRUListExStringAndShellItemListPlugin(
-    interface.KeyPlugin, MRUListExPluginMixin):
+class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
   """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
   NAME = u'mrulistex_string_and_shell_item_list'
@@ -452,19 +451,21 @@ class MRUListExStringAndShellItemListPlugin(
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListExKey(
-        parser_mediator, key, registry_type=registry_type, codepage=codepage)
+        parser_mediator, key, registry_file_type=registry_file_type,
+        codepage=codepage)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

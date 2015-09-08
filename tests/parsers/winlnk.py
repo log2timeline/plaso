@@ -35,7 +35,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEqual(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 5)
 
     # A shortcut event object.
     event_object = event_objects[0]
@@ -92,13 +92,26 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+    # A distributed link tracking event object.
+    event_object = event_objects[4]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-14 05:45:20.500012')
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_uuid = u'846ee3bb-7039-11de-9d20-001d09fa5a1c'
+    self.assertEqual(event_object.uuid, expected_uuid)
+    self.assertEqual(event_object.mac_address, u'00:1d:09:fa:5a:1c')
+
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     test_file = self._GetTestFilePath([u'NeroInfoTool.lnk'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 18)
+    self.assertEqual(len(event_objects), 20)
 
     # A shortcut event object.
     event_object = event_objects[16]

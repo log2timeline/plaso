@@ -24,7 +24,7 @@ class TestParser(interface.BaseParser):
     return
 
 
-class TestParserWithPlugins(interface.BasePluginsParser):
+class TestParserWithPlugins(interface.BaseParser):
   """Test parser with plugins."""
 
   NAME = u'test_parser_with_plugins'

@@ -77,5 +77,22 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  def testParseWithoutDate(self):
+    """Tests the Parse function with logs without a date column."""
+    test_file = self._GetTestFilePath([u'iis_without_date.log'])
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEqual(len(event_objects), 11)
+
+    event_object = event_objects[1]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-30 00:00:03')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    self.assertEqual(event_object.protocol_version, u'HTTP/1.1')
+
+
 if __name__ == '__main__':
   unittest.main()

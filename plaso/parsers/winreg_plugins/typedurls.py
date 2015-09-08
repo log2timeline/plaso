@@ -11,7 +11,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class TypedURLsPlugin(interface.KeyPlugin):
+class TypedURLsPlugin(interface.WindowsRegistryPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
   NAME = u'windows_typed_urls'
@@ -25,17 +25,17 @@ class TypedURLsPlugin(interface.KeyPlugin):
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Collect typed URLs values.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for value in key.GetValues():
       # Ignore any value not in the form: 'url[0-9]+'.
@@ -58,7 +58,7 @@ class TypedURLsPlugin(interface.KeyPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type,
+          registry_file_type=registry_file_type,
           source_append=u': Typed URLs')
       parser_mediator.ProduceEvent(event_object)
 

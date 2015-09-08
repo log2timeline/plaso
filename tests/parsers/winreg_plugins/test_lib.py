@@ -5,8 +5,8 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import single_process
-from plaso.winregistry import registry as winregistry
 
 from tests.parsers import test_lib
 
@@ -39,8 +39,8 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A Windows Registry key (instance of WinRegKey).
     """
-    registry = winregistry.WinRegistry(
-        backend=winregistry.WinRegistry.BACKEND_PYREGF)
+    registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
     winreg_file = registry.OpenFileEntry(file_entry, codepage=u'cp1252')
     return winreg_file.GetKeyByPath(key_path)
 

@@ -58,6 +58,50 @@ class PlistPlugin(plugins.BasePlugin):
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
   URLS = []
 
+  def _GetKeys(self, top_level, keys, depth=1):
+    """Helper function to return keys nested in a plist dict.
+
+    By default this function will return the values for the named keys requested
+    by a plugin in match dictionary object. The default setting is to look
+    a single layer down from the root (same as the check for plugin
+    applicability). This level is suitable for most cases.
+
+    For cases where there is variability in the name at the first level
+    (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
+    override the depth limit and use GetKeys to fetch from a deeper level.
+
+    E.g.
+    Top_Level (root):                                             # depth = 0
+    -- Key_Name_is_UUID_Generated_At_Install 1234-5678-8          # depth = 1
+    ---- Interesting_SubKey_with_value_to_Process: [Values, ...]  # depth = 2
+
+    Args:
+      top_level: Plist in dictionary form.
+      keys: A list of keys that should be returned.
+      depth: Defines how many levels deep to check for a match.
+
+    Returns:
+      A dictionary with just the keys requested or an empty dict if the plist
+      is flat, eg. top_level is a list instead of a dict object.
+    """
+    match = {}
+    if not isinstance(top_level, dict):
+      # Return an empty dict here if top_level is a list object, which happens
+      # if the plist file is flat.
+      return match
+    keys = set(keys)
+
+    if depth == 1:
+      for key in keys:
+        match[key] = top_level.get(key, None)
+    else:
+      for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
+        if parsed_key in keys:
+          match[parsed_key] = parsed_value
+          if set(match.keys()) == keys:
+            return match
+    return match
+
   @abc.abstractmethod
   def GetEntries(
       self, parser_mediator, top_level=None, match=None, **unused_kwargs):
@@ -155,11 +199,12 @@ class PlistPlugin(plugins.BasePlugin):
 
     logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
         self.NAME, plist_name))
-    match = GetKeys(top_level, self.PLIST_KEYS)
+    match = self._GetKeys(top_level, self.PLIST_KEYS)
     self.GetEntries(parser_mediator, top_level=top_level, match=match)
 
 
-def RecurseKey(recur_item, root=u'', depth=15):
+# TODO: move to lib.plist.
+def RecurseKey(recur_item, depth=15, key_path=u''):
   """Flattens nested dictionaries and lists by yielding it's values.
 
   The hierarchy of a plist file is a series of nested dictionaries and lists.
@@ -181,110 +226,44 @@ def RecurseKey(recur_item, root=u'', depth=15):
 
   Args:
     recur_item: An object to be checked for additional nested items.
-    root: The pathname of the current working key.
-    depth: A counter to ensure we stop at the maximum recursion depth.
+    depth: Optional integer indication the current recursion depth.
+           This value is used to ensure we stop at the maximum recursion depth.
+           The default is 15.
+    key_path: Optional path of the current working key. The default is
+              an emtpy string.
 
   Yields:
-    A tuple of the root, key, and value from a plist.
+    A tuple of the key path, key, and value from a plist.
   """
   if depth < 1:
-    logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
+    logging.debug(u'Recursion limit hit for key: {0:s}'.format(key_path))
     return
 
   if isinstance(recur_item, (list, tuple)):
     for recur in recur_item:
-      for key in RecurseKey(recur, root, depth):
+      for key in RecurseKey(recur, depth=depth, key_path=key_path):
         yield key
     return
 
   if not hasattr(recur_item, u'iteritems'):
     return
 
-  for key, value in recur_item.iteritems():
-    yield root, key, value
+  # TODO determine if recur_item is a plistlib._InternalDict to determine
+  # if recur_item.iteritems() should be replaced with iter(recur_item.items()).
+  # Note that testing breaks when explictly only allowing
+  # plistlib._InternalDict.
+  for subkey, value in recur_item.iteritems():
+    yield key_path, subkey, value
+
     if isinstance(value, dict):
       value = [value]
+
     if isinstance(value, list):
       for item in value:
-        if isinstance(item, dict):
-          for keyval in RecurseKey(
-              item, root=root + u'/' + key, depth=depth - 1):
-            yield keyval
+        if not isinstance(item, dict):
+          continue
 
-
-def GetKeys(top_level, keys, depth=1):
-  """Helper function to return keys nested in a plist dict.
-
-  By default this function will return the values for the named keys requested
-  by a plugin in match dictionary object. The default setting is to look
-  a single layer down from the root (same as the check for plugin
-  applicability). This level is suitable for most cases.
-
-  For cases where there is variability in the name at the first level
-  (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
-  override the depth limit and use GetKeys to fetch from a deeper level.
-
-  E.g.
-  Top_Level (root):                                             # depth = 0
-  -- Key_Name_is_UUID_Generated_At_Install 1234-5678-8          # depth = 1
-  ---- Interesting_SubKey_with_value_to_Process: [Values, ...]  # depth = 2
-
-  Args:
-    top_level: Plist in dictionary form.
-    keys: A list of keys that should be returned.
-    depth: Defines how many levels deep to check for a match.
-
-  Returns:
-    A dictionary with just the keys requested or an empty dict if the plist
-    is flat, eg. top_level is a list instead of a dict object.
-  """
-  match = {}
-  if not isinstance(top_level, dict):
-    # Return an empty dict here if top_level is a list object, which happens
-    # if the plist file is flat.
-    return match
-  keys = set(keys)
-
-  if depth == 1:
-    for key in keys:
-      match[key] = top_level.get(key, None)
-  else:
-    for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
-      if parsed_key in keys:
-        match[parsed_key] = parsed_value
-        if set(match.keys()) == keys:
-          return match
-  return match
-
-
-def GetKeysDefaultEmpty(top_level, keys, depth=1):
-  """Return keys nested in a plist dict, defaulting to an empty value.
-
-  The method GetKeys fails if the supplied key does not exist within the
-  plist object. This alternate method behaves the same way as GetKeys
-  except that instead of raising an error if the key doesn't exist it will
-  assign a default empty value ('') to the field.
-
-  Args:
-    top_level: Plist in dictionary form.
-    keys: A list of keys that should be returned.
-    depth: Defines how many levels deep to check for a match.
-
-  Returns:
-    A dictionary with just the keys requested.
-  """
-  keys = set(keys)
-  match = {}
-
-  if depth == 1:
-    for key in keys:
-      value = top_level.get(key, None)
-      if value is not None:
-        match[key] = value
-  else:
-    for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
-      if parsed_key in keys:
-        match[parsed_key] = parsed_value
-        if set(match.keys()) == keys:
-          return match
-  return match
+        subkey_path = u'{0:s}/{1:s}'.format(key_path, subkey)
+        for tuple_value in RecurseKey(
+            item, depth=depth - 1, key_path=subkey_path):
+          yield tuple_value

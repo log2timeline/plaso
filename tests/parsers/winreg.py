@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.parsers import winreg
-from plaso.winregistry import regf
 
 from tests.parsers import test_lib
 
@@ -32,41 +31,9 @@ class WinRegTest(test_lib.ParserTestCase):
 
     return parser_chains
 
-  def _OpenWinRegFile(self, filename):
-    """Opens a Windows Registry file.
-
-    Args:
-      filename: The filename of the Windows Registry file, relative to
-                the test data location.
-
-    Returns:
-      A Windows Registry file object (instance of WinRegFile).
-    """
-    file_entry = self._GetTestFileEntryFromPath([filename])
-    winreg_file = regf.WinPyregfFile()
-    winreg_file.OpenFileEntry(file_entry)
-
-    return winreg_file
-
   def _PluginNameToParserChain(self, plugin_name):
     """Generate the correct parser chain for a given plugin."""
     return u'winreg/{0:s}'.format(plugin_name)
-
-  def testGetRegistryFileType(self):
-    """Tests the _GetRegistryFileType function."""
-    winreg_file = self._OpenWinRegFile(u'NTUSER.DAT')
-
-    registry_type = self._parser._GetRegistryFileType(winreg_file)
-    self.assertEqual(registry_type, u'NTUSER')
-
-    winreg_file.Close()
-
-    winreg_file = self._OpenWinRegFile(u'SYSTEM')
-
-    registry_type = self._parser._GetRegistryFileType(winreg_file)
-    self.assertEqual(registry_type, u'SYSTEM')
-
-    winreg_file.Close()
 
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
@@ -82,6 +49,16 @@ class WinRegTest(test_lib.ParserTestCase):
     self.assertTrue(expected_chain in parser_chains)
 
     self.assertEqual(parser_chains[expected_chain], 14)
+
+  def testParseNoRootKey(self):
+    """Test the parse function on a Registry file with no root key."""
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
+    event_queue_consumer = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEqual(len(event_objects), 0)
 
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""

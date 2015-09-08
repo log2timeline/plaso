@@ -454,9 +454,10 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self.PrintHeader(u'Registry File', u'x')
     self._output_writer.Write(u'\n')
     self._output_writer.Write(
-        u'{0:>15} : {1:s}\n'.format(u'Registry File', registry_helper.path))
+        u'{0:>15} : {1:s}\n'.format(u'Registry file', registry_helper.path))
     self._output_writer.Write(
-        u'{0:>15} : {1:s}\n'.format(u'Registry Type', registry_helper.type))
+        u'{0:>15} : {1:s}\n'.format(
+            u'Registry file type', registry_helper.file_type))
     if registry_helper.collector_name:
       self._output_writer.Write(
           u'{0:>15} : {1:s}\n'.format(
@@ -611,12 +612,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     plugin_list = self._front_end.registry_plugin_list
 
     self.PrintHeader(u'Supported Plugins', u'=')
-    self.PrintHeader(u'Key Plugins')
-    for plugin_class in plugin_list.GetAllKeyPlugins():
-      self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
-
-    self.PrintHeader(u'Value Plugins')
-    for plugin_class in plugin_list.GetAllValuePlugins():
+    for plugin_class in plugin_list.GetAllPlugins():
       self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
 
     self._output_writer.Write(u'\n')
@@ -810,7 +806,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     them, one by one.
     """
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[self.registry_file])
+        registry_file_types=[self.registry_file])
 
     for registry_helper in registry_helpers:
       try:
@@ -818,7 +814,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
         self._PrintParsedRegistryFile({}, registry_helper)
         plugins_to_run = self._front_end.GetRegistryPluginsFromRegistryType(
-            registry_helper.type)
+            registry_helper.file_type)
 
         for plugin in plugins_to_run:
           key_paths = list(plugin.REG_KEYS)
@@ -828,8 +824,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
             if not key:
               continue
             parsed_data = self._front_end.ParseRegistryKey(
-                key=key, registry_helper=registry_helper,
-                use_plugins=[plugin.NAME])
+                key, registry_helper, use_plugins=[plugin.NAME])
             self.PrintParsedRegistryKey(
                 parsed_data, file_entry=registry_helper.file_entry,
                 show_hex=self._verbose_output)
@@ -846,7 +841,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     all available plugins.
     """
     registry_helpers = self._front_end.GetRegistryHelpers(
-        registry_types=[self.registry_file], plugin_names=self.plugin_names)
+        registry_file_types=[self.registry_file],
+        plugin_names=self.plugin_names)
 
     key_paths = [self._key_path]
 
@@ -870,10 +866,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       plugins.extend(self._front_end.GetRegistryPlugins(plugin_name))
     plugin_list = [plugin.NAME for plugin in plugins]
 
-    # In order to get all the Registry keys we need to expand
-    # them, but to do so we need to open up one hive so that we
-    # create the reg_cache object, which is necessary to fully
-    # expand all keys.
+    # In order to get all the Registry keys we need to expand them.
     if not registry_helpers:
       return
 
@@ -887,8 +880,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
       # Get all the appropriate keys from these plugins.
       key_paths = plugins.GetExpandedKeyPaths(
-          parser_mediator, reg_cache=registry_helper.reg_cache,
-          plugin_names=plugin_list)
+          parser_mediator, plugin_names=plugin_list)
     finally:
       registry_helper.Close()
 
@@ -1041,15 +1033,15 @@ class PregMagics(magic.Magics):
     elif line.startswith(u'scan'):
       # Line contains: "scan REGISTRY_TYPES" where REGISTRY_TYPES is a comma
       # separated list.
-      registry_type_string = line[5:]
-      if not registry_type_string:
-        registry_types = preg.PregRegistryHelper.REG_TYPES.keys()
+      registry_file_type_string = line[5:]
+      if not registry_file_type_string:
+        registry_file_types = preg.PregRegistryHelper.REG_TYPES.keys()
       else:
-        registry_types = [
-            string.strip() for string in registry_type_string.split(u',')]
+        registry_file_types = [
+            string.strip() for string in registry_file_type_string.split(u',')]
 
       registry_helpers = self.console.preg_front_end.GetRegistryHelpers(
-          registry_types=registry_types)
+          registry_file_types=registry_file_types)
 
       for registry_helper in registry_helpers:
         self.console.AddRegistryHelper(registry_helper)
@@ -1132,7 +1124,7 @@ class PregMagics(magic.Magics):
 
     current_key = current_helper.GetCurrentRegistryKey()
     parsed_data = self.console.preg_front_end.ParseRegistryKey(
-        key=current_key, registry_helper=current_helper)
+        current_key, current_helper)
 
     self.console.preg_tool.PrintParsedRegistryKey(
         parsed_data, file_entry=current_helper.file_entry, show_hex=verbose)
@@ -1181,41 +1173,37 @@ class PregMagics(magic.Magics):
       else:
         plugin_name = items[0]
 
-    helper_type = current_helper.type
+    registry_file_type = current_helper.file_type
     plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
-    plugin_found = False
-    for plugin_cls in plugins_list.GetKeyPlugins(helper_type):
-      plugin = plugin_cls(reg_cache=current_helper.reg_cache)
-      if plugin.plugin_name == plugin_name:
-        # If we found the correct plugin.
-        plugin_found = True
-        break
-
-    if not plugin_found:
+    plugin_object = plugins_list.GetPluginObjectByName(
+        registry_file_type, plugin_name)
+    if not plugin_object:
       self.output_writer.Write(
           u'No plugin named: {0:s} available for Registry type {1:s}\n'.format(
-              plugin_name, helper_type))
+              plugin_name, registry_file_type))
       return
 
-    if not hasattr(plugin, u'REG_KEYS'):
+    if not hasattr(plugin_object, u'REG_KEYS'):
       self.output_writer.Write(
           u'Plugin: {0:s} has no key information.\n'.format(line))
       return
 
     if u'-h' in line:
       self.console.preg_tool.PrintHeader(plugin_name)
-      self.console.preg_tool.PrintColumnValue(u'Description', plugin.__doc__)
+      # TODO: replace __doc__ by DESCRIPTION.
+      self.console.preg_tool.PrintColumnValue(
+          u'Description', plugin_object.__doc__)
       self.output_writer.Write(u'\n')
-      for registry_key in plugin.expanded_keys:
+      for registry_key in plugin_object.expanded_keys:
         self.console.preg_tool.PrintColumnValue(u'Registry Key', registry_key)
       return
 
-    if not plugin.expanded_keys:
-      plugin.ExpandKeys(self.console.parser_mediator)
+    if not plugin_object.expanded_keys:
+      plugin_object.ExpandKeys(self.console.parser_mediator)
 
     # Defining outside of for loop for optimization.
     get_key_by_path = current_helper.GetKeyByPath
-    for registry_key in plugin.expanded_keys:
+    for registry_key in plugin_object.expanded_keys:
       key = get_key_by_path(registry_key)
       if not key:
         self.output_writer.Write(u'Key: {0:s} not found\n'.format(registry_key))
@@ -1226,8 +1214,7 @@ class PregMagics(magic.Magics):
       # Parse the key.
       current_key = current_helper.GetCurrentRegistryKey()
       parsed_data = self.console.preg_front_end.ParseRegistryKey(
-          key=current_key, registry_helper=current_helper,
-          use_plugins=[plugin_name])
+          current_key, current_helper, use_plugins=[plugin_name])
       self.console.preg_tool.PrintParsedRegistryKey(
           parsed_data, file_entry=current_helper.file_entry)
 
@@ -1391,9 +1378,6 @@ class PregConsole(object):
     if not registry_helper:
       return False
 
-    if not getattr(registry_helper, u'reg_cache', None):
-      return False
-
     current_key = registry_helper.GetCurrentRegistryKey()
     if hasattr(current_key, u'path'):
       return True
@@ -1536,15 +1520,16 @@ class PregConsole(object):
     """Runs the interactive console."""
     source_type = self.preg_tool.source_type
     if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
-      registry_types = []
+      registry_file_types = []
     elif self.preg_tool.registry_file:
-      registry_types = [self.preg_tool.registry_file]
+      registry_file_types = [self.preg_tool.registry_file]
     else:
       # No Registry type specified use all available types instead.
-      registry_types = preg.PregRegistryHelper.REG_TYPES.keys()
+      registry_file_types = preg.PregRegistryHelper.REG_TYPES.keys()
 
     registry_helpers = self.preg_front_end.GetRegistryHelpers(
-        registry_types=registry_types, plugin_names=self.preg_tool.plugin_names)
+        registry_file_types=registry_file_types,
+        plugin_names=self.preg_tool.plugin_names)
 
     for registry_helper in registry_helpers:
       self.AddRegistryHelper(registry_helper)
@@ -1642,36 +1627,34 @@ def CommandCompleterPlugins(console, core_completer):
   Args:
     console: IPython shell object (instance of InteractiveShellEmbed).
     core_completer: IPython completer object (instance of completer.Bunch).
-  """
-  ret_list = []
 
+  Returns:
+    A list of command options.
+  """
   namespace = getattr(console, u'user_ns', {})
   magic_class = namespace.get(u'PregMagics', None)
 
   if not magic_class:
-    return ret_list
+    return []
 
   if not magic_class.console.IsLoaded():
-    return ret_list
+    return []
 
+  command_options = []
   if not u'-h' in core_completer.line:
-    ret_list.append(u'-h')
-
-  plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+    command_options.append(u'-h')
 
   registry_helper = magic_class.console.current_helper
-  helper_type = registry_helper.type
+  registry_file_type = registry_helper.file_type
 
-  for plugin_cls in plugins_list.GetKeyPlugins(helper_type):
-    plugins_list = plugin_cls(reg_cache=registry_helper.reg_cache)
-
-    plugin_name = plugins_list.plugin_name
-
-    if plugin_name == u'winreg_default':
+  plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+  # TODO: refactor this into PluginsList.
+  for plugin_cls in plugins_list.GetKeyPlugins(registry_file_type):
+    if plugin_cls.NAME == u'winreg_default':
       continue
-    ret_list.append(plugin_name)
+    command_options.append(plugin_cls.NAME)
 
-  return ret_list
+  return command_options
 
 
 # Completer commands need to be top level methods or directly callable
@@ -1681,11 +1664,14 @@ def CommandCompleterVerbose(unused_console, core_completer):
 
   Args:
     core_completer: IPython completer object (instance of completer.Bunch).
+
+  Returns:
+    A list of command options.
   """
   if u'-v' in core_completer.line:
     return []
-  else:
-    return [u'-v']
+
+  return [u'-v']
 
 
 def Main():

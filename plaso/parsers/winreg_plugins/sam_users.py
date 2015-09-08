@@ -13,7 +13,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 
 
-class UsersPlugin(interface.KeyPlugin):
+class UsersPlugin(interface.WindowsRegistryPlugin):
   """SAM Windows Registry plugin for Users Account information."""
 
   NAME = u'windows_sam_users'
@@ -38,17 +38,18 @@ class UsersPlugin(interface.KeyPlugin):
   V_VALUE_HEADER_SIZE = 0xCC
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Collect data from Users and Names and produce event objects.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-
     name_dict = {}
 
     name_key = key.GetSubkey(u'Names')
@@ -93,7 +94,7 @@ class UsersPlugin(interface.KeyPlugin):
         event_object = windows_events.WindowsRegistryEvent(
             account_create_time, key.path, text_dict,
             usage=eventdata.EventTimestamp.ACCOUNT_CREATED,
-            offset=key.offset, registry_type=registry_type,
+            offset=key.offset, registry_file_type=registry_file_type,
             source_append=u'User Account Information')
         parser_mediator.ProduceEvent(event_object)
 
@@ -102,7 +103,7 @@ class UsersPlugin(interface.KeyPlugin):
             last_login_time, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_LOGIN_TIME,
             offset=key.offset,
-            registry_type=registry_type,
+            registry_file_type=registry_file_type,
             source_append=u'User Account Information')
         parser_mediator.ProduceEvent(event_object)
 
@@ -110,7 +111,7 @@ class UsersPlugin(interface.KeyPlugin):
         event_object = windows_events.WindowsRegistryEvent(
             password_reset_time, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_PASSWORD_RESET,
-            offset=key.offset, registry_type=registry_type,
+            offset=key.offset, registry_file_type=registry_file_type,
             source_append=u'User Account Information')
         parser_mediator.ProduceEvent(event_object)
 
@@ -125,7 +126,6 @@ class UsersPlugin(interface.KeyPlugin):
       fullname: Fullname data parsed with fullname start and length values.
       comments: Comments data parsed with comments start and length values.
     """
-
     v_value = key.GetValue(u'V')
     if not v_value:
       logging.error(u'Unable to locate V Value in key.')

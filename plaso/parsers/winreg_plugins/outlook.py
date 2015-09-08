@@ -9,7 +9,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class OutlookSearchMRUPlugin(interface.KeyPlugin):
+class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin parsing Outlook Search MRU keys."""
 
   NAME = u'microsoft_outlook_mru'
@@ -34,17 +34,17 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
   REG_TYPE = u'NTUSER'
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Collect the values under Outlook and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     value_index = 0
     for value in key.GetValues():
@@ -68,7 +68,7 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type,
+          registry_file_type=registry_file_type,
           source_append=u': PST Paths')
       parser_mediator.ProduceEvent(event_object)
 

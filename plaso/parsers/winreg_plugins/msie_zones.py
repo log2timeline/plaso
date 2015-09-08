@@ -9,7 +9,7 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Elizabeth Schweinsberg (beth@bethlogic.net)'
 
 
-class MsieZoneSettingsPlugin(interface.KeyPlugin):
+class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MSIE Zones settings."""
 
   NAME = u'msie_zone'
@@ -144,8 +144,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
   }
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -158,7 +158,9 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
                   The default is None.
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
 
@@ -186,7 +188,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
     # Generate at least one event object for the key.
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-        registry_type=registry_type, urls=self.URLS)
+        registry_file_type=registry_file_type, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
     if key.number_of_subkeys == 0:
@@ -244,7 +246,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           zone_key.last_written_timestamp, path, text_dict,
-          offset=zone_key.offset, registry_type=registry_type,
+          offset=zone_key.offset, registry_file_type=registry_file_type,
           urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 

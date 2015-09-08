@@ -7,7 +7,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class DefaultPlugin(interface.KeyPlugin):
+class DefaultPlugin(interface.WindowsRegistryPlugin):
   """Default plugin that extracts minimum information from every registry key.
 
   The default plugin will parse every registry key that is passed to it and
@@ -22,21 +22,18 @@ class DefaultPlugin(interface.KeyPlugin):
   REG_TYPE = u'any'
   REG_KEYS = []
 
-  # This is a special case, plugins normally never overwrite the priority.
-  # However the default plugin should only run when all others plugins have
-  # tried and failed.
-  WEIGHT = 3
-
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Returns an event object based on a Registry key name and values.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
 
@@ -74,26 +71,28 @@ class DefaultPlugin(interface.KeyPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
-        offset=key.offset, registry_type=registry_type)
+        offset=key.offset, registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)
 
-  # Even though the DefaultPlugin is derived from KeyPlugin it needs to
-  # overwrite the Process function to make sure it is called when no other
-  # plugin is available.
+  # Even though the DefaultPlugin is derived from WindowsRegistryPlugin
+  # it needs to overwrite the Process function to make sure it is called
+  # when no other plugin is available.
 
   def Process(
-      self, parser_mediator, key=None, registry_type=None, **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None, **kwargs):
     """Process the key and return a generator to extract event objects.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     self.GetEntries(
-        parser_mediator, key=key, registry_type=registry_type, **kwargs)
+        parser_mediator, key=key, registry_file_type=registry_file_type,
+        **kwargs)
 
 
 winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

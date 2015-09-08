@@ -9,7 +9,7 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class WinVerPlugin(interface.KeyPlugin):
+class WinVerPlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows version."""
 
   NAME = u'windows_version'
@@ -42,17 +42,17 @@ class WinVerPlugin(interface.KeyPlugin):
     return value.data
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **kwargs):
     """Gather minimal information about system install and return an event.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
     text_dict[u'Owner'] = self.GetValueString(key, u'RegisteredOwner')
@@ -71,7 +71,7 @@ class WinVerPlugin(interface.KeyPlugin):
     event_object = windows_events.WindowsRegistryEvent(
         timelib.Timestamp.FromPosixTime(install), key.path, text_dict,
         usage=u'OS Install Time', offset=key.offset,
-        registry_type=registry_type, urls=self.URLS)
+        registry_file_type=registry_file_type, urls=self.URLS)
 
     event_object.prodname = text_dict[u'Product name']
     event_object.source_long = u'SOFTWARE WinVersion key'

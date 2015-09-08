@@ -31,7 +31,7 @@ class TaskCacheEvent(time_events.FiletimeEvent):
     self.task_identifier = task_identifier
 
 
-class TaskCachePlugin(interface.KeyPlugin):
+class TaskCachePlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses a Task Cache key."""
 
   NAME = u'windows_task_cache'
@@ -72,15 +72,17 @@ class TaskCachePlugin(interface.KeyPlugin):
         yield value_key, id_value
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_type=None, codepage=u'cp1252',
-      **unused_kwargs):
+      self, parser_mediator, key=None, registry_file_type=None,
+      codepage=u'cp1252', **unused_kwargs):
     """Parses a Task Cache Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      registry_type: Optional Registry type string. The default is None.
+      registry_file_type: Optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE. The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     tasks_key = key.GetSubkey(u'Tasks')
     tree_key = key.GetSubkey(u'Tree')
@@ -120,7 +122,7 @@ class TaskCachePlugin(interface.KeyPlugin):
           sub_key.name)
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type)
+          registry_file_type=registry_file_type)
       parser_mediator.ProduceEvent(event_object)
 
       if dynamic_info.last_registered_time:
