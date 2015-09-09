@@ -377,6 +377,28 @@ class WinRegistry(object):
     return self._registry_file_reader.Open(
         path, ascii_codepage=self._ascii_codepage)
 
+  # TODO: deprecate usage of this method.
+  def OpenFileEntry(self, file_entry):
+    """Opens a Windows Registry file entry.
+
+    Args:
+      file_entry: the file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A corresponding Windows Registry file object (instance of
+      WinRegistryFile) or None if not available.
+    """
+    registry_file = regf.REGFWinRegistryFile()
+    file_object = file_entry.GetFileObject()
+
+    try:
+      registry_file.Open(file_object)
+    except IOError:
+      file_object.close()
+      registry_file = None
+
+    return registry_file
+
 
 class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
   """A file system searcher-based Windows Registry file reader."""

@@ -4,7 +4,6 @@ import construct
 
 from plaso.events import windows_events
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -22,6 +21,8 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
   REG_TYPE = u'SYSTEM'
   FILETIME_STRUCT = construct.ULInt64(u'filetime_timestamp')
 
+  _SOURCE_APPEND = u'Shutdown Entry'
+
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
       codepage=u'cp1252', **unused_kwargs):
@@ -35,11 +36,10 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    shutdown_value = key.GetValue(u'ShutdownTime')
+    shutdown_value = key.GetValueByName(u'ShutdownTime')
     if not shutdown_value:
       return
-    text_dict = {}
-    text_dict[u'Description'] = shutdown_value.name
+
     try:
       filetime = self.FILETIME_STRUCT.parse(shutdown_value.data)
     except construct.FieldError as exception:
@@ -47,13 +47,14 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
           u'Unable to extract shutdown timestamp with error: {0:s}'.format(
               exception))
       return
-    timestamp = timelib.Timestamp.FromFiletime(filetime)
+
+    text_dict = {u'Description': shutdown_value.name}
 
     event_object = windows_events.WindowsRegistryEvent(
-        timestamp, key.path, text_dict,
-        usage=eventdata.EventTimestamp.LAST_SHUTDOWN, offset=key.offset,
+        filetime, key.path, text_dict, offset=key.offset,
+        usage=eventdata.EventTimestamp.LAST_SHUTDOWN,
         registry_file_type=registry_file_type,
-        source_append=u'Shutdown Entry')
+        source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 

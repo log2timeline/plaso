@@ -63,8 +63,8 @@ class USBPlugin(interface.WindowsRegistryPlugin):
 
         # Last USB connection per USB device recorded in the Registry.
         event_object = windows_events.WindowsRegistryEvent(
-            devicekey.last_written_timestamp, key.path, text_dict,
-            usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
+            devicekey.last_written_time, key.path, text_dict, offset=key.offset,
+            usage=eventdata.EventTimestamp.LAST_CONNECTED,
             registry_file_type=registry_file_type,
             source_append=u': USB Entries')
         parser_mediator.ProduceEvent(event_object)

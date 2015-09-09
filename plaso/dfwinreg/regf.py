@@ -4,9 +4,9 @@
 import pyregf
 
 from plaso import dependencies
+from plaso.dfwinreg import definitions
+from plaso.dfwinreg import errors
 from plaso.dfwinreg import interface
-from plaso.lib import errors
-from plaso.lib import timelib
 
 
 dependencies.CheckModuleVersion(u'pyregf')
@@ -26,10 +26,9 @@ class REGFWinRegistryKey(interface.WinRegistryKey):
     self._pyregf_key = pyregf_key
 
   @property
-  def last_written_timestamp(self):
-    """The last written time of the key represented as a timestamp."""
-    return timelib.Timestamp.FromFiletime(
-        self._pyregf_key.get_last_written_time_as_integer())
+  def last_written_time(self):
+    """The last written time of the key (contains a FILETIME)."""
+    return self._pyregf_key.get_last_written_time_as_integer()
 
   @property
   def name(self):
@@ -79,27 +78,6 @@ class REGFWinRegistryKey(interface.WinRegistryKey):
       key_path = self.JoinKeyPath([self._key_path, pyregf_key.name])
       yield REGFWinRegistryKey(pyregf_key, key_path=key_path)
 
-  # TODO: in the process of being deprecated.
-  def GetValue(self, name):
-    """Retrieves a value by name.
-
-    Args:
-      name: Name of the value or an empty string for the default value.
-
-    Returns:
-      A Windows Registry value object (instance of WinRegistryValue) if
-      a corresponding value was found or None if not.
-    """
-    # Value names are not unique and pyregf provides first match for
-    # the value. If this becomes problematic this method needs to
-    # be changed into a generator, iterating through all returned value
-    # for a given name.
-    pyregf_value = self._pyregf_key.get_value_by_name(name)
-    if not pyregf_value:
-      return
-
-    return REGFWinRegistryValue(pyregf_value)
-
   def GetValueByName(self, name):
     """Retrieves a value by name.
 
@@ -144,6 +122,49 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
     self._type_str = u''
 
   @property
+  def data(self):
+    """The value data as a native Python object.
+
+    Raises:
+      WinRegistryValueError: if the value data cannot be read.
+    """
+    if self._pyregf_value.type in self._STRING_VALUE_TYPES:
+      try:
+        return self._pyregf_value.get_data_as_string()
+      except IOError as exception:
+        raise errors.WinRegistryValueError(
+            u'Unable to read data from value: {0:s} with error: {1:s}'.format(
+                self._pyregf_value.name, exception))
+
+    elif self._pyregf_value.type in self._INTEGER_VALUE_TYPES:
+      try:
+        return self._pyregf_value.get_data_as_integer()
+      except (IOError, OverflowError):
+        raise errors.WinRegistryValueError(
+            u'Unable to read data from value: {0:s} with error: {1:s}'.format(
+                self._pyregf_value.name, exception))
+
+    # TODO: Add support for REG_MULTI_SZ to pyregf.
+    elif self._pyregf_value.type == definitions.REG_MULTI_SZ:
+      if self._pyregf_value.data is None:
+        return []
+
+      try:
+        utf16_string = unicode(self._pyregf_value.data.decode(u'utf-16-le'))
+        return filter(None, utf16_string.split(b'\x00'))
+      except (IOError, UnicodeError) as exception:
+        raise errors.WinRegistryValueError(
+            u'Unable to read data from value: {0:s} with error: {1:s}'.format(
+                self._pyregf_value.name, exception))
+
+    return self._pyregf_value.data
+
+  @property
+  def data_type(self):
+    """Numeric value that contains the data type."""
+    return self._pyregf_value.type
+
+  @property
   def name(self):
     """The name of the value."""
     return self._pyregf_value.name
@@ -154,52 +175,18 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
     return self._pyregf_value.offset
 
   @property
-  def data_type(self):
-    """Numeric value that contains the data type."""
-    return self._pyregf_value.type
-
-  @property
   def raw_data(self):
-    """The value data as a byte string."""
+    """The value data as a byte string.
+
+    Raises:
+      WinRegistryValueError: if the value data cannot be read.
+    """
     try:
       return self._pyregf_value.data
-    except IOError:
+    except IOError as exception:
       raise errors.WinRegistryValueError(
-          u'Unable to read data from value: {0:s}'.format(
-              self._pyregf_value.name))
-
-  @property
-  def data(self):
-    """The value data as a native Python object."""
-    if self._pyregf_value.type in [
-        self.REG_SZ, self.REG_EXPAND_SZ, self.REG_LINK]:
-      try:
-        return self._pyregf_value.data_as_string
-      except IOError:
-        pass
-
-    elif self._pyregf_value.type in [
-        self.REG_DWORD, self.REG_DWORD_BIG_ENDIAN, self.REG_QWORD]:
-      try:
-        return self._pyregf_value.data_as_integer
-      except (IOError, OverflowError):
-        # TODO: Rethink this approach. The value is not -1, but we cannot
-        # return the raw data, since the calling plugin expects an integer
-        # here.
-        return -1
-
-    # TODO: Add support for REG_MULTI_SZ to pyregf.
-    elif self._pyregf_value.type == self.REG_MULTI_SZ:
-      if self._pyregf_value.data is None:
-        return u''
-
-      try:
-        utf16_string = unicode(self._pyregf_value.data.decode(u'utf-16-le'))
-        return filter(None, utf16_string.split(b'\x00'))
-      except UnicodeError:
-        pass
-
-    return self._pyregf_value.data
+          u'Unable to read data from value: {0:s} with error: {1:s}'.format(
+              self._pyregf_value.name, exception))
 
 
 class REGFWinRegistryFile(interface.WinRegistryFile):

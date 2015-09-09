@@ -818,19 +818,22 @@ class PregRegistryHelper(object):
     return key
 
   def Open(self):
-    """Open the Registry file."""
+    """Opens a Windows Registry file.
+
+    Raises:
+      IOError: if the Windows Registry file cannot be opened.
+    """
     if self._registry_file:
       raise IOError(u'Registry file already open.')
 
-    try:
-      self._registry_file = self._win_registry.OpenFileEntry(
-          self.file_entry, codepage=self._codepage)
-    except IOError:
+    self._registry_file = self._win_registry.OpenFileEntry(self.file_entry)
+    if not self._registry_file:
       logging.error(
           u'Unable to open Registry file: {0:s} [{1:s}]'.format(
               self.path, self._collector_name))
+
       self.Close()
-      raise
+      raise IOError(u'Unable to open Registry file.')
 
     self._registry_file_type = self._win_registry.GetRegistryFileType(
         self._registry_file)

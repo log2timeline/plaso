@@ -39,10 +39,29 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    registry = dfwinreg_registry.WinRegistry(
+    # TODO: refactor.
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
-    winreg_file = registry.OpenFileEntry(file_entry, codepage=u'cp1252')
+    winreg_file = registry.OpenFileEntry(file_entry)
     return winreg_file.GetKeyByPath(key_path)
+
+  def _OpenREGFRegistryFile(self, filename):
+    """Opens a REGF Windows Registry file.
+
+    Args:
+      filename: the name of the file relative to the test file path.
+
+    Returns:
+      The Windows Registry file object (instance of REGFWinRegistryFileTest) or
+      None.
+    """
+    test_file = self._GetTestFilePath([filename])
+    file_entry = self._GetTestFileEntry(test_file)
+    file_object = file_entry.GetFileObject()
+
+    registry_file = regf.REGFWinRegistryFile()
+    registry_file.Open(file_object)
+
+    return registry_file
 
   def _ParseKeyWithPlugin(
       self, plugin_object, winreg_key, knowledge_base_values=None,

@@ -34,7 +34,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     for subkey in key.GetSubkeys():
-      username_value = subkey.GetValue(u'UsernameHint')
+      username_value = subkey.GetValueByName(u'UsernameHint')
 
       if (username_value and username_value.data and
           username_value.DataIsString()):
@@ -46,7 +46,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
       text_dict[u'UsernameHint'] = username
 
       event_object = windows_events.WindowsRegistryEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          key.last_written_time, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type,
           source_append=u': RDP Connection')
       parser_mediator.ProduceEvent(event_object)
@@ -89,13 +89,17 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
       text_dict = {}
       text_dict[value.name] = value.data
 
+      # TODO: why this behavior? Only the first Item is stored with its
+      # timestamp. Shouldn't this be: Store all the values with their
+      # timestamp and store the entire MRU as one event with the
+      # registry key last written time?
       if value.name == u'MRU0':
-        timestamp = key.last_written_timestamp
+        filetime = key.last_written_time
       else:
-        timestamp = 0
+        filetime = 0
 
       event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
+          filetime, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type,
           source_append=u': RDP Connection')
       parser_mediator.ProduceEvent(event_object)

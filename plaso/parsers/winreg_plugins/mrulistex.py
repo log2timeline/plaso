@@ -19,6 +19,8 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
   _MRULISTEX_STRUCT = construct.Range(
       1, 500, construct.ULInt32(u'entry_number'))
 
+  _SOURCE_APPEND = u': MRUListEx'
+
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, **kwargs):
@@ -46,7 +48,7 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
       A MRUListEx value generator, which returns the MRU index number
       and entry value.
     """
-    mru_list_value = key.GetValue(u'MRUListEx')
+    mru_list_value = key.GetValueByName(u'MRUListEx')
 
     # The key exists but does not contain a value named "MRUListEx".
     if not mru_list_value:
@@ -88,9 +90,9 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
       text_dict[value_text] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict,
-        offset=key.offset, registry_file_type=registry_file_type,
-        source_append=u': MRUListEx')
+        key.last_written_time, key.path, text_dict, offset=key.offset,
+        registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 
@@ -128,7 +130,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:d}'.format(entry_number))
+    value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
@@ -221,7 +223,7 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:d}'.format(entry_number))
+    value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
@@ -303,7 +305,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:d}'.format(entry_number))
+    value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
@@ -407,7 +409,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:d}'.format(entry_number))
+    value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(

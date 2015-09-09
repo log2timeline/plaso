@@ -557,7 +557,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
            The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    value = key.GetValue(u'AppCompatCache')
+    value = key.GetValueByName(u'AppCompatCache')
     if not value:
       return
 

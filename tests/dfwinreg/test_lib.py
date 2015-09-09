@@ -9,10 +9,11 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.dfwinreg import interface
+from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import interface as dfwinreg_interface
 
 
-class TestRegKey(interface.WinRegistryKey):
+class TestRegKey(dfwinreg_interface.WinRegistryKey):
   """Implementation of the Registry key interface for testing."""
 
   def __init__(
@@ -50,8 +51,8 @@ class TestRegKey(interface.WinRegistryKey):
     return self._name
 
   @property
-  def last_written_timestamp(self):
-    """The last written time of the key represented as a timestamp."""
+  def last_written_time(self):
+    """The last written time of the key (contains a FILETIME)."""
     return self._last_written_timestamp
 
   def number_of_subkeys(self):
@@ -101,7 +102,7 @@ class TestRegKey(interface.WinRegistryKey):
     return self._values
 
 
-class TestRegValue(interface.WinRegistryValue):
+class TestRegValue(dfwinreg_interface.WinRegistryValue):
   """Implementation of the Registry value interface for testing."""
 
   _INT32_BIG_ENDIAN = construct.SBInt32('value')
@@ -123,22 +124,25 @@ class TestRegValue(interface.WinRegistryValue):
     if not self._data:
       return None
 
-    if self._data_type in [self.REG_SZ, self.REG_EXPAND_SZ, self.REG_LINK]:
+    if self._data_type in self._STRING_VALUE_TYPES:
       try:
         return unicode(self._data.decode('utf-16-le'))
       except UnicodeError:
         pass
 
-    elif self._data_type == self.REG_DWORD and len(self._data) == 4:
+    elif (self._data_type == dfwinreg_definitions.REG_DWORD and
+          len(self._data) == 4):
       return self._INT32_LITTLE_ENDIAN.parse(self._data)
 
-    elif self._data_type == self.REG_DWORD_BIG_ENDIAN and len(self._data) == 4:
+    elif (self._data_type == dfwinreg_definitions.REG_DWORD_BIG_ENDIAN and
+          len(self._data) == 4):
       return self._INT32_BIG_ENDIAN.parse(self._data)
 
-    elif self._data_type == self.REG_QWORD and len(self._data) == 8:
+    elif (self._data_type == dfwinreg_definitions.REG_QWORD and
+          len(self._data) == 8):
       return self._INT64_LITTLE_ENDIAN.parse(self._data)
 
-    elif self._data_type == self.REG_MULTI_SZ:
+    elif self._data_type == dfwinreg_definitions.REG_MULTI_SZ:
       try:
         utf16_string = unicode(self._data.decode('utf-16-le'))
         return filter(None, utf16_string.split('\x00'))
@@ -169,7 +173,7 @@ class TestRegValue(interface.WinRegistryValue):
 
 
 class WinRegTestCase(unittest.TestCase):
-  """The unit test case for winreg."""
+  """The unit test case for Windows Registry related object."""
 
   _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
 

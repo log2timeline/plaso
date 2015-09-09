@@ -23,6 +23,8 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
   URLS = [u'http://www.forensicswiki.org/wiki/USB_History_Viewing']
 
+  _SOURCE_APPEND = u': USBStor Entries'
+
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
       codepage=u'cp1252', **kwargs):
@@ -42,10 +44,10 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
       # Time last USB device of this class was first inserted.
       event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_timestamp, key.path, text_dict,
-          usage=eventdata.EventTimestamp.FIRST_CONNECTED, offset=key.offset,
+          subkey.last_written_time, key.path, text_dict, offset=key.offset,
+          usage=eventdata.EventTimestamp.FIRST_CONNECTED,
           registry_file_type=registry_file_type,
-          source_append=u': USBStor Entries')
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
       name_values = subkey.name.split(u'&')
@@ -68,14 +70,14 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       for devicekey in subkey.GetSubkeys():
         text_dict[u'serial'] = devicekey.name
 
-        friendly_name_value = devicekey.GetValue(u'FriendlyName')
+        friendly_name_value = devicekey.GetValueByName(u'FriendlyName')
         if friendly_name_value:
           text_dict[u'friendly_name'] = friendly_name_value.data
         else:
           text_dict.pop(u'friendly_name', None)
 
         # ParentIdPrefix applies to Windows XP Only.
-        parent_id_prefix_value = devicekey.GetValue(u'ParentIdPrefix')
+        parent_id_prefix_value = devicekey.GetValueByName(u'ParentIdPrefix')
         if parent_id_prefix_value:
           text_dict[u'parent_id_prefix'] = parent_id_prefix_value.data
         else:
@@ -84,27 +86,27 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
         event_object = windows_events.WindowsRegistryEvent(
-            devicekey.last_written_timestamp, key.path, text_dict,
-            usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
+            devicekey.last_written_time, key.path, text_dict, offset=key.offset,
+            usage=eventdata.EventTimestamp.LAST_CONNECTED,
             registry_file_type=registry_file_type,
-            source_append=u': USBStor Entries')
+            source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
         # Build list of first Insertion times.
         first_insert = []
-        device_parameter_key = devicekey.GetSubkey(u'Device Parameters')
+        device_parameter_key = devicekey.GetSubkeyByName(u'Device Parameters')
         if device_parameter_key:
-          first_insert.append(device_parameter_key.last_written_timestamp)
+          first_insert.append(device_parameter_key.last_written_time)
 
-        log_configuration_key = devicekey.GetSubkey(u'LogConf')
+        log_configuration_key = devicekey.GetSubkeyByName(u'LogConf')
         if (log_configuration_key and
-            log_configuration_key.last_written_timestamp not in first_insert):
-          first_insert.append(log_configuration_key.last_written_timestamp)
+            log_configuration_key.last_written_time not in first_insert):
+          first_insert.append(log_configuration_key.last_written_time)
 
-        properties_key = devicekey.GetSubkey(u'Properties')
+        properties_key = devicekey.GetSubkeyByName(u'Properties')
         if (properties_key and
-            properties_key.last_written_timestamp not in first_insert):
-          first_insert.append(properties_key.last_written_timestamp)
+            properties_key.last_written_time not in first_insert):
+          first_insert.append(properties_key.last_written_time)
 
         # Add first Insertion times.
         for timestamp in first_insert:
@@ -112,7 +114,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
               timestamp, key.path, text_dict,
               usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
               registry_file_type=registry_file_type,
-              source_append=u': USBStor Entries')
+              source_append=self._SOURCE_APPEND)
           parser_mediator.ProduceEvent(event_object)
 
 

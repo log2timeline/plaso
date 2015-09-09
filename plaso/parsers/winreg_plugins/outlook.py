@@ -33,6 +33,8 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
 
   REG_TYPE = u'NTUSER'
 
+  _SOURCE_APPEND = u': PST Paths'
+
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
       codepage=u'cp1252', **unused_kwargs):
@@ -61,18 +63,24 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       text_dict = {}
       text_dict[value.name] = u'0x{0:08x}'.format(value.data)
 
+      # TODO: why this behavior? Only the first Item is stored with its
+      # timestamp. Shouldn't this be: Store all the values with their
+      # timestamp and store the entire MRU as one event with the
+      # registry key last written time?
       if value_index == 0:
-        timestamp = key.last_written_timestamp
+        filetime = key.last_written_time
       else:
-        timestamp = 0
+        filetime = 0
 
       event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
+          filetime, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type,
-          source_append=u': PST Paths')
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
       value_index += 1
+
+    # TODO: generate a single event for the whole MRU.
 
 
 winreg.WinRegistryParser.RegisterPlugin(OutlookSearchMRUPlugin)

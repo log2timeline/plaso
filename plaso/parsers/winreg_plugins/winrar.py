@@ -25,6 +25,7 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
       u'\\Software\\WinRAR\\ArcHistory']
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
+  _SOURCE_APPEND = u': WinRAR History'
 
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
@@ -48,20 +49,23 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
+      # TODO: why this behavior? Only the first Item is stored with its
+      # timestamp. Shouldn't this be: Store all the values with their
+      # timestamp and store the entire MRU as one event with the
+      # registry key last written time?
       if value.name == u'0':
-        timestamp = key.last_written_timestamp
+        timestamp = key.last_written_time
       else:
         timestamp = 0
 
-      text_dict = {}
-      text_dict[value.name] = value.data
+      text_dict = {value.name: value.data}
 
       # TODO: shouldn't this behavior be, put all the values
       # into a single event object with the last written time of the key?
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type,
-          source_append=u': WinRAR History')
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
 

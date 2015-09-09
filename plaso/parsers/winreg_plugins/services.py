@@ -25,9 +25,9 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     Args:
       key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    parameters_key = key.GetSubkey(u'Parameters')
+    parameters_key = key.GetSubkeyByName(u'Parameters')
     if parameters_key:
-      service_dll = parameters_key.GetValue(u'ServiceDll')
+      service_dll = parameters_key.GetValueByName(u'ServiceDll')
       if service_dll:
         return service_dll.data
     else:
@@ -48,8 +48,8 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     """
     text_dict = {}
 
-    service_type_value = key.GetValue(u'Type')
-    service_start_value = key.GetValue(u'Start')
+    service_type_value = key.GetValueByName(u'Type')
+    service_start_value = key.GetValueByName(u'Start')
 
     # Grab the ServiceDLL value if it exists.
     if service_type_value and service_start_value:
@@ -70,7 +70,7 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
       # Create a specific service event, so that we can recognize and expand
       # certain values when we're outputting the event.
       event_object = windows_events.WindowsRegistryServiceEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          key.last_written_time, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type, urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 

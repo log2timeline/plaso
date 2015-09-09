@@ -23,6 +23,8 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
   URLS = [(u'http://cheeky4n6monkey.blogspot.com/2012/02/writing-ccleaner'
            u'-regripper-plugin-part_05.html')]
 
+  _SOURCE_APPEND = u': CCleaner Registry key'
+
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
       codepage=u'cp1252', **unused_kwargs):
@@ -45,6 +47,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
       if value.name == u'UpdateKey':
         try:
+          # TODO: determine and document the date time format of this string.
           timestamp = timelib.Timestamp.FromTimeString(
               value.data, timezone=parser_mediator.timezone)
         except errors.TimestampError:
@@ -52,22 +55,24 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
               u'Unable to parse time string: {0:s}'.format(value.data))
           continue
 
+        # TODO: create a separate event for this.
         event_object = windows_events.WindowsRegistryEvent(
             timestamp, key.path, text_dict, offset=key.offset,
-            registry_file_type=registry_file_type)
+            registry_file_type=registry_file_type,
+            source_append=self._SOURCE_APPEND)
 
       elif value.name == u'0':
         event_object = windows_events.WindowsRegistryEvent(
-            key.timestamp, key.path, text_dict, offset=key.offset,
-            registry_file_type=registry_file_type)
+            key.last_written_time, key.path, text_dict, offset=key.offset,
+            registry_file_type=registry_file_type,
+            source_append=self._SOURCE_APPEND)
 
       else:
         # TODO: change this event not to set a timestamp of 0.
         event_object = windows_events.WindowsRegistryEvent(
             0, key.path, text_dict, offset=key.offset,
-            registry_file_type=registry_file_type)
-
-      event_object.source_append = u': CCleaner Registry key'
+            registry_file_type=registry_file_type,
+            source_append=self._SOURCE_APPEND)
 
       parser_mediator.ProduceEvent(event_object)
 

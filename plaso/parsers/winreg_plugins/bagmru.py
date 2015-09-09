@@ -53,7 +53,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     Returns:
       The path segment of the shell item.
     """
-    value = key.GetValue(u'{0:d}'.format(entry_number))
+    value = key.GetValueByName(u'{0:d}'.format(entry_number))
     path_segment = u'N/A'
     value_string = u''
     if value is None:
@@ -98,7 +98,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       A tuple of the MRUListEx index and entry number, where 0 is the first
       index value.
     """
-    mru_list_value = key.GetValue(u'MRUListEx')
+    mru_list_value = key.GetValueByName(u'MRUListEx')
     if mru_list_value:
       mrulistex_data = mru_list_value.data
       data_size = len(mrulistex_data)
@@ -163,13 +163,13 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       entry_numbers[entry_number] = path_segment
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict,
+        key.last_written_time, key.path, text_dict,
         offset=key.offset, registry_file_type=registry_file_type,
         urls=self.URLS, source_append=u': BagMRU')
     parser_mediator.ProduceEvent(event_object)
 
     for entry_number, path_segment in entry_numbers.iteritems():
-      sub_key = key.GetSubkey(u'{0:d}'.format(entry_number))
+      sub_key = key.GetSubkeyByName(u'{0:d}'.format(entry_number))
       if not sub_key:
         parser_mediator.ProduceParseError(
             u'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(

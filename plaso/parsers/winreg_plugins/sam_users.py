@@ -5,7 +5,6 @@ import logging
 from plaso.events import windows_events
 from plaso.lib import binary
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -50,28 +49,30 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    name_dict = {}
-
-    name_key = key.GetSubkey(u'Names')
+    name_key = key.GetSubkeyByName(u'Names')
     if not name_key:
       parser_mediator.ProduceParseError(u'Unable to locate Names key.')
       return
-    values = [(v.name, v.last_written_timestamp) for v in name_key.GetSubkeys()]
+    values = [(v.name, v.last_written_time) for v in name_key.GetSubkeys()]
+
     name_dict = dict(values)
 
     for subkey in key.GetSubkeys():
-      text_dict = {}
       if subkey.name == u'Names':
         continue
-      text_dict[u'user_guid'] = subkey.name
+
       parsed_v_value = self._ParseVValue(subkey)
       if not parsed_v_value:
         parser_mediator.ProduceParseError(
             u'Unable to parse SAM key: {0:s} V value.'.format(subkey))
         return
+
       username = parsed_v_value[0]
       full_name = parsed_v_value[1]
       comments = parsed_v_value[2]
+
+      text_dict = {u'user_guid': subkey.name}
+
       if username:
         text_dict[u'username'] = username
       if full_name:
@@ -79,14 +80,11 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
       if comments:
         text_dict[u'comments'] = comments
       if name_dict:
-        account_create_time = name_dict.get(text_dict.get(u'username'), 0)
+        account_create_time = name_dict.get(username, 0)
       else:
         account_create_time = 0
 
       f_data = self._ParseFValue(subkey)
-      last_login_time = timelib.Timestamp.FromFiletime(f_data.last_login)
-      password_reset_time = timelib.Timestamp.FromFiletime(
-          f_data.password_reset)
       text_dict[u'account_rid'] = f_data.rid
       text_dict[u'login_count'] = f_data.login_count
 
@@ -98,18 +96,18 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
             source_append=u'User Account Information')
         parser_mediator.ProduceEvent(event_object)
 
-      if last_login_time > 0:
+      if f_data.last_login > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            last_login_time, key.path, text_dict,
+            f_data.last_login, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_LOGIN_TIME,
             offset=key.offset,
             registry_file_type=registry_file_type,
             source_append=u'User Account Information')
         parser_mediator.ProduceEvent(event_object)
 
-      if password_reset_time > 0:
+      if f_data.password_reset > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            password_reset_time, key.path, text_dict,
+            f_data.password_reset, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_PASSWORD_RESET,
             offset=key.offset, registry_file_type=registry_file_type,
             source_append=u'User Account Information')
@@ -126,7 +124,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
       fullname: Fullname data parsed with fullname start and length values.
       comments: Comments data parsed with comments start and length values.
     """
-    v_value = key.GetValue(u'V')
+    v_value = key.GetValueByName(u'V')
     if not v_value:
       logging.error(u'Unable to locate V Value in key.')
       return
@@ -160,7 +158,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
       f_data: Construct parsed F value containing rid, login count,
               and timestamp information.
     """
-    f_value = key.GetValue(u'F')
+    f_value = key.GetValueByName(u'F')
     if not f_value:
       logging.error(u'Unable to locate F Value in key.')
       return

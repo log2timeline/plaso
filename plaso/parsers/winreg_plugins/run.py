@@ -20,6 +20,8 @@ class RunUserPlugin(interface.WindowsRegistryPlugin):
 
   URLS = [u'http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
+  _SOURCE_APPEND = u': Run Key'
+
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
       codepage=u'cp1252', **unused_kwargs):
@@ -46,9 +48,9 @@ class RunUserPlugin(interface.WindowsRegistryPlugin):
       text_dict[value.name] = value.data
 
       event_object = windows_events.WindowsRegistryEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          key.last_written_time, key.path, text_dict, offset=key.offset,
           urls=self.URLS, registry_file_type=registry_file_type,
-          source_append=': Run Key')
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
 

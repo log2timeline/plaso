@@ -24,8 +24,8 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
       u'DynamicDaylightTimeDisabled', u'StandardBias', u'StandardName',
       u'TimeZoneKeyName')
 
-  def _GetValue(self, value_name, key):
-    """Get value helper, it returns the key value if exists.
+  def _GetValueData(self, value_name, key):
+    """Retrieves the value data.
 
     Given the Registry key and the value_name it returns the data in the value
     or None if value_name does not exist.
@@ -35,9 +35,9 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
       key: Registry key (instance of dfwinreg.WinRegistryKey).
 
     Returns:
-      The data inside a Registry value or None.
+      The data inside a Windows Registry value or None.
     """
-    value = key.GetValue(value_name)
+    value = key.GetValueByName(value_name)
     if value:
       return value.data
 
@@ -58,10 +58,10 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
       return
     text_dict = {}
     for value_name in self.WIN_TIMEZONE_VALUE_NAMES:
-      text_dict[value_name] = self._GetValue(value_name, key)
+      text_dict[value_name] = self._GetValueData(value_name, key)
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+        key.last_written_time, key.path, text_dict, offset=key.offset,
         registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)

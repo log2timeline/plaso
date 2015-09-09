@@ -105,8 +105,8 @@ class WinRegistryKey(object):
     self._key_path = self.JoinKeyPath([key_path])
 
   @abc.abstractproperty
-  def last_written_timestamp(self):
-    """The last written time of the key."""
+  def last_written_time(self):
+    """The last written time of the key (contains a FILETIME)."""
 
   @abc.abstractproperty
   def name(self):
@@ -195,7 +195,7 @@ class WinRegistryKey(object):
         self.PATH_SEPARATOR, self.PATH_SEPARATOR.join(path_segments))
 
   def RecurseKeys(self):
-    """Recurses the Windows Registry keys starting with the root key.
+    """Recurses the subkeys starting with the key.
 
     Yields:
       A Windows Registry key (instance of WinRegistryKey).
@@ -223,6 +223,13 @@ class WinRegistryValue(object):
       10: u'REG_RESOURCE_REQUIREMENT_LIST',
       11: u'REG_QWORD'
   }
+
+  _INTEGER_VALUE_TYPES = frozenset([
+      definitions.REG_DWORD, definitions.REG_DWORD_BIG_ENDIAN,
+      definitions.REG_QWORD])
+
+  _STRING_VALUE_TYPES = frozenset([
+      definitions.REG_SZ, definitions.REG_EXPAND_SZ, definitions.REG_LINK])
 
   @abc.abstractproperty
   def data(self):

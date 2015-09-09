@@ -23,19 +23,18 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
     self.origin = origin
 
 
-class WindowsRegistryEvent(time_events.TimestampEvent):
+class WindowsRegistryEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows Registry-based event."""
 
   DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(
-      self, timestamp, key_name, value_dict, usage=None, offset=None,
-      registry_file_type=None, urls=None, source_append=None):
+      self, filetime, key_name, value_dict, usage=None, offset=None,
+      registry_file_type=None, source_append=None, urls=None):
     """Initializes a Windows registry event.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      filetime: the FILETIME timestamp value.
       key_name: The name of the Registry key being parsed.
       value_dict: The interpreted value of the key, stored as a dictionary.
       usage: Optional description of the usage of the time value.
@@ -44,14 +43,14 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
               The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      urls: Optional list of URLs. The default is None.
       source_append: Optional string to append to the source_long of the event.
                      The default is None.
+      urls: Optional list of URLs. The default is None.
     """
     if usage is None:
       usage = eventdata.EventTimestamp.WRITTEN_TIME
 
-    super(WindowsRegistryEvent, self).__init__(timestamp, usage)
+    super(WindowsRegistryEvent, self).__init__(filetime, usage)
 
     if key_name:
       self.keyname = key_name
@@ -64,11 +63,11 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
     if registry_file_type:
       self.registry_file_type = registry_file_type
 
-    if urls:
-      self.url = u' - '.join(urls)
-
     if source_append:
       self.source_append = source_append
+
+    if urls:
+      self.url = u' - '.join(urls)
 
 
 class WindowsRegistryServiceEvent(WindowsRegistryEvent):

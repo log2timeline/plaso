@@ -18,6 +18,8 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
 
   _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16(u'entry_letter'))
 
+  _SOURCE_APPEND = u': MRU List'
+
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
       self, parser_mediator, key, entry_index, entry_letter, **kwargs):
@@ -45,7 +47,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       A MRUList value generator, which returns the MRU index number
       and entry value.
     """
-    mru_list_value = key.GetValue(u'MRUList')
+    mru_list_value = key.GetValueByName(u'MRUList')
 
     # The key exists but does not contain a value named "MRUList".
     if not mru_list_value:
@@ -89,9 +91,9 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       text_dict[value_text] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict,
-        offset=key.offset, registry_file_type=registry_file_type,
-        source_append=u': MRU List')
+        key.last_written_time, key.path, text_dict, offset=key.offset,
+        registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 
@@ -121,7 +123,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:s}'.format(entry_letter))
+    value = key.GetValueByName(u'{0:s}'.format(entry_letter))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
@@ -217,7 +219,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:s}'.format(entry_letter))
+    value = key.GetValueByName(u'{0:s}'.format(entry_letter))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(

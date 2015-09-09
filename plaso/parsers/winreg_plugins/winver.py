@@ -4,7 +4,6 @@
 import construct
 
 from plaso.events import windows_events
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -32,7 +31,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
     Returns:
       A string value if one is available, otherwise an empty string.
     """
-    value = key.GetValue(value_name)
+    value = key.GetValueByName(value_name)
 
     if not value:
       return u''
@@ -54,24 +53,30 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
+    install_date_value = key.GetValueByName(u'InstallDate')
+    if not install_date_value:
+      # TODO: does this indicate a parse error?
+      return
+
+    install_raw = install_date_value.raw_data
+
+    # TODO: move this to a function in utils with a more descriptive name
+    # e.g. CopyByteStreamToInt32BigEndian.
+    try:
+      filetime = self.INT_STRUCT.parse(install_raw)
+    except construct.FieldError:
+      filetime = 0
+
     text_dict = {}
     text_dict[u'Owner'] = self.GetValueString(key, u'RegisteredOwner')
     text_dict[u'sp'] = self.GetValueString(key, u'CSDBuildNumber')
     text_dict[u'Product name'] = self.GetValueString(key, u'ProductName')
     text_dict[u' Windows Version Information'] = u''
 
-    install_raw = key.GetValue(u'InstallDate').raw_data
-    # TODO: move this to a function in utils with a more descriptive name
-    # e.g. CopyByteStreamToInt32BigEndian.
-    try:
-      install = self.INT_STRUCT.parse(install_raw)
-    except construct.FieldError:
-      install = 0
-
     event_object = windows_events.WindowsRegistryEvent(
-        timelib.Timestamp.FromPosixTime(install), key.path, text_dict,
-        usage=u'OS Install Time', offset=key.offset,
-        registry_file_type=registry_file_type, urls=self.URLS)
+        filetime, key.path, text_dict, offset=key.offset,
+        usage=u'OS Install Time', registry_file_type=registry_file_type,
+        urls=self.URLS)
 
     event_object.prodname = text_dict[u'Product name']
     event_object.source_long = u'SOFTWARE WinVersion key'

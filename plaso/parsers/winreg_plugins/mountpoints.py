@@ -42,7 +42,7 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       text_dict[u'Volume'] = name
 
       # Get the label if it exists.
-      label_value = subkey.GetValue(u'_LabelFromReg')
+      label_value = subkey.GetValueByName(u'_LabelFromReg')
       if label_value:
         text_dict[u'Label'] = label_value.data
 
@@ -61,9 +61,8 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
         text_dict[u'Type'] = u'Drive'
 
       event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_timestamp, key.path, text_dict,
-          offset=subkey.offset, registry_file_type=registry_file_type,
-          urls=self.URLS)
+          subkey.last_written_time, key.path, text_dict, offset=subkey.offset,
+          registry_file_type=registry_file_type, urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 

@@ -6,7 +6,6 @@ import logging
 import construct
 
 from plaso.events import windows_events
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand
@@ -83,8 +82,8 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    version_value = key.GetValue(u'Version')
-    count_subkey = key.GetSubkey(u'Count')
+    version_value = key.GetValueByName(u'Version')
+    count_subkey = key.GetSubkeyByName(u'Count')
 
     if not version_value:
       parser_mediator.ProduceParseError(u'Missing version value')
@@ -160,8 +159,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
             text_dict = {}
             text_dict[value_name] = u'[Count: {0:d}]'.format(count)
             event_object = windows_events.WindowsRegistryEvent(
-                timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
-                text_dict, offset=value.offset,
+                filetime, count_subkey.path, text_dict, offset=value.offset,
                 registry_file_type=registry_file_type)
             parser_mediator.ProduceEvent(event_object)
 
@@ -176,7 +174,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
           count = parsed_data.get(u'count', None)
           app_focus_count = parsed_data.get(u'app_focus_count', None)
           focus_duration = parsed_data.get(u'focus_duration', None)
-          timestamp = parsed_data.get(u'timestamp', 0)
+          filetime = parsed_data.get(u'timestamp', 0)
 
           text_dict = {}
           text_dict[value_name] = (
@@ -186,9 +184,8 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
                   focus_duration)
 
           event_object = windows_events.WindowsRegistryEvent(
-              timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
-              text_dict, offset=count_subkey.offset,
-              registry_file_type=registry_file_type)
+              filetime, count_subkey.path, text_dict,
+              offset=count_subkey.offset, registry_file_type=registry_file_type)
           parser_mediator.ProduceEvent(event_object)
 
 

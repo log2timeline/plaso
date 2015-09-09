@@ -24,6 +24,8 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
+  _SOURCE_APPEND = u': Typed URLs'
+
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
       codepage=u'cp1252', **kwargs):
@@ -49,7 +51,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
       # TODO: shouldn't this behavior be, put all the typed urls
       # into a single event object with the last written time of the key?
       if value.name == u'url1':
-        timestamp = key.last_written_timestamp
+        timestamp = key.last_written_time
       else:
         timestamp = 0
 
@@ -59,7 +61,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type,
-          source_append=u': Typed URLs')
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
 

@@ -70,7 +70,7 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
         text_dict[value_name] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict,
+        key.last_written_time, key.path, text_dict,
         offset=key.offset, registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)

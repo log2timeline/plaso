@@ -36,7 +36,7 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
     for value in key.GetValues():
       text_dict[value.name] = value.data
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+        key.last_written_time, key.path, text_dict, offset=key.offset,
         registry_file_type=registry_file_type, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
@@ -89,7 +89,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         # TODO: why does this have a separate event object? Remove this.
         value_dict = {u'BootExecute': value_string}
         event_object = windows_events.WindowsRegistryEvent(
-            key.last_written_timestamp, key.path, value_dict, offset=key.offset,
+            key.last_written_time, key.path, value_dict, offset=key.offset,
             registry_file_type=registry_file_type, urls=self.URLS)
         parser_mediator.ProduceEvent(event_object)
 
@@ -97,7 +97,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         text_dict[value.name] = value.data
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+        key.last_written_time, key.path, text_dict, offset=key.offset,
         registry_file_type=registry_file_type, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 

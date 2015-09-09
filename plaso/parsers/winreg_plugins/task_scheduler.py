@@ -64,7 +64,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       dfwinreg.WinRegistryKey) and a Windows Registry value (instance of
       dfwinreg.WinRegistryValue).
     """
-    id_value = key.GetValue(u'Id')
+    id_value = key.GetValueByName(u'Id')
     if id_value:
       yield key, id_value
 
@@ -85,8 +85,8 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    tasks_key = key.GetSubkey(u'Tasks')
-    tree_key = key.GetSubkey(u'Tree')
+    tasks_key = key.GetSubkeyByName(u'Tasks')
+    tree_key = key.GetSubkeyByName(u'Tree')
 
     if not tasks_key or not tree_key:
       parser_mediator.ProduceParseError(
@@ -104,7 +104,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
         task_guids[id_value.data] = value_key.name
 
     for sub_key in tasks_key.GetSubkeys():
-      dynamic_info_value = sub_key.GetValue(u'DynamicInfo')
+      dynamic_info_value = sub_key.GetValueByName(u'DynamicInfo')
       if not dynamic_info_value:
         continue
 
@@ -122,7 +122,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       text_dict[u'Task: {0:s}'.format(name)] = u'[ID: {0:s}]'.format(
           sub_key.name)
       event_object = windows_events.WindowsRegistryEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          key.last_written_time, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type)
       parser_mediator.ProduceEvent(event_object)
 

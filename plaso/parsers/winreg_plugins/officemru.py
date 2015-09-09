@@ -5,7 +5,6 @@ import logging
 import re
 
 from plaso.events import windows_events
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -39,6 +38,8 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   # The Office 14 item MRU is formatted as:
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
+
+  _SOURCE_APPEND = u': Microsoft Office MRU'
 
   def GetEntries(
       self, parser_mediator, key=None, registry_file_type=None,
@@ -79,19 +80,20 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       # timestamp. Shouldn't this be: Store all the Item # values with
       # their timestamp and store the entire MRU as one event with the
       # registry key last written time?
-      if value.name == u'Item 1':
-        timestamp = timelib.Timestamp.FromFiletime(filetime)
-      else:
-        timestamp = 0
+      if value.name != u'Item 1':
+        filetime = 0
 
       text_dict = {}
       text_dict[value.name] = value.data
 
+      # TODO: change into a seperate event object.
       event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
+          filetime, key.path, text_dict, offset=key.offset,
           registry_file_type=registry_file_type,
-          source_append=u': Microsoft Office MRU')
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
+
+    # TODO: generate a single event for the whole MRU.
 
 
 winreg.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)
