@@ -27,7 +27,7 @@ class TestWinRegistryFileReader(interface.WinRegistryFileReader):
     Returns:
       The Windows Registry file (instance of WinRegistryFile) or None.
     """
-    registry_file = regf.WinRegistryFileREGF(ascii_codepage=ascii_codepage)
+    registry_file = regf.REGFWinRegistryFile(ascii_codepage=ascii_codepage)
     file_object = open(path, 'rb')
     try:
       # If open is successful Registry file will manage the file object.
@@ -79,20 +79,6 @@ class RegistryTest(test_lib.WinRegTestCase):
         registry_file_type, definitions.REGISTRY_FILE_TYPE_SYSTEM)
 
     registry_file.Close()
-
-  def testRecurseKeys(self):
-    """Tests the RecurseKeys function."""
-    test_path = self._GetTestFilePath([u'NTUSER.DAT'])
-    registry_file = self._registry.OpenFile(test_path)
-
-    key_paths = []
-    for registry_key in registry_file.RecurseKeys():
-      key_paths.append(registry_key.paths)
-
-    registry_file.Close()
-
-    expected_key_paths = []
-    self.assertEqual(sorted(key_paths), expected_key_paths)
 
 
 if __name__ == '__main__':

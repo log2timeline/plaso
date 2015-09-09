@@ -209,7 +209,7 @@ class WinRegistryParser(interface.SingleFileBaseParser):
     """
     display_name = parser_mediator.GetDisplayName()
 
-    winreg_file = dfwinreg_regf.WinRegistryFileREGF(
+    winreg_file = dfwinreg_regf.REGFWinRegistryFile(
         ascii_codepage=parser_mediator.codepage)
 
     try:

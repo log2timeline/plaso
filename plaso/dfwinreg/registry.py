@@ -486,7 +486,7 @@ class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
     if file_object is None:
       return
 
-    registry_file = regf.WinRegistryFileREGF(ascii_codepage=ascii_codepage)
+    registry_file = regf.REGFWinRegistryFile(ascii_codepage=ascii_codepage)
     try:
       registry_file.Open(file_object)
     except IOError as exception:
@@ -522,7 +522,7 @@ class SingleWinRegistryFileReader(interface.WinRegistryFileReader):
     Returns:
       The Windows Registry file (instance of WinRegistryFile) or None.
     """
-    registry_file = regf.WinRegistryFileREGF(ascii_codepage=ascii_codepage)
+    registry_file = regf.REGFWinRegistryFile(ascii_codepage=ascii_codepage)
     try:
       registry_file.Open(self._file_object)
     except IOError as exception:
