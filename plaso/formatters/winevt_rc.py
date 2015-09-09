@@ -87,7 +87,13 @@ class Sqlite3DatabaseFile(object):
     sql_query = u'SELECT {1:s} FROM {0:s}{2:s}'.format(
         u', '.join(table_names), u', '.join(column_names), condition)
 
-    self._cursor.execute(sql_query)
+    # TODO: Current code errors out when condition contains unicode char
+    # Added Try/Except to keep it running - It should report the error to user
+    try:
+      self._cursor.execute(sql_query)
+    except sqlite3.OperationalError:
+      return False
+    
 
     # TODO: have a look at https://docs.python.org/2/library/
     # sqlite3.html#sqlite3.Row.
