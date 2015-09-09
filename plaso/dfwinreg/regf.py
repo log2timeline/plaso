@@ -76,7 +76,8 @@ class WinPyregfKey(interface.WinRegistryKey):
       the subkeys stored within the key.
     """
     for pyregf_key in self._pyregf_key.sub_keys:
-      yield WinPyregfKey(pyregf_key, key_path=self.path)
+      key_path = self.PATH_SEPARATOR.join([self._key_path, pyregf_key.name])
+      yield WinPyregfKey(pyregf_key, key_path=key_path)
 
   # TODO: in the process of being deprecated.
   def GetValue(self, name):
@@ -235,6 +236,7 @@ class WinRegistryFileREGF(interface.WinRegistryFile):
     if not regf_key:
       return
 
+    # TODO: refactor to WinRegistryKey.
     return WinPyregfKey(regf_key, key_path=key_path)
 
   def GetRootKey(self, key_path_prefix=u''):
@@ -251,8 +253,7 @@ class WinRegistryFileREGF(interface.WinRegistryFile):
     if not regf_key:
       return
 
-    # TODO: refactor to WinRegistryKey, also remove parent key path or
-    # use WinRegistry path.
+    # TODO: refactor to WinRegistryKey.
     return WinPyregfKey(regf_key, key_path=key_path_prefix)
 
   def Open(self, file_object):

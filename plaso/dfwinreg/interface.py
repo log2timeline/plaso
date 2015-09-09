@@ -16,6 +16,11 @@ class WinRegistryKey(object):
       key_path: the Windows Registry key path.
     """
     super(WinRegistryKey, self).__init__()
+
+    if not key_path:
+      key_path = self.PATH_SEPARATOR
+    elif not key_path.startswith(self.PATH_SEPARATOR):
+      key_path = u'{0:s}{1:s}'.format(self.PATH_SEPARATOR, key_path)
     self._key_path = key_path
 
   @abc.abstractproperty
@@ -85,16 +90,16 @@ class WinRegistryKey(object):
       represent the values stored within the key.
     """
 
+  # TODO: implement.
+  def JoinKeyPath(self, path_segments):
+
   def RecurseKeys(self):
     """Recurses the Windows Registry keys starting with the root key.
-
-    Args:
-      key_path_prefix: optional Windows Registry key path prefix.
 
     Yields:
       A Windows Registry key (instance of WinRegistryKey).
     """
-    for subkey in self.GetSubKeys():
+    for subkey in self.GetSubkeys():
       for key in subkey.RecurseKeys():
         yield key
 

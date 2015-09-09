@@ -201,7 +201,7 @@ class WinRegistry(object):
     return u'HKEY_LOCAL_MACHINE\\System\\ControlSet{0:03d}'.format(control_set)
 
   def _GetFileByPath(self, safe_key_path):
-    """Retrieves the Windows Registry file for a specific path.
+    """Retrieves a Windows Registry file for a specific path.
 
     Args:
       safe_key_path: the Windows Registry key path, in upper case with
@@ -219,8 +219,7 @@ class WinRegistry(object):
     key_path_prefix, registry_file = self._GetCachedFileByPath(safe_key_path)
     if not registry_file:
       for mapping in self._GetFileMappingsByPath(safe_key_path):
-        registry_file = self._registry_file_reader.Open(
-            mapping.windows_path, ascii_codepage=self._ascii_codepage)
+        registry_file = self.OpenFile(mapping.windows_path)
         if registry_file:
           if not key_path_prefix:
             key_path_prefix = mapping.key_path_prefix
@@ -365,17 +364,18 @@ class WinRegistry(object):
 
     return registry_file_type
 
-  def RecurseKeys(self):
-    """Recurses the Windows Registry keys.
+  def OpenFile(self, path):
+    """Opens a Windows Registry file.
 
-    Yields:
-      A Windows Registry key (instance of WinRegistryKey).
+    Args:
+      path: the Windows Registry file path.
+
+    Returns:
+      A corresponding Windows Registry file object (instance of
+      WinRegistryFile) or None if not available.
     """
-    for key_path_prefix in sorted(self._registry_files.keys()):
-      registry_file = self._registry_files[key_path_prefix]
-      for registry_key in registry_file.RecurseKeys(
-          key_path_prefix=key_path_prefix):
-        yield registry_key
+    return self._registry_file_reader.Open(
+        path, ascii_codepage=self._ascii_codepage)
 
 
 class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
