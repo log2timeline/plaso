@@ -96,9 +96,8 @@ class FiletimeEvent(TimestampEvent):
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
-    super(FiletimeEvent, self).__init__(
-        timelib.Timestamp.FromFiletime(filetime), timestamp_description,
-        data_type=data_type)
+    timestamp = timelib.Timestamp.FromFiletime(filetime)
+    super(FiletimeEvent, self).__init__(timestamp, usage, data_type=data_type)
 
 
 class JavaTimeEvent(TimestampEvent):

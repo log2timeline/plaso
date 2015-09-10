@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import construct
 import logging
+
+import construct
+
 from plaso.events import windows_events
 from plaso.lib import binary
 from plaso.lib import eventdata
@@ -31,25 +33,85 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
       construct.ULInt16(u'rid'),
       construct.Padding(16),
       construct.ULInt8(u'login_count'))
+
   V_VALUE_HEADER = construct.Struct(
       u'v_header',
       construct.Array(11, construct.ULInt32(u'values')))
+
   V_VALUE_HEADER_SIZE = 0xCC
 
+  _SOURCE_APPEND = u'User Account Information'
+
+  def _ParseFValue(self, key):
+    """Parses F value and returns parsed F data construct object.
+
+    Args:
+      key: Registry key (instance of dfwinreg.WinRegistryKey).
+
+    Returns:
+      f_data: Construct parsed F value containing rid, login count,
+              and timestamp information.
+    """
+    f_value = key.GetValueByName(u'F')
+    if not f_value:
+      logging.error(u'Unable to locate F Value in key.')
+      return
+    try:
+      f_data = self.F_VALUE_STRUCT.parse(f_value.data)
+    except construct.FieldError as exception:
+      logging.error(
+          u'Unable to extract F value data: {:s}'.format(exception))
+      return
+    return f_data
+
+  def _ParseVValue(self, key):
+    """Parses V value and returns name, fullname, and comments data.
+
+    Args:
+      key: Registry key (instance of dfwinreg.WinRegistryKey).
+
+    Returns:
+      name: Name data parsed with name start and length values.
+      fullname: Fullname data parsed with fullname start and length values.
+      comments: Comments data parsed with comments start and length values.
+    """
+    v_value = key.GetValueByName(u'V')
+    if not v_value:
+      logging.error(u'Unable to locate V Value in key.')
+      return
+    try:
+      structure = self.V_VALUE_HEADER.parse(v_value.data)
+    except construct.FieldError as exception:
+      logging.error(
+          u'Unable to extract V value header data with error: {0:s}'.format(
+              exception))
+      return
+    name_offset = structure.values()[0][3] + self.V_VALUE_HEADER_SIZE
+    full_name_offset = structure.values()[0][6] + self.V_VALUE_HEADER_SIZE
+    comments_offset = structure.values()[0][9] + self.V_VALUE_HEADER_SIZE
+    name_raw = v_value.data[
+        name_offset:name_offset + structure.values()[0][4]]
+    full_name_raw = v_value.data[
+        full_name_offset:full_name_offset + structure.values()[0][7]]
+    comments_raw = v_value.data[
+        comments_offset:comments_offset + structure.values()[0][10]]
+    name = binary.ReadUtf16(name_raw)
+    full_name = binary.ReadUtf16(full_name_raw)
+    comments = binary.ReadUtf16(comments_raw)
+    return name, full_name, comments
+
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect data from Users and Names and produce event objects.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    name_key = key.GetSubkeyByName(u'Names')
+    name_key = registry_key.GetSubkeyByName(u'Names')
     if not name_key:
       parser_mediator.ProduceParseError(u'Unable to locate Names key.')
       return
@@ -57,7 +119,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
 
     name_dict = dict(values)
 
-    for subkey in key.GetSubkeys():
+    for subkey in registry_key.GetSubkeys():
       if subkey.name == u'Names':
         continue
 
@@ -90,85 +152,27 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
 
       if account_create_time > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            account_create_time, key.path, text_dict,
+            account_create_time, registry_key.path, text_dict,
             usage=eventdata.EventTimestamp.ACCOUNT_CREATED,
-            offset=key.offset, registry_file_type=registry_file_type,
-            source_append=u'User Account Information')
+            offset=registry_key.offset, registry_file_type=registry_file_type,
+            source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
       if f_data.last_login > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            f_data.last_login, key.path, text_dict,
+            f_data.last_login, registry_key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_LOGIN_TIME,
-            offset=key.offset,
-            registry_file_type=registry_file_type,
-            source_append=u'User Account Information')
+            offset=registry_key.offset, registry_file_type=registry_file_type,
+            source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
       if f_data.password_reset > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            f_data.password_reset, key.path, text_dict,
+            f_data.password_reset, registry_key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_PASSWORD_RESET,
-            offset=key.offset, registry_file_type=registry_file_type,
-            source_append=u'User Account Information')
+            offset=registry_key.offset, registry_file_type=registry_file_type,
+            source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
-
-  def _ParseVValue(self, key):
-    """Parses V value and returns name, fullname, and comments data.
-
-    Args:
-      key: Registry key (instance of dfwinreg.WinRegistryKey).
-
-    Returns:
-      name: Name data parsed with name start and length values.
-      fullname: Fullname data parsed with fullname start and length values.
-      comments: Comments data parsed with comments start and length values.
-    """
-    v_value = key.GetValueByName(u'V')
-    if not v_value:
-      logging.error(u'Unable to locate V Value in key.')
-      return
-    try:
-      structure = self.V_VALUE_HEADER.parse(v_value.data)
-    except construct.FieldError as exception:
-      logging.error(
-          u'Unable to extract V value header data: {:s}'.format(exception))
-      return
-    name_offset = structure.values()[0][3] + self.V_VALUE_HEADER_SIZE
-    full_name_offset = structure.values()[0][6] + self.V_VALUE_HEADER_SIZE
-    comments_offset = structure.values()[0][9] + self.V_VALUE_HEADER_SIZE
-    name_raw = v_value.data[
-        name_offset:name_offset + structure.values()[0][4]]
-    full_name_raw = v_value.data[
-        full_name_offset:full_name_offset + structure.values()[0][7]]
-    comments_raw = v_value.data[
-        comments_offset:comments_offset + structure.values()[0][10]]
-    name = binary.ReadUtf16(name_raw)
-    full_name = binary.ReadUtf16(full_name_raw)
-    comments = binary.ReadUtf16(comments_raw)
-    return name, full_name, comments
-
-  def _ParseFValue(self, key):
-    """Parses F value and returns parsed F data construct object.
-
-    Args:
-      key: Registry key (instance of dfwinreg.WinRegistryKey).
-
-    Returns:
-      f_data: Construct parsed F value containing rid, login count,
-              and timestamp information.
-    """
-    f_value = key.GetValueByName(u'F')
-    if not f_value:
-      logging.error(u'Unable to locate F Value in key.')
-      return
-    try:
-      f_data = self.F_VALUE_STRUCT.parse(f_value.data)
-    except construct.FieldError as exception:
-      logging.error(
-          u'Unable to extract F value data: {:s}'.format(exception))
-      return
-    return f_data
 
 
 winreg.WinRegistryParser.RegisterPlugin(UsersPlugin)

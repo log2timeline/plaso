@@ -42,20 +42,18 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   _SOURCE_APPEND = u': Microsoft Office MRU'
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
-    for value in key.GetValues():
+    for value in registry_key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
         continue
@@ -88,7 +86,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
       # TODO: change into a seperate event object.
       event_object = windows_events.WindowsRegistryEvent(
-          filetime, key.path, text_dict, offset=key.offset,
+          filetime, registry_key.path, text_dict, offset=registry_key.offset,
           registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)

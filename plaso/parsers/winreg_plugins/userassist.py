@@ -70,20 +70,18 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    version_value = key.GetValueByName(u'Version')
-    count_subkey = key.GetSubkeyByName(u'Count')
+    version_value = registry_key.GetValueByName(u'Version')
+    count_subkey = registry_key.GetSubkeyByName(u'Count')
 
     if not version_value:
       parser_mediator.ProduceParseError(u'Missing version value')

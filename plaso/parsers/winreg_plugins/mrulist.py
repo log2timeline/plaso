@@ -150,21 +150,21 @@ class MRUListStringPlugin(BaseMRUListPlugin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key=None, codepage=u'cp1252',
+      registry_file_type=None, **kwargs):
     """Extracts event objects from a MRU list.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListKey(
-        parser_mediator, key, registry_file_type=registry_file_type,
-        codepage=codepage)
+        parser_mediator, registry_key, codepage=codepage,
+        registry_file_type=registry_file_type)
 
   def Process(
       self, parser_mediator, key=None, registry_file_type=None,
@@ -241,21 +241,21 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key=None, codepage=u'cp1252',
+      registry_file_type=None, **kwargs):
     """Extract event objects from a Registry key containing a MRUList value.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListKey(
-        parser_mediator, key, registry_file_type=registry_file_type,
-        codepage=codepage)
+        parser_mediator, registry_key, codepage=codepage,
+        registry_file_type=registry_file_type)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

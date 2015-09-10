@@ -19,10 +19,10 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   REG_KEYS = [u'\\{current_control_set}\\Control\\TimeZoneInformation']
   URLS = []
 
-  WIN_TIMEZONE_VALUE_NAMES = (
+  _WIN_TIMEZONE_VALUE_NAMES = frozenset([
       u'ActiveTimeBias', u'Bias', u'DaylightBias', u'DaylightName',
       u'DynamicDaylightTimeDisabled', u'StandardBias', u'StandardName',
-      u'TimeZoneKeyName')
+      u'TimeZoneKeyName'])
 
   def _GetValueData(self, value_name, key):
     """Retrieves the value data.
@@ -42,28 +42,26 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
       return value.data
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect values and return an event.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    if key is None:
+    if registry_key is None:
       return
+
     text_dict = {}
-    for value_name in self.WIN_TIMEZONE_VALUE_NAMES:
-      text_dict[value_name] = self._GetValueData(value_name, key)
+    for value_name in self._WIN_TIMEZONE_VALUE_NAMES:
+      text_dict[value_name] = self._GetValueData(value_name, registry_key)
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_time, key.path, text_dict, offset=key.offset,
-        registry_file_type=registry_file_type)
-
+        registry_key.last_written_time, registry_key.path, text_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type)
     parser_mediator.ProduceEvent(event_object)
 
 

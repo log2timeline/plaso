@@ -26,19 +26,19 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
   _SOURCE_APPEND = u': CCleaner Registry key'
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, codepage=u'cp1252',
+      registry_file_type=None, **unused_kwargs):
     """Extracts event objects from a CCleaner Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    for value in key.GetValues():
+    for value in registry_key.GetValues():
       if not value.name or not value.data:
         continue
 
@@ -57,20 +57,20 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
         # TODO: create a separate event for this.
         event_object = windows_events.WindowsRegistryEvent(
-            timestamp, key.path, text_dict, offset=key.offset,
+            timestamp, registry_key.path, text_dict, offset=registry_key.offset,
             registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
 
       elif value.name == u'0':
         event_object = windows_events.WindowsRegistryEvent(
-            key.last_written_time, key.path, text_dict, offset=key.offset,
-            registry_file_type=registry_file_type,
+            registry_key.last_written_time, registry_key.path, text_dict,
+            offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
 
       else:
         # TODO: change this event not to set a timestamp of 0.
         event_object = windows_events.WindowsRegistryEvent(
-            0, key.path, text_dict, offset=key.offset,
+            0, registry_key.path, text_dict, offset=registry_key.offset,
             registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
 

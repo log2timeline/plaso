@@ -21,7 +21,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
   INT_STRUCT = construct.ULInt32(u'install')
 
   # TODO: Refactor remove this function in a later CL.
-  def GetValueString(self, key, value_name):
+  def _GetValueString(self, key, value_name):
     """Retrieves a specific string value from the Registry key.
 
     Args:
@@ -41,19 +41,17 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
     return value.data
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Gather minimal information about system install and return an event.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    install_date_value = key.GetValueByName(u'InstallDate')
+    install_date_value = registry_key.GetValueByName(u'InstallDate')
     if not install_date_value:
       # TODO: does this indicate a parse error?
       return
@@ -68,13 +66,14 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
       filetime = 0
 
     text_dict = {}
-    text_dict[u'Owner'] = self.GetValueString(key, u'RegisteredOwner')
-    text_dict[u'sp'] = self.GetValueString(key, u'CSDBuildNumber')
-    text_dict[u'Product name'] = self.GetValueString(key, u'ProductName')
+    text_dict[u'Owner'] = self._GetValueString(registry_key, u'RegisteredOwner')
+    text_dict[u'sp'] = self._GetValueString(registry_key, u'CSDBuildNumber')
+    text_dict[u'Product name'] = self._GetValueString(
+        registry_key, u'ProductName')
     text_dict[u' Windows Version Information'] = u''
 
     event_object = windows_events.WindowsRegistryEvent(
-        filetime, key.path, text_dict, offset=key.offset,
+        filetime, registry_key.path, text_dict, offset=registry_key.offset,
         usage=u'OS Install Time', registry_file_type=registry_file_type,
         urls=self.URLS)
 

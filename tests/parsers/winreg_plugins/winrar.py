@@ -10,7 +10,6 @@ from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winrar
 
-from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -21,10 +20,12 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = winrar.WinRarHistoryPlugin()
 
-  def testProcess(self):
-    """Tests the Process function."""
-    key_path = u'\\Software\\WinRAR\\ArcHistory'
+  def _GetTestRegistry(self):
+    """Retrieves the Windows Registry for testing.
 
+    Returns:
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+    """
     values = []
 
     value_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
@@ -40,16 +41,23 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
         offset=612)
     values.append(registry_value)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-08-28 09:23:49.002031')
+    key_path = u'\\Software\\WinRAR\\ArcHistory'
+    filetime = dfwinreg_fake.Filetime()
+    filetime.CopyFromString(u'2012-08-28 09:23:49.002031')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        u'ArcHistory', key_path=key_path, last_written_time=filetime.timestamp,
+        offset=1456, values=values)
 
-    winreg_key = dfwinreg_test_lib.TestRegKey(
-        key_path, expected_timestamp, values, offset=1456)
+    return registry_key
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+  def testProcess(self):
+    """Tests the Process function."""
+    registry_key = self._GetTestRegistry()
+
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
@@ -57,20 +65,21 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = (
-        u'[{0:s}] 0: C:\\Downloads\\The Sleeping Dragon CD1.iso').format(
-            key_path)
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
-
-    event_object = event_objects[1]
-
-    self.assertEqual(event_object.timestamp, 0)
-
-    expected_string = u'[{0:s}] 1: C:\\Downloads\\plaso-static.rar'.format(
-        key_path)
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    expected_key_path = u'\\Software\\WinRAR\\ArcHistory'
+    expected_message = (
+        u'[{0:s}] '
+        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
+        u'1: C:\\Downloads\\plaso-static.rar').format(expected_key_path)
+    expected_message_short = (
+        u'[{0:s}] '
+        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
+        u'1: ...').format(expected_key_path)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

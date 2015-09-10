@@ -19,24 +19,23 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
 
   REG_KEYS = [u'\\{current_control_set}\\Control\\Windows']
   REG_TYPE = u'SYSTEM'
+
   FILETIME_STRUCT = construct.ULInt64(u'filetime_timestamp')
 
   _SOURCE_APPEND = u'Shutdown Entry'
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect ShutdownTime value under Windows and produce an event object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-          The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    shutdown_value = key.GetValueByName(u'ShutdownTime')
+    shutdown_value = registry_key.GetValueByName(u'ShutdownTime')
     if not shutdown_value:
       return
 
@@ -51,7 +50,7 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     text_dict = {u'Description': shutdown_value.name}
 
     event_object = windows_events.WindowsRegistryEvent(
-        filetime, key.path, text_dict, offset=key.offset,
+        filetime, registry_key.path, text_dict, offset=registry_key.offset,
         usage=eventdata.EventTimestamp.LAST_SHUTDOWN,
         registry_file_type=registry_file_type,
         source_append=self._SOURCE_APPEND)

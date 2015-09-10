@@ -34,31 +34,29 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
       return None
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
 
-    service_type_value = key.GetValueByName(u'Type')
-    service_start_value = key.GetValueByName(u'Start')
+    service_type_value = registry_key.GetValueByName(u'Type')
+    service_start_value = registry_key.GetValueByName(u'Start')
 
     # Grab the ServiceDLL value if it exists.
     if service_type_value and service_start_value:
-      service_dll = self.GetServiceDll(key)
+      service_dll = self.GetServiceDll(registry_key)
       if service_dll:
         text_dict[u'ServiceDll'] = service_dll
 
       # Gather all the other string and integer values and insert as they are.
-      for value in key.GetValues():
+      for value in registry_key.GetValues():
         if not value.name:
           continue
         if value.name not in text_dict:
@@ -70,8 +68,9 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
       # Create a specific service event, so that we can recognize and expand
       # certain values when we're outputting the event.
       event_object = windows_events.WindowsRegistryServiceEvent(
-          key.last_written_time, key.path, text_dict, offset=key.offset,
-          registry_file_type=registry_file_type, urls=self.URLS)
+          registry_key.last_written_time, registry_key.path, text_dict,
+          offset=registry_key.offset, registry_file_type=registry_file_type,
+          urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 

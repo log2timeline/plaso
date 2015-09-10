@@ -36,20 +36,18 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   _SOURCE_APPEND = u': PST Paths'
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect the values under Outlook and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     value_index = 0
-    for value in key.GetValues():
+    for value in registry_key.GetValues():
       # Ignore the default value.
       if not value.name:
         continue
@@ -68,12 +66,12 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       # timestamp and store the entire MRU as one event with the
       # registry key last written time?
       if value_index == 0:
-        filetime = key.last_written_time
+        filetime = registry_key.last_written_time
       else:
         filetime = 0
 
       event_object = windows_events.WindowsRegistryEvent(
-          filetime, key.path, text_dict, offset=key.offset,
+          filetime, registry_key.path, text_dict, offset=registry_key.offset,
           registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
