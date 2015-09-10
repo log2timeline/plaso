@@ -275,6 +275,24 @@ class FakeWinRegistryKey(interface.WinRegistryKey):
 
     return True
 
+  def AddValue(self, registry_value):
+    """Adds a value.
+
+    Args:
+      registry_value: the Windows Registry value (instance of
+                      FakeWinRegistryValue).
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    name = registry_value.name.upper()
+    if name in self._values:
+      return False
+
+    self._values[name] = registry_value
+
+    return True
+
   def GetSubkeyByName(self, name):
     """Retrieves a subkey by name.
 

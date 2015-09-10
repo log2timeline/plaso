@@ -7,11 +7,11 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
 
-from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -34,7 +34,7 @@ class TestFileEntry(object):
     self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
   def GetStat(self):
-    """Retrieves the stat object (instance of vfs.VFSStat)."""
+    """Retrieves the stat object (instance of dfvfs.VFSStat)."""
     return
 
 
@@ -46,7 +46,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self._plugin = appcompatcache.AppCompatCachePlugin()
 
   def _CreateTestAppCompatCache(self, time_string, binary_data):
-    """Creates a AppCompatCache Registry key and value for testing.
+    """Creates AppCompatCache Registry keys and values for testing.
 
     Args:
       time_string: string containing the key last written date and time.
@@ -56,12 +56,18 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
       A Windows Registry key object (instance of TestRegKey).
     """
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
-    timestamp = timelib.Timestamp.CopyFromString(time_string)
-    values = [dfwinreg_test_lib.TestRegValue(
-        u'AppCompatCache', binary_data, dfwinreg_definitions.REG_BINARY)]
+    filetime = dfwinreg_fake.Filetime()
+    filetime.CopyFromString(time_string)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        u'AppCompatCache', key_path=key_path,
+        last_written_time=filetime.timestamp, offset=1456)
 
-    return dfwinreg_test_lib.TestRegKey(
-        key_path, timestamp, values, offset=1456)
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'AppCompatCache', data=binary_data,
+        data_type=dfwinreg_definitions.REG_BINARY)
+    registry_key.AddValue(registry_value)
+
+    return registry_key
 
   def _ParseAppCompatCacheKey(self, file_entry, winreg_key):
     """Parses the AppCompatCacheKey.
