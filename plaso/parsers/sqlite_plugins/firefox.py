@@ -25,7 +25,7 @@ class FirefoxPlacesBookmarkAnnotation(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
@@ -50,7 +50,7 @@ class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
@@ -81,7 +81,7 @@ class FirefoxPlacesBookmark(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.
@@ -113,7 +113,7 @@ class FirefoxPlacesPageVisitedEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       row_id: The identifier of the corresponding row.
       url: The URL of the visited page.
@@ -147,7 +147,7 @@ class FirefoxDownload(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       row_id: The identifier of the corresponding row.

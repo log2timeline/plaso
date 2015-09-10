@@ -40,7 +40,7 @@ class KeychainInternetRecordEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       entry_name: Name of the entry.
@@ -74,7 +74,7 @@ class KeychainApplicationRecordEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       entry_name: Name of the entry.
@@ -204,7 +204,7 @@ class KeychainParser(interface.SingleFileBaseParser):
                  second: String with the number of the second.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC.
     """
     try:

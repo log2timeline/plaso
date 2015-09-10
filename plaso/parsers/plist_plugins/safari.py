@@ -19,7 +19,7 @@ class SafariHistoryEvent(time_events.TimestampEvent):
     """Initialize the event.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       history_entry: A dict object read from the Safari history plist.
     """

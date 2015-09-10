@@ -10,7 +10,7 @@ class TimestampEvent(event.EventObject):
 
   Attributes:
     data_type: the event data type.
-    timestamp: the timestamp which is an interger containing the number
+    timestamp: the timestamp which is an integer containing the number
                of micro seconds since January 1, 1970, 00:00:00 UTC.
     timestamp_desc: the description of the usage of the timestamp.
   """
@@ -19,7 +19,7 @@ class TimestampEvent(event.EventObject):
     """Initializes an event object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       data_type: Optional event data type. If not set data_type is

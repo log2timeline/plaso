@@ -112,7 +112,7 @@ class Timestamp(object):
                    The default timezone is UTC.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC.
 
     Raises:
@@ -253,7 +253,7 @@ class Timestamp(object):
     """Copies the timestamp to a datetime object.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: The timezone (pytz.timezone) object.
       raise_error: Boolean that if set to True will not absorb an OverflowError
@@ -288,7 +288,7 @@ class Timestamp(object):
     """Copies the timestamp to an ISO 8601 formatted string.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: Optional timezone (instance of pytz.timezone).
                 The default is UTC.
@@ -308,11 +308,11 @@ class Timestamp(object):
     """Converts microsecond timestamps to POSIX timestamps.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
 
     Returns:
-      The timestamp which is an interger containing the number of seconds
+      The timestamp which is an integer containing the number of seconds
       since January 1, 1970, 00:00:00 UTC.
     """
     return timestamp // cls.MICRO_SECONDS_PER_SECOND
@@ -387,7 +387,7 @@ class Timestamp(object):
       cocoa_time: The timestamp in Cocoa format.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     return cls.FromPosixTime(cocoa_time + cls.COCOA_TIME_TO_POSIX_BASE)
@@ -406,7 +406,7 @@ class Timestamp(object):
       delphi_time: The timestamp in Delphi format.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     posix_time = (delphi_time - cls.DELPHI_TIME_TO_POSIX_BASE) * 86400.0
@@ -436,7 +436,7 @@ class Timestamp(object):
       fat_date_time: The 32-bit FAT date time.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     number_of_seconds = cls.FAT_DATE_TO_POSIX_BASE
@@ -483,7 +483,7 @@ class Timestamp(object):
       filetime: The 64-bit FILETIME timestamp.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     # TODO: Add a handling for if the timestamp equals to zero.
@@ -510,7 +510,7 @@ class Timestamp(object):
               The default is false.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     timestamp_local = cls.FromHfsPlusTime(hfs_time)
@@ -528,7 +528,7 @@ class Timestamp(object):
       hfs_time: The timestamp in HFS+ format.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     return cls.FromPosixTime(hfs_time - cls.HFSTIME_TO_POSIX_BASE)
@@ -547,7 +547,7 @@ class Timestamp(object):
       java_time: The Java Timestamp.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     return java_time * cls.MILLI_SECONDS_TO_MICRO_SECONDS
@@ -563,7 +563,7 @@ class Timestamp(object):
       posix_time: The POSIX timestamp.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
@@ -583,7 +583,7 @@ class Timestamp(object):
       microsecond: The microseconds to add to the timestamp.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     timestamp = cls.FromPosixTime(posix_time)
@@ -599,7 +599,7 @@ class Timestamp(object):
       datetime_object: The datetime object (instance of datetime.datetime).
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if not isinstance(datetime_object, datetime.datetime):
@@ -627,7 +627,7 @@ class Timestamp(object):
                 The default is UTC.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     try:
@@ -671,7 +671,7 @@ class Timestamp(object):
                 is used when the timezone cannot be determined from the string.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
 
     Raises:
@@ -707,7 +707,7 @@ class Timestamp(object):
       uuid_time: The 60-bit UUID version 1 timestamp.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     # TODO: Add a handling for if the timestamp equals to zero.
@@ -730,7 +730,7 @@ class Timestamp(object):
       webkit_time: The 64-bit WebKit time timestamp.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if webkit_time < (cls.TIMESTAMP_MIN_MICRO_SECONDS +
@@ -743,7 +743,7 @@ class Timestamp(object):
     """Retrieves the current time (now) as a timestamp in UTC.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC.
     """
     time_elements = time.gmtime()
@@ -768,7 +768,7 @@ class Timestamp(object):
     """Converts the timestamp in localtime of the timezone to UTC.
 
     Args:
-      timestamp: The timestamp which is an interger containing the number
+      timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: The timezone (pytz.timezone) object.
       is_dst: A boolean to indicate the timestamp is corrected for daylight
@@ -776,7 +776,7 @@ class Timestamp(object):
               The default is false.
 
     Returns:
-      The timestamp which is an interger containing the number of micro seconds
+      The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if timezone and timezone != pytz.UTC:
