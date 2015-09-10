@@ -5,10 +5,11 @@
 import unittest
 
 from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import outlook
 
-from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -19,20 +20,40 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = outlook.OutlookSearchMRUPlugin()
 
+  def _CreateTestSearch(self, time_string):
+    """Creates Outlook Search Registry keys and values for testing.
+
+    Args:
+      time_string: string containing the key last written date and time.
+
+    Returns:
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+    """
+    key_path = u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
+    filetime = dfwinreg_fake.Filetime()
+    filetime.CopyFromString(time_string)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        u'Search', key_path=key_path, last_written_time=filetime.timestamp,
+        offset=1456)
+
+    value_name = (
+        u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+        u'username@example.com.ost')
+    value_data = b'\xcf\x2b\x37\x00'
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        value_name, data=value_data, data_type=dfwinreg_definitions.REG_DWORD,
+        offset=1892)
+    registry_key.AddValue(registry_value)
+
+    return registry_key
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
-    values = []
+    time_string = u'2012-08-28 09:23:49.002031'
+    registry_key = self._CreateTestSearch(time_string)
 
-    values.append(dfwinreg_test_lib.TestRegValue(
-        (u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-         u'username@example.com.ost'), b'\xcf\x2b\x37\x00',
-        dfwinreg_definitions.REG_DWORD, offset=1892))
-
-    winreg_key = dfwinreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, 1456)
-
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     expected_msg = (
@@ -51,7 +72,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEqual(event_object.timestamp, 1346145829002031)
+    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

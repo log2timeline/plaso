@@ -30,7 +30,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 6)
 
     event_object = event_objects[0]
 

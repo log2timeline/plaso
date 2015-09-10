@@ -53,6 +53,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
+    mru_text_dict = {}
     for value in registry_key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
@@ -71,18 +72,13 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       try:
         filetime = int(values[0][0], 16)
       except ValueError:
-        logging.warning(u'Unable to convert filetime string to an integer.')
-        filetime = 0
+        parser_mediator.ProduceParseError((
+            u'unable to convert filetime string to an integer for '
+            u'value: {0:s}.').format(value.name))
+        continue
 
-      # TODO: why this behavior? Only the first Item is stored with its
-      # timestamp. Shouldn't this be: Store all the Item # values with
-      # their timestamp and store the entire MRU as one event with the
-      # registry key last written time?
-      if value.name != u'Item 1':
-        filetime = 0
-
-      text_dict = {}
-      text_dict[value.name] = value.data
+      mru_text_dict[value.name] = value.data
+      text_dict = {value.name: value.data}
 
       # TODO: change into a seperate event object.
       event_object = windows_events.WindowsRegistryEvent(
@@ -91,7 +87,11 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
-    # TODO: generate a single event for the whole MRU.
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, mru_text_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)

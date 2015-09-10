@@ -46,8 +46,8 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    value_index = 0
-    for value in registry_key.GetValues():
+    text_dict = {}
+    for value_index, value in enumerate(registry_key.GetValues()):
       # Ignore the default value.
       if not value.name:
         continue
@@ -58,27 +58,13 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
 
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
-      text_dict = {}
       text_dict[value.name] = u'0x{0:08x}'.format(value.data)
 
-      # TODO: why this behavior? Only the first Item is stored with its
-      # timestamp. Shouldn't this be: Store all the values with their
-      # timestamp and store the entire MRU as one event with the
-      # registry key last written time?
-      if value_index == 0:
-        filetime = registry_key.last_written_time
-      else:
-        filetime = 0
-
-      event_object = windows_events.WindowsRegistryEvent(
-          filetime, registry_key.path, text_dict, offset=registry_key.offset,
-          registry_file_type=registry_file_type,
-          source_append=self._SOURCE_APPEND)
-      parser_mediator.ProduceEvent(event_object)
-
-      value_index += 1
-
-    # TODO: generate a single event for the whole MRU.
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, text_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(OutlookSearchMRUPlugin)

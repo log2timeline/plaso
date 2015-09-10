@@ -61,9 +61,9 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
     # TODO: move this to a function in utils with a more descriptive name
     # e.g. CopyByteStreamToInt32BigEndian.
     try:
-      filetime = self.INT_STRUCT.parse(install_raw)
+      posix_time = self.INT_STRUCT.parse(install_raw)
     except construct.FieldError:
-      filetime = 0
+      posix_time = 0
 
     text_dict = {}
     text_dict[u'Owner'] = self._GetValueString(registry_key, u'RegisteredOwner')
@@ -72,6 +72,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
         registry_key, u'ProductName')
     text_dict[u' Windows Version Information'] = u''
 
+    # TODO: change event object type.
     event_object = windows_events.WindowsRegistryEvent(
         filetime, registry_key.path, text_dict, offset=registry_key.offset,
         usage=u'OS Install Time', registry_file_type=registry_file_type,
@@ -81,6 +82,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
     event_object.source_long = u'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:
       event_object.owner = text_dict[u'Owner']
+
     parser_mediator.ProduceEvent(event_object)
 
 

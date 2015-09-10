@@ -39,7 +39,6 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE.
     """
     text_dict = {}
-
     for value in registry_key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
