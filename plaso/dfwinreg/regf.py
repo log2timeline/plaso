@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""REGF specific implementation for Windows Registry objects using pyregf."""
+"""REGF Windows Registry objects implementation using pyregf."""
 
 import pyregf
 
@@ -20,7 +20,7 @@ class REGFWinRegistryKey(interface.WinRegistryKey):
 
     Args:
       pyregf_key: a pyreg key object (instance of a pyregf.key).
-      key_path: the Windows Registry key path.
+      key_path: optional Windows Registry key path.
     """
     super(REGFWinRegistryKey, self).__init__(key_path=key_path)
     self._pyregf_key = pyregf_key
@@ -64,7 +64,7 @@ class REGFWinRegistryKey(interface.WinRegistryKey):
     if not pyregf_key:
       return
 
-    key_path = self.JoinKeyPath([self._key_path, pyregf_key.name])
+    key_path = self._JoinKeyPath([self._key_path, pyregf_key.name])
     return REGFWinRegistryKey(pyregf_key, key_path=key_path)
 
   def GetSubkeys(self):
@@ -75,7 +75,7 @@ class REGFWinRegistryKey(interface.WinRegistryKey):
       the subkeys stored within the key.
     """
     for pyregf_key in self._pyregf_key.sub_keys:
-      key_path = self.JoinKeyPath([self._key_path, pyregf_key.name])
+      key_path = self._JoinKeyPath([self._key_path, pyregf_key.name])
       yield REGFWinRegistryKey(pyregf_key, key_path=key_path)
 
   def GetValueByName(self, name):
@@ -119,7 +119,6 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
     """
     super(REGFWinRegistryValue, self).__init__()
     self._pyregf_value = pyregf_value
-    self._type_str = u''
 
   @property
   def data(self):
@@ -190,7 +189,7 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
 
 
 class REGFWinRegistryFile(interface.WinRegistryFile):
-  """Class that defines a Windows Registry file using pyregf."""
+  """Implementation of a Windows Registry file using pyregf."""
 
   def __init__(self, ascii_codepage=u'cp1252'):
     """Initializes the Windows Registry file.
@@ -214,7 +213,7 @@ class REGFWinRegistryFile(interface.WinRegistryFile):
     """Retrieves the key for a specific path.
 
     Args:
-      key_path: the Registry key path.
+      key_path: the Windows Registry key path.
 
     Returns:
       A Registry key (instance of WinRegistryKey) or None if not available.

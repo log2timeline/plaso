@@ -9,6 +9,8 @@ from plaso.dfwinreg import definitions
 class WinRegistryFile(object):
   """Class that defines a Windows Registry file."""
 
+  _KEY_PATH_SEPARATOR = u'\\'
+
   def __init__(self, ascii_codepage=u'cp1252'):
     """Initializes the Windows Registry file.
 
@@ -18,6 +20,19 @@ class WinRegistryFile(object):
     """
     super(WinRegistryFile, self).__init__()
     self._ascii_codepage = ascii_codepage
+
+  def _SplitKeyPath(self, path):
+    """Splits the key path into path segments.
+
+    Args:
+      path: a string containing the path.
+
+    Returns:
+      A list of path segements without the root path segment, which is an
+      empty string.
+    """
+    # Split the path with the path separator and remove empty path segments.
+    return filter(None, path.split(self._KEY_PATH_SEPARATOR))
 
   @abc.abstractmethod
   def Close(self):
@@ -93,16 +108,16 @@ class WinRegistryFileReader(object):
 class WinRegistryKey(object):
   """Class to represent the Windows Registry key interface."""
 
-  PATH_SEPARATOR = u'\\'
+  _PATH_SEPARATOR = u'\\'
 
   def __init__(self, key_path=u''):
     """Initializes a Windows Registry key object.
 
     Args:
-      key_path: the Windows Registry key path.
+      key_path: optional Windows Registry key path.
     """
     super(WinRegistryKey, self).__init__()
-    self._key_path = self.JoinKeyPath([key_path])
+    self._key_path = self._JoinKeyPath([key_path])
 
   @abc.abstractproperty
   def last_written_time(self):
@@ -128,6 +143,29 @@ class WinRegistryKey(object):
   def path(self):
     """The Windows Registry key path."""
     return self._key_path
+
+  def _JoinKeyPath(self, path_segments):
+    """Joins the path segments into key path.
+
+    Args:
+      path_segment: list of Windows Registry key path segments.
+    """
+    # This is an optimized way to combine the path segments into a single path
+    # and combine multiple successive path separators to one.
+
+    # Split all the path segments based on the path (segment) separator.
+    path_segments = [
+        segment.split(self._PATH_SEPARATOR) for segment in path_segments]
+
+    # Flatten the sublists into one list.
+    path_segments = [
+        element for sublist in path_segments for element in sublist]
+
+    # Remove empty path segments.
+    path_segments = filter(None, path_segments)
+
+    return u'{0:s}{1:s}'.format(
+        self._PATH_SEPARATOR, self._PATH_SEPARATOR.join(path_segments))
 
   @abc.abstractmethod
   def GetSubkeyByName(self, name):
@@ -171,29 +209,6 @@ class WinRegistryKey(object):
       represent the values stored within the key.
     """
 
-  def JoinKeyPath(self, path_segments):
-    """Joins the path segments into key path.
-
-    Args:
-      path_segment: list of Windows Registry key path segments.
-    """
-    # This is an optimized way to combine the path segments into a single path
-    # and combine multiple successive path separators to one.
-
-    # Split all the path segments based on the path (segment) separator.
-    path_segments = [
-        segment.split(self.PATH_SEPARATOR) for segment in path_segments]
-
-    # Flatten the sublists into one list.
-    path_segments = [
-        element for sublist in path_segments for element in sublist]
-
-    # Remove empty path segments.
-    path_segments = filter(None, path_segments)
-
-    return u'{0:s}{1:s}'.format(
-        self.PATH_SEPARATOR, self.PATH_SEPARATOR.join(path_segments))
-
   def RecurseKeys(self):
     """Recurses the subkeys starting with the key.
 
@@ -231,6 +246,7 @@ class WinRegistryValue(object):
   _STRING_VALUE_TYPES = frozenset([
       definitions.REG_SZ, definitions.REG_EXPAND_SZ, definitions.REG_LINK])
 
+  # TODO: move data to GetData() and raw_data to data.
   @abc.abstractproperty
   def data(self):
     """The value data as a native Python object."""

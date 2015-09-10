@@ -10,7 +10,7 @@ from tests.dfwinreg import test_lib
 
 
 class REGFWinRegTestCase(test_lib.WinRegTestCase):
-  """The unit test case for REG Windows Registry related object."""
+  """The unit test case for REGF Windows Registry related object."""
 
   def _OpenREGFRegistryFile(self, filename):
     """Opens a REGF Windows Registry file.
@@ -59,6 +59,11 @@ class REGFWinRegistryFileTest(REGFWinRegTestCase):
     """Tests the GetKeyByPath function."""
     registry_file = self._OpenREGFRegistryFile(u'NTUSER.DAT')
 
+    key_path = u'\\'
+    registry_key = registry_file.GetKeyByPath(key_path)
+    self.assertIsNotNone(registry_key)
+    self.assertEqual(registry_key.path, key_path)
+
     key_path = u'\\Software'
     registry_key = registry_file.GetKeyByPath(key_path)
     self.assertIsNotNone(registry_key)
@@ -79,12 +84,8 @@ class REGFWinRegistryFileTest(REGFWinRegTestCase):
 
     self.assertEqual(len(registry_keys), 1127)
 
-    test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
-    file_entry = self._GetTestFileEntry(test_file)
-    file_object = file_entry.GetFileObject()
+    registry_file = self._OpenREGFRegistryFile(u'ntuser.dat.LOG')
 
-    registry_file = regf.REGFWinRegistryFile()
-    registry_file.Open(file_object)
     registry_keys = list(registry_file.RecurseKeys())
     registry_file.Close()
 
@@ -175,8 +176,6 @@ class REGFWinRegistryKeyTest(REGFWinRegTestCase):
     self.assertEqual(len(values), 31)
 
     registry_file.Close()
-
-  # TODO: add tests for JoinKeyPath
 
   def testRecurseKeys(self):
     """Tests the RecurseKeys function."""

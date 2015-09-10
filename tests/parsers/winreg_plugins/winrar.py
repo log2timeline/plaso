@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winrar
@@ -28,12 +29,16 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
     value_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
         u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'0', value_data, dfwinreg_definitions.REG_SZ, offset=1892))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=1892)
+    values.append(registry_value)
 
     value_data = u'C:\\Downloads\\plaso-static.rar'.encode(u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'1', value_data, dfwinreg_definitions.REG_SZ, offset=612))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'1', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=612)
+    values.append(registry_value)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
