@@ -19,27 +19,28 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   REG_KEYS = [u'\\{current_control_set}\\Control\\TimeZoneInformation']
   URLS = []
 
-  _WIN_TIMEZONE_VALUE_NAMES = frozenset([
+  _VALUE_NAMES = frozenset([
       u'ActiveTimeBias', u'Bias', u'DaylightBias', u'DaylightName',
       u'DynamicDaylightTimeDisabled', u'StandardBias', u'StandardName',
       u'TimeZoneKeyName'])
 
-  def _GetValueData(self, value_name, key):
+  def _GetValueData(self, registry_key, value_name):
     """Retrieves the value data.
 
     Given the Registry key and the value_name it returns the data in the value
     or None if value_name does not exist.
 
     Args:
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       value_name: the name of the value.
-      key: Registry key (instance of dfwinreg.WinRegistryKey).
 
     Returns:
       The data inside a Windows Registry value or None.
     """
-    value = key.GetValueByName(value_name)
-    if value:
-      return value.data
+    registry_value = registry_key.GetValueByName(value_name)
+    if registry_value:
+      return registry_value.data
 
   def GetEntries(
       self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
@@ -56,8 +57,11 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
       return
 
     text_dict = {}
-    for value_name in self._WIN_TIMEZONE_VALUE_NAMES:
-      text_dict[value_name] = self._GetValueData(value_name, registry_key)
+    for value_name in self._VALUE_NAMES:
+      value_data = self._GetValueData(registry_key, value_name)
+      if value_data is None:
+        continue
+      text_dict[value_name] = value_data
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, text_dict,

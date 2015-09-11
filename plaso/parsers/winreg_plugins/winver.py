@@ -74,7 +74,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
 
     # TODO: change event object type.
     event_object = windows_events.WindowsRegistryEvent(
-        filetime, registry_key.path, text_dict, offset=registry_key.offset,
+        posix_time, registry_key.path, text_dict, offset=registry_key.offset,
         usage=u'OS Install Time', registry_file_type=registry_file_type,
         urls=self.URLS)
 

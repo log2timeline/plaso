@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for MS Office MRUs for Plaso."""
 
-import logging
 import re
 
 from plaso.events import windows_events

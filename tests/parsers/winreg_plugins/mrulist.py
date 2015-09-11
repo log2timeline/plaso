@@ -20,16 +20,16 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = mrulist.MRUListStringPlugin()
 
-  def _CreateTestMRUList(self, time_string):
-    """Creates MRUList Registry keys and values for testing.
+  def _CreateTestKey(self, key_path, time_string):
+    """Creates Registry keys and values for testing.
 
     Args:
+      key_path: the Windows Registry key path.
       time_string: string containing the key last written date and time.
 
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
     filetime = dfwinreg_fake.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
@@ -66,7 +66,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
     time_string = u'2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestMRUList(time_string)
+    registry_key = self._CreateTestKey(key_path, time_string)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -101,18 +101,16 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = mrulist.MRUListShellItemListPlugin()
 
-  def _CreateTestMRUList(self, time_string):
+  def _CreateTestKey(self, key_path, time_string):
     """Creates MRUList Registry keys and values for testing.
 
     Args:
+      key_path: the Windows Registry key path.
       time_string: string containing the key last written date and time.
 
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-        u'DesktopStreamMRU')
     filetime = dfwinreg_fake.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
@@ -153,7 +151,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
         u'DesktopStreamMRU')
     time_string = u'2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestMRUList(time_string)
+    registry_key = self._CreateTestKey(key_path, time_string)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

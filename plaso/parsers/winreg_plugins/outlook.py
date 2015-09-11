@@ -47,7 +47,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     text_dict = {}
-    for value_index, value in enumerate(registry_key.GetValues()):
+    for value in registry_key.GetValues():
       # Ignore the default value.
       if not value.name:
         continue

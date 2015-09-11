@@ -20,16 +20,16 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = winrar.WinRarHistoryPlugin()
 
-  def _CreateTestArcHistory(self, time_string):
+  def _CreateTestKey(self, key_path, time_string):
     """Creates WinRAR ArcHistory Registry keys and values for testing.
 
     Args:
+      key_path: the Windows Registry key path.
       time_string: string containing the key last written date and time.
 
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    key_path = u'\\Software\\WinRAR\\ArcHistory'
     filetime = dfwinreg_fake.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
@@ -55,7 +55,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     key_path = u'\\Software\\WinRAR\\ArcHistory'
     time_string = u'2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestArcHistory(time_string)
+    registry_key = self._CreateTestKey(key_path, time_string)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

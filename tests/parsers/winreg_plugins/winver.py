@@ -20,16 +20,16 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = winver.WinVerPlugin()
 
-  def _CreateTestCurrentVersion(self, time_string):
-    """Creates Windows CurrentVersion Registry keys and values for testing.
+  def _CreateTestKey(self, key_path, time_string):
+    """Creates Registry keys and values for testing.
 
     Args:
+      key_path: the Windows Registry key path.
       time_string: string containing the key last written date and time.
 
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
     filetime = dfwinreg_fake.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
@@ -62,11 +62,11 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
-  def testWinVer(self):
-    """Test the WinVer plugin."""
+  def testProcess(self):
+    """Tests the Process function."""
     key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
     time_string = u'2012-08-31 20:09:55'
-    registry_key = self._CreateTestCurrentVersion(time_string)
+    registry_key = self._CreateTestKey(key_path, time_string)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

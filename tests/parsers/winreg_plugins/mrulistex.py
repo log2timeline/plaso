@@ -5,11 +5,11 @@
 import unittest
 
 from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
 
-from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -20,33 +20,56 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = mrulistex.MRUListExStringPlugin()
 
-  def testProcess(self):
-    """Tests the Process function."""
-    key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'
-    values = []
+  def _CreateTestKey(self, key_path, time_string):
+    """Creates Registry keys and values for testing.
+
+    Args:
+      key_path: the Windows Registry key path.
+      time_string: string containing the key last written date and time.
+
+    Returns:
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+    """
+    filetime = dfwinreg_fake.Filetime()
+    filetime.CopyFromString(time_string)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        u'MRUlist', key_path=key_path,
+        last_written_time=filetime.timestamp, offset=1456)
 
     # The order is: 201
     value_data = b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00'
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'MRUListEx', value_data, dfwinreg_definitions.REG_BINARY,
-        offset=123))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'MRUListEx', data=value_data,
+        data_type=dfwinreg_definitions.REG_BINARY, offset=123)
+    registry_key.AddValue(registry_value)
 
     value_data = u'Some random text here'.encode(u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'0', value_data, dfwinreg_definitions.REG_SZ, offset=1892))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=1892)
+    registry_key.AddValue(registry_value)
 
     value_data = u'c:\\evil.exe'.encode(u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'1', value_data, dfwinreg_definitions.REG_BINARY, offset=612))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'1', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
+        offset=612)
+    registry_key.AddValue(registry_value)
 
     value_data = u'C:\\looks_legit.exe'.encode(u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'2', value_data, dfwinreg_definitions.REG_SZ, offset=1001))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'2', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=1001)
+    registry_key.AddValue(registry_value)
 
-    timestamp = timelib.Timestamp.CopyFromString(u'2012-08-28 09:23:49.002031')
-    winreg_key = dfwinreg_test_lib.TestRegKey(key_path, timestamp, values, 1456)
+    return registry_key
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+  def testProcess(self):
+    """Tests the Process function."""
+    key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'
+    time_string = u'2012-08-28 09:23:49.002031'
+    registry_key = self._CreateTestKey(key_path, time_string)
+
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)
@@ -58,8 +81,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-08-28 09:23:49.002031')
+    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -87,9 +109,9 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'OpenSavePidlMRU')
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 65)
@@ -155,9 +177,9 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs')
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)
@@ -237,9 +259,9 @@ class TestMRUListExStringAndShellItemListPlugin(
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'LastVisitedPidlMRU')
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 31)

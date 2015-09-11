@@ -20,16 +20,16 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = outlook.OutlookSearchMRUPlugin()
 
-  def _CreateTestSearch(self, time_string):
-    """Creates Outlook Search Registry keys and values for testing.
+  def _CreateTestKey(self, key_path, time_string):
+    """Creates Registry keys and values for testing.
 
     Args:
+      key_path: the Windows Registry key path.
       time_string: string containing the key last written date and time.
 
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    key_path = u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
     filetime = dfwinreg_fake.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
@@ -51,7 +51,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     key_path = u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
     time_string = u'2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestSearch(time_string)
+    registry_key = self._CreateTestKey(key_path, time_string)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -94,15 +94,22 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #     """Tests the Process function."""
 #     key_path = (
 #         u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog')
-#     values = []
+#     time_string = u'2012-08-28 09:23:49.002031'
 #
-#     values.append(dfwinreg_test_lib.TestRegValue(
-#         (u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-#          u'username@example.com.ost'), b'\x94\x01\x00\x00\x00\x00',
-#         dfwinreg_definitions.REG_BINARY, offset=827))
+#     filetime = dfwinreg_fake.Filetime()
+#     filetime.CopyFromString(time_string)
+#     registry_key = dfwinreg_fake.FakeWinRegistryKey(
+#         u'Catalog', key_path=key_path, last_written_time=filetime.timestamp,
+#         offset=3421)
 #
-#     winreg_key = dfwinreg_test_lib.TestRegKey(
-#         key_path, 1346145829002031, values, 3421)
+#     value_name = (
+#         u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+#         u'username@example.com.ost')
+#     value_data = b'\x94\x01\x00\x00\x00\x00'
+#     registry_value = dfwinreg_fake.FakeWinRegistryValue(
+#         value_name, data=value_data,
+#         data_type=dfwinreg_definitions.REG_BINARY, offset=827)
+#     registry_key.AddValue(registry_value)
 #
 #     # TODO: add test for Catalog key.
 

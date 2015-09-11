@@ -5,11 +5,11 @@
 import unittest
 
 from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import services
 
-from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -20,40 +20,74 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = services.ServicesPlugin()
 
+  def _CreateTestKey(self, key_path, time_string):
+    """Creates Registry keys and values for testing.
+
+    Args:
+      key_path: the Windows Registry key path.
+      time_string: string containing the key last written date and time.
+
+    Returns:
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+    """
+    filetime = dfwinreg_fake.Filetime()
+    filetime.CopyFromString(time_string)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        u'TestDriver', key_path=key_path, last_written_time=filetime.timestamp,
+        offset=1456)
+
+    value_data = b'\x02\x00\x00\x00'
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'Type', data=value_data, data_type=dfwinreg_definitions.REG_DWORD,
+        offset=123)
+    registry_key.AddValue(registry_value)
+
+    value_data = b'\x02\x00\x00\x00'
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'Start', data=value_data, data_type=dfwinreg_definitions.REG_DWORD,
+        offset=127)
+    registry_key.AddValue(registry_value)
+
+    value_data = b'\x01\x00\x00\x00'
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'ErrorControl', data=value_data,
+        data_type=dfwinreg_definitions.REG_DWORD, offset=131)
+    registry_key.AddValue(registry_value)
+
+    value_data = u'Pnp Filter'.encode(u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'Group', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=140)
+    registry_key.AddValue(registry_value)
+
+    value_data = u'Test Driver'.encode(u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'DisplayName', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=160)
+    registry_key.AddValue(registry_value)
+
+    value_data = u'testdriver.inf_x86_neutral_dd39b6b0a45226c4'.encode(
+        u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'DriverPackageId', data=value_data,
+        data_type=dfwinreg_definitions.REG_SZ, offset=180)
+    registry_key.AddValue(registry_value)
+
+    value_data = u'C:\\Dell\\testdriver.sys'.encode(u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'ImagePath', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=200)
+    registry_key.AddValue(registry_value)
+
+    return registry_key
+
   def testProcess(self):
     """Tests the Process function on a virtual key."""
     key_path = u'\\ControlSet001\\services\\TestDriver'
+    time_string = u'2012-08-28 09:23:49.002031'
+    registry_key = self._CreateTestKey(key_path, time_string)
 
-    values = []
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'Type', b'\x02\x00\x00\x00', dfwinreg_definitions.REG_DWORD,
-        offset=123))
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'Start', b'\x02\x00\x00\x00', dfwinreg_definitions.REG_DWORD,
-        offset=127))
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'ErrorControl', b'\x01\x00\x00\x00', dfwinreg_definitions.REG_DWORD,
-        offset=131))
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'Group', u'Pnp Filter'.encode(u'utf_16_le'),
-        dfwinreg_definitions.REG_SZ, offset=140))
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'DisplayName', u'Test Driver'.encode(u'utf_16_le'),
-        dfwinreg_definitions.REG_SZ, offset=160))
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'DriverPackageId',
-        u'testdriver.inf_x86_neutral_dd39b6b0a45226c4'.encode(u'utf_16_le'),
-        dfwinreg_definitions.REG_SZ, offset=180))
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'ImagePath', u'C:\\Dell\\testdriver.sys'.encode(u'utf_16_le'),
-        dfwinreg_definitions.REG_SZ, offset=200))
-
-    timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-08-28 09:23:49.002031')
-    winreg_key = dfwinreg_test_lib.TestRegKey(
-        key_path, timestamp, values, 1456)
-
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)
@@ -64,8 +98,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-08-28 09:23:49.002031')
+    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
@@ -88,7 +121,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function on a key in a file."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\services'
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
 
     event_objects = []
 
@@ -97,7 +130,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     mc_task_manager_event_objects = None
     rdp_video_miniport_event_objects = None
 
-    for winreg_subkey in winreg_key.GetSubkeys():
+    for winreg_subkey in registry_key.GetSubkeys():
       event_queue_consumer = self._ParseKeyWithPlugin(
           self._plugin, winreg_subkey, file_entry=test_file_entry)
       sub_event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

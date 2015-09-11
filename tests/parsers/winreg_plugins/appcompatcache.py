@@ -45,15 +45,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = appcompatcache.AppCompatCachePlugin()
 
-  def _CreateTestAppCompatCache(self, time_string, binary_data):
-    """Creates AppCompatCache Registry keys and values for testing.
+  def _CreateTestKey(self, time_string, binary_data):
+    """Creates Registry keys and values for testing.
 
     Args:
       time_string: string containing the key last written date and time.
       binary_data: the binary data of the AppCompatCache Registry value.
 
     Returns:
-      A Windows Registry key object (instance of TestRegKey).
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     filetime = dfwinreg_fake.Filetime()
@@ -69,20 +69,20 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
-  def _ParseAppCompatCacheKey(self, file_entry, winreg_key):
+  def _ParseAppCompatCacheKey(self, file_entry, registry_key):
     """Parses the AppCompatCacheKey.
 
     Args:
       file_entry: the file entry object (instance of dfvfs.FileEntry).
-      winreg_key: the Windows Registry key object (instance of
-                  dfwinreg.WinRegistryKey).
+      registry_key: the Windows Registry key object (instance of
+                    dfwinreg.WinRegistryKey).
 
     Returns:
       A list of event objects (instances of EventObjects).
     """
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values,
+        self._plugin, registry_key, knowledge_base_values=knowledge_base_values,
         file_entry=file_entry, parser_chain=self._plugin.plugin_name)
     return self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -172,9 +172,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     ]))
 
     file_entry = TestFileEntry(u'SYSTEM-XP')
-    winreg_key = self._CreateTestAppCompatCache(
+    registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 2)
 
@@ -207,9 +207,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     ]))
 
     file_entry = TestFileEntry(u'SYSTEM-Windows2003')
-    winreg_key = self._CreateTestAppCompatCache(
+    registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 1)
 
@@ -241,9 +241,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     ]))
 
     file_entry = TestFileEntry(u'SYSTEM-Vista')
-    winreg_key = self._CreateTestAppCompatCache(
+    registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 1)
 
@@ -263,8 +263,8 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function for Windows 7 AppCompatCache data."""
     file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
-    winreg_key = self._GetKeyFromFileEntry(file_entry, key_path)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    registry_key = self._GetKeyFromFileEntry(file_entry, key_path)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 330)
 
@@ -316,9 +316,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     ]))
 
     file_entry = TestFileEntry(u'SYSTEM-Windows8.0')
-    winreg_key = self._CreateTestAppCompatCache(
+    registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 1)
 
@@ -358,9 +358,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     ]))
 
     file_entry = TestFileEntry(u'SYSTEM-Windows8.1')
-    winreg_key = self._CreateTestAppCompatCache(
+    registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 1)
 
@@ -402,9 +402,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     ]))
 
     file_entry = TestFileEntry(u'SYSTEM-Windows10')
-    winreg_key = self._CreateTestAppCompatCache(
+    registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(file_entry, winreg_key)
+    event_objects = self._ParseAppCompatCacheKey(file_entry, registry_key)
 
     self.assertEqual(len(event_objects), 1)
 
