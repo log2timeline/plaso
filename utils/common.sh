@@ -205,9 +205,11 @@ linting_is_correct_remote_origin()
 }
 
 # Function to check if the linting is correct.
-# Version for usage with remote upstream
-linting_is_correct_remote_upstream()
+# Version for usage with a remote git repository as the diffbase.
+linting_is_correct_remote_diffbase()
 {
+  DIFFBASE=$1;
+
   # Determine the current pylint version.
   PYLINT_VERSION=`pylint --version 2> /dev/null | awk '/pylint/ {print $2}' | rev | cut -c2- | rev`;
 
@@ -226,7 +228,7 @@ linting_is_correct_remote_upstream()
   LINTER="pylint --rcfile=utils/pylintrc";
   RESULT=${TRUE};
 
-  FILES=`git diff --name-only upstream/master | grep "\.py$"`;
+  FILES=`git diff --name-only ${DIFFBASE} | grep "\.py$"`;
 
   for FILE in ${FILES};
   do
