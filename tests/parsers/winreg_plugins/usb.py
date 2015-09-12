@@ -26,9 +26,9 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Enum\\USB'
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values,
+        self._plugin, registry_key, knowledge_base_values=knowledge_base_values,
         file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 

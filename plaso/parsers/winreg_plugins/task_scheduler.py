@@ -116,11 +116,11 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
 
       name = task_guids.get(sub_key.name, sub_key.name)
 
-      text_dict = {}
-      text_dict[u'Task: {0:s}'.format(name)] = u'[ID: {0:s}]'.format(
+      values_dict = {}
+      values_dict[u'Task: {0:s}'.format(name)] = u'[ID: {0:s}]'.format(
           sub_key.name)
       event_object = windows_events.WindowsRegistryEvent(
-          registry_key.last_written_time, registry_key.path, text_dict,
+          registry_key.last_written_time, registry_key.path, values_dict,
           offset=registry_key.offset, registry_file_type=registry_file_type)
       parser_mediator.ProduceEvent(event_object)
 

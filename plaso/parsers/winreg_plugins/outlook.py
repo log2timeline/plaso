@@ -46,22 +46,23 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    text_dict = {}
-    for value in registry_key.GetValues():
+    values_dict = {}
+    for registry_value in registry_key.GetValues():
       # Ignore the default value.
-      if not value.name:
+      if not registry_value.name:
         continue
 
       # Ignore any value that is empty or that does not contain an integer.
-      if not value.data or not value.DataIsInteger():
+      if not registry_value.data or not registry_value.DataIsInteger():
         continue
 
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
-      text_dict[value.name] = u'0x{0:08x}'.format(value.data)
+      values_dict[registry_value.name] = u'0x{0:08x}'.format(
+          registry_value.data)
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type,
         source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)

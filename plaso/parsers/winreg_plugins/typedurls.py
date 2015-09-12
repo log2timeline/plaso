@@ -53,12 +53,12 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
       else:
         timestamp = 0
 
-      text_dict = {}
-      text_dict[value.name] = value.data
+      values_dict = {}
+      values_dict[value.name] = value.data
 
       event_object = windows_events.WindowsRegistryEvent(
-          timestamp, registry_key.path, text_dict, offset=registry_key.offset,
-          registry_file_type=registry_file_type,
+          timestamp, registry_key.path, values_dict,
+          offset=registry_key.offset, registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 

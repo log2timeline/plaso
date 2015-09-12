@@ -36,30 +36,30 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       if not name:
         continue
 
-      text_dict = {}
-      text_dict[u'Volume'] = name
+      values_dict = {}
+      values_dict[u'Volume'] = name
 
       # Get the label if it exists.
       label_value = subkey.GetValueByName(u'_LabelFromReg')
       if label_value:
-        text_dict[u'Label'] = label_value.data
+        values_dict[u'Label'] = label_value.data
 
       if name.startswith(u'{'):
-        text_dict[u'Type'] = u'Volume'
+        values_dict[u'Type'] = u'Volume'
 
       elif name.startswith(u'#'):
         # The format is: ##Server_Name#Share_Name.
-        text_dict[u'Type'] = u'Remote Drive'
+        values_dict[u'Type'] = u'Remote Drive'
         server_name, _, share_name = name[2:].partition(u'#')
-        text_dict[u'Remote_Server'] = server_name
-        text_dict[u'Share_Name'] = u'\\{0:s}'.format(
+        values_dict[u'Remote_Server'] = server_name
+        values_dict[u'Share_Name'] = u'\\{0:s}'.format(
             share_name.replace(u'#', u'\\'))
 
       else:
-        text_dict[u'Type'] = u'Drive'
+        values_dict[u'Type'] = u'Drive'
 
       event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_time, registry_key.path, text_dict,
+          subkey.last_written_time, registry_key.path, values_dict,
           offset=subkey.offset, registry_file_type=registry_file_type,
           urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)

@@ -42,11 +42,11 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
       else:
         username = u'None'
 
-      text_dict = {}
-      text_dict[u'UsernameHint'] = username
+      values_dict = {}
+      values_dict[u'UsernameHint'] = username
 
       event_object = windows_events.WindowsRegistryEvent(
-          registry_key.last_written_time, registry_key.path, text_dict,
+          registry_key.last_written_time, registry_key.path, values_dict,
           offset=registry_key.offset, registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
@@ -86,8 +86,8 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      text_dict = {}
-      text_dict[value.name] = value.data
+      values_dict = {}
+      values_dict[value.name] = value.data
 
       # TODO: why this behavior? Only the first Item is stored with its
       # timestamp. Shouldn't this be: Store all the values with their
@@ -99,8 +99,8 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
         filetime = 0
 
       event_object = windows_events.WindowsRegistryEvent(
-          filetime, registry_key.path, text_dict, offset=registry_key.offset,
-          registry_file_type=registry_file_type,
+          filetime, registry_key.path, values_dict,
+          offset=registry_key.offset, registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 

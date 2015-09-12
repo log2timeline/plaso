@@ -56,15 +56,15 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
     if registry_key is None:
       return
 
-    text_dict = {}
+    values_dict = {}
     for value_name in self._VALUE_NAMES:
       value_data = self._GetValueData(registry_key, value_name)
       if value_data is None:
         continue
-      text_dict[value_name] = value_data
+      values_dict[value_name] = value_data
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type)
     parser_mediator.ProduceEvent(event_object)
 

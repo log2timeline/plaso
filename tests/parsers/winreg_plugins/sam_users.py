@@ -25,9 +25,9 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file = self._GetTestFilePath([u'SAM'])
     key_path = u'\\SAM\\Domains\\Account\\Users'
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    registry_key = self._GetKeyFromFile(test_file, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key)
+        self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 7)

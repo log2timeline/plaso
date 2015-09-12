@@ -73,7 +73,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    text_dict = {}
+    values_dict = {}
     for entry_index, entry_letter in self._ParseMRUListValue(key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with \0 (0x0000).
@@ -88,11 +88,11 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       value_text = u'Index: {0:d} [MRU Value {1:s}]'.format(
           entry_index + 1, entry_letter)
 
-      text_dict[value_text] = value_string
+      values_dict[value_text] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_time, key.path, text_dict, offset=key.offset,
-        registry_file_type=registry_file_type,
+        key.last_written_time, key.path, values_dict,
+        offset=key.offset, registry_file_type=registry_file_type,
         source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 

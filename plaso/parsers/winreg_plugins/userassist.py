@@ -154,10 +154,10 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
             if count > 5:
               count -= 5
 
-            text_dict = {}
-            text_dict[value_name] = u'[Count: {0:d}]'.format(count)
+            values_dict = {}
+            values_dict[value_name] = u'[Count: {0:d}]'.format(count)
             event_object = windows_events.WindowsRegistryEvent(
-                filetime, count_subkey.path, text_dict, offset=value.offset,
+                filetime, count_subkey.path, values_dict, offset=value.offset,
                 registry_file_type=registry_file_type)
             parser_mediator.ProduceEvent(event_object)
 
@@ -174,15 +174,15 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
           focus_duration = parsed_data.get(u'focus_duration', None)
           filetime = parsed_data.get(u'timestamp', 0)
 
-          text_dict = {}
-          text_dict[value_name] = (
+          values_dict = {}
+          values_dict[value_name] = (
               u'[UserAssist entry: {0:d}, Count: {1:d}, '
               u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
                   userassist_entry_index, count, app_focus_count,
                   focus_duration)
 
           event_object = windows_events.WindowsRegistryEvent(
-              filetime, count_subkey.path, text_dict,
+              filetime, count_subkey.path, values_dict,
               offset=count_subkey.offset, registry_file_type=registry_file_type)
           parser_mediator.ProduceEvent(event_object)
 

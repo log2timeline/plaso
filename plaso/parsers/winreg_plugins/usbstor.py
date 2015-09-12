@@ -37,12 +37,12 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     for subkey in registry_key.GetSubkeys():
-      text_dict = {}
-      text_dict[u'subkey_name'] = subkey.name
+      values_dict = {}
+      values_dict[u'subkey_name'] = subkey.name
 
       # Time last USB device of this class was first inserted.
       event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_time, registry_key.path, text_dict,
+          subkey.last_written_time, registry_key.path, values_dict,
           offset=registry_key.offset, registry_file_type=registry_file_type,
           usage=eventdata.EventTimestamp.FIRST_CONNECTED,
           source_append=self._SOURCE_APPEND)
@@ -57,34 +57,34 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
             u'Expected 4 &-separated values in: {0:s}'.format(subkey.name))
 
       if number_of_name_values >= 1:
-        text_dict[u'device_type'] = name_values[0]
+        values_dict[u'device_type'] = name_values[0]
       if number_of_name_values >= 2:
-        text_dict[u'vendor'] = name_values[1]
+        values_dict[u'vendor'] = name_values[1]
       if number_of_name_values >= 3:
-        text_dict[u'product'] = name_values[2]
+        values_dict[u'product'] = name_values[2]
       if number_of_name_values >= 4:
-        text_dict[u'revision'] = name_values[3]
+        values_dict[u'revision'] = name_values[3]
 
       for devicekey in subkey.GetSubkeys():
-        text_dict[u'serial'] = devicekey.name
+        values_dict[u'serial'] = devicekey.name
 
         friendly_name_value = devicekey.GetValueByName(u'FriendlyName')
         if friendly_name_value:
-          text_dict[u'friendly_name'] = friendly_name_value.data
+          values_dict[u'friendly_name'] = friendly_name_value.data
         else:
-          text_dict.pop(u'friendly_name', None)
+          values_dict.pop(u'friendly_name', None)
 
         # ParentIdPrefix applies to Windows XP Only.
         parent_id_prefix_value = devicekey.GetValueByName(u'ParentIdPrefix')
         if parent_id_prefix_value:
-          text_dict[u'parent_id_prefix'] = parent_id_prefix_value.data
+          values_dict[u'parent_id_prefix'] = parent_id_prefix_value.data
         else:
-          text_dict.pop(u'parent_id_prefix', None)
+          values_dict.pop(u'parent_id_prefix', None)
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
         event_object = windows_events.WindowsRegistryEvent(
-            devicekey.last_written_time, registry_key.path, text_dict,
+            devicekey.last_written_time, registry_key.path, values_dict,
             offset=registry_key.offset, registry_file_type=registry_file_type,
             usage=eventdata.EventTimestamp.LAST_CONNECTED,
             source_append=self._SOURCE_APPEND)
@@ -109,7 +109,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
         # Add first Insertion times.
         for timestamp in first_insert:
           event_object = windows_events.WindowsRegistryEvent(
-              timestamp, registry_key.path, text_dict,
+              timestamp, registry_key.path, values_dict,
               offset=registry_key.offset, registry_file_type=registry_file_type,
               usage=eventdata.EventTimestamp.LAST_CONNECTED,
               source_append=self._SOURCE_APPEND)

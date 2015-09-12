@@ -66,13 +66,13 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     return registry_file
 
   def _ParseKeyWithPlugin(
-      self, plugin_object, winreg_key, knowledge_base_values=None,
+      self, plugin_object, registry_key, knowledge_base_values=None,
       file_entry=None, parser_chain=None):
     """Parses a key within a Windows Registry file using the plugin object.
 
     Args:
       plugin_object: The plugin object.
-      winreg_key: The Windows Registry Key.
+      registry_key: The Windows Registry Key.
       knowledge_base_values: Optional dict containing the knowledge base
                              values. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
@@ -84,7 +84,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       An event object queue consumer object (instance of
       TestItemQueueConsumer).
     """
-    self.assertNotEqual(winreg_key, None)
+    self.assertNotEqual(registry_key, None)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
@@ -110,7 +110,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       # as access to the parser chain should be very infrequent.
       parser_mediator._parser_chain_components = parser_chain.split(u'/')
 
-    plugin_object.Process(parser_mediator, key=winreg_key)
+    plugin_object.Process(parser_mediator, key=registry_key)
 
     return event_queue_consumer
 

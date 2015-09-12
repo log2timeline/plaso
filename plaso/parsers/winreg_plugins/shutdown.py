@@ -47,12 +47,12 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
               exception))
       return
 
-    text_dict = {u'Description': shutdown_value.name}
+    values_dict = {u'Description': shutdown_value.name}
 
     event_object = windows_events.WindowsRegistryEvent(
-        filetime, registry_key.path, text_dict, offset=registry_key.offset,
+        filetime, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
         usage=eventdata.EventTimestamp.LAST_SHUTDOWN,
-        registry_file_type=registry_file_type,
         source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 

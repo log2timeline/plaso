@@ -30,11 +30,11 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    text_dict = {}
+    values_dict = {}
     for value in registry_key.GetValues():
-      text_dict[value.name] = value.data
+      values_dict[value.name] = value.data
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type,
         urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
@@ -64,7 +64,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    text_dict = {}
+    values_dict = {}
 
     for value in registry_key.GetValues():
       if value.name == u'BootExecute':
@@ -93,10 +93,10 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         parser_mediator.ProduceEvent(event_object)
 
       else:
-        text_dict[value.name] = value.data
+        values_dict[value.name] = value.data
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type,
         urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)

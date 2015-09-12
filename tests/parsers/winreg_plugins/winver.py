@@ -7,6 +7,7 @@ import unittest
 from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winver
 
@@ -36,16 +37,28 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'CurrentVersion', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
 
+    value_data = u'Service Pack 1'.encode(u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'CSDVersion', data=value_data,
+        data_type=dfwinreg_definitions.REG_SZ, offset=1892)
+    registry_key.AddValue(registry_value)
+
+    value_data = u'5.1'.encode(u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'CurrentVersion', data=value_data,
+        data_type=dfwinreg_definitions.REG_SZ, offset=1121)
+    registry_key.AddValue(registry_value)
+
+    value_data = b'\x13\x1aAP'
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'InstallDate', data=value_data,
+        data_type=dfwinreg_definitions.REG_DWORD_LITTLE_ENDIAN, offset=1001)
+    registry_key.AddValue(registry_value)
+
     value_data = u'MyTestOS'.encode(u'utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         u'ProductName', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
-    registry_key.AddValue(registry_value)
-
-    value_data = u'5'.encode(u'utf_16_le')
-    registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'CSDBuildNumber', data=value_data,
-        data_type=dfwinreg_definitions.REG_SZ, offset=1892)
     registry_key.AddValue(registry_value)
 
     value_data = u'A Concerned Citizen'.encode(u'utf_16_le')
@@ -54,24 +67,18 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         data_type=dfwinreg_definitions.REG_SZ, offset=612)
     registry_key.AddValue(registry_value)
 
-    value_data = b'\x13\x1aAP'
-    registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'InstallDate', data=value_data,
-        data_type=dfwinreg_definitions.REG_BINARY, offset=1001)
-    registry_key.AddValue(registry_value)
-
     return registry_key
 
   def testProcess(self):
     """Tests the Process function."""
     key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
-    time_string = u'2012-08-31 20:09:55'
+    time_string = u'2012-08-31 20:09:55.123521'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 2)
 
     event_object = event_objects[0]
 
@@ -81,21 +88,78 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, 'windows:registry:key_value')
 
-    # Note that the double spaces here are intentional.
-    expected_msg = (
-        u'[{0:s}]  '
-        u'Windows Version Information:  '
+    expected_message = (
+        u'[{0:s}] '
         u'Owner: A Concerned Citizen '
-        u'Product name: MyTestOS sp: 5').format(key_path)
+        u'Product name: MyTestOS '
+        u'Service pack: Service Pack 1 '
+        u'Windows Version Information: 5.1').format(key_path)
 
-    expected_msg_short = (
-        u'[{0:s}]  '
-        u'Windows Version Information:  '
-        u'Owner: ...').format(key_path)
+    expected_short_message = (
+        u'[{0:s}] '
+        u'Owner: A Concerned Citizen Product nam...').format(key_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-    # TODO: Write a test for a non-synthetic key
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
+
+    event_object = event_objects[1]
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.INSTALLATION_TIME)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-31 20:09:55')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, 'windows:registry:installation')
+
+    expected_message = (
+        u'MyTestOS 5.1 Service Pack 1 '
+        u'Owner: owner '
+        u'Origin: \\Microsoft\\Windows NT\\CurrentVersion')
+
+    expected_short_message = (
+        u'MyTestOS 5.1 Service Pack 1 '
+        u'Origin: \\Microsoft\\Windows NT\\CurrentVersion')
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
+
+  def testProcessFile(self):
+    """Tests the Process function on a Windows Registry file."""
+    key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
+    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, registry_key, file_entry=test_file_entry)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEqual(len(event_objects), 2)
+
+    event_object = event_objects[0]
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-03-15 07:09:20.671875')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, 'windows:registry:key_value')
+
+    expected_message = (
+        u'[{0:s}] '
+        u'Owner: Windows User '
+        u'Product name: Windows 7 Ultimate '
+        u'Service pack: Service Pack 1 '
+        u'Windows Version Information: 6.1').format(key_path)
+
+    expected_short_message = (
+        u'[{0:s}] '
+        u'Owner: Windows User '
+        u'Product name: Wind...').format(key_path)
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

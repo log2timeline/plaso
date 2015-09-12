@@ -42,11 +42,11 @@ class RunUserPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      text_dict = {}
-      text_dict[value.name] = value.data
+      values_dict = {}
+      values_dict[value.name] = value.data
 
       event_object = windows_events.WindowsRegistryEvent(
-          registry_key.last_written_time, registry_key.path, text_dict,
+          registry_key.last_written_time, registry_key.path, values_dict,
           offset=registry_key.offset, registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND, urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)

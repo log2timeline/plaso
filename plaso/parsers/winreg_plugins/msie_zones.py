@@ -158,7 +158,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    text_dict = {}
+    values_dict = {}
 
     if registry_key.number_of_values > 0:
       for value in registry_key.GetValues():
@@ -179,11 +179,11 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
-        text_dict[value_name] = value_string
+        values_dict[value_name] = value_string
 
     # Generate at least one event object for the key.
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type,
         urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
@@ -200,7 +200,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       path = u'{0:s}\\{1:s}'.format(
           registry_key.path, self._ZONE_NAMES[zone_key.name])
 
-      text_dict = {}
+      values_dict = {}
 
       # TODO: this plugin currently just dumps the values and does not
       # distinguish between what is a feature control or not.
@@ -240,11 +240,12 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
         else:
           feature_control = u'[{0:s}]'.format(value.name)
 
-        text_dict[feature_control] = value_string
+        values_dict[feature_control] = value_string
 
       event_object = windows_events.WindowsRegistryEvent(
-          zone_key.last_written_time, path, text_dict, offset=zone_key.offset,
-          registry_file_type=registry_file_type, urls=self.URLS)
+          zone_key.last_written_time, path, values_dict,
+          offset=zone_key.offset, registry_file_type=registry_file_type,
+          urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 

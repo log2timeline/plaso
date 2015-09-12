@@ -34,8 +34,10 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
   _MRULISTEX_ENTRY = construct.ULInt32(u'entry_number')
 
+  _SOURCE_APPEND = u': BagMRU'
+
   def _ParseMRUListExEntryValue(
-      self, parser_mediator, key, entry_index, entry_number, text_dict,
+      self, parser_mediator, key, entry_index, entry_number, values_dict,
       value_strings, parent_path_segments, codepage=u'cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
@@ -45,10 +47,10 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
-      text_dict: text dictionary object to append textual strings.
+      values_dict: dictionary object containing values of the key.
       value_strings: value string dictionary object to append value strings.
       parent_path_segments: list containing the parent shell item path segments.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      codepage: Optional extended ASCII string codepage.
 
     Returns:
       The path segment of the shell item.
@@ -82,7 +84,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
         entry_index + 1, entry_number)
 
-    text_dict[value_text] = value_string
+    values_dict[value_text] = value_string
 
     return path_segment
 
@@ -139,7 +141,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     entry_numbers = {}
-    text_dict = {}
+    values_dict = {}
     value_strings = {}
 
     found_terminator = False
@@ -157,15 +159,15 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
         found_terminator = False
 
       path_segment = self._ParseMRUListExEntryValue(
-          parser_mediator, key, index, entry_number, text_dict, value_strings,
-          parent_path_segments, codepage=codepage)
+          parser_mediator, key, index, entry_number, values_dict,
+          value_strings, parent_path_segments, codepage=codepage)
 
       entry_numbers[entry_number] = path_segment
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_time, key.path, text_dict,
+        key.last_written_time, key.path, values_dict,
         offset=key.offset, registry_file_type=registry_file_type,
-        urls=self.URLS, source_append=u': BagMRU')
+        urls=self.URLS, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
     for entry_number, path_segment in entry_numbers.iteritems():

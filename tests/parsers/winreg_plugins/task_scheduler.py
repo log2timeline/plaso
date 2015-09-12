@@ -23,8 +23,8 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath([u'SOFTWARE-RunTests'])
     key_path = (
         u'\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    registry_key = self._GetKeyFromFile(test_file, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 174)

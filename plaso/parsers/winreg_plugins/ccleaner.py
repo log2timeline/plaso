@@ -42,8 +42,8 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       if not value.name or not value.data:
         continue
 
-      text_dict = {}
-      text_dict[value.name] = value.data
+      values_dict = {}
+      values_dict[value.name] = value.data
 
       if value.name == u'UpdateKey':
         try:
@@ -57,21 +57,21 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
         # TODO: create a separate event for this.
         event_object = windows_events.WindowsRegistryEvent(
-            timestamp, registry_key.path, text_dict, offset=registry_key.offset,
-            registry_file_type=registry_file_type,
+            timestamp, registry_key.path, values_dict,
+            offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
 
       elif value.name == u'0':
         event_object = windows_events.WindowsRegistryEvent(
-            registry_key.last_written_time, registry_key.path, text_dict,
+            registry_key.last_written_time, registry_key.path, values_dict,
             offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
 
       else:
         # TODO: change this event not to set a timestamp of 0.
         event_object = windows_events.WindowsRegistryEvent(
-            0, registry_key.path, text_dict, offset=registry_key.offset,
-            registry_file_type=registry_file_type,
+            0, registry_key.path, values_dict,
+            offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
 
       parser_mediator.ProduceEvent(event_object)

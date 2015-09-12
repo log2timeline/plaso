@@ -44,7 +44,7 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    text_dict = {}
+    values_dict = {}
 
     service_type_value = registry_key.GetValueByName(u'Type')
     service_start_value = registry_key.GetValueByName(u'Start')
@@ -53,22 +53,22 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     if service_type_value and service_start_value:
       service_dll = self.GetServiceDll(registry_key)
       if service_dll:
-        text_dict[u'ServiceDll'] = service_dll
+        values_dict[u'ServiceDll'] = service_dll
 
       # Gather all the other string and integer values and insert as they are.
       for value in registry_key.GetValues():
         if not value.name:
           continue
-        if value.name not in text_dict:
+        if value.name not in values_dict:
           if value.DataIsString() or value.DataIsInteger():
-            text_dict[value.name] = value.data
+            values_dict[value.name] = value.data
           elif value.DataIsMultiString():
-            text_dict[value.name] = u', '.join(value.data)
+            values_dict[value.name] = u', '.join(value.data)
 
       # Create a specific service event, so that we can recognize and expand
       # certain values when we're outputting the event.
       event_object = windows_events.WindowsRegistryServiceEvent(
-          registry_key.last_written_time, registry_key.path, text_dict,
+          registry_key.last_written_time, registry_key.path, values_dict,
           offset=registry_key.offset, registry_file_type=registry_file_type,
           urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)

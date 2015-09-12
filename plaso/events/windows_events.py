@@ -29,14 +29,14 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
   DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(
-      self, filetime, key_name, value_dict, usage=None, offset=None,
+      self, filetime, key_path, values_dict, usage=None, offset=None,
       registry_file_type=None, source_append=None, urls=None):
     """Initializes a Windows registry event.
 
     Args:
       filetime: the FILETIME timestamp value.
-      key_name: The name of the Registry key being parsed.
-      value_dict: The interpreted value of the key, stored as a dictionary.
+      key_path: the Windows Registry key path.
+      values_dict: Dictionary object containing values of the key.
       usage: Optional description of the usage of the time value.
              The default is None.
       offset: Optional (data) offset of the Registry key or value.
@@ -52,10 +52,11 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
 
     super(WindowsRegistryEvent, self).__init__(filetime, usage)
 
-    if key_name:
-      self.keyname = key_name
+    if key_path:
+      # TODO: rename keyname to key_path
+      self.keyname = key_path
 
-    self.regvalue = value_dict
+    self.regvalue = values_dict
 
     if offset or isinstance(offset, (int, long)):
       self.offset = offset
@@ -68,6 +69,41 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
 
     if urls:
       self.url = u' - '.join(urls)
+
+
+class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
+  """Convenience class for a Windows installation event.
+
+  Attributes:
+    key_path: the Windows Registry key path.
+    owner: string containing the owner.
+    product_name: string containing the produce name.
+    service_pack: string containing service pack.
+    version: string containing the version.
+  """
+
+  DATA_TYPE = 'windows:registry:installation'
+
+  def __init__(
+      self, posix_time, key_path, owner, product_name, service_pack, version):
+    """Initializes an event object.
+
+    Args:
+      posix_time: the POSIX time value.
+      key_path: the Windows Registry key path.
+      owner: string containing the owner.
+      product_name: string containing the produce name.
+      service_pack: string containing service pack.
+      version: string containing the version.
+    """
+    super(WindowsRegistryInstallationEvent, self).__init__(
+        posix_time, eventdata.EventTimestamp.INSTALLATION_TIME)
+
+    self.key_path = key_path
+    self.owner = owner
+    self.product_name = product_name
+    self.service_pack = service_pack
+    self.version = version
 
 
 class WindowsRegistryServiceEvent(WindowsRegistryEvent):

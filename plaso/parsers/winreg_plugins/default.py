@@ -33,10 +33,10 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    text_dict = {}
+    values_dict = {}
 
     if registry_key.number_of_values == 0:
-      text_dict[u'Value'] = u'No values stored in key.'
+      values_dict[u'Value'] = u'No values stored in key.'
 
     else:
       for value in registry_key.GetValues():
@@ -65,10 +65,10 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
-        text_dict[value_name] = value_string
+        values_dict[value_name] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)

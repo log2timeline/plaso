@@ -38,7 +38,7 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE.
     """
-    text_dict = {}
+    values_dict = {}
     for value in registry_key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
@@ -48,10 +48,10 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      text_dict[value.name] = value.data
+      values_dict[value.name] = value.data
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, text_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type,
         source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)

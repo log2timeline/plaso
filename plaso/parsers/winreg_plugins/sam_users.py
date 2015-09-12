@@ -133,26 +133,26 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
       full_name = parsed_v_value[1]
       comments = parsed_v_value[2]
 
-      text_dict = {u'user_guid': subkey.name}
+      values_dict = {u'user_guid': subkey.name}
 
       if username:
-        text_dict[u'username'] = username
+        values_dict[u'username'] = username
       if full_name:
-        text_dict[u'full_name'] = full_name
+        values_dict[u'full_name'] = full_name
       if comments:
-        text_dict[u'comments'] = comments
+        values_dict[u'comments'] = comments
       if name_dict:
         account_create_time = name_dict.get(username, 0)
       else:
         account_create_time = 0
 
       f_data = self._ParseFValue(subkey)
-      text_dict[u'account_rid'] = f_data.rid
-      text_dict[u'login_count'] = f_data.login_count
+      values_dict[u'account_rid'] = f_data.rid
+      values_dict[u'login_count'] = f_data.login_count
 
       if account_create_time > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            account_create_time, registry_key.path, text_dict,
+            account_create_time, registry_key.path, values_dict,
             usage=eventdata.EventTimestamp.ACCOUNT_CREATED,
             offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
@@ -160,7 +160,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
 
       if f_data.last_login > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            f_data.last_login, registry_key.path, text_dict,
+            f_data.last_login, registry_key.path, values_dict,
             usage=eventdata.EventTimestamp.LAST_LOGIN_TIME,
             offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)
@@ -168,7 +168,7 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
 
       if f_data.password_reset > 0:
         event_object = windows_events.WindowsRegistryEvent(
-            f_data.password_reset, registry_key.path, text_dict,
+            f_data.password_reset, registry_key.path, values_dict,
             usage=eventdata.EventTimestamp.LAST_PASSWORD_RESET,
             offset=registry_key.offset, registry_file_type=registry_file_type,
             source_append=self._SOURCE_APPEND)

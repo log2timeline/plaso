@@ -52,17 +52,18 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
-    mru_text_dict = {}
-    for value in registry_key.GetValues():
+    mru_values_dict = {}
+    for registry_value in registry_key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
-      if not value.name or not self._RE_VALUE_NAME.search(value.name):
+      if not registry_value.name or not self._RE_VALUE_NAME.search(
+          registry_value.name):
         continue
 
       # Ignore any value that is empty or that does not contain a string.
-      if not value.data or not value.DataIsString():
+      if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values = self._RE_VALUE_DATA.findall(value.data)
+      values = self._RE_VALUE_DATA.findall(registry_value.data)
 
       # Values will contain a list containing a tuple containing 2 values.
       if len(values) != 1 or len(values[0]) != 2:
@@ -73,21 +74,21 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       except ValueError:
         parser_mediator.ProduceParseError((
             u'unable to convert filetime string to an integer for '
-            u'value: {0:s}.').format(value.name))
+            u'value: {0:s}.').format(registry_value.name))
         continue
 
-      mru_text_dict[value.name] = value.data
-      text_dict = {value.name: value.data}
+      mru_values_dict[registry_value.name] = registry_value.data
 
       # TODO: change into a seperate event object.
+      values_dict = {registry_value.name: registry_value.data}
       event_object = windows_events.WindowsRegistryEvent(
-          filetime, registry_key.path, text_dict, offset=registry_key.offset,
-          registry_file_type=registry_file_type,
+          filetime, registry_key.path, values_dict,
+          offset=registry_key.offset, registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, mru_text_dict,
+        registry_key.last_written_time, registry_key.path, mru_values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type,
         source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
