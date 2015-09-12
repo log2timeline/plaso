@@ -1307,7 +1307,7 @@ class PregConsole(object):
     if not current_key:
       return
 
-    return current_key.GetValue(value_name)
+    return current_key.GetValueByName(value_name)
 
   def _CommandGetValueData(self, value_name):
     """Return the value data from a value in the currently loaded Registry key.
