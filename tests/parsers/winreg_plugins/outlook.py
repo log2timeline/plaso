@@ -56,14 +56,6 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    expected_msg = (
-        u'[{0:s}] '
-        u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-        u'username@example.com.ost: 0x00372bcf').format(key_path)
-
-    expected_msg_short = u'[{0:s}] C:\\Users\\username\\AppData\\Lo...'.format(
-        key_path)
-
     self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
@@ -75,7 +67,14 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_message = (
+        u'[{0:s}] '
+        u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+        u'username@example.com.ost: 0x00372bcf').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 # TODO: The catalog for Office 2013 (15.0) contains binary values not

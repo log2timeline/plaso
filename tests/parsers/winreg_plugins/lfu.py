@@ -114,14 +114,15 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = (
+    expected_message = (
         u'[{0:s}] BootExecute: autocheck autochk *').format(key_path)
 
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
 
     event_object = event_objects[1]
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'CriticalSectionTimeout: 2592000 '
         u'ExcludeFromKnownDlls: [] '
@@ -131,11 +132,10 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
         u'HeapSegmentCommit: 0 '
         u'HeapSegmentReserve: 0 '
         u'NumberOfInitialSessions: 2').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] CriticalSectionTimeout: 2592000 Excl...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
@@ -192,15 +192,14 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
             key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] ImagePath: C:\\WINDOWS\\system...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

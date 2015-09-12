@@ -96,10 +96,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'Product name: MyTestOS '
         u'Service pack: Service Pack 1 '
         u'Windows Version Information: 5.1').format(key_path)
-
-    expected_short_message = (
-        u'[{0:s}] '
-        u'Owner: A Concerned Citizen Product nam...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -116,7 +113,6 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'MyTestOS 5.1 Service Pack 1 '
         u'Owner: owner '
         u'Origin: \\Microsoft\\Windows NT\\CurrentVersion')
-
     expected_short_message = (
         u'MyTestOS 5.1 Service Pack 1 '
         u'Origin: \\Microsoft\\Windows NT\\CurrentVersion')
@@ -152,11 +148,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'Product name: Windows 7 Ultimate '
         u'Service pack: Service Pack 1 '
         u'Windows Version Information: 6.1').format(key_path)
-
-    expected_short_message = (
-        u'[{0:s}] '
-        u'Owner: Windows User '
-        u'Product name: Wind...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

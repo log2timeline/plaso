@@ -101,7 +101,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'DisplayName: Test Driver '
         u'DriverPackageId: testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
@@ -110,12 +110,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'ImagePath: C:\\Dell\\testdriver.sys '
         u'Start: Auto Start (2) '
         u'Type: File System Driver (0x2)').format(key_path)
-    expected_msg_short = (
-        u'[{0:s}] '
-        u'DisplayName: Test Driver '
-        u'DriverPackageId...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""

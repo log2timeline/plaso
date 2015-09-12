@@ -45,7 +45,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'0 (Allow)'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}\\0 (My Computer)] '
         u'[1001] Download signed ActiveX controls: 0 (Allow) '
         u'[1004] Download unsigned ActiveX controls: 0 (Allow) '
@@ -142,10 +142,10 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = u'[{0:s}\\0 (My Computer)] [...'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessForLockDown(self):
     """Tests the Process function for the lockdown zone key."""
@@ -173,7 +173,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'3 (Not Allowed)'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}\\0 (My Computer)] '
         u'[1001] Download signed ActiveX controls: 1 (Prompt User) '
         u'[1004] Download unsigned ActiveX controls: 3 (Not Allowed) '
@@ -266,10 +266,10 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = u'[{0:s}\\0 (My Com...'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
@@ -308,7 +308,7 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'0 (Allow)'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}\\0 (My Computer)] '
         u'[1200] Run ActiveX controls and plug-ins: 0 (Allow) '
         u'[1400] Active scripting: 0 (Allow) '
@@ -324,10 +324,10 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = u'[{0:s}\\0 (My Com...'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessForLockDown(self):
     """Tests the Process function."""
@@ -355,7 +355,7 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'3 (Not Allowed)'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}\\0 (My Computer)] '
         u'[1200] Run ActiveX controls and plug-ins: 3 (Not Allowed) '
         u'[1400] Active scripting: 1 (Prompt User) '
@@ -367,10 +367,10 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = u'[{0:s}\\...'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

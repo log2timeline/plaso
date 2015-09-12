@@ -13,7 +13,6 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
-  # TODO: Create NTUSER.DAT test file with WinRAR data.
 
   NAME = u'winrar_mru'
   DESCRIPTION = u'Parser for WinRAR History Registry data.'

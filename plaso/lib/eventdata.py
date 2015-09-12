@@ -31,6 +31,7 @@ class EventTimestamp(object):
   EXPIRATION_TIME = u'Expiration Time'
   START_TIME = u'Start Time'
   END_TIME = u'End Time'
+  UPDATE_TIME = u'Update Time'
 
   LAST_SHUTDOWN = u'Last Shutdown Time'
 

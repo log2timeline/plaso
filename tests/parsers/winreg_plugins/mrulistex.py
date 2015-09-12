@@ -84,16 +84,15 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value 2]: C:\\looks_legit.exe '
         u'Index: 2 [MRU Value 0]: Some random text here '
         u'Index: 3 [MRU Value 1]: c:\\evil.exe').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] Index: 1 [MRU Value 2]: C:\\l...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
@@ -128,19 +127,17 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'2011-08-28 22:48:28.159308')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}\\exe] '
         u'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
         u'P:\\Application Tools\\Firefox 6.0\\Firefox Setup 6.0.exe '
         u'Index: 2 [MRU Value 0]: Shell item path: <Computers and Devices> '
         u'<UNKNOWN: 0x00>\\\\controller\\WebDavShare\\Firefox Setup 3.6.12.exe'
         u'').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
-        u'OpenSavePidlMRU...')
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     # A shell item event object.
     event_object = event_objects[0]
@@ -149,20 +146,17 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'2012-03-08 22:16:02')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'Name: ALLOYR~1 '
         u'Long name: Alloy Research '
         u'NTFS file reference: 44518-33 '
         u'Shell item path: <Shared Documents Folder (Users Files)> '
         u'<UNKNOWN: 0x00>\\Alloy Research '
         u'Origin: {0:s}\\*').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'Name: Alloy Research '
-        u'NTFS file reference: 44518-33 '
-        u'Origin: \\Software\\Microsof...')
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
@@ -196,7 +190,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
         u'2012-04-01 13:52:39.113741')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value 17]: Path: The SHIELD, '
         u'Shell item: [The SHIELD.lnk] '
@@ -238,11 +232,10 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
         u'Shell item: [StarFury (2).lnk] '
         u'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
         u'Shell item: [Earth_SA-26_Thunderbolt.lnk]').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] Index: 1 [MR...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class TestMRUListExStringAndShellItemListPlugin(
@@ -278,7 +271,7 @@ class TestMRUListExStringAndShellItemListPlugin(
         u'2012-04-01 13:52:38.966290')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value 1]: Path: chrome.exe, '
         u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
@@ -304,12 +297,10 @@ class TestMRUListExStringAndShellItemListPlugin(
         u'Shell item path: <My Computer> P:\\Application Tools\\Firefox 6.0 '
         u'Index: 8 [MRU Value 2]: Path: Skype.exe, '
         u'Shell item path: <Users Libraries> <UNKNOWN: 0x00>').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
-        u'LastVisitedPidl...')
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

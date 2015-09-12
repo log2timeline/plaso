@@ -43,14 +43,14 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     regvalue = event_object.regvalue
     self.assertEqual(regvalue.get(u'Share_Name'), u'\\home\\nfury')
 
-    expected_string = (
+    expected_message = (
         u'[{0:s}] Label: Home Drive Remote_Server: controller Share_Name: '
         u'\\home\\nfury Type: Remote Drive Volume: '
         u'##controller#home#nfury').format(key_path)
-    expected_string_short = u'{0:s}...'.format(expected_string[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_object, expected_string, expected_string_short)
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

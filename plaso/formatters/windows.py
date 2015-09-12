@@ -24,7 +24,8 @@ class WindowsDistributedLinkTrackingCreationEventFormatter(
   SOURCE_SHORT = u'LOG'
 
 
-class WindowsRegistryInstallationEvent(interface.ConditionalEventFormatter):
+class WindowsRegistryInstallationEventFormatter(
+    interface.ConditionalEventFormatter):
   """Formatter for a Windows installation event."""
 
   DATA_TYPE = u'windows:registry:installation'
@@ -66,5 +67,5 @@ class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
 
 manager.FormattersManager.RegisterFormatters([
     WindowsDistributedLinkTrackingCreationEventFormatter,
-    WindowsRegistryInstallationEvent,
+    WindowsRegistryInstallationEventFormatter,
     WindowsVolumeCreationEventFormatter])

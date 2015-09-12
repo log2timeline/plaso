@@ -37,6 +37,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
+    values_dict = {}
     for value in registry_key.GetValues():
       # Ignore any value not in the form: 'url[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
@@ -46,21 +47,13 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      # TODO: shouldn't this behavior be, put all the typed urls
-      # into a single event object with the last written time of the key?
-      if value.name == u'url1':
-        timestamp = registry_key.last_written_time
-      else:
-        timestamp = 0
-
-      values_dict = {}
       values_dict[value.name] = value.data
 
-      event_object = windows_events.WindowsRegistryEvent(
-          timestamp, registry_key.path, values_dict,
-          offset=registry_key.offset, registry_file_type=registry_file_type,
-          source_append=self._SOURCE_APPEND)
-      parser_mediator.ProduceEvent(event_object)
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(TypedURLsPlugin)

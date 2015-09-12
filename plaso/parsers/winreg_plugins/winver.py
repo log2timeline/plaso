@@ -36,7 +36,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    installation_posix_time = None
+    installation_value = None
     string_values = {}
     for registry_value in registry_key.GetValues():
       # Ignore the default value.
@@ -45,7 +45,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
 
       if (registry_value.name == u'InstallDate' and
           registry_value.DataIsInteger()):
-        installation_posix_time = registry_value.data
+        installation_value = registry_value
         continue
 
       # Ignore any value that is empty or that does not contain a string.
@@ -74,20 +74,13 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
         registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, registry_file_type=registry_file_type)
 
-    event_object.prodname = product_name
-    if owner:
-      event_object.owner = owner
-
     parser_mediator.ProduceEvent(event_object)
 
     # TODO: if not present indicate anomaly of missing installation
     # date and time.
-    if not installation_posix_time:
-      return
-
-    if installation_posix_time is not None:
+    if installation_value:
       event_object = windows_events.WindowsRegistryInstallationEvent(
-          installation_posix_time, registry_key.path, owner, product_name,
+          installation_value.data, registry_key.path, owner, product_name,
           service_pack, version)
       parser_mediator.ProduceEvent(event_object)
 

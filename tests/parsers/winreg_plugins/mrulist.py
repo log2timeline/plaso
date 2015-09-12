@@ -82,16 +82,15 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value a]: Some random text here '
         u'Index: 2 [MRU Value c]: C:/looks_legit.exe '
         u'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] Index: 1 [MRU Value a]: Some ran...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
@@ -168,15 +167,15 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value a]: Shell item path: '
         u'<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
             key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = u'[{0:s}] Index:...'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     # A shell item event object.
     event_object = event_objects[0]
@@ -185,17 +184,14 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'2011-01-14 12:03:52')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'Name: Winnt '
         u'Shell item path: <My Computer> C:\\Winnt '
         u'Origin: {0:s}').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'Name: Winnt '
-        u'Origin: \\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-        u'Deskt...')
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

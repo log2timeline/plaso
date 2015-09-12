@@ -30,7 +30,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 13)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
@@ -47,9 +47,25 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'http://cnn.com/'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_string = u'[{0:s}] {1:s}: {2:s}'.format(
-        key_path, regvalue_identifier, expected_value)
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    expected_message = (
+        u'[{0:s}] '
+        u'url1: http://cnn.com/ '
+        u'url10: http://www.adobe.com/ '
+        u'url11: http://www.google.com/ '
+        u'url12: http://www.firefox.com/ '
+        u'url13: http://go.microsoft.com/fwlink/?LinkId=69157 '
+        u'url2: http://twitter.com/ '
+        u'url3: http://linkedin.com/ '
+        u'url4: http://tweetdeck.com/ '
+        u'url5: mozilla '
+        u'url6: http://google.com/ '
+        u'url7: http://controller.shieldbase.local/certsrv/ '
+        u'url8: http://controller.shieldbase.local/ '
+        u'url9: http://www.stark-research-labs.com/').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
@@ -86,11 +102,11 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'\\\\controller'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    expected_msg_short = u'[{0:s}] {1:s}: \\\\cont...'.format(
-        key_path, regvalue_identifier)
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

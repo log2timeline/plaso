@@ -82,17 +82,16 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'MRUList: [REG_SZ] acb '
         u'a: [REG_SZ] Some random text here '
         u'b: [REG_BINARY] '
         u'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] MRUList: [REG_SZ] acb a: [REG_SZ...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

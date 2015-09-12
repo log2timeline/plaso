@@ -39,13 +39,13 @@ class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
     # Timestamp is: 2012-04-05T17:03:53.992061+00:00
     self.assertEqual(event_object.timestamp, 1333645433992061)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
         u'/autoRun').format(key_path)
-    expected_msg_short = (
-        u'[{0:s}] Sidebar: %ProgramFiles%\\Wind...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
@@ -77,13 +77,13 @@ class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
         u'2012-04-05 17:03:53.992061')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
             key_path)
-    expected_msg_short = (
-        u'[{0:s}] mctadmin: C:\\Windows\\Sys...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
@@ -115,13 +115,13 @@ class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
         u'2011-09-16 20:57:09.067575')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] VMware Tools: \"C:\\Program Files\\VMware\\VMware Tools'
         u'\\VMwareTray.exe\"').format(key_path)
-    expected_msg_short = (
-        u'[{0:s}] VMware Tools: \"C:\\Program Files\\VMwar...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-09-16 20:57:09.067575')
@@ -157,13 +157,13 @@ class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
         u'2012-04-06 14:07:27.750000')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
         u'-k -rq').format(key_path)
-    expected_msg_short = (
-        u'[{0:s}] *WerKernelReporting: %SYSTEMROOT%...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

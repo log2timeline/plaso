@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Terminal Server Registry plugins."""
 
+import re
+
 from plaso.events import windows_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
@@ -33,6 +35,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
+    mru_values_dict = {}
     for subkey in registry_key.GetSubkeys():
       username_value = subkey.GetValueByName(u'UsernameHint')
 
@@ -40,16 +43,22 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
           username_value.DataIsString()):
         username = username_value.data
       else:
-        username = u'None'
+        username = u'N/A'
 
-      values_dict = {}
-      values_dict[u'UsernameHint'] = username
+      mru_values_dict[subkey.name] = username
+      values_dict = {u'Username hint': username}
 
       event_object = windows_events.WindowsRegistryEvent(
-          registry_key.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset, registry_file_type=registry_file_type,
+          subkey.last_written_time, subkey.path, values_dict,
+          offset=subkey.offset, registry_file_type=registry_file_type,
           source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
+
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, mru_values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
@@ -63,6 +72,7 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default',
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
+  _RE_VALUE_DATA = re.compile(r'MRU[0-9]+')
   _SOURCE_APPEND = u': RDP Connection'
 
   def GetEntries(
@@ -76,8 +86,8 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
+    values_dict = {}
     for value in registry_key.GetValues():
-      # TODO: add a check for the value naming scheme.
       # Ignore the default value.
       if not value.name:
         continue
@@ -86,23 +96,13 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      values_dict = {}
       values_dict[value.name] = value.data
 
-      # TODO: why this behavior? Only the first Item is stored with its
-      # timestamp. Shouldn't this be: Store all the values with their
-      # timestamp and store the entire MRU as one event with the
-      # registry key last written time?
-      if value.name == u'MRU0':
-        filetime = registry_key.last_written_time
-      else:
-        filetime = 0
-
-      event_object = windows_events.WindowsRegistryEvent(
-          filetime, registry_key.path, values_dict,
-          offset=registry_key.offset, registry_file_type=registry_file_type,
-          source_append=self._SOURCE_APPEND)
-      parser_mediator.ProduceEvent(event_object)
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

@@ -50,11 +50,12 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'SA-23E Mitchell-Hyundyne Starfury.docx')
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    expected_msg_short = u'[{0:s}] {1:s}: [F00000000][T01CD0146...'.format(
-        key_path, regvalue_identifier)
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

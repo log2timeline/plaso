@@ -41,15 +41,14 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
         u'2009-08-04 15:19:16.997750')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value 0]: '
         u'Shell item path: <My Computer>').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] Index: 1 [MRU Value 0]: Shel...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     event_object = event_objects[1]
 
@@ -57,15 +56,14 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
         u'2009-08-04 15:19:10.669625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}\\0] '
         u'Index: 1 [MRU Value 0]: '
         u'Shell item path: <My Computer> C:\\').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}\\0] Index: 1 [MRU Value 0]: Sh...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     event_object = event_objects[14]
 
@@ -75,9 +73,10 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     # The winreg_formatter will add a space after the key path even when there
     # is not text.
-    expected_msg = u'[{0:s}\\0\\0\\0\\0\\0] '.format(key_path)
+    expected_message = u'[{0:s}\\0\\0\\0\\0\\0] '.format(key_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
 
 
 if __name__ == '__main__':

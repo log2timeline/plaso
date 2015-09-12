@@ -122,7 +122,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'ActiveTimeBias: -60 '
         u'Bias: -60 '
@@ -132,15 +132,10 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         u'StandardBias: 0 '
         u'StandardName: @tzres.dll,-322 '
         u'TimeZoneKeyName: W. Europe Standard Time').format(key_path)
-
-    expected_msg_short = (
-        u'[{0:s}] '
-        u'ActiveTimeBias: -60 '
-        u'Bias: -60 '
-        u'Da...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_objects[0], expected_msg, expected_msg_short)
+        event_objects[0], expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
@@ -159,7 +154,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         u'2012-03-11 07:00:00.000642')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'ActiveTimeBias: 240 '
         u'Bias: 300 '
@@ -169,15 +164,10 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         u'StandardBias: 0 '
         u'StandardName: @tzres.dll,-112 '
         u'TimeZoneKeyName: Eastern Standard Time').format(key_path)
-
-    expected_msg_short = (
-        u'[{0:s}] '
-        u'ActiveTimeBias: 240 '
-        u'Bias: 300 '
-        u'Da...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_objects[0], expected_msg, expected_msg_short)
+        event_objects[0], expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

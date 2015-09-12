@@ -58,7 +58,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 2)
 
     event_object = event_objects[0]
 
@@ -69,11 +69,23 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = u'[{0:s}] UsernameHint: DOMAIN\\username'.format(key_path)
-    expected_msg_short = (
-        u'[{0:s}] UsernameHint: DOMAIN\\use...').format(key_path)
+    expected_message = (
+        u'[{0:s}\\myserver.com] '
+        u'Username hint: DOMAIN\\username').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
+
+    event_object = event_objects[1]
+
+    expected_message = (
+        u'[{0:s}] '
+        u'myserver.com: DOMAIN\\username').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
@@ -122,7 +134,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
@@ -133,19 +145,14 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
-    expected_msg_short = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
+    expected_message = (
+        u'[{0:s}] '
+        u'MRU0: 192.168.16.60 '
+        u'MRU1: computer.domain.com').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-
-    event_object = event_objects[1]
-
-    self.assertEqual(event_object.timestamp, 0)
-
-    expected_msg = u'[{0:s}] MRU1: computer.domain.com'.format(key_path)
-    expected_msg_short = u'[{0:s}] MRU1: computer.domain.com'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -182,11 +182,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[event_object_index]
 
     expected_path = u'\\??\\C:\\WINDOWS\\system32\\hticons.dll'
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessWindows2003(self):
     """Tests the Process function for Windows 2003 AppCompatCache data."""
@@ -218,11 +219,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = (
         u'\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -251,11 +253,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[event_object_index]
 
     expected_path = u'\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -281,11 +284,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_path = u'\\??\\C:\\Windows\\PSEXESVC.EXE'
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     # TODO: implement 64 bit
 
@@ -326,11 +330,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[event_object_index]
 
     expected_path = u'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessWindows8_1(self):
     """Tests the Process function for Windows 8.1 AppCompatCache data."""
@@ -368,11 +373,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[event_object_index]
 
     expected_path = u'SYSVOL\\Windows\\System32\\dllhost.exe'
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessWindows10(self):
     """Tests the Process function for Windows 10 AppCompatCache data."""
@@ -412,11 +418,12 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_object = event_objects[event_object_index]
 
     expected_path = u'C:\\Windows\\system32\\MpSigStub.exe'
-    expected_msg = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
+    expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
         event_object.keyname, event_object_index + 1, expected_path)
-    expected_msg_short = u'Path: {0:s}'.format(expected_path)
+    expected_short_message = u'Path: {0:s}'.format(expected_path)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

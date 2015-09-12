@@ -46,12 +46,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'[Count: 14]'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    # The short message contains the first 76 characters of the key path.
-    expected_msg_short = u'[{0:s}...'.format(key_path[:76])
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
@@ -74,7 +74,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:49:37.078067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -85,12 +84,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         u'Focus duration: 420000]')
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    # The short message contains the first 76 characters of the key path.
-    expected_msg_short = u'[{0:s}...'.format(key_path[:76])
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

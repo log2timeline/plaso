@@ -44,20 +44,18 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'ShutdownTime'
     self._TestRegvalue(event_object, u'Description', expected_value)
 
-    expected_msg = (
-        u'[\\ControlSet001\\Control\\Windows] '
-        u'Description: ShutdownTime')
-
     # Match UTC timestamp.
     time = long(timelib.Timestamp.CopyFromString(
         u'2012-04-04 01:58:40.839249'))
     self.assertEqual(event_object.timestamp, time)
 
-    expected_msg_short = (
+    expected_message = (
         u'[\\ControlSet001\\Control\\Windows] '
         u'Description: ShutdownTime')
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

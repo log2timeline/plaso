@@ -1,14 +1,39 @@
 # -*- coding: utf-8 -*-
 """Parser for the CCleaner Registry key."""
 
+from plaso.events import time_events
 from plaso.events import windows_events
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
 __author__ = 'Marc Seguin (segumarc@gmail.com)'
+
+
+class CCleanerUpdateEvent(time_events.TimestampEvent):
+  """Convenience class for a Windows installation event.
+
+  Attributes:
+    key_path: the Windows Registry key path.
+  """
+
+  DATA_TYPE = 'ccleaner:update'
+
+  def __init__(self, timestamp, key_path):
+    """Initializes an event object.
+
+    Args:
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      key_path: the Windows Registry key path.
+    """
+    super(CCleanerUpdateEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.UPDATE_TIME)
+
+    self.key_path = key_path
 
 
 class CCleanerPlugin(interface.WindowsRegistryPlugin):
@@ -38,43 +63,40 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
-    for value in registry_key.GetValues():
-      if not value.name or not value.data:
+    update_key_value = None
+    values_dict = {}
+    for registry_value in registry_key.GetValues():
+      if not registry_value.name or not registry_value.data:
         continue
 
-      values_dict = {}
-      values_dict[value.name] = value.data
-
-      if value.name == u'UpdateKey':
-        try:
-          # TODO: determine and document the date time format of this string.
-          timestamp = timelib.Timestamp.FromTimeString(
-              value.data, timezone=parser_mediator.timezone)
-        except errors.TimestampError:
-          parser_mediator.ProduceParseError(
-              u'Unable to parse time string: {0:s}'.format(value.data))
-          continue
-
-        # TODO: create a separate event for this.
-        event_object = windows_events.WindowsRegistryEvent(
-            timestamp, registry_key.path, values_dict,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            source_append=self._SOURCE_APPEND)
-
-      elif value.name == u'0':
-        event_object = windows_events.WindowsRegistryEvent(
-            registry_key.last_written_time, registry_key.path, values_dict,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            source_append=self._SOURCE_APPEND)
+      if (registry_value.name == u'UpdateKey' and
+          registry_value.DataIsString()):
+        update_key_value = registry_value
 
       else:
-        # TODO: change this event not to set a timestamp of 0.
-        event_object = windows_events.WindowsRegistryEvent(
-            0, registry_key.path, values_dict,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            source_append=self._SOURCE_APPEND)
+        values_dict[registry_value.name] = registry_value.data
 
-      parser_mediator.ProduceEvent(event_object)
+    if update_key_value:
+      try:
+        # Date and time string in the form: MM/DD/YYYY hh:mm:ss [A|P]M
+        # e.g. 07/13/2013 10:03:14 AM
+        # TODO: does this hold for other locales?
+        timestamp = timelib.Timestamp.FromTimeString(
+            update_key_value.data, timezone=parser_mediator.timezone)
+      except errors.TimestampError:
+        timestamp = None
+        parser_mediator.ProduceParseError(
+            u'unable to parse time string: {0:s}'.format(update_key_value.data))
+
+      if timestamp is not None:
+        event_object = CCleanerUpdateEvent(timestamp, registry_key.path)
+        parser_mediator.ProduceEvent(event_object)
+
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(CCleanerPlugin)
