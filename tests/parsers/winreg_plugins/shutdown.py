@@ -52,10 +52,9 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[\\ControlSet001\\Control\\Windows] '
         u'Description: ShutdownTime')
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+        event_object, expected_message, expected_message)
 
 
 if __name__ == '__main__':

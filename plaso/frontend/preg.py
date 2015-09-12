@@ -699,6 +699,9 @@ class PregRegistryHelper(object):
     self._codepage = codepage
     self._collector_name = collector_name
     self._knowledge_base_object = knowledge_base_object
+    self._registry_file = None
+    self._registry_file_name = None
+    self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
     self._win_registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
@@ -725,7 +728,7 @@ class PregRegistryHelper(object):
   @property
   def name(self):
     """The name of the Registry file."""
-    return getattr(self._registry_file, u'name', u'N/A')
+    return self._registry_file_name
 
   @property
   def path(self):
@@ -746,6 +749,7 @@ class PregRegistryHelper(object):
     """Reset all attributes of the Registry helper."""
     self._currently_loaded_registry_key = u''
     self._registry_file = None
+    self._registry_file_name = None
     self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
 
   def Close(self):
@@ -835,6 +839,7 @@ class PregRegistryHelper(object):
       self.Close()
       raise IOError(u'Unable to open Registry file.')
 
+    self._registry_file_name = self.file_entry.name
     self._registry_file_type = self._win_registry.GetRegistryFileType(
         self._registry_file)
 

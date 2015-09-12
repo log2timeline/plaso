@@ -188,7 +188,10 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Name: Winnt '
         u'Shell item path: <My Computer> C:\\Winnt '
         u'Origin: {0:s}').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = (
+        u'Name: Winnt '
+        u'Origin: \\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+        u'\\Deskt...')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

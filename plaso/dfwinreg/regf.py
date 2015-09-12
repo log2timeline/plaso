@@ -218,7 +218,10 @@ class REGFWinRegistryFile(interface.WinRegistryFile):
     Returns:
       A Registry key (instance of WinRegistryKey) or None if not available.
     """
-    regf_key = self._regf_file.get_key_by_path(key_path)
+    try:
+      regf_key = self._regf_file.get_key_by_path(key_path)
+    except IOError:
+      regf_key = None
     if not regf_key:
       return
 

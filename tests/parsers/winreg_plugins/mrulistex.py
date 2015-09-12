@@ -153,7 +153,10 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Shell item path: <Shared Documents Folder (Users Files)> '
         u'<UNKNOWN: 0x00>\\Alloy Research '
         u'Origin: {0:s}\\*').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = (
+        u'Name: Alloy Research '
+        u'NTFS file reference: 44518-33 '
+        u'Origin: \\Software\\Microsof...')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

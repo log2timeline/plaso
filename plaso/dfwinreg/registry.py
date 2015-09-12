@@ -356,7 +356,8 @@ class WinRegistry(object):
       # Registry type.
       match = True
       for key_path in key_paths:
-        if not registry_file.GetKeyByPath(key_path):
+        registry_key = registry_file.GetKeyByPath(key_path)
+        if not registry_key:
           match = False
 
       if match:
