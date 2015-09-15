@@ -7,6 +7,7 @@ parser.
 """
 
 import abc
+import os
 
 from plaso.parsers import manager
 
@@ -201,22 +202,32 @@ class BaseParser(object):
 class SingleFileBaseParser(BaseParser):
   """Class that implements the single file parser base."""
 
-  # The initial file offset set to None if not set.
+  # The initial file offset. Set this value to None if no initial
+  # file offset seek needs to be performed.
   _INITIAL_FILE_OFFSET = 0
 
-  def Parse(self, parser_mediator, **kwargs):
+  def Parse(self, parser_mediator, file_object=None, **kwargs):
     """Parses a single file.
-
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: optional file-like object to parse. If not set the parser
+                   will use the parser mediator to open the file-like object.
     """
     # TODO: Merge with UpdateChainAndParse for less overhead.
-    file_object = parser_mediator.GetFileObject(
-        offset=self._INITIAL_FILE_OFFSET)
+    close_file_object = False
+    if not file_object:
+      file_object = parser_mediator.GetFileObject(
+          offset=self._INITIAL_FILE_OFFSET)
+      close_file_object = True
+
+    elif self._INITIAL_FILE_OFFSET is not None:
+      file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
+
     try:
       self.ParseFileObject(parser_mediator, file_object, **kwargs)
     finally:
-      file_object.close()
+      if close_file_object:
+        file_object.close()
 
   @abc.abstractmethod
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
