@@ -17,9 +17,11 @@ dependencies.CheckModuleVersion(u'construct')
 class Filetime(object):
   """Class that implements a FILETIME timestamp.
 
-  The FILETIME is a 64-bit integer that contains the number of 100th nano
-  seconds since 1601-01-01 00:00:00. Technically FILETIME is a structure
-  that consists of 2 x 32-bit integers and is presumed to be unsigned.
+  The FILETIME timestamp is a 64-bit integer that contains the number
+  of 100th nano seconds since 1601-01-01 00:00:00.
+
+  Do not confuse this with the FILETIME structure that consists of
+  2 x 32-bit integers and is presumed to be unsigned.
 
   Attributes:
     timestamp: the FILETIME timestamp.
