@@ -97,7 +97,8 @@ class FiletimeEvent(TimestampEvent):
                  derived from the DATA_TYPE attribute.
     """
     timestamp = timelib.Timestamp.FromFiletime(filetime)
-    super(FiletimeEvent, self).__init__(timestamp, usage, data_type=data_type)
+    super(FiletimeEvent, self).__init__(
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class JavaTimeEvent(TimestampEvent):
