@@ -26,9 +26,10 @@ class MacWifiLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
-      source_code: Details of the source code file generating the event.
-      log_level: The log level used for the event.
+      timestamp: the timestamp, contains the number of microseconds from
+                 January 1, 1970 00:00:00 UTC.
+      agent: TODO
+      function: TODO
       text: The log message
       action: A string containing known WiFI actions, eg: connected to
               an AP, configured, etc. If the action is not known,
@@ -178,15 +179,12 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     return timestamp.year
 
   def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a logline and store appropriate attributes.
+    """Parse a single log line and produce an event object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     # TODO: improving this to get a valid year.
     if not self._year_use:
@@ -222,11 +220,12 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     # that need to be removed.
     function = structure.function.strip()
     action = self._GetAction(structure.agent, function, text)
-    return MacWifiLogEvent(
+    event_object = MacWifiLogEvent(
         timestamp, structure.agent, function, text, action)
+    parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -234,12 +233,9 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'logline':
-      return self._ParseLogLine(parser_mediator, structure)
+      self._ParseLogLine(parser_mediator, structure)
     elif key != u'header':
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))

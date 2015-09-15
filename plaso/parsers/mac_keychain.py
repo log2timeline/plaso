@@ -18,8 +18,8 @@ import construct
 import logging
 import os
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
@@ -29,19 +29,20 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class KeychainInternetRecordEvent(event.EventObject):
+class KeychainInternetRecordEvent(time_events.TimestampEvent):
   """Convenience class for an keychain internet record event."""
 
   DATA_TYPE = u'mac:keychain:internet'
 
   def __init__(
-      self, timestamp, timestamp_desc, entry_name, account_name,
+      self, timestamp, timestamp_description, entry_name, account_name,
       text_description, comments, where, protocol, type_protocol, ssgp_hash):
     """Initializes the event object.
 
     Args:
-      timestamp: Description of the timestamp value.
-      timestamp_desc: Timelib type of the timestamp.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       entry_name: Name of the entry.
       account_name: Name of the account.
       text_description: Short description about the entry.
@@ -51,45 +52,44 @@ class KeychainInternetRecordEvent(event.EventObject):
       type_protocol: The sub-protocol used (eg. form).
       ssgp_hash: String with hexadecimal values from the password / cert hash.
     """
-    super(KeychainInternetRecordEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = timestamp_desc
-    self.entry_name = entry_name
+    super(KeychainInternetRecordEvent, self).__init__(
+        timestamp, timestamp_description)
     self.account_name = account_name
-    self.text_description = text_description
-    self.where = where
-    self.protocol = protocol
-    self.type_protocol = type_protocol
     self.comments = comments
+    self.entry_name = entry_name
+    self.protocol = protocol
     self.ssgp_hash = ssgp_hash
+    self.text_description = text_description
+    self.type_protocol = type_protocol
+    self.where = where
 
 
-class KeychainApplicationRecordEvent(event.EventObject):
+class KeychainApplicationRecordEvent(time_events.TimestampEvent):
   """Convenience class for an keychain application password record event."""
   DATA_TYPE = u'mac:keychain:application'
 
   def __init__(
-      self, timestamp, timestamp_desc, entry_name,
-      account_name, text_description, comments, ssgp_hash):
+      self, timestamp, timestamp_description, entry_name, account_name,
+      text_description, comments, ssgp_hash):
     """Initializes the event object.
 
     Args:
-      timestamp: Description of the timestamp value.
-      timestamp_desc: Timelib type of the timestamp.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       entry_name: Name of the entry.
       account_name: Name of the account.
       text_description: Short description about the entry.
       comments: String that contains the comments added by the user.
       ssgp_hash: String with hexadecimal values from the password / cert hash.
     """
-    super(KeychainApplicationRecordEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = timestamp_desc
-    self.entry_name = entry_name
+    super(KeychainApplicationRecordEvent, self).__init__(
+        timestamp, timestamp_description)
     self.account_name = account_name
-    self.text_description = text_description
     self.comments = comments
+    self.entry_name = entry_name
     self.ssgp_hash = ssgp_hash
+    self.text_description = text_description
 
 
 class KeychainParser(interface.SingleFileBaseParser):
@@ -122,6 +122,7 @@ class KeychainParser(interface.SingleFileBaseParser):
       u'db_schema',
       construct.UBInt32(u'size'),
       construct.UBInt32(u'number_of_tables'))
+
   # For each number_of_tables, the schema has a TABLE_OFFSET with the
   # offset starting in the DB_SCHEMA.
   TABLE_OFFSET = construct.UBInt32(u'table_offset')
@@ -152,10 +153,12 @@ class KeychainParser(interface.SingleFileBaseParser):
       construct.Padding(20),
       construct.UBInt32(u'account_name'),
       construct.Padding(4))
+
   RECORD_HEADER_APP = construct.Struct(
       u'record_entry_app',
       RECORD_HEADER,
       construct.Padding(4))
+
   RECORD_HEADER_INET = construct.Struct(
       u'record_entry_inet',
       RECORD_HEADER,
@@ -167,6 +170,7 @@ class KeychainParser(interface.SingleFileBaseParser):
 
   TEXT = construct.PascalString(
       u'text', length_field=construct.UBInt32(u'length'))
+
   TIME = construct.Struct(
       u'timestamp',
       construct.String(u'year', 4),
@@ -176,6 +180,7 @@ class KeychainParser(interface.SingleFileBaseParser):
       construct.String(u'minute', 2),
       construct.String(u'second', 2),
       construct.Padding(2))
+
   TYPE_TEXT = construct.String(u'type', 4)
 
   # TODO: add more protocols.
@@ -186,11 +191,10 @@ class KeychainParser(interface.SingleFileBaseParser):
       u'http': u'http'}
 
   def _GetTimestampFromEntry(self, parser_mediator, structure):
-    """Parse a time entry structure into a microseconds since Epoch in UTC.
+    """Parses a timestamp from a TIME entry structure.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
       structure: TIME entry structure:
                  year: String with the number of the year.
                  month: String with the number of the month.
@@ -200,7 +204,8 @@ class KeychainParser(interface.SingleFileBaseParser):
                  second: String with the number of the second.
 
     Returns:
-      Microseconds since Epoch in UTC.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
     try:
       return timelib.Timestamp.FromTimeParts(
@@ -235,9 +240,10 @@ class KeychainParser(interface.SingleFileBaseParser):
          parser_mediator, file_object, record.record_header, offset)
 
     # Move to the end of the record, and then, prepared for the next record.
-    file_object.seek(
-        record.record_header.entry_length + offset - file_object.tell(),
-        os.SEEK_CUR)
+    next_record_offset = (
+        record.record_header.entry_length + offset - file_object.tell())
+    file_object.seek(next_record_offset, os.SEEK_CUR)
+
     event_object = KeychainApplicationRecordEvent(
         creation_time, eventdata.EventTimestamp.CREATION_TIME,
         entry_name, account_name, text_description, comments, ssgp_hash)
@@ -261,7 +267,7 @@ class KeychainParser(interface.SingleFileBaseParser):
       offset: First byte of the record.
 
     Returns:
-      A list of:
+      A tuple containing:
         ssgp_hash: Hash of the encrypted data (passwd, cert, note).
         creation_time: When the entry was created.
         last_mod_time: Last time the entry was updated.
@@ -326,8 +332,7 @@ class KeychainParser(interface.SingleFileBaseParser):
         ssgp_hash, creation_time, last_mod_time,
         text_description, comments, entry_name, account_name)
 
-  def _ReadEntryInternet(
-      self, parser_mediator, file_object):
+  def _ReadEntryInternet(self, parser_mediator, file_object):
     """Extracts the information from an Internet password entry.
 
     Args:

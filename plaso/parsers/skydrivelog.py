@@ -23,16 +23,17 @@ class SkyDriveLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       source_code: Details of the source code file generating the event.
       log_level: The log level used for the event.
       text: The log message.
     """
     super(SkyDriveLogEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
+    self.log_level = log_level
     self.offset = offset
     self.source_code = source_code
-    self.log_level = log_level
     self.text = text
 
 
@@ -93,6 +94,90 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     self.offset = 0
     self.last_event = None
 
+  def _GetTimestamp(self, timestamp_pypr):
+    """Gets a timestamp from a pyparsing ParseResults timestamp.
+
+    This is a timestamp_string as returned by using
+    text_parser.PyparsingConstants structures:
+    [[8, 1, 2013], [21, 22, 28], 999]
+
+    Args:
+      timestamp_string: The pyparsing ParseResults object
+
+    Returns:
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
+    """
+    month, day, year = timestamp_pypr[0]
+    hour, minute, second = timestamp_pypr[1]
+    millisecond = timestamp_pypr[2]
+    try:
+      return timelib.Timestamp.FromTimeParts(
+          year, month, day, hour, minute, second,
+          microseconds=(millisecond * 1000))
+    except ValueError:
+      pass
+
+    return 0
+
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parse a single log line and produce an event object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
+    timestamp = self._GetTimestamp(structure.timestamp)
+    if not timestamp:
+      logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
+      return
+
+    event_object = SkyDriveLogEvent(
+        timestamp, self.offset, structure.source_code, structure.log_level,
+        structure.text)
+    parser_mediator.ProduceEvent(event_object)
+
+    self.last_event = event_object
+
+  def _ParseNoHeaderSingleLine(self, parser_mediator, structure):
+    """Parse an isolated line and and produce an event object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
+    if not self.last_event:
+      logging.debug(u'SkyDrive, found isolated line with no previous events')
+      return
+
+    event_object = SkyDriveLogEvent(
+        self.last_event.timestamp, self.last_event.offset, None, None,
+        structure.text)
+    parser_mediator.ProduceEvent(event_object)
+
+    # TODO think to a possible refactoring for the non-header lines.
+    self.last_event = None
+
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
+    if key == u'logline':
+      self._ParseLogLine(parser_mediator, structure)
+    elif key == u'no_header_single_line':
+      self._ParseNoHeaderSingleLine(parser_mediator, structure)
+    else:
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a SkyDrive log file.
 
@@ -118,76 +203,6 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
           parsed_structure.timestamp))
       return False
     return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
-    """
-    if key == u'logline':
-      return self._ParseLogline(structure)
-    elif key == u'no_header_single_line':
-      return self._ParseNoHeaderSingleLine(structure)
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-  def _ParseLogline(self, structure):
-    """Parse a logline and store appropriate attributes."""
-    timestamp = self._GetTimestamp(structure.timestamp)
-    if not timestamp:
-      logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
-      return
-    evt = SkyDriveLogEvent(
-        timestamp, self.offset, structure.source_code, structure.log_level,
-        structure.text)
-    self.last_event = evt
-    return evt
-
-  def _ParseNoHeaderSingleLine(self, structure):
-    """Parse an isolated line and store appropriate attributes."""
-    if not self.last_event:
-      logging.debug(u'SkyDrive, found isolated line with no previous events')
-      return
-    evt = SkyDriveLogEvent(
-        self.last_event.timestamp, self.last_event.offset, None, None,
-        structure.text)
-    # TODO think to a possible refactoring for the non-header lines.
-    self.last_event = None
-    return evt
-
-  def _GetTimestamp(self, timestamp_pypr):
-    """Gets a timestamp from a pyparsing ParseResults timestamp.
-
-    This is a timestamp_string as returned by using
-    text_parser.PyparsingConstants structures:
-    [[8, 1, 2013], [21, 22, 28], 999]
-
-    Args:
-      timestamp_string: The pyparsing ParseResults object
-
-    Returns:
-      timestamp: A plaso timelib timestamp event or 0.
-    """
-    timestamp = 0
-    try:
-      month, day, year = timestamp_pypr[0]
-      hour, minute, second = timestamp_pypr[1]
-      millisecond = timestamp_pypr[2]
-      timestamp = timelib.Timestamp.FromTimeParts(
-          year, month, day, hour, minute, second,
-          microseconds=(millisecond * 1000))
-    except ValueError:
-      timestamp = 0
-    return timestamp
 
 
 manager.ParsersManager.RegisterParser(SkyDriveLogParser)

@@ -41,16 +41,16 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
 
   def _FormatDateTime(self, event_object):
     """Formats the date to a datetime object without timezone information.
+
     Note: Timezone information must be removed due to lack of support
-      by xlsxwriter and Excel.
+    by xlsxwriter and Excel.
 
     Args:
       event_object: the event object (instance of EventObject).
 
-     Returns:
-       A datetime object (instance of datetime.datetime) of the event object's
-       timestamp or the Excel epoch (the null time according to Excel)
-       on an OverflowError.
+    Returns:
+      A datetime object (instance of datetime.datetime). A datetime object of
+      December 31, 1899 00:00:00 is returned on error.
     """
     try:
       timestamp = timelib.Timestamp.CopyToDatetime(

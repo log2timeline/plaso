@@ -25,7 +25,8 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       structure: structure with the parse fields.
           computer_name: string with the name of the computer.
           agent: string with the agent that save the log.
@@ -35,12 +36,11 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
     """
     super(MacAppFirewallLogEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.timestamp = timestamp
-    self.computer_name = structure.computer_name
-    self.agent = structure.agent
-    self.status = structure.status
-    self.process_name = process_name
     self.action = action
+    self.agent = structure.agent
+    self.computer_name = structure.computer_name
+    self.process_name = process_name
+    self.status = structure.status
 
 
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
@@ -113,7 +113,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parses each record structure and return an event object if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -121,26 +121,20 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key in [u'logline', u'repeated']:
-      return self._ParseLogLine(parser_mediator, structure, key)
+      self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseLogLine(self, parser_mediator, structure, key):
-    """Parse a logline and store appropriate attributes.
+    """Parse a single log line and produce an event object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: log line of structure.
       key: type of line log (normal or repeated).
-
-    Returns:
-      Return an object MacAppFirewallLogEvent.
     """
     # TODO: improve this to get a valid year.
     if not self._year_use:
@@ -190,7 +184,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     event_object = MacAppFirewallLogEvent(
         timestamp, structure, process_name, action)
-    return event_object
+    parser_mediator.ProduceEvent(event_object)
 
   def _GetTimestamp(self, day, month, year, time):
     """Gets a timestamp from a pyparsing ParseResults timestamp.
