@@ -93,10 +93,12 @@ done
 
 if test ${SHOW_HELP} -ne 0;
 then
-  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [--noclfile]";
+  echo "Usage: ./${SCRIPTNAME} [--diffbase DIFFBASE] [--help] [--nobrowser] [--noclfile]";
   echo "";
   echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
   echo "              The default is upstream/master";
+  echo "";
+  echo "  --help: shows this help.";
   echo "";
   echo "  --nobrowser: forces upload.py not to open a separate browser";
   echo "               process to obtain OAuth2 credentials for Rietveld";
@@ -165,7 +167,7 @@ then
     fi
   fi
 
-  if ! linting_is_correct_remote_upstream;
+  if ! linting_is_correct_remote_diffbase ${DIFFBASE};
   then
     echo "Review aborted - fix the issues reported by the linter.";
 
