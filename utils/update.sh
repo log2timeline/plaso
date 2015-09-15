@@ -68,7 +68,7 @@ fi
 
 if test -z "${CL_NUMBER}";
 then
-  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [CL_NUMBER]";
+  echo "Usage: ./${SCRIPTNAME} [--diffbase DIFFBASE] [--help] [--nobrowser] [CL_NUMBER]";
   echo "";
   echo "  CL_NUMBER: optional change list (CL) number that is to be updated.";
   echo "             If no CL number is provided the value is read from the";
@@ -76,6 +76,8 @@ then
   echo "";
   echo "  --diffbase: the name of the branch to use as diffbase for the CL.";
   echo "              The default is upstream/master";
+  echo "";
+  echo "  --help: shows this help.";
   echo "";
   echo "  --nobrowser: forces upload.py not to open a separate browser";
   echo "               process to obtain OAuth2 credentials for Rietveld";
@@ -131,7 +133,7 @@ then
     fi
   fi
 
-  if ! linting_is_correct_remote_upstream;
+  if ! linting_is_correct_remote_diffbase ${DIFFBASE};
   then
     echo "Update aborted - fix the issues reported by the linter.";
 
