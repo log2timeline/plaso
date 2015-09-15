@@ -137,7 +137,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an event object if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).

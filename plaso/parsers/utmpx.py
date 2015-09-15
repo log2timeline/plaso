@@ -90,7 +90,8 @@ class UtmpxParser(interface.SingleFileBaseParser):
       file_object: a file-like object that points to an UTMPX file.
 
     Returns:
-      An event object (instance of UtmpxMacOsXEvent) or None.
+      An event object (instance of UtmpxMacOsXEvent) or None if
+      the UTMPX entry cannot be read.
     """
     data = file_object.read(self.MAC_UTMPX_ENTRY_SIZE)
     if len(data) != self.MAC_UTMPX_ENTRY_SIZE:

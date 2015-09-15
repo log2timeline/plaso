@@ -159,7 +159,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
         year, month, day, hour, minute, second, microseconds=microsecond)
 
   def _ParseHeader(self, parser_mediator, structure):
-    """Parse header lines and store appropriate attributes.
+    """Parse header lines and produce events.
 
     [u'Logging started.', u'Version=', u'17.0.2011.0627',
     [2013, 7, 25], 16, 3, 23, 291, u'StartLocalTime', u'<details>']
@@ -205,7 +205,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).

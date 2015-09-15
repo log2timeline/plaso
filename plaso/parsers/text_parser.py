@@ -849,7 +849,7 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse a single extracted pyparsing structure.
+    """Parses a log record structure and produces events.
 
     This function takes as an input a parsed pyparsing structure
     and produces an EventObject if possible from that structure.

@@ -9,7 +9,7 @@
    type=AVC msg=audit(1105758604.519:420): avc: denied { getattr } for pid=5962
    comm="httpd" path="/home/auser/public_html" dev=sdb2 ino=921135
 
-   The Parser will extract the 'type' value, the timestamp abd the 'pid'.
+   The Parser will extract the 'type' value, the timestamp and the 'pid'.
    In the previous example, the timestamp is '1105758604.519', it
    contains the number of seconds since January 1, 1970 and the number of
    milli seconds after the dot e.g. seconds: 1105758604, milli seconds: 519.

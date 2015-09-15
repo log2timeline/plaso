@@ -161,7 +161,7 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     self.last_event = None
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
