@@ -20,11 +20,12 @@ class PETimeEvent(time_events.PosixTimeEvent):
   DATA_TYPE = u'pe'
   TIMESTAMP_TYPE = None
 
-  def __init__(self, timestamp, pe_type, section_names, imphash):
+  def __init__(self, posix_time, pe_type, section_names, imphash):
     """Initialize a new event.
 
     Args:
-      timestamp: The timestamp of the event, as seconds since POSIX epoch.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
       pe_type: A string indicating the type of PE file the event relates to.
       section_names: A list of strings of the names of the PE file's sections.
       imphash: A string representation of the "Import Hash" of the pe file the
@@ -32,10 +33,10 @@ class PETimeEvent(time_events.PosixTimeEvent):
         https://www.mandiant.com/blog/tracking-malware-import-hashing/
     """
     super(PETimeEvent, self).__init__(
-        timestamp, self.TIMESTAMP_TYPE, self.DATA_TYPE)
+        posix_time, self.TIMESTAMP_TYPE, self.DATA_TYPE)
+    self.imphash = imphash
     self.pe_type = pe_type
     self.section_names = section_names
-    self.imphash = imphash
 
 
 class PECompilationEvent(PETimeEvent):
@@ -49,11 +50,12 @@ class PEImportModificationEvent(PETimeEvent):
   DATA_TYPE = u'pe:import:import_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.MODIFICATION_TIME
 
-  def __init__(self, timestamp, pe_type, section_names, imphash, dll_name):
+  def __init__(self, posix_time, pe_type, section_names, imphash, dll_name):
     """Initialize a new event.
 
     Args:
-      timestamp: The timestamp of the event, as seconds since POSIX epoch.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
       pe_type: A string indicating the type of PE file the event relates to.
       section_names: A list of strings of the names of the PE file's sections.
       imphash: A string representation of the "Import Hash" of the pe file the
@@ -63,7 +65,7 @@ class PEImportModificationEvent(PETimeEvent):
         timestamp relates to.
     """
     super(PEImportModificationEvent, self).__init__(
-        timestamp, pe_type, section_names, imphash)
+        posix_time, pe_type, section_names, imphash)
     self.dll_name = dll_name
 
 
@@ -72,11 +74,12 @@ class PEDelayImportModificationEvent(PETimeEvent):
   DATA_TYPE = u'pe:delay_import:import_time'
   TIMESTAMP_TYPE = eventdata.EventTimestamp.MODIFICATION_TIME
 
-  def __init__(self, timestamp, pe_type, section_names, imphash, dll_name):
+  def __init__(self, posix_time, pe_type, section_names, imphash, dll_name):
     """Initialize a new event.
 
     Args:
-      timestamp: The timestamp of the event, as seconds since POSIX epoch.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
       pe_type: A string indicating the type of PE file the event relates to.
       section_names: A list of strings of the names of the PE file's sections.
       imphash: A string representation of the "Import Hash" of the pe file the
@@ -86,7 +89,7 @@ class PEDelayImportModificationEvent(PETimeEvent):
         timestamp relates to.
     """
     super(PEDelayImportModificationEvent, self).__init__(
-        timestamp, pe_type, section_names, imphash)
+        posix_time, pe_type, section_names, imphash)
     self.dll_name = dll_name
 
 

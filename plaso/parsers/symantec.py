@@ -42,8 +42,8 @@ class SymantecParser(text_parser.TextCSVParser):
       u'domain_guid', u'log_session_guid', u'vbin_session_id',
       u'login_domain', u'extra']
 
-  def _GetTimestamp(self, timestamp_raw, timezone=pytz.UTC):
-    """Return a 64-bit signed timestamp value in micro seconds since Epoch.
+  def _GetTimestamp(self, date_time_values, timezone=pytz.UTC):
+    """Returns a timetamp.
 
     The timestamp consists of six hexadecimal octets.
     They represent the following:
@@ -57,19 +57,20 @@ class SymantecParser(text_parser.TextCSVParser):
     For example, 200A13080122 represents November 19, 2002, 8:01:34 AM.
 
     Args:
-      timestamp_raw: The hexadecimal encoded timestamp value.
+      date_time_values: The hexadecimal encoded date and time values.
       timezone: Optional timezone (instance of pytz.timezone).
                 The default is UTC.
 
     Returns:
-      A plaso timestamp value, micro seconds since Epoch in UTC.
+      A timestamp value, contains the number of micro seconds since
+      January 1, 1970, 00:00:00 UTC.
     """
-    if timestamp_raw == u'':
+    if date_time_values == u'':
       return 0
 
     year, month, day, hours, minutes, seconds = (
-        int(x[0] + x[1], 16) for x in zip(
-            timestamp_raw[::2], timestamp_raw[1::2]))
+        int(hexdigit[0] + hexdigit[1], 16) for hexdigit in zip(
+            date_time_values[::2], date_time_values[1::2]))
 
     return timelib.Timestamp.FromTimeParts(
         year + 1970, month + 1, day, hours, minutes, seconds, timezone=timezone)
