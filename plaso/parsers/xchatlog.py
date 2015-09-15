@@ -74,8 +74,10 @@ class XChatLogEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: Microseconds since Epoch in UTC.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       text: The text sent by nickname or other text (server, messages, etc.).
+      nickname: optional string containing the XChat nickname.
     """
     super(XChatLogEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
@@ -194,7 +196,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an event object if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -202,37 +204,44 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'logline':
       if not self.xchat_year:
         logging.debug(u'XChatLogParser, missing year information.')
         return
+
       timestamp = self._GetTimestamp(
           structure, parser_mediator.timezone, year=self.xchat_year)
       if not timestamp:
         logging.debug(u'XChatLogParser, cannot get timestamp from line.')
         return
+
       # The text string contains multiple unnecessary whitespaces that need to
       # be removed, thus the split and re-join.
-      return XChatLogEvent(
+      event_object = XChatLogEvent(
           timestamp, u' '.join(structure.text.split()), structure.nickname)
+      parser_mediator.ProduceEvent(event_object)
+
     elif key == u'header':
       timestamp = self._GetTimestamp(structure, parser_mediator.timezone)
       if not timestamp:
         logging.warning(u'XChatLogParser, cannot get timestamp from header.')
         return
+
       if structure.log_action == u'BEGIN':
-        return XChatLogEvent(timestamp, u'XChat start logging')
+        event_object = XChatLogEvent(timestamp, u'XChat start logging')
+        parser_mediator.ProduceEvent(event_object)
+
       elif structure.log_action == u'END':
         # End logging, unset year.
         self.xchat_year = 0
-        return XChatLogEvent(timestamp, u'XChat end logging')
+        event_object = XChatLogEvent(timestamp, u'XChat end logging')
+        parser_mediator.ProduceEvent(event_object)
+
       else:
         logging.warning(u'Unknown log action: {0:s}.'.format(
             structure.log_action))
+
     elif key == u'header_signature':
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
@@ -241,6 +250,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       # exact order as defined!
       logging.warning(u'Unknown locale header.')
       self.xchat_year = 0
+
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))

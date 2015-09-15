@@ -73,8 +73,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     test_pathspec = fake_path_spec.FakePathSpec(
         location=u'C:\\WINDOWS\\system32\\evil.exe')
     event_object = pe.PECompilationEvent(
-        timestamp=pe_event[u'timestamp'], pe_type=u'Executable (EXE)',
-        section_names=[], imphash='')
+        pe_event[u'timestamp'], u'Executable (EXE)', [], '')
     event_object.pathspec = test_pathspec
     event_object.sha256_hash = pe_event[u'sha256_hash']
     event_object.uuid = pe_event[u'uuid']

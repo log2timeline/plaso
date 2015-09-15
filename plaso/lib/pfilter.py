@@ -257,9 +257,8 @@ class DateCompareObject(object):
     """Take a date object and use that for comparison.
 
     Args:
-      data: A string, datetime object or an integer that
-      represents the time to compare against. Time should be stored
-      as microseconds since UTC in Epoch format.
+      data: A string, datetime object or an integer containing the number
+            of micro seconds since January 1, 1970, 00:00:00 UTC.
 
     Raises:
       ValueError: if the date string is invalid.

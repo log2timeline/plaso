@@ -23,7 +23,8 @@ class SkyDriveLogErrorEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: Milliseconds since epoch in UTC.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       module: The module name that generated the log line.
       source_code: Logging source file and line number.
       text: The error text message.
@@ -157,17 +158,16 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, microseconds=microsecond)
 
-  def _ParseHeader(self, structure):
-    """Parse header lines and store appropriate attributes.
+  def _ParseHeader(self, parser_mediator, structure):
+    """Parse header lines and produce events.
 
     [u'Logging started.', u'Version=', u'17.0.2011.0627',
     [2013, 7, 25], 16, 3, 23, 291, u'StartLocalTime', u'<details>']
 
     Args:
-      structure: The parsed structure.
-
-    Returns:
-      timestamp: The event or none.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
     """
     timestamp = self._GetTimestampFromHeader(structure.hdr_timestamp)
     if not timestamp:
@@ -175,26 +175,37 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
           u'SkyDriveLogError invalid timestamp {0:d}'.format(
               structure.hdr_timestamp))
       return
+
     text = u'{0:s} {1:s} {2:s}'.format(
         structure.log_start, structure.ver_str, structure.ver_num)
     detail = u'{0:s} {1:s}'.format(structure.lt_str, structure.details)
-    return SkyDriveLogErrorEvent(
+    event_object = SkyDriveLogErrorEvent(
         timestamp, None, None, text, detail)
+    parser_mediator.ProduceEvent(event_object)
 
-  def _ParseLine(self, structure):
-    """Parse a logline and store appropriate attributes."""
+  def _ParseLine(self, parser_mediator, structure):
+    """Parse a logline and store appropriate attributes.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     timestamp = self._GetTimestampFromLine(structure.timestamp)
     if not timestamp:
       logging.debug(u'SkyDriveLogError invalid timestamp {0:s}'.format(
           structure.timestamp))
       return
+
     # Replace newlines with spaces in structure.detail to preserve output.
-    return SkyDriveLogErrorEvent(
-        timestamp, structure.module, structure.source_code,
-        structure.text, structure.detail.replace(u'\n', u' '))
+    detail = structure.detail.replace(u'\n', u' ')
+    event_object = SkyDriveLogErrorEvent(
+        timestamp, structure.module, structure.source_code, structure.text,
+        detail)
+    parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -202,14 +213,11 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'logline':
-      return self._ParseLine(structure)
+      self._ParseLine(parser_mediator, structure)
     elif key == u'header':
-      return self._ParseHeader(structure)
+      self._ParseHeader(parser_mediator, structure)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))

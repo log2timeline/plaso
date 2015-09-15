@@ -26,12 +26,13 @@ class MacSecuritydLogEvent(time_events.TimestampEvent):
   DATA_TYPE = u'mac:asl:securityd:line'
 
   def __init__(
-      self, timestamp, structure, sender, sender_pid,
-      security_api, caller, message):
+      self, timestamp, structure, sender, sender_pid, security_api, caller,
+      message):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       structure: Structure with the parse fields.
         level: String with the text representation of the priority level.
         facility: String with the ASL facility.
@@ -42,16 +43,14 @@ class MacSecuritydLogEvent(time_events.TimestampEvent):
       message: String with the ASL message.
     """
     super(MacSecuritydLogEvent, self).__init__(
-        timestamp,
-        eventdata.EventTimestamp.ADDED_TIME)
-    self.timestamp = timestamp
-    self.level = structure.level
-    self.sender_pid = sender_pid
-    self.facility = structure.facility
-    self.sender = sender
-    self.security_api = security_api
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.caller = caller
+    self.facility = structure.facility
+    self.level = structure.level
     self.message = message
+    self.security_api = security_api
+    self.sender_pid = sender_pid
+    self.sender = sender
 
 
 class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
@@ -129,7 +128,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -137,18 +136,15 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key in [u'logline', u'repeated']:
-      return self._ParseLogLine(parser_mediator, structure, key)
+      self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseLogLine(self, parser_mediator, structure, key):
-    """Parse a logline and store appropriate attributes.
+    """Parse a single log line and produce an event object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -156,9 +152,6 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     # TODO: improving this to get a valid year.
     if not self._year_use:
@@ -208,9 +201,10 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     else:
       security_api = structure.security_api
 
-    return MacSecuritydLogEvent(
+    event_object = MacSecuritydLogEvent(
         timestamp, structure, sender, structure.sender_pid, security_api,
         caller, message)
+    parser_mediator.ProduceEvent(event_object)
 
   def _GetTimestamp(self, day, month, year, time):
     """Gets a timestamp from a pyparsing ParseResults timestamp.

@@ -36,10 +36,6 @@ class Token(object):
 
     self.next_state = next_state
 
-  def Action(self, unused_lexer):
-    """Method is called when the token matches."""
-    pass
-
 
 class Lexer(object):
   """A generic feed lexer."""
