@@ -42,7 +42,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     """Parses the MRUListEx entry value.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
@@ -50,7 +50,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       values_dict: dictionary object containing values of the key.
       value_strings: value string dictionary object to append value strings.
       parent_path_segments: list containing the parent shell item path segments.
-      codepage: Optional extended ASCII string codepage.
+      codepage: optional extended ASCII string codepage.
 
     Returns:
       The path segment of the shell item.
@@ -92,7 +92,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     """Parses the MRUListEx value in a given Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUListEx value.
 
@@ -133,11 +133,11 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey).
       parent_path_segments: list containing the parent shell item path segments.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
-      registry_file_type: Optional string containing the Windows Registry file
+      codepage: optional extended ASCII string codepage. The default is cp1252.
+      registry_file_type: optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     entry_numbers = {}
@@ -189,11 +189,11 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      registry_key: a Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
-      registry_file_type: Optional string containing the Windows Registry file
+      codepage: optional extended ASCII string codepage. The default is cp1252.
+      registry_file_type: optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     self._ParseSubKey(

@@ -79,7 +79,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
       mru_values_dict[registry_value.name] = registry_value.data
 
-      # TODO: change into a seperate event object.
+      # TODO: change into a separate event object.
       values_dict = {registry_value.name: registry_value.data}
       event_object = windows_events.WindowsRegistryEvent(
           filetime, registry_key.path, values_dict,

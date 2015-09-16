@@ -21,8 +21,7 @@ class FakeWinRegTestCase(test_lib.WinRegTestCase):
     registry_file = fake.FakeWinRegistryFile()
 
     software_key = fake.FakeWinRegistryKey(u'Software')
-    result = registry_file.AddKeyByPath(u'\\', software_key)
-    self.assertTrue(result)
+    registry_file.AddKeyByPath(u'\\', software_key)
 
     registry_file.Open(None)
     return registry_file

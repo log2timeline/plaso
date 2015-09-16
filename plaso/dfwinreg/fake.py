@@ -14,6 +14,7 @@ from plaso.dfwinreg import interface
 dependencies.CheckModuleVersion(u'construct')
 
 
+# TODO: give this class a place of its own when dfwinreg is split off.
 class Filetime(object):
   """Class that implements a FILETIME timestamp.
 
@@ -203,7 +204,8 @@ class FakeWinRegistryKey(interface.WinRegistryKey):
     Args:
       name: the name of the Windows Registry key.
       key_path: optional Windows Registry key path.
-      last_written_time: optional last written time (contains a FILETIME).
+      last_written_time: optional last written time (contains
+                         a FILETIME timestamp).
       offset: optional offset of the key within the Windows Registry file.
       subkeys: optional list of subkeys (instances of FakeWinRegistryKey).
       values: optional list of values (instances of FakeWinRegistryValue).
@@ -234,7 +236,7 @@ class FakeWinRegistryKey(interface.WinRegistryKey):
 
   @property
   def last_written_time(self):
-    """The last written time of the key (contains a FILETIME)."""
+    """The last written time of the key (contains a FILETIME timestamp)."""
     return self._last_written_time
 
   @property
@@ -264,18 +266,17 @@ class FakeWinRegistryKey(interface.WinRegistryKey):
       registry_key: the Windows Registry subkey (instance of
                     FakeWinRegistryKey).
 
-    Returns:
-      A boolean containing True if successful or False if not.
+    Raises:
+      KeyError: if the subkey already exists.
     """
     name = registry_key.name.upper()
     if name in self._subkeys:
-      return False
+      raise KeyError(
+          u'Subkey: {0:s} already exists.'.format(registry_key.name))
 
     self._subkeys[name] = registry_key
     registry_key._key_path = self._JoinKeyPath([
         self._key_path, registry_key.name])
-
-    return True
 
   def AddValue(self, registry_value):
     """Adds a value.
@@ -284,16 +285,15 @@ class FakeWinRegistryKey(interface.WinRegistryKey):
       registry_value: the Windows Registry value (instance of
                       FakeWinRegistryValue).
 
-    Returns:
-      A boolean containing True if successful or False if not.
+    Raises:
+      KeyError: if the value already exists.
     """
     name = registry_value.name.upper()
     if name in self._values:
-      return False
+      raise KeyError(
+          u'Value: {0:s} already exists.'.format(registry_value.name))
 
     self._values[name] = registry_value
-
-    return True
 
   def GetSubkeyByName(self, name):
     """Retrieves a subkey by name.

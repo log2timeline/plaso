@@ -16,7 +16,8 @@ class WinRegistryFileMapping(object):
 
   Attributes:
     key_path_prefix: the Windows Registry key path prefix.
-    windows_path: the Windows path to the Windows Registry file.
+    windows_path: the Windows path to the Windows Registry file. E.g.
+                  C:\\Windows\\System32\\config\\SYSTEM
   """
 
   def __init__(self, key_path_prefix, windows_path):
@@ -24,7 +25,8 @@ class WinRegistryFileMapping(object):
 
     Args:
       key_path_prefix: the Windows Registry key path prefix.
-      windows_path: the Windows path to the Windows Registry file.
+      windows_path: the Windows path to the Windows Registry file. E.g.
+                    C:\\Windows\\System32\\config\\SYSTEM
     """
     super(WinRegistryFileMapping, self).__init__()
     self.key_path_prefix = key_path_prefix.upper()
@@ -374,7 +376,13 @@ class WinRegistry(object):
     Returns:
       A corresponding Windows Registry file object (instance of
       WinRegistryFile) or None if not available.
+
+    Raises:
+      RuntimeError: if no Registry file reader is set.
     """
+    if not self._registry_file_reader:
+      raise RuntimeError(u'Missing Registry file reader.')
+
     return self._registry_file_reader.Open(
         path, ascii_codepage=self._ascii_codepage)
 

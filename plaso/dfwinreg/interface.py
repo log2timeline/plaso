@@ -73,16 +73,13 @@ class WinRegistryFile(object):
       A boolean containing True if successful or False if not.
     """
 
-  def RecurseKeys(self, key_path_prefix=u''):
+  def RecurseKeys(self):
     """Recurses the Windows Registry keys starting with the root key.
-
-    Args:
-      key_path_prefix: optional Windows Registry key path prefix.
 
     Yields:
       A Windows Registry key (instance of WinRegistryKey).
     """
-    root_key = self.GetRootKey(key_path_prefix=key_path_prefix)
+    root_key = self.GetRootKey()
     if root_key:
       for registry_key in root_key.RecurseKeys():
         yield registry_key
@@ -96,7 +93,10 @@ class WinRegistryFileReader(object):
     """Opens the Windows Registry file specificed by the path.
 
     Args:
-      path: the path of the Windows Registry file.
+      path: string containing the path of the Windows Registry file. The path
+            is a Windows path relative to the root of the file system that
+            contains the specfic Windows Registry file. E.g.
+            C:\\Windows\\System32\\config\\SYSTEM
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
 
@@ -121,7 +121,7 @@ class WinRegistryKey(object):
 
   @abc.abstractproperty
   def last_written_time(self):
-    """The last written time of the key (contains a FILETIME)."""
+    """The last written time of the key (contains a FILETIME timestamp)."""
 
   @abc.abstractproperty
   def name(self):
@@ -196,8 +196,8 @@ class WinRegistryKey(object):
       name: the name of the value or an empty string for the default value.
 
     Returns:
-      An instance of a Windows Registry value object (instance of
-      WinRegistryValue) if a corresponding value was found or None if not.
+      A Windows Registry value object (instance of WinRegistryValue) if
+      a corresponding value was found or None if not.
     """
 
   @abc.abstractmethod
@@ -249,7 +249,7 @@ class WinRegistryValue(object):
   # TODO: move data to GetData() and raw_data to data.
   @abc.abstractproperty
   def data(self):
-    """The value data as a native Python object."""
+    """The value data as a Python object."""
 
   @abc.abstractproperty
   def data_type(self):

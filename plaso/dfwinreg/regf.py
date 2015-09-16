@@ -27,7 +27,7 @@ class REGFWinRegistryKey(interface.WinRegistryKey):
 
   @property
   def last_written_time(self):
-    """The last written time of the key (contains a FILETIME)."""
+    """The last written time of the key (contains a FILETIME timestamp)."""
     return self._pyregf_key.get_last_written_time_as_integer()
 
   @property
