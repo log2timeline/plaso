@@ -7,6 +7,7 @@ import tempfile
 import unittest
 import zipfile
 
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.engine import queue
 from plaso.events import text_events
 from plaso.events import windows_events
@@ -30,11 +31,13 @@ class DummyObject(object):
 
 class GroupMock(object):
   """Mock a class for grouping events together."""
+
   def __init__(self):
+    """Initializes the mock group object."""
     self.groups = []
 
-  def AddGroup(self, name, events, desc=None, first=0, last=0, color=None,
-               cat=None):
+  def AddGroup(
+      self, name, events, desc=None, first=0, last=0, color=None, cat=None):
     """Add a new group of events."""
     self.groups.append((name, events, desc, first, last, color, cat))
 
@@ -63,40 +66,53 @@ class StorageFileTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._event_objects = []
-
-    event_1 = windows_events.WindowsRegistryEvent(
-        timelib.Timestamp.CopyFromString(u'2012-04-20 22:38:46.929596'),
-        u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'})
-    event_1.parser = 'UNKNOWN'
-
-    event_2 = windows_events.WindowsRegistryEvent(
-        timelib.Timestamp.CopyFromString(u'2012-05-02 13:43:26.929596'),
-        u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
-        {u'Value': u'send all the exes to the other world'})
-    event_2.parser = 'UNKNOWN'
-
-    event_3 = windows_events.WindowsRegistryEvent(
-        timelib.Timestamp.CopyFromString(u'2012-04-20 16:44:46.000000'),
-        u'\\HKCU\\Windows\\Normal',
-        {u'Value': u'run all the benign stuff'})
-    event_3.parser = 'UNKNOWN'
-
-    text_dict = {'text': (
-        'This is a line by someone not reading the log line properly. And '
-        'since this log line exceeds the accepted 80 chars it will be '
-        'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
-    event_4 = text_events.TextEvent(
-        timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39.000000'),
-        12, text_dict)
-    event_4.parser = 'UNKNOWN'
-
-    self._event_objects.append(event_1)
-    self._event_objects.append(event_2)
-    self._event_objects.append(event_3)
-    self._event_objects.append(event_4)
-
+    self._event_objects = self._CreateTestEventObjects()
     self._formatter_mediator = formatters_mediator.FormatterMediator()
+
+  def _CreateTestEventObjects(self):
+    """Creates the event objects for testing.
+
+    Returns:
+      A list of event objects (instances of EventObject).
+    """
+    event_objects = []
+    filetime = dfwinreg_fake.Filetime()
+
+    filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
+    values_dict = {u'Value': u'c:/Temp/evil.exe'}
+    event_object = windows_events.WindowsRegistryEvent(
+        filetime.timestamp, u'MY AutoRun key', values_dict)
+    event_object.parser = 'UNKNOWN'
+    event_objects.append(event_object)
+
+    filetime.CopyFromString(u'2012-05-02 13:43:26.929596')
+    values_dict = {u'Value': u'send all the exes to the other world'}
+    event_object = windows_events.WindowsRegistryEvent(
+        filetime.timestamp, u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
+        values_dict)
+    event_object.parser = 'UNKNOWN'
+    event_objects.append(event_object)
+
+    filetime.CopyFromString(u'2012-04-20 16:44:46')
+    values_dict = {u'Value': u'run all the benign stuff'}
+    event_object = windows_events.WindowsRegistryEvent(
+        filetime.timestamp, u'\\HKCU\\Windows\\Normal', values_dict)
+    event_object.parser = 'UNKNOWN'
+    event_objects.append(event_object)
+
+    timemstamp = timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39')
+    text_dict = {
+        u'hostname': u'nomachine',
+        u'text': (
+            u'This is a line by someone not reading the log line properly. And '
+            u'since this log line exceeds the accepted 80 chars it will be '
+            u'shortened.'),
+        u'username': u'johndoe'}
+    event_object = text_events.TextEvent(timemstamp, 12, text_dict)
+    event_object.parser = 'UNKNOWN'
+    event_objects.append(event_object)
+
+    return event_objects
 
   def testStorageWriter(self):
     """Test the storage writer."""
@@ -224,7 +240,9 @@ class StorageFileTest(unittest.TestCase):
     self.assertEqual(len(event_objects), 4)
     self.assertEqual(len(tags), 4)
 
-    self.assertEqual(tags[0].timestamp, 1238934459000000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-04-05 12:27:39')
+    self.assertEqual(tags[0].timestamp, expected_timestamp)
     self.assertEqual(tags[0].store_number, 1)
     self.assertEqual(tags[0].store_index, 0)
     self.assertEqual(tags[0].tag.comment, u'My comment')

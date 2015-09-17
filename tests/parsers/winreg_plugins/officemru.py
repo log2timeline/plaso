@@ -25,12 +25,12 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = u'\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU'
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 6)
 
     event_object = event_objects[0]
 
@@ -50,11 +50,12 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'SA-23E Mitchell-Hyundyne Starfury.docx')
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    expected_msg_short = u'[{0:s}] {1:s}: [F00000000][T01CD0146...'.format(
-        key_path, regvalue_identifier)
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -23,55 +23,54 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     the Registry.
 
     Args:
-      key: A Windows Registry key (instance of WinRegKey).
+      key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    parameters_key = key.GetSubkey(u'Parameters')
+    parameters_key = key.GetSubkeyByName(u'Parameters')
     if parameters_key:
-      service_dll = parameters_key.GetValue(u'ServiceDll')
+      service_dll = parameters_key.GetValueByName(u'ServiceDll')
       if service_dll:
         return service_dll.data
     else:
       return None
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    text_dict = {}
+    values_dict = {}
 
-    service_type_value = key.GetValue(u'Type')
-    service_start_value = key.GetValue(u'Start')
+    service_type_value = registry_key.GetValueByName(u'Type')
+    service_start_value = registry_key.GetValueByName(u'Start')
 
     # Grab the ServiceDLL value if it exists.
     if service_type_value and service_start_value:
-      service_dll = self.GetServiceDll(key)
+      service_dll = self.GetServiceDll(registry_key)
       if service_dll:
-        text_dict[u'ServiceDll'] = service_dll
+        values_dict[u'ServiceDll'] = service_dll
 
       # Gather all the other string and integer values and insert as they are.
-      for value in key.GetValues():
+      for value in registry_key.GetValues():
         if not value.name:
           continue
-        if value.name not in text_dict:
+        if value.name not in values_dict:
           if value.DataIsString() or value.DataIsInteger():
-            text_dict[value.name] = value.data
+            values_dict[value.name] = value.data
           elif value.DataIsMultiString():
-            text_dict[value.name] = u', '.join(value.data)
+            values_dict[value.name] = u', '.join(value.data)
 
       # Create a specific service event, so that we can recognize and expand
       # certain values when we're outputting the event.
       event_object = windows_events.WindowsRegistryServiceEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          registry_file_type=registry_file_type, urls=self.URLS)
+          registry_key.last_written_time, registry_key.path, values_dict,
+          offset=registry_key.offset, registry_file_type=registry_file_type,
+          urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 

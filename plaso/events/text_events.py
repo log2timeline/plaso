@@ -24,7 +24,7 @@ class TextEvent(time_events.TimestampEvent):
 
     self.offset = offset
 
-    for name, value in attributes.iteritems():
+    for name, value in iter(attributes.items()):
       # TODO: Revisit this constraints and see if we can implement
       # it using a more sane solution.
       if isinstance(value, basestring) and not value:

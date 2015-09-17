@@ -23,9 +23,9 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Enum\\USBSTOR'
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values,
+        self._plugin, registry_key, knowledge_base_values=knowledge_base_values,
         file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -50,7 +50,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'product', u'Prod_v100w')
     self._TestRegvalue(event_object, u'revision', u'Rev_1024')
 
-    expected_msg = (
+    expected_message = (
         u'[{0:s}] '
         u'device_type: Disk '
         u'friendly_name: HP v100w USB Device '
@@ -59,13 +59,10 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         u'serial: AA951D0000007252&0 '
         u'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
         u'vendor: Ven_HP').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = (
-        u'[{0:s}] '
-        u'device_type: Disk '
-        u'friendly_name: HP v100w USB D...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

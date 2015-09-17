@@ -22,9 +22,9 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = self._plugin.REG_KEYS[0]
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 5)
@@ -43,14 +43,14 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     regvalue = event_object.regvalue
     self.assertEqual(regvalue.get(u'Share_Name'), u'\\home\\nfury')
 
-    expected_string = (
+    expected_message = (
         u'[{0:s}] Label: Home Drive Remote_Server: controller Share_Name: '
         u'\\home\\nfury Type: Remote Drive Volume: '
         u'##controller#home#nfury').format(key_path)
-    expected_string_short = u'{0:s}...'.format(expected_string[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_object, expected_string, expected_string_short)
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

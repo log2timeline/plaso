@@ -6,7 +6,6 @@ import logging
 import construct
 
 from plaso.events import windows_events
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand
@@ -71,20 +70,18 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    version_value = key.GetValue(u'Version')
-    count_subkey = key.GetSubkey(u'Count')
+    version_value = registry_key.GetValueByName(u'Version')
+    count_subkey = registry_key.GetSubkeyByName(u'Count')
 
     if not version_value:
       parser_mediator.ProduceParseError(u'Missing version value')
@@ -157,11 +154,10 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
             if count > 5:
               count -= 5
 
-            text_dict = {}
-            text_dict[value_name] = u'[Count: {0:d}]'.format(count)
+            values_dict = {}
+            values_dict[value_name] = u'[Count: {0:d}]'.format(count)
             event_object = windows_events.WindowsRegistryEvent(
-                timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
-                text_dict, offset=value.offset,
+                filetime, count_subkey.path, values_dict, offset=value.offset,
                 registry_file_type=registry_file_type)
             parser_mediator.ProduceEvent(event_object)
 
@@ -176,19 +172,18 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
           count = parsed_data.get(u'count', None)
           app_focus_count = parsed_data.get(u'app_focus_count', None)
           focus_duration = parsed_data.get(u'focus_duration', None)
-          timestamp = parsed_data.get(u'timestamp', 0)
+          filetime = parsed_data.get(u'timestamp', 0)
 
-          text_dict = {}
-          text_dict[value_name] = (
+          values_dict = {}
+          values_dict[value_name] = (
               u'[UserAssist entry: {0:d}, Count: {1:d}, '
               u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
                   userassist_entry_index, count, app_focus_count,
                   focus_duration)
 
           event_object = windows_events.WindowsRegistryEvent(
-              timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
-              text_dict, offset=count_subkey.offset,
-              registry_file_type=registry_file_type)
+              filetime, count_subkey.path, values_dict,
+              offset=count_subkey.offset, registry_file_type=registry_file_type)
           parser_mediator.ProduceEvent(event_object)
 
 

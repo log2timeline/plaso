@@ -23,25 +23,23 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
   REG_KEYS = []
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Returns an event object based on a Registry key name and values.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    text_dict = {}
+    values_dict = {}
 
-    if key.number_of_values == 0:
-      text_dict[u'Value'] = u'No values stored in key.'
+    if registry_key.number_of_values == 0:
+      values_dict[u'Value'] = u'No values stored in key.'
 
     else:
-      for value in key.GetValues():
+      for value in registry_key.GetValues():
         if not value.name:
           value_name = u'(default)'
         else:
@@ -67,11 +65,11 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
-        text_dict[value_name] = value_string
+        values_dict[value_name] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict,
-        offset=key.offset, registry_file_type=registry_file_type)
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type)
 
     parser_mediator.ProduceEvent(event_object)
 
@@ -85,13 +83,13 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     self.GetEntries(
-        parser_mediator, key=key, registry_file_type=registry_file_type,
+        parser_mediator, key, registry_file_type=registry_file_type,
         **kwargs)
 
 
