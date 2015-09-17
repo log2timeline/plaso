@@ -24,20 +24,21 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
+  _SOURCE_APPEND = u': Typed URLs'
+
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect typed URLs values.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    for value in key.GetValues():
+    values_dict = {}
+    for value in registry_key.GetValues():
       # Ignore any value not in the form: 'url[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
         continue
@@ -46,21 +47,13 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      # TODO: shouldn't this behavior be, put all the typed urls
-      # into a single event object with the last written time of the key?
-      if value.name == u'url1':
-        timestamp = key.last_written_timestamp
-      else:
-        timestamp = 0
+      values_dict[value.name] = value.data
 
-      text_dict = {}
-      text_dict[value.name] = value.data
-
-      event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
-          registry_file_type=registry_file_type,
-          source_append=u': Typed URLs')
-      parser_mediator.ProduceEvent(event_object)
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(TypedURLsPlugin)

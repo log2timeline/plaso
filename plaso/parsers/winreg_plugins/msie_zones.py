@@ -25,7 +25,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
   URLS = [u'http://support.microsoft.com/kb/182569']
 
-  ZONE_NAMES = {
+  _ZONE_NAMES = {
       u'0': u'0 (My Computer)',
       u'1': u'1 (Local Intranet Zone)',
       u'2': u'2 (Trusted sites Zone)',
@@ -34,26 +34,26 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       u'5': u'5 (Custom)'
   }
 
-  KNOWN_PERMISSIONS_VALUE_NAMES = [
+  _KNOWN_PERMISSIONS_VALUE_NAMES = [
       u'1001', u'1004', u'1200', u'1201', u'1400', u'1402', u'1405', u'1406',
       u'1407', u'1601', u'1604', u'1606', u'1607', u'1608', u'1609', u'1800',
       u'1802', u'1803', u'1804', u'1809', u'1A04', u'2000', u'2001', u'2004',
       u'2100', u'2101', u'2102', u'2200', u'2201', u'2300']
 
-  CONTROL_VALUES_PERMISSIONS = {
+  _CONTROL_VALUES_PERMISSIONS = {
       0x00000000: u'0 (Allow)',
       0x00000001: u'1 (Prompt User)',
       0x00000003: u'3 (Not Allowed)',
       0x00010000: u'0x00010000 (Administrator approved)'
   }
 
-  CONTROL_VALUES_SAFETY = {
+  _CONTROL_VALUES_SAFETY = {
       0x00010000: u'0x00010000 (High safety)',
       0x00020000: u'0x00020000 (Medium safety)',
       0x00030000: u'0x00030000 (Low safety)'
   }
 
-  CONTROL_VALUES_1A00 = {
+  _CONTROL_VALUES_1A00 = {
       0x00000000: (
           u'0x00000000 (Automatic logon with current user name and password)'),
       0x00010000: u'0x00010000 (Prompt for user name and password)',
@@ -61,7 +61,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       0x00030000: u'0x00030000 (Anonymous logon)'
   }
 
-  CONTROL_VALUES_1C00 = {
+  _CONTROL_VALUES_1C00 = {
       0x00000000: u'0x00000000 (Disable Java)',
       0x00010000: u'0x00010000 (High safety)',
       0x00020000: u'0x00020000 (Medium safety)',
@@ -69,7 +69,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       0x00800000: u'0x00800000 (Custom)'
   }
 
-  FEATURE_CONTROLS = {
+  _FEATURE_CONTROLS = {
       u'1200': u'Run ActiveX controls and plug-ins',
       u'1400': u'Active scripting',
       u'1001': u'Download signed ActiveX controls',
@@ -144,8 +144,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   }
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -154,18 +153,15 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    text_dict = {}
+    values_dict = {}
 
-    if key.number_of_values > 0:
-      for value in key.GetValues():
+    if registry_key.number_of_values > 0:
+      for value in registry_key.GetValues():
         if not value.name:
           value_name = u'(default)'
         else:
@@ -183,26 +179,28 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
-        text_dict[value_name] = value_string
+        values_dict[value_name] = value_string
 
     # Generate at least one event object for the key.
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-        registry_file_type=registry_file_type, urls=self.URLS)
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
-    if key.number_of_subkeys == 0:
-      error_string = u'Key: {0:s} missing subkeys.'.format(key.path)
+    if registry_key.number_of_subkeys == 0:
+      error_string = u'Key: {0:s} missing subkeys.'.format(registry_key.path)
       parser_mediator.ProduceParseError(error_string)
       return
 
-    for zone_key in key.GetSubkeys():
+    for zone_key in registry_key.GetSubkeys():
       # TODO: these values are stored in the Description value of the
       # zone key. This solution will break on zone values that are larger
       # than 5.
-      path = u'{0:s}\\{1:s}'.format(key.path, self.ZONE_NAMES[zone_key.name])
+      path = u'{0:s}\\{1:s}'.format(
+          registry_key.path, self._ZONE_NAMES[zone_key.name])
 
-      text_dict = {}
+      values_dict = {}
 
       # TODO: this plugin currently just dumps the values and does not
       # distinguish between what is a feature control or not.
@@ -215,15 +213,15 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           value_string = value.data
 
         elif value.DataIsInteger():
-          if value.name in self.KNOWN_PERMISSIONS_VALUE_NAMES:
-            value_string = self.CONTROL_VALUES_PERMISSIONS.get(
+          if value.name in self._KNOWN_PERMISSIONS_VALUE_NAMES:
+            value_string = self._CONTROL_VALUES_PERMISSIONS.get(
                 value.data, u'UNKNOWN')
           elif value.name == u'1A00':
-            value_string = self.CONTROL_VALUES_1A00.get(value.data, u'UNKNOWN')
+            value_string = self._CONTROL_VALUES_1A00.get(value.data, u'UNKNOWN')
           elif value.name == u'1C00':
-            value_string = self.CONTROL_VALUES_1C00.get(value.data, u'UNKNOWN')
+            value_string = self._CONTROL_VALUES_1C00.get(value.data, u'UNKNOWN')
           elif value.name == u'1E05':
-            value_string = self.CONTROL_VALUES_SAFETY.get(
+            value_string = self._CONTROL_VALUES_SAFETY.get(
                 value.data, u'UNKNOWN')
           else:
             value_string = u'{0:d}'.format(value.data)
@@ -232,9 +230,9 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
         if len(value.name) == 4 and value.name != u'Icon':
-          value_description = self.FEATURE_CONTROLS.get(value.name, u'UNKNOWN')
+          value_description = self._FEATURE_CONTROLS.get(value.name, u'UNKNOWN')
         else:
-          value_description = self.FEATURE_CONTROLS.get(value.name, u'')
+          value_description = self._FEATURE_CONTROLS.get(value.name, u'')
 
         if value_description:
           feature_control = u'[{0:s}] {1:s}'.format(
@@ -242,10 +240,10 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
         else:
           feature_control = u'[{0:s}]'.format(value.name)
 
-        text_dict[feature_control] = value_string
+        values_dict[feature_control] = value_string
 
       event_object = windows_events.WindowsRegistryEvent(
-          zone_key.last_written_timestamp, path, text_dict,
+          zone_key.last_written_time, path, values_dict,
           offset=zone_key.offset, registry_file_type=registry_file_type,
           urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)

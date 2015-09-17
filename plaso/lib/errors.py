@@ -130,7 +130,3 @@ class WrongPlugin(Error):
 
 class WrongProtobufEntry(Error):
   """Raised when an EventObject cannot be serialized as a protobuf."""
-
-
-class WinRegistryValueError(Error):
-  """Raised when there is an issue reading a registry value."""

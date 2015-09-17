@@ -26,9 +26,9 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\Windows'
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values,
+        self._plugin, registry_key, knowledge_base_values=knowledge_base_values,
         file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -44,20 +44,17 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'ShutdownTime'
     self._TestRegvalue(event_object, u'Description', expected_value)
 
-    expected_msg = (
-        u'[\\ControlSet001\\Control\\Windows] '
-        u'Description: ShutdownTime')
-
     # Match UTC timestamp.
     time = long(timelib.Timestamp.CopyFromString(
         u'2012-04-04 01:58:40.839249'))
     self.assertEqual(event_object.timestamp, time)
 
-    expected_msg_short = (
+    expected_message = (
         u'[\\ControlSet001\\Control\\Windows] '
         u'Description: ShutdownTime')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
 
 
 if __name__ == '__main__':

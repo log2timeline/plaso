@@ -25,9 +25,9 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file = self._GetTestFilePath([u'SAM'])
     key_path = u'\\SAM\\Domains\\Account\\Users'
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    registry_key = self._GetKeyFromFile(test_file, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key)
+        self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 7)
@@ -39,25 +39,22 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'user_guid', u'000001F4')
     self._TestRegvalue(event_object, u'username', u'Administrator')
 
-    expected_msg = (
+    # Match UTC timestamp.
+    time = long(timelib.Timestamp.CopyFromString(
+        u'2014-09-24 03:36:06.358837'))
+    self.assertEqual(event_object.timestamp, time)
+
+    expected_message = (
         u'[\\SAM\\Domains\\Account\\Users] '
         u'account_rid: 500 '
         u'comments: Built-in account for administering the computer/domain '
         u'login_count: 6 '
         u'user_guid: 000001F4 '
         u'username: Administrator')
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    # Match UTC timestamp.
-    time = long(timelib.Timestamp.CopyFromString(
-        u'2014-09-24 03:36:06.358837'))
-    self.assertEqual(event_object.timestamp, time)
-
-    expected_msg_short = (
-        u'[\\SAM\\Domains\\Account\\Users] '
-        u'account_rid: 500 '
-        u'comments: Built-in account for ...')
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

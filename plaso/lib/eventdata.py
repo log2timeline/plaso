@@ -19,6 +19,8 @@ class EventTimestamp(object):
   LAST_RUNTIME = u'Last Time Executed'
   DELETED_TIME = u'Content Deletion Time'
 
+  INSTALLATION_TIME = u'Installation Time'
+
   FILE_DOWNLOADED = u'File Downloaded'
   PAGE_VISITED = u'Page Visited'
   # TODO: change page visited into last visited time.
@@ -29,6 +31,7 @@ class EventTimestamp(object):
   EXPIRATION_TIME = u'Expiration Time'
   START_TIME = u'Start Time'
   END_TIME = u'End Time'
+  UPDATE_TIME = u'Update Time'
 
   LAST_SHUTDOWN = u'Last Shutdown Time'
 

@@ -24,9 +24,9 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{75048700-EF1F-11D0-9888-006097DEACF9}')
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 14)
@@ -46,12 +46,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'[Count: 14]'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    # The short message contains the first 76 characters of the key path.
-    expected_msg_short = u'[{0:s}...'.format(key_path[:76])
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
@@ -60,9 +60,9 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, file_entry=test_file_entry)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 61)
@@ -74,7 +74,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:49:37.078067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -85,12 +84,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         u'Focus duration: 420000]')
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    # The short message contains the first 76 characters of the key path.
-    expected_msg_short = u'[{0:s}...'.format(key_path[:76])
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
