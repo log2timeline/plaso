@@ -68,6 +68,14 @@ plaso.formatters.bsm module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.ccleaner module
+--------------------------------
+
+.. automodule:: plaso.formatters.ccleaner
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.chrome module
 ------------------------------
 

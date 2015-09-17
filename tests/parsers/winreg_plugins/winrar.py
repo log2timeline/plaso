@@ -5,11 +5,11 @@
 import unittest
 
 from plaso.dfwinreg import definitions as dfwinreg_definitions
+from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winrar
 
-from tests.dfwinreg import test_lib as dfwinreg_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -20,31 +20,47 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = winrar.WinRarHistoryPlugin()
 
-  def testProcess(self):
-    """Tests the Process function."""
-    key_path = u'\\Software\\WinRAR\\ArcHistory'
+  def _CreateTestKey(self, key_path, time_string):
+    """Creates WinRAR ArcHistory Registry keys and values for testing.
 
-    values = []
+    Args:
+      key_path: the Windows Registry key path.
+      time_string: string containing the key last written date and time.
+
+    Returns:
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+    """
+    filetime = dfwinreg_fake.Filetime()
+    filetime.CopyFromString(time_string)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        u'ArcHistory', key_path=key_path, last_written_time=filetime.timestamp,
+        offset=1456)
 
     value_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
         u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'0', value_data, dfwinreg_definitions.REG_SZ, offset=1892))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=1892)
+    registry_key.AddValue(registry_value)
 
     value_data = u'C:\\Downloads\\plaso-static.rar'.encode(u'utf_16_le')
-    values.append(dfwinreg_test_lib.TestRegValue(
-        u'1', value_data, dfwinreg_definitions.REG_SZ, offset=612))
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'1', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        offset=612)
+    registry_key.AddValue(registry_value)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-08-28 09:23:49.002031')
+    return registry_key
 
-    winreg_key = dfwinreg_test_lib.TestRegKey(
-        key_path, expected_timestamp, values, offset=1456)
+  def testProcess(self):
+    """Tests the Process function."""
+    key_path = u'\\Software\\WinRAR\\ArcHistory'
+    time_string = u'2012-08-28 09:23:49.002031'
+    registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
@@ -52,20 +68,19 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
+    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = (
-        u'[{0:s}] 0: C:\\Downloads\\The Sleeping Dragon CD1.iso').format(
-            key_path)
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
-
-    event_object = event_objects[1]
-
-    self.assertEqual(event_object.timestamp, 0)
-
-    expected_string = u'[{0:s}] 1: C:\\Downloads\\plaso-static.rar'.format(
-        key_path)
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    expected_message = (
+        u'[{0:s}] '
+        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
+        u'1: C:\\Downloads\\plaso-static.rar').format(key_path)
+    expected_message_short = (
+        u'[{0:s}] '
+        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
+        u'1: ...').format(key_path)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

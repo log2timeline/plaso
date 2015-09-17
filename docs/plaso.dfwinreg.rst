@@ -12,6 +12,22 @@ plaso.dfwinreg.definitions module
     :undoc-members:
     :show-inheritance:
 
+plaso.dfwinreg.errors module
+----------------------------
+
+.. automodule:: plaso.dfwinreg.errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.dfwinreg.fake module
+--------------------------
+
+.. automodule:: plaso.dfwinreg.fake
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.dfwinreg.interface module
 -------------------------------
 

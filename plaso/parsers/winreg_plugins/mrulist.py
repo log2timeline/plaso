@@ -18,6 +18,8 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
 
   _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16(u'entry_letter'))
 
+  _SOURCE_APPEND = u': MRU List'
+
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
       self, parser_mediator, key, entry_index, entry_letter, **kwargs):
@@ -25,7 +27,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
@@ -38,14 +40,14 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
     """Parses the MRUList value in a given Registry key.
 
     Args:
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
 
     Returns:
       A MRUList value generator, which returns the MRU index number
       and entry value.
     """
-    mru_list_value = key.GetValue(u'MRUList')
+    mru_list_value = key.GetValueByName(u'MRUList')
 
     # The key exists but does not contain a value named "MRUList".
     if not mru_list_value:
@@ -66,12 +68,12 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: the Registry key (instance of dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    text_dict = {}
+    values_dict = {}
     for entry_index, entry_letter in self._ParseMRUListValue(key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with \0 (0x0000).
@@ -86,12 +88,12 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       value_text = u'Index: {0:d} [MRU Value {1:s}]'.format(
           entry_index + 1, entry_letter)
 
-      text_dict[value_text] = value_string
+      values_dict[value_text] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict,
+        key.last_written_time, key.path, values_dict,
         offset=key.offset, registry_file_type=registry_file_type,
-        source_append=u': MRU List')
+        source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 
@@ -111,7 +113,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
@@ -121,7 +123,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:s}'.format(entry_letter))
+    value = key.GetValueByName(u'{0:s}'.format(entry_letter))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
@@ -148,21 +150,21 @@ class MRUListStringPlugin(BaseMRUListPlugin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key=None, codepage=u'cp1252',
+      registry_file_type=None, **kwargs):
     """Extracts event objects from a MRU list.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListKey(
-        parser_mediator, key, registry_file_type=registry_file_type,
-        codepage=codepage)
+        parser_mediator, registry_key, codepage=codepage,
+        registry_file_type=registry_file_type)
 
   def Process(
       self, parser_mediator, key=None, registry_file_type=None,
@@ -171,7 +173,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
            The default is None.
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
@@ -206,7 +208,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey) that contains
+      key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
@@ -217,7 +219,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
     """
     value_string = u''
 
-    value = key.GetValue(u'{0:s}'.format(entry_letter))
+    value = key.GetValueByName(u'{0:s}'.format(entry_letter))
     if value is None:
       logging.debug(
           u'[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
@@ -239,21 +241,21 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
     return value_string
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key=None, codepage=u'cp1252',
+      registry_file_type=None, **kwargs):
     """Extract event objects from a Registry key containing a MRUList value.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListKey(
-        parser_mediator, key, registry_file_type=registry_file_type,
-        codepage=codepage)
+        parser_mediator, registry_key, codepage=codepage,
+        registry_file_type=registry_file_type)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

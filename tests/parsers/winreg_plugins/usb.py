@@ -26,9 +26,9 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Enum\\USB'
-    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values,
+        self._plugin, registry_key, knowledge_base_values=knowledge_base_values,
         file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -46,21 +46,21 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'vendor', u'VID_0E0F')
     self._TestRegvalue(event_object, u'product', u'PID_0002')
 
-    expected_msg = (
-        u'[\\ControlSet001\\Enum\\USB] '
-        u'product: PID_0002 '
-        u'serial: 6&2ab01149&0&2 '
-        u'subkey_name: VID_0E0F&PID_0002 '
-        u'vendor: VID_0E0F')
-
     # Match UTC timestamp.
     time = long(timelib.Timestamp.CopyFromString(
         u'2012-04-07 10:31:37.625246'))
     self.assertEqual(event_object.timestamp, time)
 
-    expected_msg_short = u'{0:s}...'.format(expected_msg[0:77])
+    expected_message = (
+        u'[{0:s}] '
+        u'product: PID_0002 '
+        u'serial: 6&2ab01149&0&2 '
+        u'subkey_name: VID_0E0F&PID_0002 '
+        u'vendor: VID_0E0F').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -160,7 +160,7 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
       # TODO: create a proper object for this.
       user = {}
       user[u'sid'] = subkey.name
-      value = subkey.GetValue(u'ProfileImagePath')
+      value = subkey.GetValueByName(u'ProfileImagePath')
       if value:
         user[u'path'] = value.data
         user[u'name'] = self._GetUsernameFromPath(user[u'path'])
@@ -190,7 +190,7 @@ class WindowsRegistryValuePreprocessPlugin(WindowsRegistryPreprocessPlugin):
           u'Registry key: {0:s} does not exist'.format(self.KEY_PATH))
       return self.DEFAULT_ATTRIBUTE_VALUE
 
-    registry_value = registry_key.GetValue(self.VALUE_NAME)
+    registry_value = registry_key.GetValueByName(self.VALUE_NAME)
     if not registry_value:
       logging.warning(
           u'Registry value: {0:s} does not exist'.format(self.VALUE_NAME))

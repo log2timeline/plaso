@@ -17,22 +17,21 @@ class AppCompatCacheEvent(time_events.FiletimeEvent):
   DATA_TYPE = u'windows:registry:appcompatcache'
 
   def __init__(
-      self, filetime, usage, key, entry_index, path, offset):
+      self, filetime, usage, key_name, entry_index, path, offset):
     """Initializes a Windows Registry event.
 
     Args:
       filetime: The FILETIME timestamp value.
       usage: The description of the usage of the time value.
-      key: Name of the Registry key being parsed.
+      key_name: The name of the corresponding Windows Registry key.
       entry_index: The cache entry index number for the record.
       path: The full path to the executable.
-      offset: The (data) offset of the Registry key or value.
+      offset: The (data) offset of the Windows Registry key or value.
     """
     super(AppCompatCacheEvent, self).__init__(filetime, usage)
-
-    self.keyname = key
-    self.offset = offset
     self.entry_index = entry_index
+    self.keyname = key_name
+    self.offset = offset
     self.path = path
 
 
@@ -547,17 +546,15 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     return cached_entry_object
 
-  def GetEntries(
-      self, parser_mediator, key=None, codepage=u'cp1252', **unused_kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Extracts event objects from a Application Compatibility Cache key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
     """
-    value = key.GetValue(u'AppCompatCache')
+    value = registry_key.GetValueByName(u'AppCompatCache')
     if not value:
       return
 
@@ -568,7 +565,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     if not format_type:
       parser_mediator.ProduceParseError(
           u'Unsupported signature in AppCompatCache key: {0:s}'.format(
-              key.path))
+              registry_key.path))
       return
 
     header_object = self._ParseHeader(format_type, value_data)
@@ -585,7 +582,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     if not cached_entry_size:
       parser_mediator.ProduceParseError(
           u'Unsupported cached entry size at offset {0:d} in AppCompatCache '
-          u'key: {1:s}'.format(cached_entry_offset, key.path))
+          u'key: {1:s}'.format(cached_entry_offset, registry_key.path))
       return
 
     cached_entry_index = 0
@@ -597,7 +594,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         # TODO: refactor to file modification event.
         event_object = AppCompatCacheEvent(
             cached_entry_object.last_modification_time,
-            u'File Last Modification Time', key.path,
+            u'File Last Modification Time', registry_key.path,
             cached_entry_index + 1, cached_entry_object.path,
             cached_entry_offset)
         parser_mediator.ProduceEvent(event_object)
@@ -606,7 +603,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         # TODO: refactor to process run event.
         event_object = AppCompatCacheEvent(
             cached_entry_object.last_update_time,
-            eventdata.EventTimestamp.LAST_RUNTIME, key.path,
+            eventdata.EventTimestamp.LAST_RUNTIME, registry_key.path,
             cached_entry_index + 1, cached_entry_object.path,
             cached_entry_offset)
         parser_mediator.ProduceEvent(event_object)

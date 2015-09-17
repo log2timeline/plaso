@@ -19,51 +19,53 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   REG_KEYS = [u'\\{current_control_set}\\Control\\TimeZoneInformation']
   URLS = []
 
-  WIN_TIMEZONE_VALUE_NAMES = (
+  _VALUE_NAMES = frozenset([
       u'ActiveTimeBias', u'Bias', u'DaylightBias', u'DaylightName',
       u'DynamicDaylightTimeDisabled', u'StandardBias', u'StandardName',
-      u'TimeZoneKeyName')
+      u'TimeZoneKeyName'])
 
-  def _GetValue(self, value_name, key):
-    """Get value helper, it returns the key value if exists.
+  def _GetValueData(self, registry_key, value_name):
+    """Retrieves the value data.
 
     Given the Registry key and the value_name it returns the data in the value
     or None if value_name does not exist.
 
     Args:
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       value_name: the name of the value.
-      key: Registry key (instance of winreg.WinRegKey).
 
     Returns:
-      The data inside a Registry value or None.
+      The data inside a Windows Registry value or None.
     """
-    value = key.GetValue(value_name)
-    if value:
-      return value.data
+    registry_value = registry_key.GetValueByName(value_name)
+    if registry_value:
+      return registry_value.data
 
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect values and return an event.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    if key is None:
+    if registry_key is None:
       return
-    text_dict = {}
-    for value_name in self.WIN_TIMEZONE_VALUE_NAMES:
-      text_dict[value_name] = self._GetValue(value_name, key)
+
+    values_dict = {}
+    for value_name in self._VALUE_NAMES:
+      value_data = self._GetValueData(registry_key, value_name)
+      if value_data is None:
+        continue
+      values_dict[value_name] = value_data
 
     event_object = windows_events.WindowsRegistryEvent(
-        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-        registry_file_type=registry_file_type)
-
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type)
     parser_mediator.ProduceEvent(event_object)
 
 

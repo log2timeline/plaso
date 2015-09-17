@@ -23,8 +23,8 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath([u'SOFTWARE-RunTests'])
     key_path = (
         u'\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    registry_key = self._GetKeyFromFile(test_file, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 174)
@@ -43,12 +43,12 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_value = u'[ID: {044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}]'
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    expected_msg = u'[{0:s}] {1:s}: {2:s}'.format(
+    expected_message = u'[{0:s}] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
-    expected_msg_short = u'[{0:s}] Task: SynchronizeTi...'.format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     event_object = event_objects[1]
 
@@ -58,14 +58,14 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     regvalue_identifier = u'Task: SynchronizeTime'
 
-    expected_msg = (
+    expected_message = (
         u'Task: SynchronizeTime '
         u'[Identifier: {044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}]')
-
-    expected_msg_short = (
+    expected_short_message = (
         u'Task: SynchronizeTime')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
