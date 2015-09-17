@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
-from plaso.parsers.winreg_plugins import programcache
+from plaso.parsers.winreg_plugins import programscache
 
 from tests.parsers.winreg_plugins import test_lib
 
@@ -15,7 +15,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = programcache.ExplorerProgramCachePlugin()
+    self._plugin = programscache.ExplorerProgramsCachePlugin()
 
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""
@@ -28,7 +28,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 0)
+    self.assertEqual(len(event_objects), 75)
 
     # TODO: implement.
 
@@ -43,7 +43,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 0)
+    self.assertEqual(len(event_objects), 114)
 
     # TODO: implement.
 
