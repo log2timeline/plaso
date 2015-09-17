@@ -39,16 +39,13 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       u'programscache_entry_footer',
       construct.Byte(u'sentinel'))
 
-  def _ParseValueData(
-      self, parser_mediator, registry_value, registry_file_type=None):
+  def _ParseValueData(self, parser_mediator, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_value: A Windows Registry value (instance of
                      dfwinreg.WinRegistryValue).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE.
     """
     value_data = registry_value.data
 
@@ -108,42 +105,27 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
 
   # TODO: handle recovered items?
 
-  # TODO: change after winreg clean up.
-  # def GetEntries(
-  #     self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
-  def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Extracts event objects from a Explorer ProgramsCache Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE.
     """
-    # TODO: remove after winreg clean up.
-    registry_key = key
-
     # TODO: generate a Registry event for the key.
 
-    registry_value = registry_key.GetValue(u'ProgramsCache')
+    registry_value = registry_key.GetValueByName(u'ProgramsCache')
     if registry_value:
-      self._ParseValueData(
-          parser_mediator, registry_value,
-          registry_file_type=registry_file_type)
+      self._ParseValueData(parser_mediator, registry_value)
 
-    registry_value = registry_key.GetValue(u'ProgramsCacheSMP')
+    registry_value = registry_key.GetValueByName(u'ProgramsCacheSMP')
     if registry_value:
-      self._ParseValueData(
-          parser_mediator, registry_value,
-          registry_file_type=registry_file_type)
+      self._ParseValueData(parser_mediator, registry_value)
 
-    registry_value = registry_key.GetValue(u'ProgramsCacheTBP')
+    registry_value = registry_key.GetValueByName(u'ProgramsCacheTBP')
     if registry_value:
-      self._ParseValueData(
-          parser_mediator, registry_value,
-          registry_file_type=registry_file_type)
+      self._ParseValueData(parser_mediator, registry_value)
 
 
 winreg.WinRegistryParser.RegisterPlugin(ExplorerProgramsCachePlugin)
