@@ -6,7 +6,11 @@ from plaso.lib import eventdata
 
 
 class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
-  """Convenience class for a Windows distributed link creation event."""
+  """Convenience class for a Windows distributed link creation event.
+
+  Attributes:
+    origin: a string containing the origin of the event (event source).
+  """
 
   DATA_TYPE = 'windows:distributed_link_tracking:creation'
 
@@ -14,8 +18,8 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
     """Initializes an event object.
 
     Args:
-      uuid: A uuid object (instance of uuid.UUID).
-      origin: A string containing the origin of the event (event source).
+      uuid: an uuid object (instance of uuid.UUID).
+      origin: a string containing the origin of the event (event source).
     """
     super(WindowsDistributedLinkTrackingCreationEvent, self).__init__(
         uuid, eventdata.EventTimestamp.CREATION_TIME)
@@ -36,16 +40,13 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
     Args:
       filetime: the FILETIME timestamp value.
       key_path: the Windows Registry key path.
-      values_dict: Dictionary object containing values of the key.
-      usage: Optional description of the usage of the time value.
-             The default is None.
-      offset: Optional (data) offset of the Registry key or value.
-              The default is None.
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
-      source_append: Optional string to append to the source_long of the event.
-                     The default is None.
-      urls: Optional list of URLs. The default is None.
+      values_dict: dictionary object containing values of the key.
+      usage: optional description of the usage of the time value.
+      offset: optional (data) offset of the Registry key or value.
+      registry_file_type: optional string containing the Windows Registry file
+                          type, e.g. NTUSER, SOFTWARE.
+      source_append: optional string to append to the source_long of the event.
+      urls: optional list of URLs.
     """
     if usage is None:
       usage = eventdata.EventTimestamp.WRITTEN_TIME
@@ -81,7 +82,6 @@ class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
     service_pack: string containing service pack.
     version: string containing the version.
   """
-
   DATA_TYPE = 'windows:registry:installation'
 
   def __init__(
@@ -106,24 +106,65 @@ class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
     self.version = version
 
 
+class WindowsRegistryListEvent(time_events.FiletimeEvent):
+  """Convenience class for list retrieved from the Registry e.g. MRU.
+
+  Attributes:
+    key_path: string containing the Windows Registry key path.
+    list_name: string containing the name of the list.
+    list_values: string containing the list values.
+    value_name: string containing the Windows Registry value name.
+  """
+  DATA_TYPE = 'windows:registry:list'
+
+  def __init__(
+      self, filetime, key_path, list_name, list_values,
+      timestamp_description=None, value_name=None):
+    """Initializes a Windows registry event.
+
+    Args:
+      filetime: the FILETIME timestamp value.
+      key_path: string containing the Windows Registry key path.
+      list_name: string containing the name of the list.
+      list_values: string containing the list values.
+      timestamp_description: optional usage string for the timestamp value.
+      value_name: optional string containing the Windows Registry value name.
+    """
+    if timestamp_description is None:
+      timestamp_description = eventdata.EventTimestamp.WRITTEN_TIME
+
+    super(WindowsRegistryListEvent, self).__init__(
+        filetime, timestamp_description)
+
+    self.key_path = key_path
+    self.list_name = list_name
+    self.list_values = list_values
+    self.value_name = value_name
+
+
 class WindowsRegistryServiceEvent(WindowsRegistryEvent):
-  """Convenience class for service entries retrieved from the registry."""
+  """Convenience class for service information retrieved from the Registry."""
   DATA_TYPE = 'windows:registry:service'
 
 
 class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows volume creation event."""
+  """Convenience class for a Windows volume creation event.
 
+  Attributes:
+    device_path: a string containing the volume device path.
+    serial_number: a string containing the volume serial number.
+    origin: a string containing the origin of the event (event source).
+  """
   DATA_TYPE = 'windows:volume:creation'
 
   def __init__(self, filetime, device_path, serial_number, origin):
     """Initializes an event object.
 
     Args:
-      filetime: The FILETIME timestamp value.
-      device_path: A string containing the volume device path.
-      serial_number: A string containing the volume serial number.
-      origin: A string containing the origin of the event (event source).
+      filetime: the FILETIME timestamp value.
+      device_path: a string containing the volume device path.
+      serial_number: a string containing the volume serial number.
+      origin: a string containing the origin of the event (event source).
     """
     super(WindowsVolumeCreationEvent, self).__init__(
         filetime, eventdata.EventTimestamp.CREATION_TIME)

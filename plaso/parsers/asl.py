@@ -274,10 +274,11 @@ class AslParser(interface.SingleFileBaseParser):
     while tam_fields > 0:
       try:
         raw_field = file_object.read(8)
-      except (IOError, construct.FieldError) as exception:
+      except IOError as exception:
         logging.warning(
-            u'Unable to parse ASL event with error: {0:d}'.format(exception))
+            u'Unable to read ASL event with error: {0:d}'.format(exception))
         return None, None
+
       try:
         # Try to read as a String.
         field = self.ASL_STRING.parse(raw_field)
