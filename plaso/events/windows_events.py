@@ -10,6 +10,8 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
 
   Attributes:
     origin: a string containing the origin of the event (event source).
+            E.g. the path of the corresponding LNK file or file reference
+            MFT entry with the corresponding NTFS $OBJECT_ID attribute.
   """
 
   DATA_TYPE = 'windows:distributed_link_tracking:creation'
@@ -20,6 +22,8 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
     Args:
       uuid: an uuid object (instance of uuid.UUID).
       origin: a string containing the origin of the event (event source).
+              E.g. the path of the corresponding LNK file or file reference
+              MFT entry with the corresponding NTFS $OBJECT_ID attribute.
     """
     super(WindowsDistributedLinkTrackingCreationEvent, self).__init__(
         uuid, eventdata.EventTimestamp.CREATION_TIME)
@@ -107,7 +111,7 @@ class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
 
 
 class WindowsRegistryListEvent(time_events.FiletimeEvent):
-  """Convenience class for list retrieved from the Registry e.g. MRU.
+  """Convenience class for a list retrieved from the Registry e.g. MRU.
 
   Attributes:
     key_path: string containing the Windows Registry key path.
@@ -154,6 +158,7 @@ class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
     device_path: a string containing the volume device path.
     serial_number: a string containing the volume serial number.
     origin: a string containing the origin of the event (event source).
+            E.g. corresponding Prefetch file name.
   """
   DATA_TYPE = 'windows:volume:creation'
 
@@ -165,6 +170,7 @@ class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
       device_path: a string containing the volume device path.
       serial_number: a string containing the volume serial number.
       origin: a string containing the origin of the event (event source).
+              E.g. corresponding Prefetch file name.
     """
     super(WindowsVolumeCreationEvent, self).__init__(
         filetime, eventdata.EventTimestamp.CREATION_TIME)

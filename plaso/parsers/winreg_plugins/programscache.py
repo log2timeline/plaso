@@ -64,6 +64,8 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
 
     format_version = header_struct.get(u'format_version')
     if format_version not in [0x01, 0x09, 0x0c, 0x13]:
+      parser_mediator.ProduceParseError(
+          u'unsupported format version: 0x{0:08x}'.format(format_version))
       return
 
     if format_version == 0x01:
