@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the analysis plugin manager class."""
 
+from plaso.analysis import definitions
 from plaso.lib import errors
 
 
@@ -8,6 +9,18 @@ class AnalysisPluginManager(object):
   """Class that implements the analysis plugin manager."""
 
   _plugin_classes = {}
+
+  _PLUGIN_TYPE_STRINGS = {
+      definitions.PLUGIN_TYPE_ANNOTATION: (
+          u'Annotation/tagging plugin'),
+      definitions.PLUGIN_TYPE_ANOMALY: (
+          u'Anomaly plugin'),
+      definitions.PLUGIN_TYPE_REPORT: (
+          u'Summary/Report plugin'),
+      definitions.PLUGIN_TYPE_STATISTICS: (
+          u'Statistics plugin')
+  }
+  _PLUGIN_TYPE_STRINGS.setdefault(u'Unknown type')
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -48,17 +61,20 @@ class AnalysisPluginManager(object):
                 plugin names. The default is True.
 
     Returns:
-      A sorted list of tuples containing the name, docstring and type of each
-      analysis plugin.
+      A sorted list of tuples containing the name, docstring and type string
+      of each analysis plugin.
     """
     results = []
-    for cls_obj in cls._plugin_classes.itervalues():
-      # TODO: Use a specific description variable, not the docstring.
-      doc_string, _, _ = cls_obj.__doc__.partition(u'\n')
+    for plugin_class in iter(cls._plugin_classes.values()):
+      plugin_object = plugin_class(None)
+      if not show_all and not plugin_class.ENABLE_IN_EXTRACTION:
+        continue
 
-      obj = cls_obj(None)
-      if show_all or cls_obj.ENABLE_IN_EXTRACTION:
-        results.append((obj.plugin_name, doc_string, obj.plugin_type))
+      # TODO: Use a specific description variable, not the docstring.
+      doc_string, _, _ = plugin_class.__doc__.partition(u'\n')
+      type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
+      information_tuple = (plugin_object.plugin_name, doc_string, type_string)
+      results.append(information_tuple)
 
     return sorted(results)
 
