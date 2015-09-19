@@ -110,7 +110,6 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
 
-  # TODO: remove after preg refactor.
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
     output_writer = test_lib.TestOutputWriter()

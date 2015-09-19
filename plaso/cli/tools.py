@@ -279,7 +279,6 @@ class CLITool(object):
     """
     self._ParseInformationalOptions(options)
 
-  # TODO: remove after preg refactor.
   def PrintSeparatorLine(self):
     """Prints a separator line."""
     self._output_writer.Write(u'-' * self._LINE_LENGTH)
