@@ -47,6 +47,21 @@ class WindowsRegistryInstallationEventFormatter(
   SOURCE_SHORT = u'LOG'
 
 
+class WindowsRegistryListEventFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a Windows list event e.g. MRU or Jump list."""
+
+  DATA_TYPE = u'windows:registry:list'
+
+  FORMAT_STRING_PIECES = [
+      u'Key: {key_path}',
+      u'Value: {value_name}',
+      u'List: {list_name}',
+      u'[{list_values}]']
+
+  SOURCE_LONG = u'System'
+  SOURCE_SHORT = u'LOG'
+
+
 class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows volume creation event."""
 
@@ -67,5 +82,6 @@ class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
 
 manager.FormattersManager.RegisterFormatters([
     WindowsDistributedLinkTrackingCreationEventFormatter,
+    WindowsRegistryListEventFormatter,
     WindowsRegistryInstallationEventFormatter,
     WindowsVolumeCreationEventFormatter])
