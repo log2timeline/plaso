@@ -426,6 +426,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--info', dest=u'show_info', action=u'store_true', default=False,
         help=u'Print out information about supported plugins and parsers.')
 
+    info_group.add_argument(
+        u'--use_markdown',  u'--use-markdown', dest=u'use_markdown',
+        action=u'store_true', default=False, help=(
+            u'Output lists in Markdown format use in combination with '
+            u'"--hashers list", "--parsers list" or "--timezone list"'))
+
     self.AddLogFileOptions(info_group)
 
     info_group.add_argument(
@@ -537,6 +543,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseTimezoneOption(options)
 
     self.show_info = getattr(options, u'show_info', False)
+
+    if getattr(options, u'use_markdown', False):
+      self._views_format_type = cli_views.ViewsFactory.FORMAT_TYPE_MARKDOWN
 
     if (self.list_hashers or self.list_parsers_and_plugins or
         self.list_timezones or self.show_info):
