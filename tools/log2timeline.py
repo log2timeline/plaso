@@ -427,7 +427,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         help=u'Print out information about supported plugins and parsers.')
 
     info_group.add_argument(
-        u'--use_markdown',  u'--use-markdown', dest=u'use_markdown',
+        u'--use_markdown', u'--use-markdown', dest=u'use_markdown',
         action=u'store_true', default=False, help=(
             u'Output lists in Markdown format use in combination with '
             u'"--hashers list", "--parsers list" or "--timezone list"'))
