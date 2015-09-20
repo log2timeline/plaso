@@ -624,12 +624,12 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
   def ListPluginInformation(self):
     """Lists Registry plugin information."""
-    table_view = cli_views.CLITableView(self._output_writer)
-    table_view.PrintHeader(u'Supported Plugins')
+    table_view = cli_views.CLITableView()
+    table_view.SetTitle(u'Supported Plugins')
     plugin_list = self._front_end.registry_plugin_list
     for plugin_class in plugin_list.GetAllPlugins():
-      table_view.PrintRow(plugin_class.NAME, plugin_class.DESCRIPTION)
-    table_view.PrintFooter()
+      table_view.AddRow([plugin_class.NAME, plugin_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -1145,16 +1145,16 @@ class PregMagics(magic.Magics):
 
     # Print out a hexadecimal representation of all binary values.
     if verbose:
-      table_view = cli_views.CLITableView(self.output_writer)
+      table_view = cli_views.CLITableView()
       header_shown = False
       for value in current_helper.GetCurrentRegistryKey().GetValues():
         if value.DataIsBinaryData():
           if not header_shown:
-            table_view.PrintHeader(u'Hexadecimal representation')
+            table_view.SetTitle(u'Hexadecimal representation')
             header_shown = True
 
           self.console.preg_tool.PrintSeparatorLine()
-          table_view.PrintRow(u'Attribute', value.name)
+          table_view.AddRow([u'Attribute', value.name])
           self.console.preg_tool.PrintSeparatorLine()
 
           value_string = hexdump.Hexdump.FormatData(value.data)
@@ -1163,6 +1163,8 @@ class PregMagics(magic.Magics):
           self.output_writer.Write(u'+-'*40)
           self.output_writer.Write(u'\n')
 
+      table_view.Write(self.output_writer)
+
   def _PrintPluginHelp(self, plugin_object):
     """Prints the help information of a plugin.
 
@@ -1170,17 +1172,17 @@ class PregMagics(magic.Magics):
       plugin_object: a Windows Registry plugin object (instance of
                      WindowsRegistryPlugin).
     """
-    table_view = cli_views.CLITableView(self.output_writer)
-    table_view.PrintHeader(plugin_object.NAME)
+    table_view = cli_views.CLITableView()
+    table_view.SetTitle(plugin_object.NAME)
 
     # TODO: replace __doc__ by DESCRIPTION.
     description = plugin_object.__doc__
-    table_view.PrintRow(u'Description', description)
+    table_view.AddRow([u'Description', description])
     self.output_writer.Write(u'\n')
 
     for registry_key in plugin_object.expanded_keys:
-      table_view.PrintRow(u'Registry Key', registry_key)
-    table_view.PrintFooter()
+      table_view.AddRow([u'Registry Key', registry_key])
+    table_view.Write(self._output_writer)
 
   @magic.line_magic(u'plugin')
   def ParseWithPlugin(self, line):
@@ -1421,18 +1423,16 @@ class PregConsole(object):
 
   def PrintBanner(self):
     """Writes a banner to the output writer."""
-    table_view = cli_views.CLITableView(self._output_writer, column_width=23)
-    table_view.PrintHeader(
-        u'Welcome to PREG - home of the Plaso Windows Registry Parsing.')
-
     self._output_writer.Write(u'\n')
     self._output_writer.Write(
-        u'Some of the commands that are available for use are:\n')
-    self._output_writer.Write(u'\n')
+        u'Welcome to PREG - home of the Plaso Windows Registry Parsing.\n')
 
+    table_view = cli_views.CLITableView()
+    table_view.SetTitle(u'Available commands')
+    table_view.SetColumnNames([u'Function', u'Description'])
     for function_name, description in self._BASE_FUNCTIONS:
-      table_view.PrintRow(function_name, description)
-    table_view.PrintFooter()
+      table_view.AddRow([function_name, description])
+    table_view.Write(self._output_writer)
 
     if len(self._registry_helpers) == 1:
       self.LoadRegistryFile(0)
@@ -1442,6 +1442,7 @@ class PregConsole(object):
               registry_helper.path, registry_helper.collector_name))
       self.SetPrompt(registry_file_path=registry_helper.path)
 
+    # TODO: make sure to limit number of characters per line of output.
     registry_helper = self._currently_loaded_helper
     if registry_helper and registry_helper.name != u'N/A':
       self._output_writer.Write(

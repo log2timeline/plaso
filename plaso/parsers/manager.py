@@ -145,7 +145,8 @@ class ParsersManager(object):
     """Retrieves the parser names.
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string, where None
+                            represents all parsers and plugins.
 
     Returns:
       A list of parser names.
@@ -156,21 +157,26 @@ class ParsersManager(object):
         parser_filter_string=parser_filter_string):
       parser_names.append(parser_name)
 
-    return parser_names
+    return sorted(parser_names)
 
   @classmethod
-  def GetParserPluginsInformation(cls):
+  def GetParserPluginsInformation(cls, parser_filter_string=None):
     """Retrieves the parser plugins information.
+
+    Args:
+      parser_filter_string: Optional parser filter string, where None
+                            represents all parsers and plugins.
 
     Returns:
       A list of tuples of parser plugin names and descriptions.
     """
     parser_plugins_information = []
-    for _, parser_class in cls.GetParsers():
+    for _, parser_class in cls.GetParsers(
+        parser_filter_string=parser_filter_string):
       if parser_class.SupportsPlugins():
-        for _, plugin_class in parser_class.GetPlugins():
+        for plugin_name, plugin_class in parser_class.GetPlugins():
           description = getattr(plugin_class, u'DESCRIPTION', u'')
-          parser_plugins_information.append((plugin_class.NAME, description))
+          parser_plugins_information.append((plugin_name, description))
 
     return parser_plugins_information
 
@@ -179,7 +185,8 @@ class ParsersManager(object):
     """Retrieves the parser objects.
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string, where None
+                            represents all parsers and plugins.
 
     Returns:
       A dictionary mapping parser names to parsers objects (instances of
@@ -211,7 +218,8 @@ class ParsersManager(object):
        included in the list of registered parsers;
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string, where None
+                            represents all parsers and plugins.
 
     Yields:
       A tuple that contains the uniquely identifying name of the parser
@@ -245,6 +253,21 @@ class ParsersManager(object):
       parsers_information.append((parser_class.NAME, description))
 
     return parsers_information
+
+  @classmethod
+  def GetParsersWithPlugins(cls):
+    """Retrieves the names of parser with plugins.
+
+    Returns:
+      A list of parser names.
+    """
+    parser_names = []
+
+    for parser_name, parser_class in cls.GetParsers():
+      if parser_class.SupportsPlugins():
+        parser_names.append(parser_name)
+
+    return sorted(parser_names)
 
   @classmethod
   def GetScanner(cls, specification_store):
@@ -285,7 +308,8 @@ class ParsersManager(object):
     a format specification and a list of parser names for those that do not.
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string, where None
+                            represents all parsers and plugins.
 
     Returns:
       A tuple of a format specification store (instance of

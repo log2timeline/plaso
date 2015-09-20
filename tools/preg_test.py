@@ -80,7 +80,7 @@ class PregToolTest(test_lib.ToolTestCase):
     self.assertIn(b'* Supported Plugins *', output)
     self.assertIn(b'userassist : Parser for User Assist Registry data', output)
     self.assertIn(
-        b'services : Parser for services and drivers Registry', output)
+        b'windows_services : Parser for services and drivers', output)
 
   def testPrintHeader(self):
     """Tests the PrintHeader function."""
@@ -217,34 +217,37 @@ class PregConsoleTest(test_lib.ToolTestCase):
   """Tests for the preg console."""
 
   _EXPECTED_BANNER_HEADER = [
-      (u'******** Welcome to PREG - home of the Plaso Windows Registry '
-       u'Parsing. *********'),
-      u'',
-      u'Some of the commands that are available for use are:',
-      u'',
-      (u'                 cd key : Navigate the Registry like a directory '
-       u'structure.'),
-      (u'                ls [-v] : List all subkeys and values of a Registry '
-       u'key. If'),
-      (u'                          called as ls True then values of '
-       u'keys will be'),
-      u'                          included in the output.',
-      u'             parse -[v] : Parse the current key using all plugins.',
-      (u'plugin [-h] plugin_name : Run a particular key-based plugin on the '
-       u'loaded'),
-      (u'                          hive. The correct Registry key will '
-       u'be loaded, opened'),
-      u'                          and then parsed.',
-      (u'   get_value value_name : Get a value from the currently loaded '
-       u'Registry key.'),
-      (u'get_value_data value_name : Get a value data from a value stored in '
-       u'the'),
-      u'                          currently loaded Registry key.',
-      u'                get_key : Return the currently loaded Registry key.',
-      (u'---------------------------------------------------------------------'
-       u'-----------')]
+      b'',
+      b'Welcome to PREG - home of the Plaso Windows Registry Parsing.',
+      b'',
+      (b'****************************** Available commands '
+       b'******************************'),
+      b'                 Function : Description',
+      (b'----------------------------------------------------------------------'
+       b'----------'),
+      (b'                   cd key : Navigate the Registry like a directory '
+       b'structure.'),
+      (b'                  ls [-v] : List all subkeys and values of a Registry '
+       b'key. If'),
+      (b'                            called as ls True then values of '
+       b'keys will be'),
+      b'                            included in the output.',
+      b'               parse -[v] : Parse the current key using all plugins.',
+      (b'  plugin [-h] plugin_name : Run a particular key-based plugin on the '
+       b'loaded'),
+      (b'                            hive. The correct Registry key will '
+       b'be loaded,'),
+      b'                            opened and then parsed.',
+      (b'     get_value value_name : Get a value from the currently loaded '
+       b'Registry key.'),
+      (b'get_value_data value_name : Get a value data from a value stored in '
+       b'the'),
+      b'                            currently loaded Registry key.',
+      b'                  get_key : Return the currently loaded Registry key.',
+      (b'---------------------------------------------------------------------'
+       b'-----------')]
 
-  _EXPECTED_BANNER_FOOTER = u'Happy command line console fu-ing.'
+  _EXPECTED_BANNER_FOOTER = b'Happy command line console fu-ing.'
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -281,15 +284,17 @@ class PregConsoleTest(test_lib.ToolTestCase):
     self._test_console.PrintBanner()
 
     extra_text = (
-        u'Opening hive: {0:s} [OS]\n'
-        u'Registry file: NTUSER.DAT [{0:s}] is available and '
-        u'loaded.\n').format(self._file_path)
+        b'Opening hive: {0:s} [OS]\n'
+        b'Registry file: NTUSER.DAT [{0:s}] is available and '
+        b'loaded.\n').format(self._file_path)
 
-    expected_banner = u'\n{0:s}\n{1:s}\n{2:s}'.format(
-        u'\n'.join(self._EXPECTED_BANNER_HEADER), extra_text,
+    expected_banner = b'{0:s}\n{1:s}\n{2:s}'.format(
+        b'\n'.join(self._EXPECTED_BANNER_HEADER), extra_text,
         self._EXPECTED_BANNER_FOOTER)
     banner = output_writer.ReadOutput()
-    self.assertEquals(banner, expected_banner)
+
+    # Splitting the string makes it easier to see differences.
+    self.assertEquals(banner.split(b'\n'), expected_banner.split(b'\n'))
 
   def testPrintRegistryFileList(self):
     """Test the PrintRegistryFileList function."""
@@ -305,8 +310,9 @@ class PregConsoleTest(test_lib.ToolTestCase):
     self._test_console.PrintRegistryFileList()
     text = output_writer.ReadOutput()
 
-    expected_text = u'Index Hive [collector]\n0     {0:s} [OS]\n'.format(
-        self._file_path)
+    expected_text = (
+        u'Index Hive [collector]\n'
+        u'0     {0:s} [OS]\n').format(self._file_path)
 
     self.assertEquals(text, expected_text)
 

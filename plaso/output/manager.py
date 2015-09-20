@@ -39,7 +39,11 @@ class OutputManager(object):
 
   @classmethod
   def GetDisabledOutputClasses(cls):
-    """Retrieves the disabled output classes."""
+    """Retrieves the disabled output classes.
+
+    Returns:
+      A list of the disable output classes (types of OutputModule).
+    """
     return cls._disabled_output_classes.values()
 
   @classmethod
