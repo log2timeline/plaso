@@ -93,7 +93,7 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
         u'source_short': u'LOG',
         u'tag': [u'Test tag'],
         u'text': (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-                 u'session\n closed for user root)'),
+                  u'session\n closed for user root)'),
         u'message': u'[',
         u'datetime': u'2012-06-27T18:17:01+00:00'
     }
