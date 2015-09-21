@@ -97,6 +97,12 @@ class TimesketchOutputModule(interface.OutputModule):
 
     event_values[u'message'] = message
 
+    try:
+      tags = [tag for tag in event_values[u'tag'].tags]
+    except (KeyError, AttributeError):
+      tags = []
+    event_values[u'tag'] = tags
+
     source_short, source = self._output_mediator.GetFormattedSources(
         event_object)
     if source is None or source_short is None:

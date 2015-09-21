@@ -69,6 +69,10 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     self._event_timestamp = plaso_timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')
     self._event_object = TimesketchTestEvent(self._event_timestamp)
+    self._event_tag = event.EventTag()
+    self._event_tag.uuid = self._event_object.uuid
+    self._event_tag.tags = [u'Test tag']
+    self._event_object.tag = self._event_tag
 
     output_mediator = self._CreateOutputMediator()
     self._timesketch_output = timesketch_out.TimesketchOutputModule(
@@ -87,6 +91,7 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
         u'data_type': u'syslog:line',
         u'source_long': u'Log File',
         u'source_short': u'LOG',
+        u'tag': [u'Test tag'],
         u'text': u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                  u'session\n closed for user root)',
         u'message': u'[',
