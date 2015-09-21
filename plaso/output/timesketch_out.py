@@ -98,7 +98,7 @@ class TimesketchOutputModule(interface.OutputModule):
     event_values[u'message'] = message
 
     try:
-      tags = [tag for tag in event_values[u'tag'].tags]
+      tags = list(event_values[u'tag'].tags)
     except (KeyError, AttributeError):
       tags = []
     event_values[u'tag'] = tags
