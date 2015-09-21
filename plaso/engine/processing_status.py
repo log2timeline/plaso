@@ -2,6 +2,7 @@
 """The processing status classes."""
 
 import time
+import logging
 
 from plaso.lib import definitions
 
@@ -219,6 +220,11 @@ class ProcessingStatus(object):
         self._storage_writer.number_of_events == number_of_events):
       return True
 
+    #TODO: Remove or change method
+    logging.debug((u'{0:d} events extracted, {1:d} written to storage. '
+                   u'{2:d} remaining').format(
+        number_of_events, self._storage_writer.number_of_events,
+        number_of_events - self._storage_writer.number_of_events))
     return False
 
   def UpdateCollectorStatus(

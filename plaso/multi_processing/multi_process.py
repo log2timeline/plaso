@@ -229,12 +229,9 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 class MultiProcessCollectorProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing collector process."""
 
-  # Number of seconds to wait for all the workers to start.
-  WORKERS_READY_TIMEOUT = 10
-
   def __init__(
       self, stop_collector_event, source_path_specs, path_spec_queue,
-      workers_ready_event, filter_find_specs=None, include_directory_stat=True,
+      filter_find_specs=None, include_directory_stat=True,
       **kwargs):
     """Initializes the process object.
 
@@ -354,13 +351,15 @@ class MultiProcessEngine(engine.BaseEngine):
     self._use_zeromq = use_zeromq
     if use_zeromq:
       path_spec_inbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-          delay_start=True)
+          delay_start=True, name=u'Pathspec inbound', buffer_timeout_seconds=60)
       path_spec_queue = path_spec_inbound_queue
-      event_object_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
-          delay_start=True, timeout_seconds=60)
+      event_object_inbound_queue = zeromq_queue.ZeroMQBufferedPullBindQueue(
+          delay_start=True, name=u'Event object inbound', timeout_seconds=60,
+          buffer_max_size=10000)
       event_object_queue = event_object_inbound_queue
-      parse_error_inbound_queue = zeromq_queue.ZeroMQPullBindQueue(
-          delay_start=True, timeout_seconds=60)
+      parse_error_inbound_queue = zeromq_queue.ZeroMQBufferedPullBindQueue(
+          delay_start=True, name=u'Parse error inbound', timeout_seconds=60,
+          buffer_max_size=10000)
       parse_error_queue = parse_error_inbound_queue
     else:
       path_spec_queue = MultiProcessingQueue(
@@ -394,7 +393,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._show_memory_usage = False
     self._stop_collector_event = None
     self._text_prepend = None
-    self._workers_ready_event = multiprocessing.Event()
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.
@@ -518,8 +516,9 @@ class MultiProcessEngine(engine.BaseEngine):
         definitions.PROCESSING_STATUS_RUNNING]:
 
       logging.error(
-          u'Process {0:s} (PID: {1:d}) is not functioning correctly.'.format(
-              process.name, pid))
+          u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
+          u'Status code {2!s}.'.format(
+              process.name, pid, status_indicator))
 
       self._processing_status.error_detected = True
 
@@ -537,17 +536,42 @@ class MultiProcessEngine(engine.BaseEngine):
       self._StartMonitoringProcess(worker_process.pid)
 
     elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
-      logging.debug((
-          u'Process {0:s} (PID: {1:d}) has completed its processing. '
-          u'Total of {2:d} events extracted').format(
-              process.name, pid, process_status.get(u'number_of_events', 0)))
+      if process.type == definitions.PROCESS_TYPE_WORKER:
+        number_of_events = process_status.get(u'number_of_events', 0)
+        number_of_pathspecs =  process_status.get(u'consumed_number_of_path_specs', 0)
+        logging.debug((
+            u'Process {0:s} (PID: {1:d}) has completed its processing. '
+            u'Total of {2:d} events extracted from {3:d} pathspecs').format(
+                process.name, pid, number_of_events, number_of_pathspecs))
+      elif process.type == definitions.PROCESS_TYPE_COLLECTOR:
+        number_of_pathspecs = process_status.get(
+            u'produced_number_of_path_specs', 0)
+        logging.debug((
+            u'Process {0:s} (PID: {1:d}) has completed its processing. '
+            u'Total of {2:d} pathspecs extracted').format(
+                process.name, pid, number_of_pathspecs))
+      elif process.type == definitions.PROCESS_TYPE_STORAGE_WRITER:
+        logging.debug((
+            u'Process {0:s} (PID: {1:d}) has completed its processing. '
+            u'Total of {2:d} events written').format(
+                process.name, pid, process_status.get(u'number_of_events', 0)))
+
 
       self._StopMonitoringProcess(pid)
 
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
 
-  def _CollectorQueueBound(self):
+  def _CloseStorageZeroMQQueues(self):
+    """Closes all ZeroMQ queues being used by the storage writer."""
+    for port in [self._event_object_queue_port, self._parse_error_queue_port]:
+      terminate_queue = zeromq_queue.ZeroMQPushConnectQueue(
+         linger_seconds=0, port=port, timeout_seconds=0, name=u'Termination')
+      terminate_queue.PushItem(queue.QueueAbort(), block=False)
+      terminate_queue.Close()
+
+
+  def _CollectorQueueHasBound(self):
     """Checks if the collector has bound to a queue."""
     return self._path_spec_queue_port is not None
 
@@ -616,16 +640,20 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._use_zeromq:
       path_spec_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_start=True, port=self._path_spec_queue_port,
-          timeout_seconds=20,
-          name=u'{0:s} pathspec queue.'.format(process_name))
+          timeout_seconds=2,
+          name=u'{0:s} pathspec'.format(process_name),
+          linger_seconds=0)
+      # The high water mark is set to 2 for these queues so that data
+      # doesn't build up in the workers, to prevent data loss in the case
+      # that they crash.
       parse_error_queue = zeromq_queue.ZeroMQPushConnectQueue(
-           delay_start=True, port=self._parse_error_queue_port,
-           name=u'{0:s} parse error queue.'.format(process_name),
-           high_water_mark=2)
+          delay_start=True, port=self._parse_error_queue_port,
+          name=u'{0:s} parse'.format(process_name),
+          timeout_seconds=20, high_water_mark=2)
       event_object_queue = zeromq_queue.ZeroMQPushConnectQueue(
           delay_start=True, port=self._event_object_queue_port,
-          name=u'{0:s} event object queue.'.format(process_name),
-          high_water_mark=2)
+          name=u'{0:s} event object'.format(process_name),
+          timeout_seconds=20, high_water_mark=2)
     else:
       parse_error_queue = self._parse_error_queue
       path_spec_queue = self._path_spec_queue
@@ -668,25 +696,24 @@ class MultiProcessEngine(engine.BaseEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
-      # Wake the processes to make sure that they are not blocking
-      # waiting for the queue not to be full.
-      if not self._use_zeromq:
-        self._path_spec_queue.Empty()
-        self.event_object_queue.Empty()
-        self._parse_error_queue.Empty()
-
-    # On abort we need to have the collector process get a SIGTERM first.
-    self._stop_collector_event.set()
-
     # Wake the processes to make sure that they are not blocking
-    # waiting for new items.
-    for _ in range(self._number_of_extraction_workers):
-      self._path_spec_queue.PushItem(queue.QueueAbort(), block=False)
+    # waiting for the queue not to be full.
+    if not self._use_zeromq:
+      self._path_spec_queue.Empty()
+      self.event_object_queue.Empty()
+      self._parse_error_queue.Empty()
+
+      # On abort we need to have the collector process get a SIGTERM first.
+      self._stop_collector_event.set()
 
     if not self._use_zeromq:
+      # Wake the processes to make sure that they are not blocking
+      # waiting for new items.
+      for _ in range(self._number_of_extraction_workers):
+        self._path_spec_queue.PushItem(queue.QueueAbort(), block=False)
       self.event_object_queue.PushItem(queue.QueueAbort(), block=False)
-    # TODO: enable this when the parse error queue consumer is operational.
-    # self._parse_error_queue.PushItem(queue.QueueAbort(), block=False)
+    else:
+      self._CloseStorageZeroMQQueues()
 
     # Try terminating the processes in the normal way.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
@@ -705,6 +732,11 @@ class MultiProcessEngine(engine.BaseEngine):
       # Kill any remaining processes, which can be necessary if
       # the collector dies.
       self._AbortKill()
+
+  def _StopStorageProcess(self):
+    """Stops the StorageWriter process."""
+    pass
+
 
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
@@ -1013,7 +1045,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._stop_collector_event = multiprocessing.Event()
     collector_process = MultiProcessCollectorProcess(
         self._stop_collector_event, source_path_specs, self._path_spec_queue,
-        self._workers_ready_event,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_find_specs=self._filter_find_specs,
         include_directory_stat=self._include_directory_stat, name=u'Collector')
@@ -1028,8 +1059,6 @@ class MultiProcessEngine(engine.BaseEngine):
     for _ in range(number_of_extraction_workers):
       extraction_process = self._StartExtractionWorkerProcess()
       self._StartMonitoringProcess(extraction_process.pid)
-
-    self._workers_ready_event.set()
 
     try:
       logging.debug(u'Processing started.')
@@ -1052,6 +1081,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._processing_status.error_detected = True
 
     self._StopExtractionProcesses(abort=self._processing_status.error_detected)
+    self._StopStorageProcess()
 
     return self._processing_status
 
@@ -1067,13 +1097,13 @@ class MultiProcessEngine(engine.BaseEngine):
                     the timeout is reached.
     """
     queue_start_wait_attempts = 0
-    while (not self._CollectorQueueBound() and
+    while (not self._CollectorQueueHasBound() and
            queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
       status = self._GetProcessStatus(collector_process)
       self._path_spec_queue_port = status[u'path_spec_queue_port']
       queue_start_wait_attempts += 1
       time.sleep(self._QUEUE_START_WAIT)
-    if not self._CollectorQueueBound():
+    if not self._CollectorQueueHasBound():
       raise RuntimeError(u'Collector queue did not bind in time.')
 
   def _GetStorageQueuePorts(self, storage_writer_process):
@@ -1261,9 +1291,14 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    self._path_spec_queue.Close(abort=True)
-    self._event_object_queue.Close(abort=True)
-    self._parse_error_queue.Close(abort=True)
+    #TODO: (onager) Double check the need for aborts here
+    worker_queues = (
+      self._path_spec_queue, self._event_object_queue, self._parse_error_queue)
+    for worker_queue in worker_queues:
+      if not isinstance(worker_queue, zeromq_queue.ZeroMQQueue):
+        worker_queue.Close(abort=True)
+      else:
+        worker_queue.Close()
 
   def _OnCriticalError(self):
     """The process on critical error handler."""
@@ -1293,7 +1328,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
       event_object_queue: the event object queue object (instance of
                           MultiProcessingQueue).
       parse_error_queue: the parser error queue object (instance of Queue).
-      storage_writer: A storage writer object (instance of BaseStorageWriter).
+      storage_writer: a storage writer object (instance of BaseStorageWriter).
     """
     super(MultiProcessStorageWriterProcess, self).__init__(
         definitions.PROCESS_TYPE_STORAGE_WRITER, **kwargs)

@@ -13,6 +13,9 @@ import abc
 
 from plaso.lib import errors
 
+# TODO: Remove
+import logging
+
 
 class QueueAbort(object):
   """Class that implements a queue abort."""
@@ -27,7 +30,12 @@ class Queue(object):
 
   @abc.abstractmethod
   def PushItem(self, item):
-    """Pushes an item onto the queue."""
+    """Pushes an item onto the queue.
+
+    Raises:
+      QueueFull: when the next call to PushItem would exceed the limit of items
+                 in the queue.
+    """
 
   @abc.abstractmethod
   def PopItem(self):
@@ -122,10 +130,14 @@ class ItemQueueConsumer(QueueConsumer):
     while not self._abort:
       try:
         item = self._queue.PopItem()
-      except (errors.QueueClose, errors.QueueEmpty):
+      except (errors.QueueClose, errors.QueueEmpty) as exception:
+        # TODO: REMOVE THIS
+        logging.error(u'ConsumeItems exiting, got {0:s}'.format(exception.__class__))
         break
 
       if isinstance(item, QueueAbort):
+        # TODO: REMOVE THIS
+        logging.error(u'ConsumeItems exiting, got {0:s}'.format(item.__class__))
         break
 
       self._number_of_consumed_items += 1
