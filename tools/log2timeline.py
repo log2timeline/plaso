@@ -163,6 +163,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'Unable to create filter: {0:s} with error: {1:s}'.format(
               filter_expression, exception))
 
+  def _ParseExperimentalOptions(self, options):
+    """Parses the experimental plugin options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    use_zeromq = getattr(options, u'use_zeromq', False)
+    if use_zeromq:
+      self._front_end.SetUseZeroMQ(use_zeromq)
+
   def _ParseOutputOptions(self, options):
     """Parses the output options.
 
@@ -298,6 +308,18 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                 status == definitions.PROCESSING_STATUS_RUNNING,
                 extraction_worker_status.process_status))
 
+  def AddExperimentalOptions(self, argument_group):
+    """Adds experimental options to the argument group
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
+            u'Enables experimental queueing using ZeroMQ'))
+
+
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
 
@@ -386,6 +408,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
+
+    experimental_group = argument_parser.add_argument_group(u'Experimental')
+    self.AddExperimentalOptions(experimental_group)
 
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
@@ -508,6 +533,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseExtractionOptions(options)
     self._front_end.SetUseOldPreprocess(self._old_preprocess)
     self._ParseTimezoneOption(options)
+    self._ParseExperimentalOptions(options)
 
     self.show_info = getattr(options, u'show_info', False)
 
