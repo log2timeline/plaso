@@ -526,7 +526,12 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                 path_spec.comparable))
         return
 
-      data_stream_name = getattr(path_spec, u'data_stream', u'')
+      # Note that data stream can be set but contain None, we'll set it
+      # to an empty string here.
+      data_stream_name = getattr(path_spec, u'data_stream', None)
+      if not data_stream_name:
+        data_stream_name = u''
+
       self._ProcessFileEntry(file_entry, data_stream_name=data_stream_name)
 
     except IOError as exception:
