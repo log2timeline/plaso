@@ -146,7 +146,7 @@ class ParserMediator(object):
     self._parser_chain_components = []
 
   def GetDisplayName(self, file_entry=None):
-    """Retrieves the display name for the active file entry.
+    """Retrieves the display name for a file entry.
 
     Args:
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
@@ -203,6 +203,8 @@ class ParserMediator(object):
 
   def GetFileObject(self, offset=0):
     """Provides a file-like object for the active file entry.
+
+    This will retrieve the file-object of the default (nameless) data stream.
 
     Args:
       offset: the offset to seek within the file-like object. The offset is

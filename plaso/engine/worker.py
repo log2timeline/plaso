@@ -25,11 +25,12 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   """Class that defines the event extraction worker base.
 
   This class is designed to watch a queue for path specifications of files
-  and directories (file entries) for which events need to be extracted.
+  and directories (file entries) and data streams for which events need to
+  be extracted.
 
   The event extraction worker needs to determine if a parser suitable
-  for parsing a particular file is available. All extracted event objects
-  are pushed on a storage queue for further processing.
+  for parsing a particular file entry or data stream is available. All
+  extracted event objects are pushed on a storage queue for further processing.
   """
 
   _DEFAULT_HASH_READ_SIZE = 4096
@@ -122,7 +123,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       self._compressed_stream_path_spec = None
 
   def _GetSignatureMatchParserNames(self, file_object):
-    """Determines if a file matches one of the known signatures.
+    """Determines if a file-like object matches one of the known signatures.
 
     Args:
       file_object: the file-like object whose contents will be checked
@@ -146,7 +147,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     return parser_name_list
 
-  def _HashFileEntry(self, file_entry, data_stream_name=u''):
+  def _HashDataStream(self, file_entry, data_stream_name=u''):
     """Hashes the contents of a specific data stream of a file entry.
 
     The resulting digest hashes are set in the parser mediator as attributes
@@ -154,7 +155,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     allow directories to have data streams, e.g. NTFS.
 
     Args:
-      file_entry: the file entry object to be hashed (instance of
+      file_entry: the file entry relating to the data to be hashed (instance of
                   dfvfs.FileEntry)
       data_stream_name: optional data stream name. The default is
                         an empty string which represents the default
@@ -163,7 +164,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if not self._hasher_names:
       return
 
-    logging.debug(u'[HashFileEntry] hashing file: {0:s}'.format(
+    logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
 
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
@@ -189,11 +190,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           attribute_name, digest_hash_string)
 
       logging.debug(
-          u'[HashFileEntry] digest {0:s} calculated for file: {1:s}.'.format(
+          u'[HashDataStream] digest {0:s} calculated for file: {1:s}.'.format(
               digest_hash_string, self._current_display_name))
 
     logging.debug(
-        u'[HashFileEntry] completed hashing file: {0:s}'.format(
+        u'[HashDataStream] completed hashing file: {0:s}'.format(
             self._current_display_name))
 
   def _IsMetadataFile(self, file_entry):
@@ -219,7 +220,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       parser_object: a parser object (instance of BaseParser).
       file_entry: a file entry object (instance of dfvfs.FileEntry).
       file_object: optional file-like object to parse. If not set the parser
-                   will use the parser mediator to open the file-like object.
+                   will use the parser mediator to open the file entry's
+                   default data stream as a file-like object
     """
     self._parser_mediator.ClearParserChain()
 
@@ -465,9 +467,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     try:
       if has_data_stream:
-        self._HashFileEntry(file_entry, data_stream_name=data_stream_name)
+        self._HashDataStream(file_entry, data_stream_name=data_stream_name)
 
-      # We always want to use the filestat parser if set.
+      # We always want to use the filestat parser if set but we only want
+      # to invoke it once per file entry, so we only use it if we are
+      # processing the default (nameless) data stream.
       if not data_stream_name and self._filestat_parser_object:
         self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
 
@@ -522,11 +526,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                 path_spec.comparable))
         return
 
-      data_stream_name = getattr(path_spec, u'data_stream', None)
-      if not data_stream_name:
-        self._ProcessFileEntry(file_entry)
-      else:
-        self._ProcessFileEntry(file_entry, data_stream_name=data_stream_name)
+      data_stream_name = getattr(path_spec, u'data_stream', u'')
+      self._ProcessFileEntry(file_entry, data_stream_name=data_stream_name)
 
     except IOError as exception:
       logging.warning(
