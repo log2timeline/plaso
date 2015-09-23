@@ -14,8 +14,7 @@ import plaso.dependencies
 if __name__ == u'__main__':
   if not plaso.dependencies.CheckDependencies(latest_version_check=True):
     build_instructions_url = (
-        u'https://sites.google.com/a/kiddaland.net/plaso/developer'
-        u'/building-the-tool')
+        u'https://github.com/log2timeline/plaso/wiki/Users-Guide')
 
     print(u'See: {0:s} on how to set up plaso.'.format(build_instructions_url))
     print(u'')
