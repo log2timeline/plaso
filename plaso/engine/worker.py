@@ -25,14 +25,34 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   """Class that defines the event extraction worker base.
 
   This class is designed to watch a queue for path specifications of files
-  and directories (file entries) for which events need to be extracted.
+  and directories (file entries) and data streams for which events need to
+  be extracted.
 
   The event extraction worker needs to determine if a parser suitable
-  for parsing a particular file is available. All extracted event objects
-  are pushed on a storage queue for further processing.
+  for parsing a particular file entry or data stream is available. All
+  extracted event objects are pushed on a storage queue for further processing.
   """
 
   _DEFAULT_HASH_READ_SIZE = 4096
+
+  # TSK metadata files that need special handling.
+  _METADATA_FILE_LOCATIONS_TSK = frozenset([
+      u'/$AttrDef',
+      u'/$BadClus',
+      u'/$Bitmap',
+      u'/$Boot',
+      u'/$Extend/$ObjId',
+      u'/$Extend/$Quota',
+      u'/$Extend/$Reparse',
+      u'/$Extend/$RmMetadata/$Repair',
+      u'/$Extend/$RmMetadata/$TxfLog/$Tops',
+      u'/$LogFile',
+      u'/$MFT',
+      u'/$MFTMirr',
+      u'/$Secure',
+      u'/$UpCase',
+      u'/$Volume',
+  ])
 
   def __init__(
       self, identifier, path_spec_queue, event_queue_producer,
@@ -102,33 +122,20 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       self._ProcessPathSpec(self._compressed_stream_path_spec)
       self._compressed_stream_path_spec = None
 
-  def _GetSignatureMatchParserNames(self, file_entry):
-    """Determines if a file matches one of the known signatures.
+  def _GetSignatureMatchParserNames(self, file_object):
+    """Determines if a file-like object matches one of the known signatures.
 
     Args:
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      file_object: the file-like object whose contents will be checked
+                   for known signatures.
 
     Returns:
       A list of parser names for which the file entry matches their
       known signatures.
-
-    Raises:
-      IOError: if scanning for signatures failed.
     """
     parser_name_list = []
     scan_state = pysigscan.scan_state()
-
-    file_object = file_entry.GetFileObject()
-    try:
-      self._file_scanner.scan_file_object(scan_state, file_object)
-    except IOError as exception:
-      raise IOError(
-          u'Unable to scan for signatures with error: {0:s}'.format(exception))
-    finally:
-      file_object.close()
-
-      # Make sure frame.f_locals does not keep a reference to file_entry.
-      file_entry = None
+    self._file_scanner.scan_file_object(scan_state, file_object)
 
     for scan_result in scan_state.scan_results:
       format_specification = (
@@ -140,66 +147,81 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     return parser_name_list
 
-  def _HashFileEntry(self, file_entry):
-    """Hashes the contents of a file entry.
+  def _HashDataStream(self, file_entry, data_stream_name=u''):
+    """Hashes the contents of a specific data stream of a file entry.
 
-    The resulting digest hashes are set in the parser mediator as attribute
-    to add to event objects.
+    The resulting digest hashes are set in the parser mediator as attributes
+    that are added to produced event objects. Note that some file systems
+    allow directories to have data streams, e.g. NTFS.
 
     Args:
-      file_entry: The file entry object to be hashed (instance of
+      file_entry: the file entry relating to the data to be hashed (instance of
                   dfvfs.FileEntry)
+      data_stream_name: optional data stream name. The default is
+                        an empty string which represents the default
+                        data stream.
     """
-    if not file_entry.IsFile() or not self._hasher_names:
+    if not self._hasher_names:
       return
 
-    logging.debug(u'[HashFileEntry] hashing file: {0:s}'.format(
+    logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
 
-    hasher_objects = hashers_manager.HashersManager.GetHasherObjects(
-        self._hasher_names)
+    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
+    if not file_object:
+      return
 
-    file_object = file_entry.GetFileObject()
+    # Make sure frame.f_locals does not keep a reference to file_entry.
+    file_entry = None
+
     try:
-      file_object.seek(0, os.SEEK_SET)
-
-      # We only do one read, then pass it to each of the hashers in turn.
-      data = file_object.read(self._DEFAULT_HASH_READ_SIZE)
-      while data:
-        for hasher in hasher_objects:
-          hasher.Update(data)
-        data = file_object.read(self._DEFAULT_HASH_READ_SIZE)
-
+      digest_hashes = hashers_manager.HashersManager.HashFileObject(
+          self._hasher_names, file_object,
+          buffer_size=self._DEFAULT_HASH_READ_SIZE)
     finally:
       file_object.close()
-
-      # Make sure frame.f_locals does not keep a reference to file_entry.
-      file_entry = None
-
-    # Get the digest values for every active hasher.
-    digests = {}
-    for hasher in hasher_objects:
-      digests[hasher.NAME] = hasher.GetStringDigest()
-      logging.debug(
-          u'[HashFileEntry] digest {0:s} calculated for file: {1:s}.'.format(
-              hasher.GetStringDigest(), self._current_display_name))
 
     if self._enable_profiling:
       self._ProfilingSampleMemory()
 
-    for hash_name, digest in iter(digests.items()):
+    for hash_name, digest_hash_string in iter(digest_hashes.items()):
       attribute_name = u'{0:s}_hash'.format(hash_name)
-      self._parser_mediator.AddEventAttribute(attribute_name, digest)
+      self._parser_mediator.AddEventAttribute(
+          attribute_name, digest_hash_string)
 
-    logging.debug(u'[HashFileEntry] completed hashing file: {0:s}'.format(
-        self._current_display_name))
+      logging.debug(
+          u'[HashDataStream] digest {0:s} calculated for file: {1:s}.'.format(
+              digest_hash_string, self._current_display_name))
 
-  def _ParseFileEntryWithParser(self, parser_object, file_entry):
+    logging.debug(
+        u'[HashDataStream] completed hashing file: {0:s}'.format(
+            self._current_display_name))
+
+  def _IsMetadataFile(self, file_entry):
+    """Determines if the file entry is a metadata file.
+
+    Args:
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean value indicating if the file entry is a metadata file.
+    """
+    if (file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK and
+        file_entry.path_spec.location in self._METADATA_FILE_LOCATIONS_TSK):
+      return True
+
+    return False
+
+  def _ParseFileEntryWithParser(
+      self, parser_object, file_entry, file_object=None):
     """Parses a file entry with a specific parser.
 
     Args:
-      parser_object: A parser object (instance of BaseParser).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_object: a parser object (instance of BaseParser).
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      file_object: optional file-like object to parse. If not set the parser
+                   will use the parser mediator to open the file entry's
+                   default data stream as a file-like object
     """
     self._parser_mediator.ClearParserChain()
 
@@ -210,7 +232,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       self._parsers_profiler.StartTiming(parser_object.NAME)
 
     try:
-      parser_object.UpdateChainAndParse(self._parser_mediator)
+      parser_object.UpdateChainAndParse(
+          self._parser_mediator, file_object=file_object)
 
     # We catch the IOError so we can determine the parser that generated
     # the error.
@@ -375,11 +398,51 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     return True
 
-  def _ProcessFileEntry(self, file_entry):
-    """Processes a file entry.
+  def _ProcessDataStream(self, file_entry, data_stream_name=u''):
+    """Processes a specific data stream of a file entry.
 
     Args:
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      data_stream_name: optional data stream name. The default is
+                        an empty string which represents the default
+                        data stream.
+    """
+    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
+    if not file_object:
+      return
+
+    try:
+      parser_name_list = self._GetSignatureMatchParserNames(file_object)
+      if not parser_name_list:
+        parser_name_list = self._non_sigscan_parser_names
+
+      for parser_name in parser_name_list:
+        parser_object = self._parser_objects.get(parser_name, None)
+        if not parser_object:
+          logging.warning(u'No such parser: {0:s}'.format(parser_name))
+          continue
+
+        logging.debug((
+            u'[ProcessDataStream] parsing file: {0:s} with parser: '
+            u'{1:s}').format(self._current_display_name, parser_name))
+
+        self._ParseFileEntryWithParser(
+            parser_object, file_entry, file_object=file_object)
+
+    finally:
+      file_object.close()
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
+
+  def _ProcessFileEntry(self, file_entry, data_stream_name=u''):
+    """Processes a specific data stream of a file entry.
+
+    Args:
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      data_stream_name: optional data stream name. The default is
+                        an empty string which represents the default
+                        data stream.
 
     Raises:
       RuntimeError: if the parser object is missing.
@@ -393,41 +456,36 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     self._parser_mediator.SetFileEntry(file_entry)
 
+    logging.debug(u'[ProcessFileEntry] parsing file: {0:s}'.format(
+        self._current_display_name))
+
+    is_metadata_file = self._IsMetadataFile(file_entry)
+
+    # Not every file entry has a data stream. In such cases we want to
+    # extract the metadata only.
+    has_data_stream = file_entry.HasDataStream(data_stream_name)
+
     try:
-      self._HashFileEntry(file_entry)
+      if has_data_stream:
+        self._HashDataStream(file_entry, data_stream_name=data_stream_name)
 
-      logging.debug(u'[ProcessFileEntry] parsing file: {0:s}'.format(
-          self._current_display_name))
-
-      # We always want to use the filestat parser.
-      if self._filestat_parser_object:
+      # We always want to use the filestat parser if set but we only want
+      # to invoke it once per file entry, so we only use it if we are
+      # processing the default (nameless) data stream.
+      if not data_stream_name and self._filestat_parser_object:
         self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
 
       is_archive = False
       is_compressed_stream = False
-      is_file = file_entry.IsFile()
 
-      if is_file:
+      if not is_metadata_file and file_entry.IsFile():
         is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
         if not is_compressed_stream:
           is_archive = self._ProcessArchiveFile(file_entry)
 
-      if is_file and not is_archive and not is_compressed_stream:
-        parser_name_list = self._GetSignatureMatchParserNames(file_entry)
-        if not parser_name_list:
-          parser_name_list = self._non_sigscan_parser_names
-
-        for parser_name in parser_name_list:
-          parser_object = self._parser_objects.get(parser_name, None)
-          if not parser_object:
-            self._parser_mediator.ResetFileEntry()
-            raise RuntimeError(u'No such parser: {0:s}'.format(parser_name))
-
-          logging.debug((
-              u'[ProcessFileEntry] parsing file: {0:s} with parser: '
-              u'{1:s}').format(self._current_display_name, parser_name))
-
-          self._ParseFileEntryWithParser(parser_object, file_entry)
+      if (has_data_stream and not is_archive and not is_compressed_stream and
+          not is_metadata_file):
+        self._ProcessDataStream(file_entry, data_stream_name=data_stream_name)
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
@@ -468,7 +526,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                 path_spec.comparable))
         return
 
-      self._ProcessFileEntry(file_entry)
+      # Note that data stream can be set but contain None, we'll set it
+      # to an empty string here.
+      data_stream_name = getattr(path_spec, u'data_stream', None)
+      if not data_stream_name:
+        data_stream_name = u''
+
+      self._ProcessFileEntry(file_entry, data_stream_name=data_stream_name)
 
     except IOError as exception:
       logging.warning(
