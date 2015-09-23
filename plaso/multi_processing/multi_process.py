@@ -294,6 +294,8 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
       logging.exception(exception)
       abort = True
 
+    self._path_spec_queue.Close()
+
     logging.debug(u'Collector (PID: {0:d}) stopped'.format(self._pid))
 
     # The collector will typically collect the path specifications and
@@ -453,7 +455,7 @@ class MultiProcessEngine(engine.BaseEngine):
     return processing_completed
 
   def _CheckProcessStatus(self, pid):
-    """Check status of a specific monitored process.
+    """Check status of a specific monitored process and take action on it.
 
     Args:
       pid: The process ID (PID).
@@ -538,7 +540,8 @@ class MultiProcessEngine(engine.BaseEngine):
     elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
       if process.type == definitions.PROCESS_TYPE_WORKER:
         number_of_events = process_status.get(u'number_of_events', 0)
-        number_of_pathspecs =  process_status.get(u'consumed_number_of_path_specs', 0)
+        number_of_pathspecs = process_status.get(
+            u'consumed_number_of_path_specs', 0)
         logging.debug((
             u'Process {0:s} (PID: {1:d}) has completed its processing. '
             u'Total of {2:d} events extracted from {3:d} pathspecs').format(
@@ -556,7 +559,6 @@ class MultiProcessEngine(engine.BaseEngine):
             u'Total of {2:d} events written').format(
                 process.name, pid, process_status.get(u'number_of_events', 0)))
 
-
       self._StopMonitoringProcess(pid)
 
     elif self._show_memory_usage:
@@ -566,7 +568,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Closes all ZeroMQ queues being used by the storage writer."""
     for port in [self._event_object_queue_port, self._parse_error_queue_port]:
       terminate_queue = zeromq_queue.ZeroMQPushConnectQueue(
-         linger_seconds=0, port=port, timeout_seconds=0, name=u'Termination')
+          linger_seconds=0, port=port, timeout_seconds=0, name=u'Termination')
       terminate_queue.PushItem(queue.QueueAbort(), block=False)
       terminate_queue.Close()
 
@@ -687,6 +689,8 @@ class MultiProcessEngine(engine.BaseEngine):
       abort: optional boolean to indicate the stop is issued on abort.
     """
     self._StopProcessMonitoring()
+    # We can stop the collector now.
+    self._stop_collector_event.set()
 
     # Note that multiprocessing.Queue is very sensitive regarding
     # blocking on either a get or a put. So we try to prevent using
@@ -703,9 +707,6 @@ class MultiProcessEngine(engine.BaseEngine):
       self.event_object_queue.Empty()
       self._parse_error_queue.Empty()
 
-      # On abort we need to have the collector process get a SIGTERM first.
-      self._stop_collector_event.set()
-
     if not self._use_zeromq:
       # Wake the processes to make sure that they are not blocking
       # waiting for new items.
@@ -715,7 +716,7 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       self._CloseStorageZeroMQQueues()
 
-    # Try terminating the processes in the normal way.
+    # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     if not abort:
@@ -732,11 +733,6 @@ class MultiProcessEngine(engine.BaseEngine):
       # Kill any remaining processes, which can be necessary if
       # the collector dies.
       self._AbortKill()
-
-  def _StopStorageProcess(self):
-    """Stops the StorageWriter process."""
-    pass
-
 
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
@@ -1081,7 +1077,6 @@ class MultiProcessEngine(engine.BaseEngine):
       self._processing_status.error_detected = True
 
     self._StopExtractionProcesses(abort=self._processing_status.error_detected)
-    self._StopStorageProcess()
 
     return self._processing_status
 
@@ -1291,9 +1286,9 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    #TODO: (onager) Double check the need for aborts here
     worker_queues = (
-      self._path_spec_queue, self._event_object_queue, self._parse_error_queue)
+        self._path_spec_queue, self._event_object_queue,
+        self._parse_error_queue)
     for worker_queue in worker_queues:
       if not isinstance(worker_queue, zeromq_queue.ZeroMQQueue):
         worker_queue.Close(abort=True)
@@ -1370,6 +1365,8 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
           u'Unhandled exception in storage writer (PID: {0:d}).'.format(
               self._pid))
       logging.exception(exception)
+
+    self._event_object_queue.Close()
 
     logging.debug(u'Storage writer (PID: {0:d}) stopped.'.format(self._pid))
 

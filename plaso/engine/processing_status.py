@@ -157,7 +157,10 @@ class ProcessingStatus(object):
     return self._storage_writer
 
   def GetExtractionCompleted(self):
-    """Determines the extraction completed status.
+    """Determines whether extraction is completed.
+
+    Extraction is considered complete when the collector has finished producing
+    pathspecs, and all workers have stopped running.
 
     Returns:
       A boolean value indicating the extraction completed status.
@@ -165,9 +168,15 @@ class ProcessingStatus(object):
     if not self._collector_completed:
       return False
 
-    consumed_number_of_path_specs = self.GetConsumedNumberOfPathSpecs()
     produced_number_of_path_specs = self.GetProducedNumberOfPathSpecs()
-    if consumed_number_of_path_specs != produced_number_of_path_specs:
+    consumed_number_of_path_specs = self.GetConsumedNumberOfPathSpecs()
+    path_specs_remaining = (
+        produced_number_of_path_specs - consumed_number_of_path_specs)
+    if path_specs_remaining > 0:
+      logging.debug(
+          u'{0:d} pathspecs produced, {1:d} processed. {2:d} remaining'.format(
+              produced_number_of_path_specs, consumed_number_of_path_specs,
+              path_specs_remaining))
       return False
 
     workers_running = self.WorkersRunning()
@@ -176,6 +185,7 @@ class ProcessingStatus(object):
     # at the moment. Hence we wait until the condition is met at least
     # consecutive 3 times.
     if workers_running:
+      logging.debug(u'')
       self._collector_completed_count = 0
 
     elif self._collector_completed_count < 3:
@@ -214,18 +224,27 @@ class ProcessingStatus(object):
       A boolean value indicating the extraction completed status.
     """
     extraction_completed = self.GetExtractionCompleted()
-    number_of_events = self.GetNumberOfExtractedEvents()
+    number_of_extracted_events = self.GetNumberOfExtractedEvents()
 
-    if (extraction_completed and self._storage_writer and
-        self._storage_writer.number_of_events == number_of_events):
-      return True
+    number_of_written_events = 0
+    if self._storage_writer:
+      number_of_written_events = self._storage_writer.number_of_events
 
-    #TODO: Remove or change method
-    logging.debug((u'{0:d} events extracted, {1:d} written to storage. '
-                   u'{2:d} remaining').format(
-        number_of_events, self._storage_writer.number_of_events,
-        number_of_events - self._storage_writer.number_of_events))
-    return False
+    events_remaining = number_of_extracted_events - number_of_written_events
+
+    if not extraction_completed:
+      logging.debug(u'Processing incomplete, extraction still in progress.')
+      return False
+
+    if events_remaining > 0:
+      logging.debug((
+          u'{0:d} events extracted, {1:d} written to storage. {2:d} '
+          u'remaining').format(
+              number_of_extracted_events, number_of_written_events,
+              events_remaining))
+      return False
+
+    return True
 
   def UpdateCollectorStatus(
       self, identifier, pid, produced_number_of_path_specs, status,
@@ -380,6 +399,10 @@ class ProcessingStatus(object):
   def WorkersRunning(self):
     """Determines if the workers are running."""
     for extraction_worker_status in iter(self._extraction_workers.values()):
+      if (extraction_worker_status.status ==
+          definitions.PROCESSING_STATUS_COMPLETED):
+        logging.debug(u'Worker completed.')
+        continue
       if (extraction_worker_status.number_of_events_delta > 0 or
           extraction_worker_status.consumed_number_of_path_specs_delta > 0 or
           extraction_worker_status.produced_number_of_path_specs_delta > 0):

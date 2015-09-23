@@ -10,11 +10,9 @@ scalability.
 """
 
 import abc
+import logging
 
 from plaso.lib import errors
-
-# TODO: Remove
-import logging
 
 
 class QueueAbort(object):
@@ -131,13 +129,12 @@ class ItemQueueConsumer(QueueConsumer):
       try:
         item = self._queue.PopItem()
       except (errors.QueueClose, errors.QueueEmpty) as exception:
-        # TODO: REMOVE THIS
-        logging.error(u'ConsumeItems exiting, got {0:s}'.format(exception.__class__))
+        logging.debug(u'ConsumeItems exiting, got {0:s}'.format(
+            exception.__class__))
         break
 
       if isinstance(item, QueueAbort):
-        # TODO: REMOVE THIS
-        logging.error(u'ConsumeItems exiting, got {0:s}'.format(item.__class__))
+        logging.debug(u'ConsumeItems exiting, got {0:s}'.format(item.__class__))
         break
 
       self._number_of_consumed_items += 1
