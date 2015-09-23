@@ -250,6 +250,7 @@ class ParserMediator(object):
                   file entry set in the mediator.
       query: Optional query string. The default is None.
     """
+    # TODO: rename this to event_object.parser_chain or equivalent.
     if not getattr(event_object, u'parser', None) and parser_chain:
       event_object.parser = parser_chain
 

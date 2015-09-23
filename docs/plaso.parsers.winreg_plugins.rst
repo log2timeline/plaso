@@ -100,6 +100,14 @@ plaso.parsers.winreg_plugins.outlook module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.winreg_plugins.programscache module
+-------------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.programscache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.winreg_plugins.run module
 ---------------------------------------
 

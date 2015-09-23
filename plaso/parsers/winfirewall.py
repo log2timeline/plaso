@@ -84,15 +84,12 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         self.use_local_zone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line and return an event object.
+    """Parse a single log line and and produce an event object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     log_dict = structure.asDict()
 
@@ -137,10 +134,10 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
         setattr(event_object, key, save_value)
 
-    return event_object
+    parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an event object if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -148,14 +145,13 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'comment':
       self._ParseCommentRecord(structure)
+
     elif key == u'logline':
-      return self._ParseLogLine(parser_mediator, structure)
+      self._ParseLogLine(parser_mediator, structure)
+
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))

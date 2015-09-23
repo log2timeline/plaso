@@ -59,8 +59,8 @@ message Array {
 // This message stores the main attributes inside the each record
 // instead of nesting them possibly deep down.
 message EventObject {
-  // The timestamp is presented as a 64 bit Unix Epoch time,
-  // stored in UTC.
+  // The timestamp is a signed 64-bit integer containing the number of
+  // microseconds since January 1, 1970 00:00:00 UTC.
   optional int64 timestamp = 1;
 
   // A short description of the meaning of the timestamp.

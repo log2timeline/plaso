@@ -30,7 +30,8 @@ class IISEventObject(time_events.TimestampEvent):
     """Initializes the IIS event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       structure: The structure with any parsed log values to iterate over.
     """
     super(IISEventObject, self).__init__(
@@ -149,11 +150,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     """Converts the given parsed date and time to a timestamp.
 
     Args:
-      date: A tuple or list of 3 elements for year, month, and day.
-      time: A tuple or list of 3 elements for hour, minute, and second.
+      date: Optional tuple or list of 3 elements for year, month, and day.
+      time: Optional tuple or list of 3 elements for hour, minute, and second.
 
     Returns:
-      A plaso timestamp value, micro seconds since Epoch in UTC.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
     if date:
       year, month, day = date[:3]
@@ -169,7 +171,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
         year, month, day, hour, minute, second)
 
   def _ParseCommentRecord(self, structure):
-    """Parse a comment and store appropriate attributes."""
+    """Parse a comment and store appropriate attributes.
+
+    Args:
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     comment = structure[1]
     if comment.startswith(u'Version'):
       _, _, self.version = comment.partition(u':')
@@ -189,17 +196,23 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       # a structural fix.
       self._line_structures[1] = (u'logline', log_line)
 
-  def _ParseLogLine(self, structure):
-    """Parse a single log line and return an EventObject."""
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parse a single log line and produce an event object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     date = structure.get(u'date', self._date)
     time = structure.get(u'time', self._time)
 
     timestamp = self._ConvertToTimestamp(date, time)
+    event_object = IISEventObject(timestamp, structure)
+    parser_mediator.ProduceEvent(event_object)
 
-    return IISEventObject(timestamp, structure)
-
-  def ParseRecord(self, unused_parser_mediator, key, structure):
-    """Parse each record structure and return an event object if applicable.
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -207,14 +220,11 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'comment':
       self._ParseCommentRecord(structure)
     elif key == u'logline':
-      return self._ParseLogLine(structure)
+      self._ParseLogLine(parser_mediator, structure)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))

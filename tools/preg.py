@@ -1284,8 +1284,8 @@ class PregConsole(object):
     """Command function to retrieve the currently loaded Registry key.
 
     Returns:
-      The currently loaded Registry key (instance of WinPyregfKey) or None
-      if there is no loaded key.
+      The currently loaded Registry key (instance of dfwinreg.WinRegistryKey)
+      or None if there is no loaded key.
     """
     registry_helper = self._currently_loaded_helper
     return registry_helper.GetCurrentRegistryKey()
@@ -1297,9 +1297,9 @@ class PregConsole(object):
       value_name: string containing the name of the value to be retrieved.
 
     Returns:
-      The Registry value (instance of WinPyregfValue) if it exists, None if
-      either there is no currently loaded Registry key or if the value does
-      not exist.
+      The Registry value (instance of dfwinreg.WinRegistryValue) if it exists,
+      None if either there is no currently loaded Registry key or if the value
+      does not exist.
     """
     registry_helper = self._currently_loaded_helper
 
@@ -1307,7 +1307,7 @@ class PregConsole(object):
     if not current_key:
       return
 
-    return current_key.GetValue(value_name)
+    return current_key.GetValueByName(value_name)
 
   def _CommandGetValueData(self, value_name):
     """Return the value data from a value in the currently loaded Registry key.

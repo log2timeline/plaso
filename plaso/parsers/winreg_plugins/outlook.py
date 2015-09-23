@@ -33,46 +33,39 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
 
   REG_TYPE = u'NTUSER'
 
+  _SOURCE_APPEND = u': PST Paths'
+
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect the values under Outlook and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    value_index = 0
-    for value in key.GetValues():
+    values_dict = {}
+    for registry_value in registry_key.GetValues():
       # Ignore the default value.
-      if not value.name:
+      if not registry_value.name:
         continue
 
       # Ignore any value that is empty or that does not contain an integer.
-      if not value.data or not value.DataIsInteger():
+      if not registry_value.data or not registry_value.DataIsInteger():
         continue
 
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
-      text_dict = {}
-      text_dict[value.name] = u'0x{0:08x}'.format(value.data)
+      values_dict[registry_value.name] = u'0x{0:08x}'.format(
+          registry_value.data)
 
-      if value_index == 0:
-        timestamp = key.last_written_timestamp
-      else:
-        timestamp = 0
-
-      event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
-          registry_file_type=registry_file_type,
-          source_append=u': PST Paths')
-      parser_mediator.ProduceEvent(event_object)
-
-      value_index += 1
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(OutlookSearchMRUPlugin)

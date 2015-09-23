@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for MS Office MRUs for Plaso."""
 
-import logging
 import re
 
 from plaso.events import windows_events
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -40,30 +38,32 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
+  _SOURCE_APPEND = u': Microsoft Office MRU'
+
   def GetEntries(
-      self, parser_mediator, key=None, registry_file_type=None,
-      codepage=u'cp1252', **unused_kwargs):
+      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of winreg.WinRegKey).
-           The default is None.
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
       registry_file_type: Optional string containing the Windows Registry file
                           type, e.g. NTUSER, SOFTWARE. The default is None.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
-    for value in key.GetValues():
+    mru_values_dict = {}
+    for registry_value in registry_key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
-      if not value.name or not self._RE_VALUE_NAME.search(value.name):
+      if not registry_value.name or not self._RE_VALUE_NAME.search(
+          registry_value.name):
         continue
 
       # Ignore any value that is empty or that does not contain a string.
-      if not value.data or not value.DataIsString():
+      if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values = self._RE_VALUE_DATA.findall(value.data)
+      values = self._RE_VALUE_DATA.findall(registry_value.data)
 
       # Values will contain a list containing a tuple containing 2 values.
       if len(values) != 1 or len(values[0]) != 2:
@@ -72,26 +72,26 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       try:
         filetime = int(values[0][0], 16)
       except ValueError:
-        logging.warning(u'Unable to convert filetime string to an integer.')
-        filetime = 0
+        parser_mediator.ProduceParseError((
+            u'unable to convert filetime string to an integer for '
+            u'value: {0:s}.').format(registry_value.name))
+        continue
 
-      # TODO: why this behavior? Only the first Item is stored with its
-      # timestamp. Shouldn't this be: Store all the Item # values with
-      # their timestamp and store the entire MRU as one event with the
-      # registry key last written time?
-      if value.name == u'Item 1':
-        timestamp = timelib.Timestamp.FromFiletime(filetime)
-      else:
-        timestamp = 0
+      mru_values_dict[registry_value.name] = registry_value.data
 
-      text_dict = {}
-      text_dict[value.name] = value.data
-
+      # TODO: change into a separate event object.
+      values_dict = {registry_value.name: registry_value.data}
       event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
-          registry_file_type=registry_file_type,
-          source_append=u': Microsoft Office MRU')
+          filetime, registry_key.path, values_dict,
+          offset=registry_key.offset, registry_file_type=registry_file_type,
+          source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
+
+    event_object = windows_events.WindowsRegistryEvent(
+        registry_key.last_written_time, registry_key.path, mru_values_dict,
+        offset=registry_key.offset, registry_file_type=registry_file_type,
+        source_append=self._SOURCE_APPEND)
+    parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)

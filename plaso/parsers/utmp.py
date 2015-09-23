@@ -6,10 +6,9 @@ import logging
 import os
 import socket
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -17,19 +16,20 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class UtmpEvent(event.EventObject):
+class UtmpEvent(time_events.PosixTimeEvent):
   """Convenience class for an UTMP event."""
 
   DATA_TYPE = u'linux:utmp:event'
 
   def __init__(
-      self, timestamp, microsecond, user, computer_name,
+      self, posix_time, microsecond, user, computer_name,
       terminal, status, ip_address, structure):
     """Initializes the event object.
 
     Args:
-      timestamp: Epoch when the terminal was started.
-      microsecond: number of microseconds related with timestamp.
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      microsecond: number of micro seconds.
       user: active user name.
       computer_name: name of the computer.
       terminal: type of terminal.
@@ -40,18 +40,17 @@ class UtmpEvent(event.EventObject):
         pid: integer with the process ID.
         terminal_id: integer with the Inittab ID.
     """
-    super(UtmpEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
-        timestamp, microsecond)
-    self.timestamp_desc = eventdata.EventTimestamp.START_TIME
-    self.user = user
+    super(UtmpEvent, self).__init__(
+        posix_time, eventdata.EventTimestamp.START_TIME,
+        micro_seconds=microsecond)
     self.computer_name = computer_name
-    self.terminal = terminal
-    self.status = status
-    self.ip_address = ip_address
     self.exit = structure.exit
+    self.ip_address = ip_address
     self.pid = structure.pid
+    self.status = status
     self.terminal_id = structure.terminal_id
+    self.terminal = terminal
+    self.user = user
 
 
 class UtmpParser(interface.SingleFileBaseParser):

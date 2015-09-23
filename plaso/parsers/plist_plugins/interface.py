@@ -133,7 +133,8 @@ class PlistPlugin(plugins.BasePlugin):
     The attributes for a PlistEvent should include the following:
       root = Root key this event was extracted from. E.g. DeviceCache/
       key = Key the value resided in.  E.g. 'DE:AD:BE:EF:01'
-      time = Date this artifact was created in microseconds(usec) from epoch.
+      time = Date this artifact was created in number of micro seconds
+             (usec) since January 1, 1970, 00:00:00 UTC.
       desc = Short description.  E.g. 'Device LastInquiryUpdated'
 
     See plist/bluetooth.py for the implemented example plugin.

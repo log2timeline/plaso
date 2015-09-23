@@ -167,6 +167,9 @@ class ProtobufEventAttributeSerializer(object):
       proto_attribute: a protobuf attribute object.
       attribute_name: the name of the attribute.
       ditctobject: a dictionary object that is the value of the attribute.
+
+    Raises:
+      AttributeError: if the attribute cannot be merged with the dictionary.
     """
     dict_proto = plaso_storage_pb2.Dict()
 
@@ -175,7 +178,12 @@ class ProtobufEventAttributeSerializer(object):
       cls.WriteSerializedObject(dict_proto_add, dict_key, dict_value)
 
     dict_attribute = getattr(proto_attribute, attribute_name)
-    dict_attribute.MergeFrom(dict_proto)
+    try:
+      dict_attribute.MergeFrom(dict_proto)
+    except AttributeError as exception:
+      raise AttributeError(
+          u'Unable to merge attribute: {0:s} with error: {1:s}'.format(
+              attribute_name, exception))
 
   @classmethod
   def WriteSerializedListObject(
@@ -186,6 +194,9 @@ class ProtobufEventAttributeSerializer(object):
       proto_attribute: a protobuf attribute object.
       attribute_name: the name of the attribute.
       list_object: a list object that is the value of the attribute.
+
+    Raises:
+      AttributeError: if the attribute cannot be merged with the list.
     """
     list_proto = plaso_storage_pb2.Array()
 
@@ -194,7 +205,12 @@ class ProtobufEventAttributeSerializer(object):
       cls.WriteSerializedObject(list_proto_add, u'', list_value)
 
     list_attribute = getattr(proto_attribute, attribute_name)
-    list_attribute.MergeFrom(list_proto)
+    try:
+      list_attribute.MergeFrom(list_proto)
+    except AttributeError as exception:
+      raise AttributeError(
+          u'Unable to merge attribute: {0:s} with error: {1:s}'.format(
+              attribute_name, exception))
 
 
 class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):

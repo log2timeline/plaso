@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains functions and variables used for time manipulations.
+"""Time manipulation functions and variables.
 
-This file should contain common methods that can be used in Plaso to convert
-timestamps in various formats into the standard micro seconds precision integer
-Epoch UTC time that is used internally to store timestamps in Plaso.
+This module contain common methods that can be used to convert timestamps
+from various formats into number of micro seconds since January 1, 1970,
+00:00:00 UTC that is used internally to store timestamps.
 
-The file can also contain common functions to change the default timestamp into
-a more human readable one.
+It also contains various functions to represent timestamps in a more
+human readable form.
 """
 
 import calendar
@@ -112,7 +112,8 @@ class Timestamp(object):
                    The default timezone is UTC.
 
     Returns:
-      An integer containing the timestamp.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
 
     Raises:
       ValueError: if the time string is invalid or not supported.
@@ -252,19 +253,21 @@ class Timestamp(object):
     """Copies the timestamp to a datetime object.
 
     Args:
-      timestamp: An integer containing the timestamp.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: The timezone (pytz.timezone) object.
       raise_error: Boolean that if set to True will not absorb an OverflowError
                    if the timestamp is out of bounds. By default there will be
                    no error raised.
 
     Returns:
-      A datetime object.
+      A datetime object (instance of datetime.datetime). A datetime object of
+      January 1, 1970 00:00:00 UTC is returned on error if raises_error is
+      not set.
 
     Raises:
-      OverflowError: If raises_error is set to True and an OverflowError error
-                     occurs. Otherwise the error is absorbed and a datetime
-                     object from the beginning of UNIX Epoch is returned.
+      OverflowError: If raises_error is set to True and an overflow error
+                     occurs.
     """
     datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
     try:
@@ -273,10 +276,10 @@ class Timestamp(object):
     except OverflowError as exception:
       if raise_error:
         raise
-      else:
-        logging.error((
-            u'Unable to copy {0:d} to a datetime object with error: '
-            u'{1:s}').format(timestamp, exception))
+
+      logging.error((
+          u'Unable to copy {0:d} to a datetime object with error: '
+          u'{1:s}').format(timestamp, exception))
 
     return datetime_object
 
@@ -285,7 +288,8 @@ class Timestamp(object):
     """Copies the timestamp to an ISO 8601 formatted string.
 
     Args:
-      timestamp: An integer containing the timestamp.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: Optional timezone (instance of pytz.timezone).
                 The default is UTC.
       raise_error: Boolean that if set to True will not absorb an OverflowError
@@ -304,10 +308,12 @@ class Timestamp(object):
     """Converts microsecond timestamps to POSIX timestamps.
 
     Args:
-      timestamp: An integer containing the microsecond timestamp.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
 
     Returns:
-      An integer value containing the timestamp.
+      The timestamp which is an integer containing the number of seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
     return timestamp // cls.MICRO_SECONDS_PER_SECOND
 
@@ -381,7 +387,8 @@ class Timestamp(object):
       cocoa_time: The timestamp in Cocoa format.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     return cls.FromPosixTime(cocoa_time + cls.COCOA_TIME_TO_POSIX_BASE)
 
@@ -399,7 +406,8 @@ class Timestamp(object):
       delphi_time: The timestamp in Delphi format.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     posix_time = (delphi_time - cls.DELPHI_TIME_TO_POSIX_BASE) * 86400.0
     if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
@@ -428,7 +436,8 @@ class Timestamp(object):
       fat_date_time: The 32-bit FAT date time.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     number_of_seconds = cls.FAT_DATE_TO_POSIX_BASE
 
@@ -474,7 +483,8 @@ class Timestamp(object):
       filetime: The 64-bit FILETIME timestamp.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     # TODO: Add a handling for if the timestamp equals to zero.
     if filetime < 0:
@@ -500,7 +510,8 @@ class Timestamp(object):
               The default is false.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     timestamp_local = cls.FromHfsPlusTime(hfs_time)
     return cls.LocaltimeToUTC(timestamp_local, timezone, is_dst)
@@ -517,7 +528,8 @@ class Timestamp(object):
       hfs_time: The timestamp in HFS+ format.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     return cls.FromPosixTime(hfs_time - cls.HFSTIME_TO_POSIX_BASE)
 
@@ -535,7 +547,8 @@ class Timestamp(object):
       java_time: The Java Timestamp.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     return java_time * cls.MILLI_SECONDS_TO_MICRO_SECONDS
 
@@ -550,7 +563,8 @@ class Timestamp(object):
       posix_time: The POSIX timestamp.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
         posix_time > cls.TIMESTAMP_MAX_SECONDS):
@@ -569,7 +583,8 @@ class Timestamp(object):
       microsecond: The microseconds to add to the timestamp.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     timestamp = cls.FromPosixTime(posix_time)
     if not timestamp:
@@ -578,13 +593,20 @@ class Timestamp(object):
 
   @classmethod
   def FromPythonDatetime(cls, datetime_object):
-    """Converts a Python datetime object into a timestamp."""
+    """Converts a Python datetime object into a timestamp.
+
+    Args:
+      datetime_object: The datetime object (instance of datetime.datetime).
+
+    Returns:
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
+    """
     if not isinstance(datetime_object, datetime.datetime):
       return 0
 
-    posix_epoch = int(calendar.timegm(datetime_object.utctimetuple()))
-    epoch = cls.FromPosixTime(posix_epoch)
-    return epoch + datetime_object.microsecond
+    posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
+    return cls.FromPosixTime(posix_time) + datetime_object.microsecond
 
   @classmethod
   def FromTimeParts(
@@ -605,7 +627,8 @@ class Timestamp(object):
                 The default is UTC.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     try:
       date = datetime.datetime(
@@ -622,9 +645,9 @@ class Timestamp(object):
       timezone = pytz.timezone(timezone)
 
     date_use = timezone.localize(date)
-    epoch = int(calendar.timegm(date_use.utctimetuple()))
+    posix_time = int(calendar.timegm(date_use.utctimetuple()))
 
-    return cls.FromPosixTime(epoch) + microseconds
+    return cls.FromPosixTime(posix_time) + microseconds
 
   @classmethod
   def FromTimeString(
@@ -648,7 +671,8 @@ class Timestamp(object):
                 is used when the timezone cannot be determined from the string.
 
     Returns:
-      An integer containing the timestamp.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
 
     Raises:
       TimestampError: if the time string could not be parsed.
@@ -683,7 +707,8 @@ class Timestamp(object):
       uuid_time: The 60-bit UUID version 1 timestamp.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     # TODO: Add a handling for if the timestamp equals to zero.
     if uuid_time < 0:
@@ -705,7 +730,8 @@ class Timestamp(object):
       webkit_time: The 64-bit WebKit time timestamp.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if webkit_time < (cls.TIMESTAMP_MIN_MICRO_SECONDS +
                       cls.WEBKIT_TIME_TO_POSIX_BASE):
@@ -714,7 +740,12 @@ class Timestamp(object):
 
   @classmethod
   def GetNow(cls):
-    """Current number of microseconds since the Unix epoch in UTC."""
+    """Retrieves the current time (now) as a timestamp in UTC.
+
+    Returns:
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
+    """
     time_elements = time.gmtime()
     return calendar.timegm(time_elements) * 1000000
 
@@ -737,14 +768,16 @@ class Timestamp(object):
     """Converts the timestamp in localtime of the timezone to UTC.
 
     Args:
-      timestamp: An integer containing the timestamp.
+      timestamp: The timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: The timezone (pytz.timezone) object.
       is_dst: A boolean to indicate the timestamp is corrected for daylight
               savings time (DST) only used for the DST transition period.
               The default is false.
 
     Returns:
-      An integer containing the timestamp or 0 on error.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     if timezone and timezone != pytz.UTC:
       datetime_object = (

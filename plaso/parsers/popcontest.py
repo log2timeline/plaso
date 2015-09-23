@@ -99,22 +99,23 @@ class PopularityContestSessionEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'popularity_contest:session:event'
 
-  def __init__(self, timestamp, session, status, hostid=None, details=None):
+  def __init__(self, posix_time, session, status, details=None, hostid=None):
     """Initializes the event object.
 
     Args:
-      timestamp: microseconds since epoch in UTC, it's the start/end time.
+      posix_time: the the start/end POSIX time value, which contains the
+                  number of seconds since January 1, 1970 00:00:00 UTC.
       session: the session number.
       status: start or end of the session.
-      hostid: the host uuid.
-      details: the popularity contest version and host architecture.
+      details: optional popularity contest version and host architecture.
+      hostid: optional host uuid.
     """
     super(PopularityContestSessionEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
+        posix_time, eventdata.EventTimestamp.ADDED_TIME)
+    self.details = details
+    self.hostid = hostid
     self.session = session
     self.status = status
-    self.hostid = hostid
-    self.details = details
 
 
 class PopularityContestEvent(time_events.PosixTimeEvent):
@@ -122,22 +123,21 @@ class PopularityContestEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'popularity_contest:log:event'
 
-  def __init__(self, timestamp, ctime, package, mru, tag=None):
+  def __init__(self, posix_time, timestamp_description, package, mru, tag=None):
     """Initializes the event object.
 
     Args:
-      timestamp: microseconds since epoch in UTC, it's the <atime>.
-      ctime: seconds since epoch in UTC, it's the <ctime>.
+      posix_time: the access POSIX time value, which contains the
+                  number of seconds since January 1, 1970 00:00:00 UTC.
+      timestamp_description: The usage string for the timestamp value.
       package: the installed packaged name, whom mru belongs to.
       mru: the recently used app/library from package.
-      tag: the popularity context tag.
+      tag: optional popularity context tag.
     """
     super(PopularityContestEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ACCESS_TIME)
-    # TODO: adding ctime as is, reconsider a conversion to human readable form.
-    self.ctime = ctime
-    self.package = package
+        posix_time, timestamp_description)
     self.mru = mru
+    self.package = package
     self.record_tag = tag
 
 
@@ -147,15 +147,16 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'popularity_contest'
   DESCRIPTION = u'Parser for popularity contest log files.'
 
-  EPOCH = text_parser.PyparsingConstants.INTEGER.setResultsName(u'epoch')
-  PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName(u'package')
   MRU = pyparsing.Word(pyparsing.printables).setResultsName(u'mru')
+  PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName(u'package')
   TAG = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(u'tag')
+  TIMESTAMP = text_parser.PyparsingConstants.INTEGER.setResultsName(
+      u'timestamp')
 
   HEADER = (
       pyparsing.Literal(u'POPULARITY-CONTEST-').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName(u'session') +
-      pyparsing.Literal(u'TIME:').suppress() + EPOCH +
+      pyparsing.Literal(u'TIME:').suppress() + TIMESTAMP +
       pyparsing.Literal(u'ID:').suppress() +
       pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName(u'id') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'details'))
@@ -163,10 +164,10 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   FOOTER = (
       pyparsing.Literal(u'END-POPULARITY-CONTEST-').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName(u'session') +
-      pyparsing.Literal(u'TIME:').suppress() + EPOCH)
+      pyparsing.Literal(u'TIME:').suppress() + TIMESTAMP)
 
   LOG_LINE = (
-      EPOCH.setResultsName(u'atime') + EPOCH.setResultsName(u'ctime') +
+      TIMESTAMP.setResultsName(u'atime') + TIMESTAMP.setResultsName(u'ctime') +
       (PACKAGE + TAG | PACKAGE + MRU + pyparsing.Optional(TAG)))
 
   LINE_STRUCTURES = [
@@ -190,13 +191,14 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException:
       logging.debug(u'Not a Popularity Contest log file, invalid header')
       return False
-    if not timelib.Timestamp.FromPosixTime(header_struct.epoch):
+
+    if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
       logging.debug(u'Invalid Popularity Contest log file header timestamp.')
       return False
     return True
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -204,56 +206,68 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     # TODO: Add anomaly objects for abnormal timestamps, such as when the log
     # timestamp is greater than the session start.
     if key == u'logline':
-      return self._ParseLogLine(structure)
+      self._ParseLogLine(parser_mediator, structure)
+
     elif key == u'header':
-      if not structure.epoch:
-        logging.debug(u'PopularityContestParser, header with invalid epoch.')
+      if not structure.timestamp:
+        logging.debug(
+            u'PopularityContestParser, header with invalid timestamp.')
         return
-      return PopularityContestSessionEvent(
-          structure.epoch, unicode(structure.session), u'start', structure.id,
-          structure.details)
+
+      session = u'{0!s}'.format(structure.session)
+      event_object = PopularityContestSessionEvent(
+          structure.timestamp, session, u'start', details=structure.details,
+          hostid=structure.id)
+      parser_mediator.ProduceEvent(event_object)
+
     elif key == u'footer':
-      if not structure.epoch:
-        logging.debug(u'PopularityContestParser, footer with invalid epoch.')
+      if not structure.timestamp:
+        logging.debug(
+            u'PopularityContestParser, footer with invalid timestamp.')
         return
-      return PopularityContestSessionEvent(
-          structure.epoch, unicode(structure.session), u'end')
+
+      session = u'{0!s}'.format(structure.session)
+      event_object = PopularityContestSessionEvent(
+          structure.timestamp, session, u'end')
+      parser_mediator.ProduceEvent(event_object)
+
     else:
       logging.warning(
-          u'PopularityContestParser, unknown structure: {}.'.format(key))
+          u'PopularityContestParser, unknown structure: {0:s}.'.format(key))
 
-  def _ParseLogLine(self, structure):
-    """Gets an event_object or None from the pyparsing ParseResults.
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parses an event object from the log line.
 
     Args:
-      structure: the pyparsing ParseResults object.
-
-    Returns:
-      event_object: a plaso event or None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      structure: the log line structure object (instance of
+                 pyparsing.ParseResults).
     """
     # Required fields are <mru> and <atime> and we are not interested in
     # log lines without <mru>.
     if not structure.mru:
       return
+
     # The <atime> field (as <ctime>) is always present but could be 0.
     # In case of <atime> equal to 0, we are in <NOFILES> case, safely return
     # without logging.
-    if not structure.atime:
-      return
-    # TODO: not doing any check on <tag> fields, even if only informative
-    # probably it could be better to check for the expected values.
-    # TODO: ctime is a numeric string representing seconds since epoch UTC,
-    # reconsider a conversion to integer together with microseconds usage.
-    return PopularityContestEvent(
-        structure.atime, structure.ctime, structure.package, structure.mru,
-        structure.tag)
+    if structure.atime:
+      # TODO: not doing any check on <tag> fields, even if only informative
+      # probably it could be better to check for the expected values.
+      event_object = PopularityContestEvent(
+          structure.atime, eventdata.EventTimestamp.ACCESS_TIME,
+          structure.package, structure.mru, tag=structure.tag)
+      parser_mediator.ProduceEvent(event_object)
+
+    if structure.ctime:
+      event_object = PopularityContestEvent(
+          structure.ctime, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
+          structure.package, structure.mru, tag=structure.tag)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(PopularityContestParser)

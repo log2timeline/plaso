@@ -5,35 +5,36 @@ import os
 
 import construct
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class PlsRecallEvent(event.EventObject):
+class PlsRecallEvent(time_events.DelphiTimeEvent):
   """Convenience class for a PL/SQL Recall file container."""
 
   DATA_TYPE = u'PLSRecall:event'
 
-  def __init__(self, timestamp, sequence, user, database, query):
+  def __init__(self, delphi_time, sequence, user, database, query):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp when the entry was created.
+      delphi_time: the Delphi time value when the entry was created.
       sequence: Sequence indicates the order of execution.
       username: The username that made the query.
       database_name: String containing the database name.
       query: String containing the PL/SQL query.
     """
-    super(PlsRecallEvent, self).__init__()
-    self.timestamp = timestamp
-    self.sequence = sequence
-    self.username = user
+    super(PlsRecallEvent, self).__init__(
+        delphi_time, eventdata.EventTimestamp.CREATION_TIME)
     self.database_name = database
     self.query = query
+    self.sequence = sequence
+    self.username = user
 
 
 class PlsRecallParser(interface.SingleFileBaseParser):
@@ -99,8 +100,7 @@ class PlsRecallParser(interface.SingleFileBaseParser):
 
     while pls_record:
       event_object = PlsRecallEvent(
-          timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
-          pls_record.Sequence, pls_record.Username,
+          pls_record.TimeStamp, pls_record.Sequence, pls_record.Username,
           pls_record.Database, pls_record.Query)
       parser_mediator.ProduceEvent(event_object)
 

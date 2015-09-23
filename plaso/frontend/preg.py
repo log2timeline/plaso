@@ -394,7 +394,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
     # Expand all the paths.
-    win_registry = dfwinreg_registry.WinRegistry()
+    win_registry = dfwinreg_registry.WinRegistry(
+        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
     # TODO: deprecate usage of pre_obj.
     path_attributes = self.knowledge_base_object.pre_obj.__dict__
@@ -549,8 +550,9 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A dict that contains the following structure:
           key_path:
-              key: a Registry key (instance of WinRegKey)
-              subkeys: a list of Registry keys (instance of WinRegKey).
+              key: a Registry key (instance of dfwinreg.WinRegistryKey)
+              subkeys: a list of Registry keys (instance of
+                       dfwinreg.WinRegistryKey).
               data:
                 plugin: a plugin object (instance of RegistryPlugin)
                   event_objects: List of event objects extracted.
@@ -594,8 +596,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     all available plugins.
 
     Args:
-      key: the Registry key to parse (instance of WinRegKey or a string
-           containing key path).
+      key: the Registry key to parse (instance of dfwinreg.WinRegistryKey or
+           a string containing key path).
       registry_helper: the Registry helper object (instance of
                        PregRegistryHelper).
       use_plugins: optional list of plugin names to use. The default is None
@@ -697,6 +699,9 @@ class PregRegistryHelper(object):
     self._codepage = codepage
     self._collector_name = collector_name
     self._knowledge_base_object = knowledge_base_object
+    self._registry_file = None
+    self._registry_file_name = None
+    self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
     self._win_registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
@@ -723,7 +728,7 @@ class PregRegistryHelper(object):
   @property
   def name(self):
     """The name of the Registry file."""
-    return getattr(self._registry_file, u'name', u'N/A')
+    return self._registry_file_name
 
   @property
   def path(self):
@@ -744,6 +749,7 @@ class PregRegistryHelper(object):
     """Reset all attributes of the Registry helper."""
     self._currently_loaded_registry_key = u''
     self._registry_file = None
+    self._registry_file_name = None
     self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
 
   def Close(self):
@@ -793,7 +799,8 @@ class PregRegistryHelper(object):
       key_path: the Registry key path.
 
     Returns:
-      The key (instance of WinRegKey) if available or None otherwise.
+      The key (instance of dfwinreg.WinRegistryKey) if available or
+      None otherwise.
     """
     if not key_path:
       return
@@ -815,20 +822,24 @@ class PregRegistryHelper(object):
     return key
 
   def Open(self):
-    """Open the Registry file."""
+    """Opens a Windows Registry file.
+
+    Raises:
+      IOError: if the Windows Registry file cannot be opened.
+    """
     if self._registry_file:
       raise IOError(u'Registry file already open.')
 
-    try:
-      self._registry_file = self._win_registry.OpenFileEntry(
-          self.file_entry, codepage=self._codepage)
-    except IOError:
+    self._registry_file = self._win_registry.OpenFileEntry(self.file_entry)
+    if not self._registry_file:
       logging.error(
           u'Unable to open Registry file: {0:s} [{1:s}]'.format(
               self.path, self._collector_name))
-      self.Close()
-      raise
 
+      self.Close()
+      raise IOError(u'Unable to open Registry file.')
+
+    self._registry_file_name = self.file_entry.name
     self._registry_file_type = self._win_registry.GetRegistryFileType(
         self._registry_file)
 

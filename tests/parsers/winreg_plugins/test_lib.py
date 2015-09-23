@@ -6,6 +6,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.dfwinreg import registry as dfwinreg_registry
+from plaso.dfwinreg import regf
 from plaso.engine import single_process
 
 from tests.parsers import test_lib
@@ -22,7 +23,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       key_path: The path of the key to parse.
 
     Returns:
-      A Windows Registry key (instance of WinRegKey).
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
@@ -37,21 +38,41 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       key_path: The path of the key to parse.
 
     Returns:
-      A Windows Registry key (instance of WinRegKey).
+      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
+    # TODO: refactor.
     registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
-    winreg_file = registry.OpenFileEntry(file_entry, codepage=u'cp1252')
+    winreg_file = registry.OpenFileEntry(file_entry)
     return winreg_file.GetKeyByPath(key_path)
 
+  def _OpenREGFRegistryFile(self, filename):
+    """Opens a REGF Windows Registry file.
+
+    Args:
+      filename: the name of the file relative to the test file path.
+
+    Returns:
+      The Windows Registry file object (instance of REGFWinRegistryFileTest) or
+      None.
+    """
+    test_file = self._GetTestFilePath([filename])
+    file_entry = self._GetTestFileEntry(test_file)
+    file_object = file_entry.GetFileObject()
+
+    registry_file = regf.REGFWinRegistryFile()
+    registry_file.Open(file_object)
+
+    return registry_file
+
   def _ParseKeyWithPlugin(
-      self, plugin_object, winreg_key, knowledge_base_values=None,
+      self, plugin_object, registry_key, knowledge_base_values=None,
       file_entry=None, parser_chain=None):
     """Parses a key within a Windows Registry file using the plugin object.
 
     Args:
       plugin_object: The plugin object.
-      winreg_key: The Windows Registry Key.
+      registry_key: The Windows Registry Key.
       knowledge_base_values: Optional dict containing the knowledge base
                              values. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
@@ -63,7 +84,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       An event object queue consumer object (instance of
       TestItemQueueConsumer).
     """
-    self.assertNotEqual(winreg_key, None)
+    self.assertNotEqual(registry_key, None)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
@@ -89,7 +110,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       # as access to the parser chain should be very infrequent.
       parser_mediator._parser_chain_components = parser_chain.split(u'/')
 
-    plugin_object.Process(parser_mediator, key=winreg_key)
+    plugin_object.Process(parser_mediator, key=registry_key)
 
     return event_queue_consumer
 
