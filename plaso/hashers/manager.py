@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for managing digest hashers for Plaso."""
 
+import os
+
 
 class HashersManager(object):
   """Class that implements the hashers manager."""
@@ -35,7 +37,7 @@ class HashersManager(object):
     hasher names.
 
     Args:
-      hasher_names_string: Comma separated string of names of
+      hasher_names_string: comma separated string of names of
                            hashers to enable enable, or the string 'all', to
                            enable all hashers.
 
@@ -90,7 +92,7 @@ class HashersManager(object):
     """Retrieves an instance of a specific hasher.
 
     Args:
-      hasher_name: The name of the hasher to retrieve.
+      hasher_name: the name of the hasher to retrieve.
 
     Returns:
       A hasher object (instance of BaseHasher).
@@ -111,7 +113,7 @@ class HashersManager(object):
     """Retrieves instances for all the specified hashers.
 
     Args:
-      hasher_names: List of the names of the hashers to retrieve.
+      hasher_names: list of the names of the hashers to retrieve.
 
     Returns:
       A list of hasher objects (instances of BaseHasher).
@@ -133,6 +135,41 @@ class HashersManager(object):
     """
     for hasher_name, hasher_class in cls._hasher_classes.iteritems():
       yield hasher_name, hasher_class
+
+  @classmethod
+  def HashFileObject(cls, hasher_names_string, file_object, buffer_size=4096):
+    """Hashes the contents of a file-like object.
+
+    Args:
+      hasher_names_string: comma separated string of names of
+                           hashers to enable enable, or the string 'all', to
+                           enable all hashers.
+      file_object: the file-like object to be hashed.
+      buffer_size: optional read buffer size.
+
+    Returns:
+      A dictionary of digest hashes, where the key contains digest hash name
+      and value contains the digest hash calculated from the file contents.
+    """
+    hasher_objects = cls.GetHasherObjects(hasher_names_string)
+    if not hasher_objects:
+      return {}
+
+    file_object.seek(0, os.SEEK_SET)
+
+    # We only do one read, then pass it to each of the hashers in turn.
+    data = file_object.read(buffer_size)
+    while data:
+      for hasher_object in hasher_objects:
+        hasher_object.Update(data)
+      data = file_object.read(buffer_size)
+
+    # Get the digest hash value of every active hasher.
+    digest_hashes = {}
+    for hasher_object in hasher_objects:
+      digest_hashes[hasher_object.NAME] = hasher_object.GetStringDigest()
+
+    return digest_hashes
 
   @classmethod
   def RegisterHasher(cls, hasher_class):
