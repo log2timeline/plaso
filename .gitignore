@@ -9,11 +9,10 @@
 *.pyo
 
 # Specific auto-generated build files
-/.eggs
-/.tox
 /__pycache__
 /build/
-/docs/_build/doctrees/
+/dependencies/
+/docs/_build/doctrees
 /docs/_build/html
 /dist/
 /plaso.egg-info
@@ -21,9 +20,6 @@
 # Code review files
 /.review
 ._code_review_number
-
-# Pycharm files
-/.idea
 
 # Test files
 .coverage
