@@ -1048,6 +1048,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     if not self.VerifyStructure(parser_mediator, self._text_reader.lines):
       raise errors.UnableToParseFile(u'Wrong file structure.')
 
+    # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
+    # with spaces to SkipAhead() the correct number of bytes after a match.
+    for key, structure in self.LINE_STRUCTURES:
+      structure.parseWithTabs()
+
     # Read every line in the text file.
     while self._text_reader.lines:
       # Initialize pyparsing objects.
