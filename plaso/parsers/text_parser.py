@@ -708,12 +708,12 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
   # If this value needs to be calculated on the fly (not a fixed constant for
   # this particular file type) it can be done by modifying the self.encoding
   # attribute.
-  ENCODING = u''
+  _ENCODING = u''
 
   def __init__(self):
     """Initializes the pyparsing single-line text parser object."""
     super(PyparsingSingleLineTextParser, self).__init__()
-    self.encoding = self.ENCODING
+    self.encoding = self._ENCODING
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
@@ -1019,7 +1019,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
     self._text_reader = EncodedTextReader(
-        buffer_size=self.BUFFER_SIZE, encoding=self.ENCODING)
+        buffer_size=self.BUFFER_SIZE, encoding=self._ENCODING)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a pyparsing definition.

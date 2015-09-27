@@ -2,6 +2,7 @@
 """Parser for SCCM Logs."""
 import re
 import pyparsing
+import datetime
 
 from plaso.events import text_events
 from plaso.lib import timelib
@@ -22,7 +23,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   NAME = u'sccm'
   DESCRIPTION = u'Parser for SCCM logs files.'
 
-  ENCODING = u'utf-8-sig'
+  _ENCODING = u'utf-8-sig'
 
   # Increasing the buffer size as SCCM messages are commonly well larger
   # than the default value.
@@ -39,8 +40,10 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
                setResultsName('month'),
       'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.
              setResultsName('day'),
-      'microsecond': pyparsing.Regex(r'\d{3}\-\d{3}|\d{3}\+\d{3}|\d{6,7}').
+      'microsecond': pyparsing.Regex(r'\d{3,7}').
                      setResultsName('microsecond'),
+      'utc_offset_minutes': pyparsing.Regex(r'\-\d{3}|\+\d{3}').
+                            setResultsName('utc_offset_minutes'),
       'date_prefix': pyparsing.Literal(u'" date="').
                      setResultsName('date_prefix'),
       'component_prefix': pyparsing.Literal(u'" component="').
@@ -62,7 +65,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   }
 
   # Base grammar for individual log event lines.
-  LINE_GRAMMAR = (
+  LINE_GRAMMAR_STD = (
       _PARSING_COMPONENTS['msg_left_delimiter'] + _PARSING_COMPONENTS['text'] +
       _PARSING_COMPONENTS['msg_right_delimiter'] +
       _PARSING_COMPONENTS['hour'] +
@@ -75,17 +78,32 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       _PARSING_COMPONENTS['component_prefix'] + _PARSING_COMPONENTS['component']
   )
 
+  # Grammar for individual log event lines with a minutes offset from UTC.
+  LINE_GRAMMAR_OFFSET = (
+      _PARSING_COMPONENTS['msg_left_delimiter'] + _PARSING_COMPONENTS['text'] +
+      _PARSING_COMPONENTS['msg_right_delimiter'] +
+      _PARSING_COMPONENTS['hour'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
+      pyparsing.Suppress('.') + _PARSING_COMPONENTS['microsecond'] +
+      _PARSING_COMPONENTS['utc_offset_minutes'] +
+      _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
+      pyparsing.Suppress('-') + _PARSING_COMPONENTS['day'] +
+      pyparsing.Suppress('-') + _PARSING_COMPONENTS['year'] +
+      _PARSING_COMPONENTS['component_prefix'] + _PARSING_COMPONENTS['component']
+  )
+
   LINE_STRUCTURES = [
-      ('log_entry', LINE_GRAMMAR + _PARSING_COMPONENTS['line_remainder']),
+      ('log_entry', LINE_GRAMMAR_STD + _PARSING_COMPONENTS['line_remainder']),
       ('log_entry_at_end',
-       LINE_GRAMMAR +_PARSING_COMPONENTS['lastline_remainder'] +
+       LINE_GRAMMAR_STD +_PARSING_COMPONENTS['lastline_remainder'] +
+       pyparsing.lineEnd),
+      ('log_entry_offset',
+       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['line_remainder']),
+      ('log_entry_offset_at_end',
+       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['lastline_remainder'] +
        pyparsing.lineEnd)
       ]
-
-  def __init__(self):
-    """Initialize a parser object."""
-
-    super(SCCMParser, self).__init__()
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verify whether content corresponds to an SCCM log file.
@@ -98,9 +116,8 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       Returns True if the passed buffer appears to contain content
       from an SCCM log file; returns False otherwise.
     """
-
     # Identify the token to which we attempt a match.
-    match = self._PARSING_COMPONENTS['msg_left_delimiter'].match
+    match = self._PARSING_COMPONENTS[u'msg_left_delimiter'].match
 
     # Because logs files can lead with a partial event,
     # we can't assume that the first character (post-BOM)
@@ -111,33 +128,49 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     return False
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse the record and return an SCCM log event object."""
+    """Parse the record and return an SCCM log event object.
 
-    # Remove the microsecond dash or plus if it is present.
-    # This is needed because SCCM logs may include a dash or
-    # a plus character within the microseconds value.
-    structure.microsecond = structure.microsecond.replace('-', '')
-    structure.microsecond = structure.microsecond.replace('+', '')
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
 
-    # Sometimes, SCCM logs will contain a seven-digit precision
-    # (100s of nanoseconds). Taking six-digit precision because timestamps
-    # are in microseconds.
+    Raises:
+      TimestsampError: when a non-int value for microseconds is encountered.
+    """
+    # Sometimes, SCCM logs will exhibit a seven-digit sub-second precision
+    # (100 nanosecond intervals). Using six-digit precision because
+    # timestamps are in microseconds.
     if len(structure.microsecond) > 6:
       structure.microsecond = structure.microsecond[0:6]
 
     try:
-      microsecond = int(structure.microsecond)
+      microsecond = int(structure.microsecond, 10)
     except ValueError:
       raise errors.TimestampError(
-          u'Unable to parse log line due to non-int value of microseconds.')
+          u'Unable to read number of microseconds value.')
 
-    timestamp = timelib.Timestamp.FromTimeParts(
-        structure.year, structure.month, structure.day, structure.hour,
-        structure.minute, structure.second, microsecond)
+    # 3-digit precision is milliseconds,
+    # so multiply by 1000 to convert to microseconds
+    if len(structure.microsecond) == 3:
+      microsecond = microsecond * 1000
 
-    event_object = SCCMLogEvent(
-        timestamp, 0, structure)
+    py_timestamp = datetime.datetime(
+        year=structure.year, month=structure.month, day=structure.day,
+        hour=structure.hour, minute=structure.minute,
+        second=structure.second, microsecond=microsecond)
 
+    # If an offset is given for the event, apply the offset to convert to UTC.
+    if "offset" in key:
+      delta_seconds = int(structure.utc_offset_minutes[1:], 10) * 60
+      if structure.utc_offset_minutes[0] == "-":
+        delta_seconds = -delta_seconds
+      py_timestamp = py_timestamp + datetime.timedelta(seconds=delta_seconds)
+
+    timestamp = timelib.Timestamp.FromPythonDatetime(py_timestamp)
+    event_object = SCCMLogEvent(timestamp, 0, structure)
     parser_mediator.ProduceEvent(event_object)
 
 

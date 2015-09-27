@@ -20,4 +20,5 @@ class SCCMEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = u'SCCM Event'
   SOURCE_SHORT = u'LOG'
 
+
 manager.FormattersManager.RegisterFormatter(SCCMEventFormatter)

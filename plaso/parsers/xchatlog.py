@@ -92,7 +92,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'xchatlog'
   DESCRIPTION = u'Parser for XChat log files.'
 
-  ENCODING = u'UTF-8'
+  _ENCODING = u'UTF-8'
 
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
