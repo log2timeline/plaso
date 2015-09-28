@@ -123,8 +123,6 @@ class OutputMediatorTest(unittest.TestCase):
 
   def testGetStoredHostname(self):
     """Tests the GetStoredHostname function."""
-    event_object = TestEvent()
-
     stored_hostname = self._output_mediator.GetStoredHostname()
     self.assertIsNone(stored_hostname)
 
