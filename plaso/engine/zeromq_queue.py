@@ -30,7 +30,7 @@ class ZeroMQQueue(queue.Queue):
 
   def __init__(
       self, delay_start=True, linger_seconds=10, port=None, timeout_seconds=5,
-      name=u'Unnamed', high_water_mark=1000):
+      name=u'Unnamed', maximum_items=1000):
     """Initializes a ZeroMQ backed queue.
 
     Args:
@@ -49,10 +49,11 @@ class ZeroMQQueue(queue.Queue):
                        PushItem may block for, before returning
                        queue.QueueEmpty.
       name: Optional name to identify the queue.
-      high_water_mark: Optional maximum number of items allowed in the queue
-                       at one time. Note that this limit only applies at one
-                       "end" of the queue. The default of 1000 is the ZeroMQ
-                       default value.
+      maximum_items: Optional maximum number of items queue on the ZeroMQ
+                     socket. ZeroMQ refers to this value as "high water
+                     mark" or "hwm". Note that this limit only applies at one
+                     "end" of the queue. The default of 1000 is the ZeroMQ
+                     default value.
 
     Raises:
       ValueError: If the queue is configured to connect to an endpoint,
@@ -62,7 +63,7 @@ class ZeroMQQueue(queue.Queue):
         and not port):
       raise ValueError(u'No port specified to connect to.')
     self._closed = False
-    self._high_water_mark = high_water_mark
+    self._high_water_mark = maximum_items
     self._linger_seconds = linger_seconds
     self._timeout_milliseconds = timeout_seconds * 1000
     self._zmq_socket = None
@@ -128,7 +129,7 @@ class ZeroMQQueue(queue.Queue):
       exists.
     """
     if self._zmq_socket:
-      raise errors.QueueAlreadyStarted
+      raise errors.QueueAlreadyStarted()
     self._CreateZMQSocket()
 
   # pylint: disable=arguments-differ
@@ -143,7 +144,7 @@ class ZeroMQQueue(queue.Queue):
       closed.
     """
     if self._closed and not abort:
-      raise errors.QueueAlreadyClosed
+      raise errors.QueueAlreadyClosed()
 
     if abort:
       logging.warning(u'{0:s} queue aborting. Contents may be lost.'.format(
@@ -169,7 +170,7 @@ class ZeroMQQueue(queue.Queue):
     messages on the queue that a producer or consumer is unaware of. Thus,
     the queue is never empty, so we return False. Note that it is possible that
     a queue is unable to pop an item from a queue within a timeout, which will
-    cause PopItem to return a QueueEmpty exception, but this is a different
+    cause PopItem to raise a QueueEmpty exception, but this is a different
     condition.
 
     Returns:
@@ -447,6 +448,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
     """
     raise errors.WrongQueueType
 
+
 class ZeroMQRequestBindQueue(ZeroMQRequestQueue):
   """A Plaso queue backed by a ZeroMQ REQ socket that binds to a port.
 
@@ -454,12 +456,14 @@ class ZeroMQRequestBindQueue(ZeroMQRequestQueue):
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
 
+
 class ZeroMQRequestConnectQueue(ZeroMQRequestQueue):
   """A Plaso queue backed by a ZeroMQ REQ socket that connects to a port.
 
   This queue may only be used to pop items, not to push.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
+
 
 class ZeroMQBufferedQueue(ZeroMQQueue):
   """Parent class for buffered Plaso queues..
@@ -470,7 +474,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
 
   def __init__(
       self, delay_start=True, linger_seconds=10, port=None, timeout_seconds=5,
-      name=u'Unnamed', high_water_mark=1000, buffer_max_size=10000,
+      name=u'Unnamed', maximum_items=1000, buffer_max_size=10000,
       buffer_timeout_seconds=2):
     """Initializes a buffered, ZeroMQ backed queue.
 
@@ -490,7 +494,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
                        PushItem may block for, before returning
                        queue.QueueEmpty.
       name: Optional name to identify the queue.
-      high_water_mark: Optional maximum number of items allowed in the queue
+      maximum_items: Optional maximum number of items allowed in the queue
                        at one time. Note that this limit only applies at one
                        "end" of the queue. The default of 1000 is the ZeroMQ
                        default value.
@@ -498,18 +502,13 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
                        before or after they are sent/received via ZeroMQ.
       buffer_timeout_seconds: The number of seconds to wait when doing a
                               put or get to/from the internal buffer.
-
-    Raises:
-      ValueError: If the queue is configured to connect to an endpoint,
-                      but no port is specified.
     """
     self._buffer_timeout_seconds = buffer_timeout_seconds
     self._queue = Queue.Queue(maxsize=buffer_max_size)
     self._terminate_event = threading.Event()
     super(ZeroMQBufferedQueue, self).__init__(
         delay_start, linger_seconds, port, timeout_seconds, name,
-        high_water_mark)
-
+        maximum_items)
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket as well as a regular queue and a thread."""
@@ -626,7 +625,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     Raises:
       WrongQueueType: As Pop is not supported by this queue.
     """
-    raise errors.WrongQueueType
+    raise errors.WrongQueueType()
 
   def PushItem(self, item, block=True):
     """Push an item on to the queue.
@@ -643,7 +642,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
       QueueAlreadyClosed: If the queue is closed.
     """
     if self._closed:
-      raise errors.QueueAlreadyClosed
+      raise errors.QueueAlreadyClosed()
     if not self._zmq_socket:
       self._CreateZMQSocket()
     self._queue.put(item, timeout=self._buffer_timeout_seconds)
@@ -656,12 +655,14 @@ class ZeroMQBufferedReplyBindQueue(ZeroMQBufferedReplyQueue):
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
 
+
 class ZeroMQBufferedReplyConnectQueue(ZeroMQBufferedReplyQueue):
   """A Plaso queue backed by a ZeroMQ REP socket that connects to a port.
 
   This queue may only be used to pop items, not to push.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
+
 
 class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
   """Parent class for buffered Plaso queues backed by ZeroMQ PUSH sockets.
@@ -727,7 +728,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
                           closed.
     """
     if self._closed:
-      raise errors.QueueAlreadyClosed
+      raise errors.QueueAlreadyClosed()
     if not self._zmq_socket:
       self._CreateZMQSocket()
     self._queue.put(item, block=block, timeout=self._buffer_timeout_seconds)
@@ -740,7 +741,8 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
     Raises:
       WrongQueueType: As Pop is not supported by this queue.
     """
-    raise errors.WrongQueueType
+    raise errors.WrongQueueType()
+
 
 class ZeroMQBufferedPushBindQueue(ZeroMQBufferedPushQueue):
   """A Plaso queue backed by a ZeroMQ PUSH socket that binds to a port.
@@ -756,6 +758,7 @@ class ZeroMQBufferedPushConnectQueue(ZeroMQBufferedPushQueue):
   This queue may only be used to push items, not to pop.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
+
 
 class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
   """Parent class for buffered Plaso queues backed by ZeroMQ PULL sockets.
@@ -850,7 +853,8 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     Raises:
       WrongQueueType: As Push is not supported this queue.
     """
-    raise errors.WrongQueueType
+    raise errors.WrongQueueType()
+
 
 class ZeroMQBufferedPullBindQueue(ZeroMQBufferedPullQueue):
   """A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.
@@ -866,4 +870,3 @@ class ZeroMQBufferedPullConnectQueue(ZeroMQBufferedPullQueue):
   This queue may only be used to pop items, not to push.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
-

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """The processing status classes."""
 
-import time
 import logging
+import time
 
 from plaso.lib import definitions
 
@@ -14,9 +14,9 @@ class CollectorStatus(object):
     identifier: the extraction worker identifier.
     last_running_time: timestamp of the last update when the process
                        had a running process status.
-    path_spec_queue_port: the port that the path spec queue is bound to, or None
-                          if the queue is not yet bound, or  the queue does
-                          not use a port.
+    path_spec_queue_port: the port that the path specification queue is bound
+                          to, or None if the queue is not yet bound, or the
+                          queue does not use a port.
     pid: the collector process identifier (PID).
     process_status: string containing the process status.
     produced_number_of_path_specs: the total number of path specifications
@@ -94,7 +94,7 @@ class StorageWriterStatus(object):
     number_of_events: the total number of events received
                       by the storage writer.
     parse_error_queue_port: the port that the path spec queue is bound to, or
-                            None i the queue is not yet bound, or the the queue
+                            None if the queue is not yet bound, or the the queue
                             does not use a port.
     pid: the storage writer process identifier (PID).
     process_status: string containing the process status.
@@ -160,7 +160,7 @@ class ProcessingStatus(object):
     """Determines whether extraction is completed.
 
     Extraction is considered complete when the collector has finished producing
-    pathspecs, and all workers have stopped running.
+    path specifications, and all workers have stopped running.
 
     Returns:
       A boolean value indicating the extraction completed status.
@@ -174,7 +174,8 @@ class ProcessingStatus(object):
         produced_number_of_path_specs - consumed_number_of_path_specs)
     if path_specs_remaining > 0:
       logging.debug(
-          u'{0:d} pathspecs produced, {1:d} processed. {2:d} remaining'.format(
+          (u'[ProcessingStatus] {0:d} pathspecs produced, {1:d} processed. '
+           u'{2:d} remaining. Extraction incomplete.').format(
               produced_number_of_path_specs, consumed_number_of_path_specs,
               path_specs_remaining))
       return False
@@ -185,7 +186,6 @@ class ProcessingStatus(object):
     # at the moment. Hence we wait until the condition is met at least
     # consecutive 3 times.
     if workers_running:
-      logging.debug(u'')
       self._collector_completed_count = 0
 
     elif self._collector_completed_count < 3:

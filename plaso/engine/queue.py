@@ -129,12 +129,12 @@ class ItemQueueConsumer(QueueConsumer):
       try:
         item = self._queue.PopItem()
       except (errors.QueueClose, errors.QueueEmpty) as exception:
-        logging.debug(u'ConsumeItems exiting, got {0:s}'.format(
-            exception.__class__))
+        logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
+            type(exception)))
         break
 
       if isinstance(item, QueueAbort):
-        logging.debug(u'ConsumeItems exiting, got {0:s}'.format(item.__class__))
+        logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
         break
 
       self._number_of_consumed_items += 1

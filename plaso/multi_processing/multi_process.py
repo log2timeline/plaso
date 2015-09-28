@@ -36,7 +36,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
   _PROCESS_JOIN_TIMEOUT = 5.0
 
-  def __init__(self, process_type, enable_sigsegv_handler=True, **kwargs):
+  def __init__(self, process_type, enable_sigsegv_handler=False, **kwargs):
     """Initializes the process object.
 
     Args:
@@ -231,8 +231,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
 
   def __init__(
       self, stop_collector_event, source_path_specs, path_spec_queue,
-      filter_find_specs=None, include_directory_stat=True,
-      **kwargs):
+      filter_find_specs=None, include_directory_stat=True, **kwargs):
     """Initializes the process object.
 
     Args:
@@ -264,7 +263,6 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
 
     if filter_find_specs:
       self._collector.SetFilter(filter_find_specs)
-
 
   def _GetStatus(self):
     """Returns a status dictionary."""

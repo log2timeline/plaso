@@ -611,7 +611,8 @@ class ExtractionFrontend(frontend.Frontend):
     """Sets whether the tool is using ZeroMQ for queueing or not.
 
     Args:
-      use_zeromq: boolean, when True the tool will use ZeroMQ for queuing.
+      use_zeromq: Optional boolean, when True the tool will use ZeroMQ for
+                  queuing.
     """
     self._use_zeromq = use_zeromq
 
