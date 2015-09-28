@@ -31,11 +31,11 @@ class PstorageTest(test_lib.OutputModuleTestCase):
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:
         output_mediator = self._CreateOutputMediator(storage_object=store)
-        formatter = pstorage.PlasoStorageOutputModule(output_mediator)
-        formatter.SetFilehandle(storage_file)
+        output_module = pstorage.PlasoStorageOutputModule(output_mediator)
+        output_module.SetFilePath(storage_file)
 
         with interface.EventBuffer(
-            formatter, check_dedups=False) as output_buffer:
+            output_module, check_dedups=False) as output_buffer:
           event_object = store.GetSortedEntry()
           while event_object:
             output_buffer.Append(event_object)
