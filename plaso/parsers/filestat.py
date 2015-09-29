@@ -3,34 +3,10 @@
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.events import time_events
+from plaso.events import file_system_events
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-class FileStatEvent(time_events.TimestampEvent):
-  """File system stat event."""
-
-  DATA_TYPE = u'fs:stat'
-
-  def __init__(self, timestamp, usage, allocated, size, fs_type):
-    """Initializes the event.
-
-    Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC
-      usage: The usage string describing the timestamp.
-      allocated: Boolean value to indicate the file entry is allocated.
-      size: The file size in bytes.
-      fs_type: The filesystem this timestamp is extracted from.
-    """
-    super(FileStatEvent, self).__init__(timestamp, usage)
-
-    self.offset = 0
-    self.size = size
-    self.allocated = allocated
-    self.fs_type = fs_type
 
 
 class FileStatParser(interface.BaseParser):
@@ -100,7 +76,7 @@ class FileStatParser(interface.BaseParser):
       if not timestamp:
         continue
 
-      event_object = FileStatEvent(
+      event_object = file_system_events.FileStatEvent(
           timestamp, time_attribute, is_allocated, file_size, file_system_type)
       parser_mediator.ProduceEvent(event_object)
 

@@ -210,6 +210,14 @@ plaso.parsers.msiecf module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.ntfs module
+-------------------------
+
+.. automodule:: plaso.parsers.ntfs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.olecf module
 --------------------------
 

@@ -278,6 +278,7 @@ class CollectorTest(CollectorTestCase):
       collect_directory_metadata: boolean value to indicate to collect
                                   directory metadata.
     """
+    # Note that the source file is a RAW (VMDK flat) image.
     test_file = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     image_path_spec = path_spec_factory.Factory.NewPathSpec(
