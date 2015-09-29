@@ -50,7 +50,6 @@ class OutputMediatorTest(unittest.TestCase):
         TestEventFormatter)
 
     event_formatter = self._output_mediator.GetEventFormatter(event_object)
-    self.assertIsNotNone(event_formatter)
     self.assertIsInstance(event_formatter, TestEventFormatter)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
