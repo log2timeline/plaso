@@ -21,7 +21,6 @@ class PlasoStorageOutputModule(interface.OutputModule):
       output_mediator: The output mediator object (instance of OutputMediator).
     """
     super(PlasoStorageOutputModule, self).__init__(output_mediator)
-
     self._file_object = None
     self._storage = None
 
@@ -45,19 +44,13 @@ class PlasoStorageOutputModule(interface.OutputModule):
 
     self._storage = storage.StorageFile(self._file_object, pre_obj=pre_obj)
 
-  def SetFilehandle(self, file_path=None, file_object=None):
-    """Sets the filehandle.
+  def SetFilePath(self, file_path):
+    """Sets the file-like object based on the file path.
 
     Args:
       file_path: the full path to the output file.
-      file_object: a file like object to use for a filehandle.
     """
-    if file_object:
-      self._file_object = file_object
-      return
-
-    if file_path:
-      self._file_object = open(file_path, 'wb')
+    self._file_object = open(file_path, 'wb')
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
