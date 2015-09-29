@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from plaso.output import dynamic
-from plaso.output import elastic
+# TODO: renable after refactor as indicated in:
+# https://github.com/log2timeline/plaso/issues/197
+# from plaso.output import elastic
 from plaso.output import json_line
 from plaso.output import json_out
 from plaso.output import l2t_csv
