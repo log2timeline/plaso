@@ -23,8 +23,41 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     self._parser = ntfs.NTFSMFTParser()
 
-  def testParse(self):
-    """Tests the Parse function."""
+  def testParseFile(self):
+    """Tests the Parse function on a stand-alone $MFT file."""
+    test_path = self._GetTestFilePath([u'MFT'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, os_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEqual(len(event_objects), 126352)
+
+    # A distributed link tracking event.
+    event_object = event_objects[3684]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2007-06-30 12:58:40.500004')
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_message = (
+        u'9fe44b69-2709-11dc-a06b-db3099beae3c '
+        u'MAC address: db:30:99:be:ae:3c '
+        u'Origin: $MFT: 462-1')
+
+    expected_short_message = (
+        u'9fe44b69-2709-11dc-a06b-db3099beae3c '
+        u'Origin: $MFT: 462-1')
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
+
+  def testParseImage(self):
+    """Tests the Parse function on a storage media image."""
     test_path = self._GetTestFilePath([u'vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
@@ -126,9 +159,6 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 184)
-
-    # TODO: add test for distributed link tracking events.
-    # TODO: add test for overflow exception handling.
 
 
 if __name__ == '__main__':

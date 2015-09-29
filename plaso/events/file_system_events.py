@@ -26,8 +26,8 @@ class FileStatEvent(time_events.TimestampEvent):
                  number of microseconds since Jan 1, 1970 00:00:00 UTC
       timestamp_description: a description string for the timestamp value.
       is_allocated: boolean value to indicate the file entry is allocated.
-      file_size: the file size in bytes.
-      file_system_type: the filesystem this timestamp is extracted from.
+      file_size: an integer containing the file size in bytes.
+      file_system_type: a string containing the file system type.
     """
     super(FileStatEvent, self).__init__(timestamp, timestamp_description)
 

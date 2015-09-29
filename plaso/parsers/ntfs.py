@@ -138,33 +138,35 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
           mft_entry.file_reference & 0xffffffffffff,
           mft_entry.file_reference >> 48)
 
-      try:
-        uuid_object = uuid.UUID(mft_attribute.droid_file_identifier)
-        if uuid_object.version == 1:
-          event_object = (
-              windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                  uuid_object, display_name))
-          parser_mediator.ProduceEvent(event_object)
+      if mft_attribute.droid_file_identifier:
+        try:
+          uuid_object = uuid.UUID(mft_attribute.droid_file_identifier)
+          if uuid_object.version == 1:
+            event_object = (
+                windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                    uuid_object, display_name))
+            parser_mediator.ProduceEvent(event_object)
 
-      except (TypeError, ValueError) as exception:
-        parser_mediator.ProduceParseError((
-            u'unable to read droid file identifier from attribute: 0x{0:08x} '
-            u'with error: {1:s}').format(
-                mft_attribute.attribute_type, exception))
+        except (TypeError, ValueError) as exception:
+          parser_mediator.ProduceParseError((
+              u'unable to read droid file identifier from attribute: 0x{0:08x} '
+              u'with error: {1:s}').format(
+                  mft_attribute.attribute_type, exception))
 
-      try:
-        uuid_object = uuid.UUID(mft_attribute.birth_droid_file_identifier)
-        if uuid_object.version == 1:
-          event_object = (
-              windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                  uuid_object, display_name))
-          parser_mediator.ProduceEvent(event_object)
+      if mft_attribute.birth_droid_file_identifier:
+        try:
+          uuid_object = uuid.UUID(mft_attribute.birth_droid_file_identifier)
+          if uuid_object.version == 1:
+            event_object = (
+                windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                    uuid_object, display_name))
+            parser_mediator.ProduceEvent(event_object)
 
-      except (TypeError, ValueError) as exception:
-        parser_mediator.ProduceParseError((
-            u'unable to read birth droid file identifier from attribute: '
-            u'0x{0:08x} with error: {1:s}').format(
-                mft_attribute.attribute_type, exception))
+        except (TypeError, ValueError) as exception:
+          parser_mediator.ProduceParseError((
+              u'unable to read birth droid file identifier from attribute: '
+              u'0x{0:08x} with error: {1:s}').format(
+                  mft_attribute.attribute_type, exception))
 
   def _ParseMFTEntry(self, parser_mediator, mft_entry):
     """Extract data from a NFTS $MFT entry.
