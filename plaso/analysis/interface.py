@@ -19,6 +19,7 @@ except ImportError:
 
 from collections import defaultdict
 
+from plaso.analysis import definitions
 from plaso.engine import queue
 from plaso.lib import timelib
 from plaso.lib import errors
@@ -47,13 +48,6 @@ class AnalysisPlugin(queue.ItemQueueConsumer):
   # should be able to run during the extraction phase.
   ENABLE_IN_EXTRACTION = False
 
-  # All the possible report types.
-  TYPE_ANOMALY = 1    # Plugin that is inspecting events for anomalies.
-  TYPE_STATISTICS = 2   # Statistical calculations.
-  TYPE_ANNOTATION = 3    # Inspecting events with the primary purpose of
-                         # annotating or tagging them.
-  TYPE_REPORT = 4    # Inspecting events to provide a summary information.
-
   # A flag to indicate that this plugin takes a long time to compile a report.
   LONG_RUNNING_PLUGIN = False
 
@@ -64,7 +58,7 @@ class AnalysisPlugin(queue.ItemQueueConsumer):
       incoming_queue: A queue that is used to listen to incoming events.
     """
     super(AnalysisPlugin, self).__init__(incoming_queue)
-    self.plugin_type = self.TYPE_REPORT
+    self.plugin_type = definitions.PLUGIN_TYPE_REPORT
 
   def _ConsumeItem(self, item, analysis_mediator=None, **kwargs):
     """Consumes an item callback for ConsumeItems.

@@ -51,6 +51,14 @@ plaso.cli.tools module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.views module
+----------------------
+
+.. automodule:: plaso.cli.views
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

@@ -41,6 +41,7 @@ from dfvfs.volume import tsk_volume_system
 from plaso.cli import hexdump
 from plaso.cli import storage_media_tool
 from plaso.cli import tools as cli_tools
+from plaso.cli import views as cli_views
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
 from plaso.lib import errors
@@ -362,7 +363,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       event_object.pathspec = file_entry.path_spec
       hexadecimal_output = self._GetEventDataHexDump(event_object)
 
-      self.PrintHeader(u'Hexadecimal output from event.', u'-')
+      self.PrintHeader(u'Hexadecimal output from event.', character=u'-')
       self._output_writer.Write(hexadecimal_output)
       self._output_writer.Write(u'\n')
 
@@ -396,7 +397,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
           u'Description', event_object.timestamp_desc))
       self._output_writer.Write(u'\n')
 
-    self.PrintHeader(u'Data', u'+')
+    self.PrintHeader(u'Data', character=u'+')
 
   def _PrintEventObjectsBasedOnTime(
       self, event_objects, file_entry, show_hex=False):
@@ -451,7 +452,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       parsed_data: dict object returned from ParseRegisterFile.
       registry_helper: Registry file object (instance of PregRegistryHelper).
     """
-    self.PrintHeader(u'Registry File', u'x')
+    self.PrintHeader(u'Registry File', character=u'x')
     self._output_writer.Write(u'\n')
     self._output_writer.Write(
         u'{0:>15} : {1:s}\n'.format(u'Registry file', registry_helper.path))
@@ -533,6 +534,19 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     return result
 
+  def PrintHeader(self, text, character=u'*'):
+    """Prints the header as a line with centered text.
+
+    Args:
+      text: The header text.
+      character: Optional header line character. The default is '*'.
+    """
+    self._output_writer.Write(u'\n')
+
+    format_string = u'{{0:{0:s}^{1:d}}}\n'.format(character, self._LINE_LENGTH)
+    header_string = format_string.format(u' {0:s} '.format(text))
+    self._output_writer.Write(header_string)
+
   def PrintParsedRegistryKey(self, key_data, file_entry=None, show_hex=False):
     """Write extracted data returned from ParseRegistryKey to an output writer.
 
@@ -544,8 +558,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
                 of the event should be included in the output. The default is
                 False.
     """
-    self.PrintHeader(u'Plugins', u'-')
+    self.PrintHeader(u'Plugins', character=u'-')
     for plugin, event_objects in iter(key_data.items()):
+      # TODO: make this a table view.
       self.PrintHeader(u'Plugin: {0:s}'.format(plugin.plugin_name))
       self._output_writer.Write(u'[{0:s}] {1:s}\n'.format(
           plugin.REG_TYPE, plugin.DESCRIPTION))
@@ -609,13 +624,12 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
   def ListPluginInformation(self):
     """Lists Registry plugin information."""
+    table_view = cli_views.CLITableView(self._output_writer)
+    table_view.PrintHeader(u'Supported Plugins')
     plugin_list = self._front_end.registry_plugin_list
-
-    self.PrintHeader(u'Supported Plugins', u'=')
     for plugin_class in plugin_list.GetAllPlugins():
-      self.PrintColumnValue(plugin_class.NAME, plugin_class.DESCRIPTION)
-
-    self._output_writer.Write(u'\n')
+      table_view.PrintRow(plugin_class.NAME, plugin_class.DESCRIPTION)
+    table_view.PrintFooter()
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -1131,14 +1145,16 @@ class PregMagics(magic.Magics):
 
     # Print out a hexadecimal representation of all binary values.
     if verbose:
+      table_view = cli_views.CLITableView(self.output_writer)
       header_shown = False
       for value in current_helper.GetCurrentRegistryKey().GetValues():
         if value.DataIsBinaryData():
           if not header_shown:
+            table_view.PrintHeader(u'Hexadecimal representation')
             header_shown = True
-            self.console.preg_tool.PrintHeader(u'Hexadecimal representation')
+
           self.console.preg_tool.PrintSeparatorLine()
-          self.console.preg_tool.PrintColumnValue(u'Attribute', value.name)
+          table_view.PrintRow(u'Attribute', value.name)
           self.console.preg_tool.PrintSeparatorLine()
 
           value_string = hexdump.Hexdump.FormatData(value.data)
@@ -1146,6 +1162,25 @@ class PregMagics(magic.Magics):
           self.output_writer.Write(u'\n')
           self.output_writer.Write(u'+-'*40)
           self.output_writer.Write(u'\n')
+
+  def _PrintPluginHelp(self, plugin_object):
+    """Prints the help information of a plugin.
+
+    Args:
+      plugin_object: a Windows Registry plugin object (instance of
+                     WindowsRegistryPlugin).
+    """
+    table_view = cli_views.CLITableView(self.output_writer)
+    table_view.PrintHeader(plugin_object.NAME)
+
+    # TODO: replace __doc__ by DESCRIPTION.
+    description = plugin_object.__doc__
+    table_view.PrintRow(u'Description', description)
+    self.output_writer.Write(u'\n')
+
+    for registry_key in plugin_object.expanded_keys:
+      table_view.PrintRow(u'Registry Key', registry_key)
+    table_view.PrintFooter()
 
   @magic.line_magic(u'plugin')
   def ParseWithPlugin(self, line):
@@ -1189,13 +1224,7 @@ class PregMagics(magic.Magics):
       return
 
     if u'-h' in line:
-      self.console.preg_tool.PrintHeader(plugin_name)
-      # TODO: replace __doc__ by DESCRIPTION.
-      self.console.preg_tool.PrintColumnValue(
-          u'Description', plugin_object.__doc__)
-      self.output_writer.Write(u'\n')
-      for registry_key in plugin_object.expanded_keys:
-        self.console.preg_tool.PrintColumnValue(u'Registry Key', registry_key)
+      self._PrintPluginHelp(plugin_object)
       return
 
     if not plugin_object.expanded_keys:
@@ -1392,7 +1421,8 @@ class PregConsole(object):
 
   def PrintBanner(self):
     """Writes a banner to the output writer."""
-    self.preg_tool.PrintHeader(
+    table_view = cli_views.CLITableView(self._output_writer, column_width=23)
+    table_view.PrintHeader(
         u'Welcome to PREG - home of the Plaso Windows Registry Parsing.')
 
     self._output_writer.Write(u'\n')
@@ -1401,10 +1431,8 @@ class PregConsole(object):
     self._output_writer.Write(u'\n')
 
     for function_name, description in self._BASE_FUNCTIONS:
-      self.preg_tool.PrintColumnValue(
-          function_name, description, column_width=23)
-
-    self._output_writer.Write(u'\n')
+      table_view.PrintRow(function_name, description)
+    table_view.PrintFooter()
 
     if len(self._registry_helpers) == 1:
       self.LoadRegistryFile(0)
