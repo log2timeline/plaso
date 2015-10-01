@@ -17,10 +17,9 @@ import time
 
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
-# TODO: remove after psort options refactor.
-from plaso.analysis import interface as analysis_interface
 from plaso.cli import analysis_tool
 from plaso.cli import tools as cli_tools
+from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.filters import manager as filters_manager
 from plaso.frontend import psort
@@ -249,9 +248,11 @@ class PsortTool(analysis_tool.AnalysisTool):
         time_slice=time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
-      self.PrintHeader(u'Counter')
+      table_view = cli_views.CLITableView(self._output_writer)
+      table_view.PrintHeader(u'Counter')
       for element, count in counter.most_common():
-        self.PrintColumnValue(element, u'{0:d}'.format(count))
+        table_view.PrintRow(element, u'{0:d}'.format(count))
+      table_view.PrintFooter()
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
@@ -365,54 +366,49 @@ class PsortTool(analysis_tool.AnalysisTool):
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
-    self.PrintHeader(u'Analysis Plugins')
-    format_length = 10
     analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
 
+    column_width = 10
     for name, _, _ in analysis_plugin_info:
-      if len(name) > format_length:
-        format_length = len(name)
+      if len(name) > column_width:
+        column_width = len(name)
 
-    # TODO: refactor to use type object (class) and add GetTypeString method.
-    for name, description, plugin_type in analysis_plugin_info:
-      if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
-        type_string = u'Annotation/tagging plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
-        type_string = u'Anomaly plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_REPORT:
-        type_string = u'Summary/Report plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_STATISTICS:
-        type_string = u'Statistics plugin'
-      else:
-        type_string = u'Unknown type'
-
+    table_view = cli_views.CLITableView(
+        self._output_writer, column_width=column_width)
+    table_view.PrintHeader(u'Analysis Plugins')
+    for name, description, type_string in analysis_plugin_info:
       description = u'{0:s} [{1:s}]'.format(description, type_string)
-      self.PrintColumnValue(name, description, format_length)
-    self.PrintSeparatorLine()
+      table_view.PrintRow(name, description)
+    table_view.PrintFooter()
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
-    self.PrintHeader(u'Language identifiers')
-    self.PrintColumnValue(u'Identifier', u'Language')
+    table_view = cli_views.CLITableView(self._output_writer)
+    table_view.PrintHeader(u'Language identifiers')
+    table_view.PrintRow(u'Identifier', u'Language')
     for language_id, value_list in sorted(
         language_ids.LANGUAGE_IDENTIFIERS.items()):
-      self.PrintColumnValue(language_id, value_list[1])
+      table_view.PrintRow(language_id, value_list[1])
+    table_view.PrintFooter()
 
   def ListOutputModules(self):
     """Lists the output modules."""
-    self.PrintHeader(u'Output Modules')
+    table_view = cli_views.CLITableView(self._output_writer, column_width=10)
+    table_view.PrintHeader(u'Output Modules')
     for name, output_class in sorted(self._front_end.GetOutputClasses()):
-      self.PrintColumnValue(name, output_class.DESCRIPTION, 10)
-    self.PrintSeparatorLine()
+      table_view.PrintRow(name, output_class.DESCRIPTION)
+    table_view.PrintFooter()
 
     # Assign to an attribute due to line length limitations.
     disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses
     if not disabled_classes():
       return
-    self.PrintHeader(u'Disabled Output Modules')
+
+    table_view = cli_views.CLITableView(self._output_writer, column_width=10)
+    table_view.PrintHeader(u'Disabled Output Modules')
     for output_class in disabled_classes():
-      self.PrintColumnValue(output_class.NAME, output_class.DESCRIPTION, 10)
-    self.PrintSeparatorLine()
+      table_view.PrintRow(output_class.NAME, output_class.DESCRIPTION)
+    table_view.PrintFooter()
 
   def ParseArguments(self):
     """Parses the command line arguments.
