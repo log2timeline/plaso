@@ -351,9 +351,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Lists information about the available hashers."""
     hashers_information = self._front_end.GetHashersInformation()
 
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Hashers')
 
-    table_view.SetTitle(u'Hashers')
     table_view.SetColumnNames([u'Name', u'Description'])
     for name, description in sorted(hashers_information):
       table_view.AddRow([name, description])
@@ -363,22 +363,21 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Lists information about the available parsers and plugins."""
     parsers_information = self._front_end.GetParsersInformation()
 
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Parsers')
 
-    table_view.SetTitle(u'Parsers')
     table_view.SetColumnNames([u'Name', u'Description'])
     for name, description in sorted(parsers_information):
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
 
-    for parser_name in self._front_end.GetParsersWithPlugins():
+    for parser_name in self._front_end.GetNamesOfParsersWithPlugins():
       plugins_information = self._front_end.GetParserPluginsInformation(
           parser_filter_string=parser_name)
 
-      table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-      table_view.SetTitle(
-          u'Parser plugins: {0:s}'.format(parser_name))
+      table_title = u'Parser plugins: {0:s}'.format(parser_name)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=table_title)
       table_view.SetColumnNames([u'Name', u'Description'])
       for name, description in sorted(plugins_information):
         table_view.AddRow([name, description])
@@ -386,9 +385,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     presets_information = self._front_end.GetParserPresetsInformation()
 
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-    table_view.SetTitle(u'Parser presets')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Parser presets')
     table_view.SetColumnNames([u'Name', u'Parsers and plugins'])
     for name, description in sorted(presets_information):
       table_view.AddRow([name, description])
@@ -680,9 +678,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     plugin_list = self._front_end.GetPluginData()
     for header, data in plugin_list.items():
-      table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-      table_view.SetTitle(header)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=header)
       table_view.SetColumnNames([u'Name', u'Description'])
       for entry_header, entry_data in sorted(data):
         table_view.AddRow([entry_header, entry_data])

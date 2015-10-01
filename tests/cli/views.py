@@ -81,12 +81,6 @@ class BaseTableViewTests(ViewTestCase):
     with self.assertRaises(ValueError):
       table_view.SetColumnNames([u'four', u'five'])
 
-  def testSetTitle(self):
-    """Tests the SetTitle function."""
-    table_view = TestBaseTableView()
-
-    table_view.SetTitle(u'Title')
-
 
 class CLITableViewTests(ViewTestCase):
   """Tests for the command line table view class."""
@@ -96,9 +90,7 @@ class CLITableViewTests(ViewTestCase):
     output_writer = test_lib.TestOutputWriter()
 
     # Table with columns.
-    table_view = views.CLITableView()
-
-    table_view.SetTitle(u'Title')
+    table_view = views.CLITableView(title=u'Title')
     table_view.SetColumnNames([u'Name', u'Description'])
     table_view.AddRow([u'First name', u'The first name in the table'])
     table_view.AddRow([u'Second name', u'The second name in the table'])
@@ -122,9 +114,7 @@ class CLITableViewTests(ViewTestCase):
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
     # Table without columns.
-    table_view = views.CLITableView()
-
-    table_view.SetTitle(u'Title')
+    table_view = views.CLITableView(title=u'Title')
     table_view.AddRow([u'Name', u'The name in the table'])
     table_view.AddRow([u'Description', u'The description in the table'])
 
@@ -143,17 +133,15 @@ class CLITableViewTests(ViewTestCase):
     # Splitting the string makes it easier to see differences.
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
-    # Table with a too large title.
-    table_view = views.CLITableView()
-
     # TODO: add test without title.
 
+    # Table with a too large title.
     # TODO: determine if this is the desired behavior.
     title = (
         u'In computer programming, a string is traditionally a sequence '
         u'of characters, either as a literal constant or as some kind of '
         u'variable.')
-    table_view.SetTitle(title)
+    table_view = views.CLITableView(title=title)
     table_view.SetColumnNames([u'Name', u'Description'])
     table_view.AddRow([u'First name', u'The first name in the table'])
     table_view.AddRow([u'Second name', u'The second name in the table'])
@@ -170,9 +158,7 @@ class MarkdownTableViewTests(ViewTestCase):
     output_writer = test_lib.TestOutputWriter()
 
     # Table with columns.
-    table_view = views.MarkdownTableView()
-
-    table_view.SetTitle(u'Title')
+    table_view = views.MarkdownTableView(title=u'Title')
     table_view.SetColumnNames([u'Name', u'Description'])
     table_view.AddRow([u'First name', u'The first name in the table'])
     table_view.AddRow([u'Second name', u'The second name in the table'])
@@ -192,9 +178,7 @@ class MarkdownTableViewTests(ViewTestCase):
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
     # Table without columns.
-    table_view = views.MarkdownTableView()
-
-    table_view.SetTitle(u'Title')
+    table_view = views.MarkdownTableView(title=u'Title')
     table_view.AddRow([u'Name', u'The name in the table'])
     table_view.AddRow([u'Description', u'The description in the table'])
 

@@ -387,13 +387,13 @@ class ExtractionFrontend(frontend.Frontend):
     """
     return parsers_manager.ParsersManager.GetParsersInformation()
 
-  def GetParsersWithPlugins(self):
+  def GetNamesOfParsersWithPlugins(self):
     """Retrieves the names of parser with plugins.
 
     Returns:
       A list of parser names.
     """
-    return parsers_manager.ParsersManager.GetParsersWithPlugins()
+    return parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
 
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,

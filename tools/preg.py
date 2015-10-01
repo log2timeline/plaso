@@ -624,8 +624,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
   def ListPluginInformation(self):
     """Lists Registry plugin information."""
-    table_view = cli_views.CLITableView()
-    table_view.SetTitle(u'Supported Plugins')
+    table_view = cli_views.CLITableView(title=u'Supported Plugins')
     plugin_list = self._front_end.registry_plugin_list
     for plugin_class in plugin_list.GetAllPlugins():
       table_view.AddRow([plugin_class.NAME, plugin_class.DESCRIPTION])
@@ -1145,14 +1144,12 @@ class PregMagics(magic.Magics):
 
     # Print out a hexadecimal representation of all binary values.
     if verbose:
-      table_view = cli_views.CLITableView()
-      header_shown = False
+      table_view = cli_views.CLITableView(
+          title=u'Hexadecimal representation')
+
+      # TODO: fix this output.
       for value in current_helper.GetCurrentRegistryKey().GetValues():
         if value.DataIsBinaryData():
-          if not header_shown:
-            table_view.SetTitle(u'Hexadecimal representation')
-            header_shown = True
-
           self.console.preg_tool.PrintSeparatorLine()
           table_view.AddRow([u'Attribute', value.name])
           self.console.preg_tool.PrintSeparatorLine()
@@ -1172,8 +1169,7 @@ class PregMagics(magic.Magics):
       plugin_object: a Windows Registry plugin object (instance of
                      WindowsRegistryPlugin).
     """
-    table_view = cli_views.CLITableView()
-    table_view.SetTitle(plugin_object.NAME)
+    table_view = cli_views.CLITableView(title=plugin_object.NAME)
 
     # TODO: replace __doc__ by DESCRIPTION.
     description = plugin_object.__doc__
@@ -1427,8 +1423,7 @@ class PregConsole(object):
     self._output_writer.Write(
         u'Welcome to PREG - home of the Plaso Windows Registry Parsing.\n')
 
-    table_view = cli_views.CLITableView()
-    table_view.SetTitle(u'Available commands')
+    table_view = cli_views.CLITableView(title=u'Available commands')
     table_view.SetColumnNames([u'Function', u'Description'])
     for function_name, description in self._BASE_FUNCTIONS:
       table_view.AddRow([function_name, description])

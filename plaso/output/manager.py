@@ -42,7 +42,7 @@ class OutputManager(object):
     """Retrieves the disabled output classes.
 
     Returns:
-      A list of the disable output classes (types of OutputModule).
+      A list of the disabled output classes (types of OutputModule).
     """
     return cls._disabled_output_classes.values()
 

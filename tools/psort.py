@@ -248,9 +248,8 @@ class PsortTool(analysis_tool.AnalysisTool):
         time_slice=time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
-      table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-      table_view.SetTitle(u'Counter')
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=u'Counter')
       for element, count in counter.most_common():
         table_view.AddRow([element, count])
       table_view.Write(self._output_writer)
@@ -374,9 +373,8 @@ class PsortTool(analysis_tool.AnalysisTool):
       if len(name) > column_width:
         column_width = len(name)
 
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-    table_view.SetTitle(u'Analysis Plugins')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Analysis Plugins')
     table_view.SetColumnNames([u'Name', u'Description'])
     # TODO: add support for a 3 column table.
     for name, description, type_string in analysis_plugin_info:
@@ -386,9 +384,8 @@ class PsortTool(analysis_tool.AnalysisTool):
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-    table_view.SetTitle(u'Language identifiers')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Language identifiers')
     table_view.SetColumnNames([u'Identifier', u'Language'])
     for language_id, value_list in sorted(
         language_ids.LANGUAGE_IDENTIFIERS.items()):
@@ -397,9 +394,8 @@ class PsortTool(analysis_tool.AnalysisTool):
 
   def ListOutputModules(self):
     """Lists the output modules."""
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-    table_view.SetTitle(u'Output Modules')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Output Modules')
     table_view.SetColumnNames([u'Name', u'Description'])
     for name, output_class in sorted(self._front_end.GetOutputClasses()):
       table_view.AddRow([name, output_class.DESCRIPTION])
@@ -409,9 +405,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     if not disabled_classes:
       return
 
-    table_view = cli_views.ViewsFactory.GetTableView(self._views_format_type)
-
-    table_view.SetTitle(u'Disabled Output Modules')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Disabled Output Modules')
     table_view.SetColumnNames([u'Name', u'Description'])
     for output_class in disabled_classes:
       table_view.AddRow([output_class.NAME, output_class.DESCRIPTION])

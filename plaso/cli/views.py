@@ -7,13 +7,17 @@ import abc
 class BaseTableView(object):
   """Class that implements the table view interface."""
 
-  def __init__(self):
-    """Initializes the table view object."""
+  def __init__(self, title=None):
+    """Initializes the table view object.
+
+    Args:
+      title: optional string containing the title.
+    """
     super(BaseTableView, self).__init__()
     self._columns = []
     self._number_of_columns = 0
     self._rows = []
-    self._title = None
+    self._title = title
 
   def AddRow(self, values):
     """Adds a row of values.
@@ -47,14 +51,6 @@ class BaseTableView(object):
     self._columns = column_names
     self._number_of_columns = len(self._columns)
 
-  def SetTitle(self, title):
-    """Sets the title.
-
-    Args:
-      title: a string containing the title.
-    """
-    self._title = title
-
   @abc.abstractmethod
   def Write(self, output_writer):
     """Writes the table to the output writer.
@@ -76,9 +72,13 @@ class CLITableView(BaseTableView):
 
   _HEADER_FORMAT_STRING = u'{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
 
-  def __init__(self):
-    """Initializes the command line table view object."""
-    super(CLITableView, self).__init__()
+  def __init__(self, title=None):
+    """Initializes the command line table view object.
+
+    Args:
+      title: optional string containing the title.
+    """
+    super(CLITableView, self).__init__(title=title)
     self._column_width = 40
 
   def _WriteRow(self, output_writer, values):
@@ -125,7 +125,7 @@ class CLITableView(BaseTableView):
         word_buffer.append(word)
     lines.append(u' '.join(word_buffer))
 
-    # Split the column value across on multiple lines.
+    # Split the column value across multiple lines.
     output_writer.Write(primary_format_string.format(
         values[0], lines[0]))
     for line in lines[1:]:
@@ -231,11 +231,12 @@ class ViewsFactory(object):
   }
 
   @classmethod
-  def GetTableView(cls, format_type):
+  def GetTableView(cls, format_type, title=None):
     """Retrieves a table view.
 
     Args:
       format_type: the table view format type.
+      title: optional string containing the title.
 
     Returns:
       A table view (instance of BaseTableView).
@@ -244,4 +245,4 @@ class ViewsFactory(object):
     if not view_class:
       raise ValueError(u'Unsupported format type: {0:s}'.format(format_type))
 
-    return view_class()
+    return view_class(title=title)

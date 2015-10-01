@@ -251,9 +251,8 @@ class CLITool(object):
 
     utc_date_time = datetime.datetime.utcnow()
 
-    table_view = views.ViewsFactory.GetTableView(self._views_format_type)
-
-    table_view.SetTitle(u'Zones')
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Zones')
     table_view.AddColumnNames([u'Timezone', u'UTC Offset'])
     for timezone_name in pytz.all_timezones:
       local_timezone = pytz.timezone(timezone_name)

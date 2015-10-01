@@ -255,7 +255,7 @@ class ParsersManager(object):
     return parsers_information
 
   @classmethod
-  def GetParsersWithPlugins(cls):
+  def GetNamesOfParsersWithPlugins(cls):
     """Retrieves the names of parser with plugins.
 
     Returns:
