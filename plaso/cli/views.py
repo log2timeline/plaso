@@ -6,6 +6,7 @@ class CLITableView(object):
   """Class that implements a 2 column command line table view."""
 
   # The maximum width of the table in number of characters.
+  # The standard width of Windows cmd.exe is 80 characters.
   _MAXIMUM_WIDTH = 80
 
   _HEADER_FORMAT_STRING = u'{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)

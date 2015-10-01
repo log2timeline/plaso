@@ -12,7 +12,7 @@ class AnalysisPluginManager(object):
 
   _PLUGIN_TYPE_STRINGS = {
       definitions.PLUGIN_TYPE_ANNOTATION: (
-          u'Annotation/tagging plugin'),
+          u'Annotation/Tagging plugin'),
       definitions.PLUGIN_TYPE_ANOMALY: (
           u'Anomaly plugin'),
       definitions.PLUGIN_TYPE_REPORT: (

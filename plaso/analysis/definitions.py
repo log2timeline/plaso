@@ -9,7 +9,7 @@ PLUGIN_TYPE_ANOMALY = 1
 # Plugin that calculating statistical information.
 PLUGIN_TYPE_STATISTICS = 2
 
-# Plugin that annotats (or tags) event objects.
+# Plugin that annotates (or tags) event objects.
 PLUGIN_TYPE_ANNOTATION = 3
 
 # Pluging that provides summary information.
