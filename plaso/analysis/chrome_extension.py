@@ -30,16 +30,14 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     """
     super(ChromeExtensionPlugin, self).__init__(incoming_queue)
 
+    # Saved list of already looked up extensions.
+    self._extensions = {}
     self._results = {}
-    self.plugin_type = self.TYPE_REPORT
 
     # TODO: see if these can be moved to arguments passed to ExamineEvent
     # or some kind of state object.
     self._sep = None
     self._user_paths = None
-
-    # Saved list of already looked up extensions.
-    self._extensions = {}
 
   def _GetChromeWebStorePage(self, extension_id):
     """Retrieves the page for the extension from the Chrome store website.

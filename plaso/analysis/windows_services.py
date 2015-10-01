@@ -180,9 +180,8 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
       incoming_queue: A queue to read events from.
     """
     super(WindowsServicesPlugin, self).__init__(incoming_queue)
-    self._service_collection = WindowsServiceCollection()
-    self.plugin_type = interface.AnalysisPlugin.TYPE_REPORT
     self._output_format = u'text'
+    self._service_collection = WindowsServiceCollection()
 
   def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
     """Analyzes an event_object and creates Windows Services as required.
