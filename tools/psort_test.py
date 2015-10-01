@@ -137,7 +137,7 @@ class PsortToolTest(test_lib.ToolTestCase):
     self.assertEqual(TestOutputModuleMissingParameters.missing, u'foobar')
     self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
 
-    self.assertIn(u'FILE/Unknown FS ctime OS:syslog', lines)
+    self.assertIn(u'FILE/UNKNOWN ctime OS:syslog', lines)
     output_manager.OutputManager.DeregisterOutput(
         TestOutputModuleMissingParameters)
     helpers_manager.ArgumentHelperManager.DeregisterHelper(
