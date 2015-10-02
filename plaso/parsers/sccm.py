@@ -1,8 +1,8 @@
 # -*_ coding: utf-8 -*-
 """Parser for SCCM Logs."""
 import re
-import pyparsing
 import datetime
+import pyparsing
 
 from plaso.events import text_events
 from plaso.lib import timelib
@@ -42,7 +42,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
              setResultsName('day'),
       'microsecond': pyparsing.Regex(r'\d{3,7}').
                      setResultsName('microsecond'),
-      'utc_offset_minutes': pyparsing.Regex(r'\-\d{3}|\+\d{3}').
+      'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{3}').
                             setResultsName('utc_offset_minutes'),
       'date_prefix': pyparsing.Literal(u'" date="').
                      setResultsName('date_prefix'),
@@ -65,7 +65,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   }
 
   # Base grammar for individual log event lines.
-  LINE_GRAMMAR_STD = (
+  LINE_GRAMMAR_BASE = (
       _PARSING_COMPONENTS['msg_left_delimiter'] + _PARSING_COMPONENTS['text'] +
       _PARSING_COMPONENTS['msg_right_delimiter'] +
       _PARSING_COMPONENTS['hour'] +
@@ -94,9 +94,9 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   )
 
   LINE_STRUCTURES = [
-      ('log_entry', LINE_GRAMMAR_STD + _PARSING_COMPONENTS['line_remainder']),
+      ('log_entry', LINE_GRAMMAR_BASE + _PARSING_COMPONENTS['line_remainder']),
       ('log_entry_at_end',
-       LINE_GRAMMAR_STD +_PARSING_COMPONENTS['lastline_remainder'] +
+       LINE_GRAMMAR_BASE +_PARSING_COMPONENTS['lastline_remainder'] +
        pyparsing.lineEnd),
       ('log_entry_offset',
        LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['line_remainder']),
@@ -163,9 +163,14 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
         second=structure.second, microsecond=microsecond)
 
     # If an offset is given for the event, apply the offset to convert to UTC.
-    if "offset" in key:
-      delta_seconds = int(structure.utc_offset_minutes[1:], 10) * 60
-      if structure.utc_offset_minutes[0] == "-":
+    if 'offset' in key:
+      try:
+        delta_seconds = int(structure.utc_offset_minutes[1:], 10) * 60
+      except ValueError:
+        raise ValueError(u'Unable to parse minute offset from UTC.')
+      except IndexError:
+        raise IndexError(u'Unable to parse minute offset from UTC.')
+      if structure.utc_offset_minutes[0] == '-':
         delta_seconds = -delta_seconds
       py_timestamp = py_timestamp + datetime.timedelta(seconds=delta_seconds)
 
