@@ -146,11 +146,11 @@ class UtmpxParser(interface.SingleFileBaseParser):
     # can be converted into a unicode string, otherwise we can assume
     # we are dealing with non UTMPX data.
     try:
-      _ = unicode(user)
+      user.decode(u'utf-8')
     except UnicodeDecodeError:
       return False
 
-    if user != u'utmpx-1.00':
+    if user != b'utmpx-1.00':
       return False
     if self.MAC_STATUS_TYPE[header.status_type] != u'SIGNATURE':
       return False
