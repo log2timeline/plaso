@@ -1142,25 +1142,31 @@ class PregMagics(magic.Magics):
     self.console.preg_tool.PrintParsedRegistryKey(
         parsed_data, file_entry=current_helper.file_entry, show_hex=verbose)
 
-    # Print out a hexadecimal representation of all binary values.
+    # Print a hexadecimal representation of all binary values.
     if verbose:
-      table_view = cli_views.CLITableView(
-          title=u'Hexadecimal representation')
-
-      # TODO: fix this output.
+      header_shown = False
       for value in current_helper.GetCurrentRegistryKey().GetValues():
-        if value.DataIsBinaryData():
-          self.console.preg_tool.PrintSeparatorLine()
-          table_view.AddRow([u'Attribute', value.name])
-          self.console.preg_tool.PrintSeparatorLine()
+        if not value.DataIsBinaryData():
+          continue
 
-          value_string = hexdump.Hexdump.FormatData(value.data)
-          self.output_writer.Write(value_string)
-          self.output_writer.Write(u'\n')
-          self.output_writer.Write(u'+-'*40)
-          self.output_writer.Write(u'\n')
+        if not header_shown:
+          table_view = cli_views.CLITableView(
+              title=u'Hexadecimal representation')
+          header_shown = True
+        else:
+          table_view = cli_views.CLITableView()
 
-      table_view.Write(self.output_writer)
+        table_view.AddRow([u'Attribute', value.name])
+        table_view.Write(self.output_writer)
+
+        self.console.preg_tool.PrintSeparatorLine()
+        self.console.preg_tool.PrintSeparatorLine()
+
+        value_string = hexdump.Hexdump.FormatData(value.data)
+        self.output_writer.Write(value_string)
+        self.output_writer.Write(u'\n')
+        self.output_writer.Write(u'+-'*40)
+        self.output_writer.Write(u'\n')
 
   def _PrintPluginHelp(self, plugin_object):
     """Prints the help information of a plugin.
@@ -1423,8 +1429,8 @@ class PregConsole(object):
     self._output_writer.Write(
         u'Welcome to PREG - home of the Plaso Windows Registry Parsing.\n')
 
-    table_view = cli_views.CLITableView(title=u'Available commands')
-    table_view.SetColumnNames([u'Function', u'Description'])
+    table_view = cli_views.CLITableView(
+        column_names=[u'Function', u'Description'], title=u'Available commands')
     for function_name, description in self._BASE_FUNCTIONS:
       table_view.AddRow([function_name, description])
     table_view.Write(self._output_writer)

@@ -7,15 +7,16 @@ import abc
 class BaseTableView(object):
   """Class that implements the table view interface."""
 
-  def __init__(self, title=None):
+  def __init__(self, column_names=None, title=None):
     """Initializes the table view object.
 
     Args:
+      column_names: optional list of strings containing the column names.
       title: optional string containing the title.
     """
     super(BaseTableView, self).__init__()
-    self._columns = []
-    self._number_of_columns = 0
+    self._columns = column_names or []
+    self._number_of_columns = len(self._columns)
     self._rows = []
     self._title = title
 
@@ -35,21 +36,6 @@ class BaseTableView(object):
 
     if not self._number_of_columns:
       self._number_of_columns = len(values)
-
-  def SetColumnNames(self, column_names):
-    """Sets the column names.
-
-    Args:
-      column_names: a list of strings containing the column names.
-
-    Raises:
-      ValueError: if the rows are already set.
-    """
-    if self._rows:
-      raise ValueError(u'Rows are already set.')
-
-    self._columns = column_names
-    self._number_of_columns = len(self._columns)
 
   @abc.abstractmethod
   def Write(self, output_writer):
@@ -72,14 +58,18 @@ class CLITableView(BaseTableView):
 
   _HEADER_FORMAT_STRING = u'{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
 
-  def __init__(self, title=None):
+  def __init__(self, column_names=None, title=None):
     """Initializes the command line table view object.
 
     Args:
+      column_names: optional list of strings containing the column names.
       title: optional string containing the title.
     """
-    super(CLITableView, self).__init__(title=title)
-    self._column_width = 40
+    super(CLITableView, self).__init__(column_names=column_names, title=title)
+    if self._columns:
+      self._column_width = len(self._columns[0])
+    else:
+      self._column_width = 0
 
   def _WriteRow(self, output_writer, values):
     """Writes a row of values aligned to the column width.
@@ -140,6 +130,21 @@ class CLITableView(BaseTableView):
     output_writer.Write(u'-' * self._MAXIMUM_WIDTH)
     output_writer.Write(u'\n')
 
+  def AddRow(self, values):
+    """Adds a row of values.
+
+    Args:
+      values: a list of values.
+
+    Raises:
+      ValueError: if the number of values is out of bounds.
+    """
+    super(CLITableView, self).AddRow(values)
+
+    value_length = len(values[0])
+    if value_length > self._column_width:
+      self._column_width = value_length
+
   def Write(self, output_writer):
     """Writes the table to the output writer.
 
@@ -157,20 +162,8 @@ class CLITableView(BaseTableView):
     if self._number_of_columns != 2:
       raise RuntimeError(u'Unsupported number of columns.')
 
-    if self._columns:
-      column_width = len(self._columns[0])
-    else:
-      column_width = 0
-
-    for values in self._rows:
-      value_length = len(values[0])
-      if value_length > column_width:
-        column_width = value_length
-
-    if column_width < 0 or column_width >= self._MAXIMUM_WIDTH:
+    if self._column_width < 0 or self._column_width >= self._MAXIMUM_WIDTH:
       raise RuntimeError(u'Column width out of bounds.')
-
-    self._column_width = column_width
 
     output_writer.Write(u'\n')
 
@@ -231,11 +224,12 @@ class ViewsFactory(object):
   }
 
   @classmethod
-  def GetTableView(cls, format_type, title=None):
+  def GetTableView(cls, format_type, column_names=None, title=None):
     """Retrieves a table view.
 
     Args:
       format_type: the table view format type.
+      column_names: optional list of strings containing the column names.
       title: optional string containing the title.
 
     Returns:
@@ -245,4 +239,4 @@ class ViewsFactory(object):
     if not view_class:
       raise ValueError(u'Unsupported format type: {0:s}'.format(format_type))
 
-    return view_class(title=title)
+    return view_class(column_names=column_names, title=title)

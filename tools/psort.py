@@ -374,8 +374,8 @@ class PsortTool(analysis_tool.AnalysisTool):
         column_width = len(name)
 
     table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Analysis Plugins')
-    table_view.SetColumnNames([u'Name', u'Description'])
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Analysis Plugins')
     # TODO: add support for a 3 column table.
     for name, description, type_string in analysis_plugin_info:
       description = u'{0:s} [{1:s}]'.format(description, type_string)
@@ -385,8 +385,8 @@ class PsortTool(analysis_tool.AnalysisTool):
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
     table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Language identifiers')
-    table_view.SetColumnNames([u'Identifier', u'Language'])
+        self._views_format_type, column_names=[u'Identifier', u'Language'],
+        title=u'Language identifiers')
     for language_id, value_list in sorted(
         language_ids.LANGUAGE_IDENTIFIERS.items()):
       table_view.AddRow([language_id, value_list[1]])
@@ -395,8 +395,8 @@ class PsortTool(analysis_tool.AnalysisTool):
   def ListOutputModules(self):
     """Lists the output modules."""
     table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Output Modules')
-    table_view.SetColumnNames([u'Name', u'Description'])
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Output Modules')
     for name, output_class in sorted(self._front_end.GetOutputClasses()):
       table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
@@ -406,8 +406,8 @@ class PsortTool(analysis_tool.AnalysisTool):
       return
 
     table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Disabled Output Modules')
-    table_view.SetColumnNames([u'Name', u'Description'])
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Disabled Output Modules')
     for output_class in disabled_classes:
       table_view.AddRow([output_class.NAME, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)

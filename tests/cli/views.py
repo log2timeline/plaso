@@ -34,9 +34,8 @@ class BaseTableViewTests(ViewTestCase):
 
   def testAddRow(self):
     """Tests the AddRow function."""
-    table_view = TestBaseTableView()
-
-    table_view.SetColumnNames([u'one', u'two', u'three'])
+    table_view = TestBaseTableView(
+        column_names=[u'one', u'two', u'three'])
 
     # Adding rows with the same number of values as columns is permitted.
     table_view.AddRow([u'1', u'2', u'3'])
@@ -58,29 +57,6 @@ class BaseTableViewTests(ViewTestCase):
     with self.assertRaises(ValueError):
       table_view.AddRow([u'7', u'8'])
 
-  def testSetColumnNames(self):
-    """Tests the SetColumnNames function."""
-    table_view = TestBaseTableView()
-
-    table_view.SetColumnNames([u'one', u'two', u'three'])
-
-    # Setting the column names when no rows were added is permitted.
-    table_view.SetColumnNames([u'four', u'five'])
-
-    table_view.AddRow([u'1', u'2'])
-
-    # Setting the column names after rows were added is not permitted.
-    with self.assertRaises(ValueError):
-      table_view.SetColumnNames([u'six', u'seven'])
-
-    table_view = TestBaseTableView()
-
-    table_view.AddRow([u'1', u'2', u'3'])
-
-    # Setting the column names after rows were added is not permitted.
-    with self.assertRaises(ValueError):
-      table_view.SetColumnNames([u'four', u'five'])
-
 
 class CLITableViewTests(ViewTestCase):
   """Tests for the command line table view class."""
@@ -90,8 +66,8 @@ class CLITableViewTests(ViewTestCase):
     output_writer = test_lib.TestOutputWriter()
 
     # Table with columns.
-    table_view = views.CLITableView(title=u'Title')
-    table_view.SetColumnNames([u'Name', u'Description'])
+    table_view = views.CLITableView(
+        column_names=[u'Name', u'Description'], title=u'Title')
     table_view.AddRow([u'First name', u'The first name in the table'])
     table_view.AddRow([u'Second name', u'The second name in the table'])
 
@@ -141,8 +117,8 @@ class CLITableViewTests(ViewTestCase):
         u'In computer programming, a string is traditionally a sequence '
         u'of characters, either as a literal constant or as some kind of '
         u'variable.')
-    table_view = views.CLITableView(title=title)
-    table_view.SetColumnNames([u'Name', u'Description'])
+    table_view = views.CLITableView(
+        column_names=[u'Name', u'Description'], title=title)
     table_view.AddRow([u'First name', u'The first name in the table'])
     table_view.AddRow([u'Second name', u'The second name in the table'])
 
@@ -158,8 +134,8 @@ class MarkdownTableViewTests(ViewTestCase):
     output_writer = test_lib.TestOutputWriter()
 
     # Table with columns.
-    table_view = views.MarkdownTableView(title=u'Title')
-    table_view.SetColumnNames([u'Name', u'Description'])
+    table_view = views.MarkdownTableView(
+        column_names=[u'Name', u'Description'], title=u'Title')
     table_view.AddRow([u'First name', u'The first name in the table'])
     table_view.AddRow([u'Second name', u'The second name in the table'])
 
