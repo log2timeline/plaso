@@ -34,7 +34,8 @@ class MacDocumentVersionsEvent(time_events.PosixTimeEvent):
     self.version_path = version_path
     # TODO: shouldn't this be a separate event?
     self.last_time = last_time
-    self.user_sid = user_sid
+    # Note that the user_sid value is expected to be a string.
+    self.user_sid = u'{0!s}'.format(user_sid)
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
@@ -79,7 +80,7 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     # where PerUser and UserID are a real directories.
     paths = row['version_path'].split(u'/')
     if len(paths) < 2 or not paths[1].isdigit():
-      user_sid = None
+      user_sid = u''
     else:
       user_sid = paths[1]
     version_path = self.ROOT_VERSION_PATH + row['version_path']
