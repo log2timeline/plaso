@@ -270,15 +270,14 @@ class ConditionalEventFormatter(EventFormatter):
           if type(attribute) not in (bool, int, long, float) and not attribute:
             continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
-    format_string = unicode(self.FORMAT_STRING_SEPARATOR.join(string_pieces))
+    format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     string_pieces = []
     for map_index, attribute_name in enumerate(
         self._format_string_short_pieces_map):
       if not attribute_name or event_values.get(attribute_name, None):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
-    short_format_string = unicode(
-        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
+    short_format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     return self._FormatMessages(
         format_string, short_format_string, event_values)

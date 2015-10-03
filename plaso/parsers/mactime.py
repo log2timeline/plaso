@@ -29,16 +29,20 @@ class MactimeEvent(time_events.PosixTimeEvent):
     """
     super(MactimeEvent, self).__init__(posix_time, usage)
     self.offset = row_offset
-    self.user_sid = unicode(data.get(u'uid', u''))
+    # Note that the user_sid value is expected to be a string.
+    self.user_sid = u'{0!s}'.format(data.get(u'uid', u''))
     self.user_gid = data.get(u'gid', None)
     self.md5 = data.get(u'md5', None)
     self.filename = data.get(u'name', u'N/A')
+
+    # TODO: determine if this is still an issue.
+
     # Check if the filename field is not a string, eg in the instances where a
     # filename only conists of numbers. In that case the self.filename field
     # becomes an integer value instead of a string value. That causes issues
     # later in the process, where we expect the filename value to be a string.
     if not isinstance(self.filename, basestring):
-      self.filename = unicode(self.filename)
+      self.filename = u'{0!s}'.format(self.filename)
 
     self.mode_as_string = data.get(u'mode_as_string', None)
     self.size = data.get(u'size', None)

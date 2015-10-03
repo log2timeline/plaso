@@ -346,22 +346,27 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    row = []
+    output_values = []
     for field in self._fields:
       callback_name = self.FIELD_FORMAT_CALLBACKS.get(field, None)
-      callback_function = None
       if callback_name:
         callback_function = getattr(self, callback_name, None)
+      else:
+        callback_function = None
 
       if callback_function:
-        row.append(callback_function(event_object))
+        output_value = callback_function(event_object)
       else:
-        row.append(getattr(event_object, field, u'-'))
+        output_value = getattr(event_object, field, u'-')
 
-    out_write = u'{0:s}\n'.format(
-        self._field_delimiter.join(unicode(x).replace(
-            self._field_delimiter, u' ') for x in row))
-    self._WriteLine(out_write)
+      if not isinstance(output_value, basestring):
+        output_value = u'{0!s}'.format(output_value)
+
+      output_value = output_value.replace(self._field_delimiter, u' ')
+      output_values.append(output_value)
+
+    output_line = u'{0:s}\n'.format(self._field_delimiter.join(output_values))
+    self._WriteLine(output_line)
 
   def WriteHeader(self):
     """Writes the header to the output."""

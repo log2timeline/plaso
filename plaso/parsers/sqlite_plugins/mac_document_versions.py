@@ -34,7 +34,7 @@ class MacDocumentVersionsEvent(time_events.PosixTimeEvent):
     self.version_path = version_path
     # TODO: shouldn't this be a separate event?
     self.last_time = last_time
-    self.user_sid = unicode(user_sid)
+    self.user_sid = user_sid
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
