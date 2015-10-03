@@ -4,7 +4,6 @@
 import getpass
 import logging
 import os
-import sys
 
 from dfvfs.credentials import manager as credentials_manager
 from dfvfs.helpers import source_scanner
@@ -16,7 +15,6 @@ from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.lib import timelib
 
 
@@ -887,27 +885,9 @@ class StorageMediaTool(tools.CLITool):
     self._ParseVSSProcessingOptions(options)
     self._ParseCredentialOptions(options)
 
-    self._source_path = getattr(options, self._SOURCE_OPTION, None)
+    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
     if not self._source_path:
       raise errors.BadConfigOption(u'Missing source path.')
-
-    if isinstance(self._source_path, py2to3.BYTES_TYPE):
-      encoding = sys.stdin.encoding
-
-      # Note that sys.stdin.encoding can be None.
-      if not encoding:
-        encoding = self.preferred_encoding
-
-      try:
-        self._source_path = self._source_path.decode(encoding)
-      except UnicodeDecodeError as exception:
-        raise errors.BadConfigOption((
-            u'Unable to convert source path to Unicode with error: '
-            u'{0:s}.').format(exception))
-
-    elif not isinstance(self._source_path, py2to3.UNICODE_TYPE):
-      raise errors.BadConfigOption(
-          u'Unsupported source path, string type required.')
 
     self._source_path = os.path.abspath(self._source_path)
 

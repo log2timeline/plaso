@@ -174,9 +174,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._output_module = getattr(options, u'output_module', None)
+    self._output_module = self.ParseStringOption(options, u'output_module')
 
-    text_prepend = getattr(options, u'text_prepend', None)
+    text_prepend = self.ParseStringOption(options, u'text_prepend')
     if text_prepend:
       self._front_end.SetTextPrepend(text_prepend)
 
@@ -308,7 +308,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--output', dest=u'output_module', action=u'store', type=unicode,
+        u'--output', dest=u'output_module', action=u'store', type=str,
         default=u'', help=(
             u'Bypass the storage module directly storing events according to '
             u'the output module. This means that the output will not be in the '
@@ -317,7 +317,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'own risk (eg. sqlite output does not yet work)]'))
 
     argument_group.add_argument(
-        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=unicode,
+        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=str,
         default=u'', metavar=u'TEXT', help=(
             u'Define a free form text string that is prepended to each path '
             u'to make it easier to distinguish one record from another in a '
@@ -462,20 +462,20 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     argument_parser.add_argument(
         u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
-        type=unicode, help=(
+        type=str, help=(
             u'The path to the output file, if the file exists it will get '
             u'appended to.'))
 
     argument_parser.add_argument(
-        u'source', action=u'store', metavar=u'SOURCE', nargs=u'?', type=unicode,
-        help=(
+        self._SOURCE_OPTION, action=u'store', metavar=u'SOURCE', nargs=u'?',
+        default=None, type=str, help=(
             u'The path to the source device, file or directory. If the source '
             u'is a supported storage media device or image file, archive file '
             u'or a directory, the files within are processed recursively.'))
 
     argument_parser.add_argument(
         u'filter', action=u'store', metavar=u'FILTER', nargs=u'?', default=None,
-        type=unicode, help=(
+        type=str, help=(
             u'A filter that can be used to filter the dataset before it '
             u'is written into storage. More information about the filters '
             u'and its usage can be found here: http://plaso.kiddaland.'
@@ -573,7 +573,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       root_logger = logging.getLogger()
       root_logger.addFilter(logging_filter)
 
-    self._output = getattr(options, u'output', None)
+    self._output = self.ParseStringOption(options, u'output')
     if not self._output:
       raise errors.BadConfigOption(u'No output defined.')
 
@@ -583,7 +583,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if self._operating_system:
       self._mount_path = getattr(options, u'filename', None)
 
-    self._filter_expression = getattr(options, u'filter', None)
+    self._filter_expression = self.ParseStringOption(options, u'filter')
     if self._filter_expression:
       # TODO: refactor self._filter_object out the tool into the frontend.
       self._filter_object = self._GetMatcher(self._filter_expression)

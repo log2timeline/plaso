@@ -9,8 +9,9 @@ import os
 import sys
 
 import plaso
-from plaso.lib import errors
 from plaso.cli import views
+from plaso.lib import errors
+from plaso.lib import py2to3
 
 import pytz
 
@@ -277,6 +278,45 @@ class CLITool(object):
       options: the command line arguments (instance of argparse.Namespace).
     """
     self._ParseInformationalOptions(options)
+
+  def ParseStringOption(self, options, argument_name):
+    """Parses a specific string command line argument.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      argument_nmae: the name of the command line argument.
+
+    Returns:
+      A string containing the command line argument value or None.
+
+    Raises:
+      BadConfigOption: if the command line argument value cannot be converted
+                       to a Unicode string.
+    """
+    argument_value = getattr(options, argument_name, None)
+    if not argument_value:
+      return
+
+    if isinstance(argument_value, py2to3.BYTES_TYPE):
+      encoding = sys.stdin.encoding
+
+      # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = self.preferred_encoding
+
+      try:
+        argument_value = argument_value.decode(encoding)
+      except UnicodeDecodeError as exception:
+        raise errors.BadConfigOption((
+            u'Unable to convert option: {0:s} to Unicode with error: '
+            u'{1:s}.').format(argument_name, exception))
+
+    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+      raise errors.BadConfigOption(
+          u'Unsupported option: {0:s} string type required.'.format(
+              argument_name))
+
+    return argument_value
 
   def PrintSeparatorLine(self):
     """Prints a separator line."""

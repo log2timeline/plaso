@@ -8,6 +8,7 @@ import sys
 import unittest
 
 from plaso.cli import tools
+from plaso.lib import errors
 
 from tests.cli import test_lib
 
@@ -109,6 +110,38 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
+
+  def testParseStringOption(self):
+    """Tests the ParseStringOption function."""
+    encoding = sys.stdin.encoding
+
+    # Note that sys.stdin.encoding can be None.
+    if not encoding:
+      encoding = self.preferred_encoding
+
+    cli_tool = tools.CLITool()
+    cli_tool.preferred_encoding = u'UTF-8'
+
+    expected_string = u'Test Unicode string'
+    options = test_lib.TestOptions()
+    options.test = expected_string
+
+    string = cli_tool.ParseStringOption(options, u'test')
+    self.assertEqual(string, expected_string)
+
+    options = test_lib.TestOptions()
+    options.test = expected_string.encode(encoding)
+
+    string = cli_tool.ParseStringOption(options, u'test')
+    self.assertEqual(string, expected_string)
+
+    if not sys.stdin.encoding and sys.stdin.encoding.upper() == u'UTF-8':
+      options = test_lib.TestOptions()
+      options.test = (
+          b'\xad\xfd\xab\x73\x99\xc7\xb4\x78\xd0\x8c\x8a\xee\x6d\x6a\xcb\x90')
+
+      with self.assertRaises(errors.BadConfigOption):
+        cli_tool.ParseStringOption(options, u'test')
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
