@@ -149,8 +149,9 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
         return []
 
       try:
-        utf16_string = unicode(self._pyregf_value.data.decode(u'utf-16-le'))
-        return filter(None, utf16_string.split(b'\x00'))
+        utf16_string = self._pyregf_value.data.decode(u'utf-16-le')
+        return filter(None, utf16_string.split(u'\x00'))
+
       except (IOError, UnicodeError) as exception:
         raise errors.WinRegistryValueError(
             u'Unable to read data from value: {0:s} with error: {1:s}'.format(
