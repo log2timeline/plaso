@@ -5,7 +5,7 @@ import os
 import unittest
 
 from plaso.engine import queue
-from plaso.lib import storage
+from plaso.storage import writer as storage_writer
 
 
 class EngineTestCase(unittest.TestCase):
@@ -56,7 +56,7 @@ class TestQueueConsumer(queue.ItemQueueConsumer):
     return len(self.items)
 
 
-class TestStorageWriter(storage.StorageWriter):
+class TestStorageWriter(storage_writer.StorageWriter):
   """Class that implements a test storage writer object."""
 
   def __init__(self, event_object_queue):
