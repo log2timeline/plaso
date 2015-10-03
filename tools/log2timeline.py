@@ -73,6 +73,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._filter_expression = None
     self._foreman_verbose = False
@@ -497,6 +498,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       return False
 
+    try:
+      self._command_line_arguments = u' '.join([
+          argument.decode(self.preferred_encoding) for argument in sys.argv])
+    except UnicodeDecodeError:
+      pass
+
     return True
 
   def ParseOptions(self, options):
@@ -618,6 +625,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     processing_status = self._front_end.ProcessSources(
         self._source_path_specs, self._source_type,
+        command_line_arguments=self._command_line_arguments,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
