@@ -13,7 +13,6 @@ class AnalysisFrontend(frontend.Frontend):
     """Initializes the front-end object."""
     super(AnalysisFrontend, self).__init__()
     self._data_location = None
-    self._storage_file = None
 
   def GetFormatterMediator(self):
     """Retrieves the formatter mediator.
@@ -30,7 +29,7 @@ class AnalysisFrontend(frontend.Frontend):
     Args:
       storage_file_path: the path of the storage file.
       read_only: optional boolean value to indicate the storage file should
-                 be opened in read-only mode. The default is True.
+                 be opened in read-only mode.
 
     Returns:
       The storage file object (instance of StorageFile).
@@ -45,11 +44,3 @@ class AnalysisFrontend(frontend.Frontend):
                      from.
     """
     self._data_location = data_location
-
-  def SetStorageFile(self, storage_file):
-    """Set the storage file.
-
-    Args:
-      storage_file: The path to the storage file being parsed.
-    """
-    self._storage_file = storage_file

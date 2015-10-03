@@ -242,6 +242,7 @@ class StorageFile(object):
     self._file_number = 1
     self._first_file_number = None
     self._max_buffer_size = buffer_size or self.MAX_BUFFER_SIZE
+    self._merge_buffer = None
     self._output_file = output_file
     self._pre_obj = pre_obj
     self._proto_streams = {}
@@ -261,6 +262,8 @@ class StorageFile(object):
     self._enable_profiling = False
     self._profiling_sample = 0
     self._serializers_profiler = None
+
+    self.store_range = None
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -453,31 +456,25 @@ class StorageFile(object):
 
     return tag_index_value
 
-  def _GetStreamNames(self):
-    """Retrieves a generator of the storage stream names."""
-    if self._zipfile:
-      for stream_name in self._zipfile.namelist():
-        yield stream_name
+  def _GetEventObjectSerializedData(self, stream_number, entry_index=-1):
+    """Retrieves specific event object serialized data.
 
-  def _GetEventObjectProtobufString(self, stream_number, entry_index=-1):
-    """Returns a specific event object protobuf string.
-
-    By default the next entry in the appropriate proto file is read
-    and returned, however any entry can be read using the index file.
+    By default the next entry in the specific serialized stream is read,
+    however any entry can be read using the index stream.
 
     Args:
-      stream_number: The proto stream number.
+      stream_number: The serialized stream number.
       entry_index: Read a specific entry in the file. The default is -1,
                    which represents the next available entry.
 
     Returns:
-      A tuple containing the event object protobuf string and the entry index
-      of the event object protobuf string within the storage file.
+      A tuple containing the event object serialized data and the entry index
+      of the event object within the storage file.
 
     Raises:
       EOFError: When we reach the end of the protobuf file.
-      errors.WrongProtobufEntry: If the probotuf size is too large for storage.
       IOError: if the stream cannot be opened.
+      WrongProtobufEntry: If the probotuf size is too large for storage.
     """
     file_object, last_entry_index = self._GetProtoStream(stream_number)
 
@@ -533,7 +530,7 @@ class StorageFile(object):
         if encountered_error:
           return None, None
 
-        return self._GetEventObjectProtobufString(
+        return self._GetEventObjectSerializedData(
             stream_number, entry_index=index)
 
     size_data = file_object.read(4)
@@ -653,23 +650,35 @@ class StorageFile(object):
     # TODO: once cached use the last entry index to determine if the stream
     # file object should be re-opened.
 
-    stream_name = u'plaso_index.{0:06d}'.format(stream_number)
-    index_file_object = self._OpenStream(stream_name, u'r')
+    index_stream_name = u'plaso_index.{0:06d}'.format(stream_number)
+    index_file_object = self._OpenStream(index_stream_name, u'r')
     if index_file_object is None:
-      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+      raise IOError(u'Unable to open stream: {0:s}'.format(index_stream_name))
 
     # Since zipfile.ZipExtFile is not seekable we need to read upto
     # the stream offset.
-    _ = index_file_object.read(entry_index * 4)
+    index_stream_offset = entry_index * 4
+    logging.debug(u'Seeking offset: 0x{0:08x} in index stream: {1:s}'.format(
+        index_stream_offset, index_stream_name))
 
+    index_file_object.read(index_stream_offset)
     index_data = index_file_object.read(4)
-
     index_file_object.close()
 
     if len(index_data) != 4:
       return None
 
     return struct.unpack('<I', index_data)[0]
+
+  def _GetStreamNames(self):
+    """Retrieves the stream names.
+
+    Yields:
+      A string containing the stream name.
+    """
+    if self._zipfile:
+      for stream_name in self._zipfile.namelist():
+        yield stream_name
 
   def _OpenStream(self, stream_name, mode='r'):
     """Opens a stream.
@@ -1054,8 +1063,30 @@ class StorageFile(object):
       else:
         logging.debug(u'Store [{0:d}] not used'.format(number))
 
+  def _InitializeMergeBuffer(self):
+    """Initializes the merge buffer."""
+    if self.store_range is None:
+      number_range = list(self.GetProtoNumbers())
+    else:
+      number_range = self.store_range
+
+    self._merge_buffer = []
+    for store_number in number_range:
+      event_object = self.GetEventObject(store_number)
+      if not event_object:
+        return
+
+      while event_object.timestamp < self._bound_first:
+        event_object = self.GetEventObject(store_number)
+        if not event_object:
+          return
+
+      heapq.heappush(
+          self._merge_buffer,
+          (event_object.timestamp, store_number, event_object))
+
   def GetSortedEntry(self):
-    """Return a sorted entry from the storage file.
+    """Returns a sorted entry from the storage file.
 
     Returns:
       An event object (instance of EventObject).
@@ -1064,22 +1095,8 @@ class StorageFile(object):
       self._bound_first, self._bound_last = (
           pfilter.TimeRangeCache.GetTimeRange())
 
-    if not hasattr(self, u'_merge_buffer'):
-      self._merge_buffer = []
-      number_range = getattr(self, u'store_range', list(self.GetProtoNumbers()))
-      for store_number in number_range:
-        event_object = self.GetEventObject(store_number)
-        if not event_object:
-          return
-
-        while event_object.timestamp < self._bound_first:
-          event_object = self.GetEventObject(store_number)
-          if not event_object:
-            return
-
-        heapq.heappush(
-            self._merge_buffer,
-            (event_object.timestamp, store_number, event_object))
+    if self._merge_buffer is None:
+      self._InitializeMergeBuffer()
 
     if not self._merge_buffer:
       return
@@ -1119,7 +1136,7 @@ class StorageFile(object):
       An event object (instance of EventObject) entry read from the file or
       None if not able to read in a new event.
     """
-    event_object_data, entry_index = self._GetEventObjectProtobufString(
+    event_object_data, entry_index = self._GetEventObjectSerializedData(
         stream_number, entry_index=entry_index)
     if not event_object_data:
       return

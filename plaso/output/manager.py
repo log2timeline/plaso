@@ -9,23 +9,20 @@ class OutputManager(object):
   _output_classes = {}
 
   @classmethod
-  def DeregisterOutput(cls, output_class, disabled=False):
+  def DeregisterOutput(cls, output_class):
     """Deregisters an output class.
 
     The output classes are identified based on their NAME attribute.
 
     Args:
       output_class: the class object of the output module.
-      disabled: boolean determining whether the output module is
-                disabled due to the module not loading correctly or
-                not. Defaults to False.
 
     Raises:
       KeyError: if output class is not set for the corresponding data type.
     """
     output_class_name = output_class.NAME.lower()
 
-    if disabled:
+    if output_class_name in cls._disabled_output_classes:
       class_dict = cls._disabled_output_classes
     else:
       class_dict = cls._output_classes
@@ -39,12 +36,13 @@ class OutputManager(object):
 
   @classmethod
   def GetDisabledOutputClasses(cls):
-    """Retrieves the disabled output classes.
+    """Retrieves the disabled output classes sorted by name.
 
-    Returns:
-      A list of the disabled output classes (types of OutputModule).
+    Yields:
+      A tuple of output class name and type object (subclass of OutputModule).
     """
-    return cls._disabled_output_classes.values()
+    for _, output_class in iter(cls._disabled_output_classes.items()):
+      yield output_class.NAME, output_class
 
   @classmethod
   def GetOutputClass(cls, name):
@@ -72,24 +70,13 @@ class OutputManager(object):
 
   @classmethod
   def GetOutputClasses(cls):
-    """Retrieves the available output classes.
+    """Retrieves the available output classes sorted by name.
 
     Yields:
-      A tuple of output class name and type object.
+      A tuple of output class name and type object (subclass of OutputModule).
     """
-    for output_class in cls._output_classes.itervalues():
+    for _, output_class in iter(cls._output_classes.items()):
       yield output_class.NAME, output_class
-
-  # TODO: deprecate in favor of GetOutputClasses.
-  @classmethod
-  def GetOutputs(cls):
-    """Retrieves the available output classes.
-
-    Yields:
-      A tuple of output class name and description.
-    """
-    for output_class in cls._output_classes.itervalues():
-      yield output_class.NAME, output_class.DESCRIPTION
 
   @classmethod
   def HasOutputClass(cls, name):
