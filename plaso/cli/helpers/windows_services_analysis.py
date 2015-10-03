@@ -26,8 +26,8 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--windows-services-output', dest=u'windows-services-output',
-        type=unicode, action=u'store', default=u'text',
+        u'--windows-services-output', dest=u'windows_services_output',
+        type=str, action=u'store', default=u'text',
         choices=[u'text', u'yaml'], help=(
             u'Specify how the results should be displayed. Options are text '
             u'and yaml.'))
@@ -48,7 +48,7 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of WindowsServicesPlugin')
 
-    output_format = getattr(options, u'output_format', None)
+    output_format = cls._ParseStringOption(options, u'windows_services_output')
     if output_format is None:
       raise errors.BadConfigOption(u'WindowsServices output format not set.')
 

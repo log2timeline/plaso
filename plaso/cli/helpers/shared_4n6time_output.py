@@ -13,6 +13,7 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for shared 4n6Time output modules.'
 
+  _DEFAULT_EVIDENCE = u'-'
   _DEFAULT_FIELDS = [
       u'color', u'datetime', u'host', u'source', u'sourcetype', u'user',
       u'type']
@@ -34,12 +35,12 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
             u'Defines whether the intention is to append to an already '
             u'existing database or overwrite it. Defaults to overwrite.'))
     argument_group.add_argument(
-        u'--evidence', dest=u'evidence', type=unicode, default=u'-',
+        u'--evidence', dest=u'evidence', type=str, default=u'-',
         action=u'store', required=False, help=(
             u'Set the evidence field to a specific value, defaults to '
             u'empty.'))
     argument_group.add_argument(
-        u'--fields', dest=u'fields', type=unicode, action=u'store',
+        u'--fields', dest=u'fields', type=str, action=u'store',
         nargs=u'*', default=None, help=(
             u'Defines which fields should be indexed in the database.'))
 
@@ -60,9 +61,11 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
           u'Output module is not an instance of Base4n6TimeOutputModule')
 
     append = getattr(options, u'append', False)
-    evidence = getattr(options, u'evidence', u'-')
+    evidence = cls._ParseStringOption(options, u'evidence')
+    if not evidence:
+      evidence = cls._DEFAULT_EVIDENCE
 
-    fields = getattr(options, u'fields', None)
+    fields = cls._ParseStringOption(options, u'fields')
     if not fields:
       fields = cls._DEFAULT_FIELDS
 

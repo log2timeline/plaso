@@ -26,11 +26,11 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--virustotal-api-key', dest=u'virustotal-api-key',
-        type=unicode, action='store', default=None, help=u'Specify the API key '
+        u'--virustotal-api-key', dest=u'virustotal_api_key',
+        type=str, action='store', default=None, help=u'Specify the API key '
         u'for use with VirusTotal.')
     argument_group.add_argument(
-        u'--virustotal-free-rate-limit', dest=u'virustotal-rate-limit',
+        u'--virustotal-free-rate-limit', dest=u'virustotal_rate_limit',
         type=bool, action='store', default=True, help=u'Limit Virustotal '
         u'requests to the default free API key rate of 4 requests per minute. '
         u'Set this to false if you have an key for the private API.')
@@ -51,8 +51,8 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of VirusTotalAnalysisPlugin')
 
-    api_key = getattr(options, u'virustotal-api-key', None)
-    rate_limit = getattr(options, u'virustotal-rate-limit', None)
+    api_key = cls._ParseStringOption(options, u'virustotal_api_key')
+    rate_limit = getattr(options, u'virustotal_rate_limit', None)
     if not api_key:
       raise errors.BadConfigOption(
           u'VirusTotal API key not specified. Try again with '

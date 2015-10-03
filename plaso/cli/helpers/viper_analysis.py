@@ -26,11 +26,11 @@ class ViperAnalysisHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--viper-host', dest=u'viper-host',
-        type=unicode, action='store', default=u'localhost:8080',
+        u'--viper-host', dest=u'viper_host',
+        type=str, action='store', default=u'localhost:8080',
         help=u'Specify the host to query Viper on.')
     argument_group.add_argument(
-        u'--viper-protocol', dest=u'viper-protocol',
+        u'--viper-protocol', dest=u'viper_protocol',
         choices=[u'http', u'https'], action='store', default=u'http',
         help=u'Protocol to use to query Viper.')
 
@@ -50,10 +50,10 @@ class ViperAnalysisHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of ViperAnalysisPlugin')
 
-    protocol = getattr(options, u'viper-protocol')
+    protocol = getattr(options, u'viper_protocol')
     analysis_plugin.SetProtocol(protocol)
 
-    host = getattr(options, u'viper-host', None)
+    host = cls._ParseStringOption(options, u'viper_host')
     if host is None:
       raise errors.BadConfigOption(u'Viper host not set.')
 

@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """The arguments helper interface."""
 
+import locale
+import sys
+
+from plaso.lib import errors
+from plaso.lib import py2to3
+
 
 class ArgumentsHelper(object):
   """The CLI arguments helper class."""
@@ -10,6 +16,50 @@ class ArgumentsHelper(object):
   # this can be something like: analysis, output, storage, etc.
   CATEGORY = u''
   DESCRIPTION = u''
+
+  _PREFERRED_ENCODING = locale.getpreferredencoding()
+  if not _PREFERRED_ENCODING:
+    _PREFERRED_ENCODING = u'UTF-8'
+
+  @classmethod
+  def _ParseStringOption(cls, options, argument_name):
+    """Parses a specific string command line argument.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      argument_nmae: the name of the command line argument.
+
+    Returns:
+      A string containing the command line argument value or None.
+
+    Raises:
+      BadConfigOption: if the command line argument value cannot be converted
+                       to a Unicode string.
+    """
+    argument_value = getattr(options, argument_name, None)
+    if not argument_value:
+      return
+
+    if isinstance(argument_value, py2to3.BYTES_TYPE):
+      encoding = sys.stdin.encoding
+
+      # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = cls._PREFERRED_ENCODING
+
+      try:
+        argument_value = argument_value.decode(encoding)
+      except UnicodeDecodeError as exception:
+        raise errors.BadConfigOption((
+            u'Unable to convert option: {0:s} to Unicode with error: '
+            u'{1:s}.').format(argument_name, exception))
+
+    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+      raise errors.BadConfigOption(
+          u'Unsupported option: {0:s} string type required.'.format(
+              argument_name))
+
+    return argument_value
 
   @classmethod
   def AddArguments(cls, argument_group):

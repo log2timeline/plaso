@@ -26,7 +26,7 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--server', dest=u'server', type=unicode, action=u'store',
+        u'--server', dest=u'server', type=str, action=u'store',
         default=None, metavar=u'HOSTNAME', help=(
             u'The hostname or server IP address of the server.'))
     argument_group.add_argument(
@@ -48,7 +48,7 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
     if not hasattr(output_module, u'SetServerInformation'):
       raise errors.BadConfigObject(u'Unable to set server information.')
 
-    server = getattr(options, u'server', None)
+    server = cls._ParseStringOption(options, u'server')
     if not server:
       server = cls._DEFAULT_SERVER
 

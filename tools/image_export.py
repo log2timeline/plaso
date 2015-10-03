@@ -211,9 +211,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     else:
       log_level = logging.INFO
 
-    log_file = getattr(options, u'log_file', None)
+    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
-        filename=log_file, format_string=format_string, log_level=log_level)
+        filename=self._log_file, format_string=format_string,
+        log_level=log_level)
 
     self._destination_path = self.ParseStringOption(options, u'path')
     if not self._destination_path:

@@ -257,8 +257,7 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    filter_file = getattr(options, u'file_filter', None)
-
+    filter_file = self.ParseStringOption(options, u'file_filter')
     if not filter_file:
       return
 
@@ -786,7 +785,7 @@ class StorageMediaTool(tools.CLITool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--credential', action=u'append', default=[], type=unicode,
+        u'--credential', action=u'append', default=[], type=str,
         dest=u'credentials', metavar=u'TYPE:DATA', help=(
             u'Define a credentials that can be used to unlock encrypted '
             u'volumes e.g. BitLocker. The credential is defined as type:data '
@@ -805,7 +804,7 @@ class StorageMediaTool(tools.CLITool):
     """
     argument_group.add_argument(
         u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
-        action=u'store', type=unicode, default=None, help=(
+        action=u'store', type=str, default=None, help=(
             u'List of files to include for targeted collection of files to '
             u'parse, one line per file path, setup is /path|file - where each '
             u'element can contain either a variable set in the preprocessing '

@@ -31,13 +31,13 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
 
     argument_group.add_argument(
         u'--name', u'--timeline_name', u'--timeline-name',
-        dest=u'timeline_name', type=unicode, action=u'store',
+        dest=u'timeline_name', type=str, action=u'store',
         default=u'', required=False, help=(
             u'The name of the timeline in Timesketch. Default: '
             u'hostname if present in the storage file. If no hostname '
             u'is found then manual input is used.'))
     argument_group.add_argument(
-        u'--index', dest=u'index', type=unicode, action=u'store',
+        u'--index', dest=u'index', type=str, action=u'store',
         default=default_uid, required=False, help=(
             u'The name of the Elasticsearch index. Default: Generate a random '
             u'UUID'))
@@ -71,11 +71,11 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
     if flush_interval:
       output_module.SetFlushInterval(flush_interval)
 
-    index = getattr(options, u'index', None)
+    index = cls._ParseStringOption(options, u'index')
     if index:
       output_module.SetIndex(index)
 
-    name = getattr(options, u'timeline_name', None)
+    name = cls._ParseStringOption(options, u'timeline_name')
     if name:
       output_module.SetName(name)
 

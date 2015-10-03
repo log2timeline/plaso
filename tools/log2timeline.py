@@ -564,9 +564,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging_level = logging.INFO
 
-    log_file = getattr(options, u'log_file', None)
+    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
-        filename=log_file, format_string=format_string, log_level=logging_level)
+        filename=self._log_file, format_string=format_string,
+        log_level=logging_level)
 
     if self._debug_mode:
       logging_filter = log2timeline.LoggingFilter()

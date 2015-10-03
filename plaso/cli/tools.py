@@ -59,6 +59,7 @@ class CLITool(object):
     self._data_location = None
     self._debug_mode = False
     self._input_reader = input_reader
+    self._log_file = None
     self._output_writer = output_writer
     self._quiet_mode = False
     self._timezone = pytz.UTC
@@ -107,7 +108,7 @@ class CLITool(object):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    data_location = getattr(options, u'data_location', None)
+    data_location = self.ParseStringOption(options, u'data_location')
     if not data_location:
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
@@ -159,7 +160,7 @@ class CLITool(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    timezone_string = getattr(options, u'timezone', None)
+    timezone_string = self.ParseStringOption(options, u'timezone')
     if isinstance(timezone_string, basestring):
       if timezone_string.lower() == u'list':
         self.list_timezones = True
@@ -198,7 +199,7 @@ class CLITool(object):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=unicode,
+        u'--data', action=u'store', dest=u'data_location', type=str,
         metavar=u'PATH', default=None, help=u'the location of the data files.')
 
   def AddInformationalOptions(self, argument_group):
@@ -225,7 +226,7 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'--logfile', u'--log_file', u'--log-file', action=u'store',
-        metavar=u'FILENAME', dest=u'log_file', type=unicode, default=u'', help=(
+        metavar=u'FILENAME', dest=u'log_file', type=str, default=u'', help=(
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
 
@@ -238,7 +239,7 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
-        type=unicode, default=u'UTC', help=(
+        type=str, default=u'UTC', help=(
             u'explicitly define the timezone. Typically the timezone is '
             u'determined automatically where possible. Use "-z list" to '
             u'see a list of available timezones.'))
@@ -278,6 +279,14 @@ class CLITool(object):
       options: the command line arguments (instance of argparse.Namespace).
     """
     self._ParseInformationalOptions(options)
+
+  def ParseLogFileOptions(self, options):
+    """Parses the log file options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    self._log_file = self.ParseStringOption(options, u'log_file')
 
   def ParseStringOption(self, options, argument_name):
     """Parses a specific string command line argument.
