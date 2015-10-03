@@ -20,6 +20,14 @@ plaso.storage.factory module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.writer module
+---------------------------
+
+.. automodule:: plaso.storage.writer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
