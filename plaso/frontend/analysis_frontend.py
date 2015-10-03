@@ -3,7 +3,7 @@
 
 from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import frontend
-from plaso.lib import storage
+from plaso.storage import zip_file as storage_zip_file
 
 
 class AnalysisFrontend(frontend.Frontend):
@@ -35,7 +35,7 @@ class AnalysisFrontend(frontend.Frontend):
     Returns:
       The storage file object (instance of StorageFile).
     """
-    return storage.StorageFile(storage_file_path, read_only=read_only)
+    return storage_zip_file.StorageFile(storage_file_path, read_only=read_only)
 
   def SetDataLocation(self, data_location):
     """Set the data location.

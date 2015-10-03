@@ -19,12 +19,12 @@ from plaso.frontend import presets
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import writer as storage_writer
+from plaso.storage import zip_file as storage_zip_file
 
 import pytz
 
@@ -166,7 +166,7 @@ class ExtractionFrontend(frontend.Frontend):
     if self._use_old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
       try:
-        with storage.StorageFile(
+        with storage_zip_file.StorageFile(
             self._storage_file_path, read_only=True) as storage_file:
 
           storage_information = storage_file.GetStorageInformation()

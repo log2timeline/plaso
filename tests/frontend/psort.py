@@ -11,10 +11,10 @@ from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
 from plaso.lib import event
 from plaso.lib import pfilter
-from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
+from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
@@ -126,7 +126,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
 
-    storage_file = storage.StorageFile(self._test_file_proto, read_only=True)
+    storage_file = storage_zip_file.StorageFile(
+        self._test_file_proto, read_only=True)
     storage_file.SetStoreLimit()
 
     event_object = storage_file.GetSortedEntry()
@@ -191,13 +192,13 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
 
-      storage_file = storage.StorageFile(temp_file, read_only=False)
+      storage_file = storage_zip_file.StorageFile(temp_file, read_only=False)
       pfilter.TimeRangeCache.ResetTimeConstraints()
       storage_file.SetStoreLimit()
       storage_file.AddEventObjects(events)
       storage_file.Close()
 
-      with storage.StorageFile(temp_file) as storage_file:
+      with storage_zip_file.StorageFile(temp_file) as storage_file:
         storage_file.store_range = [1]
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator, storage_file)
