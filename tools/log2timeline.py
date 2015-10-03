@@ -25,6 +25,7 @@ from plaso.frontend import log2timeline
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import pfilter
+from plaso.lib import py2to3
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
@@ -518,11 +519,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       return False
 
-    try:
-      self._command_line_arguments = u' '.join([
-          argument.decode(self.preferred_encoding) for argument in sys.argv])
-    except UnicodeDecodeError:
-      pass
+    command_line_arguments = sys.argv
+    if isinstance(command_line_arguments, py2to3.BYTES_TYPE):
+      try:
+        self._command_line_arguments = [
+            argument.decode(self.preferred_encoding)
+            for argument in command_line_arguments]
+      except UnicodeDecodeError:
+        pass
+
+    self._command_line_arguments = u' '.join(command_line_arguments)
 
     return True
 

@@ -17,9 +17,7 @@ class ArgumentsHelper(object):
   CATEGORY = u''
   DESCRIPTION = u''
 
-  _PREFERRED_ENCODING = locale.getpreferredencoding()
-  if not _PREFERRED_ENCODING:
-    _PREFERRED_ENCODING = u'UTF-8'
+  _PREFERRED_ENCODING = u'UTF-8'
 
   @classmethod
   def _ParseStringOption(cls, options, argument_name):
@@ -44,6 +42,8 @@ class ArgumentsHelper(object):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = locale.getpreferredencoding()
       if not encoding:
         encoding = cls._PREFERRED_ENCODING
 
