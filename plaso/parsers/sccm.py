@@ -1,8 +1,7 @@
 # -*_ coding: utf-8 -*-
 """Parser for SCCM Logs."""
-import re
-import datetime
 import pyparsing
+import re
 
 from plaso.events import text_events
 from plaso.lib import timelib
@@ -157,24 +156,25 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     if len(structure.microsecond) == 3:
       microsecond = microsecond * 1000
 
-    py_timestamp = datetime.datetime(
+    timestamp = timelib.Timestamp.FromTimeParts(
         year=structure.year, month=structure.month, day=structure.day,
-        hour=structure.hour, minute=structure.minute,
-        second=structure.second, microsecond=microsecond)
+        hour=structure.hour, minutes=structure.minute,
+        seconds=structure.second, microseconds=microsecond
+    )
 
     # If an offset is given for the event, apply the offset to convert to UTC.
     if 'offset' in key:
       try:
-        delta_seconds = int(structure.utc_offset_minutes[1:], 10) * 60
+        delta_microseconds = \
+          int(structure.utc_offset_minutes[1:], 10) * 60 * 1000000
       except ValueError:
         raise ValueError(u'Unable to parse minute offset from UTC.')
       except IndexError:
         raise IndexError(u'Unable to parse minute offset from UTC.')
       if structure.utc_offset_minutes[0] == '-':
-        delta_seconds = -delta_seconds
-      py_timestamp = py_timestamp + datetime.timedelta(seconds=delta_seconds)
+        delta_microseconds = -delta_microseconds
+      timestamp += delta_microseconds
 
-    timestamp = timelib.Timestamp.FromPythonDatetime(py_timestamp)
     event_object = SCCMLogEvent(timestamp, 0, structure)
     parser_mediator.ProduceEvent(event_object)
 
