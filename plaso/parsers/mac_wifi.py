@@ -49,7 +49,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'macwifi'
   DESCRIPTION = u'Parser for Mac OS X wifi.log files.'
 
-  ENCODING = u'utf-8'
+  _ENCODING = u'utf-8'
 
   # Regular expressions for known actions.
   RE_CONNECTED = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')

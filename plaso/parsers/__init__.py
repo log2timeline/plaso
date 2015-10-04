@@ -33,6 +33,7 @@ from plaso.parsers import popcontest
 from plaso.parsers import pls_recall
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
+from plaso.parsers import sccm
 from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
 from plaso.parsers import skydrivelogerr
