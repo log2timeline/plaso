@@ -59,7 +59,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'mac_securityd'
   DESCRIPTION = u'Parser for Mac OS X securityd log files.'
 
-  ENCODING = u'utf-8'
+  _ENCODING = u'utf-8'
 
   # Default ASL Securityd log.
   SECURITYD_LINE = (
