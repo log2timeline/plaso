@@ -72,12 +72,12 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
 
-    self._parser_filter_string = self.ParseStringOption(options, u'parsers')
-    if self._parser_filter_string is None:
-      self._parser_filter_string = u''
-    elif isinstance(self._parser_filter_string, basestring):
-      if self._parser_filter_string.lower() == u'list':
-        self.list_parsers_and_plugins = True
+    self._parser_filter_string = self.ParseStringOption(
+        options, u'parsers', default_value=u'')
+
+    if (isinstance(self._parser_filter_string, basestring) and
+        self._parser_filter_string.lower() == u'list'):
+      self.list_parsers_and_plugins = True
 
     # TODO: preprocess.
 

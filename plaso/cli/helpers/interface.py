@@ -20,15 +20,17 @@ class ArgumentsHelper(object):
   _PREFERRED_ENCODING = u'UTF-8'
 
   @classmethod
-  def _ParseStringOption(cls, options, argument_name):
-    """Parses a specific string command line argument.
+  def _ParseIntegerOption(cls, options, argument_name, default_value=None):
+    """Parses a specific integer command line argument.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
-      argument_nmae: the name of the command line argument.
+      argument_name: the name of the command line argument.
+      default_value: optional default value of the command line argument.
 
     Returns:
-      A string containing the command line argument value or None.
+      An integer containing the command line argument value. If the specific
+      command line argument is not set the default value will be returned.
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
@@ -36,7 +38,35 @@ class ArgumentsHelper(object):
     """
     argument_value = getattr(options, argument_name, None)
     if not argument_value:
-      return
+      return default_value
+
+    if not isinstance(argument_value, py2to3.INTEGER_TYPES):
+      raise errors.BadConfigOption(
+          u'Unsupported option: {0:s} integer type required.'.format(
+              argument_name))
+
+    return argument_value
+
+  @classmethod
+  def _ParseStringOption(cls, options, argument_name, default_value=None):
+    """Parses a specific string command line argument.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      argument_name: the name of the command line argument.
+      default_value: optional default value of the command line argument.
+
+    Returns:
+      A string containing the command line argument value. If the specific
+      command line argument is not set the default value will be returned.
+
+    Raises:
+      BadConfigOption: if the command line argument value cannot be converted
+                       to a Unicode string.
+    """
+    argument_value = getattr(options, argument_name, None)
+    if not argument_value:
+      return default_value
 
     if isinstance(argument_value, py2to3.BYTES_TYPE):
       encoding = sys.stdin.encoding

@@ -130,6 +130,15 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(string, expected_string)
 
     options = test_lib.TestOptions()
+
+    string = cli_tool.ParseStringOption(options, u'test')
+    self.assertEqual(string, None)
+
+    string = cli_tool.ParseStringOption(
+        options, u'test', default_value=expected_string)
+    self.assertEqual(string, expected_string)
+
+    options = test_lib.TestOptions()
     options.test = expected_string.encode(encoding)
 
     string = cli_tool.ParseStringOption(options, u'test')

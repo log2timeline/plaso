@@ -216,9 +216,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         filename=self._log_file, format_string=format_string,
         log_level=log_level)
 
-    self._destination_path = self.ParseStringOption(options, u'path')
-    if not self._destination_path:
-      self._destination_path = u'export'
+    self._destination_path = self.ParseStringOption(
+        options, u'path', default_value=u'export')
 
     self._ParseFilterOptions(options)
 

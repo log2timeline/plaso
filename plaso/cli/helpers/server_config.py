@@ -48,15 +48,9 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
     if not hasattr(output_module, u'SetServerInformation'):
       raise errors.BadConfigObject(u'Unable to set server information.')
 
-    server = cls._ParseStringOption(options, u'server')
-    if not server:
-      server = cls._DEFAULT_SERVER
-
-    port = getattr(options, u'port', None)
-    if port and not isinstance(port, (int, long)):
-      raise errors.BadConfigOption(u'Invalid port value not an integer.')
-
-    if not port:
-      port = cls._DEFAULT_PORT
+    server = cls._ParseStringOption(
+        options, u'server', default_value=cls._DEFAULT_SERVER)
+    port = cls._ParseIntegerOption(
+        options, u'port', default_value=cls._DEFAULT_PORT)
 
     output_module.SetServerInformation(server, port)

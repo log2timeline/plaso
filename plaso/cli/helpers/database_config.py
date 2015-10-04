@@ -57,17 +57,12 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
     if not hasattr(output_module, u'SetCredentials'):
       raise errors.BadConfigObject(u'Unable to set username information.')
 
-    username = cls._ParseStringOption(options, u'username')
-    if not username:
-      username = cls._DEFAULT_USERNAME
-
-    password = cls._ParseStringOption(options, u'password')
-    if not password:
-      password = cls._DEFAULT_PASSWORD
-
-    name = cls._ParseStringOption(options, u'db_name')
-    if not name:
-      name = cls._DEFAULT_NAME
+    username = cls._ParseStringOption(
+        options, u'username', default_value=cls._DEFAULT_USERNAME)
+    password = cls._ParseStringOption(
+        options, u'password', default_value=cls._DEFAULT_PASSWORD)
+    name = cls._ParseStringOption(
+        options, u'db_name', default_value=cls._DEFAULT_NAME)
 
     output_module.SetCredentials(username=username, password=password)
     output_module.SetDatabaseName(name)

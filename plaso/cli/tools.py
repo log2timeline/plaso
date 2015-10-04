@@ -288,15 +288,17 @@ class CLITool(object):
     """
     self._log_file = self.ParseStringOption(options, u'log_file')
 
-  def ParseStringOption(self, options, argument_name):
+  def ParseStringOption(self, options, argument_name, default_value=None):
     """Parses a specific string command line argument.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
-      argument_nmae: the name of the command line argument.
+      argument_name: the name of the command line argument.
+      default_value: optional default value of the command line argument.
 
     Returns:
-      A string containing the command line argument value or None.
+      A string containing the command line argument value. If the specific
+      command line argument is not set the default value will be returned.
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
@@ -304,7 +306,7 @@ class CLITool(object):
     """
     argument_value = getattr(options, argument_name, None)
     if not argument_value:
-      return
+      return default_value
 
     if isinstance(argument_value, py2to3.BYTES_TYPE):
       encoding = sys.stdin.encoding

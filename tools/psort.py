@@ -158,9 +158,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    preferred_language = self.ParseStringOption(options, u'preferred_language')
-    if not preferred_language:
-      preferred_language = u'en-US'
+    preferred_language = self.ParseStringOption(
+        options, u'preferred_language', default_value=u'en-US')
 
     if preferred_language == u'list':
       self.list_language_identifiers = True

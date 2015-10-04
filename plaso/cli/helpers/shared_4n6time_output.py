@@ -61,13 +61,10 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
           u'Output module is not an instance of Base4n6TimeOutputModule')
 
     append = getattr(options, u'append', False)
-    evidence = cls._ParseStringOption(options, u'evidence')
-    if not evidence:
-      evidence = cls._DEFAULT_EVIDENCE
-
-    fields = cls._ParseStringOption(options, u'fields')
-    if not fields:
-      fields = cls._DEFAULT_FIELDS
+    evidence = cls._ParseStringOption(
+        options, u'evidence', default_value=cls._DEFAULT_EVIDENCE)
+    fields = cls._ParseStringOption(
+        options, u'fields', default_value=cls._DEFAULT_FIELDS)
 
     output_module.SetAppendMode(append)
     output_module.SetEvidence(evidence)

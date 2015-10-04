@@ -52,11 +52,12 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
           u'Analysis plugin is not an instance of VirusTotalAnalysisPlugin')
 
     api_key = cls._ParseStringOption(options, u'virustotal_api_key')
-    rate_limit = getattr(options, u'virustotal_rate_limit', None)
     if not api_key:
       raise errors.BadConfigOption(
           u'VirusTotal API key not specified. Try again with '
           u'--virustotal-api-key.')
+
+    rate_limit = getattr(options, u'virustotal_rate_limit', None)
 
     analysis_plugin.SetAPIKey(api_key)
     analysis_plugin.EnableFreeAPIKeyRateLimit(rate_limit)

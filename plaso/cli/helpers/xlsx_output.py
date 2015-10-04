@@ -49,9 +49,9 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Output module is not an instance of XlsxOutputModule')
 
-    timestamp_format = cls._ParseStringOption(options, u'timestamp_format')
-    if not timestamp_format:
-      timestamp_format = cls._DEFAULT_TIMESTAMP_FORMAT
+    timestamp_format = cls._ParseStringOption(
+        options, u'timestamp_format',
+        default_value=cls._DEFAULT_TIMESTAMP_FORMAT)
     output_module.SetTimestampFormat(timestamp_format)
 
     filename = getattr(options, u'write', None)
