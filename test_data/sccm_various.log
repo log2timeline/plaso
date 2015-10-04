@@ -1,0 +1,86 @@
+﻿<![LOG[+++ Starting Install enforcement for App DT "Application Foo Version 2.2" ApplicationDeliveryType - ScopeId_AD87A846-E6A5-4088-875F-066CF1082D30/DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337, Revision - 10, ContentPath - C:\Windows\ccmcache\u, Execution Context - System]LOG]!><time="19:33:19.766-330" date="11-28-2014" component="AppEnforce" context="" type="1" thread="8744" file="appprovider.cpp:1702">
+<![LOG[    A user is logged on to the system.]LOG]!><time="19:33:19.766-330" date="11-28-2014" component="AppEnforce" context="" type="1" thread="8744" file="appprovider.cpp:2083">
+<![LOG[Event object details:
+instance of CCM_InstanceEvent
+{
+        ActionType = 23;
+        ClassName = "CCM_Application";
+        MessageLevel = 0;
+        SessionID = 1294367247;
+        TargetInstancePath = "CCM_Application.Id=\"ScopeId_07A32C38-9899-4127-A8BA-E0A41C5DE4C7/Application_14a11199-ee14-4c06-a5a7-68eadf501337\",Revision=\"23\",IsMachineTarget=1";
+        TIME_CREATED = "130646479687642814";
+        UserSID = "";
+        Value = "";
+        Verbosity = 30;
+};
+         (Microsoft.SoftwareCenter.Client.Data.Widget at Thingamabob)]LOG]!><time="10:22:50.8422964" date="1-2-2015" component="SCClient" context="" type="0" thread="16" file="">
+<![LOG[
+instance of CCM_Application
+{
+        AllowedActions = {"Install"};
+        AppDTs = {
+instance of CCM_AppDeploymentType
+{
+        AllowedActions = {"Install"};
+        ApplicabilityState = "Applicable";
+        ConfigureState = "NotNeeded";
+        ContentSize = 29;
+        DeploymentReport = "<ConfigurationItemReport AuthoringScope=\"ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337\" LogicalName=\"DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337\" Version=\"23\" Type=\"Deployment Type\" ComputerName=\"COMPUTER01\" CIComplianceState=\"NotInstalled\" CIDesiredState=\"Installed\" CIApplicablityState=\"Applicable\" CISeverity=\"None\" CIConfigureState=\"NotNeeded\" TotalConstraintViolations=\"0\" TotalModelViolations=\"0\" TotalSuppressionCount=\"0\" TotalEnforcements=\"0\" MaxOverallSeverity=\"None\" TotalConflicts=\"0\" TotalDependancyViolations=\"0\" TotalSupersedesViolations=\"0\" TotalNonSupersedenceViolations=\"0\" TotalCompliantCount=\"1\" SupersessionState=\"None\" TotalRequirementsCount=\"0\" TotalDiscoveryViolations=\"0\"><CIProperties><Name>MineSweeper2000</Name><Description/></CIProperties><NonSupersedenceViolations Count=\"0\"/><SupersedesViolations Count=\"0\"/><DependancyViolations Count=\"0\"/><RequirementViolations Count=\"0\"/><ConflictViolations Count=\"0\"/><CompliantRules Count=\"1\"><CompliantRule><RuleLogicalName>NonSupersedence</RuleLogicalName><RuleName>NonSupersedence</RuleName><RuleDescription/></CompliantRule></CompliantRules><ModelViolations Count=\"0\" SuppressedCount=\"0\" MaxSeverity=\"None\"/><DiscoveryViolations SuppressedCount=\"0\" MaxSeverity=\"None\" Count=\"0\"/><ReferencedConfigurationItems MaxOverallSeverity=\"None\" TotalConflicts=\"0\" TotalConstraintViolations=\"0\" TotalDiscoveryViolations=\"0\" TotalModelViolations=\"0\" TotalEnforcements=\"0\" TotalSuppressionCount=\"0\"/><BaseConfigurationItems/></ConfigurationItemReport>";
+        ErrorCode = 0;
+        EstimatedInstallTime = 1;
+        EvaluationState = 3;
+        FullName = "MineSweeper2000";
+        Id = "ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337/DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337";
+        InstallState = "NotInstalled";
+        LastEvalTime = "20150102102241.000000+000";
+        MaxExecuteTime = 15;
+        Name = "MineSweeper2000";
+        PercentComplete = 0;
+        PostInstallAction = "BasedOnExitCode";
+        RequiresUserInteraction = FALSE;
+        ResolvedState = "Installed";
+        RetriesRemaining = 10;
+        Revision = "23";
+        SupersessionState = "None";
+        Type = 1;
+}};
+        ApplicabilityState = "Applicable";
+        ConfigureState = "NotNeeded";
+        Deadline = "20140728132700.000000+000";
+        DeploymentReport = "<ConfigurationItemReport AuthoringScope=\"ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337\" LogicalName=\"Application_14a11199-ee14-4c06-a5a7-68eadf501337\" Version=\"23\" Type=\"AppModel\" ComputerName=\"COMPUTER01\" CIComplianceState=\"NotInstalled\" CIDesiredState=\"Installed\" CIApplicablityState=\"Applicable\" CISeverity=\"None\" CIConfigureState=\"NotNeeded\" TotalConstraintViolations=\"0\" TotalDiscoveryViolations=\"0\" TotalModelViolations=\"0\" TotalSuppressionCount=\"0\" TotalEnforcements=\"0\" TotalConflicts=\"0\" MaxOverallSeverity=\"None\" SupersessionState=\"None\"><CIProperties><Name>MineSweeper2000</Name><Description/></CIProperties><RequirementViolations Count=\"0\"/><ConflictViolations Count=\"0\"/><CompliantRules Count=\"0\"/><ModelViolations Count=\"0\" SuppressedCount=\"0\" MaxSeverity=\"None\"/><DiscoveryViolations Count=\"0\" SuppressedCount=\"0\" MaxSeverity=\"None\"/><ReferencedConfigurationItems MaxOverallSeverity=\"None\" TotalConflicts=\"0\" TotalConstraintViolations=\"0\" TotalDiscoveryViolations=\"0\" TotalModelViolations=\"0\" TotalEnforcements=\"0\" TotalSuppressionCount=\"0\"><ConfigurationItemReport AuthoringScope=\"ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337\" LogicalName=\"DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337\" Version=\"23\" Type=\"Deployment Type\" ComputerName=\"COMPUTER01\" CIComplianceState=\"NotInstalled\" CIDesiredState=\"Installed\" CIApplicablityState=\"Applicable\" CISeverity=\"None\" CIConfigureState=\"NotNeeded\" TotalConstraintViolations=\"0\" TotalModelViolations=\"0\" TotalSuppressionCount=\"0\" TotalEnforcements=\"0\" MaxOverallSeverity=\"None\" TotalConflicts=\"0\" TotalDependancyViolations=\"0\" TotalSupersedesViolations=\"0\" TotalNonSupersedenceViolations=\"0\" TotalCompliantCount=\"1\" SupersessionState=\"None\" TotalRequirementsCount=\"0\" TotalDiscoveryViolations=\"0\" Policy=\"Required\"><CIProperties><Name>MineSweeper2000</Name><Description/></CIProperties><NonSuper
+sedenceViolations Count=\"0\"/><SupersedesViolations Count=\"0\"/><DependancyViolations Count=\"0\"/><RequirementViolations Count=\"0\"/><ConflictViolations Count=\"0\"/><CompliantRules Count=\"1\"><CompliantRule><RuleLogicalName>NonSupersedence</RuleLogicalName><RuleName>NonSupersedence</RuleName><RuleDescription/></CompliantRule></CompliantRules><ModelViolations Count=\"0\" SuppressedCount=\"0\" MaxSeverity=\"None\"/><DiscoveryViolations SuppressedCount=\"0\" MaxSeverity=\"None\" Count=\"0\"/><ReferencedConfigurationItems MaxOverallSeverity=\"None\" TotalConflicts=\"0\" TotalConstraintViolations=\"0\" TotalDiscoveryViolations=\"0\" TotalModelViolations=\"0\" TotalEnforcements=\"0\" TotalSuppressionCount=\"0\"/><BaseConfigurationItems/></ConfigurationItemReport></ReferencedConfigurationItems><BaseConfigurationItems/><ReferencingConfigurationItems><ReferencingConfigurationItem AuthoringScope=\"ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337\" LogicalName=\"RequiredApplication_14a11199-ee14-4c06-a5a7-68eadf501337\" Version=\"23\"/></ReferencingConfigurationItems></ConfigurationItemReport>";
+        EnforcePreference = 2;
+        ErrorCode = 0;
+        EvaluationState = 26;
+        FileTypes = "";
+        FullName = "MineSweeper2000";
+        Icon = "";
+        Id = "ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337/Application_14a11199-ee14-4c06-a5a7-68eadf501337";
+        InformativeUrl = "";
+        InProgressActions = {"Install", "Update", "Uninstall"};
+        InstallState = "NotInstalled";
+        IsMachineTarget = TRUE;
+        IsPreflightOnly = FALSE;
+        LastEvalTime = "20150102102238.000000+000";
+        LastInstallTime = "20141126163742.000000+000";
+        Name = "MineSweeper2000";
+        NotifyUser = FALSE;
+        OverrideServiceWindow = FALSE;
+        PercentComplete = 0;
+        Publisher = "Acme";
+        RebootOutsideServiceWindow = FALSE;
+        ReleaseDate = "00000000000000.000000+000";
+        ResolvedState = "Installed";
+        Revision = "23";
+        StartTime = "20140728132700.000000+000";
+        SupersessionState = "None";
+        Type = 1;
+        UserUIExperience = FALSE;
+};
+         (Microsoft.SoftwareCenter.Client.Data.WmiConnectionManager at GetInstance)]LOG]!><time="10:22:50.8734966" date="1-2-2015" component="SCClient" context="" type="1" thread="16" file="">
+<![LOG[Releasing content request {4EA97AD6-E7E2-4583-92B9-21F532501337}]LOG]!><time="07:03:10.647-330" date="12-23-2014" component="ContentAccess" context="" type="1" thread="6744" file="contentaccessservice.cpp:1861">
+<![LOG[All references to Content 14a11199-ee14-4c06-a5a7-68eadf501337.1 in cache have been removed.                   Content will be Tombstoned.]LOG]!><time="07:03:10.647-330" date="12-23-2014" component="ContentAccess" context="" type="1" thread="6744" file="cachemanager.cpp:767">
+<![LOG[+++ Executing script to discover application. [AppDT Id: ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337/DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337, Revision: 6]]LOG]!><time="20:37:41.047-330" date="12-29-2014" component="AppDiscovery" context="" type="1" thread="4772" file="scripthandler.cpp:268">
+<![LOG[Evaluating health check rule {4EA97AD6-E7E2-4583-92B9-21F532501337} : Some Stuff.]LOG]!><time="13:29:43.373-330" date="12-28-2014" component="CcmEval" context="" type="1" thread="3452" file="ccmeval.cpp:200">
+<![LOG[Applying policy Windows/SomeDevices/VI/VS]LOG]!><time="04:20:47.594+480" date="11-26-2014" component="setuppolicyevaluator" context="" type="1" thread="6228" file="policyutil.cpp:5555">
+<![LOG[Some stuff happened.]LOG]!><time="01:52:13.827+480" date="11-24-2014" component="PeerDPAgent" context="" type="1" thread="2444" file="somefile.cpp:100">

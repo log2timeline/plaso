@@ -43,7 +43,7 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'skydrive_log'
   DESCRIPTION = u'Parser for OneDrive (or SkyDrive) log files.'
 
-  ENCODING = u'UTF-8-SIG'
+  _ENCODING = u'UTF-8-SIG'
 
   # Common SDL (SkyDriveLog) pyparsing objects.
   SDL_COLON = pyparsing.Literal(u':')
