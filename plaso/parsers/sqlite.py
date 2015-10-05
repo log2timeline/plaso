@@ -103,8 +103,11 @@ class SQLiteDatabase(object):
 
   def Close(self):
     """Close the database connection and clean up the temporary file."""
+    self._table_names = []
+
     if self._is_open:
       self._database.close()
+    self._database = None
 
     if os.path.exists(self._temp_file_name):
       try:
@@ -115,10 +118,9 @@ class SQLiteDatabase(object):
             u'{1:s} with error: {2:s}').format(
                 self._temp_file_name, self._name, exception))
 
-    self._database = None
-    self._is_open = False
-    self._table_names = []
     self._temp_file_name = u''
+
+    self._is_open = False
 
   def Open(self, file_object):
     """Opens up a database connection and build a list of table names.
@@ -153,10 +155,15 @@ class SQLiteDatabase(object):
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       self._temp_file_name = temp_file.name
 
-      data = file_object.read(self._READ_BUFFER_SIZE)
-      while data:
-        temp_file.write(data)
+      try:
         data = file_object.read(self._READ_BUFFER_SIZE)
+        while data:
+          temp_file.write(data)
+          data = file_object.read(self._READ_BUFFER_SIZE)
+      except IOError:
+        os.remove(self._temp_file_name)
+        self._temp_file_name = u''
+        raise
 
     self._database = sqlite3.connect(self._temp_file_name)
     try:
@@ -172,10 +179,10 @@ class SQLiteDatabase(object):
 
     except sqlite3.DatabaseError as exception:
       self._database.close()
-      os.remove(self._temp_file_name)
-
-      self._temp_file_name = u''
       self._database = None
+
+      os.remove(self._temp_file_name)
+      self._temp_file_name = u''
 
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
