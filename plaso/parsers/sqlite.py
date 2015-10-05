@@ -244,7 +244,7 @@ class SQLiteParser(interface.BaseParser):
     try:
       database.Open(file_object)
 
-    except IOError as exception:
+    except (IOError, ValueError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to open database with error: {0:s}'.format(
               repr(exception)))
