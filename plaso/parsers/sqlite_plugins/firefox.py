@@ -362,8 +362,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Return an URL from a reference to an entry in the from_visit table."""
     url_cache_results = cache.GetResults(u'url')
     if not url_cache_results:
-      cursor = database.cursor
-      result_set = cursor.execute(self.URL_CACHE_QUERY)
+      result_set = database.Query(self.URL_CACHE_QUERY)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
@@ -377,7 +376,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       return u''
 
     hostname = self._ReverseHostname(reverse_host)
-    return u'{:s} ({:s})'.format(url, hostname)
+    return u'{0:s} ({1:s})'.format(url, hostname)
 
 
 class FirefoxDownloadsPlugin(interface.SQLitePlugin):

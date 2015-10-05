@@ -8,6 +8,7 @@ import tempfile
 import sqlite3
 
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import plugins
@@ -81,87 +82,57 @@ class SQLiteCache(plugins.BasePluginCache):
 class SQLiteDatabase(object):
   """A simple wrapper for opening up a SQLite database."""
 
-  # Magic value for a SQLite database.
-  MAGIC = b'SQLite format 3'
-
   _READ_BUFFER_SIZE = 65536
 
-  def __init__(self, file_entry):
+  def __init__(self, name):
     """Initializes the database object.
 
     Args:
-      file_entry: the file entry object.
+      name: string containing the name of the file entry.
     """
-    self._cursor = None
     self._database = None
-    self._file_entry = file_entry
-    self._open = False
-    self._tables = []
+    self._is_open = False
+    self._name = name
+    self._table_names = []
     self._temp_file_name = u''
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self.Close()
-
-  def __enter__(self):
-    """Make usable with "with" statement."""
-    return self
-
-  @property
-  def cursor(self):
-    """Returns a cursor object from the database."""
-    if not self._open:
-      self.Open()
-
-    return self._database.cursor()
 
   @property
   def tables(self):
-    """Returns a list of all the tables in the database."""
-    if not self._open:
-      self.Open()
-
-    return self._tables
+    """Returns a list of all the table names in the database."""
+    return self._table_names
 
   def Close(self):
     """Close the database connection and clean up the temporary file."""
-    if not self._open:
-      return
+    if self._is_open:
+      self._database.close()
 
-    self._database.close()
+    if os.path.exists(self._temp_file_name):
+      try:
+        os.remove(self._temp_file_name)
+      except (OSError, IOError) as exception:
+        logging.warning((
+            u'Unable to remove temporary copy: {0:s} of SQLite database: '
+            u'{1:s} with error: {2:s}').format(
+                self._temp_file_name, self._name, exception))
 
-    try:
-      os.remove(self._temp_file_name)
-    except (OSError, IOError) as exception:
-      logging.warning((
-          u'Unable to remove temporary copy: {0:s} of SQLite database: {1:s} '
-          u'with error: {2:s}').format(
-              self._temp_file_name, self._file_entry.name, exception))
-
-    self._tables = []
     self._database = None
+    self._is_open = False
+    self._table_names = []
     self._temp_file_name = u''
-    self._open = False
 
-  def Open(self):
-    """Opens up a database connection and build a list of table names."""
-    file_object = self._file_entry.GetFileObject()
+  def Open(self, file_object):
+    """Opens up a database connection and build a list of table names.
 
-    # TODO: Remove this when the classifier gets implemented
-    # and used. As of now, there is no check made against the file
-    # to verify its signature, thus all files are sent here, meaning
-    # that this method assumes everything is a SQLite file and starts
-    # copying the content of the file into memory, which is not good
-    # for very large files.
-    file_object.seek(0, os.SEEK_SET)
+    Args:
+      file_object: the file-like object.
 
-    data = file_object.read(len(self.MAGIC))
-
-    if data != self.MAGIC:
-      file_object.close()
-      raise IOError(
-          u'File {0:s} not a SQLite database. (invalid signature)'.format(
-              self._file_entry.name))
+    Raises:
+      IOError: if the file-like object cannot be read.
+      sqlite3.DatabaseError: if the database cannot be parsed.
+      ValueErorr: if the file-like object is missing.
+    """
+    if not file_object:
+      raise ValueError(u'Missing file object.')
 
     # TODO: Current design copies the entire file into a buffer
     # that is parsed by each SQLite parser. This is not very efficient,
@@ -181,6 +152,8 @@ class SQLiteDatabase(object):
     # making sure it is available for sqlite3.connect().
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       self._temp_file_name = temp_file.name
+
+      data = file_object.read(self._READ_BUFFER_SIZE)
       while data:
         temp_file.write(data)
         data = file_object.read(self._READ_BUFFER_SIZE)
@@ -188,32 +161,41 @@ class SQLiteDatabase(object):
     self._database = sqlite3.connect(self._temp_file_name)
     try:
       self._database.row_factory = sqlite3.Row
-      self._cursor = self._database.cursor()
-    except sqlite3.DatabaseError as exception:
-      file_object.close()
-      logging.debug(
-          u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
-              self._file_entry.name, exception))
-      raise
+      cursor = self._database.cursor()
 
-    # Verify the table by reading in all table names and compare it to
-    # the list of required tables.
-    try:
-      sql_results = self._cursor.execute(
+      # Verify the table by reading in all table names and compare it to
+      # the list of required tables.
+      sql_results = cursor.execute(
           u'SELECT name FROM sqlite_master WHERE type="table"')
+
+      self._table_names = [row[0] for row in sql_results]
+
     except sqlite3.DatabaseError as exception:
-      file_object.close()
+      self._database.close()
+      os.remove(self._temp_file_name)
+
+      self._temp_file_name = u''
+      self._database = None
+
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
-              self._file_entry.name, exception))
+              self._name, exception))
       raise
 
-    self._tables = []
-    for row in sql_results:
-      self._tables.append(row[0])
+    self._is_open = True
 
-    file_object.close()
-    self._open = True
+  def Query(self, query):
+    """Queries the database.
+
+    Args:
+      query: string containing an SQL query.
+
+    Returns:
+      A results iterator (instance of sqlite3.Cursor).
+    """
+    cursor = self._database.cursor()
+    cursor.execute(query)
+    return cursor
 
 
 class SQLiteParser(interface.BaseParser):
@@ -232,6 +214,13 @@ class SQLiteParser(interface.BaseParser):
     self._plugins = SQLiteParser.GetPluginObjects()
     self.db = None
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'SQLite format 3', offset=0)
+    return format_specification
+
   def Parse(self, parser_mediator, **kwargs):
     """Parses an SQLite database.
 
@@ -242,28 +231,40 @@ class SQLiteParser(interface.BaseParser):
       A event object generator (EventObjects) extracted from the database.
     """
     file_entry = parser_mediator.GetFileEntry()
-    with SQLiteDatabase(file_entry) as database:
-      try:
-        database.Open()
-      except IOError as exception:
-        raise errors.UnableToParseFile(
-            u'Unable to open database with error: {0:s}'.format(
-                repr(exception)))
-      except sqlite3.DatabaseError as exception:
-        raise errors.UnableToParseFile(
-            u'Unable to parse SQLite database with error: {0:s}.'.format(
-                repr(exception)))
 
-      # Create a cache in which the resulting tables are cached.
-      cache = SQLiteCache()
+    database = SQLiteDatabase(file_entry.name)
+    file_object = parser_mediator.GetFileObject()
+    try:
+      database.Open(file_object)
+
+    except IOError as exception:
+      raise errors.UnableToParseFile(
+          u'Unable to open database with error: {0:s}'.format(
+              repr(exception)))
+
+    except sqlite3.DatabaseError as exception:
+      raise errors.UnableToParseFile(
+          u'Unable to parse SQLite database with error: {0:s}.'.format(
+              repr(exception)))
+
+    finally:
+      file_object.close()
+
+    # Create a cache in which the resulting tables are cached.
+    cache = SQLiteCache()
+    try:
       for plugin_object in self._plugins:
         try:
           plugin_object.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database)
+
         except errors.WrongPlugin:
           logging.debug(
               u'Plugin: {0:s} cannot parse database: {1:s}'.format(
                   plugin_object.NAME, parser_mediator.GetDisplayName()))
+
+    finally:
+      database.Close()
 
 
 manager.ParsersManager.RegisterParser(SQLiteParser)

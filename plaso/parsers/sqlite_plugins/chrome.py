@@ -178,8 +178,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
     url_cache_results = cache.GetResults(u'url')
     if not url_cache_results:
-      cursor = database.cursor
-      result_set = cursor.execute(self.URL_CACHE_QUERY)
+      result_set = database.Query(self.URL_CACHE_QUERY)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
@@ -210,8 +209,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
     sync_cache_results = cache.GetResults(u'sync')
     if not sync_cache_results:
-      cursor = database.cursor
-      result_set = cursor.execute(self.SYNC_CACHE_QUERY)
+      result_set = database.Query(self.SYNC_CACHE_QUERY)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
