@@ -47,6 +47,10 @@ class Queue(object):
   def Close(self):
     """Closes the queue."""
 
+  @abc.abstractmethod
+  def Open(self):
+    """Opens the queue, ready to enqueue or dequeue items."""
+
 
 class QueueConsumer(object):
   """Class that implements the queue consumer interface.

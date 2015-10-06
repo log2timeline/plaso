@@ -319,7 +319,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
             u'Enables experimental queueing using ZeroMQ'))
 
-
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
 

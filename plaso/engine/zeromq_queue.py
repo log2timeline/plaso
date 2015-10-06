@@ -29,12 +29,12 @@ class ZeroMQQueue(queue.Queue):
   SOCKET_CONNECTION_TYPE = None
 
   def __init__(
-      self, delay_start=True, linger_seconds=10, port=None, timeout_seconds=5,
+      self, delay_open=True, linger_seconds=10, port=None, timeout_seconds=5,
       name=u'Unnamed', maximum_items=1000):
     """Initializes a ZeroMQ backed queue.
 
     Args:
-      delay_start: Optional boolean that governs whether a ZeroMQ socket
+      delay_open: Optional boolean that governs whether a ZeroMQ socket
                    should be created the first time the queue is pushed to or
                    popped from, rather than at queue object initialization.
                    This is useful if a queue needs to be passed to a
@@ -69,7 +69,7 @@ class ZeroMQQueue(queue.Queue):
     self._zmq_socket = None
     self.name = name
     self.port = port
-    if not delay_start:
+    if not delay_open:
       self._CreateZMQSocket()
 
   @property
@@ -121,8 +121,8 @@ class ZeroMQQueue(queue.Queue):
       logging.debug(u'{0:s} bound to random port {1:d}'.format(
           self.name, self.port))
 
-  def Start(self):
-    """Starts this queue, causing the creation of a ZeroMQ socket.
+  def Open(self):
+    """Opens this queue, causing the creation of a ZeroMQ socket.
 
     Raises:
       QueueAlreadyStarted: If the queue is already started, and a socket already
@@ -162,6 +162,21 @@ class ZeroMQQueue(queue.Queue):
   @abc.abstractmethod
   def Empty(self):
     """Empties all items from the queue."""
+
+  def IsBound(self):
+    """Checks if the queue is bound to a port."""
+    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_BIND and
+        self.port is not None):
+      return True
+    return False
+
+  @abc.abstractmethod
+  def IsConnected(self):
+    """Checks if the queue is connected to an endpoint."""
+    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT and
+        self.port is not None):
+      return True
+    return False
 
   def IsEmpty(self):
     """Checks if the queue is empty.
@@ -217,7 +232,11 @@ class ZeroMQPullQueue(ZeroMQQueue):
   _SOCKET_TYPE = zmq.PULL
 
   def Empty(self):
-    """Empties the queue."""
+    """Empties the queue.
+
+    Raises:
+      ZMQError: If a ZeroMQ error occurs.
+    """
     try:
       while True:
         if self._zmq_socket:
@@ -240,6 +259,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
+      ZMQError: If a ZeroMQ error occurs.
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -251,7 +271,8 @@ class ZeroMQPullQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+        logging.error(u'ZMQ syscall interrupted in {0}. Queue aborting'.format(
+            self.name))
         return queue.QueueAbort()
       else:
         raise
@@ -324,6 +345,9 @@ class ZeroMQPushQueue(ZeroMQQueue):
       block: Optional argument to indicate whether the push should be performed
              in blocking or non-block mode.
 
+    Raises:
+      Again: If a
+      ZMQError: If a ZeroMQ specific error occurs.
     """
     logging.debug(u'Push on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -385,7 +409,11 @@ class ZeroMQRequestQueue(ZeroMQQueue):
   _SOCKET_TYPE = zmq.REQ
 
   def Empty(self):
-    """Empties the queue."""
+    """Empties the queue.
+
+    Raises:
+      ZMQError: If an error occurs in ZeroMQ.
+    """
     try:
       while True:
         if self._zmq_socket:
@@ -396,6 +424,8 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       return
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
+        # Interrupted syscall, we won't be able to dequeue any more items from
+        # this queue, so we can consider it empty.
         logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
         return
       else:
@@ -413,6 +443,9 @@ class ZeroMQRequestQueue(ZeroMQQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
+      ZMQError: If an error occurs in ZeroMQ.
+      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+                         popping an item.
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -425,7 +458,8 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+        logging.error(u'ZMQ syscall interrupted in {0}. Queue aborting.'.format(
+            self.name))
         return queue.QueueAbort()
       else:
         raise
@@ -473,13 +507,13 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
   """
 
   def __init__(
-      self, delay_start=True, linger_seconds=10, port=None, timeout_seconds=5,
+      self, delay_open=True, linger_seconds=10, port=None, timeout_seconds=5,
       name=u'Unnamed', maximum_items=1000, buffer_max_size=10000,
       buffer_timeout_seconds=2):
     """Initializes a buffered, ZeroMQ backed queue.
 
     Args:
-      delay_start: Optional boolean that governs whether a ZeroMQ socket
+      delay_open: Optional boolean that governs whether a ZeroMQ socket
                    should be created the first time the queue is pushed to or
                    popped from, rather than at queue object initialization.
                    This is useful if a queue needs to be passed to a
@@ -507,7 +541,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     self._queue = Queue.Queue(maxsize=buffer_max_size)
     self._terminate_event = threading.Event()
     super(ZeroMQBufferedQueue, self).__init__(
-        delay_start, linger_seconds, port, timeout_seconds, name,
+        delay_open, linger_seconds, port, timeout_seconds, name,
         maximum_items)
 
   def _CreateZMQSocket(self):
@@ -578,6 +612,10 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
       source_queue: The queue to uses to pull items from.
       socket: The socket to listen to, and send responses to.
       terminate_event: The event that signals that the queue should terminate.
+
+    Raises:
+      QueueEmpty: If a timeout occurs when trying to reply to a request.
+      ZMQError: If an error occurs in ZeroMQ.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
@@ -607,7 +645,9 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
       try:
         self._zmq_socket.send_pyobj(item)
       except zmq.error.Again:
-        logging.debug(u'{0:s} encountered exception.'.format(self.name))
+        logging.debug(
+            u'{0:s} could not reply to a request within {1:d} seconds.'.format(
+                self.name, self.timeout_seconds))
         raise errors.QueueEmpty
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
@@ -684,6 +724,9 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
       socket: The socket to listen to, and send responses to.
       terminate_event: The event that signals that the queue should terminate.
 
+    Raises:
+      ZMQError: If ZeroMQ encounters an error.
+      QueueEmpty: If the queue encountered a timeout trying to push an item.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
@@ -702,8 +745,10 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
       try:
         self._zmq_socket.send_pyobj(item)
       except zmq.error.Again:
-        logging.debug(u'Queue encountered exception.')
-        raise
+        logging.debug(
+            u'{0:s} could not push an item within {1:d} seconds.'.format(
+                self.name, self.timeout_seconds))
+        raise errors.QueueEmpty
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
           logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
@@ -780,6 +825,9 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
       source_queue: The queue to uses to pull items from.
       socket: The socket to listen to, and send responses to.
       terminate_event: The event that signals that the queue should terminate.
+
+    Raises:
+      ZMQError: If an error is encountered by ZeroMQ.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
@@ -811,7 +859,6 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
             continue
     logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
 
-
   def PopItem(self):
     """Pops an item off the queue.
 
@@ -821,6 +868,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
+      ZMQError: If an error is encountered by ZeroMQ.
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
