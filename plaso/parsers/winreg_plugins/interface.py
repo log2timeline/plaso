@@ -47,12 +47,6 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
       key_path: the key path.
     """
     super(WindowsRegistryKeyPathFilter, self).__init__()
-    self._key_path = None
-    self._key_path_prefix = None
-    self._key_path_suffix = None
-    self._key_path_upper = None
-    self._wow64_key_path = None
-    self._wow64_key_path_upper = None
 
     key_path.rstrip(u'\\')
     self._key_path = key_path
@@ -60,11 +54,17 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
     key_path = key_path.upper()
     self._key_path_upper = key_path
 
+    self._wow64_key_path = None
+    self._wow64_key_path_upper = None
+
     if key_path.startswith(self._CONTROL_SET_PREFIX.upper()):
       self._key_path_prefix, _, self._key_path_suffix = key_path.partition(
           u'CurrentControlSet'.upper())
 
     else:
+      self._key_path_prefix = None
+      self._key_path_suffix = None
+
       # Handle WoW64 Windows Registry key redirection.
       # Also see:
       # https://msdn.microsoft.com/en-us/library/windows/desktop/
