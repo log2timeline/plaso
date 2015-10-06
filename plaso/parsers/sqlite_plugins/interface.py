@@ -41,8 +41,7 @@ class SQLitePlugin(plugins.BasePlugin):
                   self.NAME, callback_method, query))
           continue
 
-        cursor = database.cursor
-        sql_results = cursor.execute(query)
+        sql_results = database.Query(query)
         row = sql_results.fetchone()
 
         while row:

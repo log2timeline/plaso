@@ -386,8 +386,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
     source_dict = cache.GetResults(u'source')
     if not source_dict:
-      cursor = database.cursor
-      results = cursor.execute(self.QUERY_SOURCE_FROM_TRANSFER)
+      results = database.Query(self.QUERY_SOURCE_FROM_TRANSFER)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
@@ -397,8 +396,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
     dest_dict = cache.GetResults(u'destination')
     if not dest_dict:
-      cursor = database.cursor
-      results = cursor.execute(self.QUERY_DEST_FROM_TRANSFER)
+      results = database.Query(self.QUERY_DEST_FROM_TRANSFER)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".

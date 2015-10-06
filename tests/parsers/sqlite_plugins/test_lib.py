@@ -47,7 +47,16 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain(plugin_object)
 
-    with sqlite.SQLiteDatabase(file_entry) as database:
+    database = sqlite.SQLiteDatabase(file_entry.name)
+    file_object = file_entry.GetFileObject()
+    try:
+      database.Open(file_object)
+    finally:
+      file_object.close()
+
+    try:
       plugin_object.Process(parser_mediator, cache=cache, database=database)
+    finally:
+      database.Close()
 
     return event_queue_consumer
