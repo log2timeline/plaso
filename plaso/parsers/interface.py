@@ -71,7 +71,7 @@ class BaseParser(object):
         parser_filter_string=parser_filter_string):
       plugin_names.append(plugin_name)
 
-    return plugin_names
+    return sorted(plugin_names)
 
   @classmethod
   def GetPluginObjects(cls, parser_filter_string=None):

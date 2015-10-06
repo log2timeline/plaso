@@ -420,6 +420,14 @@ plaso.formatters.safari_cookies module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.sccm module
+----------------------------
+
+.. automodule:: plaso.formatters.sccm
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.selinux module
 -------------------------------
 
