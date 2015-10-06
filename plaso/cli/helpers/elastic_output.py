@@ -22,6 +22,9 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the Elastic Search output module.'
 
+  _DEFAULT_CASE = u''
+  _DEFAULT_DOCUMENT_TYPE = u''
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Add command line arguments the helper supports to an argument group.
@@ -35,12 +38,12 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--case_name', dest=u'case_name', type=str, action=u'store',
-        default=u'', help=(
+        default=cls._DEFAULT_CASE, help=(
             u'Add a case name. This will be the name of the index in '
             u'ElasticSearch.'))
     argument_group.add_argument(
         u'--document_type', dest=u'document_type', type=str,
-        action=u'store', default=u'', help=(
+        action=u'store', default=cls._DEFAULT_DOCUMENT_TYPE, help=(
             u'Name of the document type. This is the name of the document '
             u'type that will be used in ElasticSearch.'))
 
@@ -66,8 +69,10 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
     if output_format != u'elastic':
       raise errors.BadConfigOption(u'Only works on Elastic output module.')
 
-    case_name = cls._ParseStringOption(options, u'case_name')
-    document_type = cls._ParseStringOption(options, u'document_type')
+    case_name = cls._ParseStringOption(
+        options, u'case_name', default_value=cls._DEFAULT_CASE)
+    document_type = cls._ParseStringOption(
+        options, u'document_type', default_value=cls._DEFAULT_DOCUMENT_TYPE)
 
     ElasticServer.ParseOptions(options, output_module)
     output_module.SetCaseName(case_name)

@@ -27,11 +27,12 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--server', dest=u'server', type=str, action=u'store',
-        default=None, metavar=u'HOSTNAME', help=(
-            u'The hostname or server IP address of the server.'))
+        default=cls._DEFAULT_SERVER, metavar=u'HOSTNAME',
+        help=u'The hostname or server IP address of the server.')
     argument_group.add_argument(
-        u'--port', dest=u'port', type=int, action=u'store', default=None,
-        metavar=u'PORT', help=u'The port number of the server.')
+        u'--port', dest=u'port', type=int, action=u'store',
+        default=cls._DEFAULT_PORT, metavar=u'PORT',
+        help=u'The port number of the server.')
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -43,7 +44,6 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not hasattr(output_module, u'SetServerInformation'):
       raise errors.BadConfigObject(u'Unable to set server information.')

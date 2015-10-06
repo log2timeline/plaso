@@ -14,6 +14,8 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the VirusTotal analysis plugin.'
 
+  _DEFAULT_RATE_LIMIT = True
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Add command line arguments the helper supports to an argument group.
@@ -31,9 +33,10 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
         u'for use with VirusTotal.')
     argument_group.add_argument(
         u'--virustotal-free-rate-limit', dest=u'virustotal_rate_limit',
-        type=bool, action='store', default=True, help=u'Limit Virustotal '
-        u'requests to the default free API key rate of 4 requests per minute. '
-        u'Set this to false if you have an key for the private API.')
+        type=bool, action='store', default=cls._DEFAULT_RATE_LIMIT, help=(
+            u'Limit Virustotal requests to the default free API key rate of '
+            u'4 requests per minute. Set this to false if you have an key '
+            u'for the private API.'))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
@@ -57,9 +60,10 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
           u'VirusTotal API key not specified. Try again with '
           u'--virustotal-api-key.')
 
-    rate_limit = getattr(options, u'virustotal_rate_limit', None)
-
     analysis_plugin.SetAPIKey(api_key)
+
+    rate_limit = getattr(
+        options, u'virustotal_rate_limit', cls._DEFAULT_RATE_LIMIT)
     analysis_plugin.EnableFreeAPIKeyRateLimit(rate_limit)
 
 

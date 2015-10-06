@@ -29,7 +29,7 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--timestamp_format', dest=u'timestamp_format', type=str,
-        action=u'store', default=u'', help=(
+        action=u'store', default=cls._DEFAULT_TIMESTAMP_FORMAT, help=(
             u'Set the timestamp format that will be used in the datetime'
             u'column of the XLSX spreadsheet.'))
 
@@ -43,7 +43,6 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(output_module, xlsx.XlsxOutputModule):
       raise errors.BadConfigObject(
