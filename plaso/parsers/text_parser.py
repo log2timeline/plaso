@@ -708,12 +708,12 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
   # If this value needs to be calculated on the fly (not a fixed constant for
   # this particular file type) it can be done by modifying the self.encoding
   # attribute.
-  ENCODING = u''
+  _ENCODING = u'ascii'
 
   def __init__(self):
     """Initializes the pyparsing single-line text parser object."""
     super(PyparsingSingleLineTextParser, self).__init__()
-    self.encoding = self.ENCODING
+    self.encoding = self._ENCODING
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
@@ -1019,7 +1019,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
     self._text_reader = EncodedTextReader(
-        buffer_size=self.BUFFER_SIZE, encoding=self.ENCODING)
+        buffer_size=self.BUFFER_SIZE, encoding=self._ENCODING)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a pyparsing definition.
@@ -1047,6 +1047,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     if not self.VerifyStructure(parser_mediator, self._text_reader.lines):
       raise errors.UnableToParseFile(u'Wrong file structure.')
+
+    # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
+    # with spaces to SkipAhead() the correct number of bytes after a match.
+    for key, structure in self.LINE_STRUCTURES:
+      structure.parseWithTabs()
 
     # Read every line in the text file.
     while self._text_reader.lines:

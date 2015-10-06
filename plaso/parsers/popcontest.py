@@ -147,8 +147,13 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'popularity_contest'
   DESCRIPTION = u'Parser for popularity contest log files.'
 
-  MRU = pyparsing.Word(pyparsing.printables).setResultsName(u'mru')
-  PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName(u'package')
+  _ASCII_PRINTABLES = pyparsing.printables
+  _UNICODE_PRINTABLES = u''.join(
+      unichr(character) for character in xrange(65536)
+      if not unichr(character).isspace())
+
+  MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName(u'mru')
+  PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName(u'package')
   TAG = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(u'tag')
   TIMESTAMP = text_parser.PyparsingConstants.INTEGER.setResultsName(
       u'timestamp')
@@ -176,26 +181,37 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       (u'footer', FOOTER),
   ]
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Popularity Contest log file.
+  _ENCODING = u'UTF-8'
+
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parses an event object from the log line.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
-
-    Returns:
-      True if this is the correct parser, False otherwise.
+      structure: the log line structure object (instance of
+                 pyparsing.ParseResults).
     """
-    try:
-      header_struct = self.HEADER.parseString(line)
-    except pyparsing.ParseException:
-      logging.debug(u'Not a Popularity Contest log file, invalid header')
-      return False
+    # Required fields are <mru> and <atime> and we are not interested in
+    # log lines without <mru>.
+    if not structure.mru:
+      return
 
-    if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
-      logging.debug(u'Invalid Popularity Contest log file header timestamp.')
-      return False
-    return True
+    # The <atime> field (as <ctime>) is always present but could be 0.
+    # In case of <atime> equal to 0, we are in <NOFILES> case, safely return
+    # without logging.
+    if structure.atime:
+      # TODO: not doing any check on <tag> fields, even if only informative
+      # probably it could be better to check for the expected values.
+      event_object = PopularityContestEvent(
+          structure.atime, eventdata.EventTimestamp.ACCESS_TIME,
+          structure.package, structure.mru, tag=structure.tag)
+      parser_mediator.ProduceEvent(event_object)
+
+    if structure.ctime:
+      event_object = PopularityContestEvent(
+          structure.ctime, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
+          structure.package, structure.mru, tag=structure.tag)
+      parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -239,35 +255,26 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       logging.warning(
           u'PopularityContestParser, unknown structure: {0:s}.'.format(key))
 
-  def _ParseLogLine(self, parser_mediator, structure):
-    """Parses an event object from the log line.
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify that this file is a Popularity Contest log file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      structure: the log line structure object (instance of
-                 pyparsing.ParseResults).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
     """
-    # Required fields are <mru> and <atime> and we are not interested in
-    # log lines without <mru>.
-    if not structure.mru:
-      return
+    try:
+      header_struct = self.HEADER.parseString(line)
+    except pyparsing.ParseException:
+      logging.debug(u'Not a Popularity Contest log file, invalid header')
+      return False
 
-    # The <atime> field (as <ctime>) is always present but could be 0.
-    # In case of <atime> equal to 0, we are in <NOFILES> case, safely return
-    # without logging.
-    if structure.atime:
-      # TODO: not doing any check on <tag> fields, even if only informative
-      # probably it could be better to check for the expected values.
-      event_object = PopularityContestEvent(
-          structure.atime, eventdata.EventTimestamp.ACCESS_TIME,
-          structure.package, structure.mru, tag=structure.tag)
-      parser_mediator.ProduceEvent(event_object)
-
-    if structure.ctime:
-      event_object = PopularityContestEvent(
-          structure.ctime, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
-          structure.package, structure.mru, tag=structure.tag)
-      parser_mediator.ProduceEvent(event_object)
+    if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
+      logging.debug(u'Invalid Popularity Contest log file header timestamp.')
+      return False
+    return True
 
 
 manager.ParsersManager.RegisterParser(PopularityContestParser)

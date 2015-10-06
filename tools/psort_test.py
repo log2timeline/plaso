@@ -102,12 +102,17 @@ class PsortToolTest(test_lib.ToolTestCase):
 
     # Since the printed output varies depending on which output modules are
     # enabled we cannot test the complete string but rather test substrings.
-    self.assertTrue(raw_data.startswith((
-        b'\n******************************** Output Modules '
-        b'********************************')))
+    expected_raw_data = (
+        b'\n'
+        b'******************************** Output Modules '
+        b'********************************\n')
+    self.assertTrue(raw_data.startswith(expected_raw_data))
 
     for name, output_class in output_manager.OutputManager.GetOutputClasses():
-      expected_string = u'{0:s} : {1:s}'.format(name, output_class.DESCRIPTION)
+      expected_string = b'{0:s} : {1:s}'.format(name, output_class.DESCRIPTION)
+      # Note that the description can be continued on the next line. Therefore
+      # only the words in the first 80 characters are compared.
+      expected_string, _, _ = expected_string[0:80].rpartition(b' ')
       self.assertTrue(expected_string in raw_data)
 
   def testProcessStorageWithMissingParameters(self):
@@ -137,7 +142,7 @@ class PsortToolTest(test_lib.ToolTestCase):
     self.assertEqual(TestOutputModuleMissingParameters.missing, u'foobar')
     self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
 
-    self.assertIn(u'FILE/Unknown FS ctime OS:syslog', lines)
+    self.assertIn(u'FILE/UNKNOWN ctime OS:syslog', lines)
     output_manager.OutputManager.DeregisterOutput(
         TestOutputModuleMissingParameters)
     helpers_manager.ArgumentHelperManager.DeregisterHelper(

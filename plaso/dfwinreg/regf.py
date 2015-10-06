@@ -138,7 +138,7 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
     elif self._pyregf_value.type in self._INTEGER_VALUE_TYPES:
       try:
         return self._pyregf_value.get_data_as_integer()
-      except (IOError, OverflowError):
+      except (IOError, OverflowError) as exception:
         raise errors.WinRegistryValueError(
             u'Unable to read data from value: {0:s} with error: {1:s}'.format(
                 self._pyregf_value.name, exception))
@@ -149,8 +149,9 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
         return []
 
       try:
-        utf16_string = unicode(self._pyregf_value.data.decode(u'utf-16-le'))
-        return filter(None, utf16_string.split(b'\x00'))
+        utf16_string = self._pyregf_value.data.decode(u'utf-16-le')
+        return filter(None, utf16_string.split(u'\x00'))
+
       except (IOError, UnicodeError) as exception:
         raise errors.WinRegistryValueError(
             u'Unable to read data from value: {0:s} with error: {1:s}'.format(
@@ -191,14 +192,16 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
 class REGFWinRegistryFile(interface.WinRegistryFile):
   """Implementation of a Windows Registry file using pyregf."""
 
-  def __init__(self, ascii_codepage=u'cp1252'):
+  def __init__(self, ascii_codepage=u'cp1252', key_path_prefix=u''):
     """Initializes the Windows Registry file.
 
     Args:
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
+      key_path_prefix: optional Windows Registry key path prefix.
     """
-    super(REGFWinRegistryFile, self).__init__()
+    super(REGFWinRegistryFile, self).__init__(
+        ascii_codepage=ascii_codepage, key_path_prefix=key_path_prefix)
     self._file_object = None
     self._regf_file = pyregf.file()
     self._regf_file.set_ascii_codepage(ascii_codepage)
@@ -218,8 +221,17 @@ class REGFWinRegistryFile(interface.WinRegistryFile):
     Returns:
       A Registry key (instance of WinRegistryKey) or None if not available.
     """
+    key_path_upper = key_path.upper()
+    if key_path_upper.startswith(self._key_path_prefix_upper):
+      relative_key_path = key_path[self._key_path_prefix_length:]
+    elif key_path.startswith(self._KEY_PATH_SEPARATOR):
+      relative_key_path = key_path
+      key_path = u''.join([self._key_path_prefix, key_path])
+    else:
+      return
+
     try:
-      regf_key = self._regf_file.get_key_by_path(key_path)
+      regf_key = self._regf_file.get_key_by_path(relative_key_path)
     except IOError:
       regf_key = None
     if not regf_key:
@@ -227,11 +239,8 @@ class REGFWinRegistryFile(interface.WinRegistryFile):
 
     return REGFWinRegistryKey(regf_key, key_path=key_path)
 
-  def GetRootKey(self, key_path_prefix=u''):
+  def GetRootKey(self):
     """Retrieves the root key.
-
-    Args:
-      key_path_prefix: optional Windows Registry key path prefix.
 
     Returns:
       The Windows Registry root key (instance of WinRegistryKey) or
@@ -241,7 +250,7 @@ class REGFWinRegistryFile(interface.WinRegistryFile):
     if not regf_key:
       return
 
-    return REGFWinRegistryKey(regf_key, key_path=key_path_prefix)
+    return REGFWinRegistryKey(regf_key, key_path=self._key_path_prefix)
 
   def Open(self, file_object):
     """Opens the Windows Registry file using a file-like object.

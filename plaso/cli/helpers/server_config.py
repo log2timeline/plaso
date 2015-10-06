@@ -26,12 +26,13 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--server', dest=u'server', type=unicode, action=u'store',
-        default=None, metavar=u'HOSTNAME', help=(
-            u'The hostname or server IP address of the server.'))
+        u'--server', dest=u'server', type=str, action=u'store',
+        default=cls._DEFAULT_SERVER, metavar=u'HOSTNAME',
+        help=u'The hostname or server IP address of the server.')
     argument_group.add_argument(
-        u'--port', dest=u'port', type=int, action=u'store', default=None,
-        metavar=u'PORT', help=u'The port number of the server.')
+        u'--port', dest=u'port', type=int, action=u'store',
+        default=cls._DEFAULT_PORT, metavar=u'PORT',
+        help=u'The port number of the server.')
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -43,20 +44,13 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not hasattr(output_module, u'SetServerInformation'):
       raise errors.BadConfigObject(u'Unable to set server information.')
 
-    server = getattr(options, u'server', None)
-    if not server:
-      server = cls._DEFAULT_SERVER
-
-    port = getattr(options, u'port', None)
-    if port and not isinstance(port, (int, long)):
-      raise errors.BadConfigOption(u'Invalid port value not an integer.')
-
-    if not port:
-      port = cls._DEFAULT_PORT
+    server = cls._ParseStringOption(
+        options, u'server', default_value=cls._DEFAULT_SERVER)
+    port = cls._ParseIntegerOption(
+        options, u'port', default_value=cls._DEFAULT_PORT)
 
     output_module.SetServerInformation(server, port)

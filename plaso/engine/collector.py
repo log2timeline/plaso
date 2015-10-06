@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Generic collector that supports both file system and image files."""
 
+import copy
 import hashlib
 import logging
 
@@ -24,11 +25,11 @@ class Collector(queue.ItemQueueProducer):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      path_spec_queue: The path specification queue (instance of Queue).
+      path_spec_queue: the path specification queue (instance of Queue).
                        This queue contains path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
+      resolver_context: optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
     super(Collector, self).__init__(path_spec_queue)
@@ -43,8 +44,8 @@ class Collector(queue.ItemQueueProducer):
     """Processes a file system within a storage media image.
 
     Args:
-      path_spec: The path specification of the root of the file system.
-      find_specs: Optional list of find specifications (instances of
+      path_spec: the path specification of the root of the file system.
+      find_specs: optional list of find specifications (instances of
                   dfvfs.FindSpec). The default is None.
     """
     try:
@@ -142,7 +143,7 @@ class Collector(queue.ItemQueueProducer):
     """Sets the collect directory metadata flag.
 
     Args:
-      collect_directory_metadata: Boolean value to indicate to collect
+      collect_directory_metadata: boolean value to indicate to collect
                                   directory metadata.
     """
     self._fs_collector.SetCollectDirectoryMetadata(collect_directory_metadata)
@@ -151,7 +152,7 @@ class Collector(queue.ItemQueueProducer):
     """Sets the collection filter find specifications.
 
     Args:
-      filter_find_specs: List of filter find specifications (instances of
+      filter_find_specs: list of filter find specifications (instances of
                          dfvfs.FindSpec).
     """
     self._filter_find_specs = filter_find_specs
@@ -173,7 +174,7 @@ class FileSystemCollector(queue.ItemQueueProducer):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      path_spec_queue: The path specification queue (instance of Queue).
+      path_spec_queue: the path specification queue (instance of Queue).
                        This queue contains path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
@@ -183,21 +184,11 @@ class FileSystemCollector(queue.ItemQueueProducer):
     self._duplicate_file_check = False
     self._hashlist = {}
 
-    self.number_of_file_entries = 0
-
-  def __enter__(self):
-    """Enters a with statement."""
-    return self
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Exits a with statement."""
-    return
-
   def _CalculateNTFSTimeHash(self, file_entry):
     """Return a hash value calculated from a NTFS file's metadata.
 
     Args:
-      file_entry: The file entry (instance of TSKFileEntry).
+      file_entry: the file entry (instance of TSKFileEntry).
 
     Returns:
       A hash value (string) that can be used to determine if a file's timestamp
@@ -206,26 +197,53 @@ class FileSystemCollector(queue.ItemQueueProducer):
     stat_object = file_entry.GetStat()
     ret_hash = hashlib.md5()
 
-    ret_hash.update('atime:{0:d}.{1:d}'.format(
-        getattr(stat_object, 'atime', 0),
-        getattr(stat_object, 'atime_nano', 0)))
+    ret_hash.update(b'atime:{0:d}.{1:d}'.format(
+        getattr(stat_object, u'atime', 0),
+        getattr(stat_object, u'atime_nano', 0)))
 
-    ret_hash.update('crtime:{0:d}.{1:d}'.format(
-        getattr(stat_object, 'crtime', 0),
-        getattr(stat_object, 'crtime_nano', 0)))
+    ret_hash.update(b'crtime:{0:d}.{1:d}'.format(
+        getattr(stat_object, u'crtime', 0),
+        getattr(stat_object, u'crtime_nano', 0)))
 
-    ret_hash.update('mtime:{0:d}.{1:d}'.format(
-        getattr(stat_object, 'mtime', 0),
-        getattr(stat_object, 'mtime_nano', 0)))
+    ret_hash.update(b'mtime:{0:d}.{1:d}'.format(
+        getattr(stat_object, u'mtime', 0),
+        getattr(stat_object, u'mtime_nano', 0)))
 
-    ret_hash.update('ctime:{0:d}.{1:d}'.format(
-        getattr(stat_object, 'ctime', 0),
-        getattr(stat_object, 'ctime_nano', 0)))
+    ret_hash.update(b'ctime:{0:d}.{1:d}'.format(
+        getattr(stat_object, u'ctime', 0),
+        getattr(stat_object, u'ctime_nano', 0)))
 
     return ret_hash.hexdigest()
 
+  def _ProcessDataStreams(self, file_entry):
+    """Processes the data streams in a file entry.
+
+    Args:
+      file_entry: a file entry (instance of dfvfs.FileEntry).
+    """
+    produced_main_path_spec = False
+    for data_stream in file_entry.data_streams:
+      # Make a copy so we don't make the changes on a path specification
+      # directly. Otherwise already produced path specifications can be
+      # altered in the process.
+      path_spec = copy.deepcopy(file_entry.path_spec)
+      setattr(path_spec, u'data_stream', data_stream.name)
+      self.ProduceItem(path_spec)
+
+      if not data_stream.name:
+        produced_main_path_spec = True
+
+    if (not produced_main_path_spec and (
+        not file_entry.IsDirectory() or self._collect_directory_metadata)):
+      self.ProduceItem(file_entry.path_spec)
+
   def _ProcessDirectory(self, file_entry):
-    """Processes a directory and extract its metadata if necessary."""
+    """Processes a directory and extract its metadata if necessary.
+
+    Args:
+      file_entry: a file entry (instance of dfvfs.FileEntry) that refers
+                  to the directory to process.
+    """
     # Need to do a breadth-first search otherwise we'll hit the Python
     # maximum recursion depth.
     sub_directories = []
@@ -251,12 +269,6 @@ class FileSystemCollector(queue.ItemQueueProducer):
           continue
 
       if sub_file_entry.IsDirectory():
-        # This check is here to improve performance by not producing
-        # path specifications that don't get processed.
-        if self._collect_directory_metadata:
-          self.ProduceItem(sub_file_entry.path_spec)
-          self.number_of_file_entries += 1
-
         sub_directories.append(sub_file_entry)
 
       elif sub_file_entry.IsFile():
@@ -267,15 +279,14 @@ class FileSystemCollector(queue.ItemQueueProducer):
         if self._duplicate_file_check:
           hash_value = self._CalculateNTFSTimeHash(sub_file_entry)
 
-          inode = getattr(sub_file_entry.path_spec, 'inode', 0)
+          inode = getattr(sub_file_entry.path_spec, u'inode', 0)
           if inode in self._hashlist:
             if hash_value in self._hashlist[inode]:
               continue
 
           self._hashlist.setdefault(inode, []).append(hash_value)
 
-        self.ProduceItem(sub_file_entry.path_spec)
-        self.number_of_file_entries += 1
+      self._ProcessDataStreams(sub_file_entry)
 
     for sub_file_entry in sub_directories:
       if self._abort:
@@ -292,9 +303,9 @@ class FileSystemCollector(queue.ItemQueueProducer):
     """Collects files from the file system.
 
     Args:
-      file_system: The file system (instance of dfvfs.FileSystem).
-      path_spec: The path specification (instance of dfvfs.PathSpec).
-      find_specs: Optional list of find specifications (instances of
+      file_system: the file system (instance of dfvfs.FileSystem).
+      path_spec: the path specification (instance of dfvfs.PathSpec).
+      find_specs: optional list of find specifications (instances of
                   dfvfs.FindSpec). The default is None.
     """
     if find_specs:
@@ -305,7 +316,6 @@ class FileSystemCollector(queue.ItemQueueProducer):
           return
 
         self.ProduceItem(path_spec)
-        self.number_of_file_entries += 1
 
     else:
       file_entry = file_system.GetFileEntryByPathSpec(path_spec)
@@ -316,7 +326,7 @@ class FileSystemCollector(queue.ItemQueueProducer):
     """Sets the collect directory metadata flag.
 
     Args:
-      collect_directory_metadata: Boolean value to indicate to collect
+      collect_directory_metadata: boolean value to indicate to collect
                                   directory metadata.
     """
     self._collect_directory_metadata = collect_directory_metadata

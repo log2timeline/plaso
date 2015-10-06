@@ -98,6 +98,10 @@ class ParserMediator(object):
     if not location:
       return
 
+    data_stream = getattr(path_spec, u'data_stream', None)
+    if data_stream:
+      location = u'{0:s}:{1:s}'.format(location, data_stream)
+
     if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:
       return location
 
@@ -142,7 +146,7 @@ class ParserMediator(object):
     self._parser_chain_components = []
 
   def GetDisplayName(self, file_entry=None):
-    """Retrieves the display name for the file entry.
+    """Retrieves the display name for a file entry.
 
     Args:
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
@@ -164,16 +168,14 @@ class ParserMediator(object):
     path_spec = getattr(file_entry, u'path_spec', None)
     relative_path = self._GetRelativePath(path_spec)
 
-    if self._text_prepend:
-      text_prepend = self._text_prepend
-    else:
-      text_prepend = u''
-
     if not relative_path:
       relative_path = file_entry.name
 
     if not relative_path:
       return file_entry.path_spec.type_indicator
+
+    if self._text_prepend:
+      relative_path = u'{0:s}{1:s}'.format(self._text_prepend, relative_path)
 
     parent_path_spec = path_spec.parent
     if parent_path_spec and path_spec.type_indicator in [
@@ -185,19 +187,24 @@ class ParserMediator(object):
         dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
       store_index = getattr(path_spec.parent, u'store_index', None)
       if store_index is not None:
-        return u'VSS{0:d}:{1:s}:{2:s}{3:s}'.format(
-            store_index + 1, file_entry.path_spec.type_indicator, text_prepend,
-            relative_path)
+        return u'VSS{0:d}:{1:s}:{2:s}'.format(
+            store_index + 1, file_entry.path_spec.type_indicator, relative_path)
 
-    return u'{0:s}:{1:s}{2:s}'.format(
-        file_entry.path_spec.type_indicator, text_prepend, relative_path)
+    return u'{0:s}:{1:s}'.format(
+        file_entry.path_spec.type_indicator, relative_path)
 
   def GetFileEntry(self):
-    """The dfVFS FileEntry object for the file being parsed."""
+    """Retrieves the active file entry.
+
+    Returns:
+      A file entry (instance of dfvfs.FileEntry).
+    """
     return self._file_entry
 
   def GetFileObject(self, offset=0):
-    """Provides a dfVFS FileObject for the file being parsed.
+    """Provides a file-like object for the active file entry.
+
+    This will retrieve the file-object of the default (nameless) data stream.
 
     Args:
       offset: the offset to seek within the file-like object. The offset is
@@ -211,9 +218,10 @@ class ParserMediator(object):
       ValueError: If no file entry is set in the mediator.
     """
     if not self._file_entry:
-      raise ValueError(u'Missing file entry')
+      raise ValueError(u'Missing active file entry')
 
-    file_object = self._file_entry.GetFileObject()
+    data_stream = getattr(self._file_entry.path_spec, u'data_stream', u'')
+    file_object = self._file_entry.GetFileObject(data_stream_name=data_stream)
     if offset is not None:
       file_object.seek(offset, os.SEEK_SET)
     return file_object
@@ -356,11 +364,11 @@ class ParserMediator(object):
     self.number_of_parse_errors = 0
 
   def ResetFileEntry(self):
-    """Resets the file entry."""
+    """Resets the active file entry."""
     self._file_entry = None
 
   def SetFileEntry(self, file_entry):
-    """Sets the current file entry and clears the parser chain.
+    """Sets the active file entry.
 
     Args:
       file_entry: the file entry (instance of dfvfs.FileEntry).

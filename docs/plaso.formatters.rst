@@ -140,10 +140,10 @@ plaso.formatters.file_history module
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.filestat module
---------------------------------
+plaso.formatters.file_system module
+-----------------------------------
 
-.. automodule:: plaso.formatters.filestat
+.. automodule:: plaso.formatters.file_system
     :members:
     :undoc-members:
     :show-inheritance:
@@ -416,6 +416,14 @@ plaso.formatters.safari_cookies module
 --------------------------------------
 
 .. automodule:: plaso.formatters.safari_cookies
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.sccm module
+----------------------------
+
+.. automodule:: plaso.formatters.sccm
     :members:
     :undoc-members:
     :show-inheritance:

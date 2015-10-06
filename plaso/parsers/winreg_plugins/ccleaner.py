@@ -42,26 +42,22 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
   NAME = u'ccleaner'
   DESCRIPTION = u'Parser for CCleaner Registry data.'
 
-  REG_KEYS = [u'\\Software\\Piriform\\CCleaner']
-  REG_TYPE = u'NTUSER'
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner')])
 
   URLS = [(u'http://cheeky4n6monkey.blogspot.com/2012/02/writing-ccleaner'
            u'-regripper-plugin-part_05.html')]
 
   _SOURCE_APPEND = u': CCleaner Registry key'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, codepage=u'cp1252',
-      registry_file_type=None, **unused_kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Extracts event objects from a CCleaner Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     update_key_value = None
     values_dict = {}
@@ -94,8 +90,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 

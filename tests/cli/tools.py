@@ -8,6 +8,7 @@ import sys
 import unittest
 
 from plaso.cli import tools
+from plaso.lib import errors
 
 from tests.cli import test_lib
 
@@ -110,86 +111,46 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
 
-  def testPrintColumnValue(self):
-    """Tests the PrintColumnValue function."""
-    output_writer = test_lib.TestOutputWriter()
-    cli_tool = tools.CLITool(output_writer=output_writer)
+  def testParseStringOption(self):
+    """Tests the ParseStringOption function."""
+    encoding = sys.stdin.encoding
 
-    cli_tool.PrintColumnValue(u'Name', u'Description')
-    string = output_writer.ReadOutput()
-    expected_string = b'                     Name : Description\n'
+    # Note that sys.stdin.encoding can be None.
+    if not encoding:
+      encoding = self.preferred_encoding
+
+    cli_tool = tools.CLITool()
+    cli_tool.preferred_encoding = u'UTF-8'
+
+    expected_string = u'Test Unicode string'
+    options = test_lib.TestOptions()
+    options.test = expected_string
+
+    string = cli_tool.ParseStringOption(options, u'test')
     self.assertEqual(string, expected_string)
 
-    cli_tool.PrintColumnValue(u'Name', u'Description', column_width=10)
-    string = output_writer.ReadOutput()
-    expected_string = b'      Name : Description\n'
+    options = test_lib.TestOptions()
+
+    string = cli_tool.ParseStringOption(options, u'test')
+    self.assertEqual(string, None)
+
+    string = cli_tool.ParseStringOption(
+        options, u'test', default_value=expected_string)
     self.assertEqual(string, expected_string)
 
-    with self.assertRaises(ValueError):
-      cli_tool.PrintColumnValue(u'Name', u'Description', column_width=-10)
+    options = test_lib.TestOptions()
+    options.test = expected_string.encode(encoding)
 
-    # TODO: determine if this is the desired behavior.
-    cli_tool.PrintColumnValue(u'Name', u'Description', column_width=100)
-    string = output_writer.ReadOutput()
-    expected_string = (
-        b'                                                                     '
-        b'                           Name : \n'
-        b'                                                                     '
-        b'                                  Description\n')
+    string = cli_tool.ParseStringOption(options, u'test')
     self.assertEqual(string, expected_string)
 
-  def testPrintHeader(self):
-    """Tests the PrintHeader function."""
-    output_writer = test_lib.TestOutputWriter()
-    cli_tool = tools.CLITool(output_writer=output_writer)
+    if not sys.stdin.encoding and sys.stdin.encoding.upper() == u'UTF-8':
+      options = test_lib.TestOptions()
+      options.test = (
+          b'\xad\xfd\xab\x73\x99\xc7\xb4\x78\xd0\x8c\x8a\xee\x6d\x6a\xcb\x90')
 
-    cli_tool.PrintHeader(u'Text')
-    string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'************************************* '
-        b'Text '
-        b'*************************************\n')
-    self.assertEqual(string, expected_string)
-
-    cli_tool.PrintHeader(u'Another Text', character=u'x')
-    string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx '
-        b'Another Text '
-        b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n')
-    self.assertEqual(string, expected_string)
-
-    # TODO: determine if this is the desired behavior.
-    cli_tool.PrintHeader(u'')
-    string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'*************************************** '
-        b' '
-        b'***************************************\n')
-    self.assertEqual(string, expected_string)
-
-    # TODO: determine if this is the desired behavior.
-    cli_tool.PrintHeader(None)
-    string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'************************************* '
-        b'None '
-        b'*************************************\n')
-    self.assertEqual(string, expected_string)
-
-    # TODO: determine if this is the desired behavior.
-    expected_string = (
-        u'\n '
-        u'In computer programming, a string is traditionally a sequence '
-        u'of characters, either as a literal constant or as some kind of '
-        u'variable. \n')
-    cli_tool.PrintHeader(expected_string[2:-2])
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, expected_string)
+      with self.assertRaises(errors.BadConfigOption):
+        cli_tool.ParseStringOption(options, u'test')
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""

@@ -17,10 +17,9 @@ import time
 
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
-# TODO: remove after psort options refactor.
-from plaso.analysis import interface as analysis_interface
 from plaso.cli import analysis_tool
 from plaso.cli import tools as cli_tools
+from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.filters import manager as filters_manager
 from plaso.frontend import psort
@@ -83,9 +82,12 @@ class PsortTool(analysis_tool.AnalysisTool):
     analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
     analysis_plugin_names = set([
         name.lower() for name, _, _ in analysis_plugin_info])
-    analysis_plugin_string = getattr(options, u'analysis_plugins', u'')
-    if analysis_plugin_string == u'':
+
+    analysis_plugin_string = self.ParseStringOption(
+        options, u'analysis_plugins')
+    if not analysis_plugin_string:
       return
+
     requested_plugin_names = set([
         name.strip().lower() for name in analysis_plugin_string.split(u',')])
 
@@ -117,7 +119,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._filter_expression = getattr(options, u'filter', None)
+    self._filter_expression = self.ParseStringOption(options, u'filter')
     if self._filter_expression:
       self._filter_object = filters_manager.FiltersManager.GetFilterObject(
           self._filter_expression)
@@ -156,7 +158,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    preferred_language = getattr(options, u'preferred_language', u'en-US')
+    preferred_language = self.ParseStringOption(
+        options, u'preferred_language', default_value=u'en-US')
 
     if preferred_language == u'list':
       self.list_language_identifiers = True
@@ -249,9 +252,11 @@ class PsortTool(analysis_tool.AnalysisTool):
         time_slice=time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
-      self.PrintHeader(u'Counter')
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=u'Counter')
       for element, count in counter.most_common():
-        self.PrintColumnValue(element, u'{0:d}'.format(count))
+        table_view.AddRow([element, count])
+      table_view.Write(self._output_writer)
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
@@ -327,7 +332,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     argument_group.add_argument(
         u'filter', nargs=u'?', action=u'store', metavar=u'FILTER', default=None,
-        type=unicode, help=(
+        type=str, help=(
             u'A filter that can be used to filter the dataset before it '
             u'is written into storage. More information about the filters '
             u'and how to use them can be found here: {0:s}').format(self._URL))
@@ -341,7 +346,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     argument_group.add_argument(
         u'--language', metavar=u'LANGUAGE', dest=u'preferred_language',
-        default=u'en-US', type=unicode, help=(
+        default=u'en-US', type=str, help=(
             u'The preferred language identifier for Windows Event Log message '
             u'strings. Use "--language list" to see a list of available '
             u'language identifiers. Note that formatting will fall back on '
@@ -365,54 +370,51 @@ class PsortTool(analysis_tool.AnalysisTool):
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
-    self.PrintHeader(u'Analysis Plugins')
-    format_length = 10
     analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
 
+    column_width = 10
     for name, _, _ in analysis_plugin_info:
-      if len(name) > format_length:
-        format_length = len(name)
+      if len(name) > column_width:
+        column_width = len(name)
 
-    # TODO: refactor to use type object (class) and add GetTypeString method.
-    for name, description, plugin_type in analysis_plugin_info:
-      if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
-        type_string = u'Annotation/tagging plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
-        type_string = u'Anomaly plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_REPORT:
-        type_string = u'Summary/Report plugin'
-      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_STATISTICS:
-        type_string = u'Statistics plugin'
-      else:
-        type_string = u'Unknown type'
-
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Analysis Plugins')
+    # TODO: add support for a 3 column table.
+    for name, description, type_string in analysis_plugin_info:
       description = u'{0:s} [{1:s}]'.format(description, type_string)
-      self.PrintColumnValue(name, description, format_length)
-    self.PrintSeparatorLine()
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
-    self.PrintHeader(u'Language identifiers')
-    self.PrintColumnValue(u'Identifier', u'Language')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Identifier', u'Language'],
+        title=u'Language identifiers')
     for language_id, value_list in sorted(
         language_ids.LANGUAGE_IDENTIFIERS.items()):
-      self.PrintColumnValue(language_id, value_list[1])
+      table_view.AddRow([language_id, value_list[1]])
+    table_view.Write(self._output_writer)
 
   def ListOutputModules(self):
     """Lists the output modules."""
-    self.PrintHeader(u'Output Modules')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Output Modules')
     for name, output_class in sorted(self._front_end.GetOutputClasses()):
-      self.PrintColumnValue(name, output_class.DESCRIPTION, 10)
-    self.PrintSeparatorLine()
+      table_view.AddRow([name, output_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
 
-    # Assign to an attribute due to line length limitations.
-    disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses
-    if not disabled_classes():
+    disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses()
+    if not disabled_classes:
       return
-    self.PrintHeader(u'Disabled Output Modules')
-    for output_class in disabled_classes():
-      self.PrintColumnValue(output_class.NAME, output_class.DESCRIPTION, 10)
-    self.PrintSeparatorLine()
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Disabled Output Modules')
+    for output_class in disabled_classes:
+      table_view.AddRow([output_class.NAME, output_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -434,7 +436,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     analysis_group.add_argument(
         u'--analysis', metavar=u'PLUGIN_LIST', dest=u'analysis_plugins',
-        default=u'', action=u'store', type=unicode, help=(
+        default=u'', action=u'store', type=str, help=(
             u'A comma separated list of analysis plugin names to be loaded '
             u'or "--analysis list" to see a list of available plugins.'))
 
@@ -587,8 +589,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       logging_level = logging.INFO
 
-    log_file = getattr(options, u'log_file', None)
-    self._ConfigureLogging(filename=log_file, log_level=logging_level)
+    self.ParseLogFileOptions(options)
+    self._ConfigureLogging(filename=self._log_file, log_level=logging_level)
 
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:

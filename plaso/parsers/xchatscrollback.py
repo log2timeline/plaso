@@ -76,7 +76,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   NAME = u'xchatscrollback'
   DESCRIPTION = u'Parser for XChat scrollback log files.'
 
-  ENCODING = u'UTF-8'
+  _ENCODING = u'UTF-8'
 
   # Define how a log line should look like.
   LOG_LINE = (

@@ -16,8 +16,8 @@ from plaso.formatters import chrome_cookies
 from plaso.formatters import chrome_extension_activity
 from plaso.formatters import chrome_preferences
 from plaso.formatters import cups_ipp
-from plaso.formatters import filestat
 from plaso.formatters import file_history
+from plaso.formatters import file_system
 from plaso.formatters import firefox
 from plaso.formatters import firefox_cache
 from plaso.formatters import firefox_cookies
@@ -49,6 +49,7 @@ from plaso.formatters import pls_recall
 from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import safari_cookies
+from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import shell_items
 from plaso.formatters import skydrivelog

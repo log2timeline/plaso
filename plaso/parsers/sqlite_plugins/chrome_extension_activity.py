@@ -56,14 +56,13 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
       u'activitylog_compressed', u'string_ids', u'url_ids'])
 
   def ParseActivityLogUncompressedRow(
-      self, parser_mediator, row, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query (instance of sqlite3.Row).
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     event_object = ChromeExtensionActivityEvent(row)
     parser_mediator.ProduceEvent(event_object, query=query)

@@ -9,7 +9,9 @@ import os
 import sys
 
 import plaso
+from plaso.cli import views
 from plaso.lib import errors
+from plaso.lib import py2to3
 
 import pytz
 
@@ -36,10 +38,10 @@ class CLITool(object):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
+      input_reader: optional input reader (instance of InputReader).
                     The default is None which indicates the use of the stdin
                     input reader.
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer: optional output writer (instance of OutputWriter).
                      The default is None which indicates the use of the stdout
                      output writer.
     """
@@ -57,9 +59,11 @@ class CLITool(object):
     self._data_location = None
     self._debug_mode = False
     self._input_reader = input_reader
+    self._log_file = None
     self._output_writer = output_writer
     self._quiet_mode = False
     self._timezone = pytz.UTC
+    self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
@@ -104,7 +108,7 @@ class CLITool(object):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    data_location = getattr(options, u'data_location', None)
+    data_location = self.ParseStringOption(options, u'data_location')
     if not data_location:
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
@@ -156,7 +160,7 @@ class CLITool(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    timezone_string = getattr(options, u'timezone', None)
+    timezone_string = self.ParseStringOption(options, u'timezone')
     if isinstance(timezone_string, basestring):
       if timezone_string.lower() == u'list':
         self.list_timezones = True
@@ -195,7 +199,7 @@ class CLITool(object):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=unicode,
+        u'--data', action=u'store', dest=u'data_location', type=str,
         metavar=u'PATH', default=None, help=u'the location of the data files.')
 
   def AddInformationalOptions(self, argument_group):
@@ -222,7 +226,7 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'--logfile', u'--log_file', u'--log-file', action=u'store',
-        metavar=u'FILENAME', dest=u'log_file', type=unicode, default=u'', help=(
+        metavar=u'FILENAME', dest=u'log_file', type=str, default=u'', help=(
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
 
@@ -235,14 +239,13 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
-        type=unicode, default=u'UTC', help=(
+        type=str, default=u'UTC', help=(
             u'explicitly define the timezone. Typically the timezone is '
             u'determined automatically where possible. Use "-z list" to '
             u'see a list of available timezones.'))
 
   def ListTimeZones(self):
     """Lists the timezones."""
-    self.PrintHeader(u'Zones')
     max_length = 0
     for timezone_name in pytz.all_timezones:
       if len(timezone_name) > max_length:
@@ -250,7 +253,9 @@ class CLITool(object):
 
     utc_date_time = datetime.datetime.utcnow()
 
-    self.PrintColumnValue(u'Timezone', u'UTC Offset', column_width=max_length)
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Zones')
+    table_view.AddColumnNames([u'Timezone', u'UTC Offset'])
     for timezone_name in pytz.all_timezones:
       local_timezone = pytz.timezone(timezone_name)
 
@@ -263,9 +268,9 @@ class CLITool(object):
         _, _, diff = local_date_string.rpartition(u'-')
         diff_string = u'-{0:s}'.format(diff)
 
-      self.PrintColumnValue(timezone_name, diff_string, column_width=max_length)
+      table_view.AddRow([timezone_name, diff_string])
 
-    self.PrintSeparatorLine()
+    table_view.Write(self._output_writer)
 
   def ParseOptions(self, options):
     """Parses tool specific options.
@@ -275,61 +280,54 @@ class CLITool(object):
     """
     self._ParseInformationalOptions(options)
 
-  def PrintColumnValue(self, name, description, column_width=25):
-    """Prints a value with a name and description aligned to the column width.
+  def ParseLogFileOptions(self, options):
+    """Parses the log file options.
 
     Args:
-      name: the name.
-      description: the description.
-      column_width: optional column width. The default is 25.
+      options: the command line arguments (instance of argparse.Namespace).
     """
-    line_length = self._LINE_LENGTH - column_width - 3
+    self._log_file = self.ParseStringOption(options, u'log_file')
 
-    # The format string of the first line of the column value.
-    primary_format_string = u'{{0:>{0:d}s}} : {{1:s}}\n'.format(column_width)
-
-    # The format string of successive lines of the column value.
-    secondary_format_string = u'{{0:<{0:d}s}}{{1:s}}\n'.format(
-        column_width + 3)
-
-    if len(description) < line_length:
-      self._output_writer.Write(primary_format_string.format(name, description))
-      return
-
-    # Split the description in words.
-    words = description.split()
-
-    current = 0
-
-    lines = []
-    word_buffer = []
-    for word in words:
-      current += len(word) + 1
-      if current >= line_length:
-        current = len(word)
-        lines.append(u' '.join(word_buffer))
-        word_buffer = [word]
-      else:
-        word_buffer.append(word)
-    lines.append(u' '.join(word_buffer))
-
-    # Print the column value on multiple lines.
-    self._output_writer.Write(primary_format_string.format(name, lines[0]))
-    for line in lines[1:]:
-      self._output_writer.Write(secondary_format_string.format(u'', line))
-
-  def PrintHeader(self, text, character=u'*'):
-    """Prints the header as a line with centered text.
+  def ParseStringOption(self, options, argument_name, default_value=None):
+    """Parses a string command line argument.
 
     Args:
-      text: The header text.
-      character: Optional header line character. The default is '*'.
-    """
-    self._output_writer.Write(u'\n')
+      options: the command line arguments (instance of argparse.Namespace).
+      argument_name: the name of the command line argument.
+      default_value: optional default value of the command line argument.
 
-    format_string = u'{{0:{0:s}^{1:d}}}\n'.format(character, self._LINE_LENGTH)
-    header_string = format_string.format(u' {0:s} '.format(text))
-    self._output_writer.Write(header_string)
+    Returns:
+      A string containing the command line argument value. If the command
+      line argument is not set the default value will be returned.
+
+    Raises:
+      BadConfigOption: if the command line argument value cannot be converted
+                       to a Unicode string.
+    """
+    argument_value = getattr(options, argument_name, None)
+    if not argument_value:
+      return default_value
+
+    if isinstance(argument_value, py2to3.BYTES_TYPE):
+      encoding = sys.stdin.encoding
+
+      # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = self.preferred_encoding
+
+      try:
+        argument_value = argument_value.decode(encoding)
+      except UnicodeDecodeError as exception:
+        raise errors.BadConfigOption((
+            u'Unable to convert option: {0:s} to Unicode with error: '
+            u'{1:s}.').format(argument_name, exception))
+
+    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+      raise errors.BadConfigOption(
+          u'Unsupported option: {0:s} string type required.'.format(
+              argument_name))
+
+    return argument_value
 
   def PrintSeparatorLine(self):
     """Prints a separator line."""

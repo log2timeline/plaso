@@ -210,6 +210,14 @@ plaso.parsers.msiecf module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.ntfs module
+-------------------------
+
+.. automodule:: plaso.parsers.ntfs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.olecf module
 --------------------------
 
@@ -294,6 +302,14 @@ plaso.parsers.safari_cookies module
 -----------------------------------
 
 .. automodule:: plaso.parsers.safari_cookies
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.sccm module
+-------------------------
+
+.. automodule:: plaso.parsers.sccm
     :members:
     :undoc-members:
     :show-inheritance:

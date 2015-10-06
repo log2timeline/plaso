@@ -20,8 +20,9 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_sam_users'
   DESCRIPTION = u'Parser for SAM Users and Names Registry keys.'
 
-  REG_KEYS = [u'\\SAM\\Domains\\Account\\Users']
-  REG_TYPE = u'SAM'
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\SAM\\Domains\\Account\\Users')])
 
   F_VALUE_STRUCT = construct.Struct(
       u'f_struct',
@@ -100,16 +101,13 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
     comments = binary.ReadUtf16(comments_raw)
     return name, full_name, comments
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect data from Users and Names and produce event objects.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     name_key = registry_key.GetSubkeyByName(u'Names')
     if not name_key:
@@ -154,24 +152,21 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
         event_object = windows_events.WindowsRegistryEvent(
             account_create_time, registry_key.path, values_dict,
             usage=eventdata.EventTimestamp.ACCOUNT_CREATED,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            source_append=self._SOURCE_APPEND)
+            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
       if f_data.last_login > 0:
         event_object = windows_events.WindowsRegistryEvent(
             f_data.last_login, registry_key.path, values_dict,
             usage=eventdata.EventTimestamp.LAST_LOGIN_TIME,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            source_append=self._SOURCE_APPEND)
+            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
       if f_data.password_reset > 0:
         event_object = windows_events.WindowsRegistryEvent(
             f_data.password_reset, registry_key.path, values_dict,
             usage=eventdata.EventTimestamp.LAST_PASSWORD_RESET,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            source_append=self._SOURCE_APPEND)
+            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
 

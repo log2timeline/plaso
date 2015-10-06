@@ -15,8 +15,11 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_timezone'
   DESCRIPTION = u'Parser for Windows timezone settings.'
 
-  REG_TYPE = u'SYSTEM'
-  REG_KEYS = [u'\\{current_control_set}\\Control\\TimeZoneInformation']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          u'TimeZoneInformation')])
+
   URLS = []
 
   _VALUE_NAMES = frozenset([
@@ -42,16 +45,13 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
     if registry_value:
       return registry_value.data
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect values and return an event.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     if registry_key is None:
       return
@@ -65,7 +65,7 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type)
+        offset=registry_key.offset)
     parser_mediator.ProduceEvent(event_object)
 
 

@@ -15,21 +15,26 @@ try:
 except ImportError:
   win32console = None
 
-from dfvfs.helpers import source_scanner
+from dfvfs.lib import definitions as dfvfs_definitions
 
 import plaso
+from plaso import dependencies
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
+from plaso.cli import views as cli_views
 from plaso.frontend import log2timeline
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import pfilter
+from plaso.lib import py2to3
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Class that implements the log2timeline CLI tool.
 
   Attributes:
+    dependencies_check: a boolean value to indicate the availability and
+                        versions of dependencies should be checked.
     show_info: a boolean value to indicate information about hashers, parsers,
                plugins, etc. should be shown.
   """
@@ -72,6 +77,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._filter_expression = None
     self._foreman_verbose = False
@@ -83,6 +89,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = u'linear'
     self._output = None
 
+    self.dependencies_check = True
     self.show_info = False
 
   def _ClearScreen(self):
@@ -182,9 +189,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._output_module = getattr(options, u'output_module', None)
+    self._output_module = self.ParseStringOption(options, u'output_module')
 
-    text_prepend = getattr(options, u'text_prepend', None)
+    text_prepend = self.ParseStringOption(options, u'text_prepend')
     if text_prepend:
       self._front_end.SetTextPrepend(text_prepend)
 
@@ -327,7 +334,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--output', dest=u'output_module', action=u'store', type=unicode,
+        u'--output', dest=u'output_module', action=u'store', type=str,
         default=u'', help=(
             u'Bypass the storage module directly storing events according to '
             u'the output module. This means that the output will not be in the '
@@ -336,7 +343,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'own risk (eg. sqlite output does not yet work)]'))
 
     argument_group.add_argument(
-        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=unicode,
+        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=str,
         default=u'', metavar=u'TEXT', help=(
             u'Define a free form text string that is prepended to each path '
             u'to make it easier to distinguish one record from another in a '
@@ -369,30 +376,47 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   def ListHashers(self):
     """Lists information about the available hashers."""
     hashers_information = self._front_end.GetHashersInformation()
-    self.PrintHeader(u'Hashers')
-    for name, description in sorted(hashers_information):
-      self.PrintColumnValue(name, description)
 
-    self._output_writer.Write(u'\n')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Hashers')
+
+    for name, description in sorted(hashers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ListParsersAndPlugins(self):
     """Lists information about the available parsers and plugins."""
     parsers_information = self._front_end.GetParsersInformation()
-    self.PrintHeader(u'Parsers')
-    for name, description in sorted(parsers_information):
-      self.PrintColumnValue(name, description)
 
-    plugins_information = self._front_end.GetParserPluginsInformation()
-    self.PrintHeader(u'Parser Plugins')
-    for name, description in sorted(plugins_information):
-      self.PrintColumnValue(name, description)
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Parsers')
+
+    for name, description in sorted(parsers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+    for parser_name in self._front_end.GetNamesOfParsersWithPlugins():
+      plugins_information = self._front_end.GetParserPluginsInformation(
+          parser_filter_string=parser_name)
+
+      table_title = u'Parser plugins: {0:s}'.format(parser_name)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=[u'Name', u'Description'],
+          title=table_title)
+      for name, description in sorted(plugins_information):
+        table_view.AddRow([name, description])
+      table_view.Write(self._output_writer)
 
     presets_information = self._front_end.GetParserPresetsInformation()
-    self.PrintHeader(u'Parsers Presets')
-    for name, description in sorted(presets_information):
-      self.PrintColumnValue(name, description)
 
-    self._output_writer.Write(u'\n')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Parsers and plugins'],
+        title=u'Parser presets')
+    for name, description in sorted(presets_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -429,6 +453,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--info', dest=u'show_info', action=u'store_true', default=False,
         help=u'Print out information about supported plugins and parsers.')
 
+    info_group.add_argument(
+        u'--use_markdown', u'--use-markdown', dest=u'use_markdown',
+        action=u'store_true', default=False, help=(
+            u'Output lists in Markdown format use in combination with '
+            u'"--hashers list", "--parsers list" or "--timezone list"'))
+
+    info_group.add_argument(
+        u'--no_dependencies_check', u'--no-dependencies-check',
+        dest=u'dependencies_check', action=u'store_false', default=True,
+        help=u'Disable the dependencies check.')
+
     self.AddLogFileOptions(info_group)
 
     info_group.add_argument(
@@ -454,27 +489,27 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     processing_group.add_argument(
         u'--sigsegv_handler', u'--sigsegv-handler', dest=u'sigsegv_handler',
         action=u'store_true', default=False, help=(
-            u'Enables the SIGSEGV handler. WARNINGN this functionality is '
-            u'expirimental and will a deadlock worker process if a real '
+            u'Enables the SIGSEGV handler. WARNING this functionality is '
+            u'experimental and will a deadlock worker process if a real '
             u'segfault is caught, but not signal SIGSEGV. This functionality '
             u'is therefore primarily intended for debugging purposes'))
 
     argument_parser.add_argument(
         u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
-        type=unicode, help=(
+        type=str, help=(
             u'The path to the output file, if the file exists it will get '
             u'appended to.'))
 
     argument_parser.add_argument(
-        u'source', action=u'store', metavar=u'SOURCE', nargs=u'?', type=unicode,
-        help=(
+        self._SOURCE_OPTION, action=u'store', metavar=u'SOURCE', nargs=u'?',
+        default=None, type=str, help=(
             u'The path to the source device, file or directory. If the source '
             u'is a supported storage media device or image file, archive file '
             u'or a directory, the files within are processed recursively.'))
 
     argument_parser.add_argument(
         u'filter', action=u'store', metavar=u'FILTER', nargs=u'?', default=None,
-        type=unicode, help=(
+        type=str, help=(
             u'A filter that can be used to filter the dataset before it '
             u'is written into storage. More information about the filters '
             u'and its usage can be found here: http://plaso.kiddaland.'
@@ -517,6 +552,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       return False
 
+    command_line_arguments = sys.argv
+    if isinstance(command_line_arguments, py2to3.BYTES_TYPE):
+      try:
+        self._command_line_arguments = [
+            argument.decode(self.preferred_encoding)
+            for argument in command_line_arguments]
+      except UnicodeDecodeError:
+        pass
+
+    self._command_line_arguments = u' '.join(command_line_arguments)
+
     return True
 
   def ParseOptions(self, options):
@@ -535,6 +581,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseExperimentalOptions(options)
 
     self.show_info = getattr(options, u'show_info', False)
+
+    if getattr(options, u'use_markdown', False):
+      self._views_format_type = cli_views.ViewsFactory.FORMAT_TYPE_MARKDOWN
+
+    self.dependencies_check = getattr(options, u'dependencies_check', True)
 
     if (self.list_hashers or self.list_parsers_and_plugins or
         self.list_timezones or self.show_info):
@@ -555,16 +606,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging_level = logging.INFO
 
-    log_file = getattr(options, u'log_file', None)
+    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
-        filename=log_file, format_string=format_string, log_level=logging_level)
+        filename=self._log_file, format_string=format_string,
+        log_level=logging_level)
 
     if self._debug_mode:
       logging_filter = log2timeline.LoggingFilter()
       root_logger = logging.getLogger()
       root_logger.addFilter(logging_filter)
 
-    self._output = getattr(options, u'output', None)
+    self._output = self.ParseStringOption(options, u'output')
     if not self._output:
       raise errors.BadConfigOption(u'No output defined.')
 
@@ -574,7 +626,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if self._operating_system:
       self._mount_path = getattr(options, u'filename', None)
 
-    self._filter_expression = getattr(options, u'filter', None)
+    self._filter_expression = self.ParseStringOption(options, u'filter')
     if self._filter_expression:
       # TODO: refactor self._filter_object out the tool into the frontend.
       self._filter_object = self._GetMatcher(self._filter_expression)
@@ -604,22 +656,18 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     scan_context = self.ScanSource()
     self._source_type = scan_context.source_type
 
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
-    if self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY):
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_DIRECTORY:
       self._source_type_string = u'directory'
 
-    elif self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_FILE):
+    elif self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       self._source_type_string = u'single file'
 
     elif self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
       self._source_type_string = u'storage media device'
 
     elif self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
       self._source_type_string = u'storage media image'
 
     else:
@@ -639,6 +687,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     processing_status = self._front_end.ProcessSources(
         self._source_path_specs, self._source_type,
+        command_line_arguments=self._command_line_arguments,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
@@ -663,16 +712,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""
-    plugin_list = self._front_end.GetPluginData()
     self._output_writer.Write(
         u'{0:=^80s}\n'.format(u' log2timeline/plaso information '))
 
+    plugin_list = self._front_end.GetPluginData()
     for header, data in plugin_list.items():
-      self.PrintHeader(header)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=[u'Name', u'Description'],
+          title=header)
       for entry_header, entry_data in sorted(data):
-        self.PrintColumnValue(entry_header, entry_data)
-
-    self._output_writer.Write(u'\n')
+        table_view.AddRow([entry_header, entry_data])
+      table_view.Write(self._output_writer)
 
 
 def Main():
@@ -703,6 +753,9 @@ def Main():
 
   if have_list_option:
     return True
+
+  if tool.dependencies_check and not dependencies.CheckDependencies():
+    return False
 
   try:
     tool.ProcessSources()
