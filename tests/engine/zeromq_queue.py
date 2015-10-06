@@ -13,11 +13,11 @@ class testZeroMQQueues(test_lib.EngineTestCase):
   """Tests for ZeroMQ queues."""
 
   _QUEUE_CLASSES = frozenset([
-                              zeromq_queue.ZeroMQPushBindQueue,
-                              zeromq_queue.ZeroMQPullBindQueue,
-                              zeromq_queue.ZeroMQRequestBindQueue,
-                              zeromq_queue.ZeroMQBufferedPullBindQueue,
-                              zeromq_queue.ZeroMQBufferedPushBindQueue])
+      zeromq_queue.ZeroMQPushBindQueue,
+      zeromq_queue.ZeroMQPullBindQueue,
+      zeromq_queue.ZeroMQRequestBindQueue,
+      zeromq_queue.ZeroMQBufferedPullBindQueue,
+      zeromq_queue.ZeroMQBufferedPushBindQueue])
 
   def _testItemTransferred(self, push_queue, pop_queue):
     """Tests than item can be transferred between two queues."""
