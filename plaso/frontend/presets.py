@@ -5,7 +5,7 @@ categories = {
     u'win_gen': [
         u'bencode', u'esedb', u'filestat', u'google_drive', u'java_idx', u'lnk',
         u'mcafee_protection', u'olecf', u'openxml', u'pe', u'prefetch',
-        u'skydrive_log_error', u'skydrive_log', u'skype',
+        u'sccm', u'skydrive_log_error', u'skydrive_log', u'skype',
         u'symantec_scanlog', u'webhist', u'winfirewall', u'winjob',
         u'winreg'],
     u'winxp': [
@@ -40,7 +40,7 @@ categories = {
     u'macosx_slow': [u'macosx', u'syslog'],
     u'android': [
         u'android_app_usage', u'android_calls', u'android_sms'],
-  }
+}
 
 
 def GetParsersFromCategory(category):

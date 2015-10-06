@@ -20,6 +20,14 @@ plaso.analysis.chrome_extension module
     :undoc-members:
     :show-inheritance:
 
+plaso.analysis.definitions module
+---------------------------------
+
+.. automodule:: plaso.analysis.definitions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.analysis.file_hashes module
 ---------------------------------
 

@@ -37,7 +37,7 @@ class FileStatParser(interface.BaseParser):
     # once that is in place.
     fs_info = file_system.GetFsInfo()
     if fs_info.info:
-      type_string = unicode(fs_info.info.ftype)
+      type_string = u'{0:s}'.format(fs_info.info.ftype)
       if type_string.startswith(u'TSK_FS_TYPE'):
         return type_string[12:]
 

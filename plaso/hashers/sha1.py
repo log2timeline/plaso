@@ -36,7 +36,7 @@ class SHA1Hasher(interface.BaseHasher):
       A string hash digest calculated over the data blocks passed to
       Update(). The string will consist of printable Unicode characters.
     """
-    return unicode(self._sha1_context.hexdigest())
+    return u'{0:s}'.format(self._sha1_context.hexdigest())
 
   def GetBinaryDigest(self):
     """Returns the digest of the hash function as a binary string.

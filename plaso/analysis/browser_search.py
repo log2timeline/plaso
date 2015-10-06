@@ -10,6 +10,7 @@ from plaso.analysis import manager
 from plaso.filters import manager as filters_manager
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
+from plaso.lib import py2to3
 
 
 # Create a lightweight object that is used to store timeline based information
@@ -199,29 +200,29 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       if filter_obj and call_back_obj:
         self._filter_dict[filter_obj] = (call_back, call_back_obj)
 
-  def _ScrubLine(self, line):
-    """Scrub the line of most obvious HTML codes.
-
-    An attempt at taking a line and swapping all instances
-    of %XX which represent a character in hex with it's
-    unicode character.
+  def _DecodeURL(self, url):
+    """Decodes the URL, replaces %XX to their corresponding characters.
 
     Args:
-      line: The string that we are about to "fix".
+      url: a string containing the encoded URL.
 
     Returns:
-      A Unicode string that has it's %XX hex codes swapped for text.
+      A Unicode string containing the decoded URL.
     """
-    if not line:
+    if not url:
       return u''
 
-    try:
-      # TODO: this is likely going to break on Python 3, fix this.
-      return unicode(urllib.unquote(str(line)), u'utf-8')
-    except UnicodeDecodeError:
-      logging.warning(u'Unable to decode line: {0:s}'.format(line))
+    decoded_url = urllib.unquote(url)
+    if isinstance(decoded_url, py2to3.BYTES_TYPE):
+      try:
+        decoded_url = decoded_url.decode(u'utf-8')
+      except UnicodeDecodeError as exception:
+        decoded_url = decoded_url.decode(u'utf-8', errors=u'replace')
+        logging.warning(
+            u'Unable to decode URL: {0:s} with error: {1:s}'.format(
+                url, exception))
 
-    return line
+    return decoded_url
 
   def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.
@@ -284,17 +285,18 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     for filter_obj, call_backs in self._filter_dict.items():
       call_back_name, call_back_object = call_backs
       if filter_obj.Match(event_object):
-        returned_line = self._ScrubLine(call_back_object(url_attribute))
-        if not returned_line:
+        url = call_back_object(url_attribute)
+        decoded_url = self._DecodeURL(url)
+        if not decoded_url:
           continue
-        self._counter[u'{0:s}:{1:s}'.format(call_back_name, returned_line)] += 1
+        self._counter[u'{0:s}:{1:s}'.format(call_back_name, decoded_url)] += 1
 
         # Add the timeline format for each search term.
         timestamp = getattr(event_object, u'timestamp', 0)
         source = getattr(event_object, u'parser', u'N/A')
         source = getattr(event_object, u'plugin', source)
         self._search_term_timeline.append(SEARCH_OBJECT(
-            timestamp, source, call_back_name, returned_line))
+            timestamp, source, call_back_name, decoded_url))
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

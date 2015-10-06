@@ -20,6 +20,7 @@ from dfvfs.helpers import source_scanner
 import plaso
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
+from plaso.cli import views as cli_views
 from plaso.frontend import log2timeline
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -72,6 +73,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._filter_expression = None
     self._foreman_verbose = False
@@ -347,31 +349,34 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
   def ListHashers(self):
     """Lists information about the available hashers."""
+    table_view = cli_views.CLITableView(self._output_writer)
+    table_view.PrintHeader(u'Hashers')
     hashers_information = self._front_end.GetHashersInformation()
-    self.PrintHeader(u'Hashers')
     for name, description in sorted(hashers_information):
-      self.PrintColumnValue(name, description)
+      table_view.PrintRow(name, description)
 
-    self._output_writer.Write(u'\n')
+    table_view.PrintFooter()
 
   def ListParsersAndPlugins(self):
     """Lists information about the available parsers and plugins."""
-    parsers_information = self._front_end.GetParsersInformation()
-    self.PrintHeader(u'Parsers')
-    for name, description in sorted(parsers_information):
-      self.PrintColumnValue(name, description)
+    table_view = cli_views.CLITableView(self._output_writer)
 
+    table_view.PrintHeader(u'Parsers')
+    parsers_information = self._front_end.GetParsersInformation()
+    for name, description in sorted(parsers_information):
+      table_view.PrintRow(name, description)
+
+    table_view.PrintHeader(u'Parser Plugins')
     plugins_information = self._front_end.GetParserPluginsInformation()
-    self.PrintHeader(u'Parser Plugins')
     for name, description in sorted(plugins_information):
-      self.PrintColumnValue(name, description)
+      table_view.PrintRow(name, description)
 
     presets_information = self._front_end.GetParserPresetsInformation()
-    self.PrintHeader(u'Parsers Presets')
+    table_view.PrintHeader(u'Parsers Presets')
     for name, description in sorted(presets_information):
-      self.PrintColumnValue(name, description)
+      table_view.PrintRow(name, description)
 
-    self._output_writer.Write(u'\n')
+    table_view.PrintFooter()
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -492,6 +497,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       self._output_writer.Write(argument_parser.format_usage())
 
       return False
+
+    try:
+      self._command_line_arguments = u' '.join([
+          argument.decode(self.preferred_encoding) for argument in sys.argv])
+    except UnicodeDecodeError:
+      pass
 
     return True
 
@@ -614,6 +625,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     processing_status = self._front_end.ProcessSources(
         self._source_path_specs, self._source_type,
+        command_line_arguments=self._command_line_arguments,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
@@ -638,16 +650,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""
-    plugin_list = self._front_end.GetPluginData()
     self._output_writer.Write(
         u'{0:=^80s}\n'.format(u' log2timeline/plaso information '))
 
+    table_view = cli_views.CLITableView(self._output_writer)
+    plugin_list = self._front_end.GetPluginData()
     for header, data in plugin_list.items():
-      self.PrintHeader(header)
+      table_view.PrintHeader(header)
       for entry_header, entry_data in sorted(data):
-        self.PrintColumnValue(entry_header, entry_data)
+        table_view.PrintRow(entry_header, entry_data)
 
-    self._output_writer.Write(u'\n')
+    table_view.PrintFooter()
 
 
 def Main():

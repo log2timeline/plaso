@@ -24,6 +24,7 @@ from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
+from plaso.storage import writer as storage_writer
 
 import pytz
 
@@ -166,12 +167,14 @@ class ExtractionFrontend(frontend.Frontend):
       # Check if the storage file contains a preprocessing object.
       try:
         with storage.StorageFile(
-            self._storage_file_path, read_only=True) as store:
-          storage_information = store.GetStorageInformation()
+            self._storage_file_path, read_only=True) as storage_file:
+
+          storage_information = storage_file.GetStorageInformation()
           if storage_information:
             logging.info(u'Using preprocessing information from a prior run.')
             pre_obj = storage_information[-1]
             self._enable_preprocessing = False
+
       except IOError:
         logging.warning(u'Storage file does not exist, running preprocess.')
 
@@ -216,18 +219,19 @@ class ExtractionFrontend(frontend.Frontend):
   #   * mount point
 
   def _PreprocessSetCollectionInformation(
-      self, pre_obj, source_type, unused_engine, filter_file=None,
-      parser_filter_string=None, preferred_encoding=u'utf-8'):
+      self, pre_obj, source_type, unused_engine, command_line_arguments=None,
+      filter_file=None, parser_filter_string=None, preferred_encoding=u'utf-8'):
     """Sets the collection information as part of the preprocessing.
 
     Args:
       pre_obj: the preprocess object (instance of PreprocessObject).
       source_type: the dfVFS source type definition.
       engine: the engine object (instance of BaseEngine).
-      filter_file: a path to a file that contains find specifications.
-                   The default is None.
-      parser_filter_string: optional parser filter string. The default is None.
-      preferred_encoding: optional preferred encoding. The default is UTF-8.
+      command_line_arguments: optional string of the command line arguments or
+                              None if not set.
+      filter_file: optional path to a file that contains find specifications.
+      parser_filter_string: optional parser filter string.
+      preferred_encoding: optional preferred encoding.
     """
     collection_information = {}
 
@@ -303,6 +307,8 @@ class ExtractionFrontend(frontend.Frontend):
     else:
       collection_information[u'method'] = u'OS collection'
 
+    collection_information[u'cmd_line'] = command_line_arguments
+
     pre_obj.collection_information = collection_information
 
   def _PreprocessSetTimezone(self, pre_obj, timezone=pytz.UTC):
@@ -377,10 +383,10 @@ class ExtractionFrontend(frontend.Frontend):
     return parsers_manager.ParsersManager.GetParsersInformation()
 
   def ProcessSources(
-      self, source_path_specs, source_type, enable_sigsegv_handler=False,
-      filter_file=None, hasher_names_string=None, parser_filter_string=None,
-      preferred_encoding=u'utf-8', single_process_mode=False,
-      status_update_callback=None,
+      self, source_path_specs, source_type, command_line_arguments=None,
+      enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
+      parser_filter_string=None, preferred_encoding=u'utf-8',
+      single_process_mode=False, status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
     """Processes the sources.
@@ -389,22 +395,20 @@ class ExtractionFrontend(frontend.Frontend):
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
       source_type: the dfVFS source type definition.
+      command_line_arguments: optional string of the command line arguments or
+                              None if not set.
       enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled. The default is False.
+                              handler should be enabled.
       filter_file: optional path to a file that contains find specifications.
-                   The default is None.
       hasher_names_string: optional comma separated string of names of
-                           hashers to enable. The default is None.
-      parser_filter_string: optional parser filter string. The default is None.
-      preferred_encoding: optional preferred encoding. The default is UTF-8.
+                           hashers to enable.
+      parser_filter_string: optional parser filter string.
+      preferred_encoding: optional preferred encoding.
       single_process_mode: optional boolean value to indicate if the front-end
-                           should run in single process mode. The default is
-                           False.
+                           should run in single process mode.
       status_update_callback: optional callback function for status updates.
-                              The default is None.
       storage_serializer_format: optional storage serializer format.
-                                 The default is protobuf.
-      timezone: optional preferred timezone. The default is UTC.
+      timezone: optional preferred timezone.
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
@@ -486,21 +490,22 @@ class ExtractionFrontend(frontend.Frontend):
       filter_find_specs = None
 
     self._PreprocessSetCollectionInformation(
-        pre_obj, source_type, self._engine, filter_file=filter_file,
+        pre_obj, source_type, self._engine,
+        command_line_arguments=command_line_arguments, filter_file=filter_file,
         parser_filter_string=parser_filter_string,
         preferred_encoding=preferred_encoding)
 
     if self._output_module:
-      storage_writer = storage.BypassStorageWriter(
+      storage_writer_object = storage_writer.BypassStorageWriter(
           self._engine.event_object_queue, self._storage_file_path,
           output_module_string=self._output_module, pre_obj=pre_obj)
     else:
-      storage_writer = storage.FileStorageWriter(
+      storage_writer_object = storage_writer.FileStorageWriter(
           self._engine.event_object_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=storage_serializer_format)
 
-      storage_writer.SetEnableProfiling(
+      storage_writer_object.SetEnableProfiling(
           self._enable_profiling,
           profiling_type=self._profiling_type)
 
@@ -510,7 +515,7 @@ class ExtractionFrontend(frontend.Frontend):
         logging.debug(u'Starting extraction in single process mode.')
 
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer,
+            source_path_specs, storage_writer_object,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
@@ -527,7 +532,7 @@ class ExtractionFrontend(frontend.Frontend):
 
         # TODO: pass number_of_extraction_workers.
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer,
+            source_path_specs, storage_writer_object,
             enable_sigsegv_handler=enable_sigsegv_handler,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,

@@ -77,10 +77,60 @@ class PregToolTest(test_lib.ToolTestCase):
     output = self._output_writer.ReadOutput()
 
     # TODO: refactor to more accurate way to test this.
-    self.assertIn(b'= Supported Plugins =', output)
+    self.assertIn(b'* Supported Plugins *', output)
     self.assertIn(b'userassist : Parser for User Assist Registry data', output)
     self.assertIn(
         b'services : Parser for services and drivers Registry', output)
+
+  def testPrintHeader(self):
+    """Tests the PrintHeader function."""
+    self._test_tool.PrintHeader(u'Text')
+    string = self._output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'************************************* '
+        b'Text '
+        b'*************************************\n')
+    self.assertEqual(string, expected_string)
+
+    self._test_tool.PrintHeader(u'Another Text', character=u'x')
+    string = self._output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx '
+        b'Another Text '
+        b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n')
+    self.assertEqual(string, expected_string)
+
+    # TODO: determine if this is the desired behavior.
+    self._test_tool.PrintHeader(u'')
+    string = self._output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'*************************************** '
+        b' '
+        b'***************************************\n')
+    self.assertEqual(string, expected_string)
+
+    # TODO: determine if this is the desired behavior.
+    self._test_tool.PrintHeader(None)
+    string = self._output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'************************************* '
+        b'None '
+        b'*************************************\n')
+    self.assertEqual(string, expected_string)
+
+    # TODO: determine if this is the desired behavior.
+    expected_string = (
+        u'\n '
+        u'In computer programming, a string is traditionally a sequence '
+        u'of characters, either as a literal constant or as some kind of '
+        u'variable. \n')
+    self._test_tool.PrintHeader(expected_string[2:-2])
+    string = self._output_writer.ReadOutput()
+    self.assertEqual(string, expected_string)
 
   def testRunModeRegistryPlugin(self):
     """Tests the RunModeRegistryPlugin function."""
@@ -166,7 +216,7 @@ class PregToolTest(test_lib.ToolTestCase):
 class PregConsoleTest(test_lib.ToolTestCase):
   """Tests for the preg console."""
 
-  _EXPECTED_BANNER_HEADER = (
+  _EXPECTED_BANNER_HEADER = [
       (u'******** Welcome to PREG - home of the Plaso Windows Registry '
        u'Parsing. *********'),
       u'',
@@ -190,7 +240,9 @@ class PregConsoleTest(test_lib.ToolTestCase):
       (u'get_value_data value_name : Get a value data from a value stored in '
        u'the'),
       u'                          currently loaded Registry key.',
-      u'                get_key : Return the currently loaded Registry key.')
+      u'                get_key : Return the currently loaded Registry key.',
+      (u'---------------------------------------------------------------------'
+       u'-----------')]
 
   _EXPECTED_BANNER_FOOTER = u'Happy command line console fu-ing.'
 
@@ -229,10 +281,11 @@ class PregConsoleTest(test_lib.ToolTestCase):
     self._test_console.PrintBanner()
 
     extra_text = (
-        u'Opening hive: {0:s} [OS]\nRegistry file: NTUSER.DAT [{0:s}] is '
-        u'available and loaded.\n').format(self._file_path)
+        u'Opening hive: {0:s} [OS]\n'
+        u'Registry file: NTUSER.DAT [{0:s}] is available and '
+        u'loaded.\n').format(self._file_path)
 
-    expected_banner = u'\n{0:s}\n\n{1:s}\n{2:s}'.format(
+    expected_banner = u'\n{0:s}\n{1:s}\n{2:s}'.format(
         u'\n'.join(self._EXPECTED_BANNER_HEADER), extra_text,
         self._EXPECTED_BANNER_FOOTER)
     banner = output_writer.ReadOutput()

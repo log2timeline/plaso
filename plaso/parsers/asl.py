@@ -62,7 +62,8 @@ class AslEvent(time_events.PosixTimeEvent):
     self.read_uid = read_uid
     self.record_position = record_position
     self.sender = sender
-    self.user_sid = unicode(record_header.uid)
+    # Note that the user_sid value is expected to be a string.
+    self.user_sid = u'{0:d}'.format(record_header.uid)
 
 
 class AslParser(interface.SingleFileBaseParser):
