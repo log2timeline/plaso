@@ -98,13 +98,15 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    packages=find_packages('.', exclude=[u'tests', u'tests.*', u'tools']),
+    packages=find_packages('.', exclude=[
+        'docs', 'tests', 'tests.*', 'tools', 'utils']),
     package_dir={
         'plaso': 'plaso',
     },
     data_files=[
         ('share/plaso', glob.glob(os.path.join('data', '*'))),
-        ('share/doc/plaso', glob.glob(os.path.join('docs', '*'))),
+        ('share/doc/plaso', [
+            u'AUTHORS', u'ACKNOWLEDGEMENTS', u'LICENSE', u'README']),
     ],
     # TODO: this is disabled for now since setup.py will actually try
     # to install the depencies directly from pypi.

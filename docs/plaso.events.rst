@@ -4,6 +4,14 @@ plaso.events package
 Submodules
 ----------
 
+plaso.events.file_system_events module
+--------------------------------------
+
+.. automodule:: plaso.events.file_system_events
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.events.plist_event module
 -------------------------------
 

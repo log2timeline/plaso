@@ -44,7 +44,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
   NAME = u'skydrive_log_error'
   DESCRIPTION = u'Parser for OneDrive (or SkyDrive) error log files.'
 
-  ENCODING = u'utf-8'
+  _ENCODING = u'utf-8'
 
   # Common SDE (SkyDriveError) structures.
   INTEGER_CAST = text_parser.PyParseIntCast

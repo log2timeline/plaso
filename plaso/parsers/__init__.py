@@ -22,6 +22,7 @@ from plaso.parsers import mac_wifi
 from plaso.parsers import mactime
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
+from plaso.parsers import ntfs
 from plaso.parsers import olecf
 from plaso.parsers import opera
 from plaso.parsers import oxml
@@ -32,6 +33,7 @@ from plaso.parsers import popcontest
 from plaso.parsers import pls_recall
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
+from plaso.parsers import sccm
 from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
 from plaso.parsers import skydrivelogerr

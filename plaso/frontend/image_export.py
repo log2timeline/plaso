@@ -334,10 +334,12 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     if not self._file_scanner or not file_entry.IsFile():
       return
 
-    scan_state = pysigscan.scan_state()
+    file_object = file_entry.GetFileObject()
+    if not file_object:
+      return False
 
     try:
-      file_object = file_entry.GetFileObject()
+      scan_state = pysigscan.scan_state()
       self._file_scanner.scan_file_object(scan_state, file_object)
     finally:
       file_object.close()
@@ -507,8 +509,11 @@ class FileSaver(object):
       os.makedirs(target_directory)
 
     if self._skip_duplicates and file_entry.IsFile():
+      file_object = file_entry.GetFileObject()
+      if not file_object:
+        return
+
       try:
-        file_object = file_entry.GetFileObject()
         digest_hash = self._CalculateHash(file_object)
       except IOError as exception:
         logging.error((
@@ -527,8 +532,11 @@ class FileSaver(object):
       else:
         self._digest_hashes[inode] = [digest_hash]
 
+    file_object = file_entry.GetFileObject()
+    if not file_object:
+      return
+
     try:
-      file_object = file_entry.GetFileObject()
       target_path = os.path.join(target_directory, target_filename)
       self._CopyFileObject(file_object, target_path)
     except IOError as exception:

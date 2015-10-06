@@ -131,12 +131,15 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     if not notes:
       notes.append(u'-')
 
-    row = (
-        u'{0:02d}/{1:02d}/{2:04d}'.format(
-            date_use.month, date_use.day, date_use.year),
-        u'{0:02d}:{1:02d}:{2:02d}'.format(
-            date_use.hour, date_use.minute, date_use.second),
-        self._output_mediator.timezone,
+    date_string = u'{0:02d}/{1:02d}/{2:04d}'.format(
+        date_use.month, date_use.day, date_use.year)
+    time_string = u'{0:02d}:{1:02d}:{2:02d}'.format(
+        date_use.hour, date_use.minute, date_use.second)
+
+    output_values = (
+        date_string,
+        time_string,
+        u'{0!s}'.format(self._output_mediator.timezone),
         self._output_mediator.GetMACBRepresentation(event_object),
         source_short,
         source,
@@ -147,14 +150,14 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         message,
         u'2',
         getattr(event_object, u'display_name', u'-'),
-        inode,
+        u'{0!s}'.format(inode),
         u' '.join(notes),
         getattr(event_object, u'parser', u'-'),
         extra.replace(u'\n', u'-').replace(u'\r', u''))
 
-    out_write = u'{0:s}\n'.format(
-        u','.join(unicode(x).replace(u',', u' ') for x in row))
-    self._WriteLine(out_write)
+    output_line = u'{0:s}\n'.format(
+        u','.join(value.replace(u',', u' ') for value in output_values))
+    self._WriteLine(output_line)
 
   def WriteHeader(self):
     """Writes the header to the output."""

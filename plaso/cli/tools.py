@@ -10,6 +10,7 @@ import sys
 
 import plaso
 from plaso.lib import errors
+from plaso.cli import views
 
 import pytz
 
@@ -36,10 +37,10 @@ class CLITool(object):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
+      input_reader: optional input reader (instance of InputReader).
                     The default is None which indicates the use of the stdin
                     input reader.
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer: optional output writer (instance of OutputWriter).
                      The default is None which indicates the use of the stdout
                      output writer.
     """
@@ -242,7 +243,6 @@ class CLITool(object):
 
   def ListTimeZones(self):
     """Lists the timezones."""
-    self.PrintHeader(u'Zones')
     max_length = 0
     for timezone_name in pytz.all_timezones:
       if len(timezone_name) > max_length:
@@ -250,7 +250,11 @@ class CLITool(object):
 
     utc_date_time = datetime.datetime.utcnow()
 
-    self.PrintColumnValue(u'Timezone', u'UTC Offset', column_width=max_length)
+    table_view = views.CLITableView(
+        self._output_writer, column_width=max_length)
+
+    table_view.PrintHeader(u'Zones')
+    table_view.PrintRow(u'Timezone', u'UTC Offset')
     for timezone_name in pytz.all_timezones:
       local_timezone = pytz.timezone(timezone_name)
 
@@ -263,9 +267,9 @@ class CLITool(object):
         _, _, diff = local_date_string.rpartition(u'-')
         diff_string = u'-{0:s}'.format(diff)
 
-      self.PrintColumnValue(timezone_name, diff_string, column_width=max_length)
+      table_view.PrintRow(timezone_name, diff_string)
 
-    self.PrintSeparatorLine()
+    table_view.PrintFooter()
 
   def ParseOptions(self, options):
     """Parses tool specific options.
@@ -274,62 +278,6 @@ class CLITool(object):
       options: the command line arguments (instance of argparse.Namespace).
     """
     self._ParseInformationalOptions(options)
-
-  def PrintColumnValue(self, name, description, column_width=25):
-    """Prints a value with a name and description aligned to the column width.
-
-    Args:
-      name: the name.
-      description: the description.
-      column_width: optional column width. The default is 25.
-    """
-    line_length = self._LINE_LENGTH - column_width - 3
-
-    # The format string of the first line of the column value.
-    primary_format_string = u'{{0:>{0:d}s}} : {{1:s}}\n'.format(column_width)
-
-    # The format string of successive lines of the column value.
-    secondary_format_string = u'{{0:<{0:d}s}}{{1:s}}\n'.format(
-        column_width + 3)
-
-    if len(description) < line_length:
-      self._output_writer.Write(primary_format_string.format(name, description))
-      return
-
-    # Split the description in words.
-    words = description.split()
-
-    current = 0
-
-    lines = []
-    word_buffer = []
-    for word in words:
-      current += len(word) + 1
-      if current >= line_length:
-        current = len(word)
-        lines.append(u' '.join(word_buffer))
-        word_buffer = [word]
-      else:
-        word_buffer.append(word)
-    lines.append(u' '.join(word_buffer))
-
-    # Print the column value on multiple lines.
-    self._output_writer.Write(primary_format_string.format(name, lines[0]))
-    for line in lines[1:]:
-      self._output_writer.Write(secondary_format_string.format(u'', line))
-
-  def PrintHeader(self, text, character=u'*'):
-    """Prints the header as a line with centered text.
-
-    Args:
-      text: The header text.
-      character: Optional header line character. The default is '*'.
-    """
-    self._output_writer.Write(u'\n')
-
-    format_string = u'{{0:{0:s}^{1:d}}}\n'.format(character, self._LINE_LENGTH)
-    header_string = format_string.format(u' {0:s} '.format(text))
-    self._output_writer.Write(header_string)
 
   def PrintSeparatorLine(self):
     """Prints a separator line."""

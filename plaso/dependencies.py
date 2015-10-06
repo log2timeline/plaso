@@ -16,6 +16,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyevt': 20120410,
     u'pyevtx': 20141112,
     u'pyewf': 20131210,
+    u'pyfsntfs': 20150831,
     u'pyfwsi': 20150606,
     u'pylnk': 20150830,
     u'pymsiecf': 20150314,
@@ -38,7 +39,7 @@ PYTHON_DEPENDENCIES = [
     (u'binplist', u'__version__', u'0.1.4', None),
     (u'construct', u'__version__', u'2.5.2', None),
     (u'dateutil', u'__version__', u'1.5', None),
-    (u'dfvfs', u'__version__', u'20150630', None),
+    (u'dfvfs', u'__version__', u'20150915', None),
     (u'dpkt', u'__version__', u'1.8', None),
     # The protobuf module does not appear to have version information.
     (u'google.protobuf', u'', u'', None),

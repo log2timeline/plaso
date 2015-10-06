@@ -51,9 +51,13 @@ class TestCollectorQueueConsumer(queue.ItemQueueConsumer):
     """Retrieves a list of file paths from the path specifications."""
     file_paths = []
     for path_spec in self.path_specs:
-      location = getattr(path_spec, 'location', None)
+      data_stream = getattr(path_spec, u'data_stream', None)
+      location = getattr(path_spec, u'location', None)
       if location is not None:
+        if data_stream:
+          location = u'{0:s}:{1:s}'.format(location, data_stream)
         file_paths.append(location)
+
     return file_paths
 
 
@@ -265,11 +269,16 @@ class CollectorTest(CollectorTestCase):
     # image_offset: 0
     self.assertEqual(paths[1], u'/passwords.txt')
 
-  def testImageWithPartitionsCollections(self):
-    """Test collection on a storage media image file with multiple partitions.
+  def _TestImageWithPartitionsCollections(self, collect_directory_metadata):
+    """Test collection on a storage media image with multiple partitions.
 
     The image contains 2 partitions (p1 and p2) with NFTS file systems.
+
+    Args:
+      collect_directory_metadata: boolean value to indicate to collect
+                                  directory metadata.
     """
+    # Note that the source file is a RAW (VMDK flat) image.
     test_file = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     image_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -293,6 +302,8 @@ class CollectorTest(CollectorTestCase):
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_path_spec_queue, resolver_context=resolver_context)
+    test_collector.SetCollectDirectoryMetadata(collect_directory_metadata)
+
     test_collector.Collect([p1_file_system_path_spec, p2_file_system_path_spec])
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -304,53 +315,76 @@ class CollectorTest(CollectorTestCase):
     expected_paths_p1 = [
         u'/$AttrDef',
         u'/$BadClus',
+        u'/$BadClus:$Bad',
         u'/$Bitmap',
         u'/$Boot',
-        u'/$Extend',
         u'/$Extend/$ObjId',
         u'/$Extend/$Quota',
         u'/$Extend/$Reparse',
-        u'/$Extend/$RmMetadata',
         u'/$Extend/$RmMetadata/$Repair',
-        u'/$Extend/$RmMetadata/$TxfLog',
+        u'/$Extend/$RmMetadata/$Repair:$Config',
         u'/$LogFile',
         u'/$MFT',
         u'/$MFTMirr',
         u'/$Secure',
+        u'/$Secure:$SDS',
         u'/$UpCase',
         u'/$Volume',
         u'/file1.txt',
         u'/file2.txt']
 
+    if collect_directory_metadata:
+      expected_directory_metadata_paths_p1 = [
+          u'/$Extend',
+          u'/$Extend/$RmMetadata',
+          u'/$Extend/$RmMetadata/$TxfLog',
+      ]
+
     expected_paths_p2 = [
         u'/$AttrDef',
         u'/$BadClus',
+        u'/$BadClus:$Bad',
         u'/$Bitmap',
         u'/$Boot',
-        u'/$Extend',
         u'/$Extend/$ObjId',
         u'/$Extend/$Quota',
         u'/$Extend/$Reparse',
-        u'/$Extend/$RmMetadata',
         u'/$Extend/$RmMetadata/$Repair',
-        u'/$Extend/$RmMetadata/$TxfLog',
+        u'/$Extend/$RmMetadata/$Repair:$Config',
         u'/$LogFile',
         u'/$MFT',
         u'/$MFTMirr',
         u'/$Secure',
+        u'/$Secure:$SDS',
         u'/$UpCase',
         u'/$Volume',
         u'/file1_on_part_2.txt',
         u'/file2_on_part_2.txt']
 
+    if collect_directory_metadata:
+      expected_directory_metadata_paths_p2 = [
+          u'/$Extend',
+          u'/$Extend/$RmMetadata',
+          u'/$Extend/$RmMetadata/$TxfLog',
+      ]
+
     expected_paths = []
     expected_paths.extend(expected_paths_p1)
     expected_paths.extend(expected_paths_p2)
+
+    if collect_directory_metadata:
+      expected_paths.extend(expected_directory_metadata_paths_p1)
+      expected_paths.extend(expected_directory_metadata_paths_p2)
 
     self.assertEqual(
         test_collector_queue_consumer.number_of_path_specs, len(expected_paths))
 
     self.assertEqual(sorted(paths), sorted(expected_paths))
+
+  def testImageWithPartitionsCollections(self):
+    """Test collection on a storage media image with multiple partitions."""
+    self._TestImageWithPartitionsCollections(True)
+    self._TestImageWithPartitionsCollections(False)
 
 
 class BuildFindSpecsFromFileTest(unittest.TestCase):

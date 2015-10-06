@@ -3,14 +3,8 @@
 """This file contains the tests for the event storage."""
 
 import os
-import tempfile
 import unittest
-import zipfile
 
-from plaso.dfwinreg import fake as dfwinreg_fake
-from plaso.engine import queue
-from plaso.events import text_events
-from plaso.events import windows_events
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
@@ -18,11 +12,11 @@ from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib
-from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
 
 from tests import test_lib as shared_test_lib
+from tests.storage import test_lib
 
 
 class DummyObject(object):
@@ -64,90 +58,11 @@ class GroupMock(object):
 class StorageFileTest(unittest.TestCase):
   """Tests for the plaso storage file."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._event_objects = self._CreateTestEventObjects()
-    self._formatter_mediator = formatters_mediator.FormatterMediator()
-
-  def _CreateTestEventObjects(self):
-    """Creates the event objects for testing.
-
-    Returns:
-      A list of event objects (instances of EventObject).
-    """
-    event_objects = []
-    filetime = dfwinreg_fake.Filetime()
-
-    filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
-    values_dict = {u'Value': u'c:/Temp/evil.exe'}
-    event_object = windows_events.WindowsRegistryEvent(
-        filetime.timestamp, u'MY AutoRun key', values_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
-
-    filetime.CopyFromString(u'2012-05-02 13:43:26.929596')
-    values_dict = {u'Value': u'send all the exes to the other world'}
-    event_object = windows_events.WindowsRegistryEvent(
-        filetime.timestamp, u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
-        values_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
-
-    filetime.CopyFromString(u'2012-04-20 16:44:46')
-    values_dict = {u'Value': u'run all the benign stuff'}
-    event_object = windows_events.WindowsRegistryEvent(
-        filetime.timestamp, u'\\HKCU\\Windows\\Normal', values_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
-
-    timemstamp = timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39')
-    text_dict = {
-        u'hostname': u'nomachine',
-        u'text': (
-            u'This is a line by someone not reading the log line properly. And '
-            u'since this log line exceeds the accepted 80 chars it will be '
-            u'shortened.'),
-        u'username': u'johndoe'}
-    event_object = text_events.TextEvent(timemstamp, 12, text_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
-
-    return event_objects
-
-  def testStorageWriter(self):
-    """Test the storage writer."""
-    self.assertEqual(len(self._event_objects), 4)
-
-    # The storage writer is normally run in a separate thread.
-    # For the purpose of this test it has to be run in sequence,
-    # hence the call to WriteEventObjects after all the event objects
-    # have been queued up.
-
-    # TODO: add upper queue limit.
-    # A timeout is used to prevent the multi processing queue to close and
-    # stop blocking the current process.
-    test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
-    test_queue_producer = queue.ItemQueueProducer(test_queue)
-    test_queue_producer.ProduceItems(self._event_objects)
-
-    test_queue_producer.SignalAbort()
-
-    with tempfile.NamedTemporaryFile() as temp_file:
-      storage_writer = storage.FileStorageWriter(test_queue, temp_file)
-      storage_writer.WriteEventObjects()
-
-      z_file = zipfile.ZipFile(temp_file, 'r', zipfile.ZIP_DEFLATED)
-
-      expected_z_filename_list = [
-          u'plaso_index.000001', u'plaso_meta.000001', u'plaso_proto.000001',
-          u'plaso_timestamps.000001', u'serializer.txt']
-
-      z_filename_list = sorted(z_file.namelist())
-      self.assertEqual(len(z_filename_list), 5)
-      self.assertEqual(z_filename_list, expected_z_filename_list)
-
   def testStorage(self):
     """Test the storage object."""
+    test_event_objects = test_lib.CreateTestEventObjects()
+    formatter_mediator = formatters_mediator.FormatterMediator()
+
     event_objects = []
     timestamps = []
     group_mock = GroupMock()
@@ -162,7 +77,7 @@ class StorageFileTest(unittest.TestCase):
     with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, 'plaso.db')
       store = storage.StorageFile(temp_file)
-      store.AddEventObjects(self._event_objects)
+      store.AddEventObjects(test_event_objects)
 
       # Add tagging.
       tag_1 = event.EventTag()
@@ -249,12 +164,12 @@ class StorageFileTest(unittest.TestCase):
     self.assertEqual(tags[0].tag.color, u'blue')
 
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        self._formatter_mediator, tags[0])
+        formatter_mediator, tags[0])
     self.assertEqual(msg[0:10], u'This is a ')
 
     self.assertEqual(tags[1].tag.tags[0], 'Malware')
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        self._formatter_mediator, tags[1])
+        formatter_mediator, tags[1])
     self.assertEqual(msg[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEqual(tags[2].tag.comment, u'This is interesting')
@@ -290,19 +205,6 @@ class StorageFileTest(unittest.TestCase):
 
     self.assertEqual(same_events, proto_group_events)
 
-
-class StoreStorageTest(unittest.TestCase):
-  """Test sorting storage file,"""
-
-  def setUp(self):
-    """Setup sets parameters that will be reused throughout this test."""
-    # TODO: have sample output generated from the test.
-    # TODO: Use input data with a defined year.  syslog parser chooses a
-    # year based on system clock; forcing updates to test file if regenerated.
-    self.test_file = os.path.join(u'test_data', u'psort_test.proto.plaso')
-    self.first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
-    self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
-
   def testStorageSort(self):
     """This test ensures that items read and output are in the expected order.
 
@@ -313,10 +215,17 @@ class StoreStorageTest(unittest.TestCase):
     The test will be to read the TestEventBuffer storage and check to see
     if it matches the known good sort order.
     """
+    # TODO: have sample output generated from the test.
+    # TODO: Use input data with a defined year.  syslog parser chooses a
+    # year based on system clock; forcing updates to test file if regenerated.
+    test_file = os.path.join(u'test_data', u'psort_test.proto.plaso')
+    first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
+    last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
+
     pfilter.TimeRangeCache.ResetTimeConstraints()
-    pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
-    pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
-    store = storage.StorageFile(self.test_file, read_only=True)
+    pfilter.TimeRangeCache.SetUpperTimestamp(last)
+    pfilter.TimeRangeCache.SetLowerTimestamp(first)
+    store = storage.StorageFile(test_file, read_only=True)
 
     store.store_range = [1, 5, 6]
 
