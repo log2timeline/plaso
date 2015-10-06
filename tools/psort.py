@@ -248,11 +248,11 @@ class PsortTool(analysis_tool.AnalysisTool):
         time_slice=time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
-      table_view = cli_views.CLITableView(self._output_writer)
-      table_view.PrintHeader(u'Counter')
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=u'Counter')
       for element, count in counter.most_common():
-        table_view.PrintRow(element, u'{0:d}'.format(count))
-      table_view.PrintFooter()
+        table_view.AddRow([element, count])
+      table_view.Write(self._output_writer)
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
@@ -373,42 +373,44 @@ class PsortTool(analysis_tool.AnalysisTool):
       if len(name) > column_width:
         column_width = len(name)
 
-    table_view = cli_views.CLITableView(
-        self._output_writer, column_width=column_width)
-    table_view.PrintHeader(u'Analysis Plugins')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Analysis Plugins')
+    # TODO: add support for a 3 column table.
     for name, description, type_string in analysis_plugin_info:
       description = u'{0:s} [{1:s}]'.format(description, type_string)
-      table_view.PrintRow(name, description)
-    table_view.PrintFooter()
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
-    table_view = cli_views.CLITableView(self._output_writer)
-    table_view.PrintHeader(u'Language identifiers')
-    table_view.PrintRow(u'Identifier', u'Language')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Identifier', u'Language'],
+        title=u'Language identifiers')
     for language_id, value_list in sorted(
         language_ids.LANGUAGE_IDENTIFIERS.items()):
-      table_view.PrintRow(language_id, value_list[1])
-    table_view.PrintFooter()
+      table_view.AddRow([language_id, value_list[1]])
+    table_view.Write(self._output_writer)
 
   def ListOutputModules(self):
     """Lists the output modules."""
-    table_view = cli_views.CLITableView(self._output_writer, column_width=10)
-    table_view.PrintHeader(u'Output Modules')
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Output Modules')
     for name, output_class in sorted(self._front_end.GetOutputClasses()):
-      table_view.PrintRow(name, output_class.DESCRIPTION)
-    table_view.PrintFooter()
+      table_view.AddRow([name, output_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
 
-    # Assign to an attribute due to line length limitations.
-    disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses
-    if not disabled_classes():
+    disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses()
+    if not disabled_classes:
       return
 
-    table_view = cli_views.CLITableView(self._output_writer, column_width=10)
-    table_view.PrintHeader(u'Disabled Output Modules')
-    for output_class in disabled_classes():
-      table_view.PrintRow(output_class.NAME, output_class.DESCRIPTION)
-    table_view.PrintFooter()
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Disabled Output Modules')
+    for output_class in disabled_classes:
+      table_view.AddRow([output_class.NAME, output_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
