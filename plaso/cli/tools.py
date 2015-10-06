@@ -61,6 +61,7 @@ class CLITool(object):
     self._output_writer = output_writer
     self._quiet_mode = False
     self._timezone = pytz.UTC
+    self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
@@ -250,11 +251,9 @@ class CLITool(object):
 
     utc_date_time = datetime.datetime.utcnow()
 
-    table_view = views.CLITableView(
-        self._output_writer, column_width=max_length)
-
-    table_view.PrintHeader(u'Zones')
-    table_view.PrintRow(u'Timezone', u'UTC Offset')
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Zones')
+    table_view.AddColumnNames([u'Timezone', u'UTC Offset'])
     for timezone_name in pytz.all_timezones:
       local_timezone = pytz.timezone(timezone_name)
 
@@ -267,9 +266,9 @@ class CLITool(object):
         _, _, diff = local_date_string.rpartition(u'-')
         diff_string = u'-{0:s}'.format(diff)
 
-      table_view.PrintRow(timezone_name, diff_string)
+      table_view.AddRow([timezone_name, diff_string])
 
-    table_view.PrintFooter()
+    table_view.Write(self._output_writer)
 
   def ParseOptions(self, options):
     """Parses tool specific options.

@@ -349,34 +349,48 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
   def ListHashers(self):
     """Lists information about the available hashers."""
-    table_view = cli_views.CLITableView(self._output_writer)
-    table_view.PrintHeader(u'Hashers')
     hashers_information = self._front_end.GetHashersInformation()
-    for name, description in sorted(hashers_information):
-      table_view.PrintRow(name, description)
 
-    table_view.PrintFooter()
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Hashers')
+
+    for name, description in sorted(hashers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ListParsersAndPlugins(self):
     """Lists information about the available parsers and plugins."""
-    table_view = cli_views.CLITableView(self._output_writer)
-
-    table_view.PrintHeader(u'Parsers')
     parsers_information = self._front_end.GetParsersInformation()
-    for name, description in sorted(parsers_information):
-      table_view.PrintRow(name, description)
 
-    table_view.PrintHeader(u'Parser Plugins')
-    plugins_information = self._front_end.GetParserPluginsInformation()
-    for name, description in sorted(plugins_information):
-      table_view.PrintRow(name, description)
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Parsers')
+
+    for name, description in sorted(parsers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+    for parser_name in self._front_end.GetNamesOfParsersWithPlugins():
+      plugins_information = self._front_end.GetParserPluginsInformation(
+          parser_filter_string=parser_name)
+
+      table_title = u'Parser plugins: {0:s}'.format(parser_name)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=[u'Name', u'Description'],
+          title=table_title)
+      for name, description in sorted(plugins_information):
+        table_view.AddRow([name, description])
+      table_view.Write(self._output_writer)
 
     presets_information = self._front_end.GetParserPresetsInformation()
-    table_view.PrintHeader(u'Parsers Presets')
-    for name, description in sorted(presets_information):
-      table_view.PrintRow(name, description)
 
-    table_view.PrintFooter()
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Parsers and plugins'],
+        title=u'Parser presets')
+    for name, description in sorted(presets_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -409,6 +423,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     info_group.add_argument(
         u'--info', dest=u'show_info', action=u'store_true', default=False,
         help=u'Print out information about supported plugins and parsers.')
+
+    info_group.add_argument(
+        u'--use_markdown', u'--use-markdown', dest=u'use_markdown',
+        action=u'store_true', default=False, help=(
+            u'Output lists in Markdown format use in combination with '
+            u'"--hashers list", "--parsers list" or "--timezone list"'))
 
     self.AddLogFileOptions(info_group)
 
@@ -521,6 +541,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseTimezoneOption(options)
 
     self.show_info = getattr(options, u'show_info', False)
+
+    if getattr(options, u'use_markdown', False):
+      self._views_format_type = cli_views.ViewsFactory.FORMAT_TYPE_MARKDOWN
 
     if (self.list_hashers or self.list_parsers_and_plugins or
         self.list_timezones or self.show_info):
@@ -653,14 +676,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write(
         u'{0:=^80s}\n'.format(u' log2timeline/plaso information '))
 
-    table_view = cli_views.CLITableView(self._output_writer)
     plugin_list = self._front_end.GetPluginData()
     for header, data in plugin_list.items():
-      table_view.PrintHeader(header)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=[u'Name', u'Description'],
+          title=header)
       for entry_header, entry_data in sorted(data):
-        table_view.PrintRow(entry_header, entry_data)
-
-    table_view.PrintFooter()
+        table_view.AddRow([entry_header, entry_data])
+      table_view.Write(self._output_writer)
 
 
 def Main():
