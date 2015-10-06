@@ -663,11 +663,11 @@ class MultiProcessEngine(engine.BaseEngine):
       parse_error_queue = zeromq_queue.ZeroMQPushConnectQueue(
           delay_open=True, port=self._parse_error_queue_port,
           name=u'{0:s} parse'.format(process_name),
-          timeout_seconds=20, high_water_mark=2)
+          timeout_seconds=20, maximum_items=2)
       event_object_queue = zeromq_queue.ZeroMQPushConnectQueue(
           delay_open=True, port=self._event_object_queue_port,
           name=u'{0:s} event object'.format(process_name),
-          timeout_seconds=20, high_water_mark=2)
+          timeout_seconds=20, maximum_items=2)
     else:
       parse_error_queue = self._parse_error_queue
       path_spec_queue = self._path_spec_queue

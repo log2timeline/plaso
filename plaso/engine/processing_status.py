@@ -176,8 +176,8 @@ class ProcessingStatus(object):
       logging.debug(
           (u'[ProcessingStatus] {0:d} pathspecs produced, {1:d} processed. '
            u'{2:d} remaining. Extraction incomplete.').format(
-              produced_number_of_path_specs, consumed_number_of_path_specs,
-              path_specs_remaining))
+               produced_number_of_path_specs, consumed_number_of_path_specs,
+               path_specs_remaining))
       return False
 
     workers_running = self.WorkersRunning()

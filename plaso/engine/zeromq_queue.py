@@ -49,7 +49,7 @@ class ZeroMQQueue(queue.Queue):
                        PushItem may block for, before returning
                        queue.QueueEmpty.
       name: Optional name to identify the queue.
-      maximum_items: Optional maximum number of items queue on the ZeroMQ
+      maximum_items: Optional maximum number of items to queue on the ZeroMQ
                      socket. ZeroMQ refers to this value as "high water
                      mark" or "hwm". Note that this limit only applies at one
                      "end" of the queue. The default of 1000 is the ZeroMQ
@@ -170,9 +170,8 @@ class ZeroMQQueue(queue.Queue):
       return True
     return False
 
-  @abc.abstractmethod
   def IsConnected(self):
-    """Checks if the queue is connected to an endpoint."""
+    """Checks if the queue is connected to an port."""
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT and
         self.port is not None):
       return True
