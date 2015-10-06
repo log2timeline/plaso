@@ -37,12 +37,12 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_task_cache'
   DESCRIPTION = u'Parser for Task Scheduler cache Registry data.'
 
-  REG_TYPE = u'SOFTWARE'
-  REG_KEYS = [
-      u'\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
+          u'CurrentVersion\\Schedule\\TaskCache')])
 
-  URL = [
-      u'https://code.google.com/p/winreg-kb/wiki/TaskSchedulerKeys']
+  URLS = [u'https://code.google.com/p/winreg-kb/wiki/TaskSchedulerKeys']
 
   _DYNAMIC_INFO_STRUCT = construct.Struct(
       u'dynamic_info_record',
@@ -72,16 +72,13 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       for value_key, id_value in self._GetIdValue(sub_key):
         yield value_key, id_value
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Parses a Task Cache Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     tasks_key = registry_key.GetSubkeyByName(u'Tasks')
     tree_key = registry_key.GetSubkeyByName(u'Tree')
@@ -121,7 +118,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
           sub_key.name)
       event_object = windows_events.WindowsRegistryEvent(
           registry_key.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset, registry_file_type=registry_file_type)
+          offset=registry_key.offset)
       parser_mediator.ProduceEvent(event_object)
 
       if dynamic_info.last_registered_time:

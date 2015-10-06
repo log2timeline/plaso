@@ -98,9 +98,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-31 20:45:29'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, knowledge_base_values=knowledge_base_values)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)
@@ -176,9 +174,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-31 20:45:29'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, knowledge_base_values=knowledge_base_values)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)

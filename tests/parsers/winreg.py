@@ -37,35 +37,29 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath([u'NTUSER.DAT'])
-    event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     parser_chains = self._GetParserChains(event_objects)
 
-    expected_chain = self._PluginNameToParserChain(u'userassist')
-    self.assertTrue(expected_chain in parser_chains)
+    expected_parser_chain = self._PluginNameToParserChain(u'userassist')
+    self.assertTrue(expected_parser_chain in parser_chains)
 
-    self.assertEqual(parser_chains[expected_chain], 14)
+    self.assertEqual(parser_chains[expected_parser_chain], 14)
 
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
-    event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 0)
 
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath([u'SYSTEM'])
-    event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     parser_chains = self._GetParserChains(event_objects)
@@ -76,18 +70,20 @@ class WinRegTest(test_lib.ParserTestCase):
         u'windows_usbstor_devices', u'windows_boot_execute',
         u'windows_services']
     for plugin in plugin_names:
-      expected_chain = self._PluginNameToParserChain(plugin)
+      expected_parser_chain = self._PluginNameToParserChain(plugin)
       self.assertTrue(
-          expected_chain in parser_chains,
-          u'Chain {0:s} not found in events.'.format(expected_chain))
+          expected_parser_chain in parser_chains,
+          u'Chain {0:s} not found in events.'.format(expected_parser_chain))
 
     # Check that the number of events produced by each plugin are correct.
-    self.assertEqual(parser_chains.get(
-        self._PluginNameToParserChain(u'windows_usbstor_devices'), 0), 3)
-    self.assertEqual(parser_chains.get(
-        self._PluginNameToParserChain(u'windows_boot_execute'), 0), 2)
-    self.assertEqual(parser_chains.get(
-        self._PluginNameToParserChain(u'windows_services'), 0), 831)
+    parser_chain = self._PluginNameToParserChain(u'windows_usbstor_devices')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 7)
+
+    parser_chain = self._PluginNameToParserChain(u'windows_boot_execute')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 4)
+
+    parser_chain = self._PluginNameToParserChain(u'windows_services')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 831)
 
 
 if __name__ == '__main__':

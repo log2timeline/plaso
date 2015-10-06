@@ -12,8 +12,11 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_version'
   DESCRIPTION = u'Parser for Windows version Registry data.'
 
-  REG_KEYS = [u'\\Microsoft\\Windows NT\\CurrentVersion']
-  REG_TYPE = u'SOFTWARE'
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
+          u'CurrentVersion')])
+
   URLS = []
 
   _STRING_VALUE_NAME_STRINGS = {
@@ -25,16 +28,13 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
       u'RegisteredOwner': u'owner',
   }
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Gather minimal information about system install and return an event.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     installation_value = None
     string_values = {}
@@ -72,7 +72,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type)
+        offset=registry_key.offset)
 
     parser_mediator.ProduceEvent(event_object)
 

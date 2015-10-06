@@ -79,6 +79,9 @@ class BasePlugin(object):
     mediator, transfers control to the plugin-specific Process() method,
     and updates the chain again once the processing is complete. It provides a
     simpler parser API in most cases.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     parser_mediator.AppendToParserChain(self)
     try:
@@ -95,5 +98,12 @@ class BasePluginCache(object):
   """
 
   def GetResults(self, attribute):
-    """Return back a cached attribute if it exists."""
+    """Retrieves a cached attribute.
+
+    Args:
+      attribute: the name of the cached attribute.
+
+    Returns:
+      The value of the cached attribute or None if no such attribute exists.
+    """
     return getattr(self, attribute, None)

@@ -38,7 +38,7 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
 
   def __init__(
       self, filetime, key_path, values_dict, usage=None, offset=None,
-      registry_file_type=None, source_append=None, urls=None):
+      source_append=None, urls=None):
     """Initializes a Windows registry event.
 
     Args:
@@ -47,8 +47,6 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
       values_dict: dictionary object containing values of the key.
       usage: optional description of the usage of the time value.
       offset: optional (data) offset of the Registry key or value.
-      registry_file_type: optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE.
       source_append: optional string to append to the source_long of the event.
       urls: optional list of URLs.
     """
@@ -65,9 +63,6 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
 
     if offset or isinstance(offset, (int, long)):
       self.offset = offset
-
-    if registry_file_type:
-      self.registry_file_type = registry_file_type
 
     if source_append:
       self.source_append = source_append

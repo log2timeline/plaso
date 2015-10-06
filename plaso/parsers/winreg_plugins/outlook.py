@@ -15,9 +15,13 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   NAME = u'microsoft_outlook_mru'
   DESCRIPTION = u'Parser for Microsoft Outlook search MRU Registry data.'
 
-  REG_KEYS = [
-      u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search',
-      u'\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Outlook\\'
+          u'Search'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+          u'Search')])
 
   # TODO: The catalog for Office 2013 (15.0) contains binary values not
   # dword values. Check if Office 2007 and 2010 have the same. Re-enable the
@@ -25,26 +29,24 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   # handle the binary data or create a OutlookSearchCatalogMRUPlugin.
   # Registry keys for:
   #   MS Outlook 2007 Search Catalog:
-  #     '\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog'
+  #     'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\12.0\\Outlook\\'
+  #     'Catalog'
   #   MS Outlook 2010 Search Catalog:
-  #     '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog'
+  #     'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Outlook\\'
+  #     'Search\\Catalog'
   #   MS Outlook 2013 Search Catalog:
-  #     '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog'
-
-  REG_TYPE = u'NTUSER'
+  #     'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+  #     'Search\\Catalog'
 
   _SOURCE_APPEND = u': PST Paths'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect the values under Outlook and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     values_dict = {}
     for registry_value in registry_key.GetValues():
@@ -63,8 +65,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 

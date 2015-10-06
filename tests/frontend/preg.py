@@ -8,7 +8,6 @@ from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
 
@@ -123,7 +122,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     registry_helper = registry_helpers[0]
     registry_helper.Open()
-    expected_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_NTUSER
+    expected_file_type = preg.REGISTRY_FILE_TYPE_NTUSER
     self.assertEquals(registry_helper.file_type, expected_file_type)
     self.assertEquals(registry_helper.name, u'NTUSER.DAT')
     self.assertEquals(registry_helper.collector_name, u'TSK')
@@ -170,7 +169,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     plugin_list = []
     for plugin in plugins:
       plugin_list.append(plugin.NAME)
-      key_list.extend(plugin.REG_KEYS)
+      key_list.extend(plugin.GetKeyPaths())
 
     self._front_end.ExpandKeysRedirect(key_list)
 
@@ -180,11 +179,14 @@ class PregFrontendTest(test_lib.FrontendTestCase):
       self.assertIn(key_parsed, key_list)
 
     usb_parsed_data = parsed_data.get(
-        u'\\{current_control_set}\\Enum\\USBSTOR', None)
+        u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Enum\\USBSTOR', None)
     self.assertIsNotNone(usb_parsed_data)
     usb_key = usb_parsed_data.get(u'key', None)
     self.assertIsNotNone(usb_key)
-    self.assertEquals(usb_key.path, u'\\ControlSet001\\Enum\\USBSTOR')
+
+    expected_key_path = (
+        u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR')
+    self.assertEquals(usb_key.path, expected_key_path)
 
     data = usb_parsed_data.get(u'data', None)
     self.assertIsNotNone(data)
