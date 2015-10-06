@@ -84,21 +84,21 @@ class SQLiteDatabase(object):
 
   _READ_BUFFER_SIZE = 65536
 
-  def __init__(self, name):
+  def __init__(self, filename):
     """Initializes the database object.
 
     Args:
-      name: string containing the name of the file entry.
+      filename: string containing the name of the file entry.
     """
     self._database = None
+    self._filename = filename
     self._is_open = False
-    self._name = name
     self._table_names = []
     self._temp_file_name = u''
 
   @property
   def tables(self):
-    """Returns a list of all the table names in the database."""
+    """Returns a list of the names of all the tables."""
     return self._table_names
 
   def Close(self):
@@ -116,14 +116,19 @@ class SQLiteDatabase(object):
         logging.warning((
             u'Unable to remove temporary copy: {0:s} of SQLite database: '
             u'{1:s} with error: {2:s}').format(
-                self._temp_file_name, self._name, exception))
+                self._temp_file_name, self._filename, exception))
 
     self._temp_file_name = u''
 
     self._is_open = False
 
   def Open(self, file_object):
-    """Opens up a database connection and build a list of table names.
+    """Opens a SQLite database file.
+
+    Since pysqlite cannot read directly from a file-like object a temporary
+    copy of the file is made. After creating a copy the database file this
+    function sets up a connection with the database and determines the names
+    of the tables.
 
     Args:
       file_object: the file-like object.
@@ -170,8 +175,6 @@ class SQLiteDatabase(object):
       self._database.row_factory = sqlite3.Row
       cursor = self._database.cursor()
 
-      # Verify the table by reading in all table names and compare it to
-      # the list of required tables.
       sql_results = cursor.execute(
           u'SELECT name FROM sqlite_master WHERE type="table"')
 
@@ -186,7 +189,7 @@ class SQLiteDatabase(object):
 
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
-              self._name, exception))
+              self._filename, exception))
       raise
 
     self._is_open = True
@@ -208,7 +211,6 @@ class SQLiteDatabase(object):
 class SQLiteParser(interface.BaseParser):
   """A SQLite parser for Plaso."""
 
-  # Name of the parser, which enables all plugins by default.
   NAME = u'sqlite'
   DESCRIPTION = u'Parser for SQLite database files.'
 
