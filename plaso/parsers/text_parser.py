@@ -708,7 +708,7 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
   # If this value needs to be calculated on the fly (not a fixed constant for
   # this particular file type) it can be done by modifying the self.encoding
   # attribute.
-  _ENCODING = u''
+  _ENCODING = u'ascii'
 
   def __init__(self):
     """Initializes the pyparsing single-line text parser object."""
