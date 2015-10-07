@@ -138,7 +138,7 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
     elif self._pyregf_value.type in self._INTEGER_VALUE_TYPES:
       try:
         return self._pyregf_value.get_data_as_integer()
-      except (IOError, OverflowError):
+      except (IOError, OverflowError) as exception:
         raise errors.WinRegistryValueError(
             u'Unable to read data from value: {0:s} with error: {1:s}'.format(
                 self._pyregf_value.name, exception))
