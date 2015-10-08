@@ -90,7 +90,7 @@ class BinaryCookieParser(interface.SingleFileBaseParser):
     Args:
       page_data: Raw bytes of the page.
       file_entry: The file entry (instance of dfvfs.FileEntry).
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     try:
       page = self.PAGE_DATA.parse(page_data)

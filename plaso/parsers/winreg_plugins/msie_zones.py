@@ -15,13 +15,19 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   NAME = u'msie_zone'
   DESCRIPTION = u'Parser for Internet Explorer zone settings Registry data.'
 
-  REG_TYPE = u'NTUSER'
-
-  REG_KEYS = [
-      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-       u'\\Zones'),
-      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-       u'\\Lockdown_Zones')]
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          u'Internet Settings\\Lockdown_Zones'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          u'Internet Settings\\Zones'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          u'Internet Settings\\Lockdown_Zones'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          u'Internet Settings\\Zones')])
 
   URLS = [u'http://support.microsoft.com/kb/182569']
 
@@ -143,8 +149,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       u'{A8A88C49-5EB2-4990-A1A2-0876022C854F}': u'Third Party Cookie'
   }
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -155,8 +160,6 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     values_dict = {}
 
@@ -184,8 +187,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
     # Generate at least one event object for the key.
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        urls=self.URLS)
+        offset=registry_key.offset, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
     if registry_key.number_of_subkeys == 0:
@@ -244,26 +246,8 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           zone_key.last_written_time, path, values_dict,
-          offset=zone_key.offset, registry_file_type=registry_file_type,
-          urls=self.URLS)
+          offset=zone_key.offset, urls=self.URLS)
       parser_mediator.ProduceEvent(event_object)
 
 
-class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):
-  """Parses the Zones key in the Software hive."""
-
-  NAME = u'msie_zone_software'
-
-  REG_TYPE = u'SOFTWARE'
-  REG_KEYS = [
-      u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones',
-      (u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-       u'\\Lockdown_Zones'),
-      (u'\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-       u'\\Zones'),
-      (u'\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-       u'\\Lockdown_Zones')]
-
-
-winreg.WinRegistryParser.RegisterPlugins([
-    MsieZoneSettingsPlugin, MsieZoneSettingsSoftwareZonesPlugin])
+winreg.WinRegistryParser.RegisterPlugin(MsieZoneSettingsPlugin)

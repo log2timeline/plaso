@@ -433,9 +433,16 @@ class FakeWinRegistryValue(interface.WinRegistryValue):
 class FakeWinRegistryFile(interface.WinRegistryFile):
   """Fake implementation of a Windows Registry file."""
 
-  def __init__(self):
-    """Initializes the Windows Registry file."""
-    super(FakeWinRegistryFile, self).__init__()
+  def __init__(self, ascii_codepage=u'cp1252', key_path_prefix=u''):
+    """Initializes the Windows Registry file.
+
+    Args:
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+      key_path_prefix: optional Windows Registry key path prefix.
+    """
+    super(FakeWinRegistryFile, self).__init__(
+        ascii_codepage=ascii_codepage, key_path_prefix=key_path_prefix)
     self._root_key = None
 
   def AddKeyByPath(self, key_path, registry_key):
@@ -452,7 +459,7 @@ class FakeWinRegistryFile(interface.WinRegistryFile):
       return False
 
     if not self._root_key:
-      self._root_key = FakeWinRegistryKey(u'')
+      self._root_key = FakeWinRegistryKey(self._key_path_prefix)
 
     path_segments = self._SplitKeyPath(key_path)
     parent_key = self._root_key
@@ -476,10 +483,16 @@ class FakeWinRegistryFile(interface.WinRegistryFile):
     Returns:
       A Registry key (instance of WinRegistryKey) or None if not available.
     """
-    if not key_path.startswith(self._KEY_PATH_SEPARATOR):
+    key_path_upper = key_path.upper()
+    if key_path_upper.startswith(self._key_path_prefix_upper):
+      relative_key_path = key_path[self._key_path_prefix_length:]
+    elif key_path.startswith(self._KEY_PATH_SEPARATOR):
+      relative_key_path = key_path
+      key_path = u''.join([self._key_path_prefix, key_path])
+    else:
       return
 
-    path_segments = self._SplitKeyPath(key_path)
+    path_segments = self._SplitKeyPath(relative_key_path)
     registry_key = self._root_key
     for path_segment in path_segments:
       if not registry_key:
@@ -489,17 +502,13 @@ class FakeWinRegistryFile(interface.WinRegistryFile):
 
     return registry_key
 
-  def GetRootKey(self, key_path_prefix=u''):
+  def GetRootKey(self):
     """Retrieves the root key.
-
-    Args:
-      key_path_prefix: optional Windows Registry key path prefix.
 
     Returns:
       The Windows Registry root key (instance of WinRegistryKey) or
       None if not available.
     """
-    # TODO: handle key_path_prefix.
     return self._root_key
 
   def Open(self, unused_file_object):

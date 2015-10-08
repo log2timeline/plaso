@@ -5,7 +5,6 @@
 import os
 import unittest
 
-from plaso.dfwinreg import definitions
 from plaso.dfwinreg import interface
 from plaso.dfwinreg import regf
 from plaso.dfwinreg import registry
@@ -65,18 +64,16 @@ class RegistryTest(test_lib.WinRegTestCase):
     test_path = self._GetTestFilePath([u'NTUSER.DAT'])
     registry_file = self._registry.OpenFile(test_path)
 
-    registry_file_type = self._registry.GetRegistryFileType(registry_file)
-    self.assertEqual(
-        registry_file_type, definitions.REGISTRY_FILE_TYPE_NTUSER)
+    key_path_prefix = self._registry.GetRegistryFileMapping(registry_file)
+    self.assertEqual(key_path_prefix, u'HKEY_CURRENT_USER')
 
     registry_file.Close()
 
     test_path = self._GetTestFilePath([u'SYSTEM'])
     registry_file = self._registry.OpenFile(test_path)
 
-    registry_file_type = self._registry.GetRegistryFileType(registry_file)
-    self.assertEqual(
-        registry_file_type, definitions.REGISTRY_FILE_TYPE_SYSTEM)
+    key_path_prefix = self._registry.GetRegistryFileMapping(registry_file)
+    self.assertEqual(key_path_prefix, u'HKEY_LOCAL_MACHINE\\System')
 
     registry_file.Close()
 

@@ -713,7 +713,7 @@ class PcapParser(interface.SingleFileBaseParser):
     """Parses a PCAP file-like object.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
 
     Raises:

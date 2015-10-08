@@ -17,17 +17,31 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   NAME = u'microsoft_office_mru'
   DESCRIPTION = u'Parser for Microsoft Office MRU Registry data.'
 
-  REG_TYPE = u'NTUSER'
-
-  REG_KEYS = [
-      u'\\Software\\Microsoft\\Office\\14.0\\Word\\Place MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\Access\\File MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\Access\\Place MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\PowerPoint\\File MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\PowerPoint\\Place MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\Excel\\File MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\Excel\\Place MRU',
-      u'\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'Access\\File MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'Access\\Place MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'Excel\\File MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'Excel\\Place MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'PowerPoint\\File MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'PowerPoint\\Place MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'Word\\File MRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          u'Word\\Place MRU')])
 
   _RE_VALUE_NAME = re.compile(r'^Item [0-9]+$', re.I)
 
@@ -40,16 +54,13 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': Microsoft Office MRU'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
     mru_values_dict = {}
@@ -83,14 +94,12 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       values_dict = {registry_value.name: registry_value.data}
       event_object = windows_events.WindowsRegistryEvent(
           filetime, registry_key.path, values_dict,
-          offset=registry_key.offset, registry_file_type=registry_file_type,
-          source_append=self._SOURCE_APPEND)
+          offset=registry_key.offset, source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, mru_values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 

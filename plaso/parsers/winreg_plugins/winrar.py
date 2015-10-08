@@ -17,25 +17,24 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
   NAME = u'winrar_mru'
   DESCRIPTION = u'Parser for WinRAR History Registry data.'
 
-  REG_TYPE = u'NTUSER'
-  REG_KEYS = [
-      u'\\Software\\WinRAR\\DialogEditHistory\\ExtrPath',
-      u'\\Software\\WinRAR\\DialogEditHistory\\ArcName',
-      u'\\Software\\WinRAR\\ArcHistory']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ArcName'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ExtrPath')])
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
   _SOURCE_APPEND = u': WinRAR History'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Extracts event objects from a WinRAR ArcHistory key.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
       registry_key: a Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE.
     """
     values_dict = {}
     for value in registry_key.GetValues():
@@ -51,8 +50,7 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 

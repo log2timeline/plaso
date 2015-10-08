@@ -109,6 +109,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-31 20:09:55')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, 'windows:registry:installation')
 
     expected_data_type = 'windows:registry:installation'
     self.assertEqual(event_object.data_type, expected_data_type)

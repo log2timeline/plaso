@@ -80,10 +80,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     Returns:
       A list of event objects (instances of EventObjects).
     """
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, knowledge_base_values=knowledge_base_values,
-        file_entry=file_entry, parser_chain=self._plugin.plugin_name)
+        self._plugin, registry_key, file_entry=file_entry,
+        parser_chain=self._plugin.plugin_name)
     return self._GetEventObjectsFromQueue(event_queue_consumer)
 
   def testProcessWindowsXP(self):

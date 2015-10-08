@@ -11,15 +11,19 @@ class WinRegistryFile(object):
 
   _KEY_PATH_SEPARATOR = u'\\'
 
-  def __init__(self, ascii_codepage=u'cp1252'):
+  def __init__(self, ascii_codepage=u'cp1252', key_path_prefix=u''):
     """Initializes the Windows Registry file.
 
     Args:
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
+      key_path_prefix: optional Windows Registry key path prefix.
     """
     super(WinRegistryFile, self).__init__()
     self._ascii_codepage = ascii_codepage
+    self._key_path_prefix = key_path_prefix
+    self._key_path_prefix_length = len(key_path_prefix)
+    self._key_path_prefix_upper = key_path_prefix.upper()
 
   def _SplitKeyPath(self, path):
     """Splits the key path into path segments.
@@ -51,11 +55,8 @@ class WinRegistryFile(object):
     """
 
   @abc.abstractmethod
-  def GetRootKey(self, key_path_prefix=u''):
+  def GetRootKey(self):
     """Retrieves the root key.
-
-    Args:
-      key_path_prefix: optional Windows Registry key path prefix.
 
     Returns:
       The Windows Registry root key (instance of WinRegistryKey) or
@@ -83,6 +84,16 @@ class WinRegistryFile(object):
     if root_key:
       for registry_key in root_key.RecurseKeys():
         yield registry_key
+
+  def SetKeyPathPrefix(self, key_path_prefix):
+    """Sets the Window Registry key path prefix.
+
+    Args:
+      key_path_prefix: the Windows Registry key path prefix.
+    """
+    self._key_path_prefix = key_path_prefix
+    self._key_path_prefix_length = len(key_path_prefix)
+    self._key_path_prefix_upper = key_path_prefix.upper()
 
 
 class WinRegistryFileReader(object):
@@ -164,8 +175,10 @@ class WinRegistryKey(object):
     # Remove empty path segments.
     path_segments = filter(None, path_segments)
 
-    return u'{0:s}{1:s}'.format(
-        self._PATH_SEPARATOR, self._PATH_SEPARATOR.join(path_segments))
+    key_path = self._PATH_SEPARATOR.join(path_segments)
+    if not key_path.startswith(u'HKEY_'):
+      key_path = u'{0:s}{1:s}'.format(self._PATH_SEPARATOR, key_path)
+    return key_path
 
   @abc.abstractmethod
   def GetSubkeyByName(self, name):
