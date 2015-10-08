@@ -657,8 +657,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     image_options = argument_parser.add_argument_group(u'Image Options')
 
     image_options.add_argument(
-        u'-i', u'--image', dest=u'image', action=u'store', type=unicode,
-        default=u'', metavar=u'IMAGE_PATH', help=(
+        u'-i', u'--image', dest=self._SOURCE_OPTION, action=u'store',
+        type=str, default=u'', metavar=u'IMAGE_PATH', help=(
             u'If the Registry file is contained within a storage media image, '
             u'set this option to specify the path of image file.'))
 
@@ -688,14 +688,13 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     mode_options.add_argument(
         u'-k', u'--key', dest=u'key', action=u'store', default=u'',
-        type=unicode, metavar=u'REGISTRY_KEYPATH', help=(
+        type=str, metavar=u'REGISTRY_KEYPATH', help=(
             u'A Registry key path that the tool should parse using all '
             u'available plugins.'))
 
     mode_options.add_argument(
         u'-p', u'--plugins', dest=u'plugin_names', action=u'append', default=[],
-        type=unicode, metavar=u'PLUGIN_NAME',
-        help=(
+        type=str, metavar=u'PLUGIN_NAME', help=(
             u'Substring match of the Registry plugin to be used, this '
             u'parameter can be repeated to create a list of plugins to be '
             u'run against, eg: "-p userassist -p rdp" or "-p userassist".'))
@@ -743,7 +742,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       return
 
     registry_file = getattr(options, u'registry_file', None)
-    image = getattr(options, u'image', None)
+    image = self.ParseStringOption(options, self._SOURCE_OPTION)
     source_path = None
     if image:
       # TODO: refactor, there should be no need for separate code paths.
@@ -769,7 +768,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         raise errors.BadConfigOption(
             u'Registry file: {0:s} does not exist.'.format(registry_file))
 
-    self._key_path = getattr(options, u'key', None)
+    self._key_path = self.ParseStringOption(options, u'key')
     self._parse_restore_points = getattr(options, u'restore_points', False)
 
     self._quiet = getattr(options, u'quiet', False)
@@ -786,13 +785,14 @@ class PregTool(storage_media_tool.StorageMediaTool):
       raise errors.BadConfigOption(
           u'Unable to read the input file with error: {0:s}'.format(reason))
 
+    # TODO: make sure encoded plugin names are handled correctly.
     self.plugin_names = getattr(options, u'plugin_names', [])
 
     self._front_end.SetKnowledgeBase(self._knowledge_base_object)
 
     if getattr(options, u'console', False):
       self.run_mode = self.RUN_MODE_CONSOLE
-    elif getattr(options, u'key', u'') and registry_file:
+    elif self._key_path and registry_file:
       self.run_mode = self.RUN_MODE_REG_KEY
     elif self.plugin_names:
       self.run_mode = self.RUN_MODE_REG_PLUGIN

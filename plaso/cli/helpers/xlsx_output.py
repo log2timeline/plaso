@@ -28,8 +28,8 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--timestamp_format', dest=u'timestamp_format', type=unicode,
-        action=u'store', default=u'', help=(
+        u'--timestamp_format', dest=u'timestamp_format', type=str,
+        action=u'store', default=cls._DEFAULT_TIMESTAMP_FORMAT, help=(
             u'Set the timestamp format that will be used in the datetime'
             u'column of the XLSX spreadsheet.'))
 
@@ -43,14 +43,14 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(output_module, xlsx.XlsxOutputModule):
       raise errors.BadConfigObject(
           u'Output module is not an instance of XlsxOutputModule')
 
-    timestamp_format = getattr(
-        options, u'timestamp_format', cls._DEFAULT_TIMESTAMP_FORMAT)
+    timestamp_format = cls._ParseStringOption(
+        options, u'timestamp_format',
+        default_value=cls._DEFAULT_TIMESTAMP_FORMAT)
     output_module.SetTimestampFormat(timestamp_format)
 
     filename = getattr(options, u'write', None)

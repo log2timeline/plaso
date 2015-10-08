@@ -82,9 +82,12 @@ class PsortTool(analysis_tool.AnalysisTool):
     analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
     analysis_plugin_names = set([
         name.lower() for name, _, _ in analysis_plugin_info])
-    analysis_plugin_string = getattr(options, u'analysis_plugins', u'')
-    if analysis_plugin_string == u'':
+
+    analysis_plugin_string = self.ParseStringOption(
+        options, u'analysis_plugins')
+    if not analysis_plugin_string:
       return
+
     requested_plugin_names = set([
         name.strip().lower() for name in analysis_plugin_string.split(u',')])
 
@@ -116,7 +119,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._filter_expression = getattr(options, u'filter', None)
+    self._filter_expression = self.ParseStringOption(options, u'filter')
     if self._filter_expression:
       self._filter_object = filters_manager.FiltersManager.GetFilterObject(
           self._filter_expression)
@@ -155,7 +158,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    preferred_language = getattr(options, u'preferred_language', u'en-US')
+    preferred_language = self.ParseStringOption(
+        options, u'preferred_language', default_value=u'en-US')
 
     if preferred_language == u'list':
       self.list_language_identifiers = True
@@ -328,7 +332,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     argument_group.add_argument(
         u'filter', nargs=u'?', action=u'store', metavar=u'FILTER', default=None,
-        type=unicode, help=(
+        type=str, help=(
             u'A filter that can be used to filter the dataset before it '
             u'is written into storage. More information about the filters '
             u'and how to use them can be found here: {0:s}').format(self._URL))
@@ -342,7 +346,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     argument_group.add_argument(
         u'--language', metavar=u'LANGUAGE', dest=u'preferred_language',
-        default=u'en-US', type=unicode, help=(
+        default=u'en-US', type=str, help=(
             u'The preferred language identifier for Windows Event Log message '
             u'strings. Use "--language list" to see a list of available '
             u'language identifiers. Note that formatting will fall back on '
@@ -432,7 +436,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     analysis_group.add_argument(
         u'--analysis', metavar=u'PLUGIN_LIST', dest=u'analysis_plugins',
-        default=u'', action=u'store', type=unicode, help=(
+        default=u'', action=u'store', type=str, help=(
             u'A comma separated list of analysis plugin names to be loaded '
             u'or "--analysis list" to see a list of available plugins.'))
 
@@ -585,8 +589,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       logging_level = logging.INFO
 
-    log_file = getattr(options, u'log_file', None)
-    self._ConfigureLogging(filename=log_file, log_level=logging_level)
+    self.ParseLogFileOptions(options)
+    self._ConfigureLogging(filename=self._log_file, log_level=logging_level)
 
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:

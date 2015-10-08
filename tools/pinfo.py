@@ -547,7 +547,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
         default=False, help=u'Print verbose output.')
 
     argument_parser.add_argument(
-        u'--compare', dest=u'compare_storage_file', type=unicode,
+        u'--compare', dest=u'compare_storage_file', type=str,
         action=u'store', default=u'', metavar=u'STORAGE_FILE', help=(
             u'The path of the storage file to compare against.'))
 
@@ -594,7 +594,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     self._verbose = getattr(options, u'verbose', False)
 
-    compare_storage_file_path = getattr(options, u'compare_storage_file', None)
+    compare_storage_file_path = self.ParseStringOption(
+        options, u'compare_storage_file')
     if compare_storage_file_path:
       if not os.path.isfile(compare_storage_file_path):
         raise errors.BadConfigOption(
