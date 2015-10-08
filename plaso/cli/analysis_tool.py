@@ -34,7 +34,7 @@ class AnalysisTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._storage_file_path = getattr(options, u'storage_file', None)
+    self._storage_file_path = self.ParseStringOption(options, u'storage_file')
     if not self._storage_file_path:
       raise errors.BadConfigOption(u'Missing storage file option.')
 
@@ -51,7 +51,7 @@ class AnalysisTool(tools.CLITool):
                       argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'storage_file', metavar=u'STORAGE_FILE', nargs=u'?', type=unicode,
+        u'storage_file', metavar=u'STORAGE_FILE', nargs=u'?', type=str,
         default=None, help=u'The path of the storage file.')
 
   def ParseOptions(self, options):

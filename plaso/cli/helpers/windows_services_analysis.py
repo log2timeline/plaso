@@ -14,6 +14,8 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the Windows Services analysis plugin.'
 
+  _DEFAULT_OUTPUT = u'text'
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Add command line arguments the helper supports to an argument group.
@@ -26,8 +28,8 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--windows-services-output', dest=u'windows-services-output',
-        type=unicode, action=u'store', default=u'text',
+        u'--windows-services-output', dest=u'windows_services_output',
+        type=str, action=u'store', default=cls._DEFAULT_OUTPUT,
         choices=[u'text', u'yaml'], help=(
             u'Specify how the results should be displayed. Options are text '
             u'and yaml.'))
@@ -42,16 +44,13 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(analysis_plugin, windows_services.WindowsServicesPlugin):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of WindowsServicesPlugin')
 
-    output_format = getattr(options, u'output_format', None)
-    if output_format is None:
-      raise errors.BadConfigOption(u'WindowsServices output format not set.')
-
+    output_format = cls._ParseStringOption(
+        options, u'windows_services_output', default_value=cls._DEFAULT_OUTPUT)
     analysis_plugin.SetOutputFormat(output_format)
 
 

@@ -7,6 +7,7 @@ import json
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -201,7 +202,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
           data[u'text'] = u'No additional data.'
 
     time_value = row['time_string']
-    if isinstance(time_value, (int, long)):
+    if isinstance(time_value, py2to3.INTEGER_TYPES):
       timestamp = timelib.Timestamp.FromJavaTime(time_value)
     else:
       try:

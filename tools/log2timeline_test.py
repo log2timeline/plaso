@@ -69,7 +69,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesImage(self):
     """Tests the ProcessSources function on a single partition image."""
-    test_source = self._GetTestFilePath([u'image.qcow2'])
+    test_source = self._GetTestFilePath([u'ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
       test_storage_file = os.path.join(temp_directory, u'test.plaso')

@@ -38,7 +38,6 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(output_module, sqlite_4n6time.SQLite4n6TimeOutputModule):
       raise errors.BadConfigObject(
