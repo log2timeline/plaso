@@ -181,6 +181,21 @@ class ParsersManager(object):
     return parser_plugins_information
 
   @classmethod
+  def GetParserObjectByName(cls, parser_name):
+    """Retrieves a specific parser object by its name.
+
+    Args:
+      parser_name: the name of the parser.
+
+    Returns:
+      A parser object (instance of BaseParser) or None.
+    """
+    parser_class = cls._parser_classes.get(parser_name, None)
+    if not parser_class:
+      return
+    return parser_class()
+
+  @classmethod
   def GetParserObjects(cls, parser_filter_string=None):
     """Retrieves the parser objects.
 
@@ -329,19 +344,6 @@ class ParsersManager(object):
         remainder_list.append(parser_name)
 
     return specification_store, remainder_list
-
-  @classmethod
-  def GetWindowsRegistryPlugins(cls):
-    """Build a list of all available Windows Registry plugins.
-
-    Returns:
-      A plugins list (instance of PluginList).
-    """
-    parser_class = cls._parser_classes.get(u'winreg', None)
-    if not parser_class:
-      return
-
-    return parser_class.GetPluginList()
 
   @classmethod
   def RegisterParser(cls, parser_class):

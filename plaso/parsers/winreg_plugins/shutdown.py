@@ -17,30 +17,28 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_shutdown'
   DESCRIPTION = u'Parser for ShutdownTime Registry value.'
 
-  REG_KEYS = [u'\\{current_control_set}\\Control\\Windows']
-  REG_TYPE = u'SYSTEM'
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
-  FILETIME_STRUCT = construct.ULInt64(u'filetime_timestamp')
+  _UINT64_STRUCT = construct.ULInt64(u'value')
 
   _SOURCE_APPEND = u'Shutdown Entry'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect ShutdownTime value under Windows and produce an event object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     shutdown_value = registry_key.GetValueByName(u'ShutdownTime')
     if not shutdown_value:
       return
 
     try:
-      filetime = self.FILETIME_STRUCT.parse(shutdown_value.data)
+      filetime = self._UINT64_STRUCT.parse(shutdown_value.data)
     except construct.FieldError as exception:
       parser_mediator.ProduceParseError(
           u'Unable to extract shutdown timestamp with error: {0:s}'.format(
@@ -51,9 +49,8 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         filetime, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        usage=eventdata.EventTimestamp.LAST_SHUTDOWN,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND,
+        usage=eventdata.EventTimestamp.LAST_SHUTDOWN)
     parser_mediator.ProduceEvent(event_object)
 
 

@@ -89,7 +89,7 @@ class ParserTestCase(unittest.TestCase):
   def _GetParserMediator(
       self, event_queue, parse_error_queue, knowledge_base_values=None,
       file_entry=None, parser_chain=None):
-    """Retrieves a parser context object.
+    """Retrieves a parser mediator object.
 
     Args:
       event_queue: the event queue (instance of Queue).
@@ -102,7 +102,7 @@ class ParserTestCase(unittest.TestCase):
                     point. The default is None.
 
     Returns:
-      A parser context object (instance of ParserMediator).
+      A parser mediator object (instance of ParserMediator).
     """
     event_queue_producer = queue.ItemQueueProducer(event_queue)
     parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)

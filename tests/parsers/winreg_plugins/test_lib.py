@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin related functions and classes for testing."""
 
-from dfvfs.lib import definitions
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import resolver as path_spec_resolver
-
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.dfwinreg import regf
 from plaso.engine import single_process
@@ -14,21 +10,6 @@ from tests.parsers import test_lib
 
 class RegistryPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a Windows Registry plugin."""
-
-  def _GetKeyFromFile(self, path, key_path):
-    """Retrieves a Windows Registry key from a file.
-
-    Args:
-      path: The path to the file, as a string.
-      key_path: The path of the key to parse.
-
-    Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
-    """
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    return self._GetKeyFromFileEntry(file_entry, key_path)
 
   def _GetKeyFromFileEntry(self, file_entry, key_path):
     """Retrieves a Windows Registry key from a file.
@@ -66,17 +47,17 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     return registry_file
 
   def _ParseKeyWithPlugin(
-      self, plugin_object, registry_key, knowledge_base_values=None,
-      file_entry=None, parser_chain=None):
+      self, plugin_object, registry_key, file_entry=None,
+      knowledge_base_values=None, parser_chain=None):
     """Parses a key within a Windows Registry file using the plugin object.
 
     Args:
       plugin_object: The plugin object.
       registry_key: The Windows Registry Key.
-      knowledge_base_values: Optional dict containing the knowledge base
-                             values. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      knowledge_base_values: Optional dict containing the knowledge base
+                             values. The default is None.
       parser_chain: Optional string containing the parsing chain up to this
                     point. The default is None.
 
@@ -110,7 +91,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       # as access to the parser chain should be very infrequent.
       parser_mediator._parser_chain_components = parser_chain.split(u'/')
 
-    plugin_object.Process(parser_mediator, key=registry_key)
+    plugin_object.Process(parser_mediator, registry_key)
 
     return event_queue_consumer
 

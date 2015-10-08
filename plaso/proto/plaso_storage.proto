@@ -99,7 +99,7 @@ message EventObject {
 
   // Description of the origin of the event in generic terms that
   // mostly adhere to the definition of the TLN format.
-  // TODO: Remove this field from the EventObject message.
+  // NOTE: This field is deprecated and should no longer be used.
   enum SourceShort {
     AV = 1; // All Anti-Virus engine log files.
     BACK = 2; // Information from backup points, eg. restore points, VSS.
@@ -120,7 +120,7 @@ message EventObject {
   }
 
   // The category or short description of the source.
-  // TODO: Remove this field from the EventObject message.
+  // NOTE: This field is deprecated and should no longer be used.
   optional SourceShort source_short = 13;
 
   // The short description is not sufficient to describe the source
@@ -136,7 +136,7 @@ message EventObject {
   //    Recycle Bin
   //    NTUSER.DAT Registry
   //    Sophos AV Log
-  // TODO: Remove this field from the EventObject message.
+  // NOTE: This field is deprecated and should no longer be used.
   optional string source_long = 14;
 
   /////////////////////////////////////////////////////////////////////
@@ -152,6 +152,7 @@ message EventObject {
   // The name of the plugin that was used, if applicable.
   optional string plugin = 18;
   // The Windows Registry file type, e.g.: NTUSER, SAM.
+  // NOTE: This field is deprecated and should no longer be used.
   optional string registry_file_type = 19;
   // Boolean value that indicates whether the file was allocated or not.
   optional bool allocated = 20;
