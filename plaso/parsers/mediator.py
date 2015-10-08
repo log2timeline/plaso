@@ -220,7 +220,8 @@ class ParserMediator(object):
     if not self._file_entry:
       raise ValueError(u'Missing active file entry')
 
-    file_object = self._file_entry.GetFileObject()
+    data_stream = getattr(self._file_entry.path_spec, u'data_stream', u'')
+    file_object = self._file_entry.GetFileObject(data_stream_name=data_stream)
     if offset is not None:
       file_object.seek(offset, os.SEEK_SET)
     return file_object
