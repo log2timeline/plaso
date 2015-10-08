@@ -3,6 +3,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.lib import py2to3
 
 
 class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
@@ -63,7 +64,8 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
 
     self.regvalue = values_dict
 
-    if offset or isinstance(offset, (int, long)):
+    # TODO: determine how should offset 0 be handled.
+    if offset or isinstance(offset, py2to3.INTEGER_TYPES):
       self.offset = offset
 
     if registry_file_type:

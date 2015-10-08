@@ -95,13 +95,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddLogFileOptions(argument_parser)
 
     argument_parser.add_argument(
-        u'-w', u'--write', action=u'store', dest=u'path', type=unicode,
+        u'-w', u'--write', action=u'store', dest=u'path', type=str,
         metavar=u'PATH', default=u'export', help=(
             u'The directory in which extracted files should be stored.'))
 
     self.AddFilterOptions(argument_parser)
     argument_parser.add_argument(
-        u'--date-filter', u'--date_filter', action=u'append', type=unicode,
+        u'--date-filter', u'--date_filter', action=u'append', type=str,
         dest=u'date_filters', metavar=u'TYPE_START_END', default=[], help=(
             u'Filter based on file entry date and time ranges. This parameter '
             u'is formatted as "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where '
@@ -121,7 +121,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     argument_parser.add_argument(
         u'-x', u'--extensions', dest=u'extensions_string', action=u'store',
-        type=unicode, metavar=u'EXTENSIONS', help=(
+        type=str, metavar=u'EXTENSIONS', help=(
             u'Filter based on file name extensions. This option accepts '
             u'multiple multiple comma separated values e.g. "csv,docx,pst".'))
 
@@ -135,7 +135,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     argument_parser.add_argument(
         u'--signatures', dest=u'signature_identifiers', action=u'store',
-        type=unicode, metavar=u'IDENTIFIERS', help=(
+        type=str, metavar=u'IDENTIFIERS', help=(
             u'Filter based on file format signature identifiers. This option '
             u'accepts multiple comma separated values e.g. "esedb,lnk". '
             u'Use "list" to show an overview of the supported file format '
@@ -153,8 +153,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddVSSProcessingOptions(argument_parser)
 
     argument_parser.add_argument(
-        u'image', nargs='?', action=u'store', metavar=u'IMAGE', default=None,
-        type=unicode, help=(
+        self._SOURCE_OPTION, nargs='?', action=u'store', metavar=u'IMAGE',
+        default=None, type=str, help=(
             u'The full path to the image file that we are about to extract '
             u'files from, it should be a raw image or another image that '
             u'plaso supports.'))
@@ -194,7 +194,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._ParseDataLocationOption(options)
 
     # Check the list options first otherwise required options will raise.
-    signature_identifiers = getattr(options, u'signature_identifiers', None)
+    signature_identifiers = self.ParseStringOption(
+        options, u'signature_identifiers')
     if signature_identifiers == u'list':
       self.list_signature_identifiers = True
 
@@ -210,11 +211,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     else:
       log_level = logging.INFO
 
-    log_file = getattr(options, u'log_file', None)
+    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
-        filename=log_file, format_string=format_string, log_level=log_level)
+        filename=self._log_file, format_string=format_string,
+        log_level=log_level)
 
-    self._destination_path = getattr(options, u'path', u'export')
+    self._destination_path = self.ParseStringOption(
+        options, u'path', default_value=u'export')
 
     self._ParseFilterOptions(options)
 
@@ -228,7 +231,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     except ValueError as exception:
       raise errors.BadConfigOption(exception)
 
-    extensions_string = getattr(options, u'extensions_string', None)
+    extensions_string = self.ParseStringOption(options, u'extensions_string')
     self._front_end.ParseExtensionsString(extensions_string)
 
     names_string = getattr(options, u'names_string', None)

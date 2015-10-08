@@ -28,7 +28,7 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--tagging-file', dest=u'tagging_file', type=unicode,
+        u'--tagging-file', dest=u'tagging_file', type=str,
         help=u'Specify a file to read tagging criteria from.',
         action=u'store')
 
@@ -48,7 +48,7 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of TaggingPlugin')
 
-    tagging_file = getattr(options, u'tagging_file', None)
+    tagging_file = cls._ParseStringOption(options, u'tagging_file')
     if tagging_file:
       if not os.path.exists(tagging_file) or not os.path.isfile(tagging_file):
         # Check if the file exists in the data location path.
