@@ -68,14 +68,10 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    source_long = getattr(event_object, u'source_long', None)
-    if not source_long:
-      registry_file_type = getattr(
-          event_object, u'registry_file_type', u'UNKNOWN')
-      source_long = u'{0:s} key'.format(registry_file_type)
-
-    if hasattr(event_object, u'source_append'):
-      source_long += u' {0:s}'.format(event_object.source_append)
+    source_long = getattr(event_object, u'source_long', u'UNKNOWN')
+    source_append = getattr(event_object, u'source_append', None)
+    if source_append:
+      source_long = u'{0:s} {1:s}'.format(source_long, source_append)
 
     return self.SOURCE_SHORT, source_long
 

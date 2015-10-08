@@ -153,13 +153,15 @@ class PreprocessPluginsManager(object):
 
     if knowledge_base:
       pre_obj = knowledge_base.pre_obj
+      path_attributes = pre_obj.__dict__
     else:
       pre_obj = None
+      path_attributes = None
 
     # TODO: do not pass the full pre_obj here but just
     # the necessary values.
     registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
-        searcher, pre_obj=pre_obj)
+        searcher, path_attributes=path_attributes)
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 

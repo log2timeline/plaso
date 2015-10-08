@@ -21,7 +21,9 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
-    key_path = self._plugin.REG_KEYS[0]
+    key_path = (
+        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+        u'MountPoints2')
     registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)

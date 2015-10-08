@@ -15,18 +15,17 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
   NAME = u'explorer_programscache'
   DESCRIPTION = u'Parser for Explorer ProgramsCache Registry data.'
 
-  REG_TYPE = u'NTUSER'
-
-  REG_KEYS = [
-      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-       u'StartPage'),
-      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-       u'StartPage2')]
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          u'Explorer\\StartPage'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          u'Explorer\\StartPage2')])
 
   URLS = [
-      (u'https://github.com/libyal/assorted/blob/master/documentation/'
-       u'Jump%20lists%20format.asciidoc#4-explorer-programscache-registry-'
-       u'values')]
+      (u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
+       u'Programs%20Cache%20values.asciidoc')]
 
   _HEADER_STRUCT = construct.Struct(
       u'programscache_header',

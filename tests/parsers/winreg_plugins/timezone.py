@@ -112,9 +112,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, knowledge_base_values=knowledge_base_values)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)
@@ -139,13 +137,12 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
-    test_file = self._GetTestFilePath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\TimeZoneInformation'
-    registry_key = self._GetKeyFromFile(test_file, key_path)
+    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
 
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, knowledge_base_values=knowledge_base_values)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)

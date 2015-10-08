@@ -11,15 +11,15 @@ from plaso.parsers.winreg_plugins import run
 from tests.parsers.winreg_plugins import test_lib
 
 
-class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
-  """Tests for the Run Windows Registry plugin on the User hive."""
+class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the auto rus Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunUserPlugin()
+    self._plugin = run.AutoRunsPlugin()
 
-  def testProcess(self):
-    """Tests the Process function."""
+  def testProcessNtuserRun(self):
+    """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
     key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
     registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -47,16 +47,8 @@ class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-
-class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
-  """Tests for the RunOnce Windows Registry plugin on the User hive."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunUserPlugin()
-
-  def testProcess(self):
-    """Tests the Process function."""
+  def testProcessNtuserRunOnce(self):
+    """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
     key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
     registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -85,16 +77,8 @@ class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-
-class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the Run Windows Registry plugin on the Software hive."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunSoftwarePlugin()
-
-  def testProcess(self):
-    """Tests the Process function."""
+  def testProcessSoftwareRun(self):
+    """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Run'
     registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -127,16 +111,8 @@ class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
         u'2011-09-16 20:57:09.067575')
     self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
-
-class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the RunOnce Windows Registry plugin on the Software hive."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunSoftwarePlugin()
-
-  def testProcess(self):
-    """Tests the Process function."""
+  def testProcessSoftwareRunOnce(self):
+    """Tests the Process function on a RunOnce key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
     registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)

@@ -18,23 +18,21 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_usbstor_devices'
   DESCRIPTION = u'Parser for USB Plug And Play Manager USBStor Registry Key.'
 
-  REG_KEYS = [u'\\{current_control_set}\\Enum\\USBSTOR']
-  REG_TYPE = u'SYSTEM'
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Enum\\USBSTOR')])
 
   URLS = [u'http://www.forensicswiki.org/wiki/USB_History_Viewing']
 
   _SOURCE_APPEND = u': USBStor Entries'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect Values under USBStor and return an event object for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     for subkey in registry_key.GetSubkeys():
       values_dict = {}
@@ -43,9 +41,8 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       # Time last USB device of this class was first inserted.
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset, registry_file_type=registry_file_type,
-          usage=eventdata.EventTimestamp.FIRST_CONNECTED,
-          source_append=self._SOURCE_APPEND)
+          offset=registry_key.offset, source_append=self._SOURCE_APPEND,
+          usage=eventdata.EventTimestamp.FIRST_CONNECTED)
       parser_mediator.ProduceEvent(event_object)
 
       name_values = subkey.name.split(u'&')
@@ -85,9 +82,8 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
         # Vista/XP - Time of an insert.
         event_object = windows_events.WindowsRegistryEvent(
             devicekey.last_written_time, registry_key.path, values_dict,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            usage=eventdata.EventTimestamp.LAST_CONNECTED,
-            source_append=self._SOURCE_APPEND)
+            offset=registry_key.offset, source_append=self._SOURCE_APPEND,
+            usage=eventdata.EventTimestamp.LAST_CONNECTED)
         parser_mediator.ProduceEvent(event_object)
 
         # Build list of first Insertion times.
@@ -110,9 +106,8 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
         for timestamp in first_insert:
           event_object = windows_events.WindowsRegistryEvent(
               timestamp, registry_key.path, values_dict,
-              offset=registry_key.offset, registry_file_type=registry_file_type,
-              usage=eventdata.EventTimestamp.LAST_CONNECTED,
-              source_append=self._SOURCE_APPEND)
+              offset=registry_key.offset, source_append=self._SOURCE_APPEND,
+              usage=eventdata.EventTimestamp.LAST_CONNECTED)
           parser_mediator.ProduceEvent(event_object)
 
 

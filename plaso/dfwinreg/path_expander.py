@@ -5,7 +5,7 @@
 class WinRegistryKeyPathExpander(object):
   """Class that implements the Windows Registry key path expander object."""
 
-  def ExpandPath(self, key_path, pre_obj=None):
+  def ExpandPath(self, key_path, path_attributes=None):
     """Expand a Registry key path based on attributes in pre calculated values.
 
        A Registry key path may contain paths that are attributes, based on
@@ -23,9 +23,8 @@ class WinRegistryKeyPathExpander(object):
        case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
 
     Args:
-      key_path: The Registry key path before being expanded.
-      pre_obj: Optional preprocess object that contains stored values from
-               the image.
+      key_path: the Windows Registry key path before being expanded.
+      path_attributes: optional dictionary of path attributes.
 
     Returns:
       A Registry key path that's expanded based on attribute values.
@@ -34,20 +33,13 @@ class WinRegistryKeyPathExpander(object):
       KeyError: If an attribute name is in the key path not set in
                 the preprocessing object a KeyError will be raised.
     """
-    key_dict = {}
+    if not path_attributes:
+      return key_path
 
-    if pre_obj:
-      key_dict.update(pre_obj.__dict__.items())
-
-    # TODO: make case insensitive.
-    expanded_key_path = u''
     try:
-      expanded_key_path = key_path.format(**key_dict)
+      expanded_key_path = key_path.format(**path_attributes)
     except KeyError as exception:
-      raise KeyError(u'Unable to expand path with error: {0:s}'.format(
-          exception))
-
-    if not expanded_key_path:
-      raise KeyError(u'Unable to expand path, no value returned.')
+      raise KeyError(
+          u'Unable to expand path with error: {0:s}'.format(exception))
 
     return expanded_key_path

@@ -1,138 +1,13 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
-import logging
-
-from plaso.dfwinreg import regf as dfwinreg_regf
 from plaso.dfwinreg import registry as dfwinreg_registry
-from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-# TODO: add tests for this class.
-class PluginList(object):
-  """A simple class that stores information about Windows Registry plugins."""
-
-  def __init__(self):
-    """Initializes the plugin list object."""
-    super(PluginList, self).__init__()
-    self._plugins = {}
-
-  def __iter__(self):
-    """Return an iterator of all Windows Registry plugins."""
-    ret = []
-    _ = map(ret.extend, self._plugins.values())
-    for item in ret:
-      yield item
-
-  def _GetPluginsByType(self, plugins_dict, registry_file_type):
-    """Retrieves the Windows Registry plugins of a specific type.
-
-    Args:
-      plugins_dict: Dictionary containing the Windows Registry plugins
-                    by plugin type.
-      registry_file_type: String containing the Windows Registry file type,
-                          e.g. NTUSER, SOFTWARE.
-
-    Returns:
-      A list containing the Windows Registry plugins (instances of
-      RegistryPlugin) for the specific plugin type.
-    """
-    return plugins_dict.get(
-        registry_file_type, []) + plugins_dict.get(u'any', [])
-
-  def AddPlugin(self, registry_file_type, plugin_class):
-    """Add a Windows Registry plugin to the plugin list.
-
-    Args:
-      registry_file_type: String containing the Windows Registry file type,
-                          e.g. NTUSER, SOFTWARE.
-      plugin_class: The plugin class that is being registered.
-    """
-    self._plugins.setdefault(registry_file_type, []).append(plugin_class)
-
-  def GetAllPlugins(self):
-    """Return all key plugins as a list."""
-    ret = []
-    _ = map(ret.extend, self._plugins.values())
-    return ret
-
-  def GetExpandedKeyPaths(self, parser_mediator, plugin_names=None):
-    """Retrieves a list of expanded Windows Registry key paths.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      plugin_names: Optional list of plugin names, if defined only keys from
-                    these plugins will be expanded. The default is None which
-                    means all key plugins will get expanded keys.
-
-    Returns:
-      A list of expanded Windows Registry key paths.
-    """
-    key_paths = []
-    for plugin_cls in self.GetAllPlugins():
-      plugin_object = plugin_cls()
-
-      if plugin_names and plugin_object.NAME not in plugin_names:
-        continue
-      plugin_object.ExpandKeys(parser_mediator)
-      if not plugin_object.expanded_keys:
-        continue
-
-      for key_path in plugin_object.expanded_keys:
-        if key_path not in key_paths:
-          key_paths.append(key_path)
-
-    return key_paths
-
-  def GetPluginObjectByName(self, registry_file_type, plugin_name):
-    """Creates a new instance of a specific Windows Registry plugin.
-
-    Args:
-      registry_file_type: String containing the Windows Registry file type,
-                          e.g. NTUSER, SOFTWARE.
-      plugin_name: the name of the plugin.
-
-    Returns:
-      The Windows Registry plugin (instance of RegistryPlugin) or None.
-    """
-    # TODO: make this a dict lookup instead of a list iteration.
-    for plugin_cls in self.GetPlugins(registry_file_type):
-      if plugin_cls.NAME == plugin_name:
-        return plugin_cls()
-
-  def GetPluginObjects(self, registry_file_type):
-    """Creates new instances of a specific type of Windows Registry plugins.
-
-    Args:
-      registry_file_type: String containing the Windows Registry file type,
-                          e.g. NTUSER, SOFTWARE.
-
-    Returns:
-      The Windows Registry plugin (instance of RegistryPlugin) or None.
-    """
-    return [plugin_cls() for plugin_cls in self.GetPlugins(registry_file_type)]
-
-  def GetPlugins(self, registry_file_type):
-    """Retrieves the Windows Registry key-based plugins of a specific type.
-
-    Args:
-      registry_file_type: String containing the Windows Registry file type,
-                          e.g. NTUSER, SOFTWARE.
-
-    Returns:
-      A list containing the Windows Registry plugins (types of
-      RegistryPlugin) for the specific plugin type.
-    """
-    return self._GetPluginsByType(self._plugins, registry_file_type)
-
-  def GetTypes(self):
-    """Return a set of all plugins supported."""
-    return set(self._plugins)
-
-
+# TODO: rename to REGFParser.
 class WinRegistryParser(interface.SingleFileBaseParser):
   """Parses Windows NT Registry (REGF) files."""
 
@@ -144,39 +19,32 @@ class WinRegistryParser(interface.SingleFileBaseParser):
   def __init__(self):
     """Initializes a parser object."""
     super(WinRegistryParser, self).__init__()
-    self._plugins = WinRegistryParser.GetPluginList()
-    self._win_registry = dfwinreg_registry.WinRegistry(
-        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
+    self._plugins = WinRegistryParser.GetPluginObjects()
 
-  def _ParseRegistryFile(
-      self, parser_mediator, winreg_file, registry_file_type):
-    """Parses a Windows Registry file.
+    for list_index, plugin_object in enumerate(self._plugins):
+      if plugin_object.NAME == u'winreg_default':
+        self._default_plugin = self._plugins.pop(list_index)
+        break
+
+    # TODO: build a filter tree to optimize lookups.
+
+  def _CanProcessKeyWithPlugin(self, registry_key, plugin_object):
+    """Determines if a plugin can process a Windows Registry key or its values.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      winreg_file: A Windows Registry file (instance of
-                   dfwinreg.WinRegistryFile).
-      registry_file_type: The Registry file type.
+      registry_key: a Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
+      plugin_object: a Windows Registry plugin object (instance of
+                     WindowsRegistryPlugin).
+
+    Returns:
+      A boolean value that indicates a match.
     """
-    plugins = self._plugins.GetPluginObjects(registry_file_type)
-    logging.debug(
-        u'Number of plugins for this Windows Registry file: {0:d}.'.format(
-            len(plugins)))
+    for filter_object in plugin_object.FILTERS:
+      if filter_object.Match(registry_key):
+        return True
 
-    # Recurse through keys in the file and apply the plugins in the order:
-    # 1. file type specific plugins.
-    # 2. generic plugins.
-
-    for key in winreg_file.RecurseKeys():
-      for plugin_object in plugins:
-        # TODO: determine if the plugin matches the key and continue
-        # to the next key.
-        if parser_mediator.abort:
-          break
-
-        plugin_object.UpdateChainAndProcess(
-            parser_mediator, key=key, registry_file_type=registry_file_type,
-            codepage=parser_mediator.codepage)
+    return False
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -185,46 +53,41 @@ class WinRegistryParser(interface.SingleFileBaseParser):
     format_specification.AddNewSignature(b'regf', offset=0)
     return format_specification
 
-  @classmethod
-  def GetPluginList(cls):
-    """Build a list of all available plugins.
-
-    Returns:
-      A plugins list (instance of PluginList).
-    """
-    plugins_list = PluginList()
-    for _, plugin_class in cls.GetPlugins():
-      plugins_list.AddPlugin(plugin_class.REG_TYPE, plugin_class)
-    return plugins_list
-
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Registry file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
     """
-    display_name = parser_mediator.GetDisplayName()
+    win_registry_reader = dfwinreg_registry.FileObjectWinRegistryFileReader()
+    registry_file = win_registry_reader.Open(file_object)
 
-    winreg_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage=parser_mediator.codepage)
+    win_registry = dfwinreg_registry.WinRegistry()
+    key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
+    registry_file.SetKeyPathPrefix(key_path_prefix)
+    root_key = registry_file.GetRootKey()
+    if not root_key:
+      return
 
     try:
-      winreg_file.Open(file_object)
+      for registry_key in root_key.RecurseKeys():
+        # TODO: use a filter tree to optimize lookups.
+        found_matching_plugin = False
+        for plugin_object in self._plugins:
+          if parser_mediator.abort:
+            break
+
+          if self._CanProcessKeyWithPlugin(registry_key, plugin_object):
+            found_matching_plugin = True
+            plugin_object.UpdateChainAndProcess(parser_mediator, registry_key)
+
+        if not found_matching_plugin:
+          self._default_plugin.UpdateChainAndProcess(
+              parser_mediator, registry_key)
+
     except IOError as exception:
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, exception))
-
-    registry_file_type = self._win_registry.GetRegistryFileType(winreg_file)
-    logging.debug(
-        u'Windows Registry file {0:s}: detected as: {1:s}'.format(
-            display_name, registry_file_type))
-
-    self._ParseRegistryFile(parser_mediator, winreg_file, registry_file_type)
+      parser_mediator.ProduceParseError(u'{0:s}'.format(exception))
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)
