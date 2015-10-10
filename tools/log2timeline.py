@@ -15,9 +15,10 @@ try:
 except ImportError:
   win32console = None
 
-from dfvfs.helpers import source_scanner
+from dfvfs.lib import definitions as dfvfs_definitions
 
 import plaso
+from plaso import dependencies
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
@@ -32,6 +33,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Class that implements the log2timeline CLI tool.
 
   Attributes:
+    dependencies_check: a boolean value to indicate the availability and
+                        versions of dependencies should be checked.
     show_info: a boolean value to indicate information about hashers, parsers,
                plugins, etc. should be shown.
   """
@@ -86,6 +89,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = u'linear'
     self._output = None
 
+    self.dependencies_check = True
     self.show_info = False
 
   def _ClearScreen(self):
@@ -431,6 +435,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'Output lists in Markdown format use in combination with '
             u'"--hashers list", "--parsers list" or "--timezone list"'))
 
+    info_group.add_argument(
+        u'--no_dependencies_check', u'--no-dependencies-check',
+        dest=u'dependencies_check', action=u'store_false', default=True,
+        help=u'Disable the dependencies check.')
+
     self.AddLogFileOptions(info_group)
 
     info_group.add_argument(
@@ -456,7 +465,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     processing_group.add_argument(
         u'--sigsegv_handler', u'--sigsegv-handler', dest=u'sigsegv_handler',
         action=u'store_true', default=False, help=(
-            u'Enables the SIGSEGV handler. WARNINGN this functionality is '
+            u'Enables the SIGSEGV handler. WARNING this functionality is '
             u'expirimental and will a deadlock worker process if a real '
             u'segfault is caught, but not signal SIGSEGV. This functionality '
             u'is therefore primarily intended for debugging purposes'))
@@ -551,6 +560,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if getattr(options, u'use_markdown', False):
       self._views_format_type = cli_views.ViewsFactory.FORMAT_TYPE_MARKDOWN
 
+    self.dependencies_check = getattr(options, u'dependencies_check', True)
+
     if (self.list_hashers or self.list_parsers_and_plugins or
         self.list_timezones or self.show_info):
       return
@@ -620,22 +631,18 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     scan_context = self.ScanSource()
     self._source_type = scan_context.source_type
 
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
-    if self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY):
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_DIRECTORY:
       self._source_type_string = u'directory'
 
-    elif self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_FILE):
+    elif self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       self._source_type_string = u'single file'
 
     elif self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
       self._source_type_string = u'storage media device'
 
     elif self._source_type == (
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
       self._source_type_string = u'storage media image'
 
     else:
@@ -721,6 +728,9 @@ def Main():
 
   if have_list_option:
     return True
+
+  if tool.dependencies_check and not dependencies.CheckDependencies():
+    return False
 
   try:
     tool.ProcessSources()
