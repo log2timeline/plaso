@@ -466,7 +466,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--sigsegv_handler', u'--sigsegv-handler', dest=u'sigsegv_handler',
         action=u'store_true', default=False, help=(
             u'Enables the SIGSEGV handler. WARNING this functionality is '
-            u'expirimental and will a deadlock worker process if a real '
+            u'experimental and will a deadlock worker process if a real '
             u'segfault is caught, but not signal SIGSEGV. This functionality '
             u'is therefore primarily intended for debugging purposes'))
 
