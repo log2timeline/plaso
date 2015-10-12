@@ -36,7 +36,7 @@ class OutputManager(object):
 
   @classmethod
   def GetDisabledOutputClasses(cls):
-    """Retrieves the disabled output classes sorted by name.
+    """Retrieves the disabled output classes and its associated name.
 
     Yields:
       A tuple of output class name and type object (subclass of OutputModule).
@@ -70,7 +70,7 @@ class OutputManager(object):
 
   @classmethod
   def GetOutputClasses(cls):
-    """Retrieves the available output classes sorted by name.
+    """Retrieves the available output classes its associated name.
 
     Yields:
       A tuple of output class name and type object (subclass of OutputModule).

@@ -270,6 +270,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     pre_obj.collection_information[u'time_of_run'] = time_of_run
     pre_obj.counter = collections.Counter()
 
+  # TODO: fix docstring, function does not create the pre_obj the call to
+  # storage does. Likely refactor this functionality into the storage API.
   def _GetLastGoodPreprocess(self, storage_file):
     """Gets the last stored preprocessing object with time zone information.
 

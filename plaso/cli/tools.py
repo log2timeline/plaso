@@ -244,6 +244,36 @@ class CLITool(object):
             u'determined automatically where possible. Use "-z list" to '
             u'see a list of available timezones.'))
 
+  def GetCommandLineArguments(self):
+    """Retrieves the command line arguments.
+
+    Returns:
+      A string containing the command line arguments.
+    """
+    command_line_arguments = sys.argv
+    if isinstance(command_line_arguments, py2to3.BYTES_TYPE):
+      encoding = sys.stdin.encoding
+
+      # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = self.preferred_encoding
+
+      try:
+        command_line_arguments = [
+            argument.decode(encoding) for argument in command_line_arguments]
+
+      except UnicodeDecodeError:
+        logging.error(
+            u'Unable to properly read command line input due to encoding '
+            u'error. Replacing non Basic Latin (C0) characters with "?" or '
+            u'"\\ufffd".')
+
+        command_line_arguments = [
+            argument.decode(encoding, errors=u'replace')
+            for argument in command_line_arguments]
+
+    return u' '.join(command_line_arguments)
+
   def ListTimeZones(self):
     """Lists the timezones."""
     max_length = 0

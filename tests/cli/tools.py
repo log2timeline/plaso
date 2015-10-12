@@ -111,6 +111,14 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     output = argument_parser.format_help()
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
 
+  def testGetCommandLineArguments(self):
+    """Tests the GetCommandLineArguments function."""
+    cli_tool = tools.CLITool()
+    cli_tool.preferred_encoding = u'UTF-8'
+
+    command_line_arguments = cli_tool.GetCommandLineArguments()
+    self.assertIsNotNone(command_line_arguments)
+
   def testParseStringOption(self):
     """Tests the ParseStringOption function."""
     encoding = sys.stdin.encoding

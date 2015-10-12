@@ -25,7 +25,6 @@ from plaso.filters import manager as filters_manager
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.winnt import language_ids
 
 
@@ -618,16 +617,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       logging.warning(u'Unable to automatically determine data location.')
 
-    command_line_arguments = sys.argv
-    if isinstance(command_line_arguments, py2to3.BYTES_TYPE):
-      try:
-        self._command_line_arguments = [
-            argument.decode(self.preferred_encoding)
-            for argument in command_line_arguments]
-      except UnicodeDecodeError:
-        pass
-
-    self._command_line_arguments = u' '.join(command_line_arguments)
+    self._command_line_arguments = self.GetCommandLineArguments()
 
     # TODO: refactor this.
     self._options = options
