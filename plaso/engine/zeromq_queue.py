@@ -345,7 +345,8 @@ class ZeroMQPushQueue(ZeroMQQueue):
              in blocking or non-block mode.
 
     Raises:
-      Again: If a
+      Again: If it was no possible to push the item to the queue within the
+             timeout.
       ZMQError: If a ZeroMQ specific error occurs.
     """
     logging.debug(u'Push on {0:s} queue, port {1:d}'.format(
@@ -362,7 +363,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
       raise
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+        logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
         return queue.QueueAbort()
       else:
         raise
@@ -440,11 +441,12 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       The item retrieved from the queue, as a deserialized Python object.
 
     Raises:
+      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+                         popping an item.
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
       ZMQError: If an error occurs in ZeroMQ.
-      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
-                         popping an item.
+
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -539,6 +541,8 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     self._buffer_timeout_seconds = buffer_timeout_seconds
     self._queue = Queue.Queue(maxsize=buffer_max_size)
     self._terminate_event = threading.Event()
+    # We need to set up the internal buffer queue before we call super, so that
+    # if the call to super opens the ZMQSocket, the backing thread will work.
     super(ZeroMQBufferedQueue, self).__init__(
         delay_open, linger_seconds, port, timeout_seconds, name,
         maximum_items)
@@ -724,8 +728,8 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
       terminate_event: The event that signals that the queue should terminate.
 
     Raises:
-      ZMQError: If ZeroMQ encounters an error.
       QueueEmpty: If the queue encountered a timeout trying to push an item.
+      ZMQError: If ZeroMQ encounters an error.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
