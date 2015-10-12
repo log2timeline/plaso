@@ -306,6 +306,14 @@ plaso.parsers.safari_cookies module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sccm module
+-------------------------
+
+.. automodule:: plaso.parsers.sccm
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.selinux module
 ----------------------------
 

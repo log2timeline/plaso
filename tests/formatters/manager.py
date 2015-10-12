@@ -61,15 +61,15 @@ class FormattersManagerTest(unittest.TestCase):
       message_strings.append(csv_message_strings)
 
     self.assertIn((
-        u'1334961526929596,REG,UNKNOWN key,[MY AutoRun key] Run: '
+        u'1334961526929596,REG,UNKNOWN,[MY AutoRun key] Run: '
         u'c:/Temp/evil.exe'), message_strings)
 
     self.assertIn(
-        (u'1334966206929596,REG,UNKNOWN key,[//HKCU/Secret/EvilEmpire/'
+        (u'1334966206929596,REG,UNKNOWN,[//HKCU/Secret/EvilEmpire/'
          u'Malicious_key] Value: send all the exes to the other '
          u'world'), message_strings)
     self.assertIn(
-        (u'1334940286000000,REG,UNKNOWN key,[//HKCU/Windows'
+        (u'1334940286000000,REG,UNKNOWN,[//HKCU/Windows'
          u'/Normal] Value: run all the benign stuff'), message_strings)
     self.assertIn(
         (u'1335781787929596,FILE,Weird Log File,This log line reads '

@@ -12,13 +12,14 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_boot_verify'
   DESCRIPTION = u'Parser for Boot Verification Registry data.'
 
-  REG_TYPE = u'SYSTEM'
-  REG_KEYS = [u'\\{current_control_set}\\Control\\BootVerificationProgram']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          u'BootVerificationProgram')])
 
   URLS = [u'http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Gather the BootVerification key values and return one event for all.
 
     This key is rare, so its presence is suspect.
@@ -27,16 +28,13 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     values_dict = {}
     for value in registry_key.GetValues():
       values_dict[value.name] = value.data
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        urls=self.URLS)
+        offset=registry_key.offset, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
 
@@ -46,13 +44,14 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
   NAME = u'windows_boot_execute'
   DESCRIPTION = u'Parser for Boot Execution Registry data.'
 
-  REG_TYPE = u'SYSTEM'
-  REG_KEYS = [u'\\{current_control_set}\\Control\\Session Manager']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          u'Session Manager')])
 
   URLS = [u'http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 
     The rest of the values in the Session Manager key are in a separate event.
@@ -61,11 +60,8 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     values_dict = {}
-
     for value in registry_key.GetValues():
       if value.name == u'BootExecute':
         # MSDN: claims that the data type of this value is REG_BINARY
@@ -88,8 +84,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         value_dict = {u'BootExecute': value_string}
         event_object = windows_events.WindowsRegistryEvent(
             registry_key.last_written_time, registry_key.path, value_dict,
-            offset=registry_key.offset, registry_file_type=registry_file_type,
-            urls=self.URLS)
+            offset=registry_key.offset, urls=self.URLS)
         parser_mediator.ProduceEvent(event_object)
 
       else:
@@ -97,8 +92,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        urls=self.URLS)
+        offset=registry_key.offset, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
 

@@ -19,19 +19,13 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
   NAME = u'winreg_default'
   DESCRIPTION = u'Parser for Registry data.'
 
-  REG_TYPE = u'any'
-  REG_KEYS = []
-
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Returns an event object based on a Registry key name and values.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     values_dict = {}
 
@@ -69,28 +63,9 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type)
+        offset=registry_key.offset)
 
     parser_mediator.ProduceEvent(event_object)
-
-  # Even though the DefaultPlugin is derived from WindowsRegistryPlugin
-  # it needs to overwrite the Process function to make sure it is called
-  # when no other plugin is available.
-
-  def Process(
-      self, parser_mediator, key=None, registry_file_type=None, **kwargs):
-    """Process the key and return a generator to extract event objects.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: Optional Registry key (instance of dfwinreg.WinRegistryKey).
-           The default is None.
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
-    """
-    self.GetEntries(
-        parser_mediator, key, registry_file_type=registry_file_type,
-        **kwargs)
 
 
 winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

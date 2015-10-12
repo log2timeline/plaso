@@ -79,12 +79,10 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
     """Parses the namespace table.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
-                The default is None.
       cache: Optional cache object (instance of EseDbCache).
       table: Optional table object (instance of pyesedb.table).
-             The default is None.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))

@@ -67,13 +67,17 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   NAME = u'appcompatcache'
   DESCRIPTION = u'Parser for Application Compatibility Cache Registry data.'
 
-  REG_KEYS = [
-      u'\\{current_control_set}\\Control\\Session Manager\\AppCompatibility',
-      u'\\{current_control_set}\\Control\\Session Manager\\AppCompatCache']
-  REG_TYPE = u'SYSTEM'
-  URL = [
-      (u'https://code.google.com/p/winreg-kb/wiki/'
-       u'ApplicationCompatibilityCacheKey')]
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          u'Session Manager\\AppCompatibility'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          u'Session Manager\\AppCompatCache')])
+
+  URLS = [
+      (u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
+       u'Application%20Compatibility%20Cache%20key.asciidoc')]
 
   _FORMAT_TYPE_2000 = 1
   _FORMAT_TYPE_XP = 2

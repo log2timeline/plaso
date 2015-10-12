@@ -126,8 +126,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     """
     local_path = cache.GetResults(u'local_path')
     if not local_path:
-      cursor = database.cursor
-      results = cursor.execute(self.LOCAL_PATH_CACHE_QUERY)
+      results = database.Query(self.LOCAL_PATH_CACHE_QUERY)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
@@ -171,8 +170,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     """
     cloud_path = cache.GetResults(u'cloud_path')
     if not cloud_path:
-      cursor = database.cursor
-      results = cursor.execute(self.CLOUD_PATH_CACHE_QUERY)
+      results = database.Query(self.CLOUD_PATH_CACHE_QUERY)
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".

@@ -72,10 +72,12 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
 
-    self._parser_filter_string = getattr(options, u'parsers', u'')
-    if isinstance(self._parser_filter_string, basestring):
-      if self._parser_filter_string.lower() == u'list':
-        self.list_parsers_and_plugins = True
+    self._parser_filter_string = self.ParseStringOption(
+        options, u'parsers', default_value=u'')
+
+    if (isinstance(self._parser_filter_string, basestring) and
+        self._parser_filter_string.lower() == u'list'):
+      self.list_parsers_and_plugins = True
 
     # TODO: preprocess.
 
@@ -172,7 +174,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     # TODO: rename option name to parser_filter_string.
     argument_group.add_argument(
-        u'--parsers', dest=u'parsers', type=unicode, action=u'store',
+        u'--parsers', dest=u'parsers', type=str, action=u'store',
         default=u'', metavar=u'PARSER_LIST', help=(
             u'Define a list of parsers to use by the tool. This is a comma '
             u'separated list where each entry can be either a name of a parser '

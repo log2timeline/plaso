@@ -8,7 +8,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.dfwinreg import definitions as dfwinreg_definitions
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import queue
 from plaso.engine import single_process
@@ -18,6 +17,253 @@ from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 from plaso.preprocessors import manager as preprocess_manager
+
+
+# The Registry (file) types.
+REGISTRY_FILE_TYPE_NTUSER = u'NTUSER'
+REGISTRY_FILE_TYPE_SAM = u'SAM'
+REGISTRY_FILE_TYPE_SECURITY = u'SECURITY'
+REGISTRY_FILE_TYPE_SOFTWARE = u'SOFTWARE'
+REGISTRY_FILE_TYPE_SYSTEM = u'SYSTEM'
+REGISTRY_FILE_TYPE_UNKNOWN = u'UNKNOWN'
+REGISTRY_FILE_TYPE_USRCLASS = u'USRCLASS'
+
+REGISTRY_FILE_TYPES = frozenset([
+    REGISTRY_FILE_TYPE_NTUSER,
+    REGISTRY_FILE_TYPE_SAM,
+    REGISTRY_FILE_TYPE_SECURITY,
+    REGISTRY_FILE_TYPE_SOFTWARE,
+    REGISTRY_FILE_TYPE_SYSTEM,
+    REGISTRY_FILE_TYPE_USRCLASS])
+
+
+# TODO: add tests for this class.
+class PluginList(object):
+  """A simple class that stores information about Windows Registry plugins."""
+
+  def __init__(self):
+    """Initializes the plugin list object."""
+    super(PluginList, self).__init__()
+    self._plugins = {}
+
+  def __iter__(self):
+    """Return an iterator of all Windows Registry plugins."""
+    ret = []
+    _ = map(ret.extend, self._plugins.values())
+    for item in ret:
+      yield item
+
+  def _GetPluginsByType(self, plugins_dict, registry_file_type):
+    """Retrieves the Windows Registry plugins of a specific type.
+
+    Args:
+      plugins_dict: Dictionary containing the Windows Registry plugins
+                    by plugin type.
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list containing the Windows Registry plugins (instances of
+      RegistryPlugin) for the specific plugin type.
+    """
+    return plugins_dict.get(
+        registry_file_type, []) + plugins_dict.get(u'any', [])
+
+  def AddPlugin(self, plugin_class):
+    """Add a Windows Registry plugin to the plugin list.
+
+    Only plugins with full Windows Registry key paths are registered.
+
+    Args:
+      plugin_class: The plugin class that is being registered.
+    """
+    key_paths = []
+    registry_file_types = set()
+    for registry_key_filter in plugin_class.FILTERS:
+      plugin_key_paths = getattr(registry_key_filter, u'key_paths', [])
+      for plugin_key_path in plugin_key_paths:
+        if plugin_key_path not in key_paths:
+          key_paths.append(plugin_key_path)
+
+          if plugin_key_path.startswith(u'HKEY_CURRENT_USER'):
+            registry_file_types.add(u'NTUSER')
+          elif plugin_key_path.startswith(u'HKEY_LOCAL_MACHINE\\SAM'):
+            registry_file_types.add(u'SAM')
+          elif plugin_key_path.startswith(u'HKEY_LOCAL_MACHINE\\Software'):
+            registry_file_types.add(u'SOFTWARE')
+          elif plugin_key_path.startswith(u'HKEY_LOCAL_MACHINE\\System'):
+            registry_file_types.add(u'SYSTEM')
+
+    if len(registry_file_types) == 1:
+      plugin_type = registry_file_types.pop()
+    else:
+      plugin_type = u'any'
+
+    if key_paths:
+      self._plugins.setdefault(plugin_type, []).append(plugin_class)
+
+  def GetAllPlugins(self):
+    """Return all key plugins as a list."""
+    ret = []
+    _ = map(ret.extend, self._plugins.values())
+    return ret
+
+  def GetKeyPaths(self, plugin_names=None):
+    """Retrieves a list of Windows Registry key paths.
+
+    Args:
+      plugin_names: Optional list of plugin names, if defined only keys from
+                    these plugins will be expanded. The default is None which
+                    means all key plugins will get expanded keys.
+
+    Returns:
+      A set of Windows Registry key paths.
+    """
+    key_paths = set()
+    for plugin_cls in self.GetAllPlugins():
+      plugin_object = plugin_cls()
+
+      if plugin_names and plugin_object.NAME not in plugin_names:
+        continue
+
+      for key_path in plugin_object.GetKeyPaths():
+        key_paths.add(key_path)
+
+    return key_paths
+
+  def GetPluginObjectByName(self, registry_file_type, plugin_name):
+    """Creates a new instance of a specific Windows Registry plugin.
+
+    Args:
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
+      plugin_name: the name of the plugin.
+
+    Returns:
+      The Windows Registry plugin (instance of RegistryPlugin) or None.
+    """
+    # TODO: make this a dict lookup instead of a list iteration.
+    for plugin_cls in self.GetPlugins(registry_file_type):
+      if plugin_cls.NAME == plugin_name:
+        return plugin_cls()
+
+  def GetPluginObjects(self, registry_file_type):
+    """Creates new instances of a specific type of Windows Registry plugins.
+
+    Args:
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list of Windows Registry plugins (instances of RegistryPlugin).
+    """
+    return [plugin_cls() for plugin_cls in self.GetPlugins(registry_file_type)]
+
+  def GetPlugins(self, registry_file_type):
+    """Retrieves the Windows Registry key-based plugins of a specific type.
+
+    Args:
+      registry_file_type: String containing the Windows Registry file type,
+                          e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list containing the Windows Registry plugins (types of
+      RegistryPlugin) for the specific plugin type.
+    """
+    return self._GetPluginsByType(self._plugins, registry_file_type)
+
+  def GetRegistryPlugins(self, filter_string):
+    """Retrieves the Windows Registry plugins based on a filter string.
+
+    Args:
+      filter_string: string containing the name of the plugin or an empty
+                     string for all the plugins.
+
+    Returns:
+      A list of Windows Registry plugins (instance of RegistryPlugin).
+    """
+    if filter_string:
+      filter_string = filter_string.lower()
+
+    plugins_to_run = []
+    for plugins_per_type in iter(self._plugins.values()):
+      for plugin in plugins_per_type:
+        # Note that this method also matches on parts of the plugin name.
+        if not filter_string or filter_string in plugin.NAME.lower():
+          plugins_to_run.append(plugin)
+
+    return plugins_to_run
+
+  def GetRegistryTypes(self, filter_string):
+    """Retrieves the Windows Registry types based on a filter string.
+
+    Args:
+      filter_string: string containing the name of the plugin or an empty
+                     string for all the plugins.
+
+    Returns:
+      A list of Windows Registry types.
+    """
+    if filter_string:
+      filter_string = filter_string.lower()
+
+    registry_file_types = set()
+    for plugin_type, plugins_per_type in iter(self._plugins.items()):
+      for plugin in plugins_per_type:
+        if not filter_string or filter_string == plugin.NAME.lower():
+          if plugin_type == u'any':
+            registry_file_types.update(REGISTRY_FILE_TYPES)
+
+          else:
+            registry_file_types.add(plugin_type)
+
+    return list(registry_file_types)
+
+  def GetRegistryTypesFromPlugins(self, plugin_names):
+    """Return a list of Registry types extracted from a list of plugin names.
+
+    Args:
+      plugin_names: a list of plugin names.
+
+    Returns:
+      A list of Registry types extracted from the supplied plugins.
+    """
+    if not plugin_names:
+      return []
+
+    registry_file_types = set()
+    for plugin_type, plugins_per_type in iter(self._plugins.items()):
+      for plugin in plugins_per_type:
+        if plugin.NAME.lower() in plugin_names:
+          # If a plugin is available for every Registry type
+          # we need to make sure all Registry files are included.
+          if plugin_type == u'any':
+            registry_file_types.update(REGISTRY_FILE_TYPES)
+
+          else:
+            registry_file_types.add(plugin_type)
+
+    return list(registry_file_types)
+
+  def GetRegistryPluginsFromRegistryType(self, registry_file_type):
+    """Retrieves the Windows Registry plugins based on a Registry type.
+
+    Args:
+      registry_file_type: the Windows Registry files type string or an empty
+                          string for all the plugins.
+
+    Returns:
+      A list of Windows Registry plugins (instance of RegistryPlugin).
+    """
+    if registry_file_type:
+      registry_file_type = registry_file_type.upper()
+
+    plugins_to_run = []
+    for plugin_type, plugins_per_type in iter(self._plugins.items()):
+      if not registry_file_type or plugin_type in [u'any', registry_file_type]:
+        plugins_to_run.extend(plugins_per_type)
+
+    return plugins_to_run
 
 
 class PregItemQueueConsumer(queue.ItemQueueConsumer):
@@ -72,8 +318,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     self._parse_restore_points = False
     self._preprocess_completed = False
     self._registry_files = []
-    self._registry_plugin_list = (
-        parsers_manager.ParsersManager.GetWindowsRegistryPlugins())
+    self._registry_plugin_list = self.GetWindowsRegistryPlugins()
     self._searcher = None
     self._single_file = False
     self._source_path = None
@@ -197,53 +442,6 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
             file_entry, collector_name, self.knowledge_base_object,
             codepage=codepage)
 
-  def _GetRegistryTypes(self, plugin_name):
-    """Retrieves the Windows Registry types based on a filter string.
-
-    Args:
-      plugin_name: string containing the name of the plugin or an empty
-                   string for all types.
-
-    Returns:
-      A list of Windows Registry types.
-    """
-    types = set()
-    for plugin in self.GetRegistryPlugins(plugin_name):
-      for plugin_class in self._registry_plugin_list.GetAllPlugins():
-        if plugin.NAME == plugin_class.NAME:
-          types.add(plugin_class.REG_TYPE)
-          break
-
-    return list(types)
-
-  def _GetRegistryTypesFromPlugins(self, plugin_names):
-    """Return a list of Registry types extracted from a list of plugin names.
-
-    Args:
-      plugin_names: a list of plugin names.
-
-    Returns:
-      A list of Registry types extracted from the supplied plugins.
-    """
-    if not plugin_names:
-      return []
-
-    plugins_list = self._registry_plugin_list
-    registry_file_types = set()
-
-    for plugin_name in plugin_names:
-      for plugin_class in plugins_list.GetAllPlugins():
-        if plugin_name == plugin_class.NAME.lower():
-          # If a plugin is available for every Registry type
-          # we need to make sure all Registry files are included.
-          if plugin_class.REG_TYPE == u'any':
-            registry_file_types.extend(dfwinreg_definitions.REGISTRY_FILE_TYPES)
-
-          else:
-            registry_file_types.add(plugin_class.REG_TYPE)
-
-    return list(registry_file_types)
-
   def _GetSearcher(self):
     """Retrieve a searcher for the first source path specification.
 
@@ -358,39 +556,39 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if registry_file_type:
       types = [registry_file_type]
     else:
-      types = self._GetRegistryTypes(plugin_name)
+      types = self._registry_plugin_list.GetRegistryTypes(plugin_name)
 
     # Gather the Registry files to fetch.
     paths = []
 
     for reg_type in types:
-      if reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_NTUSER:
+      if reg_type == REGISTRY_FILE_TYPE_NTUSER:
         paths.append(u'/Documents And Settings/.+/NTUSER.DAT')
         paths.append(u'/Users/.+/NTUSER.DAT')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SAM:
+      elif reg_type == REGISTRY_FILE_TYPE_SAM:
         paths.append(u'{sysregistry}/SAM')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SECURITY:
+      elif reg_type == REGISTRY_FILE_TYPE_SECURITY:
         paths.append(u'{sysregistry}/SECURITY')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SOFTWARE:
+      elif reg_type == REGISTRY_FILE_TYPE_SOFTWARE:
         paths.append(u'{sysregistry}/SOFTWARE')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_SYSTEM:
+      elif reg_type == REGISTRY_FILE_TYPE_SYSTEM:
         paths.append(u'{sysregistry}/SYSTEM')
         if restore_path:
           paths.append(u'{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
 
-      elif reg_type == dfwinreg_definitions.REGISTRY_FILE_TYPE_USRCLASS:
+      elif reg_type == REGISTRY_FILE_TYPE_USRCLASS:
         paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
     # Expand all the paths.
@@ -456,7 +654,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if registry_file_types is None:
       registry_file_types = []
 
-    types_from_plugins = self._GetRegistryTypesFromPlugins(plugin_names)
+    types_from_plugins = (
+        self._registry_plugin_list.GetRegistryTypesFromPlugins(plugin_names))
     registry_file_types.extend(types_from_plugins)
 
     paths = []
@@ -478,6 +677,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           helper for helper in self._GetRegistryHelperFromPath(path, codepage)])
     return registry_helpers
 
+  # TODO: remove after refactoring.
   def GetRegistryPlugins(self, filter_string):
     """Retrieves the Windows Registry plugins based on a filter string.
 
@@ -488,22 +688,9 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
     """
-    plugins = {}
-    for plugin in self._registry_plugin_list.GetAllPlugins():
-      plugins[plugin.NAME] = plugin
+    return self._registry_plugin_list.GetRegistryPlugins(filter_string)
 
-    if not filter_string:
-      return plugins.values()
-
-    filter_string = filter_string.lower()
-
-    plugins_to_run = []
-    for plugin_name, plugin in iter(plugins.items()):
-      if filter_string in plugin_name.lower():
-        plugins_to_run.append(plugin)
-
-    return plugins_to_run
-
+  # TODO: remove after refactoring.
   def GetRegistryPluginsFromRegistryType(self, registry_file_type):
     """Retrieves the Windows Registry plugins based on a Registry type.
 
@@ -513,23 +700,36 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry plugins (instance of RegistryPlugin).
     """
-    plugins = {}
-    for plugin in self._registry_plugin_list.GetAllPlugins():
-      plugins.setdefault(plugin.REG_TYPE.lower(), []).append(plugin)
+    return self._registry_plugin_list.GetRegistryPluginsFromRegistryType(
+        registry_file_type)
 
-    if not registry_file_type:
-      return plugins.values()
+  def GetRegistryTypes(self, filter_string):
+    """Retrieves the Windows Registry types based on a filter string.
 
-    registry_file_type = registry_file_type.lower()
+    Args:
+      filter_string: string containing the name of the plugin or an empty
+                     string for all the plugins.
 
-    plugins_to_run = []
-    for plugin_type, plugin_list in iter(plugins.items()):
-      if registry_file_type == plugin_type:
-        plugins_to_run.extend(plugin_list)
-      elif plugin_type == u'any':
-        plugins_to_run.extend(plugin_list)
+    Returns:
+      A list of Windows Registry types.
+    """
+    return self._registry_plugin_list.GetRegistryTypes(filter_string)
 
-    return plugins_to_run
+  def GetWindowsRegistryPlugins(self):
+    """Build a list of all available Windows Registry plugins.
+
+    Returns:
+      A plugins list (instance of PluginList).
+    """
+    winreg_parser = parsers_manager.ParsersManager.GetParserObjectByName(
+        u'winreg')
+    if not winreg_parser:
+      return
+
+    plugins_list = PluginList()
+    for _, plugin_class in winreg_parser.GetPlugins():
+      plugins_list.AddPlugin(plugin_class)
+    return plugins_list
 
   def ParseRegistryFile(
       self, registry_helper, key_paths=None, use_plugins=None):
@@ -576,28 +776,28 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       key_paths = []
 
     for key_path in key_paths:
-      key = registry_helper.GetKeyByPath(key_path)
-      return_dict[key_path] = {u'key': key}
+      registry_key = registry_helper.GetKeyByPath(key_path)
+      return_dict[key_path] = {u'key': registry_key}
 
-      if not key:
+      if not registry_key:
         continue
 
-      return_dict[key_path][u'subkeys'] = list(key.GetSubkeys())
+      return_dict[key_path][u'subkeys'] = list(registry_key.GetSubkeys())
 
       return_dict[key_path][u'data'] = self.ParseRegistryKey(
-          key, registry_helper, use_plugins=use_plugins)
+          registry_key, registry_helper, use_plugins=use_plugins)
 
     return return_dict
 
-  def ParseRegistryKey(self, key, registry_helper, use_plugins=None):
+  def ParseRegistryKey(self, registry_key, registry_helper, use_plugins=None):
     """Parse a single Registry key and return parsed information.
 
     Parses the Registry key either using the supplied plugin or trying against
     all available plugins.
 
     Args:
-      key: the Registry key to parse (instance of dfwinreg.WinRegistryKey or
-           a string containing key path).
+      registry_key: the Registry key to parse (instance of
+                    dfwinreg.WinRegistryKey or a string containing key path).
       registry_helper: the Registry helper object (instance of
                        PregRegistryHelper).
       use_plugins: optional list of plugin names to use. The default is None
@@ -610,10 +810,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not registry_helper:
       return {}
 
-    if isinstance(key, basestring):
-      key = registry_helper.GetKeyByPath(key)
+    if isinstance(registry_key, basestring):
+      registry_key = registry_helper.GetKeyByPath(registry_key)
 
-    if not key:
+    if not registry_key:
       return {}
 
     event_queue = single_process.SingleProcessQueue()
@@ -623,17 +823,44 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     parser_mediator.SetFileEntry(registry_helper.file_entry)
 
     return_dict = {}
+    found_matching_plugin = False
     for plugin_object in self._registry_plugin_list.GetPluginObjects(
         registry_helper.file_type):
       if use_plugins and plugin_object.NAME not in use_plugins:
         continue
 
-      plugin_object.Process(parser_mediator, key=key)
+      # Check if plugin should be processed.
+      can_process = False
+      for filter_object in plugin_object.FILTERS:
+        if filter_object.Match(registry_key):
+          can_process = True
+          break
+
+      if not can_process:
+        continue
+
+      found_matching_plugin = True
+      plugin_object.Process(parser_mediator, registry_key)
       event_queue_consumer.ConsumeItems()
       event_objects = [
           event_object for event_object in event_queue_consumer.GetItems()]
       if event_objects:
         return_dict[plugin_object] = event_objects
+
+    if not found_matching_plugin:
+      winreg_parser = parsers_manager.ParsersManager.GetParserObjectByName(
+          u'winreg')
+      if not winreg_parser:
+        return
+      default_plugin_object = winreg_parser.GetPluginObjectByName(
+          u'winreg_default')
+
+      default_plugin_object.Process(parser_mediator, registry_key)
+      event_queue_consumer.ConsumeItems()
+      event_objects = [
+          event_object for event_object in event_queue_consumer.GetItems()]
+      if event_objects:
+        return_dict[default_plugin_object] = event_objects
 
     return return_dict
 
@@ -681,6 +908,21 @@ class PregRegistryHelper(object):
     file_entry: file entry object (instance of dfvfs.FileEntry).
   """
 
+  _KEY_PATHS_PER_REGISTRY_TYPE = {
+      REGISTRY_FILE_TYPE_NTUSER: frozenset([
+          u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer']),
+      REGISTRY_FILE_TYPE_SAM: frozenset([
+          u'\\SAM\\Domains\\Account\\Users']),
+      REGISTRY_FILE_TYPE_SECURITY: frozenset([
+          u'\\Policy\\PolAdtEv']),
+      REGISTRY_FILE_TYPE_SOFTWARE: frozenset([
+          u'\\Microsoft\\Windows\\CurrentVersion\\App Paths']),
+      REGISTRY_FILE_TYPE_SYSTEM: frozenset([
+          u'\\Select']),
+      REGISTRY_FILE_TYPE_USRCLASS: frozenset([
+          u'\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion']),
+  }
+
   def __init__(
       self, file_entry, collector_name, knowledge_base_object,
       codepage=u'cp1252'):
@@ -698,10 +940,11 @@ class PregRegistryHelper(object):
     self._Reset()
     self._codepage = codepage
     self._collector_name = collector_name
+    self._key_path_prefix = u''
     self._knowledge_base_object = knowledge_base_object
     self._registry_file = None
     self._registry_file_name = None
-    self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
+    self._registry_file_type = REGISTRY_FILE_TYPE_UNKNOWN
     self._win_registry = dfwinreg_registry.WinRegistry(
         backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
 
@@ -742,15 +985,16 @@ class PregRegistryHelper(object):
   @property
   def root_key(self):
     """The root key of the Registry file."""
-    if self._registry_file:
-      return self._registry_file.GetKeyByPath(u'\\')
+    if not self._registry_file:
+      return
+    return self._registry_file.GetKeyByPath(u'\\')
 
   def _Reset(self):
     """Reset all attributes of the Registry helper."""
-    self._currently_loaded_registry_key = u''
+    self._currently_loaded_registry_key = None
     self._registry_file = None
     self._registry_file_name = None
-    self._registry_file_type = dfwinreg_definitions.REGISTRY_FILE_TYPE_UNKNOWN
+    self._registry_file_type = REGISTRY_FILE_TYPE_UNKNOWN
 
   def Close(self):
     """Closes the helper."""
@@ -786,17 +1030,18 @@ class PregRegistryHelper(object):
 
   def GetCurrentRegistryPath(self):
     """Return the loaded Registry key path or None if no key is loaded."""
-    key = self._currently_loaded_registry_key
-    if not key:
+    registry_key = self._currently_loaded_registry_key
+    if not registry_key:
       return
 
-    return key.path
+    return registry_key.path
 
   def GetKeyByPath(self, key_path):
     """Retrieves a specific key defined by the Registry key path.
 
     Args:
-      key_path: the Registry key path.
+      key_path: a Windows Registry key path relative to the root key of
+                the file or relative to the root of the Windows Registry.
 
     Returns:
       The key (instance of dfwinreg.WinRegistryKey) if available or
@@ -804,6 +1049,19 @@ class PregRegistryHelper(object):
     """
     if not key_path:
       return
+
+    key_path_upper = key_path.upper()
+    if key_path_upper.startswith(self._key_path_prefix.upper()):
+      key_path = key_path[len(self._key_path_prefix):]
+      key_path_upper = key_path_upper[len(self._key_path_prefix):]
+    elif not key_path.startswith(u'\\'):
+      return
+
+    # TODO: remove in preg refactor.
+    if (self._registry_file_type == REGISTRY_FILE_TYPE_SYSTEM and
+        key_path_upper.startswith(u'\\CurrentControlSet\\'.upper())):
+      key_path = u'\\{{current_control_set}}\\{0:s}'.format(
+          key_path[len(u'\\CurrentControlSet\\'):])
 
     # TODO: deprecate usage of pre_obj.
     path_attributes = self._knowledge_base_object.pre_obj.__dict__
@@ -814,12 +1072,39 @@ class PregRegistryHelper(object):
     except KeyError:
       expanded_key_path = key_path
 
-    key = self._registry_file.GetKeyByPath(expanded_key_path)
-    if not key:
+    registry_key = self._registry_file.GetKeyByPath(expanded_key_path)
+    if not registry_key:
       return
 
-    self._currently_loaded_registry_key = key
-    return key
+    self._currently_loaded_registry_key = registry_key
+    return registry_key
+
+  def GetRegistryFileType(self, registry_file):
+    """Determines the Windows Registry type based on keys present in the file.
+
+    Args:
+      registry_file: the Windows Registry file object (instance of
+                     WinRegistryFile).
+
+    Returns:
+      The Windows Registry file type, e.g. NTUSER, SOFTWARE.
+    """
+    registry_file_type = REGISTRY_FILE_TYPE_UNKNOWN
+    for registry_file_type, key_paths in iter(
+        self._KEY_PATHS_PER_REGISTRY_TYPE.items()):
+
+      # If all key paths are found we consider the file to match a certain
+      # Registry type.
+      match = True
+      for key_path in key_paths:
+        registry_key = registry_file.GetKeyByPath(key_path)
+        if not registry_key:
+          match = False
+
+      if match:
+        break
+
+    return registry_file_type
 
   def Open(self):
     """Opens a Windows Registry file.
@@ -840,10 +1125,13 @@ class PregRegistryHelper(object):
       raise IOError(u'Unable to open Registry file.')
 
     self._registry_file_name = self.file_entry.name
-    self._registry_file_type = self._win_registry.GetRegistryFileType(
+    self._registry_file_type = self.GetRegistryFileType(self._registry_file)
+    self._key_path_prefix = self._win_registry.GetRegistryFileMapping(
         self._registry_file)
+
+    self._registry_file.SetKeyPathPrefix(self._key_path_prefix)
 
     # Retrieve the Registry file root key because the Registry helper
     # expects self._currently_loaded_registry_key to be set after
     # the Registry file is opened.
-    self.GetKeyByPath(u'\\')
+    self._currently_loaded_registry_key = self.GetKeyByPath(u'\\')

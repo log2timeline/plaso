@@ -4,6 +4,8 @@
 import logging
 import re
 
+from plaso.lib import py2to3
+
 
 # Illegal Unicode characters for XML.
 ILLEGAL_XML_RE = re.compile(
@@ -95,7 +97,7 @@ def GetInodeValue(inode_raw):
   Returns:
     An integer inode value.
   """
-  if isinstance(inode_raw, (int, long)):
+  if isinstance(inode_raw, py2to3.INTEGER_TYPES):
     return inode_raw
 
   if isinstance(inode_raw, float):

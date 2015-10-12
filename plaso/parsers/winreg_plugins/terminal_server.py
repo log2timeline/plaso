@@ -17,23 +17,23 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
   NAME = u'mstsc_rdp'
   DESCRIPTION = u'Parser for Terminal Server Client Connection Registry data.'
 
-  REG_TYPE = u'NTUSER'
-  REG_KEYS = [
-      u'\\Software\\Microsoft\\Terminal Server Client\\Servers',
-      u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          u'Servers'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          u'Default\\AddIns\\RDPDR')])
 
   _SOURCE_APPEND = u': RDP Connection'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect Values in Servers and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     mru_values_dict = {}
     for subkey in registry_key.GetSubkeys():
@@ -50,14 +50,12 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
 
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_time, subkey.path, values_dict,
-          offset=subkey.offset, registry_file_type=registry_file_type,
-          source_append=self._SOURCE_APPEND)
+          offset=subkey.offset, source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, mru_values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 
@@ -67,24 +65,24 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   NAME = u'mstsc_rdp_mru'
   DESCRIPTION = u'Parser for Terminal Server Client MRU Registry data.'
 
-  REG_TYPE = u'NTUSER'
-  REG_KEYS = [
-      u'\\Software\\Microsoft\\Terminal Server Client\\Default',
-      u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
+  FILTERS = frozenset([
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          u'Default'),
+      interface.WindowsRegistryKeyPathFilter(
+          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          u'LocalDevices')])
 
   _RE_VALUE_DATA = re.compile(r'MRU[0-9]+')
   _SOURCE_APPEND = u': RDP Connection'
 
-  def GetEntries(
-      self, parser_mediator, registry_key, registry_file_type=None, **kwargs):
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect MRU Values and return event for each one.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      registry_file_type: Optional string containing the Windows Registry file
-                          type, e.g. NTUSER, SOFTWARE. The default is None.
     """
     values_dict = {}
     for value in registry_key.GetValues():
@@ -100,8 +98,7 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, registry_file_type=registry_file_type,
-        source_append=self._SOURCE_APPEND)
+        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 
 

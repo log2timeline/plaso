@@ -177,8 +177,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
         u'2010-05-12 07:58:33')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = u'mru [/super/cool] package [plaso] tag [WRONG_TAG]'
-    expected_short_string = u'/super/cool'
+    expected_string = u'mru [/super/cóól] package [plaso] tag [WRONG_TAG]'
+    expected_short_string = u'/super/cóól'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 

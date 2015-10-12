@@ -9,8 +9,9 @@ import os
 import sys
 
 import plaso
-from plaso.lib import errors
 from plaso.cli import views
+from plaso.lib import errors
+from plaso.lib import py2to3
 
 import pytz
 
@@ -58,9 +59,11 @@ class CLITool(object):
     self._data_location = None
     self._debug_mode = False
     self._input_reader = input_reader
+    self._log_file = None
     self._output_writer = output_writer
     self._quiet_mode = False
     self._timezone = pytz.UTC
+    self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
@@ -105,7 +108,7 @@ class CLITool(object):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    data_location = getattr(options, u'data_location', None)
+    data_location = self.ParseStringOption(options, u'data_location')
     if not data_location:
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
@@ -157,7 +160,7 @@ class CLITool(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    timezone_string = getattr(options, u'timezone', None)
+    timezone_string = self.ParseStringOption(options, u'timezone')
     if isinstance(timezone_string, basestring):
       if timezone_string.lower() == u'list':
         self.list_timezones = True
@@ -196,7 +199,7 @@ class CLITool(object):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=unicode,
+        u'--data', action=u'store', dest=u'data_location', type=str,
         metavar=u'PATH', default=None, help=u'the location of the data files.')
 
   def AddInformationalOptions(self, argument_group):
@@ -223,7 +226,7 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'--logfile', u'--log_file', u'--log-file', action=u'store',
-        metavar=u'FILENAME', dest=u'log_file', type=unicode, default=u'', help=(
+        metavar=u'FILENAME', dest=u'log_file', type=str, default=u'', help=(
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
 
@@ -236,7 +239,7 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
-        type=unicode, default=u'UTC', help=(
+        type=str, default=u'UTC', help=(
             u'explicitly define the timezone. Typically the timezone is '
             u'determined automatically where possible. Use "-z list" to '
             u'see a list of available timezones.'))
@@ -250,11 +253,9 @@ class CLITool(object):
 
     utc_date_time = datetime.datetime.utcnow()
 
-    table_view = views.CLITableView(
-        self._output_writer, column_width=max_length)
-
-    table_view.PrintHeader(u'Zones')
-    table_view.PrintRow(u'Timezone', u'UTC Offset')
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Zones')
+    table_view.AddColumnNames([u'Timezone', u'UTC Offset'])
     for timezone_name in pytz.all_timezones:
       local_timezone = pytz.timezone(timezone_name)
 
@@ -267,9 +268,9 @@ class CLITool(object):
         _, _, diff = local_date_string.rpartition(u'-')
         diff_string = u'-{0:s}'.format(diff)
 
-      table_view.PrintRow(timezone_name, diff_string)
+      table_view.AddRow([timezone_name, diff_string])
 
-    table_view.PrintFooter()
+    table_view.Write(self._output_writer)
 
   def ParseOptions(self, options):
     """Parses tool specific options.
@@ -278,6 +279,55 @@ class CLITool(object):
       options: the command line arguments (instance of argparse.Namespace).
     """
     self._ParseInformationalOptions(options)
+
+  def ParseLogFileOptions(self, options):
+    """Parses the log file options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    self._log_file = self.ParseStringOption(options, u'log_file')
+
+  def ParseStringOption(self, options, argument_name, default_value=None):
+    """Parses a string command line argument.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      argument_name: the name of the command line argument.
+      default_value: optional default value of the command line argument.
+
+    Returns:
+      A string containing the command line argument value. If the command
+      line argument is not set the default value will be returned.
+
+    Raises:
+      BadConfigOption: if the command line argument value cannot be converted
+                       to a Unicode string.
+    """
+    argument_value = getattr(options, argument_name, None)
+    if not argument_value:
+      return default_value
+
+    if isinstance(argument_value, py2to3.BYTES_TYPE):
+      encoding = sys.stdin.encoding
+
+      # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = self.preferred_encoding
+
+      try:
+        argument_value = argument_value.decode(encoding)
+      except UnicodeDecodeError as exception:
+        raise errors.BadConfigOption((
+            u'Unable to convert option: {0:s} to Unicode with error: '
+            u'{1:s}.').format(argument_name, exception))
+
+    elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
+      raise errors.BadConfigOption(
+          u'Unsupported option: {0:s} string type required.'.format(
+              argument_name))
+
+    return argument_value
 
   def PrintSeparatorLine(self):
     """Prints a separator line."""

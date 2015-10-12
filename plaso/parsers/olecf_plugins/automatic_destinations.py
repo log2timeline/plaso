@@ -113,7 +113,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
               exception))
 
     if header.unknown1 != 1:
-      # TODO: add format debugging notes to parser context.
+      # TODO: add format debugging notes to parser mediator.
       logging.debug(u'[{0:s}] unknown1 value: {1:d}.'.format(
           self.NAME, header.unknown1))
 
