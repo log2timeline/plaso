@@ -613,11 +613,11 @@ class ExtractionFrontend(frontend.Frontend):
     self._use_old_preprocess = use_old_preprocess
 
   def SetUseZeroMQ(self, use_zeromq=False):
-    """Sets whether the tool is using ZeroMQ for queueing or not.
+    """Sets whether the frontend is using ZeroMQ for queueing or not.
 
     Args:
-      use_zeromq: Optional boolean, when True the tool will use ZeroMQ for
-                  queuing.
+      use_zeromq: optional boolean value to indicate if ZeroMQ should be used
+                  for queuing.
     """
     self._use_zeromq = use_zeromq
 

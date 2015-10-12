@@ -334,7 +334,7 @@ class MultiProcessEngine(engine.BaseEngine):
   # Note that on average Windows seems to require a bit longer wait
   # than 5 seconds.
   _RPC_SERVER_TIMEOUT = 8.0
-  _MAX_RPC_ERRORS = 10
+  _MAXIMUM_RPC_ERRORS = 10
 
   _STATUS_CHECK_SLEEP = 1.5
 
@@ -490,7 +490,7 @@ class MultiProcessEngine(engine.BaseEngine):
       rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
       self._rpc_errors_per_pid[pid] = rpc_errors
 
-      if rpc_errors > self._MAX_RPC_ERRORS:
+      if rpc_errors > self._MAXIMUM_RPC_ERRORS:
         process_is_alive = False
 
       if process_is_alive:
@@ -587,11 +587,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Args:
       process: The handle to the process to query (instance of
-               MultiProcessBaseProcess)
+               MultiProcessBaseProcess).
 
     Returns:
-      A status dict.
-      """
+      A dictionary containing the process status.
+    """
     process_is_alive = process.is_alive()
     if process_is_alive:
       rpc_client = self._rpc_clients_per_pid.get(process.pid, None)
@@ -1096,7 +1096,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Args:
       collector_process: the collector process object (instance of
-                        MultiProcessCollectorProcess).
+                         MultiProcessCollectorProcess).
 
     Raises:
       RuntimeError: if the collector is not able to start its queue before the
@@ -1421,7 +1421,7 @@ class MultiProcessingQueue(queue.Queue):
     self._queue = multiprocessing.Queue(maxsize=maximum_number_of_queued_items)
 
   def Open(self):
-    """Called to open the queue."""
+    """Opens the queue."""
     pass
 
   # pylint: disable=arguments-differ
