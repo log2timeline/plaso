@@ -23,11 +23,12 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath([u'SAM'])
     key_path = u'\\SAM\\Domains\\Account\\Users'
-    registry_key = self._GetKeyFromFile(test_file, key_path)
+    test_file_entry = self._GetTestFileEntryFromPath([u'SAM'])
+    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+
     event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key)
+        self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 7)

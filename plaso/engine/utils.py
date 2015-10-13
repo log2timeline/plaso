@@ -28,8 +28,9 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
         continue
 
       if pre_obj:
+        path_attributes = pre_obj.__dict__
         try:
-          line = expander.ExpandPath(line, pre_obj=pre_obj)
+          line = expander.ExpandPath(line, path_attributes=path_attributes)
         except KeyError as exception:
           logging.error((
               u'Unable to use collection filter line: {0:s} with error: '

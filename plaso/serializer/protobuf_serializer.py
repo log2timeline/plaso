@@ -7,6 +7,7 @@ from dfvfs.serializer import protobuf_serializer as dfvfs_protobuf_serializer
 from google.protobuf import message
 
 from plaso.lib import event
+from plaso.lib import py2to3
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import interface
@@ -139,7 +140,7 @@ class ProtobufEventAttributeSerializer(object):
     elif isinstance(attribute_value, bool):
       proto_attribute.boolean = attribute_value
 
-    elif isinstance(attribute_value, (int, long)):
+    elif isinstance(attribute_value, py2to3.INTEGER_TYPES):
       # TODO: add some bounds checking.
       proto_attribute.integer = attribute_value
 
@@ -483,7 +484,7 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
                 u'coming from file: {3:s}').format(
                     attribute_name, type(attribute_value), exception, path))
             # Catch potential out of range errors.
-            if isinstance(attribute_value, (int, long)):
+            if isinstance(attribute_value, py2to3.INTEGER_TYPES):
               setattr(proto, attribute_name, -1)
 
       else:

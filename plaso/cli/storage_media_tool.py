@@ -4,7 +4,6 @@
 import getpass
 import logging
 import os
-import sys
 
 from dfvfs.credentials import manager as credentials_manager
 from dfvfs.helpers import source_scanner
@@ -16,7 +15,6 @@ from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.lib import timelib
 
 
@@ -259,8 +257,7 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    filter_file = getattr(options, u'file_filter', None)
-
+    filter_file = self.ParseStringOption(options, u'file_filter')
     if not filter_file:
       return
 
@@ -788,7 +785,7 @@ class StorageMediaTool(tools.CLITool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--credential', action=u'append', default=[], type=unicode,
+        u'--credential', action=u'append', default=[], type=str,
         dest=u'credentials', metavar=u'TYPE:DATA', help=(
             u'Define a credentials that can be used to unlock encrypted '
             u'volumes e.g. BitLocker. The credential is defined as type:data '
@@ -807,7 +804,7 @@ class StorageMediaTool(tools.CLITool):
     """
     argument_group.add_argument(
         u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
-        action=u'store', type=unicode, default=None, help=(
+        action=u'store', type=str, default=None, help=(
             u'List of files to include for targeted collection of files to '
             u'parse, one line per file path, setup is /path|file - where each '
             u'element can contain either a variable set in the preprocessing '
@@ -887,27 +884,9 @@ class StorageMediaTool(tools.CLITool):
     self._ParseVSSProcessingOptions(options)
     self._ParseCredentialOptions(options)
 
-    self._source_path = getattr(options, self._SOURCE_OPTION, None)
+    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
     if not self._source_path:
       raise errors.BadConfigOption(u'Missing source path.')
-
-    if isinstance(self._source_path, py2to3.BYTES_TYPE):
-      encoding = sys.stdin.encoding
-
-      # Note that sys.stdin.encoding can be None.
-      if not encoding:
-        encoding = self.preferred_encoding
-
-      try:
-        self._source_path = self._source_path.decode(encoding)
-      except UnicodeDecodeError as exception:
-        raise errors.BadConfigOption((
-            u'Unable to convert source path to Unicode with error: '
-            u'{0:s}.').format(exception))
-
-    elif not isinstance(self._source_path, py2to3.UNICODE_TYPE):
-      raise errors.BadConfigOption(
-          u'Unsupported source path, string type required.')
 
     self._source_path = os.path.abspath(self._source_path)
 

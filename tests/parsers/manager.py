@@ -19,7 +19,7 @@ class TestParser(interface.BaseParser):
     """Parsers the file entry and extracts event objects.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     return
 
@@ -37,7 +37,7 @@ class TestParserWithPlugins(interface.BaseParser):
     """Parsers the file entry and extracts event objects.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     return
 
@@ -53,7 +53,7 @@ class TestPlugin(plugins.BasePlugin):
     """Evaluates if this is the correct plugin and processes data accordingly.
 
     Args:
-      parser_mediator: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.

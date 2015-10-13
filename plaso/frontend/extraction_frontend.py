@@ -354,13 +354,18 @@ class ExtractionFrontend(frontend.Frontend):
     """
     return hashers_manager.HashersManager.GetHashersInformation()
 
-  def GetParserPluginsInformation(self):
+  def GetParserPluginsInformation(self, parser_filter_string=None):
     """Retrieves the parser plugins information.
+
+    Args:
+      parser_filter_string: Optional parser filter string, where None
+                            represents all parsers and plugins.
 
     Returns:
       A list of tuples of parser plugin names and descriptions.
     """
-    return parsers_manager.ParsersManager.GetParserPluginsInformation()
+    return parsers_manager.ParsersManager.GetParserPluginsInformation(
+        parser_filter_string=parser_filter_string)
 
   def GetParserPresetsInformation(self):
     """Retrieves the parser presets information.
@@ -381,6 +386,14 @@ class ExtractionFrontend(frontend.Frontend):
       A list of tuples of parser names and descriptions.
     """
     return parsers_manager.ParsersManager.GetParsersInformation()
+
+  def GetNamesOfParsersWithPlugins(self):
+    """Retrieves the names of parser with plugins.
+
+    Returns:
+      A list of parser names.
+    """
+    return parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
 
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,

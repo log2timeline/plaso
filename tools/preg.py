@@ -47,7 +47,6 @@ from plaso.frontend import preg
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
-from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 
 
@@ -562,8 +561,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     for plugin, event_objects in iter(key_data.items()):
       # TODO: make this a table view.
       self.PrintHeader(u'Plugin: {0:s}'.format(plugin.plugin_name))
-      self._output_writer.Write(u'[{0:s}] {1:s}\n'.format(
-          plugin.REG_TYPE, plugin.DESCRIPTION))
+      self._output_writer.Write(u'{0:s}\n'.format(plugin.DESCRIPTION))
       if plugin.URLS:
         self._output_writer.Write(
             u'Additional information can be found here:\n')
@@ -579,6 +577,14 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     self.PrintSeparatorLine()
     self._output_writer.Write(u'\n\n')
+
+  def GetWindowsRegistryPlugins(self):
+    """Build a list of all available Windows Registry plugins.
+
+    Returns:
+      A plugins list (instance of PluginList).
+    """
+    return self._front_end.GetWindowsRegistryPlugins()
 
   def GetWindowsVolumeIdentifiers(self, scan_node, volume_identifiers):
     """Determines and returns back a list of Windows volume identifiers.
@@ -624,12 +630,11 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
   def ListPluginInformation(self):
     """Lists Registry plugin information."""
-    table_view = cli_views.CLITableView(self._output_writer)
-    table_view.PrintHeader(u'Supported Plugins')
+    table_view = cli_views.CLITableView(title=u'Supported Plugins')
     plugin_list = self._front_end.registry_plugin_list
     for plugin_class in plugin_list.GetAllPlugins():
-      table_view.PrintRow(plugin_class.NAME, plugin_class.DESCRIPTION)
-    table_view.PrintFooter()
+      table_view.AddRow([plugin_class.NAME, plugin_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -658,8 +663,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     image_options = argument_parser.add_argument_group(u'Image Options')
 
     image_options.add_argument(
-        u'-i', u'--image', dest=u'image', action=u'store', type=unicode,
-        default=u'', metavar=u'IMAGE_PATH', help=(
+        u'-i', u'--image', dest=self._SOURCE_OPTION, action=u'store',
+        type=str, default=u'', metavar=u'IMAGE_PATH', help=(
             u'If the Registry file is contained within a storage media image, '
             u'set this option to specify the path of image file.'))
 
@@ -689,14 +694,13 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     mode_options.add_argument(
         u'-k', u'--key', dest=u'key', action=u'store', default=u'',
-        type=unicode, metavar=u'REGISTRY_KEYPATH', help=(
+        type=str, metavar=u'REGISTRY_KEYPATH', help=(
             u'A Registry key path that the tool should parse using all '
             u'available plugins.'))
 
     mode_options.add_argument(
         u'-p', u'--plugins', dest=u'plugin_names', action=u'append', default=[],
-        type=unicode, metavar=u'PLUGIN_NAME',
-        help=(
+        type=str, metavar=u'PLUGIN_NAME', help=(
             u'Substring match of the Registry plugin to be used, this '
             u'parameter can be repeated to create a list of plugins to be '
             u'run against, eg: "-p userassist -p rdp" or "-p userassist".'))
@@ -744,7 +748,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       return
 
     registry_file = getattr(options, u'registry_file', None)
-    image = getattr(options, u'image', None)
+    image = self.ParseStringOption(options, self._SOURCE_OPTION)
     source_path = None
     if image:
       # TODO: refactor, there should be no need for separate code paths.
@@ -770,7 +774,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         raise errors.BadConfigOption(
             u'Registry file: {0:s} does not exist.'.format(registry_file))
 
-    self._key_path = getattr(options, u'key', None)
+    self._key_path = self.ParseStringOption(options, u'key')
     self._parse_restore_points = getattr(options, u'restore_points', False)
 
     self._quiet = getattr(options, u'quiet', False)
@@ -787,13 +791,14 @@ class PregTool(storage_media_tool.StorageMediaTool):
       raise errors.BadConfigOption(
           u'Unable to read the input file with error: {0:s}'.format(reason))
 
+    # TODO: make sure encoded plugin names are handled correctly.
     self.plugin_names = getattr(options, u'plugin_names', [])
 
     self._front_end.SetKnowledgeBase(self._knowledge_base_object)
 
     if getattr(options, u'console', False):
       self.run_mode = self.RUN_MODE_CONSOLE
-    elif getattr(options, u'key', u'') and registry_file:
+    elif self._key_path and registry_file:
       self.run_mode = self.RUN_MODE_REG_KEY
     elif self.plugin_names:
       self.run_mode = self.RUN_MODE_REG_PLUGIN
@@ -831,7 +836,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
             registry_helper.file_type)
 
         for plugin in plugins_to_run:
-          key_paths = list(plugin.REG_KEYS)
+          key_paths = plugin.GetKeyPaths()
           self._front_end.ExpandKeysRedirect(key_paths)
           for key_path in key_paths:
             key = registry_helper.GetKeyByPath(key_path)
@@ -886,15 +891,13 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     registry_helper = registry_helpers[0]
     key_paths = []
+    plugins_list = self._front_end.registry_plugin_list
     try:
       registry_helper.Open()
-      parser_mediator = self._front_end.CreateParserMediator()
-
-      plugins = self._front_end.registry_plugin_list
 
       # Get all the appropriate keys from these plugins.
-      key_paths = plugins.GetExpandedKeyPaths(
-          parser_mediator, plugin_names=plugin_list)
+      key_paths = plugins_list.GetKeyPaths(plugin_names=plugin_list)
+
     finally:
       registry_helper.Close()
 
@@ -925,32 +928,91 @@ class PregMagics(magic.Magics):
   # TODO: Use the output writer from the tool.
   output_writer = cli_tools.StdoutOutputWriter()
 
+  def _HiveActionList(self, unused_line):
+    """Handles the hive list action.
+
+    Args:
+      line: the command line provide via the console.
+    """
+    self.console.PrintRegistryFileList()
+    self.output_writer.Write(u'\n')
+    self.output_writer.Write(
+        u'To open a Registry file, use: hive open INDEX\n')
+
+  def _HiveActionOpen(self, line):
+    """Handles the hive open action.
+
+    Args:
+      line: the command line provide via the console.
+    """
+    try:
+      registry_file_index = int(line[5:], 10)
+    except ValueError:
+      self.output_writer.Write(
+          u'Unable to open Registry file, invalid index number.\n')
+      return
+
+    try:
+      self.console.LoadRegistryFile(registry_file_index)
+    except errors.UnableToLoadRegistryHelper as exception:
+      self.output_writer.Write(
+          u'Unable to load hive, with error: {0:s}.\n'.format(exception))
+      return
+
+    registry_helper = self.console.current_helper
+    self.output_writer.Write(u'Opening hive: {0:s} [{1:s}]\n'.format(
+        registry_helper.path, registry_helper.collector_name))
+    self.console.SetPrompt(registry_file_path=registry_helper.path)
+
+  def _HiveActionScan(self, line):
+    """Handles the hive scan action.
+
+    Args:
+      line: the command line provide via the console.
+    """
+    # Line contains: "scan REGISTRY_TYPES" where REGISTRY_TYPES is a comma
+    # separated list.
+    registry_file_type_string = line[5:]
+    if not registry_file_type_string:
+      registry_file_types = self.console.preg_front_end.GetRegistryTypes()
+    else:
+      registry_file_types = [
+          string.strip() for string in registry_file_type_string.split(u',')]
+
+    registry_helpers = self.console.preg_front_end.GetRegistryHelpers(
+        registry_file_types=registry_file_types)
+
+    for registry_helper in registry_helpers:
+      self.console.AddRegistryHelper(registry_helper)
+
+    self.console.PrintRegistryFileList()
+
   @magic.line_magic(u'cd')
-  def ChangeDirectory(self, key):
+  def ChangeDirectory(self, key_path):
     """Change between Registry keys, like a directory tree.
 
     The key path can either be an absolute path or a relative one.
     Absolute paths can use '.' and '..' to denote current and parent
-    directory/key path.
+    directory/key path. If no key path is set the current key is changed
+    to point to the root key.
 
     Args:
-      key: path to the key to traverse to.
+      key_path: path to the key to traverse to.
     """
     if not self.console and not self.console.IsLoaded():
       return
-    registry_key = None
-    key_path = key
 
-    if not key:
-      self.ChangeDirectory(self.REGISTRY_FILE_BASE_PATH)
-
-    loaded_helper = self.console.current_helper
-
-    if not loaded_helper:
+    registry_helper = self.console.current_helper
+    if not registry_helper:
       return
 
+    if not key_path:
+      key_path = self.REGISTRY_FILE_BASE_PATH
+
+    key_path_upper = key_path.upper()
+
     # Check if we need to expand environment attributes.
-    match = self.EXPANSION_RE.search(key)
+    match = self.EXPANSION_RE.search(key_path)
     if match and u'{0:s}{0:s}'.format(
         self.EXPANSION_KEY_OPEN) not in match.group(0):
       pre_obj = self.console.preg_front_end.knowledge_base_object.pre_obj
@@ -960,107 +1022,92 @@ class PregMagics(magic.Magics):
 
       try:
         # TODO: create an ExpandKeyPath function.
-        key = loaded_helper._win_registry.ExpandKeyPath(key, path_attributes)
+        key_path = registry_helper._win_registry.ExpandKeyPath(
+            key_path, path_attributes)
       except (KeyError, IndexError):
         pass
 
-    if key.startswith(self.REGISTRY_KEY_PATH_SEPARATOR):
-      registry_key = loaded_helper.GetKeyByPath(key)
-    elif key == u'.':
+    registry_key = None
+    relative_key_path = key_path
+    if (key_path.startswith(self.REGISTRY_KEY_PATH_SEPARATOR) or
+        key_path_upper.startswith(u'HKEY_')):
+      registry_key = registry_helper.GetKeyByPath(key_path)
+
+    elif key_path == u'.':
       return
-    elif key.startswith(u'.\\'):
-      current_path = loaded_helper.GetCurrentRegistryPath()
-      _, _, key_path = key.partition(self.REGISTRY_KEY_PATH_SEPARATOR)
-      registry_key = loaded_helper.GetKeyByPath(u'{0:s}\\{1:s}'.format(
-          current_path, key_path))
-    elif key.startswith(u'..'):
-      parent_path, _, _ = loaded_helper.GetCurrentRegistryPath().rpartition(
+
+    elif key_path.startswith(u'.\\'):
+      current_path = registry_helper.GetCurrentRegistryPath()
+      _, _, relative_key_path = key_path.partition(
+          self.REGISTRY_KEY_PATH_SEPARATOR)
+      registry_key = registry_helper.GetKeyByPath(u'{0:s}\\{1:s}'.format(
+          current_path, relative_key_path))
+
+    elif key_path.startswith(u'..'):
+      parent_path, _, _ = registry_helper.GetCurrentRegistryPath().rpartition(
           self.REGISTRY_KEY_PATH_SEPARATOR)
       # We know the path starts with a "..".
-      if len(key) == 2:
-        key_path = u''
+      if len(key_path) == 2:
+        relative_key_path = u''
       else:
-        key_path = key[3:]
+        relative_key_path = key_path[3:]
+
       if parent_path:
-        if key_path:
-          path = u'{0:s}\\{1:s}'.format(parent_path, key_path)
+        if relative_key_path:
+          path = u'{0:s}\\{1:s}'.format(parent_path, relative_key_path)
         else:
           path = parent_path
-        registry_key = loaded_helper.GetKeyByPath(path)
+        registry_key = registry_helper.GetKeyByPath(path)
       else:
-        registry_key = loaded_helper.GetKeyByPath(u'\\{0:s}'.format(key_path))
+        registry_key = registry_helper.GetKeyByPath(
+            u'\\{0:s}'.format(relative_key_path))
 
     else:
       # Check if key is not set at all, then assume traversal from root.
-      if not loaded_helper.GetCurrentRegistryPath():
-        _ = loaded_helper.GetKeyByPath(self.REGISTRY_FILE_BASE_PATH)
+      if not registry_helper.GetCurrentRegistryPath():
+        _ = registry_helper.GetKeyByPath(self.REGISTRY_FILE_BASE_PATH)
 
-      current_key = loaded_helper.GetCurrentRegistryKey()
-      if current_key.name == loaded_helper.root_key.name:
-        key_path = u'\\{0:s}'.format(key)
+      current_key = registry_helper.GetCurrentRegistryKey()
+      if (not current_key or (
+          registry_helper.root_key and
+          current_key.name == registry_helper.root_key.name)):
+        relative_key_path = u'\\{0:s}'.format(key_path)
       else:
-        key_path = u'{0:s}\\{1:s}'.format(current_key.path, key)
-      registry_key = loaded_helper.GetKeyByPath(key_path)
+        relative_key_path = u'{0:s}\\{1:s}'.format(current_key.path, key_path)
+      registry_key = registry_helper.GetKeyByPath(relative_key_path)
 
-    if registry_key:
-      if key_path == self.REGISTRY_FILE_BASE_PATH:
-        path = self.REGISTRY_FILE_BASE_PATH
-      else:
-        path = registry_key.path
-
-      sanitized_path = path.replace(u'}', u'}}').replace(u'{', u'{{')
-      sanitized_path = sanitized_path.replace(
-          self.REGISTRY_KEY_PATH_SEPARATOR, u'\\\\')
-      self.console.SetPrompt(
-          registry_file_path=loaded_helper.path, prepend_string=sanitized_path)
-    else:
+    if not registry_key:
       self.output_writer.Write(
-          u'Unable to change to: {0:s}\n'.format(key_path))
+          u'Unable to change to: {0:s}\n'.format(relative_key_path))
+      return
+
+    if relative_key_path == self.REGISTRY_FILE_BASE_PATH:
+      path = self.REGISTRY_FILE_BASE_PATH
+    else:
+      path = registry_key.path
+
+    sanitized_path = path.replace(u'}', u'}}').replace(u'{', u'{{')
+    sanitized_path = sanitized_path.replace(
+        self.REGISTRY_KEY_PATH_SEPARATOR, u'\\\\')
+    self.console.SetPrompt(
+        registry_file_path=registry_helper.path,
+        prepend_string=sanitized_path)
 
   @magic.line_magic(u'hive')
   def HiveActions(self, line):
-    """Define the hive command on the console prompt."""
+    """Handles the hive actions.
+
+    Args:
+      line: the command line provide via the console.
+    """
     if line.startswith(u'list'):
-      self.console.PrintRegistryFileList()
-      self.output_writer.Write(u'\n')
-      self.output_writer.Write(
-          u'To open a Registry file, use: hive open INDEX\n')
+      self._HiveActionList(line)
+
     elif line.startswith(u'open ') or line.startswith(u'load '):
-      try:
-        registry_file_index = int(line[5:], 10)
-      except ValueError:
-        self.output_writer.Write(
-            u'Unable to open Registry file, invalid index number.\n')
-        return
+      self._HiveActionOpen(line)
 
-      try:
-        self.console.LoadRegistryFile(registry_file_index)
-      except errors.UnableToLoadRegistryHelper as exception:
-        self.output_writer.Write(
-            u'Unable to load hive, with error: {0:s}.\n'.format(exception))
-        return
-
-      registry_helper = self.console.current_helper
-      self.output_writer.Write(u'Opening hive: {0:s} [{1:s}]\n'.format(
-          registry_helper.path, registry_helper.collector_name))
-      self.console.SetPrompt(registry_file_path=registry_helper.path)
     elif line.startswith(u'scan'):
-      # Line contains: "scan REGISTRY_TYPES" where REGISTRY_TYPES is a comma
-      # separated list.
-      registry_file_type_string = line[5:]
-      if not registry_file_type_string:
-        registry_file_types = preg.PregRegistryHelper.REG_TYPES.keys()
-      else:
-        registry_file_types = [
-            string.strip() for string in registry_file_type_string.split(u',')]
-
-      registry_helpers = self.console.preg_front_end.GetRegistryHelpers(
-          registry_file_types=registry_file_types)
-
-      for registry_helper in registry_helpers:
-        self.console.AddRegistryHelper(registry_helper)
-
-      self.console.PrintRegistryFileList()
+      self._HiveActionScan(line)
 
   @magic.line_magic(u'ls')
   def ListDirectoryContent(self, line):
@@ -1143,25 +1190,31 @@ class PregMagics(magic.Magics):
     self.console.preg_tool.PrintParsedRegistryKey(
         parsed_data, file_entry=current_helper.file_entry, show_hex=verbose)
 
-    # Print out a hexadecimal representation of all binary values.
+    # Print a hexadecimal representation of all binary values.
     if verbose:
-      table_view = cli_views.CLITableView(self.output_writer)
       header_shown = False
       for value in current_helper.GetCurrentRegistryKey().GetValues():
-        if value.DataIsBinaryData():
-          if not header_shown:
-            table_view.PrintHeader(u'Hexadecimal representation')
-            header_shown = True
+        if not value.DataIsBinaryData():
+          continue
 
-          self.console.preg_tool.PrintSeparatorLine()
-          table_view.PrintRow(u'Attribute', value.name)
-          self.console.preg_tool.PrintSeparatorLine()
+        if not header_shown:
+          table_view = cli_views.CLITableView(
+              title=u'Hexadecimal representation')
+          header_shown = True
+        else:
+          table_view = cli_views.CLITableView()
 
-          value_string = hexdump.Hexdump.FormatData(value.data)
-          self.output_writer.Write(value_string)
-          self.output_writer.Write(u'\n')
-          self.output_writer.Write(u'+-'*40)
-          self.output_writer.Write(u'\n')
+        table_view.AddRow([u'Attribute', value.name])
+        table_view.Write(self.output_writer)
+
+        self.console.preg_tool.PrintSeparatorLine()
+        self.console.preg_tool.PrintSeparatorLine()
+
+        value_string = hexdump.Hexdump.FormatData(value.data)
+        self.output_writer.Write(value_string)
+        self.output_writer.Write(u'\n')
+        self.output_writer.Write(u'+-'*40)
+        self.output_writer.Write(u'\n')
 
   def _PrintPluginHelp(self, plugin_object):
     """Prints the help information of a plugin.
@@ -1170,17 +1223,16 @@ class PregMagics(magic.Magics):
       plugin_object: a Windows Registry plugin object (instance of
                      WindowsRegistryPlugin).
     """
-    table_view = cli_views.CLITableView(self.output_writer)
-    table_view.PrintHeader(plugin_object.NAME)
+    table_view = cli_views.CLITableView(title=plugin_object.NAME)
 
     # TODO: replace __doc__ by DESCRIPTION.
     description = plugin_object.__doc__
-    table_view.PrintRow(u'Description', description)
+    table_view.AddRow([u'Description', description])
     self.output_writer.Write(u'\n')
 
     for registry_key in plugin_object.expanded_keys:
-      table_view.PrintRow(u'Registry Key', registry_key)
-    table_view.PrintFooter()
+      table_view.AddRow([u'Registry Key', registry_key])
+    table_view.Write(self._output_writer)
 
   @magic.line_magic(u'plugin')
   def ParseWithPlugin(self, line):
@@ -1209,7 +1261,7 @@ class PregMagics(magic.Magics):
         plugin_name = items[0]
 
     registry_file_type = current_helper.file_type
-    plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+    plugins_list = self.console.preg_tool.GetWindowsRegistryPlugins()
     plugin_object = plugins_list.GetPluginObjectByName(
         registry_file_type, plugin_name)
     if not plugin_object:
@@ -1218,7 +1270,8 @@ class PregMagics(magic.Magics):
               plugin_name, registry_file_type))
       return
 
-    if not hasattr(plugin_object, u'REG_KEYS'):
+    key_paths = plugin_object.GetKeyPaths()
+    if not key_paths:
       self.output_writer.Write(
           u'Plugin: {0:s} has no key information.\n'.format(line))
       return
@@ -1227,19 +1280,14 @@ class PregMagics(magic.Magics):
       self._PrintPluginHelp(plugin_object)
       return
 
-    if not plugin_object.expanded_keys:
-      plugin_object.ExpandKeys(self.console.parser_mediator)
-
-    # Defining outside of for loop for optimization.
-    get_key_by_path = current_helper.GetKeyByPath
-    for registry_key in plugin_object.expanded_keys:
-      key = get_key_by_path(registry_key)
-      if not key:
-        self.output_writer.Write(u'Key: {0:s} not found\n'.format(registry_key))
+    for key_path in key_paths:
+      registry_key = current_helper.GetKeyByPath(key_path)
+      if not registry_key:
+        self.output_writer.Write(u'Key: {0:s} not found\n'.format(key_path))
         continue
 
       # Move the current location to the key to be parsed.
-      self.ChangeDirectory(registry_key)
+      self.ChangeDirectory(key_path)
       # Parse the key.
       current_key = current_helper.GetCurrentRegistryKey()
       parsed_data = self.console.preg_front_end.ParseRegistryKey(
@@ -1283,7 +1331,7 @@ class PregConsole(object):
   @property
   def current_helper(self):
     """The currently loaded Registry helper."""
-    return self._currently_loaded_helper
+    return self._currently_registry_helper
 
   def __init__(self, preg_tool):
     """Initialize the console object.
@@ -1292,7 +1340,7 @@ class PregConsole(object):
       preg_tool: a preg tool object (instance of PregTool).
     """
     super(PregConsole, self).__init__()
-    self._currently_loaded_helper = None
+    self._currently_registry_helper = None
     self._currently_loaded_helper_path = u''
     self._registry_helpers = {}
 
@@ -1316,7 +1364,7 @@ class PregConsole(object):
       The currently loaded Registry key (instance of dfwinreg.WinRegistryKey)
       or None if there is no loaded key.
     """
-    registry_helper = self._currently_loaded_helper
+    registry_helper = self._currently_registry_helper
     return registry_helper.GetCurrentRegistryKey()
 
   def _CommandGetValue(self, value_name):
@@ -1330,7 +1378,7 @@ class PregConsole(object):
       None if either there is no currently loaded Registry key or if the value
       does not exist.
     """
-    registry_helper = self._currently_loaded_helper
+    registry_helper = self._currently_registry_helper
 
     current_key = registry_helper.GetCurrentRegistryKey()
     if not current_key:
@@ -1403,7 +1451,7 @@ class PregConsole(object):
       True if a Registry helper is currently loaded and ready
       to be used, otherwise False is returned.
     """
-    registry_helper = self._currently_loaded_helper
+    registry_helper = self._currently_registry_helper
     if not registry_helper:
       return False
 
@@ -1421,28 +1469,26 @@ class PregConsole(object):
 
   def PrintBanner(self):
     """Writes a banner to the output writer."""
-    table_view = cli_views.CLITableView(self._output_writer, column_width=23)
-    table_view.PrintHeader(
-        u'Welcome to PREG - home of the Plaso Windows Registry Parsing.')
-
     self._output_writer.Write(u'\n')
     self._output_writer.Write(
-        u'Some of the commands that are available for use are:\n')
-    self._output_writer.Write(u'\n')
+        u'Welcome to PREG - home of the Plaso Windows Registry Parsing.\n')
 
+    table_view = cli_views.CLITableView(
+        column_names=[u'Function', u'Description'], title=u'Available commands')
     for function_name, description in self._BASE_FUNCTIONS:
-      table_view.PrintRow(function_name, description)
-    table_view.PrintFooter()
+      table_view.AddRow([function_name, description])
+    table_view.Write(self._output_writer)
 
     if len(self._registry_helpers) == 1:
       self.LoadRegistryFile(0)
-      registry_helper = self._currently_loaded_helper
+      registry_helper = self._currently_registry_helper
       self._output_writer.Write(
           u'Opening hive: {0:s} [{1:s}]\n'.format(
               registry_helper.path, registry_helper.collector_name))
       self.SetPrompt(registry_file_path=registry_helper.path)
 
-    registry_helper = self._currently_loaded_helper
+    # TODO: make sure to limit number of characters per line of output.
+    registry_helper = self._currently_registry_helper
     if registry_helper and registry_helper.name != u'N/A':
       self._output_writer.Write(
           u'Registry file: {0:s} [{1:s}] is available and loaded.\n'.format(
@@ -1478,14 +1524,15 @@ class PregConsole(object):
     if index < 0 or index >= len(helper_keys):
       raise errors.UnableToLoadRegistryHelper(u'Index out of bounds.')
 
-    if self._currently_loaded_helper:
-      self._currently_loaded_helper.Close()
+    if self._currently_registry_helper:
+      self._currently_registry_helper.Close()
 
     registry_helper_path = helper_keys[index]
-    self._currently_loaded_helper = self._registry_helpers[registry_helper_path]
+    self._currently_registry_helper = (
+        self._registry_helpers[registry_helper_path])
     self._currently_loaded_helper_path = registry_helper_path
 
-    self._currently_loaded_helper.Open()
+    self._currently_registry_helper.Open()
 
   def PrintRegistryFileList(self):
     """Write a list of all available registry helpers to an output writer."""
@@ -1553,7 +1600,7 @@ class PregConsole(object):
       registry_file_types = [self.preg_tool.registry_file]
     else:
       # No Registry type specified use all available types instead.
-      registry_file_types = preg.PregRegistryHelper.REG_TYPES.keys()
+      registry_file_types = self.preg_front_end.GetRegistryTypes()
 
     registry_helpers = self.preg_front_end.GetRegistryHelpers(
         registry_file_types=registry_file_types,
@@ -1582,7 +1629,7 @@ class PregConsole(object):
     if len(self._registry_helpers) == 1:
       self.LoadRegistryFile(0)
 
-    registry_helper = self._currently_loaded_helper
+    registry_helper = self._currently_registry_helper
 
     if registry_helper:
       registry_file_path = registry_helper.name
@@ -1675,7 +1722,7 @@ def CommandCompleterPlugins(console, core_completer):
   registry_helper = magic_class.console.current_helper
   registry_file_type = registry_helper.file_type
 
-  plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+  plugins_list = console.preg_tool.GetWindowsRegistryPlugins()
   # TODO: refactor this into PluginsList.
   for plugin_cls in plugins_list.GetKeyPlugins(registry_file_type):
     if plugin_cls.NAME == u'winreg_default':

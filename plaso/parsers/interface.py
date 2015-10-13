@@ -71,7 +71,22 @@ class BaseParser(object):
         parser_filter_string=parser_filter_string):
       plugin_names.append(plugin_name)
 
-    return plugin_names
+    return sorted(plugin_names)
+
+  @classmethod
+  def GetPluginObjectByName(cls, plugin_name):
+    """Retrieves a specific plugin object by its name.
+
+    Args:
+      plugin_name: the name of the plugin.
+
+    Returns:
+      A plugin object (instance of BasePlugin) or None.
+    """
+    plugin_class = cls._plugin_classes.get(plugin_name, None)
+    if not plugin_class:
+      return
+    return plugin_class()
 
   @classmethod
   def GetPluginObjects(cls, parser_filter_string=None):

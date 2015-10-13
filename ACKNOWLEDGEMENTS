@@ -25,6 +25,8 @@ Thanks to contributors (alphabetically based on last name):
   * Parsers
     * BEncode
     * Java IDX parser
+* Christian Buia
+  * SCCM
 * Johan Berggren
   * SQLite plugins
     * Zeitgeist activity database

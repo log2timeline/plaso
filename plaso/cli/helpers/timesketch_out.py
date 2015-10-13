@@ -16,6 +16,10 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the timesketch output module.'
 
+  _DEFAULT_FLUSH_INTERVAL = 1000
+  _DEFAULT_NAME = u''
+  _DEFAULT_UUID = uuid.uuid4().hex
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Add command line arguments the helper supports to an argument group.
@@ -27,25 +31,26 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
       argument_group: the argparse group (instance of argparse._ArgumentGroup or
                       or argparse.ArgumentParser).
     """
-    default_uid = uuid.uuid4().hex
-
     argument_group.add_argument(
         u'--name', u'--timeline_name', u'--timeline-name',
-        dest=u'timeline_name', type=unicode, action=u'store',
-        default=u'', required=False, help=(
+        dest=u'timeline_name', type=str, action=u'store',
+        default=cls._DEFAULT_NAME, required=False, help=(
             u'The name of the timeline in Timesketch. Default: '
             u'hostname if present in the storage file. If no hostname '
             u'is found then manual input is used.'))
+
     argument_group.add_argument(
-        u'--index', dest=u'index', type=unicode, action=u'store',
-        default=default_uid, required=False, help=(
+        u'--index', dest=u'index', type=str, action=u'store',
+        default=cls._DEFAULT_UUID, required=False, help=(
             u'The name of the Elasticsearch index. Default: Generate a random '
             u'UUID'))
+
     argument_group.add_argument(
         u'--flush_interval', '--flush-interval', dest=u'flush_interval',
-        type=int, action=u'store', default=1000, required=False, help=(
+        type=int, action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL,
+        required=False, help=(
             u'The number of events to queue up before sent in bulk '
-            u'to Elasticsearch. Default: 1000'))
+            u'to Elasticsearch.'))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -67,17 +72,17 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
     if output_format != u'timesketch':
       raise errors.BadConfigOption(u'Only works on Timesketch output module.')
 
-    flush_interval = getattr(options, u'flush_interval', None)
-    if flush_interval:
-      output_module.SetFlushInterval(flush_interval)
+    flush_interval = cls._ParseIntegerOption(
+        options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
+    output_module.SetFlushInterval(flush_interval)
 
-    index = getattr(options, u'index', None)
-    if index:
-      output_module.SetIndex(index)
+    index = cls._ParseStringOption(
+        options, u'index', default_value=cls._DEFAULT_UUID)
+    output_module.SetIndex(index)
 
-    name = getattr(options, u'timeline_name', None)
-    if name:
-      output_module.SetName(name)
+    name = cls._ParseStringOption(
+        options, u'timeline_name', default_value=cls._DEFAULT_NAME)
+    output_module.SetName(name)
 
 
 manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputHelper)

@@ -37,7 +37,6 @@ class PstorageOutputHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(output_module, pstorage.PlasoStorageOutputModule):
       raise errors.BadConfigObject(
