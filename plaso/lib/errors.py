@@ -126,7 +126,3 @@ class WrongQueueType(Error):
 
 class WrongPlugin(Error):
   """Raised when the plugin is of the wrong type."""
-
-
-class WrongProtobufEntry(Error):
-  """Raised when an EventObject cannot be serialized as a protobuf."""

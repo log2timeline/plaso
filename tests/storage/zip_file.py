@@ -203,6 +203,52 @@ class SerializedDataTimestampTable(test_lib.StorageTestCase):
       offset_table.Read()
 
 
+class ZIPStorageFile(test_lib.StorageTestCase):
+  """Tests for the ZIP-based storage file object."""
+
+  def testGetSerializedEventObjectOffsetTable(self):
+    """Tests the _GetSerializedEventObjectOffsetTable function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    offset_table = storage_file._GetSerializedEventObjectOffsetTable(3)
+    self.assertIsNotNone(offset_table)
+
+  def testGetSerializedEventObjectStream(self):
+    """Tests the _GetSerializedEventObjectStream function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    data_stream = storage_file._GetSerializedEventObjectStream(3)
+    self.assertIsNotNone(data_stream)
+
+  def testGetSerializedEventObjectStreamNumbers(self):
+    """Tests the _GetSerializedEventObjectStreamNumbers function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    stream_numbers = storage_file._GetSerializedEventObjectStreamNumbers()
+    self.assertEqual(len(stream_numbers), 7)
+
+  def testGetStreamNames(self):
+    """Tests the _GetStreamNames function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    stream_names = list(storage_file._GetStreamNames())
+    self.assertEqual(len(stream_names), 29)
+
+  def testHasStream(self):
+    """Tests the _HasStream function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    self.assertTrue(storage_file._HasStream(u'plaso_timestamps.000003'))
+    self.assertFalse(storage_file._HasStream(u'bogus'))
+
+  # TODO: add _WriteStream test.
+
+
 class StorageFileTest(test_lib.StorageTestCase):
   """Tests for the ZIP storage file object."""
 
@@ -263,6 +309,67 @@ class StorageFileTest(test_lib.StorageTestCase):
     storage_file.StoreGrouping(group_mock)
     storage_file.Close()
 
+  def testGetStorageInformation(self):
+    """Tests the GetStorageInformation function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    storage_information = storage_file.GetStorageInformation()
+    self.assertEqual(len(storage_information), 1)
+
+  def _GetEventObjects(self, storage_file, stream_number):
+    """Retrieves all the event object in specific serialized data stream.
+
+    Args:
+      storage_file: a storage file (instance of StorageFile).
+      stream_number: an integer containing the number of the serialized event
+                     object stream.
+
+    Yields:
+      An event object (instance of EventObject).
+    """
+    event_object = storage_file._GetEventObject(stream_number)
+    while event_object:
+      yield event_object
+      event_object = storage_file._GetEventObject(stream_number)
+
+  def _GetEventsFromGroup(self, storage_file, event_group):
+    """Return a generator with all EventObjects from a group.
+
+    Args:
+      storage_file: a storage file (instance of StorageFile).
+      event_group: an event group (instance of plaso_storage_pb2.EventGroup).
+
+    Returns:
+      A list of event objects (instance of EventObjects).
+    """
+    event_objects = []
+    for group_event in event_group.events:
+      event_object = storage_file._GetEventObject(
+          group_event.store_number, entry_index=group_event.store_index)
+      event_objects.append(event_object)
+
+    return event_objects
+
+  def _GetTaggedEvent(self, storage_file, event_tag):
+    """Retrieves the event object for a specific event tag.
+
+    Args:
+      storage_file: a storage file (instance of StorageFile).
+      event_tag: an event tag object (instance of EventTag).
+
+    Returns:
+      An event object (instance of EventObject) or None if no corresponding
+      event was found.
+    """
+    event_object = storage_file._GetEventObject(
+        event_tag.store_number, entry_index=event_tag.store_index)
+    if not event_object:
+      return
+
+    event_object.tag = event_tag
+    return event_object
+
   def testStorage(self):
     """Test the storage object."""
     formatter_mediator = formatters_mediator.FormatterMediator()
@@ -289,7 +396,7 @@ class StorageFileTest(test_lib.StorageTestCase):
       self.assertTrue(read_store.HasTagging())
       self.assertTrue(read_store.HasGrouping())
 
-      for event_object in read_store.GetEntries(1):
+      for event_object in self._GetEventObjects(read_store, 1):
         event_objects.append(event_object)
         timestamps.append(event_object.timestamp)
         if event_object.data_type == 'windows:registry:key_value':
@@ -302,20 +409,20 @@ class StorageFileTest(test_lib.StorageTestCase):
               eventdata.EventTimestamp.WRITTEN_TIME)
 
       for tag in read_store.GetTagging():
-        event_object = read_store.GetTaggedEvent(tag)
+        event_object = self._GetTaggedEvent(read_store, tag)
         tagged_event_objects.append(event_object)
 
       groups = list(read_store.GetGrouping())
       self.assertEqual(len(groups), 1)
-      group_events = list(read_store.GetEventsFromGroup(groups[0]))
+      group_events = self._GetEventsFromGroup(read_store, groups[0])
 
       # Read the same events that were put in the group, just to compare
       # against.
-      event_object = read_store.GetEventObject(1, 1)
+      event_object = read_store._GetEventObject(1, entry_index=1)
       serialized_event_object = serializer.WriteSerialized(event_object)
       same_events.append(serialized_event_object)
 
-      event_object = read_store.GetEventObject(1, 2)
+      event_object = read_store._GetEventObject(1, entry_index=2)
       serialized_event_object = serializer.WriteSerialized(event_object)
       same_events.append(serialized_event_object)
 
@@ -418,6 +525,8 @@ class StorageFileTest(test_lib.StorageTestCase):
         1451584472000000]
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
+
+  # TODO: add test for StoreReport
 
 
 if __name__ == '__main__':
