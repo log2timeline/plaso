@@ -251,7 +251,8 @@ class CLITool(object):
       A string containing the command line arguments.
     """
     command_line_arguments = sys.argv
-    if isinstance(command_line_arguments, py2to3.BYTES_TYPE):
+    if (command_line_arguments and
+        isinstance(command_line_arguments[0], py2to3.BYTES_TYPE)):
       encoding = sys.stdin.encoding
 
       # Note that sys.stdin.encoding can be None.
