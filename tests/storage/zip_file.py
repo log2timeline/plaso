@@ -158,6 +158,51 @@ class SerializedDataOffsetTable(test_lib.StorageTestCase):
       offset_table.Read()
 
 
+class SerializedDataTimestampTable(test_lib.StorageTestCase):
+  """Tests for the serialized data offset table object."""
+
+  def testGetTimestamp(self):
+    """Tests the GetTimestamp function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    zip_file_object = zipfile.ZipFile(
+        test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
+
+    stream_name = u'plaso_timestamps.000003'
+    offset_table = zip_file._SerializedDataTimestampTable(
+        zip_file_object, stream_name)
+    offset_table.Read()
+
+    self.assertEqual(offset_table.GetTimestamp(0), 1390377181000000)
+    self.assertEqual(offset_table.GetTimestamp(1), 1390377241000000)
+
+    with self.assertRaises(IndexError):
+      offset_table.GetTimestamp(2)
+
+    self.assertEqual(offset_table.GetTimestamp(-1), 1390377241000000)
+    self.assertEqual(offset_table.GetTimestamp(-2), 1390377181000000)
+
+    with self.assertRaises(IndexError):
+      offset_table.GetTimestamp(-3)
+
+  def testRead(self):
+    """Tests the Read function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    zip_file_object = zipfile.ZipFile(
+        test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
+
+    stream_name = u'plaso_timestamps.000003'
+    offset_table = zip_file._SerializedDataTimestampTable(
+        zip_file_object, stream_name)
+    offset_table.Read()
+
+    stream_name = u'bogus'
+    offset_table = zip_file._SerializedDataTimestampTable(
+        zip_file_object, stream_name)
+
+    with self.assertRaises(IOError):
+      offset_table.Read()
+
+
 class StorageFileTest(test_lib.StorageTestCase):
   """Tests for the ZIP storage file object."""
 
@@ -342,10 +387,12 @@ class StorageFileTest(test_lib.StorageTestCase):
     if it matches the known good sort order.
     """
     # TODO: have sample output generated from the test.
-    # TODO: Use input data with a defined year.  syslog parser chooses a
+    # TODO: Use input data with a defined year. The syslog parser chooses a
     # year based on system clock; forcing updates to test file if regenerated.
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    # First: 1342799054000000
     first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
+    # Last: 1479431743000000
     last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
     pfilter.TimeRangeCache.ResetTimeConstraints()
@@ -355,16 +402,22 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     storage_file.store_range = [1, 5, 6]
 
-    read_list = []
+    timestamps = []
     event_object = storage_file.GetSortedEntry()
     while event_object:
-      read_list.append(event_object.timestamp)
+      timestamps.append(event_object.timestamp)
       event_object = storage_file.GetSortedEntry()
 
     expected_timestamps = [
-        1344270407000000, 1392438730000000, 1427151678000000, 1451584472000000]
+        1343166324000000,
+        1344270407000000,
+        1392438730000000,
+        1418925272000000,
+        1427151678000000,
+        1427151678000123,
+        1451584472000000]
 
-    self.assertEqual(read_list, expected_timestamps)
+    self.assertEqual(sorted(timestamps), expected_timestamps)
 
 
 if __name__ == '__main__':
