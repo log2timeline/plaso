@@ -13,7 +13,7 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.frontend import extraction_frontend
 from plaso.lib import pfilter
-from plaso.lib import storage
+from plaso.storage import zip_file as storage_zip_file
 
 from tests.frontend import test_lib
 
@@ -129,7 +129,8 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ProcessSources([path_spec], source_type)
 
     try:
-      storage_file = storage.StorageFile(storage_file_path, read_only=True)
+      storage_file = storage_zip_file.StorageFile(
+          storage_file_path, read_only=True)
     except IOError:
       self.fail(u'Not a storage file.')
 
