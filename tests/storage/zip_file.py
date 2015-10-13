@@ -10,10 +10,10 @@ from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
-from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
+from plaso.storage import zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
@@ -75,31 +75,31 @@ class StorageFileTest(unittest.TestCase):
     serializer = protobuf_serializer.ProtobufEventObjectSerializer
 
     with shared_test_lib.TempDirectory() as dirname:
-      temp_file = os.path.join(dirname, 'plaso.db')
-      store = storage.StorageFile(temp_file)
+      temp_file = os.path.join(dirname, u'plaso.db')
+      store = zip_file.StorageFile(temp_file)
       store.AddEventObjects(test_event_objects)
 
       # Add tagging.
       tag_1 = event.EventTag()
       tag_1.store_index = 0
       tag_1.store_number = 1
-      tag_1.comment = 'My comment'
-      tag_1.color = 'blue'
+      tag_1.comment = u'My comment'
+      tag_1.color = u'blue'
       tags_mock.append(tag_1)
 
       tag_2 = event.EventTag()
       tag_2.store_index = 1
       tag_2.store_number = 1
-      tag_2.tags = ['Malware']
-      tag_2.color = 'red'
+      tag_2.tags = [u'Malware']
+      tag_2.color = u'red'
       tags_mock.append(tag_2)
 
       tag_3 = event.EventTag()
       tag_3.store_number = 1
       tag_3.store_index = 2
-      tag_3.comment = 'This is interesting'
-      tag_3.tags = ['Malware', 'Benign']
-      tag_3.color = 'red'
+      tag_3.comment = u'This is interesting'
+      tag_3.tags = [u'Malware', u'Benign']
+      tag_3.color = u'red'
       tags_mock.append(tag_3)
 
       store.StoreTagging(tags_mock)
@@ -108,18 +108,18 @@ class StorageFileTest(unittest.TestCase):
       tag_4 = event.EventTag()
       tag_4.store_index = 1
       tag_4.store_number = 1
-      tag_4.tags = ['Interesting']
+      tag_4.tags = [u'Interesting']
 
       store.StoreTagging([tag_4])
 
       group_mock.AddGroup(
-          'Malicious', [(1, 1), (1, 2)], desc='Events that are malicious',
-          color='red', first=1334940286000000, last=1334961526929596,
-          cat='Malware')
+          u'Malicious', [(1, 1), (1, 2)], desc=u'Events that are malicious',
+          color=u'red', first=1334940286000000, last=1334961526929596,
+          cat=u'Malware')
       store.StoreGrouping(group_mock)
       store.Close()
 
-      read_store = storage.StorageFile(temp_file, read_only=True)
+      read_store = zip_file.StorageFile(temp_file, read_only=True)
 
       self.assertTrue(read_store.HasTagging())
       self.assertTrue(read_store.HasGrouping())
@@ -167,21 +167,21 @@ class StorageFileTest(unittest.TestCase):
         formatter_mediator, tags[0])
     self.assertEqual(msg[0:10], u'This is a ')
 
-    self.assertEqual(tags[1].tag.tags[0], 'Malware')
+    self.assertEqual(tags[1].tag.tags[0], u'Malware')
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, tags[1])
     self.assertEqual(msg[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEqual(tags[2].tag.comment, u'This is interesting')
-    self.assertEqual(tags[2].tag.tags[0], 'Malware')
-    self.assertEqual(tags[2].tag.tags[1], 'Benign')
+    self.assertEqual(tags[2].tag.tags[0], u'Malware')
+    self.assertEqual(tags[2].tag.tags[1], u'Benign')
 
-    self.assertEqual(tags[2].parser, 'UNKNOWN')
+    self.assertEqual(tags[2].parser, u'UNKNOWN')
 
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
-    self.assertEqual(tags[3].tag.tags[0], 'Interesting')
-    self.assertEqual(tags[3].tag.tags[1], 'Malware')
+    self.assertEqual(tags[3].tag.tags[0], u'Interesting')
+    self.assertEqual(tags[3].tag.tags[1], u'Malware')
 
     expected_timestamps = [
         1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
@@ -225,7 +225,7 @@ class StorageFileTest(unittest.TestCase):
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(last)
     pfilter.TimeRangeCache.SetLowerTimestamp(first)
-    store = storage.StorageFile(test_file, read_only=True)
+    store = zip_file.StorageFile(test_file, read_only=True)
 
     store.store_range = [1, 5, 6]
 

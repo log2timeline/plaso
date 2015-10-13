@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.frontend import analysis_frontend
-from plaso.lib import storage
+from plaso.storage import zip_file as storage_zip_file
 
 from tests.frontend import test_lib
 
@@ -20,7 +20,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
     storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
     storage_file = test_front_end.OpenStorage(storage_file_path)
 
-    self.assertIsInstance(storage_file, storage.StorageFile)
+    self.assertIsInstance(storage_file, storage_zip_file.StorageFile)
 
     storage_file.Close()
 
