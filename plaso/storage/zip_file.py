@@ -139,9 +139,8 @@ class _EventTagIndexValue(object):
 
     Args:
       identifier: the identifier string.
-      store_number: optional store number. The default is 0.
+      store_number: optional store number.
       store_offset: optional offset relative to the start of the store.
-                    The default 0.
     """
     super(_EventTagIndexValue, self).__init__()
     self.identifier = identifier
@@ -191,7 +190,7 @@ class _SerializedDataStream(object):
       construct.ULInt32(u'size'))
   _DATA_ENTRY_SIZE = _DATA_ENTRY.sizeof()
 
-  # Set the maximum serialized data size to 40 MiB
+  # The maximum serialized data size (40 MiB).
   _MAXIMUM_DATA_SIZE = 40 * 1024 * 1024
 
   def __init__(self, zip_file, stream_name, access_mode='r'):
@@ -254,7 +253,7 @@ class _SerializedDataStream(object):
     if not self._file_object:
       self._OpenFileObject()
 
-    data = self._file_object.read(4)
+    data = self._file_object.read(self._DATA_ENTRY_SIZE)
     if not data:
       return
 
@@ -311,6 +310,7 @@ class _SerializedDataOffsetTable(object):
   _TABLE_ENTRY = construct.Struct(
       u'table_entry',
       construct.ULInt32(u'offset'))
+  _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
   def __init__(self, zip_file, stream_name, access_mode='r'):
     """Initializes a serialized data offset table object.
@@ -355,12 +355,83 @@ class _SerializedDataOffsetTable(object):
           u'Unable to open stream with error: {0:s}'.format(exception))
 
     try:
-      entry_data = file_object.read(4)
+      entry_data = file_object.read(self._TABLE_ENTRY_SIZE)
       while entry_data:
         table_entry = self._TABLE_ENTRY.parse(entry_data)
 
         self._offsets.append(table_entry.offset)
-        entry_data = file_object.read(4)
+        entry_data = file_object.read(self._TABLE_ENTRY_SIZE)
+
+    except construct.FieldError as exception:
+      raise IOError(
+          u'Unable to read table entry with error: {0:s}'.format(exception))
+
+    finally:
+      file_object.close()
+
+
+class _SerializedDataTimestampTable(object):
+  """Class that defines a serialized data timestamp table."""
+
+  _TABLE_ENTRY = construct.Struct(
+      u'table_entry',
+      construct.SLInt64(u'timestamp'))
+  _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
+
+  def __init__(self, zip_file, stream_name, access_mode='r'):
+    """Initializes a serialized data timestamp table object.
+
+    Args:
+      zip_file: the ZIP file object that contains the stream.
+      stream_name: string containing the name of the stream.
+      access_mode: optional string containing the access mode.
+                   The default is read-only ('r').
+    """
+    super(_SerializedDataTimestampTable, self).__init__()
+    self._access_mode = access_mode
+    self._timestamps = []
+    self._stream_name = stream_name
+    self._zip_file = zip_file
+
+  @property
+  def number_of_timestamps(self):
+    """The number of timestamps."""
+    return len(self._timestamps)
+
+  def GetTimestamp(self, entry_index):
+    """Retrieves a specific serialized data timestamp.
+
+    Args:
+      entry_index: an integer containing the table entry index.
+
+    Returns:
+      An integer containing the serialized data timestamp.
+
+    Raises:
+      IndexError: if the table entry index is out of bounds.
+    """
+    return self._timestamps[entry_index]
+
+  def Read(self):
+    """Reads the serialized data timestamp table.
+
+    Raises:
+      IOError: if the timestamp table cannot be read.
+    """
+    try:
+      file_object = self._zip_file.open(
+          self._stream_name, mode=self._access_mode)
+    except KeyError as exception:
+      raise IOError(
+          u'Unable to open stream with error: {0:s}'.format(exception))
+
+    try:
+      entry_data = file_object.read(self._TABLE_ENTRY_SIZE)
+      while entry_data:
+        table_entry = self._TABLE_ENTRY.parse(entry_data)
+
+        self._timestamps.append(table_entry.timestamp)
+        entry_data = file_object.read(self._TABLE_ENTRY_SIZE)
 
     except construct.FieldError as exception:
       raise IOError(
@@ -387,10 +458,8 @@ class StorageFile(object):
   # Set the version of this storage mechanism.
   STORAGE_VERSION = 1
 
-  # Define structs.
-  _INTEGER = construct.ULInt32(u'integer')
-
-  _MAXIMUM_NUMBER_OF_OFFSET_TABLES = 5
+  # The maximum number of cached tables.
+  _MAXIMUM_NUMBER_OF_CACHED_TABLES = 5
 
   source_short_map = {}
   for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
@@ -439,6 +508,8 @@ class StorageFile(object):
     self._read_only = read_only
     self._serialized_data_streams = {}
     self._serializer_format_string = u''
+    self._timestamp_tables = {}
+    self._timestamp_tables_lfu = []
     self._write_counter = 0
 
     self._SetSerializerFormat(serializer_format)
@@ -569,28 +640,6 @@ class StorageFile(object):
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
 
-  def _GetEventGroupProto(self, file_object):
-    """Return a single group entry.
-
-    Raises:
-      WrongProtobufEntry: If the probotuf size is too large for storage.
-    """
-    unpacked = file_object.read(4)
-    if len(unpacked) != 4:
-      return None
-
-    size = struct.unpack('<I', unpacked)[0]
-
-    if size > StorageFile.MAXIMUM_PROTO_STRING_SIZE:
-      raise errors.WrongProtobufEntry(
-          u'Protobuf size too large: {0:d}'.format(size))
-
-    proto_serialized = file_object.read(size)
-    proto = plaso_storage_pb2.EventGroup()
-
-    proto.ParseFromString(proto_serialized)
-    return proto
-
   def _GetEventObjectSerializedData(self, stream_number, entry_index=-1):
     """Retrieves specific event object serialized data.
 
@@ -617,6 +666,41 @@ class StorageFile(object):
           u'with error: {1:s}.').format(stream_number, exception))
       return None, None
 
+    if (not data_stream.entry_index and entry_index == -1 and
+        self._bound_first is not None):
+      # We only get here if the following conditions are met:
+      #   1. data_stream.entry_index is not set (so this is the first read
+      #      from this file).
+      #   2. There is a lower bound (so we have a date filter).
+      #   3. We are accessing this function using 'get me the next entry' as an
+      #      opposed to the 'get me entry X', where we just want to server entry
+      #      X.
+      #
+      # The purpose: speed seeking into the storage file based on time. Instead
+      # of spending precious time reading through the storage file and
+      # deserializing protobufs just to compare timestamps we read a much
+      # 'cheaper' file, one that only contains timestamps to find the proper
+      # entry into the storage file. That way we'll get to the right place in
+      # the file and can start reading protobufs from the right location.
+
+      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+      if self._HasStream(stream_name):
+        try:
+          entry_index = self._GetFirstSerializedDataStreamEntryIndex(
+              stream_number, self._bound_first)
+
+        except IOError as exception:
+          entry_index = None
+
+          logging.error(
+              u'Unable to read timestamp table from stream: {0:s}.'.format(
+                  stream_name))
+
+        if entry_index is None:
+          return None, None
+
+      # TODO: determine if anything else needs to be handled here.
+
     if entry_index >= 0:
       try:
         stream_offset = self._GetSerializedDataStreamOffset(
@@ -629,49 +713,6 @@ class StorageFile(object):
 
       data_stream.SeekEntryAtOffset(entry_index, stream_offset)
 
-    if (not data_stream.entry_index and entry_index == -1 and
-        self._bound_first is not None):
-      # We only get here if the following conditions are met:
-      #   1. data_stream.entry_index is not set (so this is the first read
-      #      from this file).
-      #   2. There is a lower bound (so we have a date filter).
-      #   3. The lower bound is higher than zero (basically set to a value).
-      #   4. We are accessing this function using 'get me the next entry' as an
-      #      opposed to the 'get me entry X', where we just want to server entry
-      #      X.
-      #
-      # The purpose: speed seeking into the storage file based on time. Instead
-      # of spending precious time reading through the storage file and
-      # deserializing protobufs just to compare timestamps we read a much
-      # 'cheaper' file, one that only contains timestamps to find the proper
-      # entry into the storage file. That way we'll get to the right place in
-      # the file and can start reading protobufs from the right location.
-
-      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
-
-      if stream_name in self._GetStreamNames():
-        timestamp_file_object = self._OpenStream(stream_name, u'r')
-        if timestamp_file_object is None:
-          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
-
-        index = 0
-        timestamp_compare = 0
-        encountered_error = False
-        while timestamp_compare < self._bound_first:
-          timestamp_raw = timestamp_file_object.read(8)
-          if len(timestamp_raw) != 8:
-            encountered_error = True
-            break
-
-          timestamp_compare = struct.unpack('<q', timestamp_raw)[0]
-          index += 1
-
-        if encountered_error:
-          return None, None
-
-        return self._GetEventObjectSerializedData(
-            stream_number, entry_index=index)
-
     event_object_entry_index = data_stream.entry_index
     try:
       event_object_data = data_stream.ReadEntry()
@@ -683,12 +724,12 @@ class StorageFile(object):
 
     return event_object_data, event_object_entry_index
 
-  def _GetEventTagIndexValue(self, store_number, store_index, uuid):
+  def _GetEventTagIndexValue(self, store_number, entry_index, uuid):
     """Retrieves an event tag index value.
 
     Args:
       store_number: the store number.
-      store_index: the store index.
+      entry_index: an integer containing the serialized data stream entry index.
       uuid: the UUID string.
 
     Returns:
@@ -698,7 +739,7 @@ class StorageFile(object):
       self._BuildTagIndex()
 
     # Try looking up event tag by numeric identifier.
-    tag_identifier = u'{0:d}:{1:d}'.format(store_number, store_index)
+    tag_identifier = u'{0:d}:{1:d}'.format(store_number, entry_index)
     tag_index_value = self._event_tag_index.get(tag_identifier, None)
 
     # Try looking up event tag by UUID.
@@ -706,6 +747,49 @@ class StorageFile(object):
       tag_index_value = self._event_tag_index.get(uuid, None)
 
     return tag_index_value
+
+  def _GetFirstSerializedDataStreamEntryIndex(self, stream_number, timestamp):
+    """Retrieves the first serialized data stream entry index for a timestamp.
+
+    The timestamp indicates the lower bound. The first entry with a timestamp
+    greater or equal to the lower bound will be returned.
+
+    Args:
+      stream_number: an integer containing the number of the stream.
+      timestamp: the lower bounds timestamp which is an integer containing
+                 the number of micro seconds since January 1, 1970,
+                 00:00:00 UTC.
+
+    Returns:
+      The index of the entry in the corresponding serialized data stream or
+      None if there was no matching entry.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    timestamp_table = self._timestamp_tables.get(stream_number, None)
+    if not timestamp_table:
+      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+      timestamp_table = _SerializedDataTimestampTable(
+          self._zipfile, stream_name)
+      timestamp_table.Read()
+
+      if len(self._timestamp_tables) >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
+        lfu_stream_number = self._timestamp_tables_lfu.pop()
+        del self._timestamp_tables[lfu_stream_number]
+
+      self._timestamp_tables[stream_number] = timestamp_table
+
+    if stream_number in self._timestamp_tables_lfu:
+      lfu_index = self._timestamp_tables_lfu.index(stream_number)
+      self._timestamp_tables_lfu.pop(lfu_index)
+
+    self._timestamp_tables_lfu.append(stream_number)
+
+    for entry_index in range(timestamp_table.number_of_timestamps):
+      timestamp_compare = timestamp_table.GetTimestamp(entry_index)
+      if timestamp_compare >= timestamp:
+        return entry_index
 
   def _GetSerializedDataStream(self, stream_number):
     """Retrieves the serialized data stream.
@@ -754,7 +838,7 @@ class StorageFile(object):
       offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
       offset_table.Read()
 
-      if len(self._offset_tables) >= self._MAXIMUM_NUMBER_OF_OFFSET_TABLES:
+      if len(self._offset_tables) >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
         lfu_stream_number = self._offset_tables_lfu.pop()
         del self._offset_tables[lfu_stream_number]
 
@@ -891,69 +975,83 @@ class StorageFile(object):
     if self._serializers_profiler:
       self._serializers_profiler.Write()
 
-  def _ReadEventTag(self, file_object):
-    """Reads an event tag from the storage file.
+  def _ReadEventGroup(self, data_stream):
+    """Reads an event group.
 
     Args:
-      file_object: the file-like object to read from.
+      data_stream: the data stream object (instance of _SerializedDataStream).
 
     Returns:
-      An event tag (instance of EventTag).
-
-    Raises:
-      WrongProtobufEntry: If the probotuf size is too large for storage.
+      An event group object (instance of plaso_storage_pb2.EventGroup) or None.
     """
-    event_tag_data = file_object.read(4)
-    if len(event_tag_data) != 4:
-      return None
+    event_group_data = data_stream.ReadEntry()
+    if not event_group_data:
+      return
 
-    proto_string_size = self._INTEGER.parse(event_tag_data)
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'event_group')
 
-    if proto_string_size > self.MAXIMUM_PROTO_STRING_SIZE:
-      raise errors.WrongProtobufEntry(
-          u'Protobuf string size value exceeds maximum: {0:d}'.format(
-              proto_string_size))
+    # TODO: add event group serializers and use ReadSerialized.
+    # event_group = self._event_group_serializer.ReadSerialized(proto_string)
 
-    proto_string = file_object.read(proto_string_size)
+    event_group = plaso_storage_pb2.EventGroup()
+    event_group.ParseFromString(event_group_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'event_group')
+
+    # TODO: return a Python object instead of a protobuf.
+    return event_group
+
+  def _ReadEventTag(self, data_stream):
+    """Reads an event tag.
+
+    Args:
+      data_stream: the data stream object (instance of _SerializedDataStream).
+
+    Returns:
+      An event tag object (instance of EventTag) or None.
+    """
+    event_tag_data = data_stream.ReadEntry()
+    if not event_tag_data:
+      return
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'event_tag')
 
-    event_tag = self._event_tag_serializer.ReadSerialized(proto_string)
+    event_tag = self._event_tag_serializer.ReadSerialized(event_tag_data)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'event_tag')
 
     return event_tag
 
-  def _ReadEventTagByIdentifier(self, store_number, store_index, uuid):
+  def _ReadEventTagByIdentifier(self, store_number, entry_index, uuid):
     """Reads an event tag by identifier.
 
     Args:
       store_number: the store number.
-      store_index: the store index.
+      entry_index: an integer containing the serialized data stream entry index.
       uuid: the UUID string.
 
     Returns:
       The event tag (instance of EventTag).
 
     Raises:
-      IOError: if the stream cannot be opened.
+      IOError: if the event tag data stream cannot be opened.
     """
     tag_index_value = self._GetEventTagIndexValue(
-        store_number, store_index, uuid)
+        store_number, entry_index, uuid)
     if tag_index_value is None:
       return
 
     stream_name = u'plaso_tagging.{0:06d}'.format(tag_index_value.store_number)
-    tag_file_object = self._OpenStream(stream_name, u'r')
-    if tag_file_object is None:
-      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+    if not self._HasStream(stream_name):
+      raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-    # Since zipfile.ZipExtFile is not seekable we need to read upto
-    # the store offset.
-    _ = tag_file_object.read(tag_index_value.store_offset)
-    return self._ReadEventTag(tag_file_object)
+    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_offset)
+    return data_stream.ReadEntry()
 
   def _ReadStream(self, stream_name):
     """Reads the data in a stream.
@@ -1060,6 +1158,73 @@ class StorageFile(object):
     # TODO: this can raise an IOError e.g. "Stale NFS file handle".
     # Determine if this be handled more error resiliently.
     self._zipfile.writestr(stream_name, stream_data)
+
+  def AddEventObject(self, event_object):
+    """Adds an event object to the storage.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Raises:
+      IOError: When trying to write to a closed storage file.
+    """
+    if not self._file_open:
+      raise IOError(u'Trying to add an entry to a closed storage file.')
+
+    if event_object.timestamp > self._buffer_last_timestamp:
+      self._buffer_last_timestamp = event_object.timestamp
+
+    # TODO: support negative timestamps.
+    if (event_object.timestamp < self._buffer_first_timestamp and
+        event_object.timestamp > 0):
+      self._buffer_first_timestamp = event_object.timestamp
+
+    attributes = event_object.GetValues()
+    # Add values to counters.
+    if self._pre_obj:
+      self._pre_obj.counter[u'total'] += 1
+      self._pre_obj.counter[attributes.get(u'parser', u'N/A')] += 1
+      # TODO remove plugin, add parser chain. Refactor to separate method e.g.
+      # UpdateEventCounters.
+      if u'plugin' in attributes:
+        self._pre_obj.plugin_counter[attributes.get(u'plugin', u'N/A')] += 1
+
+    # Add to temporary counter.
+    self._count_data_type[event_object.data_type] += 1
+    parser = attributes.get(u'parser', u'unknown_parser')
+    self._count_parser[parser] += 1
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'event_object')
+
+    event_object_data = self._event_object_serializer.WriteSerialized(
+        event_object)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'event_object')
+
+    # TODO: Re-think this approach with the re-design of the storage.
+    # Check if the event object failed to serialize (none is returned).
+    if event_object_data is None:
+      return
+
+    heapq.heappush(
+        self._buffer, (event_object.timestamp, event_object_data))
+    self._buffer_size += len(event_object_data)
+    self._write_counter += 1
+
+    if self._buffer_size > self._max_buffer_size:
+      self._FlushBuffer()
+
+  def AddEventObjects(self, event_objects):
+    """Adds event objects to the storage.
+
+    Args:
+      event_objects: a list or generator of event objects (instances of
+                     EventObject).
+    """
+    for event_object in event_objects:
+      self.AddEventObject(event_object)
 
   def Close(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
@@ -1174,24 +1339,30 @@ class StorageFile(object):
     return self._file_number
 
   def GetGrouping(self):
-    """Return a generator that reads all grouping information from storage.
+    """Retrieves event groups.
+
+    Yields:
+      An event group protobuf object (instance of plaso_storage_pb2.EventGroup).
 
     Raises:
-      IOError: if the stream cannot be opened.
+      IOError: if the event group data stream cannot be opened.
     """
     if not self.HasGrouping():
       return
 
     for stream_name in self._GetStreamNames():
-      if stream_name.startswith(u'plaso_grouping.'):
-        file_object = self._OpenStream(stream_name, u'r')
-        if file_object is None:
-          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+      if not stream_name.startswith(u'plaso_grouping.'):
+        continue
 
-        group_entry = self._GetEventGroupProto(file_object)
-        while group_entry:
-          yield group_entry
-          group_entry = self._GetEventGroupProto(file_object)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+      data_stream = _SerializedDataStream(self._zipfile, stream_name)
+
+      event_group = self._ReadEventGroup(data_stream)
+      while event_group:
+        yield event_group
+        event_group = self._ReadEventGroup(data_stream)
 
   def GetLastPreprocessObject(self):
     """Return the last pre-processing object from the storage file if possible.
@@ -1239,6 +1410,24 @@ class StorageFile(object):
 
     for number in sorted(numbers):
       yield number
+
+  def GetReports(self):
+    """Retrieves the analysis reports.
+
+    Yields:
+      Analysis reports (instances of AnalysisReport).
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    for stream_name in self._GetStreamNames():
+      if stream_name.startswith(u'plaso_report.'):
+        file_object = self._OpenStream(stream_name, u'r')
+        if file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+        report_string = file_object.read(self.MAXIMUM_REPORT_PROTOBUF_SIZE)
+        yield self._analysis_report_serializer.ReadSerialized(report_string)
 
   def GetSortedEntry(self):
     """Retrieves a sorted entry from the storage file.
@@ -1369,15 +1558,74 @@ class StorageFile(object):
       IOError: if the stream cannot be opened.
     """
     for stream_name in self._GetStreamNames():
-      if stream_name.startswith(u'plaso_tagging.'):
-        file_object = self._OpenStream(stream_name, u'r')
-        if file_object is None:
-          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+      if not stream_name.startswith(u'plaso_tagging.'):
+        continue
 
-        tag_entry = self._ReadEventTag(file_object)
-        while tag_entry:
-          yield tag_entry
-          tag_entry = self._ReadEventTag(file_object)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+      data_stream = _SerializedDataStream(self._zipfile, stream_name)
+
+      event_tag = self._ReadEventTag(data_stream)
+      while event_tag:
+        yield event_tag
+        event_tag = self._ReadEventTag(data_stream)
+
+  def HasGrouping(self):
+    """Return a bool indicating whether or not a Group file is stored."""
+    for name in self._GetStreamNames():
+      if name.startswith(u'plaso_grouping.'):
+        return True
+    return False
+
+  def HasReports(self):
+    """Return a bool indicating whether or not a Report file is stored."""
+    for name in self._GetStreamNames():
+      if name.startswith(u'plaso_report'):
+        return True
+
+    return False
+
+  def HasTagging(self):
+    """Return a bool indicating whether or not a Tag file is stored."""
+    for name in self._GetStreamNames():
+      if name.startswith(u'plaso_tagging.'):
+        return True
+    return False
+
+  def ReadMeta(self, number):
+    """Return a dict with the metadata entries.
+
+    Args:
+      number: The number of the metadata file (name is plaso_meta_XXX where
+              XXX is this number.
+
+    Returns:
+      A dict object containing all the variables inside the metadata file.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    stream_name = u'plaso_meta.{0:06d}'.format(number)
+    file_object = self._OpenStream(stream_name, 'r')
+    if file_object is None:
+      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+    return yaml.safe_load(file_object)
+
+  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
+      profiling_type: optional profiling type. The default is 'all'.
+    """
+    self._enable_profiling = enable_profiling
+
+    if self._enable_profiling:
+      if (profiling_type in [u'all', u'serializers'] and
+          not self._serializers_profiler):
+        self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
   def SetStoreLimit(self, unused_my_filter=None):
     """Set a limit to the stores used for returning data."""
@@ -1404,176 +1652,6 @@ class StorageFile(object):
 
       else:
         logging.debug(u'Store [{0:d}] not used'.format(number))
-
-  def ReadMeta(self, number):
-    """Return a dict with the metadata entries.
-
-    Args:
-      number: The number of the metadata file (name is plaso_meta_XXX where
-              XXX is this number.
-
-    Returns:
-      A dict object containing all the variables inside the metadata file.
-
-    Raises:
-      IOError: if the stream cannot be opened.
-    """
-    stream_name = u'plaso_meta.{0:06d}'.format(number)
-    file_object = self._OpenStream(stream_name, 'r')
-    if file_object is None:
-      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
-    return yaml.safe_load(file_object)
-
-  def AddEventObject(self, event_object):
-    """Adds an event object to the storage.
-
-    Args:
-      event_object: an event object (instance of EventObject).
-
-    Raises:
-      IOError: When trying to write to a closed storage file.
-    """
-    if not self._file_open:
-      raise IOError(u'Trying to add an entry to a closed storage file.')
-
-    if event_object.timestamp > self._buffer_last_timestamp:
-      self._buffer_last_timestamp = event_object.timestamp
-
-    # TODO: support negative timestamps.
-    if (event_object.timestamp < self._buffer_first_timestamp and
-        event_object.timestamp > 0):
-      self._buffer_first_timestamp = event_object.timestamp
-
-    attributes = event_object.GetValues()
-    # Add values to counters.
-    if self._pre_obj:
-      self._pre_obj.counter[u'total'] += 1
-      self._pre_obj.counter[attributes.get(u'parser', u'N/A')] += 1
-      if u'plugin' in attributes:
-        self._pre_obj.plugin_counter[attributes.get(u'plugin', u'N/A')] += 1
-
-    # Add to temporary counter.
-    self._count_data_type[event_object.data_type] += 1
-    parser = attributes.get(u'parser', u'unknown_parser')
-    self._count_parser[parser] += 1
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'event_object')
-
-    event_object_data = self._event_object_serializer.WriteSerialized(
-        event_object)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'event_object')
-
-    # TODO: Re-think this approach with the re-design of the storage.
-    # Check if the event object failed to serialize (none is returned).
-    if event_object_data is None:
-      return
-
-    heapq.heappush(
-        self._buffer, (event_object.timestamp, event_object_data))
-    self._buffer_size += len(event_object_data)
-    self._write_counter += 1
-
-    if self._buffer_size > self._max_buffer_size:
-      self._FlushBuffer()
-
-  def AddEventObjects(self, event_objects):
-    """Adds event objects to the storage.
-
-    Args:
-      event_objects: a list or generator of event objects (instances of
-                     EventObject).
-    """
-    for event_object in event_objects:
-      self.AddEventObject(event_object)
-
-  def HasTagging(self):
-    """Return a bool indicating whether or not a Tag file is stored."""
-    for name in self._GetStreamNames():
-      if name.startswith(u'plaso_tagging.'):
-        return True
-    return False
-
-  def HasGrouping(self):
-    """Return a bool indicating whether or not a Group file is stored."""
-    for name in self._GetStreamNames():
-      if name.startswith(u'plaso_grouping.'):
-        return True
-    return False
-
-  def HasReports(self):
-    """Return a bool indicating whether or not a Report file is stored."""
-    for name in self._GetStreamNames():
-      if name.startswith(u'plaso_report'):
-        return True
-
-    return False
-
-  def StoreReport(self, analysis_report):
-    """Store an analysis report.
-
-    Args:
-      analysis_report: An analysis report object (instance of AnalysisReport).
-    """
-    report_number = 1
-    for name in self._GetStreamNames():
-      if name.startswith(u'plaso_report.'):
-        _, _, number_string = name.partition(u'.')
-        try:
-          number = int(number_string, 10)
-        except ValueError:
-          logging.error(u'Unable to read in report number.')
-          number = 0
-        if number >= report_number:
-          report_number = number + 1
-
-    stream_name = u'plaso_report.{0:06}'.format(report_number)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'analysis_report')
-
-    serialized_report_proto = self._analysis_report_serializer.WriteSerialized(
-        analysis_report)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'analysis_report')
-
-    self._WriteStream(stream_name, serialized_report_proto)
-
-  def GetReports(self):
-    """Read in all stored analysis reports from storage and yield them.
-
-    Yields:
-      Analysis reports (instances of AnalysisReport).
-
-    Raises:
-      IOError: if the stream cannot be opened.
-    """
-    for stream_name in self._GetStreamNames():
-      if stream_name.startswith(u'plaso_report.'):
-        file_object = self._OpenStream(stream_name, u'r')
-        if file_object is None:
-          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
-
-        report_string = file_object.read(self.MAXIMUM_REPORT_PROTOBUF_SIZE)
-        yield self._analysis_report_serializer.ReadSerialized(report_string)
-
-  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if profiling should
-                        be enabled.
-      profiling_type: optional profiling type. The default is 'all'.
-    """
-    self._enable_profiling = enable_profiling
-
-    if self._enable_profiling:
-      if (profiling_type in [u'all', u'serializers'] and
-          not self._serializers_profiler):
-        self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
   def StoreGrouping(self, rows):
     """Store group information into the storage file.
@@ -1652,6 +1730,37 @@ class StorageFile(object):
     stream_name = u'plaso_grouping.{0:06d}'.format(group_number)
     self._WriteStream(stream_name, b''.join(group_packed))
 
+  def StoreReport(self, analysis_report):
+    """Store an analysis report.
+
+    Args:
+      analysis_report: An analysis report object (instance of AnalysisReport).
+    """
+    report_number = 1
+    for name in self._GetStreamNames():
+      if name.startswith(u'plaso_report.'):
+        _, _, number_string = name.partition(u'.')
+        try:
+          number = int(number_string, 10)
+        except ValueError:
+          logging.error(u'Unable to read in report number.')
+          number = 0
+        if number >= report_number:
+          report_number = number + 1
+
+    stream_name = u'plaso_report.{0:06}'.format(report_number)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'analysis_report')
+
+    serialized_report_proto = self._analysis_report_serializer.WriteSerialized(
+        analysis_report)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'analysis_report')
+
+    self._WriteStream(stream_name, serialized_report_proto)
+
   def StoreTagging(self, tags):
     """Store tag information into the storage file.
 
@@ -1717,15 +1826,18 @@ class StorageFile(object):
         stream_name = u'plaso_tagging.{0:06d}'.format(
             tag_index_value.store_number)
 
-        tag_file_object = self._OpenStream(stream_name, u'r')
-        if tag_file_object is None:
-          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+        if not self._HasStream(stream_name):
+          raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-        # Since zipfile.ZipExtFile is not seekable we need to read up to
-        # the store offset.
-        _ = tag_file_object.read(tag_index_value.store_offset)
+        data_stream = _SerializedDataStream(self._zipfile, stream_name)
+        # TODO: replace 0 by the actual event tag entry index.
+        # This is for code consistency rather then a functional purpose.
+        data_stream.SeekEntryAtOffset(0, tag_index_value.store_offset)
 
-        old_tag = self._ReadEventTag(tag_file_object)
+        # TODO: if old_tag is cached make sure to update cache after write.
+        old_tag = self._ReadEventTag(data_stream)
+        if not old_tag:
+          continue
 
         # TODO: move the append functionality into EventTag.
         # Maybe name the function extend or update?
