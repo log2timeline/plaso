@@ -4,6 +4,7 @@
 
 import os
 import unittest
+import zipfile
 
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -55,69 +56,188 @@ class GroupMock(object):
       yield dummy
 
 
-class StorageFileTest(unittest.TestCase):
-  """Tests for the plaso storage file."""
+class SerializedDataStream(test_lib.StorageTestCase):
+  """Tests for the serialized data stream object."""
+
+  def testReadAndSeek(self):
+    """Tests the ReadEntry and SeekEntryAtOffset functions."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    zip_file_object = zipfile.ZipFile(
+        test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
+
+    stream_name = u'plaso_proto.000003'
+    data_stream = zip_file._SerializedDataStream(zip_file_object, stream_name)
+
+    # The plaso_index.000003 stream contains 2 protobuf serialized
+    # event objects. One at offset 0 of size 271 (including the 4 bytes of
+    # the entry size) and one at offset 271 of size 271.
+    self.assertEqual(data_stream.entry_index, 0)
+
+    entry_data1 = data_stream.ReadEntry()
+    self.assertEqual(data_stream.entry_index, 1)
+    self.assertEqual(data_stream._stream_offset, 271)
+    self.assertIsNotNone(entry_data1)
+
+    entry_data2 = data_stream.ReadEntry()
+    self.assertEqual(data_stream.entry_index, 2)
+    self.assertEqual(data_stream._stream_offset, 542)
+    self.assertIsNotNone(entry_data2)
+
+    entry_data = data_stream.ReadEntry()
+    self.assertEqual(data_stream.entry_index, 2)
+    self.assertEqual(data_stream._stream_offset, 542)
+    self.assertIsNone(entry_data)
+
+    data_stream.SeekEntryAtOffset(1, 271)
+    entry_data = data_stream.ReadEntry()
+    self.assertEqual(data_stream.entry_index, 2)
+    self.assertEqual(data_stream._stream_offset, 542)
+    self.assertEqual(entry_data, entry_data2)
+
+    data_stream.SeekEntryAtOffset(0, 0)
+    entry_data = data_stream.ReadEntry()
+    self.assertEqual(data_stream.entry_index, 1)
+    self.assertEqual(data_stream._stream_offset, 271)
+    self.assertEqual(entry_data, entry_data1)
+
+    with self.assertRaises(IOError):
+      data_stream.SeekEntryAtOffset(0, 10)
+      data_stream.ReadEntry()
+
+    stream_name = u'plaso_proto.000009'
+    data_stream = zip_file._SerializedDataStream(zip_file_object, stream_name)
+
+    with self.assertRaises(IOError):
+      data_stream.ReadEntry()
+
+    zip_file_object.close()
+
+
+class SerializedDataOffsetTable(test_lib.StorageTestCase):
+  """Tests for the serialized data offset table object."""
+
+  def testGetOffset(self):
+    """Tests the GetOffset function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    zip_file_object = zipfile.ZipFile(
+        test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
+
+    stream_name = u'plaso_index.000003'
+    offset_table = zip_file._SerializedDataOffsetTable(
+        zip_file_object, stream_name)
+    offset_table.Read()
+
+    self.assertEqual(offset_table.GetOffset(0), 0)
+    self.assertEqual(offset_table.GetOffset(1), 271)
+
+    with self.assertRaises(IndexError):
+      offset_table.GetOffset(2)
+
+    self.assertEqual(offset_table.GetOffset(-1), 271)
+    self.assertEqual(offset_table.GetOffset(-2), 0)
+
+    with self.assertRaises(IndexError):
+      offset_table.GetOffset(-3)
+
+  def testRead(self):
+    """Tests the Read function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    zip_file_object = zipfile.ZipFile(
+        test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
+
+    stream_name = u'plaso_index.000003'
+    offset_table = zip_file._SerializedDataOffsetTable(
+        zip_file_object, stream_name)
+    offset_table.Read()
+
+    stream_name = u'bogus'
+    offset_table = zip_file._SerializedDataOffsetTable(
+        zip_file_object, stream_name)
+
+    with self.assertRaises(IOError):
+      offset_table.Read()
+
+
+class StorageFileTest(test_lib.StorageTestCase):
+  """Tests for the ZIP storage file object."""
+
+  def _CreateStorageFile(self, path):
+    """Creates a storage file for testing.
+
+    Args:
+      path: a string containing the path of the storage file.
+
+    Returns:
+      A storage file object (instance of StorageFile).
+    """
+    test_event_objects = test_lib.CreateTestEventObjects()
+
+    storage_file = zip_file.StorageFile(path)
+    storage_file.AddEventObjects(test_event_objects)
+
+    tags_mock = []
+
+    # Add tagging.
+    tag_1 = event.EventTag()
+    tag_1.store_index = 0
+    tag_1.store_number = 1
+    tag_1.comment = u'My comment'
+    tag_1.color = u'blue'
+    tags_mock.append(tag_1)
+
+    tag_2 = event.EventTag()
+    tag_2.store_index = 1
+    tag_2.store_number = 1
+    tag_2.tags = [u'Malware']
+    tag_2.color = u'red'
+    tags_mock.append(tag_2)
+
+    tag_3 = event.EventTag()
+    tag_3.store_number = 1
+    tag_3.store_index = 2
+    tag_3.comment = u'This is interesting'
+    tag_3.tags = [u'Malware', u'Benign']
+    tag_3.color = u'red'
+    tags_mock.append(tag_3)
+
+    storage_file.StoreTagging(tags_mock)
+
+    # Add additional tagging, second round.
+    tag_4 = event.EventTag()
+    tag_4.store_index = 1
+    tag_4.store_number = 1
+    tag_4.tags = [u'Interesting']
+
+    storage_file.StoreTagging([tag_4])
+
+    group_mock = GroupMock()
+    group_mock.AddGroup(
+        u'Malicious', [(1, 1), (1, 2)], desc=u'Events that are malicious',
+        color=u'red', first=1334940286000000, last=1334961526929596,
+        cat=u'Malware')
+    storage_file.StoreGrouping(group_mock)
+    storage_file.Close()
 
   def testStorage(self):
     """Test the storage object."""
-    test_event_objects = test_lib.CreateTestEventObjects()
     formatter_mediator = formatters_mediator.FormatterMediator()
 
     event_objects = []
+    tagged_event_objects = []
     timestamps = []
-    group_mock = GroupMock()
-    tags = []
-    tags_mock = []
     groups = []
     group_events = []
     same_events = []
 
     serializer = protobuf_serializer.ProtobufEventObjectSerializer
 
+    # TODO: this is needed to work around static member issue of pfilter
+    # which is used in storage file.
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+
     with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
-      store = zip_file.StorageFile(temp_file)
-      store.AddEventObjects(test_event_objects)
-
-      # Add tagging.
-      tag_1 = event.EventTag()
-      tag_1.store_index = 0
-      tag_1.store_number = 1
-      tag_1.comment = u'My comment'
-      tag_1.color = u'blue'
-      tags_mock.append(tag_1)
-
-      tag_2 = event.EventTag()
-      tag_2.store_index = 1
-      tag_2.store_number = 1
-      tag_2.tags = [u'Malware']
-      tag_2.color = u'red'
-      tags_mock.append(tag_2)
-
-      tag_3 = event.EventTag()
-      tag_3.store_number = 1
-      tag_3.store_index = 2
-      tag_3.comment = u'This is interesting'
-      tag_3.tags = [u'Malware', u'Benign']
-      tag_3.color = u'red'
-      tags_mock.append(tag_3)
-
-      store.StoreTagging(tags_mock)
-
-      # Add additional tagging, second round.
-      tag_4 = event.EventTag()
-      tag_4.store_index = 1
-      tag_4.store_number = 1
-      tag_4.tags = [u'Interesting']
-
-      store.StoreTagging([tag_4])
-
-      group_mock.AddGroup(
-          u'Malicious', [(1, 1), (1, 2)], desc=u'Events that are malicious',
-          color=u'red', first=1334940286000000, last=1334961526929596,
-          cat=u'Malware')
-      store.StoreGrouping(group_mock)
-      store.Close()
+      self._CreateStorageFile(temp_file)
 
       read_store = zip_file.StorageFile(temp_file, read_only=True)
 
@@ -128,15 +248,17 @@ class StorageFileTest(unittest.TestCase):
         event_objects.append(event_object)
         timestamps.append(event_object.timestamp)
         if event_object.data_type == 'windows:registry:key_value':
-          self.assertEqual(event_object.timestamp_desc,
-                           eventdata.EventTimestamp.WRITTEN_TIME)
+          self.assertEqual(
+              event_object.timestamp_desc,
+              eventdata.EventTimestamp.WRITTEN_TIME)
         else:
-          self.assertEqual(event_object.timestamp_desc,
-                           eventdata.EventTimestamp.WRITTEN_TIME)
+          self.assertEqual(
+              event_object.timestamp_desc,
+              eventdata.EventTimestamp.WRITTEN_TIME)
 
       for tag in read_store.GetTagging():
         event_object = read_store.GetTaggedEvent(tag)
-        tags.append(event_object)
+        tagged_event_objects.append(event_object)
 
       groups = list(read_store.GetGrouping())
       self.assertEqual(len(groups), 1)
@@ -153,35 +275,39 @@ class StorageFileTest(unittest.TestCase):
       same_events.append(serialized_event_object)
 
     self.assertEqual(len(event_objects), 4)
-    self.assertEqual(len(tags), 4)
+    self.assertEqual(len(tagged_event_objects), 4)
 
+    event_object = tagged_event_objects[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-04-05 12:27:39')
-    self.assertEqual(tags[0].timestamp, expected_timestamp)
-    self.assertEqual(tags[0].store_number, 1)
-    self.assertEqual(tags[0].store_index, 0)
-    self.assertEqual(tags[0].tag.comment, u'My comment')
-    self.assertEqual(tags[0].tag.color, u'blue')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.store_number, 1)
+    self.assertEqual(event_object.store_index, 0)
+    self.assertEqual(event_object.tag.comment, u'My comment')
+    self.assertEqual(event_object.tag.color, u'blue')
 
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        formatter_mediator, tags[0])
+        formatter_mediator, event_object)
     self.assertEqual(msg[0:10], u'This is a ')
 
-    self.assertEqual(tags[1].tag.tags[0], u'Malware')
+    event_object = tagged_event_objects[1]
+    self.assertEqual(event_object.tag.tags[0], u'Malware')
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        formatter_mediator, tags[1])
+        formatter_mediator, event_object)
     self.assertEqual(msg[0:15], u'[\\HKCU\\Windows\\')
 
-    self.assertEqual(tags[2].tag.comment, u'This is interesting')
-    self.assertEqual(tags[2].tag.tags[0], u'Malware')
-    self.assertEqual(tags[2].tag.tags[1], u'Benign')
+    event_object = tagged_event_objects[2]
+    self.assertEqual(event_object.tag.comment, u'This is interesting')
+    self.assertEqual(event_object.tag.tags[0], u'Malware')
+    self.assertEqual(event_object.tag.tags[1], u'Benign')
 
-    self.assertEqual(tags[2].parser, u'UNKNOWN')
+    self.assertEqual(event_object.parser, u'UNKNOWN')
 
+    event_object = tagged_event_objects[3]
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
-    self.assertEqual(tags[3].tag.tags[0], u'Interesting')
-    self.assertEqual(tags[3].tag.tags[1], u'Malware')
+    self.assertEqual(event_object.tag.tags[0], u'Interesting')
+    self.assertEqual(event_object.tag.tags[1], u'Malware')
 
     expected_timestamps = [
         1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
@@ -218,22 +344,22 @@ class StorageFileTest(unittest.TestCase):
     # TODO: have sample output generated from the test.
     # TODO: Use input data with a defined year.  syslog parser chooses a
     # year based on system clock; forcing updates to test file if regenerated.
-    test_file = os.path.join(u'test_data', u'psort_test.proto.plaso')
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
     first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
     last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(last)
     pfilter.TimeRangeCache.SetLowerTimestamp(first)
-    store = zip_file.StorageFile(test_file, read_only=True)
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    store.store_range = [1, 5, 6]
+    storage_file.store_range = [1, 5, 6]
 
     read_list = []
-    event_object = store.GetSortedEntry()
+    event_object = storage_file.GetSortedEntry()
     while event_object:
       read_list.append(event_object.timestamp)
-      event_object = store.GetSortedEntry()
+      event_object = storage_file.GetSortedEntry()
 
     expected_timestamps = [
         1344270407000000, 1392438730000000, 1427151678000000, 1451584472000000]
