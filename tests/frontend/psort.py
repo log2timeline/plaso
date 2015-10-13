@@ -137,7 +137,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       timestamp_list.append(event_object.timestamp)
       event_object = storage_file.GetSortedEntry()
 
-    self.assertEqual(len(timestamp_list), 8)
+    self.assertEqual(len(timestamp_list), 15)
     self.assertTrue(
         timestamp_list[0] >= self.first and timestamp_list[-1] <= self.last)
 
