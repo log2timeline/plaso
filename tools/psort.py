@@ -25,7 +25,6 @@ from plaso.filters import manager as filters_manager
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.winnt import language_ids
 
 
