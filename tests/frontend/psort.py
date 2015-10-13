@@ -11,10 +11,10 @@ from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
 from plaso.lib import event
 from plaso.lib import pfilter
-from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
+from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
@@ -49,6 +49,8 @@ class PsortTestEventFormatter(formatters_interface.EventFormatter):
 class TestOutputModule(output_interface.LinearOutputModule):
   """Test output module."""
 
+  NAME = u'psort_test'
+
   _HEADER = (
       u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
       u'short,desc,version,filename,inode,notes,format,extra\n')
@@ -57,7 +59,7 @@ class TestOutputModule(output_interface.LinearOutputModule):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
     """
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
     source_short, source_long = self._output_mediator.GetFormattedSources(
@@ -126,7 +128,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
 
-    storage_file = storage.StorageFile(self._test_file_proto, read_only=True)
+    storage_file = storage_zip_file.StorageFile(
+        self._test_file_proto, read_only=True)
     storage_file.SetStoreLimit()
 
     event_object = storage_file.GetSortedEntry()
@@ -143,7 +146,6 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
   def testProcessStorage(self):
     """Test the ProcessStorage function."""
     test_front_end = psort.PsortFrontend()
-    test_front_end.SetOutputFilename(u'output.txt')
     test_front_end.SetOutputFormat(u'dynamic')
     test_front_end.SetPreferredLanguageIdentifier(u'en-US')
     test_front_end.SetQuietMode(True)
@@ -155,7 +157,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     output_module = test_front_end.GetOutputModule(storage_file)
     output_module.SetOutputWriter(output_writer)
 
-    counter = test_front_end.ProcessStorage(output_module, storage_file, [], [])
+    counter = test_front_end.ProcessStorage(
+        output_module, storage_file, storage_file_path, [], [])
     self.assertEqual(counter[u'Stored Events'], 15)
 
     output_writer.SeekToBeginning()
@@ -191,13 +194,13 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
 
-      storage_file = storage.StorageFile(temp_file, read_only=False)
+      storage_file = storage_zip_file.StorageFile(temp_file, read_only=False)
       pfilter.TimeRangeCache.ResetTimeConstraints()
       storage_file.SetStoreLimit()
       storage_file.AddEventObjects(events)
       storage_file.Close()
 
-      with storage.StorageFile(temp_file) as storage_file:
+      with storage_zip_file.StorageFile(temp_file) as storage_file:
         storage_file.store_range = [1]
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator, storage_file)
@@ -247,7 +250,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     preprocess_object = event.PreprocessObject()
     preprocess_object.SetCollectionInformationValues({})
     test_front_end._SetAnalysisPluginProcessInformation(
-        analysis_plugins, preprocess_object, u'utf-8')
+        u'', analysis_plugins, preprocess_object)
     self.assertIsNotNone(preprocess_object)
     plugin_names = preprocess_object.collection_information[u'plugins']
     time_of_run = preprocess_object.collection_information[u'time_of_run']

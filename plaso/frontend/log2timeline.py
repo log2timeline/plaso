@@ -60,7 +60,7 @@ class Log2TimelineFrontend(extraction_frontend.ExtractionFrontend):
       A list of tuples of output module names and descriptions.
     """
     output_modules_information = []
-    for name, description in sorted(output_manager.OutputManager.GetOutputs()):
+    for name, description in output_manager.OutputManager.GetOutputClasses():
       output_modules_information.append((name, description))
 
     return output_modules_information

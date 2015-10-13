@@ -63,6 +63,22 @@ class OutputManagerTest(unittest.TestCase):
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 
+  def testGetDisabledOutputClasses(self):
+    """Tests the GetDisabledOutputClasses function."""
+    manager.OutputManager.RegisterOutput(TestOutput, disabled=True)
+
+    names = []
+    output_classes = []
+
+    for name, output_class in manager.OutputManager.GetDisabledOutputClasses():
+      names.append(name)
+      output_classes.append(output_class)
+
+    self.assertIn(u'test_output', names)
+    self.assertIn(TestOutput, output_classes)
+
+    manager.OutputManager.DeregisterOutput(TestOutput)
+
   def testGetOutputClasses(self):
     """Tests the GetOutputClasses function."""
     manager.OutputManager.RegisterOutput(TestOutput)
@@ -76,23 +92,6 @@ class OutputManagerTest(unittest.TestCase):
 
     self.assertIn(u'test_output', names)
     self.assertIn(TestOutput, output_classes)
-
-    manager.OutputManager.DeregisterOutput(TestOutput)
-
-  # TODO: remove in favor of testGetOutputClasses.
-  def testGetOutputs(self):
-    """Tests the GetOutputs function."""
-    manager.OutputManager.RegisterOutput(TestOutput)
-
-    names = []
-    descriptions = []
-
-    for name, description in manager.OutputManager.GetOutputs():
-      names.append(name)
-      descriptions.append(description)
-
-    self.assertIn(u'test_output', names)
-    self.assertIn(u'This is a test output module.', descriptions)
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 
