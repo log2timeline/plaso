@@ -23,6 +23,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
 
+  # Enable the SHA256 hasher by default.
+  _DEFAULT_HASHER_STRING = u'sha256'
+
   _BYTES_IN_A_MIB = 1024 * 1024
 
   def __init__(self, input_reader=None, output_writer=None):
@@ -67,7 +70,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._hasher_names_string = getattr(options, u'hashers', u'')
+    self._hasher_names_string = getattr(
+        options, u'hashers', self._DEFAULT_HASHER_STRING)
     if isinstance(self._hasher_names_string, basestring):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
@@ -164,12 +168,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--hashers', dest=u'hashers', type=str, action=u'store', default=u'',
-        metavar=u'HASHER_LIST', help=(
+        u'--hashers', dest=u'hashers', type=str, action=u'store',
+        default=self._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
             u'Define a list of hashers to use by the tool. This is a comma '
             u'separated list where each entry is the name of a hasher. eg. '
-            u'"md5,sha256" or "all" to indicate that all hashers should be '
-            u'enabled. Use "--hashers list" or "--info" to list the available '
+            u'"md5,sha256", "all" to indicate that all hashers should be '
+            u'enabled or "none" to disable all hashers. Use "--hashers list" '
+            u'or "--info" to list the available '
             u'hashers.'))
 
     # TODO: rename option name to parser_filter_string.

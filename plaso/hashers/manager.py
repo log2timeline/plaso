@@ -38,8 +38,8 @@ class HashersManager(object):
 
     Args:
       hasher_names_string: comma separated string of names of
-                           hashers to enable enable, or the string 'all', to
-                           enable all hashers.
+                           hashers to enable enable, the string 'all' to
+                           enable all hashers or 'none' to disable all hashers.
 
     Returns:
       A list of names of valid hashers from the string, or an empty list if
@@ -47,7 +47,7 @@ class HashersManager(object):
     """
     hasher_names = []
 
-    if not hasher_names_string:
+    if not hasher_names_string or hasher_names_string.strip() == u'none':
       return hasher_names
 
     if hasher_names_string.strip() == u'all':
