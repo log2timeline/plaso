@@ -108,14 +108,6 @@ plaso.lib.specification module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.storage module
-------------------------
-
-.. automodule:: plaso.lib.storage
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.timelib module
 ------------------------
 
