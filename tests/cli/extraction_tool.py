@@ -27,11 +27,13 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'This is a'),
       (u'                        comma separated list where each entry is the '
        u'name of a'),
-      (u'                        hasher. eg. "md5,sha256" or "all" to indicate '
+      (u'                        hasher. E.g. "md5,sha256", "all" to indicate '
        u'that all'),
-      (u'                        hashers should be enabled. Use "--hashers '
-       u'list" or "--'),
-      u'                        info" to list the available hashers.',
+      (u'                        hashers should be enabled or "none" to '
+       u'disable all'),
+      (u'                        hashers. Use "--hashers list" or "--info" to '
+       u'list the'),
+      u'                        available hashers.',
       u'  --parsers PARSER_LIST',
       (u'                        Define a list of parsers to use by the tool. '
        u'This is a'),
