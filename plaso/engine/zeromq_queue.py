@@ -271,8 +271,9 @@ class ZeroMQPullQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0:s}. Queue aborting'.format(
-            self.name))
+        logging.error(
+            u'ZMQ syscall interrupted in {0:s}. Queue aborting'.format(
+                self.name))
         return queue.QueueAbort()
       else:
         raise
@@ -462,8 +463,9 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
-            self.name))
+        logging.error(
+            u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
+                self.name))
         return queue.QueueAbort()
       else:
         raise
