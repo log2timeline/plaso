@@ -24,7 +24,6 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.filters import manager as filters_manager
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
-from plaso.output import manager as output_manager
 from plaso.lib import errors
 from plaso.winnt import language_ids
 
@@ -36,7 +35,7 @@ class PsortOptions(object):
 class PsortTool(analysis_tool.AnalysisTool):
   """Class that implements the psort CLI tool."""
 
-  _URL = u'http://plaso.kiddaland.net/usage/filters'
+  _FILTERS_URL = u'http://plaso.kiddaland.net/usage/filters'
 
   NAME = u'psort'
   DESCRIPTION = (
@@ -58,6 +57,7 @@ class PsortTool(analysis_tool.AnalysisTool):
         input_reader=input_reader, output_writer=output_writer)
     self._analysis_plugins = None
     self._analysis_plugins_output_format = None
+    self._command_line_arguments = None
     self._deduplicate_events = True
     self._filter_expression = None
     self._filter_object = None
@@ -236,6 +236,7 @@ class PsortTool(analysis_tool.AnalysisTool):
           configuration_object, output_module)
       missing_parameters = output_module.GetMissingArguments()
 
+    # TODO: fix or remove this comment.
     # Get ANALYSIS PLUGINS AND CONFIGURE!
     get_plugins_and_producers = self._front_end.GetAnalysisPluginsAndEventQueues
     analysis_plugins, event_queue_producers = get_plugins_and_producers(
@@ -246,10 +247,14 @@ class PsortTool(analysis_tool.AnalysisTool):
           self._options, analysis_plugin)
 
     counter = self._front_end.ProcessStorage(
-        output_module, storage_file, analysis_plugins, event_queue_producers,
+        output_module, storage_file, self._storage_file_path,
+        analysis_plugins, event_queue_producers,
+        command_line_arguments=self._command_line_arguments,
         deduplicate_events=self._deduplicate_events,
         preferred_encoding=self.preferred_encoding,
         time_slice=time_slice, use_time_slicer=self._use_time_slicer)
+
+    storage_file.Close()
 
     if not self._quiet_mode:
       table_view = cli_views.ViewsFactory.GetTableView(
@@ -335,7 +340,8 @@ class PsortTool(analysis_tool.AnalysisTool):
         type=str, help=(
             u'A filter that can be used to filter the dataset before it '
             u'is written into storage. More information about the filters '
-            u'and how to use them can be found here: {0:s}').format(self._URL))
+            u'and how to use them can be found here: {0:s}').format(
+                self._FILTERS_URL))
 
   def AddLanguageOptions(self, argument_group):
     """Adds the language options to the argument group.
@@ -401,19 +407,19 @@ class PsortTool(analysis_tool.AnalysisTool):
     table_view = cli_views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=[u'Name', u'Description'],
         title=u'Output Modules')
-    for name, output_class in sorted(self._front_end.GetOutputClasses()):
+    for name, output_class in self._front_end.GetOutputClasses():
       table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
 
-    disabled_classes = output_manager.OutputManager.GetDisabledOutputClasses()
+    disabled_classes = list(self._front_end.GetDisabledOutputClasses())
     if not disabled_classes:
       return
 
     table_view = cli_views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=[u'Name', u'Description'],
         title=u'Disabled Output Modules')
-    for output_class in disabled_classes:
-      table_view.AddRow([output_class.NAME, output_class.DESCRIPTION])
+    for name, output_class in disabled_classes:
+      table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
 
   def ParseArguments(self):
@@ -580,7 +586,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._ParseAnalysisPluginOptions(options)
     self._ParseExperimentalOptions(options)
     self._ParseFilterOptions(options)
-    self._front_end.SetStorageFile(self._storage_file_path)
 
     if self._debug_mode:
       logging_level = logging.DEBUG
@@ -604,8 +609,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._deduplicate_events = getattr(options, u'dedup', True)
 
     self._output_filename = getattr(options, u'write', None)
-    if self._output_filename:
-      self._front_end.SetOutputFilename(self._output_filename)
 
     if self._data_location:
       self._front_end.SetDataLocation(self._data_location)
@@ -613,6 +616,8 @@ class PsortTool(analysis_tool.AnalysisTool):
       options.data_location = self._data_location
     else:
       logging.warning(u'Unable to automatically determine data location.')
+
+    self._command_line_arguments = self.GetCommandLineArguments()
 
     # TODO: refactor this.
     self._options = options

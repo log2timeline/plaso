@@ -8,6 +8,7 @@ import unittest
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
+from plaso.lib import pfilter
 from plaso.output import manager as output_manager
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
@@ -126,6 +127,10 @@ class PsortToolTest(test_lib.ToolTestCase):
     helpers_manager.ArgumentHelperManager.RegisterHelper(
         TestOutputModuleArgumentHelper)
 
+    # TODO: this is needed to work around static member issue of pfilter
+    # which is used in storage file.
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+
     lines = []
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file_name = os.path.join(temp_directory, u'output.txt')
@@ -135,7 +140,7 @@ class PsortToolTest(test_lib.ToolTestCase):
       self._test_tool.ProcessStorage()
 
       with open(temp_file_name, 'rb') as file_object:
-        for line in file_object:
+        for line in file_object.readlines():
           lines.append(line.strip())
 
     self.assertTrue(self._input_reader.read_called)
@@ -143,6 +148,7 @@ class PsortToolTest(test_lib.ToolTestCase):
     self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
 
     self.assertIn(u'FILE/UNKNOWN ctime OS:syslog', lines)
+
     output_manager.OutputManager.DeregisterOutput(
         TestOutputModuleMissingParameters)
     helpers_manager.ArgumentHelperManager.DeregisterHelper(

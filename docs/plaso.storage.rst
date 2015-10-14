@@ -28,6 +28,14 @@ plaso.storage.writer module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.zip_file module
+-----------------------------
+
+.. automodule:: plaso.storage.zip_file
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

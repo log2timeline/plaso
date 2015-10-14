@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Storage related functions and classes for testing."""
 
+import os
+import unittest
+
 from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.events import text_events
 from plaso.events import windows_events
@@ -51,3 +54,26 @@ def CreateTestEventObjects():
   event_objects.append(event_object)
 
   return event_objects
+
+
+class StorageTestCase(unittest.TestCase):
+  """The unit test case for storage objects."""
+
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
+
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)

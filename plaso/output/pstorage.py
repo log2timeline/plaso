@@ -2,10 +2,10 @@
 """Implements a StorageFile output module."""
 
 from plaso.lib import event
-from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
+from plaso.storage import zip_file
 
 
 class PlasoStorageOutputModule(interface.OutputModule):
@@ -42,7 +42,7 @@ class PlasoStorageOutputModule(interface.OutputModule):
     if storage_file_path:
       pre_obj.collection_information[u'file_processed'] = storage_file_path
 
-    self._storage = storage.StorageFile(self._file_object, pre_obj=pre_obj)
+    self._storage = zip_file.StorageFile(self._file_object, pre_obj=pre_obj)
 
   def SetFilePath(self, file_path):
     """Sets the file-like object based on the file path.
