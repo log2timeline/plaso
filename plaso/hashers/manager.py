@@ -38,8 +38,8 @@ class HashersManager(object):
 
     Args:
       hasher_names_string: comma separated string of names of
-                           hashers to enable enable, the string 'all' to
-                           enable all hashers or 'none' to disable all hashers.
+                           hashers to enable, the string 'all' to enable all
+                           hashers or 'none' to disable all hashers.
 
     Returns:
       A list of names of valid hashers from the string, or an empty list if
