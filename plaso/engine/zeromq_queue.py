@@ -234,17 +234,18 @@ class ZeroMQPullQueue(ZeroMQQueue):
     """Empties the queue.
 
     Raises:
-      ZMQError: If a ZeroMQ error occurs.
+      zmq.error.ZMQError: If a ZeroMQ error occurs.
     """
     try:
       while True:
         if self._zmq_socket:
           self._zmq_socket.recv_pyobj()
     except zmq.error.Again:
+      # Timeout dequeueing an item, so the queue is empty.
       pass
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+        logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
         return
       else:
         raise
@@ -258,7 +259,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
-      ZMQError: If a ZeroMQ error occurs.
+      zmq.error.ZMQError: If a ZeroMQ error occurs.
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -270,7 +271,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}. Queue aborting'.format(
+        logging.error(u'ZMQ syscall interrupted in {0:s}. Queue aborting'.format(
             self.name))
         return queue.QueueAbort()
       else:
@@ -345,9 +346,11 @@ class ZeroMQPushQueue(ZeroMQQueue):
              in blocking or non-block mode.
 
     Raises:
-      Again: If it was no possible to push the item to the queue within the
-             timeout.
-      ZMQError: If a ZeroMQ specific error occurs.
+      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+                         pushing an item.
+      zmq.error.Again: If it was not possible to push the item to the queue
+                       within the timeout.
+      zmq.error.ZMQError: If a ZeroMQ specific error occurs.
     """
     logging.debug(u'Push on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -412,7 +415,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
     """Empties the queue.
 
     Raises:
-      ZMQError: If an error occurs in ZeroMQ.
+      zmq.error.ZMQError: If an error occurs in ZeroMQ.
     """
     try:
       while True:
@@ -426,7 +429,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       if exception.errno == errno.EINTR:
         # Interrupted syscall, we won't be able to dequeue any more items from
         # this queue, so we can consider it empty.
-        logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+        logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
         return
       else:
         raise
@@ -445,7 +448,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
                          popping an item.
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
-      ZMQError: If an error occurs in ZeroMQ.
+      zmq.error.ZMQError: If an error occurs in ZeroMQ.
 
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
@@ -459,7 +462,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       raise errors.QueueEmpty
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}. Queue aborting.'.format(
+        logging.error(u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
             self.name))
         return queue.QueueAbort()
       else:
@@ -618,7 +621,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     Raises:
       QueueEmpty: If a timeout occurs when trying to reply to a request.
-      ZMQError: If an error occurs in ZeroMQ.
+      zmq.error.ZMQError: If an error occurs in ZeroMQ.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
@@ -632,7 +635,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         continue
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
-          logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+          logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
           break
         else:
           raise
@@ -654,7 +657,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         raise errors.QueueEmpty
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
-          logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+          logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
           break
         else:
           raise
@@ -729,7 +732,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
 
     Raises:
       QueueEmpty: If the queue encountered a timeout trying to push an item.
-      ZMQError: If ZeroMQ encounters an error.
+      zmq.error.ZMQError: If ZeroMQ encounters an error.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
@@ -754,7 +757,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
         raise errors.QueueEmpty
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
-          logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+          logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
           break
         else:
           raise
@@ -830,7 +833,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
       terminate_event: The event that signals that the queue should terminate.
 
     Raises:
-      ZMQError: If an error is encountered by ZeroMQ.
+      zmq.error.ZMQError: If an error is encountered by ZeroMQ.
     """
     logging.debug(u'ZeroMQ responder thread started')
     while not terminate_event.isSet():
@@ -841,7 +844,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
         item = queue.QueueAbort()
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
-          logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+          logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
           break
         else:
           raise
@@ -871,7 +874,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
                   queue timeout.
-      ZMQError: If an error is encountered by ZeroMQ.
+      zmq.error.ZMQError: If an error is encountered by ZeroMQ.
     """
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
@@ -883,7 +886,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
       return queue.QueueAbort()
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(u'ZMQ syscall interrupted in {0}.'.format(self.name))
+        logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
         return queue.QueueAbort()
       else:
         raise
