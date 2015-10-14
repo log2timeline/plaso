@@ -10,6 +10,7 @@ scalability.
 """
 
 import abc
+import logging
 
 from plaso.lib import errors
 
@@ -27,7 +28,12 @@ class Queue(object):
 
   @abc.abstractmethod
   def PushItem(self, item):
-    """Pushes an item onto the queue."""
+    """Pushes an item onto the queue.
+
+    Raises:
+      QueueFull: when the next call to PushItem would exceed the limit of items
+                 in the queue.
+    """
 
   @abc.abstractmethod
   def PopItem(self):
@@ -40,6 +46,10 @@ class Queue(object):
   @abc.abstractmethod
   def Close(self):
     """Closes the queue."""
+
+  @abc.abstractmethod
+  def Open(self):
+    """Opens the queue, ready to enqueue or dequeue items."""
 
 
 class QueueConsumer(object):
@@ -122,10 +132,13 @@ class ItemQueueConsumer(QueueConsumer):
     while not self._abort:
       try:
         item = self._queue.PopItem()
-      except (errors.QueueClose, errors.QueueEmpty):
+      except (errors.QueueClose, errors.QueueEmpty) as exception:
+        logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
+            type(exception)))
         break
 
       if isinstance(item, QueueAbort):
+        logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
         break
 
       self._number_of_consumed_items += 1
