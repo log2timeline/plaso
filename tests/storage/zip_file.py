@@ -230,6 +230,14 @@ class ZIPStorageFile(test_lib.StorageTestCase):
     stream_numbers = storage_file._GetSerializedEventObjectStreamNumbers()
     self.assertEqual(len(stream_numbers), 7)
 
+  def testGetSerializedEventObjectTimestampTable(self):
+    """Tests the _GetSerializedEventObjectTimestampTable function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamp_table = storage_file._GetSerializedEventObjectTimestampTable(3)
+    self.assertIsNotNone(timestamp_table)
+
   def testGetStreamNames(self):
     """Tests the _GetStreamNames function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -246,6 +254,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
     self.assertTrue(storage_file._HasStream(u'plaso_timestamps.000003'))
     self.assertFalse(storage_file._HasStream(u'bogus'))
 
+  # TODO: add _OpenStream test.
+  # TODO: add _ReadStream test.
   # TODO: add _WriteStream test.
 
 

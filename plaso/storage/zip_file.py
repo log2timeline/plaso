@@ -86,6 +86,7 @@ import logging
 # TODO: replace all instances of struct by construct!
 import struct
 import sys
+import warnings
 import zipfile
 
 import construct
@@ -463,6 +464,20 @@ class ZIPStorageFile(object):
     self._timestamp_tables_lfu = []
     self._zipfile = None
 
+  def _Close(self):
+    """Closes the storage file."""
+    if not self._zipfile:
+      return
+
+    self._event_object_streams = {}
+    self._offset_tables = {}
+    self._offset_tables_lfu = []
+    self._timestamp_tables = {}
+    self._timestamp_tables_lfu = []
+
+    self._zipfile.close()
+    self._zipfile = None
+
   def _GetSerializedEventObjectOffsetTable(self, stream_number):
     """Retrieves the serialized event object stream offset table.
 
@@ -521,6 +536,40 @@ class ZIPStorageFile(object):
 
     return data_stream
 
+  def _GetSerializedEventObjectTimestampTable(self, stream_number):
+    """Retrieves the serialized event object stream timestamp table.
+
+    Args:
+      stream_number: an integer containing the number of the stream.
+
+    Returns:
+      A serialized data timestamp table (instance of
+       _SerializedDataTimestampTable).
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    timestamp_table = self._timestamp_tables.get(stream_number, None)
+    if not timestamp_table:
+      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+      timestamp_table = _SerializedDataTimestampTable(
+          self._zipfile, stream_name)
+      timestamp_table.Read()
+
+      if len(self._timestamp_tables) >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
+        lfu_stream_number = self._timestamp_tables_lfu.pop()
+        del self._timestamp_tables[lfu_stream_number]
+
+      self._timestamp_tables[stream_number] = timestamp_table
+
+    if stream_number in self._timestamp_tables_lfu:
+      lfu_index = self._timestamp_tables_lfu.index(stream_number)
+      self._timestamp_tables_lfu.pop(lfu_index)
+
+    self._timestamp_tables_lfu.append(stream_number)
+
+    return timestamp_table
+
   def _GetSerializedEventObjectStreamNumbers(self):
     """Retrieves the available serialized event object stream numbers.
 
@@ -570,8 +619,66 @@ class ZIPStorageFile(object):
     file_object.close()
     return True
 
+  def _Open(self, path, access_mode=u'r'):
+    """Opens the storage file.
+
+    Args:
+      path: string containing the path of the storage file.
+      access_mode: optional string indicating the access mode.
+
+    Raises:
+      IOError: if the ZIP file is already opened or if the ZIP file cannot
+               be opened.
+    """
+    if self._zipfile:
+      raise IOError(u'ZIP file already opened.')
+
+    try:
+      self._zipfile = zipfile.ZipFile(
+          path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
+          allowZip64=True)
+
+    except zipfile.BadZipfile as exception:
+      raise IOError(
+          u'Unable to open ZIP file with error: {0:s}'.format(exception))
+
+  def _OpenStream(self, stream_name, access_mode=u'r'):
+    """Opens a stream.
+
+    Args:
+      stream_name: string containing the name of the stream.
+      access_mode: optional string indicating the access mode.
+
+    Returns:
+      The stream file-like object (instance of zipfile.ZipExtFile) or None.
+    """
+    try:
+      return self._zipfile.open(stream_name, mode=access_mode)
+    except KeyError:
+      return
+
+  def _ReadStream(self, stream_name):
+    """Reads data from a stream.
+
+    Args:
+      stream_name: string containing the name of the stream.
+
+    Returns:
+      A byte string containing the data of the stream.
+    """
+    file_object = self._OpenStream(stream_name)
+    if not file_object:
+      return b''
+
+    try:
+      data = file_object.read()
+    finally:
+      file_object.close()
+
+    return data
+
   def _WriteStream(self, stream_name, stream_data):
-    """Write the data to a stream.
+    """Writes data to a stream.
 
     Args:
       stream_name: string containing the name of the stream.
@@ -579,13 +686,15 @@ class ZIPStorageFile(object):
     """
     # TODO: this can raise an IOError e.g. "Stale NFS file handle".
     # Determine if this be handled more error resiliently.
-    self._zipfile.writestr(stream_name, stream_data)
+
+    # Prevent zipfile from generating "UserWarning: Duplicate name:".
+    with warnings.catch_warnings():
+      warnings.simplefilter(u'ignore')
+      self._zipfile.writestr(stream_name, stream_data)
 
 
 class StorageFile(ZIPStorageFile):
   """Class that defines the ZIP-based storage file."""
-
-  _STREAM_DATA_SEGMENT_SIZE = 1024
 
   # Set the maximum buffer size to 196 MiB
   MAXIMUM_BUFFER_SIZE = 196 * 1024 * 1024
@@ -635,7 +744,6 @@ class StorageFile(ZIPStorageFile):
     self._buffer_size = 0
     self._event_object_serializer = None
     self._event_tag_index = None
-    self._file_open = False
     self._file_number = 1
     self._first_file_number = None
     self._max_buffer_size = buffer_size or self.MAXIMUM_BUFFER_SIZE
@@ -646,13 +754,14 @@ class StorageFile(ZIPStorageFile):
     self._serializer_format_string = u''
     self._write_counter = 0
 
-    self._SetSerializerFormat(serializer_format)
+    if self._read_only:
+      access_mode = u'r'
+    else:
+      access_mode = u'a'
 
-    self._Open()
-
-    # Add information about the serializer used in the storage.
-    if not self._read_only and not self._OpenStream(u'serializer.txt'):
-      self._WriteStream(u'serializer.txt', self._serializer_format_string)
+    self._Open(
+        output_file, access_mode=access_mode,
+        serializer_format=serializer_format)
 
     # Attributes for profiling.
     self._enable_profiling = False
@@ -691,7 +800,7 @@ class StorageFile(ZIPStorageFile):
       if not stream_name.startswith(u'plaso_tag_index.'):
         continue
 
-      file_object = self._OpenStream(stream_name, u'r')
+      file_object = self._OpenStream(stream_name)
       if file_object is None:
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
@@ -704,8 +813,7 @@ class StorageFile(ZIPStorageFile):
             u'with error: {1:s}').format(stream_name, exception))
 
       while True:
-        tag_index_value = _EventTagIndexValue.Read(
-            file_object, store_number)
+        tag_index_value = _EventTagIndexValue.Read(file_object, store_number)
         if tag_index_value is None:
           break
 
@@ -933,24 +1041,8 @@ class StorageFile(ZIPStorageFile):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    timestamp_table = self._timestamp_tables.get(stream_number, None)
-    if not timestamp_table:
-      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
-      timestamp_table = _SerializedDataTimestampTable(
-          self._zipfile, stream_name)
-      timestamp_table.Read()
-
-      if len(self._timestamp_tables) >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
-        lfu_stream_number = self._timestamp_tables_lfu.pop()
-        del self._timestamp_tables[lfu_stream_number]
-
-      self._timestamp_tables[stream_number] = timestamp_table
-
-    if stream_number in self._timestamp_tables_lfu:
-      lfu_index = self._timestamp_tables_lfu.index(stream_number)
-      self._timestamp_tables_lfu.pop(lfu_index)
-
-    self._timestamp_tables_lfu.append(stream_number)
+    timestamp_table = self._GetSerializedEventObjectTimestampTable(
+        stream_number)
 
     for entry_index in range(timestamp_table.number_of_timestamps):
       timestamp_compare = timestamp_table.GetTimestamp(entry_index)
@@ -979,31 +1071,36 @@ class StorageFile(ZIPStorageFile):
           self._merge_buffer,
           (event_object.timestamp, store_number, event_object))
 
-  def _Open(self):
+  # pylint: disable=arguments-differ
+  def _Open(
+      self, path, access_mode=u'r',
+      serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Opens the storage file.
+
+    Args:
+      path: string containing the path of the storage file.
+      access_mode: optional string indicating the access mode.
+      serializer_format: Optional storage serializer format. The default is
+                         protobuf.
 
     Raises:
       IOError: if the file is opened in read only mode and the file does
                not exist.
     """
-    if self._read_only:
-      access_mode = u'r'
-    else:
-      access_mode = u'a'
+    super(StorageFile, self)._Open(path, access_mode=access_mode)
 
-    try:
-      self._zipfile = zipfile.ZipFile(
-          self._output_file, access_mode, zipfile.ZIP_DEFLATED, allowZip64=True)
-    except zipfile.BadZipfile as exception:
-      raise IOError(u'Unable to read ZIP file with error: {0:s}'.format(
-          exception))
+    serializer_stream_name = u'serializer.txt'
+    has_serializer_stream = self._HasStream(serializer_stream_name)
+    if has_serializer_stream:
+      stored_serializer_format = self._ReadStream(serializer_stream_name)
+      if stored_serializer_format:
+        serializer_format = stored_serializer_format
 
-    self._file_open = True
+    self._SetSerializerFormat(serializer_format)
 
-    # Read the serializer string (if available).
-    serializer = self._ReadStream(u'serializer.txt')
-    if serializer:
-      self._SetSerializerFormat(serializer)
+    if access_mode != u'r' and not has_serializer_stream:
+      # Note that _serializer_format_string is set by _SetSerializerFormat().
+      self._WriteStream(serializer_stream_name, self._serializer_format_string)
 
     if not self._read_only:
       logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
@@ -1031,22 +1128,6 @@ class StorageFile(ZIPStorageFile):
             pass
 
       self._first_file_number = self._file_number
-
-  def _OpenStream(self, stream_name, mode='r'):
-    """Opens a stream.
-
-    Args:
-      stream_name: string containing the name of the stream.
-      mode: optional string containing the access mode. The default is
-            read-only ('r').
-
-    Returns:
-      The stream file-like object (instance of zipfile.ZipExtFile) or None.
-    """
-    try:
-      return self._zipfile.open(stream_name, mode)
-    except KeyError:
-      return
 
   def _ProfilingStop(self):
     """Stops the profiling."""
@@ -1131,12 +1212,11 @@ class StorageFile(ZIPStorageFile):
     data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_offset)
     return data_stream.ReadEntry()
 
-  def _ReadMeta(self, number):
+  def _ReadMeta(self, stream_number):
     """Return a dict with the metadata entries.
 
     Args:
-      number: The number of the metadata file (name is plaso_meta_XXX where
-              XXX is this number.
+      stream_number: an integer containing the number of the stream.
 
     Returns:
       A dict object containing all the variables inside the metadata file.
@@ -1144,8 +1224,8 @@ class StorageFile(ZIPStorageFile):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    stream_name = u'plaso_meta.{0:06d}'.format(number)
-    file_object = self._OpenStream(stream_name, 'r')
+    stream_name = u'plaso_meta.{0:06d}'.format(stream_number)
+    file_object = self._OpenStream(stream_name)
     if file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
     return yaml.safe_load(file_object)
@@ -1179,29 +1259,6 @@ class StorageFile(ZIPStorageFile):
       self._serializers_profiler.StopTiming(u'pre_obj')
 
     return preprocess_object
-
-  def _ReadStream(self, stream_name):
-    """Reads the data in a stream.
-
-    Args:
-      stream_name: string containing the name of the stream.
-
-    Returns:
-      A byte string containing the data of the stream.
-    """
-    data_segments = []
-    file_object = self._OpenStream(stream_name, u'r')
-
-    # zipfile.ZipExtFile does not support the with-statement interface.
-    if file_object:
-      data = file_object.read(self._STREAM_DATA_SEGMENT_SIZE)
-      while data:
-        data_segments.append(data)
-        data = file_object.read(self._STREAM_DATA_SEGMENT_SIZE)
-
-      file_object.close()
-
-    return b''.join(data_segments)
 
   def _SetSerializerFormat(self, serializer_format):
     """Set the serializer format.
@@ -1284,7 +1341,7 @@ class StorageFile(ZIPStorageFile):
     Raises:
       IOError: When trying to write to a closed storage file.
     """
-    if not self._file_open:
+    if not self._zipfile:
       raise IOError(u'Trying to add an entry to a closed storage file.')
 
     if event_object.timestamp > self._buffer_last_timestamp:
@@ -1344,17 +1401,19 @@ class StorageFile(ZIPStorageFile):
 
   def Close(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
-    if self._file_open:
-      if not self._read_only and self._pre_obj:
-        self._WritePreprocessObject(self._pre_obj)
+    if not self._zipfile:
+      return
 
-      self._FlushBuffer()
-      self._zipfile.close()
-      self._file_open = False
-      if not self._read_only:
-        logging.debug((
-            u'[Storage] Closing the storage, number of events added: '
-            u'{0:d}').format(self._write_counter))
+    if not self._read_only and self._pre_obj:
+      self._WritePreprocessObject(self._pre_obj)
+
+    self._FlushBuffer()
+    self._Close()
+
+    if not self._read_only:
+      logging.debug((
+          u'[Storage] Closing the storage, number of events added: '
+          u'{0:d}').format(self._write_counter))
 
     self._ProfilingStop()
 
@@ -1398,7 +1457,7 @@ class StorageFile(ZIPStorageFile):
       if not stream_name.startswith(u'plaso_report.'):
         continue
 
-      file_object = self._OpenStream(stream_name, u'r')
+      file_object = self._OpenStream(stream_name)
       if file_object is None:
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
