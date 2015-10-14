@@ -221,7 +221,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     for analysis_plugin in analysis_plugins:
       if self._use_zeromq:
         analysis_plugin_output_queue = zeromq_queue.ZeroMQPushConnectQueue(
-            delay_start=True, port=analysis_queue_port)
+            delay_open=True, port=analysis_queue_port)
       else:
         analysis_plugin_output_queue = analysis_report_incoming_queue
 
@@ -362,12 +362,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     for _ in range(0, len(analysis_plugins_list)):
       if self._use_zeromq:
         output_queue = zeromq_queue.ZeroMQPushBindQueue()
-        # Start the queue so it can bind to a random port, and we can get the
+        # Open the queue so it can bind to a random port, and we can get the
         # port number to use in the input queue.
-        output_queue.Start()
+        output_queue.Open()
         queue_port = output_queue.port
         input_queue = zeromq_queue.ZeroMQPullConnectQueue(
-            port=queue_port, delay_start=True)
+            port=queue_port, delay_open=True)
         analysis_plugin_input_queues.append(input_queue)
       else:
         input_queue = multi_process.MultiProcessingQueue(timeout=5)
@@ -511,7 +511,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       analysis_queue_port = None
       if self._use_zeromq:
         analysis_report_incoming_queue = zeromq_queue.ZeroMQPullBindQueue(
-            delay_start=False, port=None, linger_seconds=5)
+            delay_open=False, port=None, linger_seconds=5)
         analysis_queue_port = analysis_report_incoming_queue.port
       else:
         analysis_report_incoming_queue = multi_process.MultiProcessingQueue(

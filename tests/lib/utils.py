@@ -25,7 +25,7 @@ class UtilsTestCase(unittest.TestCase):
     bytes_in = 'Ascii\x00'
     self.assertTrue(utils.IsText(bytes_in))
 
-    bytes_in = 'Ascii Start then...\x00\x99\x23'
+    bytes_in = 'Ascii Open then...\x00\x99\x23'
     self.assertFalse(utils.IsText(bytes_in))
 
 
