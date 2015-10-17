@@ -19,10 +19,10 @@ class TimestampEvent(event.EventObject):
     """Initializes an event object.
 
     Args:
-      timestamp: The timestamp which is an integer containing the number
+      timestamp: the timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      data_type: Optional event data type. If not set data_type is
+      timestamp_description: the usage string for the timestamp value.
+      data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
     super(TimestampEvent, self).__init__()
@@ -41,13 +41,13 @@ class CocoaTimeEvent(TimestampEvent):
 
     Args:
       cocoa_time: the Cocoa time value.
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
+    timestamp = timelib.Timestamp.FromCocoaTime(cocoa_time)
     super(CocoaTimeEvent, self).__init__(
-        timelib.Timestamp.FromCocoaTime(cocoa_time), timestamp_description,
-        data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class DelphiTimeEvent(TimestampEvent):
@@ -58,13 +58,13 @@ class DelphiTimeEvent(TimestampEvent):
 
     Args:
       delphi_time: the Delphi time value.
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
+    timestamp = timelib.Timestamp.FromDelphiTime(delphi_time)
     super(DelphiTimeEvent, self).__init__(
-        timelib.Timestamp.FromDelphiTime(delphi_time), timestamp_description,
-        data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class FatDateTimeEvent(TimestampEvent):
@@ -75,13 +75,13 @@ class FatDateTimeEvent(TimestampEvent):
 
     Args:
       fat_date_time: the FAT date time value.
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
+    timestamp = timelib.Timestamp.FromFatDateTime(fat_date_time)
     super(FatDateTimeEvent, self).__init__(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), timestamp_description,
-        data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class FiletimeEvent(TimestampEvent):
@@ -92,7 +92,7 @@ class FiletimeEvent(TimestampEvent):
 
     Args:
       filetime: the FILETIME timestamp value.
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -108,14 +108,15 @@ class JavaTimeEvent(TimestampEvent):
     """Initializes an event object.
 
     Args:
-      java_time: the Java time value.
-      timestamp_description: The usage string for the timestamp value.
+      java_time: the Java timestamp which is an integer containing the number
+                 of milli seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
+    timestamp = timelib.Timestamp.FromJavaTime(java_time)
     super(JavaTimeEvent, self).__init__(
-        timelib.Timestamp.FromJavaTime(java_time), timestamp_description,
-        data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class PosixTimeEvent(TimestampEvent):
@@ -128,7 +129,7 @@ class PosixTimeEvent(TimestampEvent):
     Args:
       posix_time: the POSIX time value, which contains the number of seconds
                   since January 1, 1970 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
       micro_seconds: optional number of micro seconds.
@@ -151,13 +152,13 @@ class PythonDatetimeEvent(TimestampEvent):
 
     Args:
       datetime_time: the datetime object (instance of datetime.datetime).
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
+    timestamp = timelib.Timestamp.FromPythonDatetime(datetime_time)
     super(PythonDatetimeEvent, self).__init__(
-        timelib.Timestamp.FromPythonDatetime(datetime_time),
-        timestamp_description, data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
 
 
 class UUIDTimeEvent(TimestampEvent):
@@ -172,7 +173,7 @@ class UUIDTimeEvent(TimestampEvent):
 
     Args:
       uuid: a uuid object (instance of uuid.UUID).
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
 
     Raises:
       ValueError: if the UUID version is not supported.
@@ -198,10 +199,10 @@ class WebKitTimeEvent(TimestampEvent):
 
     Args:
       webkit_time: the WebKit time value.
-      timestamp_description: The usage string for the timestamp value.
+      timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
+    timestamp = timelib.Timestamp.FromWebKitTime(webkit_time)
     super(WebKitTimeEvent, self).__init__(
-        timelib.Timestamp.FromWebKitTime(webkit_time), timestamp_description,
-        data_type=data_type)
+        timestamp, timestamp_description, data_type=data_type)
