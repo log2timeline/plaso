@@ -21,7 +21,7 @@ class ShellItemsParser(object):
     """Initializes the parser.
 
     Args:
-      origin: A string containing the origin of the event (event source).
+      origin: a string containing the origin of the event (event source).
     """
     super(ShellItemsParser, self).__init__()
     self._origin = origin
@@ -31,7 +31,7 @@ class ShellItemsParser(object):
     """Parses a shell item.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       shell_item: the shell item (instance of pyfwsi.item).
     """
     path_segment = self._ParseShellItemPathSegment(shell_item)
@@ -167,16 +167,17 @@ class ShellItemsParser(object):
 
     return self._path_segments[-1]
 
-  def Parse(
-      self, parser_mediator, byte_stream, parent_path_segments,
+  def ParseDataStream(
+      self, parser_mediator, byte_stream, parent_path_segments=None,
       codepage=u'cp1252'):
     """Parses the shell items from the byte stream.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       byte_stream: a string holding the shell items data.
-      parent_path_segments: list containing the parent shell item path segments.
-      codepage: Optional byte stream codepage. The default is cp1252.
+      parent_path_segments: optional list containing the parent shell item
+                            path segments.
+      codepage: optional byte stream codepage. The default is cp1252.
     """
     if parent_path_segments and isinstance(parent_path_segments, list):
       self._path_segments = list(parent_path_segments)
@@ -184,26 +185,13 @@ class ShellItemsParser(object):
       self._path_segments = []
 
     shell_item_list = pyfwsi.item_list()
-    shell_item_list.copy_from_byte_stream(byte_stream, ascii_codepage=codepage)
 
-    for shell_item in shell_item_list.items:
-      self._ParseShellItem(parser_mediator, shell_item)
-
-  def UpdateChainAndParse(
-      self, parser_mediator, byte_stream, parent_path_segments,
-      codepage=u'cp1252'):
-    """Wrapper for Parse() to synchronize the parser chain.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      byte_stream: a string holding the shell items data.
-      parent_path_segments: list containing the parent shell item path segments.
-      codepage: Optional byte stream codepage. The default is cp1252.
-    """
     parser_mediator.AppendToParserChain(self)
     try:
-      self.Parse(
-          parser_mediator, byte_stream, parent_path_segments,
-          codepage=codepage)
+      shell_item_list.copy_from_byte_stream(
+          byte_stream, ascii_codepage=codepage)
+
+      for shell_item in shell_item_list.items:
+        self._ParseShellItem(parser_mediator, shell_item)
     finally:
       parser_mediator.PopFromParserChain()
