@@ -67,6 +67,9 @@ class RestorePointLogParser(interface.BaseParser):
 
     Returns:
       The file header construct object.
+
+    Raises:
+      UnableToParseFile: when the header cannot be parsed.
     """
     try:
       file_header = self._FILE_HEADER_STRUCT.parse_stream(file_object)
@@ -87,6 +90,9 @@ class RestorePointLogParser(interface.BaseParser):
 
     Returns:
       The file footer construct object.
+
+    Raises:
+      UnableToParseFile: when the footer cannot be parsed.
     """
     try:
       file_footer = self._FILE_FOOTER_STRUCT.parse_stream(file_object)

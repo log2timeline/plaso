@@ -269,9 +269,6 @@ class MsiecfParser(interface.SingleFileBaseParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     msiecf_file = pymsiecf.file()
     msiecf_file.set_ascii_codepage(parser_mediator.codepage)
@@ -280,7 +277,7 @@ class MsiecfParser(interface.SingleFileBaseParser):
       msiecf_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceParseError(
-          u'Unable to open file with error: {0:s}'.format(exception))
+          u'unable to open file with error: {0:s}'.format(exception))
       return
 
     format_version = msiecf_file.format_version

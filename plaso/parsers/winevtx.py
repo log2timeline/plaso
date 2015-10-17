@@ -5,7 +5,6 @@ import pyevtx
 
 from plaso import dependencies
 from plaso.events import time_events
-from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -151,9 +150,6 @@ class WinEvtxParser(interface.SingleFileBaseParser):
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
       file_object: a file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     evtx_file = pyevtx.file()
     evtx_file.set_ascii_codepage(parser_mediator.codepage)
@@ -161,10 +157,9 @@ class WinEvtxParser(interface.SingleFileBaseParser):
     try:
       evtx_file.open_file_object(file_object)
     except IOError as exception:
-      display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
+      return
 
     for record_index, evtx_record in enumerate(evtx_file.records):
       try:
