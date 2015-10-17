@@ -33,7 +33,8 @@ class MactimeEvent(time_events.PosixTimeEvent):
   DATA_TYPE = u'fs:mactime:line'
 
   def __init__(
-      self, posix_time, usage, row_offset, filename, inode_number, data_size, mode, user_uid, user_gid, md5_hash):
+      self, posix_time, usage, row_offset, filename, inode_number, data_size,
+      mode, user_uid, user_gid, md5_hash):
     """Initializes a mactime-based event object.
 
     Args:
