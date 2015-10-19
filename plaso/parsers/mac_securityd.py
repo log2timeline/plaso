@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the ASL securityd log plaintext parser."""
 
-import datetime
 import logging
 
 import pyparsing
@@ -158,9 +157,10 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       self._year_use = parser_mediator.year
 
     if not self._year_use:
-      # Get from the creation time of the file.
-      self._year_use = self._GetYear(
-          self.file_entry.GetStat(), parser_mediator.timezone)
+      # TODO: Find a decent way to actually calculate the correct year
+      # instead of relying on stats object.
+      self._year_use = parser_mediator.GetFileEntryYear()
+
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()
@@ -225,30 +225,6 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     hours, minutes, seconds = time
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hours, minutes, seconds)
-
-  def _GetYear(self, stat, zone):
-    """Retrieves the year either from the input file or from the settings."""
-    time = getattr(stat, u'crtime', 0)
-    if not time:
-      time = getattr(stat, u'ctime', 0)
-
-    if not time:
-      current_year = timelib.GetCurrentYear()
-      logging.error((
-          u'Unable to determine year of log file.\nDefaulting to: '
-          u'{0:d}').format(current_year))
-      return current_year
-
-    try:
-      timestamp = datetime.datetime.fromtimestamp(time, zone)
-    except ValueError:
-      current_year = timelib.GetCurrentYear()
-      logging.error((
-          u'Unable to determine year of log file.\nDefaulting to: '
-          u'{0:d}').format(current_year))
-      return current_year
-
-    return timestamp.year
 
 
 manager.ParsersManager.RegisterParser(MacSecuritydLogParser)

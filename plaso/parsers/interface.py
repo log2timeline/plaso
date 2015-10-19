@@ -9,6 +9,7 @@ parser.
 import abc
 import os
 
+from plaso.lib import errors
 from plaso.parsers import manager
 
 
@@ -92,6 +93,7 @@ class BaseParser(object):
 
     del cls._plugin_classes[plugin_name]
 
+  # TOOD: move this to a filter.
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
@@ -106,7 +108,7 @@ class BaseParser(object):
     """Retrieves the plugin names.
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: optional parser filter string. The default is None.
 
     Returns:
       A list of plugin names.
@@ -139,7 +141,7 @@ class BaseParser(object):
     """Retrieves the plugin objects.
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: optional parser filter string. The default is None.
 
     Returns:
       A list of plugin objects (instances of BasePlugin).
@@ -158,7 +160,7 @@ class BaseParser(object):
     """Retrieves the registered plugins.
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: optional parser filter string. The default is None.
 
     Yields:
       A tuple that contains the uniquely identifying name of the plugin
@@ -179,26 +181,6 @@ class BaseParser(object):
         continue
 
       yield plugin_name, plugin_class
-
-  @abc.abstractmethod
-  def Parse(self, parser_mediator, **kwargs):
-    """Parsers the file entry and extracts event objects.
-
-    This is the main function of the class, the one that actually
-    goes through the log file and parses each line of it to
-    produce a parsed line and a timestamp.
-
-    It also tries to verify the file structure and see if the class is capable
-    of parsing the file passed to the module. It will do so with series of tests
-    that should determine if the file is of the correct structure.
-
-    If the class is not capable of parsing the file passed to it an exception
-    should be raised, an exception of the type UnableToParseFile that indicates
-    the reason why the class does not parse it.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):
@@ -242,27 +224,44 @@ class BaseParser(object):
     """
     return cls._plugin_classes is not None
 
-  # TODO: deprecate.
-  def UpdateChainAndParse(self, parser_mediator, **kwargs):
-    """Wrapper for Parse() to synchronize the parser chain.
 
-    This convenience method updates the parser chain object held by the
-    mediator, transfers control to the parser-specific Parse() method,
-    and updates the chain again once the parsing is complete. It provides a
-    simpler parser API in most cases.
+class FileEntryParser(BaseParser):
+  """Class that implements the file entry parser interface."""
+
+  def Parse(self, parser_mediator, **kwargs):
+    """Parsers the file entry and extracts event objects.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    file_entry = parser_mediator.GetFileEntry()
+    if not file_entry:
+      raise errors.UnableToParseFile(u'Invalid file entry')
+
     parser_mediator.AppendToParserChain(self)
     try:
-      self.Parse(parser_mediator, **kwargs)
+      self.ParseFileEntry(parser_mediator, file_entry, **kwargs)
     finally:
       parser_mediator.PopFromParserChain()
 
+  @abc.abstractmethod
+  def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
+    """Parses a file entry.
 
-class SingleFileBaseParser(BaseParser):
-  """Class that implements the single file parser base."""
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+
+
+class FileObjectParser(BaseParser):
+  """Class that implements the file-like object parser interface."""
 
   # The initial file offset. Set this value to None if no initial
   # file offset seek needs to be performed.
@@ -274,7 +273,13 @@ class SingleFileBaseParser(BaseParser):
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
       file_object: a file-like object to parse.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    if not file_object:
+      raise errors.UnableToParseFile(u'Invalid file object')
+
     if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
 
@@ -289,8 +294,8 @@ class SingleFileBaseParser(BaseParser):
     """Parses a file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

@@ -30,7 +30,7 @@ import pytz
 
 
 class SlowLexicalTextParser(
-    interface.SingleFileBaseParser, lexer.SelfFeederMixIn):
+    interface.FileObjectParser, lexer.SelfFeederMixIn):
   """Generic text based parser that uses lexer to assist with parsing.
 
   This text parser is based on a rather slow lexer, which makes the
@@ -65,7 +65,7 @@ class SlowLexicalTextParser(
     """
     # TODO: remove the multiple inheritance.
     lexer.SelfFeederMixIn.__init__(self)
-    interface.SingleFileBaseParser.__init__(self)
+    interface.FileObjectParser.__init__(self)
     self.line_ready = False
     self.attributes = {
         u'body': u'',
@@ -77,7 +77,6 @@ class SlowLexicalTextParser(
         u'username': u'',
     }
     self.local_zone = local_zone
-    self.file_entry = None
 
   def ClearValues(self):
     """Clears all the values inside the attributes dict.
@@ -148,7 +147,6 @@ class SlowLexicalTextParser(
     path_spec_printable = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_entry.name)
 
-    self.file_entry = file_entry
     # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
     self.file_object = file_object
 
@@ -379,7 +377,7 @@ class SlowLexicalTextParser(
     self.attributes[u'iyear'] = int(match.group(1))
 
 
-class TextCSVParser(interface.SingleFileBaseParser):
+class TextCSVParser(interface.FileObjectParser):
   """An implementation of a simple CSV line-per-entry log files.
 
   Attributes:
@@ -679,7 +677,7 @@ class PyparsingConstants(object):
       pyparsing.nums, min=1, max=5).setParseAction(PyParseIntCast)
 
 
-class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
+class PyparsingSingleLineTextParser(interface.FileObjectParser):
   """Single line text parser based on the pyparsing library."""
 
   # The actual structure, this needs to be defined by each parser.
@@ -720,13 +718,11 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     self._line_structures = self.LINE_STRUCTURES
 
   def _ReadLine(
-      self, parser_mediator, file_entry, text_file_object, max_len=0,
-      quiet=False, depth=0):
+      self, parser_mediator, text_file_object, max_len=0, quiet=False, depth=0):
     """Read a single line from a text file and return it back.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
       text_file_object: a text file object (instance of dfvfs.TextFile).
       max_len: optional maximum number of bytes a single line can take.
       quiet: optional boolean value to indicate parse warning should not be
@@ -753,8 +749,7 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
         return u''
 
       return self._ReadLine(
-          parser_mediator, file_entry, text_file_object, max_len=max_len,
-          depth=depth + 1)
+          parser_mediator, text_file_object, max_len=max_len, depth=depth + 1)
 
     if not self.encoding:
       return line.strip()
@@ -764,11 +759,11 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
       return decoded_line.strip()
     except UnicodeDecodeError:
       if not quiet:
+        display_name = parser_mediator.GetDisplayName()
         logging.warning((
             u'Unable to decode line [{0:s}...] with encoding: {1:s} in '
             u'file: {2:s}').format(
-                repr(line[1:30]), self.encoding,
-                parser_mediator.GetDisplayName(file_entry)))
+                repr(line[1:30]), self.encoding, display_name))
       return line.strip()
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -781,12 +776,6 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_entry = parser_mediator.GetFileEntry()
-
-    # TODO: find a more elegant way for this; currently the mac_wifi and
-    # syslog parser seem to rely on this member.
-    self.file_entry = file_entry
-
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     if not self._line_structures:
@@ -796,8 +785,8 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
     text_file_object = text_file.TextFile(file_object)
 
     line = self._ReadLine(
-        parser_mediator, file_entry, text_file_object,
-        max_len=self.MAX_LINE_LENGTH, quiet=True)
+        parser_mediator, text_file_object, max_len=self.MAX_LINE_LENGTH,
+        quiet=True)
     if not line:
       raise errors.UnableToParseFile(u'Not a text file.')
 
@@ -845,7 +834,7 @@ class PyparsingSingleLineTextParser(interface.SingleFileBaseParser):
                 repr(line), self._current_offset))
 
       self._current_offset = text_file_object.get_offset()
-      line = self._ReadLine(parser_mediator, file_entry, text_file_object)
+      line = self._ReadLine(parser_mediator, text_file_object)
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):

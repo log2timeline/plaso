@@ -55,7 +55,7 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
     self.volume_device_paths = volume_device_paths
 
 
-class WinPrefetchParser(interface.SingleFileBaseParser):
+class WinPrefetchParser(interface.FileObjectParser):
   """A parser for Windows Prefetch files."""
 
   _INITIAL_FILE_OFFSET = None
@@ -441,7 +441,7 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
       if timestamp:
         event_object = windows_events.WindowsVolumeCreationEvent(
             timestamp, volume_device_path, volume_serial_number,
-            parser_mediator.GetFileEntry().name)
+            parser_mediator.GetFilename())
         parser_mediator.ProduceEvent(event_object)
 
       for filename in filename_strings.itervalues():

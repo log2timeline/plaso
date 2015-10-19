@@ -39,7 +39,7 @@ class RestorePointInfoEvent(time_events.FiletimeEvent):
     self.sequence_number = sequence_number
 
 
-class RestorePointLogParser(interface.SingleFileBaseParser):
+class RestorePointLogParser(interface.FileObjectParser):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = u'rplog'

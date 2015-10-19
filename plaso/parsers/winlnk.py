@@ -85,7 +85,7 @@ class WinLnkLinkEvent(time_events.FiletimeEvent):
     self.birth_droid_file_identifier = lnk_file.birth_droid_file_identifier
 
 
-class WinLnkParser(interface.SingleFileBaseParser):
+class WinLnkParser(interface.FileObjectParser):
   """Parses Windows Shortcut (LNK) files."""
 
   _INITIAL_FILE_OFFSET = None
@@ -128,8 +128,7 @@ class WinLnkParser(interface.SingleFileBaseParser):
     if lnk_file.link_target_identifier_data:
       # TODO: change file_entry.name to display name once it is generated
       # correctly.
-      file_entry = parser_mediator.GetFileEntry()
-      display_name = file_entry.name
+      display_name = parser_mediator.GetFilename()
       shell_items_parser = shell_items.ShellItemsParser(display_name)
       shell_items_parser.ParseByteStream(
           parser_mediator, lnk_file.link_target_identifier_data,

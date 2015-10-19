@@ -38,7 +38,7 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
       setattr(self, key, value)
 
 
-class OpenXMLParser(interface.SingleFileBaseParser):
+class OpenXMLParser(interface.FileObjectParser):
   """Parse metadata from OXML files."""
 
   NAME = u'openxml'

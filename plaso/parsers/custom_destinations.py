@@ -16,7 +16,7 @@ from plaso.parsers import manager
 from plaso.parsers import winlnk
 
 
-class CustomDestinationsParser(interface.SingleFileBaseParser):
+class CustomDestinationsParser(interface.FileObjectParser):
   """Parses .customDestinations-ms files."""
 
   _INITIAL_FILE_OFFSET = None

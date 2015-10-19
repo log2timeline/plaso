@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The parser mediator object."""
 
+import datetime
 import logging
 import os
 
@@ -201,30 +202,53 @@ class ParserMediator(object):
     """
     return self._file_entry
 
-  def GetFileObject(self, offset=0):
-    """Provides a file-like object for the active file entry.
+  def GetFileEntryYear(self):
+    """Retrieves the file entry year.
 
-    This will retrieve the file-object of the default (nameless) data stream.
-
-    Args:
-      offset: the offset to seek within the file-like object. The offset is
-              relative from the start of the data. The default is 0. None
-              can be used to ignore setting the offset.
+    This function uses the creation time if available otherwise the change
+    time (metadata last modification time) is used.
 
     Returns:
-      A file-like object (instance of dfvfs.FileIO).
+      An integer containing the year of the file entry or None.
+    """
+    file_entry = self.GetFileEntry()
+    stat_object = file_entry.GetStat()
 
-    Raises:
-      ValueError: If no file entry is set in the mediator.
+    posix_time = getattr(stat_object, u'crtime', None)
+    if posix_time is not None:
+      posix_time = getattr(stat_object, u'ctime', None)
+
+    if posix_time is None:
+      logging.error(
+          u'Unable to determine creation year from file stat information.')
+      return
+
+    try:
+      datetime_object = datetime.datetime.fromtimestamp(
+          posix_time, self._knowledge_base.timezone)
+
+    except ValueError as exception:
+      logging.error((
+          u'Unable to determine creation year from file stat information '
+          u'with error: {0:s}').format(exception))
+      return
+
+    return datetime_object.year
+
+  def GetFilename(self):
+    """Retrieves the name of the active file entry.
+
+    Returns:
+      A string containing the name of the active file entry or None.
     """
     if not self._file_entry:
-      raise ValueError(u'Missing active file entry')
+      return
 
-    data_stream = getattr(self._file_entry.path_spec, u'data_stream', u'')
-    file_object = self._file_entry.GetFileObject(data_stream_name=data_stream)
-    if offset is not None:
-      file_object.seek(offset, os.SEEK_SET)
-    return file_object
+    data_stream = getattr(self._file_entry.path_spec, u'data_stream', None)
+    if data_stream:
+      return u'{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
+
+    return self._file_entry.name
 
   def GetParserChain(self):
     """The parser chain up to this point."""
