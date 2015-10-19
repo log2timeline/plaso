@@ -234,7 +234,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      shell_items_parser.ParseDataStream(
+      shell_items_parser.ParseByteStream(
           parser_mediator, value.data, codepage=codepage)
 
       value_string = u'Shell item path: {0:s}'.format(

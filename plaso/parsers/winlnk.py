@@ -135,7 +135,7 @@ class WinLnkParser(interface.SingleFileBaseParser):
       file_entry = parser_mediator.GetFileEntry()
       display_name = file_entry.name
       shell_items_parser = shell_items.ShellItemsParser(display_name)
-      shell_items_parser.ParseDataStream(
+      shell_items_parser.ParseByteStream(
           parser_mediator, lnk_file.link_target_identifier_data,
           codepage=parser_mediator.codepage)
 

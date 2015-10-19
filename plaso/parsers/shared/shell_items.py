@@ -167,7 +167,7 @@ class ShellItemsParser(object):
 
     return self._path_segments[-1]
 
-  def ParseDataStream(
+  def ParseByteStream(
       self, parser_mediator, byte_stream, parent_path_segments=None,
       codepage=u'cp1252'):
     """Parses the shell items from the byte stream.

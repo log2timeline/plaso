@@ -112,7 +112,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
           registry_key.path, registry_value.name)
 
       shell_items_parser = shell_items.ShellItemsParser(display_name)
-      shell_items_parser.ParseDataStream(
+      shell_items_parser.ParseByteStream(
           parser_mediator, value_data[value_data_offset:],
           codepage=parser_mediator.codepage)
 

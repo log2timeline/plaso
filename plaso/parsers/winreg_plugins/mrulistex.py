@@ -246,7 +246,7 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      shell_items_parser.ParseDataStream(
+      shell_items_parser.ParseByteStream(
           parser_mediator, value.data, codepage=codepage)
 
       value_string = u'Shell item path: {0:s}'.format(
@@ -344,7 +344,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
 
         else:
           shell_items_parser = shell_items.ShellItemsParser(key.path)
-          shell_items_parser.ParseDataStream(
+          shell_items_parser.ParseByteStream(
               parser_mediator, shell_item_list_data, codepage=codepage)
 
           value_string = u'Path: {0:s}, Shell item: [{1:s}]'.format(
@@ -441,7 +441,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
 
         else:
           shell_items_parser = shell_items.ShellItemsParser(key.path)
-          shell_items_parser.ParseDataStream(
+          shell_items_parser.ParseByteStream(
               parser_mediator, shell_item_list_data, codepage=codepage)
 
           value_string = u'Path: {0:s}, Shell item path: {1:s}'.format(
