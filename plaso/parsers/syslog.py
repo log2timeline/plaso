@@ -62,20 +62,8 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    # Note this an older comment applying to a similar approach previously
-    # the init function.
-    # TODO: this is a HACK to get the tests working let's discuss this.
     if not self._year_use:
-      self._year_use = parser_mediator.year
-
-    if not self._year_use:
-      # TODO: Find a decent way to actually calculate the correct year
-      # instead of relying on stats object.
-      self._year_use = parser_mediator.GetFileEntryYear()
-
-      if not self._year_use:
-        # TODO: Make this sensible, not have the year permanent.
-        self._year_use = 2012
+      self._year_use = parser_mediator.GetEstimatedYear()
 
     month_compare = int(self.attributes[u'imonth'])
     if month_compare and self._last_month > month_compare:

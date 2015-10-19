@@ -135,33 +135,24 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       structure: log line of structure.
       key: type of line log (normal or repeated).
     """
-    # TODO: improve this to get a valid year.
     if not self._year_use:
-      self._year_use = parser_mediator.year
-
-    if not self._year_use:
-      # TODO: Find a decent way to actually calculate the correct year
-      # instead of relying on stats object.
-      self._year_use = parser_mediator.GetFileEntryYear()
-
-      # If fail, get from the current time.
-      if not self._year_use:
-        self._year_use = timelib.GetCurrentYear()
+      self._year_use = parser_mediator.GetEstimatedYear()
 
     # Gap detected between years.
     month = timelib.MONTH_DICT.get(structure.month.lower())
     if not self._last_month:
       self._last_month = month
+
     if month < self._last_month:
       self._year_use += 1
+
     timestamp = self._GetTimestamp(
-        structure.day,
-        month,
-        self._year_use,
-        structure.time)
+        structure.day, month, self._year_use, structure.time)
+
     if not timestamp:
       logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
+
     self._last_month = month
 
     # If the actual entry is a repeated entry, we take the basic information

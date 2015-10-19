@@ -57,7 +57,7 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
 
 
 class BaseParser(object):
-  """Class that implements the parser object interface."""
+  """Class that defines the parser object interface."""
 
   NAME = u'base_parser'
   DESCRIPTION = u''
@@ -226,7 +226,7 @@ class BaseParser(object):
 
 
 class FileEntryParser(BaseParser):
-  """Class that implements the file entry parser interface."""
+  """Class that defines the file entry parser interface."""
 
   def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
@@ -261,7 +261,7 @@ class FileEntryParser(BaseParser):
 
 
 class FileObjectParser(BaseParser):
-  """Class that implements the file-like object parser interface."""
+  """Class that defines the file-like object parser interface."""
 
   # The initial file offset. Set this value to None if no initial
   # file offset seek needs to be performed.

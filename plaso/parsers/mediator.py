@@ -9,7 +9,8 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 # TODO: disabled as long nothing is listening on the parse error queue.
 # from plaso.lib import event
-from plaso.lib import utils
+from plaso.lib import py2to3
+from plaso.lib import timelib
 
 
 class ParserMediator(object):
@@ -78,6 +79,32 @@ class ParserMediator(object):
     """The year."""
     return self._knowledge_base.year
 
+  def _GetInode(self, inode_value):
+    """Retrieves the inode.
+
+    Args:
+      inode_value: a string or an integer containing the inode.
+
+    Returns:
+      An integer containing the inode or -1 on error.
+    """
+    if isinstance(inode_value, py2to3.INTEGER_TYPES):
+      return inode_value
+
+    if isinstance(inode_value, float):
+      return int(inode_value)
+
+    if not isinstance(inode_value, basestring):
+      return -1
+
+    if b'-' in inode_value:
+      inode_value, _, _ = inode_value.partition(b'-')
+
+    try:
+      return int(inode_value, 10)
+    except ValueError:
+      return -1
+
   def _GetRelativePath(self, path_spec):
     """Retrieves the relative path.
 
@@ -113,6 +140,39 @@ class ParserMediator(object):
       _, _, location = location.partition(self._mount_path)
 
     return location
+
+  def _GetYearFromFileEntry(self):
+    """Retrieves the year from the file entry date and time values.
+
+    This function uses the creation time if available otherwise the change
+    time (metadata last modification time) is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    file_entry = self.GetFileEntry()
+    stat_object = file_entry.GetStat()
+
+    posix_time = getattr(stat_object, u'crtime', None)
+    if posix_time is not None:
+      posix_time = getattr(stat_object, u'ctime', None)
+
+    if posix_time is None:
+      logging.error(
+          u'Unable to determine creation year from file stat information.')
+      return
+
+    try:
+      datetime_object = datetime.datetime.fromtimestamp(
+          posix_time, self._knowledge_base.timezone)
+
+    except ValueError as exception:
+      logging.error((
+          u'Unable to determine creation year from file stat information '
+          u'with error: {0:s}').format(exception))
+      return
+
+    return datetime_object.year
 
   def AddEventAttribute(self, attribute_name, attribute_value):
     """Add an attribute that will be set on all events produced.
@@ -194,6 +254,30 @@ class ParserMediator(object):
     return u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, relative_path)
 
+  def GetEstimatedYear(self):
+    """Retrieves an estimate of the year.
+
+    This function first looks to see if the knowledge base defines a year, if
+    not it tries to determine the year based on the file entry metadata, if
+    that fails the current year is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    # TODO: improve this method to get a more reliable estimate.
+    # Preserve the year-less date and sort this out in the psort phase.
+    year = self._knowledge_base.year
+
+    if not year:
+      # TODO: Find a decent way to actually calculate the correct year
+      # instead of relying on stats object.
+      year = self._GetYearFromFileEntry()
+
+    if not year:
+      year = timelib.GetCurrentYear()
+
+    return year
+
   def GetFileEntry(self):
     """Retrieves the active file entry.
 
@@ -201,39 +285,6 @@ class ParserMediator(object):
       A file entry (instance of dfvfs.FileEntry).
     """
     return self._file_entry
-
-  def GetFileEntryYear(self):
-    """Retrieves the file entry year.
-
-    This function uses the creation time if available otherwise the change
-    time (metadata last modification time) is used.
-
-    Returns:
-      An integer containing the year of the file entry or None.
-    """
-    file_entry = self.GetFileEntry()
-    stat_object = file_entry.GetStat()
-
-    posix_time = getattr(stat_object, u'crtime', None)
-    if posix_time is not None:
-      posix_time = getattr(stat_object, u'ctime', None)
-
-    if posix_time is None:
-      logging.error(
-          u'Unable to determine creation year from file stat information.')
-      return
-
-    try:
-      datetime_object = datetime.datetime.fromtimestamp(
-          posix_time, self._knowledge_base.timezone)
-
-    except ValueError as exception:
-      logging.error((
-          u'Unable to determine creation year from file stat information '
-          u'with error: {0:s}').format(exception))
-      return
-
-    return datetime_object.year
 
   def GetFilename(self):
     """Retrieves the name of the active file entry.
@@ -307,10 +358,9 @@ class ParserMediator(object):
         display_name = self.GetDisplayName(file_entry)
 
       stat_object = file_entry.GetStat()
-      inode_number = getattr(stat_object, u'ino', None)
-      if not hasattr(event_object, u'inode') and inode_number:
-        # TODO: clean up the GetInodeValue function.
-        event_object.inode = utils.GetInodeValue(inode_number)
+      inode_value = getattr(stat_object, u'ino', None)
+      if not hasattr(event_object, u'inode') and inode_value:
+        event_object.inode = self._GetInode(inode_value)
 
     if not getattr(event_object, u'display_name', None) and display_name:
       event_object.display_name = display_name
