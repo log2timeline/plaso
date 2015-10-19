@@ -80,7 +80,7 @@ class MactimeParser(text_parser.TextCSVParser):
       u'atime', u'mtime', u'ctime', u'btime']
   VALUE_SEPARATOR = b'|'
 
-  MD5_RE = re.compile(r'^[0-9a-fA-F]+$')
+  _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
   # Mapping according to:
   # http://wiki.sleuthkit.org/index.php?title=Mactime_output
@@ -119,7 +119,8 @@ class MactimeParser(text_parser.TextCSVParser):
     Returns:
       A boolean indicating the row could be verified.
     """
-    if not self.MD5_RE.match(row[u'md5']):
+    # The md5 value is '0' if not set.
+    if row[u'md5'] != b'0' and not self._MD5_RE.match(row[u'md5']):
       return False
 
     try:
@@ -127,7 +128,7 @@ class MactimeParser(text_parser.TextCSVParser):
       # and then back to string so it can be compared, if the value is
       # not a string representation of an integer, eg: '12a' then this
       # conversion will fail and we return a False value.
-      if str(int(row.get(u'size', u'0'), 10)) != row.get(u'size', None):
+      if str(int(row.get(u'size', b'0'), 10)) != row.get(u'size', None):
         return False
     except ValueError:
       return False
