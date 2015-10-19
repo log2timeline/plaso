@@ -34,6 +34,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   Attributes:
     dependencies_check: a boolean value to indicate the availability and
                         versions of dependencies should be checked.
+    list_output_modules: a boolean value to indicate information about the
+                         output modules should be shows.
     show_info: a boolean value to indicate information about hashers, parsers,
                plugins, etc. should be shown.
   """
@@ -89,6 +91,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output = None
 
     self.dependencies_check = True
+    self.list_output_modules = False
     self.show_info = False
 
   def _ClearScreen(self):
@@ -189,6 +192,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       BadConfigOption: if the options are invalid.
     """
     self._output_module = self.ParseStringOption(options, u'output_module')
+    if self._output_module == u'list':
+      self.list_output_modules = True
 
     text_prepend = self.ParseStringOption(options, u'text_prepend')
     if text_prepend:
@@ -338,8 +343,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'Bypass the storage module directly storing events according to '
             u'the output module. This means that the output will not be in the '
             u'pstorage format but in the format chosen by the output module. '
-            u'[Please note this feature is EXPERIMENTAL at this time, use at '
-            u'own risk (eg. sqlite output does not yet work)]'))
+            u'Use "--output list" or "--info" to list the available output '
+            u'modules. Note this feature is EXPERIMENTAL at this time, use '
+            u'at own risk (e.g. sqlite output does not yet work)'))
 
     argument_group.add_argument(
         u'-t', u'--text', dest=u'text_prepend', action=u'store', type=str,
@@ -382,6 +388,26 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     for name, description in sorted(hashers_information):
       table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+  def ListOutputModules(self):
+    """Lists the output modules."""
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Output Modules')
+    for name, output_class in self._front_end.GetOutputClasses():
+      table_view.AddRow([name, output_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
+
+    disabled_classes = list(self._front_end.GetDisabledOutputClasses())
+    if not disabled_classes:
+      return
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Disabled Output Modules')
+    for name, output_class in disabled_classes:
+      table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
 
   def ListParsersAndPlugins(self):
@@ -566,6 +592,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     # Check the list options first otherwise required options will raise.
     self._ParseExtractionOptions(options)
+    self._ParseOutputOptions(options)
+    # TODO: refactor usage of self._old_preprocess.
     self._front_end.SetUseOldPreprocess(self._old_preprocess)
     self._ParseTimezoneOption(options)
     self._ParseExperimentalOptions(options)
@@ -577,8 +605,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.dependencies_check = getattr(options, u'dependencies_check', True)
 
-    if (self.list_hashers or self.list_parsers_and_plugins or
-        self.list_timezones or self.show_info):
+    if (self.list_hashers or self.list_output_modules or
+        self.list_parsers_and_plugins or self.list_timezones or
+        self.show_info):
       return
 
     super(Log2TimelineTool, self).ParseOptions(options)
@@ -735,6 +764,10 @@ def Main():
 
   if tool.list_parsers_and_plugins:
     tool.ListParsersAndPlugins()
+    have_list_option = True
+
+  if tool.list_output_modules:
+    tool.ListOutputModules()
     have_list_option = True
 
   if tool.list_timezones:
