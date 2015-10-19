@@ -22,7 +22,7 @@ class AndroidAppUsageEvent(time_events.JavaTimeEvent):
 
     Args:
       java_time: the Java timestamp which is an integer containing the number
-                 of milli seconds since January 1, 1970, 00:00:00 UTC.
+                 of milliseconds since January 1, 1970, 00:00:00 UTC.
       package_name: string containing the name of the Android application.
       component_name: string containing the name of the individual component
                       of the application.
@@ -39,6 +39,8 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
   NAME = u'android_app_usage'
   DESCRIPTION = u'Parser for Android usage-history.xml files.'
 
+  _HEADER_READ_SIZE = 128
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an Android usage-history file-like object.
 
@@ -49,7 +51,7 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    data = file_object.read(128)
+    data = file_object.read(self._HEADER_READ_SIZE)
     if not data.startswith(b'<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [not XML]')

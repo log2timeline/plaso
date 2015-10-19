@@ -109,7 +109,7 @@ class JavaTimeEvent(TimestampEvent):
 
     Args:
       java_time: the Java timestamp which is an integer containing the number
-                 of milli seconds since January 1, 1970, 00:00:00 UTC.
+                 of milliseconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: the usage string for the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.

@@ -73,6 +73,8 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
   NAME = u'opera_typed_history'
   DESCRIPTION = u'Parser for Opera typed_history.xml files.'
 
+  _HEADER_READ_SIZE = 128
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an Opera typed history file-like object.
 
@@ -83,7 +85,7 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    data = file_object.read(128)
+    data = file_object.read(self._HEADER_READ_SIZE)
     if not data.startswith(b'<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
