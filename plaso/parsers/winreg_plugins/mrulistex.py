@@ -44,6 +44,9 @@ class MRUListExStringRegistryKeyFilter(
       if key_path.endswith(ignore_key_path_suffix):
         return False
 
+    if u'\\BagMRU\\'.upper() in key_path:
+      return False
+
     return super(MRUListExStringRegistryKeyFilter, self).Match(registry_key)
 
 
