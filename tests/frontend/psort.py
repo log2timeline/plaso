@@ -10,10 +10,11 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
 from plaso.lib import event
-from plaso.lib import pfilter
 from plaso.lib import timelib
+from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
+from plaso.storage import filters as storage_filters
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -72,7 +73,7 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self._WriteLine(self._HEADER)
 
 
-class TestEventBuffer(output_interface.EventBuffer):
+class TestEventBuffer(output_event_buffer.EventBuffer):
   """A test event buffer."""
 
   def __init__(self, output_module, check_dedups=True, store=None):
@@ -116,30 +117,30 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     self._front_end = psort.PsortFrontend()
 
     # TODO: have sample output generated from the test.
-    self._test_file_proto = self._GetTestFilePath([u'psort_test.proto.plaso'])
-    self._test_file_json = self._GetTestFilePath([u'psort_test.json.plaso'])
-    self.first = timelib.Timestamp.CopyFromString(u'2012-07-24 21:45:24')
-    self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
+
+    self._start_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-07-24 21:45:24')
+    self._end_timestamp = timelib.Timestamp.CopyFromString(
+        u'2016-11-18 01:15:43')
 
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within time bounds."""
-    timestamp_list = []
-    pfilter.TimeRangeCache.ResetTimeConstraints()
-    pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
-    pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
-
+    storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
     storage_file = storage_zip_file.StorageFile(
-        self._test_file_proto, read_only=True)
-    storage_file.SetStoreLimit()
+        storage_file_path, read_only=True)
+    time_range_filter = storage_filters.TimeRangeFilter(
+        self._start_timestamp, self._end_timestamp)
+    storage_file.SetStoreLimit(time_range_filter)
 
-    event_object = storage_file.GetSortedEntry()
-    while event_object:
+    timestamp_list = []
+    # TODO: refactor to use StorageReader.
+    for event_object in storage_file.GetSortedEntries():
       timestamp_list.append(event_object.timestamp)
-      event_object = storage_file.GetSortedEntry()
 
     self.assertEqual(len(timestamp_list), 15)
     self.assertTrue(
-        timestamp_list[0] >= self.first and timestamp_list[-1] <= self.last)
+        timestamp_list[0] >= self._start_timestamp and
+        timestamp_list[-1] <= self._end_timestamp)
 
     storage_file.Close()
 
@@ -181,27 +182,26 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         PsortTestEventFormatter)
 
-    events = []
-    events.append(PsortTestEvent(5134324321))
-    events.append(PsortTestEvent(2134324321))
-    events.append(PsortTestEvent(9134324321))
-    events.append(PsortTestEvent(15134324321))
-    events.append(PsortTestEvent(5134324322))
-    events.append(PsortTestEvent(5134024321))
+    events = [
+        PsortTestEvent(5134324321),
+        PsortTestEvent(2134324321),
+        PsortTestEvent(9134324321),
+        PsortTestEvent(15134324321),
+        PsortTestEvent(5134324322),
+        PsortTestEvent(5134024321)]
 
     output_writer = cli_test_lib.TestOutputWriter()
 
     with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
 
-      storage_file = storage_zip_file.StorageFile(temp_file, read_only=False)
-      pfilter.TimeRangeCache.ResetTimeConstraints()
-      storage_file.SetStoreLimit()
+      storage_file = storage_zip_file.StorageFile(temp_file)
       storage_file.AddEventObjects(events)
       storage_file.Close()
 
-      with storage_zip_file.StorageFile(temp_file) as storage_file:
-        storage_file.store_range = [1]
+      with storage_zip_file.StorageFile(
+          temp_file, read_only=True) as storage_file:
+        # storage_file.store_range = [1]
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator, storage_file)
         output_module = TestOutputModule(output_mediator_object)
@@ -235,8 +235,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
   def testGetLastGoodPreprocess(self):
     """Tests the last good preprocess method."""
     test_front_end = psort.PsortFrontend()
-    storage_file = test_front_end.OpenStorage(
-        self._test_file_json, read_only=True)
+    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
     preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
     self.assertIsNotNone(preprocessor_object)
     timezone = getattr(preprocessor_object, u'zone')

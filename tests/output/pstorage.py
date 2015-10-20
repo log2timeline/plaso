@@ -5,8 +5,7 @@
 import os
 import unittest
 
-from plaso.lib import pfilter
-from plaso.output import interface
+from plaso.output import event_buffer
 from plaso.output import pstorage
 from plaso.storage import zip_file as storage_zip_file
 
@@ -21,10 +20,6 @@ class PstorageTest(test_lib.OutputModuleTestCase):
     """Sets up the objects needed for this test."""
     self.test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
 
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    pfilter.TimeRangeCache.ResetTimeConstraints()
-
   def testOutput(self):
     with shared_test_lib.TempDirectory() as dirname:
       storage_file = os.path.join(dirname, u'plaso.plaso')
@@ -35,12 +30,10 @@ class PstorageTest(test_lib.OutputModuleTestCase):
         output_module = pstorage.PlasoStorageOutputModule(output_mediator)
         output_module.SetFilePath(storage_file)
 
-        with interface.EventBuffer(
+        with event_buffer.EventBuffer(
             output_module, check_dedups=False) as output_buffer:
-          event_object = store.GetSortedEntry()
-          while event_object:
+          for event_object in store.GetSortedEntries():
             output_buffer.Append(event_object)
-            event_object = store.GetSortedEntry()
 
       # Make sure original and dump have the same events.
       original = storage_zip_file.StorageFile(

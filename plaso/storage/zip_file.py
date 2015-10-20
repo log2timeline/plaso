@@ -97,7 +97,6 @@ from plaso.engine import profiler
 from plaso.lib import definitions
 from plaso.lib import event
 from plaso.lib import limit
-from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
@@ -1062,10 +1061,11 @@ class StorageFile(ZIPStorageFile):
       if not event_object:
         return
 
-      while event_object.timestamp < self._bound_first:
-        event_object = self._GetEventObject(store_number)
-        if not event_object:
-          return
+      if self._bound_first is not None:
+        while event_object.timestamp < self._bound_first:
+          event_object = self._GetEventObject(store_number)
+          if not event_object:
+            continue
 
       heapq.heappush(
           self._merge_buffer,
@@ -1464,15 +1464,19 @@ class StorageFile(ZIPStorageFile):
       report_string = file_object.read(self.MAXIMUM_REPORT_PROTOBUF_SIZE)
       yield self._analysis_report_serializer.ReadSerialized(report_string)
 
-  def GetSortedEntry(self):
-    """Retrieves a sorted entry from the storage file.
+  def GetSortedEntry(self, time_range_filter=None):
+    """Retrieves a sorted entry.
+
+    Args:
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
 
     Returns:
       An event object (instance of EventObject).
     """
-    if self._bound_first is None:
-      self._bound_first, self._bound_last = (
-          pfilter.TimeRangeCache.GetTimeRange())
+    if self._bound_first is None and time_range_filter:
+      self._bound_first = time_range_filter.start_timestamp
+      self._bound_last = time_range_filter.end_timestamp
 
     if self._merge_buffer is None:
       self._InitializeMergeBuffer()
@@ -1485,7 +1489,7 @@ class StorageFile(ZIPStorageFile):
       return
 
     # Stop as soon as we hit the upper bound.
-    if event_read.timestamp > self._bound_last:
+    if self._bound_last is not None and event_read.timestamp > self._bound_last:
       return
 
     new_event_object = self._GetEventObject(store_number)
@@ -1499,6 +1503,21 @@ class StorageFile(ZIPStorageFile):
         event_read.store_number, event_read.store_index, event_read.uuid)
 
     return event_read
+
+  def GetSortedEntries(self, time_range_filter=None):
+    """Retrieves a sorted entries.
+
+    Args:
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
+
+    Yields:
+      An event object (instance of EventObject).
+    """
+    event_object = self.GetSortedEntry(time_range_filter=time_range_filter)
+    while event_object:
+      yield event_object
+      event_object = self.GetSortedEntry(time_range_filter=time_range_filter)
 
   def GetStorageInformation(self):
     """Retrieves storage (preprocessing) information stored in the storage file.
@@ -1592,10 +1611,15 @@ class StorageFile(ZIPStorageFile):
           not self._serializers_profiler):
         self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
-  def SetStoreLimit(self, unused_my_filter=None):
-    """Set a limit to the stores used for returning data."""
-    # Retrieve set first and last timestamps.
-    self._bound_first, self._bound_last = pfilter.TimeRangeCache.GetTimeRange()
+  def SetStoreLimit(self, time_range_filter):
+    """Set a limit to the stores used for returning data.
+
+    Args:
+      time_range_filter: a time range filter object (instance of
+                         TimeRangeFilter).
+    """
+    self._bound_first = time_range_filter.start_timestamp
+    self._bound_last = time_range_filter.end_timestamp
 
     self.store_range = []
 
