@@ -18,7 +18,6 @@ from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
 from plaso.lib import event
-from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.output import event_buffer as output_event_buffer
@@ -508,13 +507,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         self._filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
     with storage_file:
-      if self._filter_object:
-        # TODO: remove the need to call pfilter.
-        start_timestamp, end_timestamp = pfilter.TimeRangeCache.GetTimeRange()
-        time_range_filter = storage_filters.TimeRangeFilter(
-            start_timestamp, end_timestamp)
-        storage_file.SetStoreLimit(time_range_filter)
-
       # TODO: allow for single processing.
       # TODO: add upper queue limit.
       analysis_queue_port = None

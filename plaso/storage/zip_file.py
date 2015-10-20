@@ -96,7 +96,6 @@ import yaml
 from plaso.engine import profiler
 from plaso.lib import definitions
 from plaso.lib import event
-from plaso.lib import limit
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
@@ -763,8 +762,6 @@ class StorageFile(ZIPStorageFile):
     self._profiling_sample = 0
     self._serializers_profiler = None
 
-    self.store_range = None
-
   def __enter__(self):
     """Make usable with "with" statement."""
     return self
@@ -983,63 +980,6 @@ class StorageFile(ZIPStorageFile):
 
     return tag_index_value
 
-  def _InitializeMergeBuffer(self, time_range_filter=None):
-    """Initializes the merge buffer.
-
-    Args:
-      time_range_filter: an optional time range filter object (instance of
-                         TimeRangeFilter).
-    """
-    if self.store_range is None:
-      number_range = self._GetSerializedEventObjectStreamNumbers()
-    else:
-      number_range = self.store_range
-
-    self._merge_buffer = []
-    for stream_number in number_range:
-      entry_index = -1
-      if time_range_filter:
-        stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
-        if self._HasStream(stream_name):
-          try:
-            timestamp_table = self._GetSerializedEventObjectTimestampTable(
-                stream_number)
-          except IOError as exception:
-            logging.error((
-                u'Unable to read timestamp table from stream: {0:s} '
-                u'with error: {1:s}.').format(stream_name, exception))
-
-          # If the start timestamp of the time range filter is larger than the
-          # last timestamp in the timestamp table skip this stream.
-          timestamp_compare = timestamp_table.GetTimestamp(-1)
-          if time_range_filter.start_timestamp > timestamp_compare:
-            continue
-
-          for table_index in range(timestamp_table.number_of_timestamps - 1):
-            timestamp_compare = timestamp_table.GetTimestamp(table_index)
-            if time_range_filter.start_timestamp >= timestamp_compare:
-              entry_index = table_index
-              break
-
-      event_object = self._GetEventObject(
-          stream_number, entry_index=entry_index)
-      while event_object:
-        # Check the lower bound in case no timestamp table was available.
-        if (time_range_filter and
-            event_object.timestamp < time_range_filter.start_timestamp):
-          event_object = self._GetEventObject(stream_number)
-          continue
-
-        # Stop as soon as we hit the upper bound.
-        if (time_range_filter and
-            event_object.timestamp > time_range_filter.end_timestamp):
-          return
-
-        heapq.heappush(
-            self._merge_buffer, (event_object.timestamp, event_object))
-
-        event_object = self._GetEventObject(stream_number)
-
   # pylint: disable=arguments-differ
   def _Open(
       self, path, access_mode=u'r',
@@ -1199,6 +1139,60 @@ class StorageFile(ZIPStorageFile):
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
     return yaml.safe_load(file_object)
 
+  def _ReadMergeBuffer(self, time_range_filter=None):
+    """Reads the event objects into the merge buffer.
+
+    Args:
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
+    """
+    self._merge_buffer = []
+
+    number_range = self._GetSerializedEventObjectStreamNumbers()
+    for stream_number in number_range:
+      entry_index = -1
+      if time_range_filter:
+        stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+        if self._HasStream(stream_name):
+          try:
+            timestamp_table = self._GetSerializedEventObjectTimestampTable(
+                stream_number)
+          except IOError as exception:
+            logging.error((
+                u'Unable to read timestamp table from stream: {0:s} '
+                u'with error: {1:s}.').format(stream_name, exception))
+
+          # If the start timestamp of the time range filter is larger than the
+          # last timestamp in the timestamp table skip this stream.
+          timestamp_compare = timestamp_table.GetTimestamp(-1)
+          if time_range_filter.start_timestamp > timestamp_compare:
+            continue
+
+          for table_index in range(timestamp_table.number_of_timestamps - 1):
+            timestamp_compare = timestamp_table.GetTimestamp(table_index)
+            if time_range_filter.start_timestamp >= timestamp_compare:
+              entry_index = table_index
+              break
+
+      event_object = self._GetEventObject(
+          stream_number, entry_index=entry_index)
+      while event_object:
+        # Check the lower bound in case no timestamp table was available.
+        if (time_range_filter and
+            event_object.timestamp < time_range_filter.start_timestamp):
+          event_object = self._GetEventObject(stream_number)
+          continue
+
+        # Stop as soon as we hit the upper bound.
+        if (time_range_filter and
+            event_object.timestamp > time_range_filter.end_timestamp):
+          return
+
+        heapq.heappush(
+            self._merge_buffer, (event_object.timestamp, event_object))
+
+        event_object = self._GetEventObject(stream_number)
+
   def _ReadPreprocessObject(self, data_stream):
     """Reads a preprocessing object.
 
@@ -1280,13 +1274,6 @@ class StorageFile(ZIPStorageFile):
     # Store information about store range for this particular
     # preprocessing object. This will determine which stores
     # this information is applicable for.
-    stores = self._GetSerializedEventObjectStreamNumbers()
-    if stores:
-      end = stores[-1] + 1
-    else:
-      end = self._first_file_number
-    pre_obj.store_range = (self._first_file_number, end)
-
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'pre_obj')
 
@@ -1444,22 +1431,16 @@ class StorageFile(ZIPStorageFile):
       An event object (instance of EventObject).
     """
     if self._merge_buffer is None:
-      self._InitializeMergeBuffer(time_range_filter=time_range_filter)
+      self._ReadMergeBuffer(time_range_filter=time_range_filter)
 
     if not self._merge_buffer:
       return
 
     _, event_object = heapq.heappop(self._merge_buffer)
-    if not event_object:
-      return
-
-    # Stop as soon as we hit the upper bound.
-    if (time_range_filter and
-        event_object.timestamp > time_range_filter.end_timestamp):
-      return
-
-    event_object.tag = self._ReadEventTagByIdentifier(
-        event_object.store_number, event_object.store_index, event_object.uuid)
+    if event_object:
+      event_object.tag = self._ReadEventTagByIdentifier(
+          event_object.store_number, event_object.store_index,
+          event_object.uuid)
 
     return event_object
 
@@ -1569,37 +1550,6 @@ class StorageFile(ZIPStorageFile):
       if (profiling_type in [u'all', u'serializers'] and
           not self._serializers_profiler):
         self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
-
-  def SetStoreLimit(self, time_range_filter):
-    """Set a limit to the stores used for returning data.
-
-    Args:
-      time_range_filter: a time range filter object (instance of
-                         TimeRangeFilter).
-    """
-    bound_first = time_range_filter.start_timestamp
-    bound_last = time_range_filter.end_timestamp
-
-    self.store_range = []
-
-    # TODO: Fetch a filter object from the filter query.
-
-    for number in self._GetSerializedEventObjectStreamNumbers():
-      # TODO: Read more criteria from here.
-      first, last = self._ReadMeta(number).get(u'range', (0, limit.MAX_INT64))
-      if last < first:
-        logging.error(
-            u'last: {0:d} first: {1:d} container: {2:d} (last < first)'.format(
-                last, first, number))
-
-      if first <= bound_last and bound_first <= last:
-        # TODO: Check at least parser and data_type (stored in metadata).
-        # Check whether these attributes exist in filter, if so use the filter
-        # to determine whether the stores should be included.
-        self.store_range.append(number)
-
-      else:
-        logging.debug(u'Store [{0:d}] not used'.format(number))
 
   # TODO: move only used in testing.
   def StoreGrouping(self, rows):

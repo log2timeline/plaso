@@ -130,11 +130,11 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         storage_file_path, read_only=True)
     time_range_filter = storage_filters.TimeRangeFilter(
         self._start_timestamp, self._end_timestamp)
-    storage_file.SetStoreLimit(time_range_filter)
 
     timestamp_list = []
     # TODO: refactor to use StorageReader.
-    for event_object in storage_file.GetSortedEntries():
+    for event_object in storage_file.GetSortedEntries(
+        time_range_filter=time_range_filter):
       timestamp_list.append(event_object.timestamp)
 
     self.assertEqual(len(timestamp_list), 15)
@@ -201,7 +201,6 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
       with storage_zip_file.StorageFile(
           temp_file, read_only=True) as storage_file:
-        # storage_file.store_range = [1]
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator, storage_file)
         output_module = TestOutputModule(output_mediator_object)
