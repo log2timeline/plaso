@@ -996,7 +996,6 @@ class StorageFile(ZIPStorageFile):
       number_range = self.store_range
 
     self._merge_buffer = []
-
     for stream_number in number_range:
       entry_index = -1
       if time_range_filter:
@@ -1037,8 +1036,7 @@ class StorageFile(ZIPStorageFile):
           return
 
         heapq.heappush(
-            self._merge_buffer,
-            (event_object.timestamp, stream_number, event_object))
+            self._merge_buffer, (event_object.timestamp, event_object))
 
         event_object = self._GetEventObject(stream_number)
 
@@ -1451,25 +1449,19 @@ class StorageFile(ZIPStorageFile):
     if not self._merge_buffer:
       return
 
-    _, store_number, event_read = heapq.heappop(self._merge_buffer)
-    if not event_read:
+    _, event_object = heapq.heappop(self._merge_buffer)
+    if not event_object:
       return
 
     # Stop as soon as we hit the upper bound.
     if (time_range_filter and
-        event_read.timestamp > time_range_filter.end_timestamp):
+        event_object.timestamp > time_range_filter.end_timestamp):
       return
 
-    new_event_object = self._GetEventObject(store_number)
-    if new_event_object:
-      heapq.heappush(
-          self._merge_buffer,
-          (new_event_object.timestamp, store_number, new_event_object))
+    event_object.tag = self._ReadEventTagByIdentifier(
+        event_object.store_number, event_object.store_index, event_object.uuid)
 
-    event_read.tag = self._ReadEventTagByIdentifier(
-        event_read.store_number, event_read.store_index, event_read.uuid)
-
-    return event_read
+    return event_object
 
   def GetSortedEntries(self, time_range_filter=None):
     """Retrieves a sorted entries.
