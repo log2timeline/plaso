@@ -733,10 +733,6 @@ class StorageFile(ZIPStorageFile):
       not exist.
     """
     super(StorageFile, self).__init__()
-    # bound_first and bound_last contain timestamps and None is used
-    # to indicate not set.
-    self._bound_first = None
-    self._bound_last = None
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
@@ -881,21 +877,25 @@ class StorageFile(ZIPStorageFile):
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
 
-  def _GetEventObject(self, stream_number, entry_index=-1):
+  def _GetEventObject(
+      self, stream_number, entry_index=-1, time_range_filter=None):
     """Reads an event object from a specific stream.
 
     Args:
       stream_number: an integer containing the number of the serialized event
                      object stream.
-      entry_index: an integer containing the number of the serialized event
-                   object within the stream. Where -1 represents the next
+      entry_index: an optional integer containing the number of the serialized
+                   event object within the stream. Where -1 represents the next
                    available event object.
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
 
     Returns:
       An event object (instance of EventObject) or None.
     """
     event_object_data, entry_index = self._GetEventObjectSerializedData(
-        stream_number, entry_index=entry_index)
+        stream_number, entry_index=entry_index,
+        time_range_filter=time_range_filter)
     if not event_object_data:
       return
 
@@ -913,7 +913,8 @@ class StorageFile(ZIPStorageFile):
 
     return event_object
 
-  def _GetEventObjectSerializedData(self, stream_number, entry_index=-1):
+  def _GetEventObjectSerializedData(
+      self, stream_number, entry_index=-1, time_range_filter=None):
     """Retrieves specific event object serialized data.
 
     By default the first available entry in the specific serialized stream
@@ -921,8 +922,11 @@ class StorageFile(ZIPStorageFile):
 
     Args:
       stream_number: an integer containing the number of the stream.
-      entry_index: Read a specific entry in the file. The default is -1,
-                   which represents the first available entry.
+      entry_index: an optional integer containing the number of the serialized
+                   event object within the stream. Where -1 represents the next
+                   available event object.
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
 
     Returns:
       A tuple containing the event object serialized data and the entry index
@@ -939,8 +943,8 @@ class StorageFile(ZIPStorageFile):
           u'with error: {1:s}.').format(stream_number, exception))
       return None, None
 
-    if (not data_stream.entry_index and entry_index == -1 and
-        self._bound_first is not None):
+    # TODO: refactor this to _InitializeMergeBuffer.
+    if not data_stream.entry_index and entry_index == -1 and time_range_filter:
       # We only get here if the following conditions are met:
       #   1. data_stream.entry_index is not set (so this is the first read
       #      from this file).
@@ -960,7 +964,7 @@ class StorageFile(ZIPStorageFile):
       if self._HasStream(stream_name):
         try:
           entry_index = self._GetFirstSerializedDataStreamEntryIndex(
-              stream_number, self._bound_first)
+              stream_number, time_range_filter.start_timestamp)
 
         except IOError as exception:
           entry_index = None
@@ -1048,22 +1052,31 @@ class StorageFile(ZIPStorageFile):
       if timestamp_compare >= timestamp:
         return entry_index
 
-  def _InitializeMergeBuffer(self):
-    """Initializes the merge buffer."""
+  def _InitializeMergeBuffer(self, time_range_filter=None):
+    """Initializes the merge buffer.
+
+    Args:
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
+    """
     if self.store_range is None:
       number_range = self._GetSerializedEventObjectStreamNumbers()
     else:
       number_range = self.store_range
 
     self._merge_buffer = []
-    for store_number in number_range:
-      event_object = self._GetEventObject(store_number)
-      if not event_object:
-        return
 
-      if self._bound_first is not None:
-        while event_object.timestamp < self._bound_first:
-          event_object = self._GetEventObject(store_number)
+    # Search the stores for the available event object.
+    for store_number in number_range:
+      event_object = self._GetEventObject(
+          store_number, time_range_filter=time_range_filter)
+      if not event_object:
+        continue
+
+      if time_range_filter:
+        while event_object.timestamp < time_range_filter.start_timestamp:
+          event_object = self._GetEventObject(
+              store_number, time_range_filter=time_range_filter)
           if not event_object:
             continue
 
@@ -1474,12 +1487,8 @@ class StorageFile(ZIPStorageFile):
     Returns:
       An event object (instance of EventObject).
     """
-    if self._bound_first is None and time_range_filter:
-      self._bound_first = time_range_filter.start_timestamp
-      self._bound_last = time_range_filter.end_timestamp
-
     if self._merge_buffer is None:
-      self._InitializeMergeBuffer()
+      self._InitializeMergeBuffer(time_range_filter=time_range_filter)
 
     if not self._merge_buffer:
       return
@@ -1489,11 +1498,12 @@ class StorageFile(ZIPStorageFile):
       return
 
     # Stop as soon as we hit the upper bound.
-    if self._bound_last is not None and event_read.timestamp > self._bound_last:
+    if (time_range_filter and
+        event_read.timestamp > time_range_filter.end_timestamp):
       return
 
-    new_event_object = self._GetEventObject(store_number)
-
+    new_event_object = self._GetEventObject(
+        store_number, time_range_filter=time_range_filter)
     if new_event_object:
       heapq.heappush(
           self._merge_buffer,
@@ -1618,8 +1628,8 @@ class StorageFile(ZIPStorageFile):
       time_range_filter: a time range filter object (instance of
                          TimeRangeFilter).
     """
-    self._bound_first = time_range_filter.start_timestamp
-    self._bound_last = time_range_filter.end_timestamp
+    bound_first = time_range_filter.start_timestamp
+    bound_last = time_range_filter.end_timestamp
 
     self.store_range = []
 
@@ -1633,7 +1643,7 @@ class StorageFile(ZIPStorageFile):
             u'last: {0:d} first: {1:d} container: {2:d} (last < first)'.format(
                 last, first, number))
 
-      if first <= self._bound_last and self._bound_first <= last:
+      if first <= bound_last and bound_first <= last:
         # TODO: Check at least parser and data_type (stored in metadata).
         # Check whether these attributes exist in filter, if so use the filter
         # to determine whether the stores should be included.
