@@ -1186,7 +1186,7 @@ class StorageFile(ZIPStorageFile):
         # Stop as soon as we hit the upper bound.
         if (time_range_filter and
             event_object.timestamp > time_range_filter.end_timestamp):
-          return
+          break
 
         heapq.heappush(
             self._merge_buffer, (event_object.timestamp, event_object))
