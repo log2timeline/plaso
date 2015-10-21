@@ -344,8 +344,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'the output module. This means that the output will not be in the '
             u'pstorage format but in the format chosen by the output module. '
             u'Use "--output list" or "--info" to list the available output '
-            u'modules. Note this feature is EXPERIMENTAL at this time, use '
-            u'at own risk (e.g. sqlite output does not yet work)'))
+            u'modules. Note this feature is EXPERIMENTAL at this time '))
+            u'e.g. sqlite output does not yet work.'))
 
     argument_group.add_argument(
         u'-t', u'--text', dest=u'text_prepend', action=u'store', type=str,
