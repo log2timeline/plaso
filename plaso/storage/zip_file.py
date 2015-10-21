@@ -980,6 +980,56 @@ class StorageFile(ZIPStorageFile):
 
     return tag_index_value
 
+  def _InitializeMergeBuffer(self, time_range_filter=None):
+    """Initializes the event objects into the merge buffer.
+
+    This function fills the merge buffer with the first relevant event object
+    from each stream.
+
+    Args:
+      time_range_filter: an optional time range filter object (instance of
+                         TimeRangeFilter).
+    """
+    self._merge_buffer = []
+
+    number_range = self._GetSerializedEventObjectStreamNumbers()
+    for stream_number in number_range:
+      entry_index = -1
+      if time_range_filter:
+        stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+        if self._HasStream(stream_name):
+          try:
+            timestamp_table = self._GetSerializedEventObjectTimestampTable(
+                stream_number)
+          except IOError as exception:
+            logging.error((
+                u'Unable to read timestamp table from stream: {0:s} '
+                u'with error: {1:s}.').format(stream_name, exception))
+
+          # If the start timestamp of the time range filter is larger than the
+          # last timestamp in the timestamp table skip this stream.
+          timestamp_compare = timestamp_table.GetTimestamp(-1)
+          if time_range_filter.start_timestamp > timestamp_compare:
+            continue
+
+          for table_index in range(timestamp_table.number_of_timestamps - 1):
+            timestamp_compare = timestamp_table.GetTimestamp(table_index)
+            if time_range_filter.start_timestamp >= timestamp_compare:
+              entry_index = table_index
+              break
+
+      event_object = self._GetEventObject(
+          stream_number, entry_index=entry_index)
+      # Check the lower bound in case no timestamp table was available.
+      while (event_object and time_range_filter and
+             event_object.timestamp < time_range_filter.start_timestamp):
+        event_object = self._GetEventObject(stream_number)
+
+      if event_object:
+        heapq.heappush(
+            self._merge_buffer,
+            (event_object.timestamp, stream_number, event_object))
+
   # pylint: disable=arguments-differ
   def _Open(
       self, path, access_mode=u'r',
@@ -1138,60 +1188,6 @@ class StorageFile(ZIPStorageFile):
     if file_object is None:
       raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
     return yaml.safe_load(file_object)
-
-  def _ReadMergeBuffer(self, time_range_filter=None):
-    """Reads the event objects into the merge buffer.
-
-    Args:
-      time_range_filter: an optional time range filter object (instance of
-                         TimeRangeFilter).
-    """
-    self._merge_buffer = []
-
-    number_range = self._GetSerializedEventObjectStreamNumbers()
-    for stream_number in number_range:
-      entry_index = -1
-      if time_range_filter:
-        stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
-        if self._HasStream(stream_name):
-          try:
-            timestamp_table = self._GetSerializedEventObjectTimestampTable(
-                stream_number)
-          except IOError as exception:
-            logging.error((
-                u'Unable to read timestamp table from stream: {0:s} '
-                u'with error: {1:s}.').format(stream_name, exception))
-
-          # If the start timestamp of the time range filter is larger than the
-          # last timestamp in the timestamp table skip this stream.
-          timestamp_compare = timestamp_table.GetTimestamp(-1)
-          if time_range_filter.start_timestamp > timestamp_compare:
-            continue
-
-          for table_index in range(timestamp_table.number_of_timestamps - 1):
-            timestamp_compare = timestamp_table.GetTimestamp(table_index)
-            if time_range_filter.start_timestamp >= timestamp_compare:
-              entry_index = table_index
-              break
-
-      event_object = self._GetEventObject(
-          stream_number, entry_index=entry_index)
-      while event_object:
-        # Check the lower bound in case no timestamp table was available.
-        if (time_range_filter and
-            event_object.timestamp < time_range_filter.start_timestamp):
-          event_object = self._GetEventObject(stream_number)
-          continue
-
-        # Stop as soon as we hit the upper bound.
-        if (time_range_filter and
-            event_object.timestamp > time_range_filter.end_timestamp):
-          break
-
-        heapq.heappush(
-            self._merge_buffer, (event_object.timestamp, event_object))
-
-        event_object = self._GetEventObject(stream_number)
 
   def _ReadPreprocessObject(self, data_stream):
     """Reads a preprocessing object.
@@ -1431,16 +1427,29 @@ class StorageFile(ZIPStorageFile):
       An event object (instance of EventObject).
     """
     if self._merge_buffer is None:
-      self._ReadMergeBuffer(time_range_filter=time_range_filter)
+      self._InitializeMergeBuffer(time_range_filter=time_range_filter)
 
     if not self._merge_buffer:
       return
 
-    _, event_object = heapq.heappop(self._merge_buffer)
-    if event_object:
-      event_object.tag = self._ReadEventTagByIdentifier(
-          event_object.store_number, event_object.store_index,
-          event_object.uuid)
+    _, stream_number, event_object = heapq.heappop(self._merge_buffer)
+    if not event_object:
+      return
+
+    # Stop as soon as we hit the upper bound.
+    if (time_range_filter and
+        event_object.timestamp > time_range_filter.end_timestamp):
+      return
+
+    # Read the next event object in a stream.
+    next_event_object = self._GetEventObject(stream_number)
+    if next_event_object:
+      heapq.heappush(
+          self._merge_buffer,
+          (next_event_object.timestamp, stream_number, next_event_object))
+
+    event_object.tag = self._ReadEventTagByIdentifier(
+        event_object.store_number, event_object.store_index, event_object.uuid)
 
     return event_object
 

@@ -138,9 +138,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       timestamp_list.append(event_object.timestamp)
 
     self.assertEqual(len(timestamp_list), 15)
-    self.assertTrue(
-        timestamp_list[0] >= self._start_timestamp and
-        timestamp_list[-1] <= self._end_timestamp)
+    self.assertEqual(timestamp_list[0], self._start_timestamp)
+    self.assertEqual(timestamp_list[-1], self._end_timestamp)
 
     storage_file.Close()
 
