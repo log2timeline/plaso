@@ -1026,6 +1026,10 @@ class StorageFile(ZIPStorageFile):
         event_object = self._GetEventObject(stream_number)
 
       if event_object:
+        if (time_range_filter and
+            event_object.timestamp > time_range_filter.end_timestamp):
+          continue
+
         heapq.heappush(
             self._merge_buffer,
             (event_object.timestamp, stream_number, event_object))
