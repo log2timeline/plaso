@@ -65,6 +65,24 @@ class Log2TimelineFrontend(extraction_frontend.ExtractionFrontend):
 
     return output_modules_information
 
+  def GetDisabledOutputClasses(self):
+    """Retrieves the disabled output classes.
+
+    Returns:
+      An output module generator which yields tuples of output class names
+      and type object.
+    """
+    return output_manager.OutputManager.GetDisabledOutputClasses()
+
+  def GetOutputClasses(self):
+    """Retrieves the available output classes.
+
+    Returns:
+      An output module generator which yields tuples of output class names
+      and type object.
+    """
+    return output_manager.OutputManager.GetOutputClasses()
+
   def GetPluginData(self):
     """Retrieves the version and various plugin information.
 
