@@ -3,7 +3,7 @@
 
 from plaso.engine import queue
 from plaso.lib import definitions
-from plaso.lib import storage
+from plaso.storage import zip_file as storage_zip_file
 
 
 class StorageWriter(queue.ItemQueueConsumer):
@@ -97,7 +97,7 @@ class FileStorageWriter(StorageWriter):
 
   def _Open(self):
     """Opens the storage writer."""
-    self._storage_file = storage.StorageFile(
+    self._storage_file = storage_zip_file.StorageFile(
         self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj,
         serializer_format=self._serializer_format)
 

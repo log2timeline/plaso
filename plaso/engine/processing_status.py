@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The processing status classes."""
 
+import logging
 import time
 
 from plaso.lib import definitions
@@ -13,6 +14,9 @@ class CollectorStatus(object):
     identifier: the extraction worker identifier.
     last_running_time: timestamp of the last update when the process
                        had a running process status.
+    path_spec_queue_port: the port that the path specification queue is bound
+                          to, or None if the queue is not yet bound, or the
+                          queue does not use a port.
     pid: the collector process identifier (PID).
     process_status: string containing the process status.
     produced_number_of_path_specs: the total number of path specifications
@@ -27,6 +31,7 @@ class CollectorStatus(object):
     super(CollectorStatus, self).__init__()
     self.identifier = None
     self.last_running_time = 0
+    self.path_spec_queue_port = None
     self.pid = None
     self.process_status = None
     self.produced_number_of_path_specs = 0
@@ -80,11 +85,17 @@ class StorageWriterStatus(object):
   """The storage writer status.
 
   Attributes:
+    event_object_queue_port: the port that the event object queue is bound to,
+                             or None if the queue is not yet bound, or the
+                             queue does not use a port.
     identifier: the extraction worker identifier.
     last_running_time: timestamp of the last update when the process
                        had a running process status.
     number_of_events: the total number of events received
                       by the storage writer.
+    parse_error_queue_port: the port that the path spec queue is bound to, or
+                            None if the queue is not yet bound, or the the queue
+                            does not use a port.
     pid: the storage writer process identifier (PID).
     process_status: string containing the process status.
     status: string containing the storage writer status.
@@ -146,7 +157,10 @@ class ProcessingStatus(object):
     return self._storage_writer
 
   def GetExtractionCompleted(self):
-    """Determines the extraction completed status.
+    """Determines whether extraction is completed.
+
+    Extraction is considered complete when the collector has finished producing
+    path specifications, and all workers have stopped running.
 
     Returns:
       A boolean value indicating the extraction completed status.
@@ -154,9 +168,16 @@ class ProcessingStatus(object):
     if not self._collector_completed:
       return False
 
-    consumed_number_of_path_specs = self.GetConsumedNumberOfPathSpecs()
     produced_number_of_path_specs = self.GetProducedNumberOfPathSpecs()
-    if consumed_number_of_path_specs != produced_number_of_path_specs:
+    consumed_number_of_path_specs = self.GetConsumedNumberOfPathSpecs()
+    path_specs_remaining = (
+        produced_number_of_path_specs - consumed_number_of_path_specs)
+    if path_specs_remaining > 0:
+      logging.debug(
+          (u'[ProcessingStatus] {0:d} pathspecs produced, {1:d} processed. '
+           u'{2:d} remaining. Extraction incomplete.').format(
+               produced_number_of_path_specs, consumed_number_of_path_specs,
+               path_specs_remaining))
       return False
 
     workers_running = self.WorkersRunning()
@@ -203,13 +224,27 @@ class ProcessingStatus(object):
       A boolean value indicating the extraction completed status.
     """
     extraction_completed = self.GetExtractionCompleted()
-    number_of_events = self.GetNumberOfExtractedEvents()
+    number_of_extracted_events = self.GetNumberOfExtractedEvents()
 
-    if (extraction_completed and self._storage_writer and
-        self._storage_writer.number_of_events == number_of_events):
-      return True
+    number_of_written_events = 0
+    if self._storage_writer:
+      number_of_written_events = self._storage_writer.number_of_events
 
-    return False
+    events_remaining = number_of_extracted_events - number_of_written_events
+
+    if not extraction_completed:
+      logging.debug(u'Processing incomplete, extraction still in progress.')
+      return False
+
+    if events_remaining > 0:
+      logging.debug((
+          u'{0:d} events extracted, {1:d} written to storage. {2:d} '
+          u'remaining').format(
+              number_of_extracted_events, number_of_written_events,
+              events_remaining))
+      return False
+
+    return True
 
   def UpdateCollectorStatus(
       self, identifier, pid, produced_number_of_path_specs, status,
@@ -364,6 +399,10 @@ class ProcessingStatus(object):
   def WorkersRunning(self):
     """Determines if the workers are running."""
     for extraction_worker_status in iter(self._extraction_workers.values()):
+      if (extraction_worker_status.status ==
+          definitions.PROCESSING_STATUS_COMPLETED):
+        logging.debug(u'Worker completed.')
+        continue
       if (extraction_worker_status.number_of_events_delta > 0 or
           extraction_worker_status.consumed_number_of_path_specs_delta > 0 or
           extraction_worker_status.produced_number_of_path_specs_delta > 0):

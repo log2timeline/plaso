@@ -26,7 +26,6 @@ from plaso.frontend import log2timeline
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import pfilter
-from plaso.lib import py2to3
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
@@ -170,6 +169,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'Unable to create filter: {0:s} with error: {1:s}'.format(
               filter_expression, exception))
 
+  def _ParseExperimentalOptions(self, options):
+    """Parses the experimental plugin options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+    """
+    use_zeromq = getattr(options, u'use_zeromq', False)
+    if use_zeromq:
+      self._front_end.SetUseZeroMQ(use_zeromq)
+
   def _ParseOutputOptions(self, options):
     """Parses the output options.
 
@@ -305,6 +314,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                 status == definitions.PROCESSING_STATUS_RUNNING,
                 extraction_worker_status.process_status))
 
+  def AddExperimentalOptions(self, argument_group):
+    """Adds experimental options to the argument group
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
+            u'Enables experimental queueing using ZeroMQ'))
+
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
 
@@ -410,6 +430,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
+
+    experimental_group = argument_parser.add_argument_group(u'Experimental')
+    self.AddExperimentalOptions(experimental_group)
 
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
@@ -528,16 +551,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       return False
 
-    command_line_arguments = sys.argv
-    if isinstance(command_line_arguments, py2to3.BYTES_TYPE):
-      try:
-        self._command_line_arguments = [
-            argument.decode(self.preferred_encoding)
-            for argument in command_line_arguments]
-      except UnicodeDecodeError:
-        pass
-
-    self._command_line_arguments = u' '.join(command_line_arguments)
+    self._command_line_arguments = self.GetCommandLineArguments()
 
     return True
 
@@ -554,6 +568,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseExtractionOptions(options)
     self._front_end.SetUseOldPreprocess(self._old_preprocess)
     self._ParseTimezoneOption(options)
+    self._ParseExperimentalOptions(options)
 
     self.show_info = getattr(options, u'show_info', False)
 

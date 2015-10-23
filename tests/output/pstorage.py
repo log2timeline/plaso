@@ -6,9 +6,9 @@ import os
 import unittest
 
 from plaso.lib import pfilter
-from plaso.lib import storage
 from plaso.output import interface
 from plaso.output import pstorage
+from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.output import test_lib
@@ -29,7 +29,8 @@ class PstorageTest(test_lib.OutputModuleTestCase):
     with shared_test_lib.TempDirectory() as dirname:
       storage_file = os.path.join(dirname, u'plaso.plaso')
       # Copy events to pstorage dump.
-      with storage.StorageFile(self.test_filename, read_only=True) as store:
+      with storage_zip_file.StorageFile(
+          self.test_filename, read_only=True) as store:
         output_mediator = self._CreateOutputMediator(storage_object=store)
         output_module = pstorage.PlasoStorageOutputModule(output_mediator)
         output_module.SetFilePath(storage_file)
@@ -42,8 +43,9 @@ class PstorageTest(test_lib.OutputModuleTestCase):
             event_object = store.GetSortedEntry()
 
       # Make sure original and dump have the same events.
-      original = storage.StorageFile(self.test_filename, read_only=True)
-      dump = storage.StorageFile(storage_file, read_only=True)
+      original = storage_zip_file.StorageFile(
+          self.test_filename, read_only=True)
+      dump = storage_zip_file.StorageFile(storage_file, read_only=True)
       event_object_original = original.GetSortedEntry()
       event_object_dump = dump.GetSortedEntry()
       original_list = []

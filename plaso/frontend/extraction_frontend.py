@@ -19,12 +19,12 @@ from plaso.frontend import presets
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import writer as storage_writer
+from plaso.storage import zip_file as storage_zip_file
 
 import pytz
 
@@ -56,6 +56,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._use_old_preprocess = False
+    self._use_zeromq = False
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = context.Context()
     self._single_process_mode = False
@@ -166,7 +167,7 @@ class ExtractionFrontend(frontend.Frontend):
     if self._use_old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
       try:
-        with storage.StorageFile(
+        with storage_zip_file.StorageFile(
             self._storage_file_path, read_only=True) as storage_file:
 
           storage_information = storage_file.GetStorageInformation()
@@ -207,7 +208,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     return pre_obj
 
-  # TODO: have the frontend fill collecton information gradually
+  # TODO: have the frontend fill collection information gradually
   # and set it as the last step of preprocessing?
   # Split in:
   # * extraction preferences (user preferences)
@@ -456,7 +457,8 @@ class ExtractionFrontend(frontend.Frontend):
       self._engine = single_process.SingleProcessEngine(self._queue_size)
     else:
       self._engine = multi_process.MultiProcessEngine(
-          maximum_number_of_queued_items=self._queue_size)
+          maximum_number_of_queued_items=self._queue_size,
+          use_zeromq=self._use_zeromq)
 
     self._engine.SetEnableDebugOutput(self._debug_mode)
     self._engine.SetEnableProfiling(
@@ -622,6 +624,15 @@ class ExtractionFrontend(frontend.Frontend):
                           preprocessing again.
     """
     self._use_old_preprocess = use_old_preprocess
+
+  def SetUseZeroMQ(self, use_zeromq=False):
+    """Sets whether the frontend is using ZeroMQ for queueing or not.
+
+    Args:
+      use_zeromq: optional boolean value to indicate if ZeroMQ should be used
+                  for queuing.
+    """
+    self._use_zeromq = use_zeromq
 
   def SetStorageFile(self, storage_file_path):
     """Sets the storage file path.

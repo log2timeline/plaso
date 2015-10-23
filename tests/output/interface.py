@@ -109,14 +109,14 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
     """Test listing up all available registered modules."""
     manager.OutputManager.RegisterOutput(TestOutputModule)
 
-    module_seen = False
-    for name, description in manager.OutputManager.GetOutputs():
-      if name == 'test_xml':
-        module_seen = True
-        self.assertEqual(description, (
-            u'Test output that provides a simple mocked XML.'))
+    test_output_class = None
+    for name, output_class in manager.OutputManager.GetOutputClasses():
+      if name == u'test_xml':
+        test_output_class = output_class
 
-    self.assertTrue(module_seen)
+    expected_description = u'Test output that provides a simple mocked XML.'
+    self.assertIsNotNone(test_output_class)
+    self.assertEqual(test_output_class.DESCRIPTION, expected_description)
 
     manager.OutputManager.DeregisterOutput(TestOutputModule)
 
