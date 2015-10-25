@@ -1,22 +1,24 @@
-﻿08-01-2013 21:22:28.999 global.cpp:626!logVersionInfo (DETAIL): 17.0.2011.0627 (Ship)
-08-01-2013 21:22:29.702 localchanges.cpp:6117!handleLocalChanges (DETAIL): handling LC_PERSIST_SYNC_TOKEN 15, 2 queued changes
-08-01-2013 21:22:29.702 localchanges.cpp:5959!handlePersistSyncToken (NORMAL): Persisting Sync Token for drive 1.
-SyncToken = LM%3d12345678905670%3bID%3d1234567890E059C0!103%3bLR%3d12345678905623%3aEP%3d2
-08-01-2013 21:22:58.344 global.cpp:612!openErrorLog (DETAIL): Local time is : 08-01-2013 23:22:58.344
-08-01-2013 21:22:58.344 clientpolicysettings.cpp:124!ClientPolicySettings::IsRefreshNeeded (NORMAL): Must refresh because time since last refresh was 458289 seconds ago (Poll Interval: 0).
-08-01-2013 21:22:58.812 user.cpp:145!User::GetServiceTicket (ERROR): Cannot get service ticket : 0x8004de40
-08-01-2013 21:22:58.812 storageserviceapi.cpp:1310!StorageServiceApi::GetClientPolicy (ERROR): Unable to get service ticket : 0x8004de40, waiting...
-08-01-2013 21:28:39.286 filescanner.cpp:1945!sweepDriveContents (DETAIL): Found deleted file in sweep: genoa secret-logo.png RID(A12FCC3B7AF059C0!118), FSID(1970324837077388,3297664651)
-08-01-2013 21:28:39.286 filescanner.cpp:1945!sweepDriveContents (DETAIL): Found deleted file in sweep: publicskydrivewordfile.rtf RID(A12FCC3B7AF059C0!110), FSID(844424930232805,3297664651)
-08-01-2013 21:28:39.286 filescanner.cpp:4059!doFullScanWork (DETAIL): scan for lib 1 complete, took 0 ms
-08-01-2013 21:28:39.286 core.cpp:2738!handleScanState (DETAIL): finished scanning drive 1, 8 changes
-08-01-2013 21:28:46.555 syncserviceproxy.cpp:2209!SyncServiceProxy::StartChangeEnumeration (NORMAL): rootFolderID=A12FCC3B7AF059C0!103 syncToken=LM%3d12345678905670%3bID%3d1234567890E059C0!103%3bLR%3d12345678905623%3aEP%3d2
-08-01-2013 21:28:46.727 storageserviceapi.cpp:70!LogResponse (NORMAL): GET https://dm1.storage.live.com/MyData/LiveFolders?Filter=changes&InlineBlobs=false&MaxItemCount=50&SyncToken=LM%3d12345678905670%3bID%3d1234567890E059C0!103%3bLR%3d12345678905623%3aEP%3d2&View=SkyDriveSync status:200/0x0 retry:0 size:2903  X-MSNSERVER:DM1____1213219
-08-01-2013 21:28:46.727 syncserviceproxy.cpp:2329!SyncServiceProxy::OnDownloadedEntries (NORMAL): EndChangeEnum rootFolderID=A12FCC3B7AF059C0!103 http=200 ss=2 hMD=0 pA=0 syncToken=LM%3d12345678905670%3bID%3d1234567890E059C0!103%3bLR%3d12345678905623%3aEP%3d2
+######Logging started. Version=16.4.6012.0828 StartSystemTime:2013-08-12-010852.985 StartLocalTime:2013-08-11-210852.985 PID=0x19e4 TID=0x19e8 ContinuedFrom=
+######Logging started. Version=17.0.2011.0627 StartSystemTime:2013-08-12-011008.835 StartLocalTime:2013-08-11-211008.835 PID=0x14b0 TID=0x1348 ContinuedFrom=
+08-12-13,01:10:08.882,0,1348,0,QOS,telemetry.cpp(158),0,0,VRB,QoS enabled,
+08-12-13,01:10:08.882,1,1348,0,QOS,telemetry.cpp(178),0,0,VRB,Upload enabled,
+08-12-13,01:10:08.882,2,1348,0,PAL,timer.cpp(24),0,0,VRB,TicksPerUsec,g_ticksPerUsec=0x1
 
--> Tiramisu_recipe.pdf (Document) A12FCC3B7AF059C0!122 A12FCC3B7AF059C0!122.0 A12FCC3B7AF059C0!103 
+08-12-13,01:10:08.882,3,1348,0,QOS,telemetry.cpp(70),0,0,VRB,Start: Production,
+08-12-13,01:10:08.882,4,f08,0,PAL,iothread.cpp(132),0,02F8F948,NRM,ThreadMain starting,id=0xf08
+08-12-13,01:10:41.299,16,1348,0,AUTH,oauthurlhelper.cpp(185),0,0,VRB,Sign out web URL is https://login.live.com/oauth20_logout.srf?client_id=00000000480728C5&redirect_uri=https://login.live.com/oauth20_desktop.srf,
+08-12-13,01:10:42.439,17,1348,0,AUTH,oauthconnectedid.cpp(217),0,0,VRB,ConnectedId is 7f095149027848ed,
+08-12-13,02:29:04.812,67f,1998,0,WNS,absconn.cpp(177),536d940,052E77A8,VRB,Received data from server,dwID=0x0;dwSize=0x40;pbData=PNG 110 CON 48
 
-08-01-2013 21:28:46.742 uploadgate.cpp:670!UploadGate::NotifyUploadRemoved (NORMAL): Removing change A12FCC3B7AF059C0!122 'Tiramisu_recipe.pdf'
-SyncToken = Not a sync token (àèìòù)!
-This line should be skipped!
-13-33-2013 21:28:46.742 invalid.cpp:666!timestamp (PLASO): invalid timestamp
+<ping-response><wait>48</wait></ping-response>
+08-12-13,02:29:49.766,680,1998,0,PAL,workpool.cpp(169),0,02FEB630,VRB,Firing timer ,timer=05308E10;start=0x62c7f6;due=0x62c7f6
+08-12-13,02:52:32.976,291,1358,0,WNS,absconn.cpp(177),2cc9b18,02D2A8A8,VRB,Received data from server,dwID=0x0;dwSize=0x15a;pbData=GET 5 WNS 331
+Context: 2891
+
+<channel-response><id>1;13714367258539257282</id><exp>2013-09-11T02:52:37Z</exp><url>https://bn1.notify.windows.com/?token=AgYAAAAdkHjSxiNH1mbF0Rp5TIv0Kz317BKYIAfBNO6szULCOEE2393owBINnPC5xoika5SJlNtXZ%2bwzaRVsPRcP1p64XFn90vGwr07DGZxfna%2bxBpBBplzZhLV9y%2fNV%2bBPxNmTI5sRgaZ%2foGvYCIj6MdeU1</url></channel-response>
+
+08-12-13,02:52:32.976,292,1358,0,WNS,wnsclient.cpp(561),2cc9b18,002A1C0C,NRM,Request Channel succeeded asynchronously,pRequest=@02CC9310;channelId=1;13714367258539257282;channelUri=https://bn1.notify.windows.com/?token=AgYAAAAdkHjSxiNH1mbF0Rp5TIv0Kz317BKYIAfBNO6szULCOEE2393owBINnPC5xoika5SJlNtXZ%2bwzaRVsPRcP1p64XFn90vGwr07DGZxfna%2bxBpBBplzZhLV9y%2fNV%2bBPxNmTI5sRgaZ%2foGvYCIj6MdeU1;expiry=1378867957;transactionId=2
+######Logging started. Version=17.0.2011.0627 StartSystemTime:2013-08-12-031857.232 StartLocalTime:2013-08-11-231857.232 PID=0x1ef0 TID=0x1ef4 ContinuedFrom=
+08-12-13,03:18:57.310,0,1ef4,0,QOS,telemetry.cpp(158),0,0,VRB,QoS enabled,
+08-31-13,03:45:37.940,2f8,1650,0,PAL,cwinhttp.cpp(1581),0,037BC2BC,VRB,,output=GET <- /MyData/LiveFolders?Filter=changes&InlineBlobs=false&MaxItemCount=50&SyncToken=LM%3d63511875645970%3bID%3d7F095149027848ED!103%3bLR%3d63513517536493%3bEP%3d2%3bTD%3dTrue&View=SkyDriveSync;m_httpStatus=0x130;hr=8004db30;m_pSink=null;cb=0x0;msec=0x4e
+08-31-13,03:45:38.222,2f9,32ec,0,PAL,workpool.cpp(169),0,036F9060,VRB,Firing timer ,timer=00CF41D8;start=0x22e330c;due=0x22e330c
