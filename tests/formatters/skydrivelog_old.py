@@ -1,31 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the SkyDrive error log event formatter."""
+"""Tests for the SkyDrive old log event formatter."""
 
 import unittest
 
-from plaso.formatters import skydrivelogerr
+from plaso.formatters import skydrivelog_old
 
 from tests.formatters import test_lib
 
 
-class SkyDriveLogErrorFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the SkyDrive error log event formatter."""
+class SkyDriveOldLogFormatterTest(test_lib.EventFormatterTestCase):
+  """Tests for the SkyDrive old log event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = skydrivelogerr.SkyDriveLogErrorFormatter()
+    event_formatter = skydrivelog_old.SkyDriveOldLogFormatter()
     self.assertNotEqual(event_formatter, None)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = skydrivelogerr.SkyDriveLogErrorFormatter()
+    event_formatter = skydrivelog_old.SkyDriveOldLogFormatter()
 
     expected_attribute_names = [
-        u'module',
         u'source_code',
-        u'text',
-        u'detail']
+        u'log_level',
+        u'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
