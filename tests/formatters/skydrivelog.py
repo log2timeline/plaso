@@ -22,9 +22,10 @@ class SkyDriveLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skydrivelog.SkyDriveLogFormatter()
 
     expected_attribute_names = [
+        u'module',
         u'source_code',
         u'log_level',
-        u'text']
+        u'detail']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

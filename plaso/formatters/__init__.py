@@ -53,7 +53,7 @@ from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import shell_items
 from plaso.formatters import skydrivelog
-from plaso.formatters import skydrivelogerr
+from plaso.formatters import skydrivelog_old
 from plaso.formatters import skype
 from plaso.formatters import symantec
 from plaso.formatters import syslog
