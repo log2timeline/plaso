@@ -161,7 +161,7 @@ class PreprocessPluginsManager(object):
     # TODO: do not pass the full pre_obj here but just
     # the necessary values.
     registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
-        searcher, path_attributes=path_attributes)
+        file_system, mount_point, path_attributes=path_attributes)
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 

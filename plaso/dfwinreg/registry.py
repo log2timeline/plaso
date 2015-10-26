@@ -3,11 +3,10 @@
 
 import logging
 
-from dfvfs.helpers import file_system_searcher
+from dfvfs.helpers import windows_path_resolver
 from dfvfs.resolver import resolver
 
 from plaso.dfwinreg import interface
-from plaso.dfwinreg import path_expander
 from plaso.dfwinreg import regf
 
 
@@ -41,49 +40,46 @@ class WinRegistry(object):
 
   _PATH_SEPARATOR = u'\\'
 
-  # TODO: refactor to use %SystemRoot% and %UserProfile% instead.
-  # TODO: refactor to use Windows paths.
-
   _REGISTRY_FILE_MAPPINGS_9X = [
       WinRegistryFileMapping(
           u'HKEY_LOCAL_MACHINE',
-          u'{systemroot}/SYSTEM.DAT',
+          u'%SystemRoot%\\SYSTEM.DAT',
           []),
       WinRegistryFileMapping(
           u'HKEY_USERS',
-          u'{systemroot}/USER.DAT',
+          u'%SystemRoot%\\USER.DAT',
           []),
   ]
 
   _REGISTRY_FILE_MAPPINGS_NT = [
       WinRegistryFileMapping(
           u'HKEY_CURRENT_USER',
-          u'{userprofile}/NTUSER.DAT',
+          u'%UserProfile%\\NTUSER.DAT',
           [u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer']),
       WinRegistryFileMapping(
           u'HKEY_CURRENT_USER\\Software\\Classes',
-          u'{userprofile}/AppData/Local/Microsoft/Windows/UsrClass.dat',
+          u'%UserProfile%\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat',
           [u'\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion']),
       WinRegistryFileMapping(
           u'HKEY_CURRENT_USER\\Software\\Classes',
-          (u'{userprofile}/Local Settings/Application Data/Microsoft/'
-           u'Windows/UsrClass.dat'),
+          (u'%UserProfile%\\Local Settings\\Application Data\\Microsoft\\'
+           u'Windows\\UsrClass.dat'),
           []),
       WinRegistryFileMapping(
           u'HKEY_LOCAL_MACHINE\\SAM',
-          u'{systemroot}/System32/config/SAM',
+          u'%SystemRoot%\\System32\\config\\SAM',
           [u'\\SAM\\Domains\\Account\\Users']),
       WinRegistryFileMapping(
           u'HKEY_LOCAL_MACHINE\\Security',
-          u'{systemroot}/System32/config/SECURITY',
+          u'%SystemRoot%\\System32\\config\\SECURITY',
           [u'\\Policy\\PolAdtEv']),
       WinRegistryFileMapping(
           u'HKEY_LOCAL_MACHINE\\Software',
-          u'{systemroot}/System32/config/SOFTWARE',
+          u'%SystemRoot%\\System32\\config\\SOFTWARE',
           [u'\\Microsoft\\Windows\\CurrentVersion\\App Paths']),
       WinRegistryFileMapping(
           u'HKEY_LOCAL_MACHINE\\System',
-          u'{systemroot}/System32/config/SYSTEM',
+          u'%SystemRoot%\\System32\\config\\SYSTEM',
           [u'\\Select'])
   ]
 
@@ -501,74 +497,26 @@ class PathSpecWinRegistryFileReader(interface.WinRegistryFileReader):
 class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
   """A file system searcher-based Windows Registry file reader."""
 
-  def __init__(self, searcher, path_attributes=None):
+  def __init__(self, file_system, mount_point, path_attributes=None):
     """Initializes a Windows Registry file reader object.
 
     Args:
-      searcher: the file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
+      file_system: the file system object (instance of vfs.FileSystem).
+      mount_point: the mount point path specification (instance of
+                   path.PathSpec).
       path_attributes: optional dictionary of path attributes.
     """
     super(SearcherWinRegistryFileReader, self).__init__()
-    self._file_path_expander = path_expander.WinRegistryKeyPathExpander()
-    self._path_attributes = path_attributes or {}
-    self._searcher = searcher
+    self._path_resolver = windows_path_resolver.WindowsPathResolver(
+        file_system, mount_point)
 
-  def _FindPathSpec(self, path):
-    """Searches for a path specification.
-
-    Args:
-      path: the path of the Windows Registry file.
-
-    Returns:
-      A path specification (instance of dfvfs.PathSpec) of
-      the Windows Registry file.
-
-    Raises:
-      IOError: If the Windows Registry file cannot be found.
-    """
-    path, _, filename = path.rpartition(u'/')
-
-    # TODO: determine why this first find is used add comment or remove.
-    # It does not appear to help with making sure path segment separate
-    # is correct.
-    find_spec = file_system_searcher.FindSpec(
-        location=path, case_sensitive=False)
-    path_specs = list(self._searcher.Find(find_specs=[find_spec]))
-
-    if not path_specs or len(path_specs) != 1:
-      raise IOError(
-          u'Unable to find directory: {0:s}'.format(path))
-
-    relative_path = self._searcher.GetRelativePath(path_specs[0])
-    if not relative_path:
-      raise IOError(u'Unable to determine relative path of: {0:s}'.format(path))
-
-    # The path is split in segments to make it path segement separator
-    # independent (and thus platform independent).
-    path_segments = self._searcher.SplitPath(relative_path)
-    path_segments.append(filename)
-
-    find_spec = file_system_searcher.FindSpec(
-        location=path_segments, case_sensitive=False)
-    path_specs = list(self._searcher.Find(find_specs=[find_spec]))
-
-    if not path_specs:
-      raise IOError(
-          u'Unable to find file: {0:s} in directory: {1:s}'.format(
-              filename, relative_path))
-
-    if len(path_specs) != 1:
-      raise IOError((
-          u'Find for file: {0:s} in directory: {1:s} returned {2:d} '
-          u'results.').format(filename, relative_path, len(path_specs)))
-
-    if not relative_path:
-      raise IOError(
-          u'Missing file: {0:s} in directory: {1:s}'.format(
-              filename, relative_path))
-
-    return path_specs[0]
+    if path_attributes:
+      for attribute_name, attribute_value in iter(path_attributes.items()):
+        # TODO: fix the call to this class and make sure only relevant
+        # values are passed.
+        if attribute_name == u'systemroot':
+          self._path_resolver.SetEnvironmentVariable(
+              u'SystemRoot', attribute_value)
 
   def _OpenPathSpec(self, path_spec, ascii_codepage=u'cp1252'):
     """Opens the Windows Registry file specified by the path specification.
@@ -584,14 +532,11 @@ class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
     if not path_spec:
       return
 
-    file_entry = self._searcher.GetFileEntryByPathSpec(path_spec)
-    if file_entry is None:
-      return
-
-    file_object = file_entry.GetFileObject()
+    file_object = resolver.Resolver.OpenFileObject(path_spec)
     if file_object is None:
       return
 
+    # TODO: fix empty file object.
     registry_file = regf.REGFWinRegistryFile(ascii_codepage=ascii_codepage)
     try:
       registry_file.Open(file_object)
@@ -615,17 +560,10 @@ class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
     Returns:
       The Windows Registry file (instance of WinRegistryFile) or None.
     """
-    try:
-      expanded_path = self._file_path_expander.ExpandPath(
-          path, path_attributes=self._path_attributes)
+    path_spec = self._path_resolver.ResolvePath(path)
+    if path_spec is None:
+      return
 
-    except KeyError as exception:
-      logging.warning(
-          u'Unable to expand path: {0:s} with error: {1:s}'.format(
-              path, exception))
-      expanded_path = path
-
-    path_spec = self._FindPathSpec(expanded_path)
     return self._OpenPathSpec(path_spec)
 
 
