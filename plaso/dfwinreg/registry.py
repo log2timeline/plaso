@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Classes for Windows Registry access."""
 
-
 class WinRegistryFileMapping(object):
   """Class that defines a Windows Registry file mapping.
 
