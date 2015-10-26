@@ -9,6 +9,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import knowledge_base
+from plaso.preprocessors import manager
 from plaso.preprocessors import windows
 
 from tests.preprocessors import test_lib
@@ -26,7 +27,7 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
         u'/Windows/System32/config/SOFTWARE', file_data)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
+    registry_file_reader = manager.FileSystemWinRegistryFileReader(
         self._fake_file_system, mount_point, path_attributes=path_attributes)
     self._win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
@@ -44,7 +45,7 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
         u'/Windows/System32/config/SYSTEM', file_data)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
+    registry_file_reader = manager.FileSystemWinRegistryFileReader(
         self._fake_file_system, mount_point, path_attributes=path_attributes)
     self._win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
