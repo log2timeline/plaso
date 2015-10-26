@@ -37,6 +37,10 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
           self._path_resolver.SetEnvironmentVariable(
               u'SystemRoot', attribute_value)
 
+        elif attribute_name == u'userprofile':
+          self._path_resolver.SetEnvironmentVariable(
+              u'UserProfile', attribute_value)
+
   def _OpenPathSpec(self, path_spec, ascii_codepage=u'cp1252'):
     """Opens the Windows Registry file specified by the path specification.
 
