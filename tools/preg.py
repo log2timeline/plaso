@@ -1131,7 +1131,7 @@ class PregMagics(magic.Magics):
     for key in current_key.GetSubkeys():
       # TODO: move this construction into a separate function in OutputWriter.
       time_string = timelib.Timestamp.CopyToIsoFormat(
-          key.last_written_timestamp)
+          key.last_written_time)
       time_string, _, _ = time_string.partition(u'.')
 
       sub.append((u'{0:>19s} {1:>15s}  {2:s}'.format(
