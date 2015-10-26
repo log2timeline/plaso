@@ -27,6 +27,7 @@ except ImportError:
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 import IPython
+# pylint: disable=no-name-in-module
 from IPython.config.loader import Config
 from IPython.core import magic
 
