@@ -101,7 +101,7 @@ class WinRegistryFileReader(object):
 
   @abc.abstractmethod
   def Open(self, path, ascii_codepage=u'cp1252'):
-    """Opens the Windows Registry file specificed by the path.
+    """Opens the Windows Registry file specified by the path.
 
     Args:
       path: string containing the path of the Windows Registry file. The path
