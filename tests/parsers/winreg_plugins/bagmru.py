@@ -22,8 +22,10 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

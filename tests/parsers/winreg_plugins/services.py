@@ -83,7 +83,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a virtual key."""
-    key_path = u'\\ControlSet001\\services\\TestDriver'
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\TestDriver')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -118,8 +119,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
-    key_path = u'\\ControlSet001\\services'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services'
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
 
     event_objects = []
 

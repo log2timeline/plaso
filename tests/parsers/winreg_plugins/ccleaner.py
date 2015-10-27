@@ -24,8 +24,10 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-CCLEANER.DAT'])
-    key_path = u'\\Software\\Piriform\\CCleaner'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = u'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
