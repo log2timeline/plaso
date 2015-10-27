@@ -445,16 +445,16 @@ class PathSpecWinRegistryFileReader(interface.WinRegistryFileReader):
     """Initializes a Windows Registry file reader object.
 
     Args:
-      path_spec: a path specfication (instance of dfvfs.PathSpec).
+      path_spec: a path specification (instance of dfvfs.PathSpec).
     """
     super(PathSpecWinRegistryFileReader, self).__init__()
     self._path_spec = path_spec
 
   def _OpenPathSpec(self, path_spec, ascii_codepage=u'cp1252'):
-    """Opens the Windows Registry file specificed by the path specification.
+    """Opens the Windows Registry file specified by the path specification.
 
     Args:
-      path_spec: a path specfication (instance of dfvfs.PathSpec).
+      path_spec: a path specification (instance of dfvfs.PathSpec).
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
 
@@ -485,7 +485,7 @@ class PathSpecWinRegistryFileReader(interface.WinRegistryFileReader):
     return registry_file
 
   def Open(self, path, ascii_codepage=u'cp1252'):
-    """Opens the Windows Registry file specificed by the path.
+    """Opens the Windows Registry file specified by the path.
 
     Args:
       path: the path of the Windows Registry file.
@@ -571,10 +571,10 @@ class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
     return path_specs[0]
 
   def _OpenPathSpec(self, path_spec, ascii_codepage=u'cp1252'):
-    """Opens the Windows Registry file specificed by the path specification.
+    """Opens the Windows Registry file specified by the path specification.
 
     Args:
-      path_spec: a path specfication (instance of dfvfs.PathSpec).
+      path_spec: a path specification (instance of dfvfs.PathSpec).
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
 
@@ -605,7 +605,7 @@ class SearcherWinRegistryFileReader(interface.WinRegistryFileReader):
     return registry_file
 
   def Open(self, path, ascii_codepage=u'cp1252'):
-    """Opens the Windows Registry file specificed by the path.
+    """Opens the Windows Registry file specified by the path.
 
     Args:
       path: the path of the Windows Registry file.
