@@ -16,7 +16,7 @@ class TestWinRegistryFileReader(interface.WinRegistryFileReader):
   """A single file Windows Registry file reader."""
 
   def Open(self, path, ascii_codepage=u'cp1252'):
-    """Opens the Windows Registry file specificed by the path.
+    """Opens the Windows Registry file specified by the path.
 
     Args:
       path: the path of the Windows Registry file.
