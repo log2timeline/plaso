@@ -80,13 +80,16 @@ class ParserMediator(object):
     return self._knowledge_base.year
 
   def _GetInode(self, inode_value):
-    """Retrieves the inode.
+    """Retrieves the inode from the inode value.
+
+    Note that the inode value in TSK can be a string, e.g. '27-128-1'.
 
     Args:
       inode_value: a string or an integer containing the inode.
 
     Returns:
-      An integer containing the inode or -1 on error.
+      An integer containing the inode or -1 on error if the inode value
+      cannot be converted to an integer.
     """
     if isinstance(inode_value, py2to3.INTEGER_TYPES):
       return inode_value
