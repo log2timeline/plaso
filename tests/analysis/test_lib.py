@@ -108,7 +108,11 @@ class AnalysisPluginTestCase(unittest.TestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
-    parser_object.Parse(parser_mediator)
+    file_object = file_entry.GetFileObject()
+    try:
+      parser_object.Parse(parser_mediator, file_object)
+    finally:
+      file_object.close()
 
     return event_queue
 

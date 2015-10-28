@@ -41,7 +41,7 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
       u'HKEY_LOCAL_MACHINE\\Software']
 
   def __init__(self, key_path):
-    """Initializes Windows Registry key filter object.
+    """Initializes a Windows Registry key filter object.
 
     Args:
       key_path: the key path.
@@ -125,7 +125,7 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
   """Windows Registry key path prefix filter."""
 
   def __init__(self, key_path_prefix):
-    """Initializes Windows Registry key filter object.
+    """Initializes a Windows Registry key filter object.
 
     Args:
       key_path_prefix: the key path prefix.
@@ -150,7 +150,7 @@ class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):
   """Windows Registry key path suffix filter."""
 
   def __init__(self, key_path_suffix):
-    """Initializes Windows Registry key filter object.
+    """Initializes a Windows Registry key filter object.
 
     Args:
       key_path_suffix: the key path suffix.
@@ -177,7 +177,7 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
   _EMPTY_SET = frozenset()
 
   def __init__(self, value_names):
-    """Initializes Windows Registry key filter object.
+    """Initializes a Windows Registry key filter object.
 
     Args:
       value_names: list of value names that should be present in the key.
@@ -208,7 +208,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
   # List of Windows Registry key filters (instances of
   # BaseWindowsRegistryKeyFilter) that should match for the plugin to
-  # parse the Windows Registry or its values.
+  # parse the Windows Registry key or its values.
   FILTERS = frozenset()
 
   # URLS should contain a list of URLs with additional information about this
