@@ -70,9 +70,9 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      shell_items_parser.UpdateChainAndParse(
-          parser_mediator, value.data, parent_path_segments,
-          codepage=codepage)
+      shell_items_parser.ParseByteStream(
+          parser_mediator, value.data,
+          parent_path_segments=parent_path_segments, codepage=codepage)
 
       path_segment = shell_items_parser.GetUpperPathSegment()
       value_string = shell_items_parser.CopyToPath()

@@ -12,11 +12,57 @@ import os
 from plaso.parsers import manager
 
 
+class BaseFileEntryFilter(object):
+  """Class that defines the file entry filter interface."""
+
+  @abc.abstractmethod
+  def Match(self, file_entry):
+    """Determines if a file entry matches the filter.
+
+    Args:
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean value that indicates a match.
+    """
+
+
+class FileNameFileEntryFilter(BaseFileEntryFilter):
+  """Class that defines a file name file entry filter."""
+
+  def __init__(self, filename):
+    """Initializes a file entry filter object.
+
+    Args:
+      filename: string containing the name of the file.
+    """
+    super(FileNameFileEntryFilter, self).__init__()
+    self._filename = filename.lower()
+
+  def Match(self, file_entry):
+    """Determines if a file entry matches the filter.
+
+    Args:
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean value that indicates a match.
+    """
+    if not file_entry:
+      return False
+
+    filename = file_entry.name.lower()
+    return filename == self._filename
+
+
 class BaseParser(object):
   """Class that implements the parser object interface."""
 
   NAME = u'base_parser'
   DESCRIPTION = u''
+
+  # List of filters that should match for the parser to be applied.
+  FILTERS = frozenset()
 
   # Every derived parser class that implements plugins should define
   # its own _plugin_classes dict:
@@ -196,6 +242,7 @@ class BaseParser(object):
     """
     return cls._plugin_classes is not None
 
+  # TODO: deprecate.
   def UpdateChainAndParse(self, parser_mediator, **kwargs):
     """Wrapper for Parse() to synchronize the parser chain.
 
@@ -221,28 +268,21 @@ class SingleFileBaseParser(BaseParser):
   # file offset seek needs to be performed.
   _INITIAL_FILE_OFFSET = 0
 
-  def Parse(self, parser_mediator, file_object=None, **kwargs):
-    """Parses a single file.
+  def Parse(self, parser_mediator, file_object, **kwargs):
+    """Parses a single file-like object.
+
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: optional file-like object to parse. If not set the parser
-                   will use the parser mediator to open the file-like object.
+      file_object: a file-like object to parse.
     """
-    # TODO: Merge with UpdateChainAndParse for less overhead.
-    close_file_object = False
-    if not file_object:
-      file_object = parser_mediator.GetFileObject(
-          offset=self._INITIAL_FILE_OFFSET)
-      close_file_object = True
-
-    elif self._INITIAL_FILE_OFFSET is not None:
+    if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
 
+    parser_mediator.AppendToParserChain(self)
     try:
       self.ParseFileObject(parser_mediator, file_object, **kwargs)
     finally:
-      if close_file_object:
-        file_object.close()
+      parser_mediator.PopFromParserChain()
 
   @abc.abstractmethod
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):

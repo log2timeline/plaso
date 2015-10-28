@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Restore Point (rp.log) files."""
 
-import logging
 import os
 
 import construct
@@ -40,11 +39,14 @@ class RestorePointInfoEvent(time_events.FiletimeEvent):
     self.sequence_number = sequence_number
 
 
-class RestorePointLogParser(interface.BaseParser):
+class RestorePointLogParser(interface.SingleFileBaseParser):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = u'rplog'
   DESCRIPTION = u'Parser for Windows Restore Point (rp.log) files.'
+
+  FILTERS = frozenset([
+      interface.FileNameFileEntryFilter(u'rp.log')])
 
   _FILE_HEADER_STRUCT = construct.Struct(
       u'file_header',
@@ -52,7 +54,7 @@ class RestorePointLogParser(interface.BaseParser):
       construct.ULInt32(u'restore_point_type'),
       construct.ULInt64(u'sequence_number'),
       construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00',
+          lambda character, ctx: character == b'\x00\x00',
           construct.Field(u'description', 2)))
 
   _FILE_FOOTER_STRUCT = construct.Struct(
@@ -105,25 +107,8 @@ class RestorePointLogParser(interface.BaseParser):
 
     return file_footer
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a single file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    # TODO: for now cheat with detecting this file type.
-    file_entry = parser_mediator.GetFileEntry()
-    if file_entry.name.lower() != u'rp.log':
-      raise errors.UnableToParseFile(u'File not named: rp.log')
-
-    file_object = parser_mediator.GetFileObject(offset=None)
-    try:
-      self.ParseFileObject(parser_mediator, file_object, **kwargs)
-    finally:
-      file_object.close()
-
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
-    """Parses a Windows Prefetch file-like object.
+    """Parses a Windows Restore Point (rp.log) log file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -132,7 +117,6 @@ class RestorePointLogParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
     file_header = self._ParseFileHeader(file_object)
 
     try:
@@ -141,15 +125,15 @@ class RestorePointLogParser(interface.BaseParser):
       description = b''.join(file_header.description).decode(u'utf16')[:-1]
     except UnicodeDecodeError as exception:
       description = u''
-      logging.warning((
-          u'[{0:s}] Unable to decode description UTF-16 stream with '
-          u'error: {1:s}').format(self.NAME, exception))
+      parser_mediator.ProduceParseError((
+          u'unable to decode description UTF-16 stream with error: '
+          u'{0:s}').format(exception))
 
     file_object.seek(-8, os.SEEK_END)
     file_footer = self._ParseFileFooter(file_object)
 
-    timestamp = file_footer.get(u'creation_time', 0)
-    if not timestamp:
+    timestamp = file_footer.get(u'creation_time', None)
+    if timestamp is None:
       parser_mediator.ProduceParseError(u'Timestamp not set.')
     else:
       event_object = RestorePointInfoEvent(
