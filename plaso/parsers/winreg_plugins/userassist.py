@@ -99,105 +99,114 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
     if not version_value:
       parser_mediator.ProduceParseError(u'Missing version value')
-    elif not version_value.DataIsInteger():
+      return
+
+    if not version_value.DataIsInteger():
       parser_mediator.ProduceParseError(u'Unsupported version value data type')
-    elif version_value.data not in [3, 5]:
+      return
+
+    format_version = version_value.GetData()
+    if format_version not in [3, 5]:
       parser_mediator.ProduceParseError(
-          u'Unsupported version: {0:d}'.format(version_value.data))
-    elif not count_subkey:
+          u'Unsupported format version: {0:d}'.format(format_version))
+      return
+
+    if not count_subkey:
       parser_mediator.ProduceParseError(u'Missing count subkey')
-    else:
-      userassist_entry_index = 0
+      return
 
-      for value in count_subkey.GetValues():
-        try:
-          value_name = value.name.decode(u'rot-13')
-        except UnicodeEncodeError as exception:
-          logging.debug((
-              u'Unable to decode UserAssist string: {0:s} with error: {1:s}.\n'
-              u'Attempting piecewise decoding.').format(
-                  value.name, exception))
+    userassist_entry_index = 0
 
-          characters = []
-          for char in value.name:
-            if ord(char) < 128:
-              try:
-                characters.append(char.decode(u'rot-13'))
-              except UnicodeEncodeError:
-                characters.append(char)
-            else:
+    for registry_value in count_subkey.GetValues():
+      try:
+        value_name = registry_value.name.decode(u'rot-13')
+      except UnicodeEncodeError as exception:
+        logging.debug((
+            u'Unable to decode UserAssist string: {0:s} with error: {1:s}.\n'
+            u'Attempting piecewise decoding.').format(
+                registry_value.name, exception))
+
+        characters = []
+        for char in registry_value.name:
+          if ord(char) < 128:
+            try:
+              characters.append(char.decode(u'rot-13'))
+            except UnicodeEncodeError:
               characters.append(char)
-
-          value_name = u''.join(characters)
-
-        if version_value.data == 5:
-          path_segments = value_name.split(u'\\')
-
-          for segment_index in range(0, len(path_segments)):
-            # Remove the { } from the path segment to get the GUID.
-            guid = path_segments[segment_index][1:-1]
-            path_segments[segment_index] = known_folder_ids.PATHS.get(
-                guid, path_segments[segment_index])
-
-          value_name = u'\\'.join(path_segments)
-          # Check if we might need to substitute values.
-          if u'%' in value_name:
-            # TODO: deprecate direct use of pre_obj.
-            value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-                value_name, parser_mediator.knowledge_base.pre_obj)
-
-        value_data_size = len(value.data)
-        if not value.DataIsBinaryData():
-          parser_mediator.ProduceParseError(
-              u'Unsupported value data type: {0:s}'.format(
-                  value.data_type_string))
-
-        elif value_name == u'UEME_CTLSESSION':
-          pass
-
-        elif version_value.data == 3:
-          if value_data_size != self._USERASSIST_V3_STRUCT.sizeof():
-            parser_mediator.ProduceParseError(
-                u'Unsupported value data size: {0:d}'.format(value_data_size))
-
           else:
-            parsed_data = self._USERASSIST_V3_STRUCT.parse(value.data)
-            filetime = parsed_data.get(u'timestamp', 0)
-            count = parsed_data.get(u'count', 0)
+            characters.append(char)
 
-            if count > 5:
-              count -= 5
+        value_name = u''.join(characters)
 
-            values_dict = {}
-            values_dict[value_name] = u'[Count: {0:d}]'.format(count)
-            event_object = windows_events.WindowsRegistryEvent(
-                filetime, count_subkey.path, values_dict, offset=value.offset)
-            parser_mediator.ProduceEvent(event_object)
+      if format_version == 5:
+        path_segments = value_name.split(u'\\')
 
-        elif version_value.data == 5:
-          if value_data_size != self._USERASSIST_V5_STRUCT.sizeof():
-            parser_mediator.ProduceParseError(
-                u'Unsupported value data size: {0:d}'.format(value_data_size))
+        for segment_index in range(0, len(path_segments)):
+          # Remove the { } from the path segment to get the GUID.
+          guid = path_segments[segment_index][1:-1]
+          path_segments[segment_index] = known_folder_ids.PATHS.get(
+              guid, path_segments[segment_index])
 
-          parsed_data = self._USERASSIST_V5_STRUCT.parse(value.data)
+        value_name = u'\\'.join(path_segments)
+        # Check if we might need to substitute values.
+        if u'%' in value_name:
+          # TODO: deprecate direct use of pre_obj.
+          value_name = environ_expand.ExpandWindowsEnvironmentVariables(
+              value_name, parser_mediator.knowledge_base.pre_obj)
 
-          userassist_entry_index += 1
-          count = parsed_data.get(u'count', None)
-          app_focus_count = parsed_data.get(u'app_focus_count', None)
-          focus_duration = parsed_data.get(u'focus_duration', None)
+      value_data_size = len(registry_value.data)
+      if not registry_value.DataIsBinaryData():
+        parser_mediator.ProduceParseError(
+            u'Unsupported value data type: {0:s}'.format(
+                registry_value.data_type_string))
+
+      elif value_name == u'UEME_CTLSESSION':
+        pass
+
+      elif format_version == 3:
+        if value_data_size != self._USERASSIST_V3_STRUCT.sizeof():
+          parser_mediator.ProduceParseError(
+              u'Unsupported value data size: {0:d}'.format(value_data_size))
+
+        else:
+          parsed_data = self._USERASSIST_V3_STRUCT.parse(registry_value.data)
           filetime = parsed_data.get(u'timestamp', 0)
+          count = parsed_data.get(u'count', 0)
+
+          if count > 5:
+            count -= 5
 
           values_dict = {}
-          values_dict[value_name] = (
-              u'[UserAssist entry: {0:d}, Count: {1:d}, '
-              u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
-                  userassist_entry_index, count, app_focus_count,
-                  focus_duration)
-
+          values_dict[value_name] = u'[Count: {0:d}]'.format(count)
           event_object = windows_events.WindowsRegistryEvent(
               filetime, count_subkey.path, values_dict,
-              offset=count_subkey.offset)
+              offset=registry_value.offset)
           parser_mediator.ProduceEvent(event_object)
+
+      elif format_version == 5:
+        if value_data_size != self._USERASSIST_V5_STRUCT.sizeof():
+          parser_mediator.ProduceParseError(
+              u'Unsupported value data size: {0:d}'.format(value_data_size))
+
+        parsed_data = self._USERASSIST_V5_STRUCT.parse(registry_value.data)
+
+        userassist_entry_index += 1
+        count = parsed_data.get(u'count', None)
+        app_focus_count = parsed_data.get(u'app_focus_count', None)
+        focus_duration = parsed_data.get(u'focus_duration', None)
+        filetime = parsed_data.get(u'timestamp', 0)
+
+        values_dict = {}
+        values_dict[value_name] = (
+            u'[UserAssist entry: {0:d}, Count: {1:d}, '
+            u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
+                userassist_entry_index, count, app_focus_count,
+                focus_duration)
+
+        event_object = windows_events.WindowsRegistryEvent(
+            filetime, count_subkey.path, values_dict,
+            offset=count_subkey.offset)
+        parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

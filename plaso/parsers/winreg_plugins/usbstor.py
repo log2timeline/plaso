@@ -67,14 +67,14 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
         friendly_name_value = devicekey.GetValueByName(u'FriendlyName')
         if friendly_name_value:
-          values_dict[u'friendly_name'] = friendly_name_value.data
+          values_dict[u'friendly_name'] = friendly_name_value.GetData()
         else:
           values_dict.pop(u'friendly_name', None)
 
         # ParentIdPrefix applies to Windows XP Only.
         parent_id_prefix_value = devicekey.GetValueByName(u'ParentIdPrefix')
         if parent_id_prefix_value:
-          values_dict[u'parent_id_prefix'] = parent_id_prefix_value.data
+          values_dict[u'parent_id_prefix'] = parent_id_prefix_value.GetData()
         else:
           values_dict.pop(u'parent_id_prefix', None)
 
