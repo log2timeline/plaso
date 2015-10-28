@@ -452,10 +452,10 @@ plaso.formatters.skydrivelog module
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.skydrivelogerr module
---------------------------------------
+plaso.formatters.skydrivelog_old module
+---------------------------------------
 
-.. automodule:: plaso.formatters.skydrivelogerr
+.. automodule:: plaso.formatters.skydrivelog_old
     :members:
     :undoc-members:
     :show-inheritance:

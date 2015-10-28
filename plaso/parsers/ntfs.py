@@ -8,7 +8,6 @@ import pyfsntfs
 from plaso import dependencies
 from plaso.events import file_system_events
 from plaso.events import windows_events
-from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -191,19 +190,14 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     mft_metadata_file = pyfsntfs.mft_metadata_file()
 
     try:
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
-      display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:

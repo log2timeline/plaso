@@ -184,6 +184,9 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
 
     Returns:
       The file header construct object.
+
+    Raises:
+      UnableToParseFile: when the header cannot be parsed.
     """
     try:
       file_header = self._FILE_HEADER_STRUCT.parse_stream(file_object)
@@ -208,6 +211,9 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
 
     Returns:
       The file information construct object.
+
+    Raises:
+      UnableToParseFile: when the file information cannot be parsed.
     """
     try:
       if format_version == 17:
@@ -238,6 +244,9 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
 
     Returns:
       A list of metrics array entry construct objects.
+
+    Raises:
+      UnableToParseFile: when the metrics array cannot be parsed.
     """
     metrics_array = []
 
@@ -308,6 +317,9 @@ class WinPrefetchParser(interface.SingleFileBaseParser):
 
     Yields:
       A volume information construct object.
+
+    Raises:
+      UnableToParseFile: when the volume information cannot be parsed.
     """
     volumes_information_offset = file_information.get(
         u'volumes_information_offset', 0)
