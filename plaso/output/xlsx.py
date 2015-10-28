@@ -10,6 +10,7 @@ try:
 except ImportError:
   xlsxwriter = None
 
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import dynamic
@@ -42,15 +43,15 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
   def _FormatDateTime(self, event_object):
     """Formats the date to a datetime object without timezone information.
 
-    Note: Timezone information must be removed due to lack of support
+    Note: timezone information must be removed due to lack of support
     by xlsxwriter and Excel.
 
     Args:
       event_object: the event object (instance of EventObject).
 
     Returns:
-      A datetime object (instance of datetime.datetime). A datetime object of
-      December 31, 1899 00:00:00 is returned on error.
+      A datetime object (instance of datetime.datetime)
+      or a string containing 'ERROR' on OverflowError.
     """
     try:
       timestamp = timelib.Timestamp.CopyToDatetime(
@@ -62,32 +63,39 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
+          u'{1:s}. Event {2!d}:{3!d} triggered the exception.').format(
               event_object.timestamp, exception,
-              getattr(event_object, u'store_number', u''),
-              getattr(event_object, u'store_index', u'')))
+              getattr(event_object, u'store_number', u'N/A'),
+              getattr(event_object, u'store_index', u'N/A')))
 
-      return datetime.datetime(1899, 12, 31)
+      return u'ERROR'
 
   def Close(self):
     """Closes the output."""
     self._workbook.close()
 
   def Open(self):
-    """Creates a new workbook."""
+    """Creates a new workbook.
+
+    Raises:
+      ValueError: Invalid filename.
+      IOError: Filename already exists.
+    """
     if not self._filename:
       raise ValueError((
-          u'Unable to create XlSX workbook. Output filename was not provided.'))
+          u'Unable to create XLSX workbook. Output filename was not provided.'))
 
     if os.path.isfile(self._filename):
       raise IOError((
           u'Unable to use an already existing file for output '
           u'[{0:s}]').format(self._filename))
 
-    self._workbook = xlsxwriter.Workbook(
-        self._filename,
-        {u'constant_memory': True, u'strings_to_urls': False,
-         u'default_date_format': self._timestamp_format})
+    options = {
+        u'constant_memory': True,
+        u'strings_to_urls': False,
+        u'strings_to_formulas': False,
+        u'default_date_format': self._timestamp_format}
+    self._workbook = xlsxwriter.Workbook(self._filename, options)
     self._sheet = self._workbook.add_worksheet(u'Sheet')
     self._current_row = 0
 
@@ -124,7 +132,8 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
       else:
         value = getattr(event_object, field, u'-')
 
-      if not isinstance(value, (bool, int, long, float, datetime.datetime)):
+      if not isinstance(value, (
+          bool, py2to3.INTEGER_TYPES, float, datetime.datetime)):
         value = utils.GetUnicodeString(value)
         value = utils.RemoveIllegalXMLCharacters(value)
 
@@ -138,7 +147,7 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
       self._sheet.set_column(
           column_index, column_index, self._column_widths[column_index])
 
-      if field in [u'datetime', u'timestamp']:
+      if isinstance(value, datetime.datetime):
         self._sheet.write_datetime(
             self._current_row, column_index, value)
       else:
@@ -155,10 +164,9 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
       self._sheet.write(self._current_row, index, field, bold)
       self._column_widths[index] = len(field) + 2
     self._current_row += 1
-    self._sheet.autofilter(0, len(self._fields)-1, 0, 0)
+    self._sheet.autofilter(0, len(self._fields) - 1, 0, 0)
     self._sheet.freeze_panes(1, 0)
 
 
 manager.OutputManager.RegisterOutput(
     XlsxOutputModule, disabled=xlsxwriter is None)
-
