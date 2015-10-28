@@ -56,9 +56,6 @@ class OleCfParser(interface.SingleFileBaseParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     olecf_file = pyolecf.file()
     olecf_file.set_ascii_codepage(parser_mediator.codepage)
@@ -66,9 +63,9 @@ class OleCfParser(interface.SingleFileBaseParser):
     try:
       olecf_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, parser_mediator.GetDisplayName(), exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
+      return
 
     # Get a list of all root items from the OLE CF file.
     root_item = olecf_file.root_item

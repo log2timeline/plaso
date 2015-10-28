@@ -31,11 +31,13 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         u'2013-11-13 17:52:34')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg_short = u'User: N/A'
-    expected_msg = (
+    expected_message = (
         u'User: N/A Status: BOOT_TIME '
         u'Computer Name: localhost Terminal: N/A')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_short_message = u'User: N/A'
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     event_object = event_objects[1]
 
@@ -45,16 +47,18 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.terminal, u'console', )
-    self.assertEqual(event_object.status, u'USER_PROCESS')
+    self.assertEqual(event_object.status_type, 7)
     self.assertEqual(event_object.computer_name, u'localhost')
-    expected_msg = (
+
+    expected_message = (
         u'User: moxilo Status: '
         u'USER_PROCESS '
         u'Computer Name: localhost '
         u'Terminal: console')
-    expected_msg_short = (
-        u'User: moxilo')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_short_message = u'User: moxilo'
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
     event_object = event_objects[4]
 
@@ -64,15 +68,17 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.terminal, u'ttys002')
-    self.assertEqual(event_object.status, u'DEAD_PROCESS')
-    expected_msg = (
+    self.assertEqual(event_object.status_type, 8)
+
+    expected_message = (
         u'User: moxilo Status: '
         u'DEAD_PROCESS '
         u'Computer Name: localhost '
         u'Terminal: ttys002')
-    expected_msg_short = (
-        u'User: moxilo')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    expected_short_message = u'User: moxilo'
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

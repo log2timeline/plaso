@@ -8,7 +8,6 @@ import pylnk
 from plaso import dependencies
 from plaso.events import time_events
 from plaso.events import windows_events
-from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -111,9 +110,6 @@ class WinLnkParser(interface.SingleFileBaseParser):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
       display_name: Optional display name.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     if not display_name:
       display_name = parser_mediator.GetDisplayName()
@@ -124,9 +120,9 @@ class WinLnkParser(interface.SingleFileBaseParser):
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
+      return
 
     link_target = None
     if lnk_file.link_target_identifier_data:

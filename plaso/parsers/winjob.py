@@ -16,32 +16,42 @@ __author__ = 'Brian Baskin (brian@thebaskins.com)'
 
 
 class WinJobEvent(time_events.TimestampEvent):
-  """Convenience class for a Windows Scheduled Task event."""
+  """Convenience class for a Windows Scheduled Task event.
+
+  Attributes:
+    application: string that contains the path to job executable.
+    comment: string that contains the job description.
+    parameter: string that contains the application command line parameters.
+    trigger: an integer that contains the event trigger, e.g. DAILY.
+    username: string that contains the username that scheduled the job.
+    working_dir: string that contains the working path for task.
+  """
 
   DATA_TYPE = u'windows:tasks:job'
 
   def __init__(
       self, timestamp, timestamp_description, application, parameter,
-      working_dir, username, trigger, comment):
+      working_dir, username, trigger, description):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp value.
-      timestamp_description: The usage string for the timestamp value.
-      application: Path to job executable.
-      parameter: Application command line parameters.
-      working_dir: Working path for task.
-      username: User job was scheduled from.
-      trigger: Trigger event that runs the task, e.g. DAILY.
-      comment: Optional description about the job.
+      timestamp: the timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: the usage string for the timestamp value.
+      application: string that contains the path to job executable.
+      parameter: string that contains the application command line parameters.
+      working_dir: string that contains the working path for task.
+      username: string that contains the username that scheduled the job.
+      trigger: an integer that contains the event trigger, e.g. DAILY.
+      description: string that contains the job description.
     """
     super(WinJobEvent, self).__init__(timestamp, timestamp_description)
-    self.application = binary.ReadUtf16(application)
-    self.parameter = binary.ReadUtf16(parameter)
-    self.working_dir = binary.ReadUtf16(working_dir)
-    self.username = binary.ReadUtf16(username)
+    self.application = application
+    self.comment = description
+    self.parameter = parameter
     self.trigger = trigger
-    self.comment = binary.ReadUtf16(comment)
+    self.username = username
+    self.working_dir = working_dir
 
 
 class WinJobParser(interface.SingleFileBaseParser):
@@ -50,7 +60,7 @@ class WinJobParser(interface.SingleFileBaseParser):
   NAME = u'winjob'
   DESCRIPTION = u'Parser for Windows Scheduled Task job (or At-job) files.'
 
-  PRODUCT_VERSIONS = {
+  _PRODUCT_VERSIONS = {
       0x0400: u'Windows NT 4.0',
       0x0500: u'Windows 2000',
       0x0501: u'Windows XP',
@@ -60,23 +70,12 @@ class WinJobParser(interface.SingleFileBaseParser):
       0x0603: u'Windows 8.1'
   }
 
-  TRIGGER_TYPES = {
-      0x0000: u'ONCE',
-      0x0001: u'DAILY',
-      0x0002: u'WEEKLY',
-      0x0003: u'MONTHLYDATE',
-      0x0004: u'MONTHLYDOW',
-      0x0005: u'EVENT_ON_IDLE',
-      0x0006: u'EVENT_AT_SYSTEMSTART',
-      0x0007: u'EVENT_AT_LOGON'
-  }
-
-  JOB_FIXED_STRUCT = construct.Struct(
+  _JOB_FIXED_STRUCT = construct.Struct(
       u'job_fixed',
       construct.ULInt16(u'product_version'),
-      construct.ULInt16(u'file_version'),
+      construct.ULInt16(u'format_version'),
       construct.Bytes(u'job_uuid', 16),
-      construct.ULInt16(u'app_name_len_offset'),
+      construct.ULInt16(u'application_length_offset'),
       construct.ULInt16(u'trigger_offset'),
       construct.ULInt16(u'error_retry_count'),
       construct.ULInt16(u'error_retry_interval'),
@@ -100,37 +99,37 @@ class WinJobParser(interface.SingleFileBaseParser):
   # Using Construct's utf-16 encoding here will create strings with their
   # null terminators exposed. Instead, we'll read these variables raw and
   # convert them using Plaso's ReadUtf16() for proper formatting.
-  JOB_VARIABLE_STRUCT = construct.Struct(
+  _JOB_VARIABLE_STRUCT = construct.Struct(
       u'job_variable',
       construct.ULInt16(u'running_instance_count'),
-      construct.ULInt16(u'app_name_len'),
+      construct.ULInt16(u'application_length'),
       construct.String(
-          u'app_name',
-          lambda ctx: ctx.app_name_len * 2),
-      construct.ULInt16(u'parameter_len'),
+          u'application',
+          lambda ctx: ctx.application_length * 2),
+      construct.ULInt16(u'parameter_length'),
       construct.String(
           u'parameter',
-          lambda ctx: ctx.parameter_len * 2),
-      construct.ULInt16(u'working_dir_len'),
+          lambda ctx: ctx.parameter_length * 2),
+      construct.ULInt16(u'working_dir_length'),
       construct.String(
           u'working_dir',
-          lambda ctx: ctx.working_dir_len * 2),
-      construct.ULInt16(u'username_len'),
+          lambda ctx: ctx.working_dir_length * 2),
+      construct.ULInt16(u'username_length'),
       construct.String(
           u'username',
-          lambda ctx: ctx.username_len * 2),
-      construct.ULInt16(u'comment_len'),
+          lambda ctx: ctx.username_length * 2),
+      construct.ULInt16(u'comment_length'),
       construct.String(
           u'comment',
-          lambda ctx: ctx.comment_len * 2),
-      construct.ULInt16(u'userdata_len'),
+          lambda ctx: ctx.comment_length * 2),
+      construct.ULInt16(u'userdata_length'),
       construct.String(
           u'userdata',
-          lambda ctx: ctx.userdata_len),
-      construct.ULInt16(u'reserved_len'),
+          lambda ctx: ctx.userdata_length),
+      construct.ULInt16(u'reserved_length'),
       construct.String(
           u'reserved',
-          lambda ctx: ctx.reserved_len),
+          lambda ctx: ctx.reserved_length),
       construct.ULInt16(u'test'),
       construct.ULInt16(u'trigger_size'),
       construct.ULInt16(u'trigger_reserved1'),
@@ -164,74 +163,77 @@ class WinJobParser(interface.SingleFileBaseParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     try:
-      header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
+      header_struct = self._JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
-    if not header.product_version in self.PRODUCT_VERSIONS:
-      raise errors.UnableToParseFile(u'Not a valid Scheduled Task file')
+    if not header_struct.product_version in self._PRODUCT_VERSIONS:
+      raise errors.UnableToParseFile((
+          u'Unsupported product version in: 0x{0:04x} Scheduled Task '
+          u'file').format(header_struct.product_version))
 
-    if not header.file_version == 1:
-      raise errors.UnableToParseFile(u'Not a valid Scheduled Task file')
+    if not header_struct.format_version == 1:
+      raise errors.UnableToParseFile(
+          u'Unsupported format version in: {0:d} Scheduled Task file'.format(
+              header_struct.format_version))
 
-    # Obtain the relevant values from the file.
     try:
-      data = self.JOB_VARIABLE_STRUCT.parse_stream(file_object)
+      job_variable_struct = self._JOB_VARIABLE_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
-
-    trigger_type = self.TRIGGER_TYPES.get(data.trigger_type, u'Unknown')
 
     last_run_date = timelib.Timestamp.FromTimeParts(
-        header.ran_year,
-        header.ran_month,
-        header.ran_day,
-        header.ran_hour,
-        header.ran_minute,
-        header.ran_second,
-        microseconds=(header.ran_millisecond * 1000),
+        header_struct.ran_year,
+        header_struct.ran_month,
+        header_struct.ran_day,
+        header_struct.ran_hour,
+        header_struct.ran_minute,
+        header_struct.ran_second,
+        microseconds=header_struct.ran_millisecond * 1000,
         timezone=parser_mediator.timezone)
 
     scheduled_date = timelib.Timestamp.FromTimeParts(
-        data.sched_start_year,
-        data.sched_start_month,
-        data.sched_start_day,
-        data.sched_start_hour,
-        data.sched_start_minute,
+        job_variable_struct.sched_start_year,
+        job_variable_struct.sched_start_month,
+        job_variable_struct.sched_start_day,
+        job_variable_struct.sched_start_hour,
+        job_variable_struct.sched_start_minute,
         0,  # Seconds are not stored.
         timezone=parser_mediator.timezone)
 
-    # Create two timeline events, one for created date and the other for last
-    # run.
+    application = binary.ReadUtf16(job_variable_struct.application)
+    description = binary.ReadUtf16(job_variable_struct.comment)
+    parameter = binary.ReadUtf16(job_variable_struct.parameter)
+    username = binary.ReadUtf16(job_variable_struct.username)
+    working_dir = binary.ReadUtf16(job_variable_struct.working_dir)
+
     parser_mediator.ProduceEvents(
         [WinJobEvent(
-            last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, data.app_name,
-            data.parameter, data.working_dir, data.username, trigger_type,
-            data.comment),
+            last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, application,
+            parameter, working_dir, username, job_variable_struct.trigger_type,
+            description),
          WinJobEvent(
-             scheduled_date, u'Scheduled To Start', data.app_name,
-             data.parameter, data.working_dir, data.username, trigger_type,
-             data.comment)])
+             scheduled_date, u'Scheduled To Start', application, parameter,
+             working_dir, username, job_variable_struct.trigger_type,
+             description)])
 
-    # A scheduled end date is optional.
-    if data.sched_end_year:
+    if job_variable_struct.sched_end_year:
       scheduled_end_date = timelib.Timestamp.FromTimeParts(
-          data.sched_end_year,
-          data.sched_end_month,
-          data.sched_end_day,
+          job_variable_struct.sched_end_year,
+          job_variable_struct.sched_end_month,
+          job_variable_struct.sched_end_day,
           0,  # Hours are not stored.
           0,  # Minutes are not stored.
           0,  # Seconds are not stored.
           timezone=parser_mediator.timezone)
 
       event_object = WinJobEvent(
-          scheduled_end_date, u'Scheduled To End', data.app_name,
-          data.parameter, data.working_dir, data.username, trigger_type,
-          data.comment)
+          scheduled_end_date, u'Scheduled To End', application, parameter,
+          working_dir, username, job_variable_struct.trigger_type, description)
       parser_mediator.ProduceEvent(event_object)
 
 

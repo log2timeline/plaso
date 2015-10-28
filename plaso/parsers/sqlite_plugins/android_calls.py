@@ -76,7 +76,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
         duration = 0
 
     if duration:
-      # The duration is in seconds and the date value in milli seconds.
+      # The duration is in seconds and the date value in milliseconds.
       duration *= 1000
       event_object = AndroidCallEvent(
           row['date'] + duration, u'Call Ended', row['id'], row['number'],
