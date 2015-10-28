@@ -195,7 +195,10 @@ class PsortTool(analysis_tool.AnalysisTool):
         storage_file, preferred_encoding=self.preferred_encoding,
         timezone=self._timezone)
 
-    if isinstance(output_module, output_interface.LinearOutputModule):
+    # TODO: Remove this check for the xlsx output module when
+    # DynamicOutputModule no longer inherits LinearOutputModule. (issue #393)
+    if (isinstance(output_module, output_interface.LinearOutputModule) and
+        output_module.NAME != u'xlsx'):
       if self._output_filename:
         output_file_object = open(self._output_filename, u'wb')
         output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
