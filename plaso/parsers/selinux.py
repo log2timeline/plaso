@@ -12,7 +12,7 @@
    The Parser will extract the 'type' value, the timestamp and the 'pid'.
    In the previous example, the timestamp is '1105758604.519', it
    contains the number of seconds since January 1, 1970 and the number of
-   milli seconds after the dot e.g. seconds: 1105758604, milli seconds: 519.
+   milliseconds after the dot e.g. seconds: 1105758604, milliseconds: 519.
 
    The number after the timestamp (420 in the example) is a 'serial number'
    that can be used to correlate multiple logs generated from the same event.
