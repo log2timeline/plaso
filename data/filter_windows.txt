@@ -16,7 +16,7 @@
 # * Browser cookie files: IE.
 # * Flash cookies, or LSO/SOL files from the Flash player.
 #
-# File system artifacts.
+# File system metadata files.
 /[$]MFT
 /[$]LogFile
 /[$]Extend/$UsnJrnl
@@ -27,32 +27,31 @@
 /RECYCLER
 /RECYCLER/.+
 /RECYCLER/.+/.+
-# Windows Registry hives.
+# Windows Registry files.
 /(Users|Documents And Settings)/.+/NTUSER[.]DAT
 /Users/.+/AppData/Local/Microsoft/Windows/Usrclass[.]dat
 /Documents And Settings/.+/Local Settings/Application Data/Microsoft/Windows/Usrclass[.]dat
-# {sysregistry} points to the location that contains the system hives,
-# eg: \Windows\System32\config.
-{sysregistry}/(SAM|SOFTWARE|SECURITY|SYSTEM)
+{systemroot}/System32/config/(SAM|SOFTWARE|SECURITY|SYSTEM)
 # Recent file activity.
-/Users/.+/AppData/Roaming/Microsoft/Windows/Recent/.+[.]LNK
-/Users/.+/AppData/Roaming/Microsoft/Office/Recent/.+[.]LNK
-/Documents And Settings/.+/Recent/.+[.]LNK
+/Users/.+/AppData/Roaming/Microsoft/Windows/Recent/.+[.]lnk
+/Users/.+/AppData/Roaming/Microsoft/Office/Recent/.+[.]lnk
+/Documents And Settings/.+/Recent/.+[.]lnk
+# Jump List files.
 /Users/.+/AppData/Roaming/Microsoft/Windows/Recent/Automaticdestinations/.+[.]automaticDestinations-ms
 /Users/.+/AppData/Roaming/Microsoft/Windows/Recent/Customdestinations/.+[.].customDestinations-ms
 # Windows Event Logs.
-{systemroot}/winevt/Logs/.+[.]evtx
-{systemroot}/config/.+[.]evt
+{systemroot}/System32/winevt/Logs/.+[.]evtx
+{systemroot}/System32/config/.+[.]evt
 # Various log files.
-{windir}/inf/setupapi[.].+[.]log
-{windir}/setupapi.log
-{windir}/System32/LogFiles/.+/.+[.]txt
-# Windows Artifacts.
-{windir}/Tasks/.+[.]job
-{windir}/Appcompat/Programs/Recentfilecache[.]bcf
-{windir}/Appcompat/Programs/AMcache[.]hve
+{systemroot}/inf/setupapi[.].+[.]log
+{systemroot}/setupapi.log
+{systemroot}/System32/LogFiles/.+/.+[.]txt
+# Windows artifacts.
+{systemroot}/Tasks/.+[.]job
+{systemroot}/Appcompat/Programs/Recentfilecache[.]bcf
+{systemroot}/Appcompat/Programs/AMcache[.]hve
 # Prefetch files.
-{windir}/Prefetch/.+[.]pf
+{systemroot}/Prefetch/.+[.]pf
 # Browser history artifacts.
 /Users/.+/AppData/Local/Microsoft/Windows/History/History.IE5/index[.]dat
 /Users/.+/AppData/Local/Microsoft/Windows/History/History.IE5/MSHist.+/index[.]dat
