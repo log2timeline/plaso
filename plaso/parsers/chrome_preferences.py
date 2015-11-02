@@ -26,7 +26,7 @@ class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
     self.path = path
 
 
-class ChromePreferencesParser(interface.SingleFileBaseParser):
+class ChromePreferencesParser(interface.FileObjectParser):
   """Parses Chrome Preferences files."""
 
   NAME = u'chrome_preferences'

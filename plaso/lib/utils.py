@@ -4,8 +4,6 @@
 import logging
 import re
 
-from plaso.lib import py2to3
-
 
 # Illegal Unicode characters for XML.
 ILLEGAL_XML_RE = re.compile(
@@ -86,32 +84,6 @@ def GetUnicodeString(string):
   if not isinstance(string, unicode):
     return str(string).decode('utf8', 'ignore')
   return string
-
-
-def GetInodeValue(inode_raw):
-  """Read in a 'raw' inode value and try to convert it into an integer.
-
-  Args:
-    inode_raw: A string or an int inode value.
-
-  Returns:
-    An integer inode value.
-  """
-  if isinstance(inode_raw, py2to3.INTEGER_TYPES):
-    return inode_raw
-
-  if isinstance(inode_raw, float):
-    return int(inode_raw)
-
-  try:
-    return int(inode_raw)
-  except ValueError:
-    # Let's do one more attempt.
-    inode_string, _, _ = str(inode_raw).partition('-')
-    try:
-      return int(inode_string)
-    except ValueError:
-      return -1
 
 
 def RemoveIllegalXMLCharacters(string, replacement=u'\ufffd'):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a appfirewall.log (Mac OS X Firewall) parser."""
 
-import datetime
 import logging
 
 import pyparsing
@@ -136,32 +135,24 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       structure: log line of structure.
       key: type of line log (normal or repeated).
     """
-    # TODO: improve this to get a valid year.
     if not self._year_use:
-      self._year_use = parser_mediator.year
-
-    if not self._year_use:
-      # Get from the creation time of the file.
-      self._year_use = self._GetYear(
-          self.file_entry.GetStat(), parser_mediator.timezone)
-      # If fail, get from the current time.
-      if not self._year_use:
-        self._year_use = timelib.GetCurrentYear()
+      self._year_use = parser_mediator.GetEstimatedYear()
 
     # Gap detected between years.
     month = timelib.MONTH_DICT.get(structure.month.lower())
     if not self._last_month:
       self._last_month = month
+
     if month < self._last_month:
       self._year_use += 1
+
     timestamp = self._GetTimestamp(
-        structure.day,
-        month,
-        self._year_use,
-        structure.time)
+        structure.day, month, self._year_use, structure.time)
+
     if not timestamp:
       logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
+
     self._last_month = month
 
     # If the actual entry is a repeated entry, we take the basic information
@@ -209,27 +200,6 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     except ValueError:
       timestamp = 0
     return timestamp
-
-  def _GetYear(self, stat, timezone):
-    """Retrieves the year either from the input file or from the settings."""
-    time = getattr(stat, u'crtime', 0)
-    if not time:
-      time = getattr(stat, u'ctime', 0)
-
-    if not time:
-      logging.error(
-          u'Unable to determine correct year of log file, defaulting to '
-          u'current year.')
-      return timelib.GetCurrentYear()
-
-    try:
-      timestamp = datetime.datetime.fromtimestamp(time, timezone)
-    except ValueError as exception:
-      logging.error((
-          u'Unable to determine correct year of log file with error: {0:s}, '
-          u'defaulting to current year.').format(exception))
-      return timelib.GetCurrentYear()
-    return timestamp.year
 
 
 manager.ParsersManager.RegisterParser(MacAppFirewallParser)

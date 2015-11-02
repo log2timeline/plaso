@@ -75,7 +75,7 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
     self.xml_string = evtx_record.xml_string
 
 
-class WinEvtxParser(interface.SingleFileBaseParser):
+class WinEvtxParser(interface.FileObjectParser):
   """Parses Windows XML EventLog (EVTX) files."""
 
   _INITIAL_FILE_OFFSET = None

@@ -52,7 +52,7 @@ class UtmpxMacOsXEvent(time_events.PosixTimeEvent):
     self.user = user
 
 
-class UtmpxParser(interface.SingleFileBaseParser):
+class UtmpxParser(interface.FileObjectParser):
   """Parser for UTMPX files."""
 
   NAME = u'utmpx'

@@ -8,7 +8,7 @@ from plaso.parsers import manager
 
 
 # TODO: rename to REGFParser.
-class WinRegistryParser(interface.SingleFileBaseParser):
+class WinRegistryParser(interface.FileObjectParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = u'winreg'
