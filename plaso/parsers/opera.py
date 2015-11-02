@@ -67,7 +67,7 @@ class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
       self.description = u'Last Visit'
 
 
-class OperaTypedHistoryParser(interface.SingleFileBaseParser):
+class OperaTypedHistoryParser(interface.FileObjectParser):
   """Parses the Opera typed_history.xml file."""
 
   NAME = u'opera_typed_history'
@@ -121,7 +121,7 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
       parser_mediator.ProduceEvent(event_object)
 
 
-class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
+class OperaGlobalHistoryParser(interface.FileObjectParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = u'opera_global'

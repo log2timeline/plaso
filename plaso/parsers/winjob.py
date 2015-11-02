@@ -54,7 +54,7 @@ class WinJobEvent(time_events.TimestampEvent):
     self.working_dir = working_dir
 
 
-class WinJobParser(interface.SingleFileBaseParser):
+class WinJobParser(interface.FileObjectParser):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = u'winjob'

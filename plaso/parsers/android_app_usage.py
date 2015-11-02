@@ -33,7 +33,7 @@ class AndroidAppUsageEvent(time_events.JavaTimeEvent):
     self.package = package_name
 
 
-class AndroidAppUsageParser(interface.SingleFileBaseParser):
+class AndroidAppUsageParser(interface.FileObjectParser):
   """Parses the Android usage-history.xml file."""
 
   NAME = u'android_app_usage'

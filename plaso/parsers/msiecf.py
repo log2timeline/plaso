@@ -111,7 +111,7 @@ class MsiecfUrlEvent(time_events.TimestampEvent):
       # OLE VT parsing.
 
 
-class MsiecfParser(interface.SingleFileBaseParser):
+class MsiecfParser(interface.FileObjectParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = u'msiecf'

@@ -38,7 +38,7 @@ class FirefoxCacheEvent(time_events.PosixTimeEvent):
       setattr(self, key, value)
 
 
-class BaseFirefoxCacheParser(interface.SingleFileBaseParser):
+class BaseFirefoxCacheParser(interface.FileObjectParser):
   """Parses Firefox cache files."""
 
   # pylint: disable=abstract-method
@@ -192,11 +192,10 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     if file_object.get_size() < 4:
       raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
 
-    file_entry = parser_mediator.GetFileEntry()
-
+    filename = parser_mediator.GetFilename()
     try:
       # Match cache2 filename (SHA-1 hex of cache record key).
-      self._CACHE_FILENAME.parseString(file_entry.name)
+      self._CACHE_FILENAME.parseString(filename)
     except pyparsing.ParseException:
       raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
 
@@ -425,16 +424,16 @@ class FirefoxOldCacheParser(BaseFirefoxCacheParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_entry = parser_mediator.GetFileEntry()
+    filename = parser_mediator.GetFilename()
     display_name = parser_mediator.GetDisplayName()
 
     try:
       # Match cache filename. Five hex characters + 'm' + two digit
       # number, e.g. '01ABCm02'. 'm' is for metadata. Cache files with 'd'
       # instead contain data only.
-      self._CACHE_FILENAME.parseString(file_entry.name)
+      self._CACHE_FILENAME.parseString(filename)
     except pyparsing.ParseException:
-      if not file_entry.name.startswith(u'_CACHE_00'):
+      if not filename.startswith(u'_CACHE_00'):
         raise errors.UnableToParseFile(u'Not a Firefox cache1 file.')
 
     firefox_config = self._GetFirefoxConfig(file_object, display_name)

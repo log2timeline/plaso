@@ -17,7 +17,7 @@ from plaso.parsers import manager
 dependencies.CheckModuleVersion(u'pyfsntfs')
 
 
-class NTFSMFTParser(interface.SingleFileBaseParser):
+class NTFSMFTParser(interface.FileObjectParser):
   """Parses a NTFS $MFT metadata file."""
 
   _INITIAL_FILE_OFFSET = None

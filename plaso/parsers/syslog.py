@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a syslog parser in plaso."""
 
-import datetime
-import logging
-
 from plaso.events import text_events
 from plaso.lib import lexer
-from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -56,30 +52,6 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     self.attributes[u'reporter'] = u''
     self.attributes[u'pid'] = u''
 
-  def _GetYear(self, stat, timezone):
-    """Retrieves the year either from the input file or from the settings."""
-    time = getattr(stat, u'crtime', 0)
-    if not time:
-      time = getattr(stat, u'ctime', 0)
-
-    if not time:
-      current_year = timelib.GetCurrentYear()
-      logging.error((
-          u'Unable to determine year of syslog file.\nDefaulting to: '
-          u'{0:d}').format(current_year))
-      return current_year
-
-    try:
-      timestamp = datetime.datetime.fromtimestamp(time, timezone)
-    except ValueError as exception:
-      current_year = timelib.GetCurrentYear()
-      logging.error(
-          u'Unable to determine year of syslog file with error: {0:s}\n'
-          u'Defaulting to: {1:d}'.format(exception, current_year))
-      return current_year
-
-    return timestamp.year
-
   def ParseLine(self, parser_mediator):
     """Parse a single line from the syslog file.
 
@@ -90,21 +62,8 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    # Note this an older comment applying to a similar approach previously
-    # the init function.
-    # TODO: this is a HACK to get the tests working let's discuss this.
     if not self._year_use:
-      self._year_use = parser_mediator.year
-
-    if not self._year_use:
-      # TODO: Find a decent way to actually calculate the correct year
-      # from the syslog file, instead of relying on stats object.
-      stat = self.file_entry.GetStat()
-      self._year_use = self._GetYear(stat, parser_mediator.timezone)
-
-      if not self._year_use:
-        # TODO: Make this sensible, not have the year permanent.
-        self._year_use = 2012
+      self._year_use = parser_mediator.GetEstimatedYear()
 
     month_compare = int(self.attributes[u'imonth'])
     if month_compare and self._last_month > month_compare:
