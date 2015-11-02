@@ -22,7 +22,13 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       file_system: the file system object (instance of vfs.FileSystem).
       mount_point: the mount point path specification (instance of
                    path.PathSpec).
-      path_attributes: optional dictionary of path attributes.
+      path_attributes: optional dictionary of path attributes. The path
+                       attributes correspond to environment variable names
+                       that can be used in the Windows paths. E.g. the
+                       systemroot path attribute corresponds to the
+                       %SystemRoot% environment variable. At moment only
+                       the systemroot and userprofile path attributes are
+                       supported.
     """
     super(FileSystemWinRegistryFileReader, self).__init__()
     self._file_system = file_system
@@ -81,7 +87,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Opens the Windows Registry file specified by the path.
 
     Args:
-      path: the path of the Windows Registry file.
+      path: string containing the path of the Windows Registry file.
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
 
@@ -244,8 +250,6 @@ class PreprocessPluginsManager(object):
       pre_obj = None
       path_attributes = None
 
-    # TODO: do not pass the full pre_obj here but just
-    # the necessary values.
     registry_file_reader = FileSystemWinRegistryFileReader(
         file_system, mount_point, path_attributes=path_attributes)
     win_registry = dfwinreg_registry.WinRegistry(
