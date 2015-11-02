@@ -76,7 +76,7 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
     self.strings = list(evt_record.strings)
 
 
-class WinEvtParser(interface.SingleFileBaseParser):
+class WinEvtParser(interface.FileObjectParser):
   """Parses Windows EventLog (EVT) files."""
 
   _INITIAL_FILE_OFFSET = None

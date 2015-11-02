@@ -41,7 +41,7 @@ class JavaIDXEvent(time_events.TimestampEvent):
     self.ip_address = ip_address
 
 
-class JavaIDXParser(interface.SingleFileBaseParser):
+class JavaIDXParser(interface.FileObjectParser):
   """Parse Java WebStart Cache IDX files for download events.
 
   There are five structures defined. 6.02 files had one generic section

@@ -250,11 +250,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       self._parsers_profiler.StartTiming(parser_object.NAME)
 
     try:
-      if isinstance(parser_object, parsers_interface.SingleFileBaseParser):
+      if isinstance(parser_object, parsers_interface.FileEntryParser):
+        parser_object.Parse(self._parser_mediator)
+      elif isinstance(parser_object, parsers_interface.FileObjectParser):
         parser_object.Parse(self._parser_mediator, file_object)
       else:
-        parser_object.UpdateChainAndParse(
-            self._parser_mediator, file_object=file_object)
+        logging.warning(
+            u'{0:s} unsupported parser type.'.format(parser_object.NAME))
 
     # We catch the IOError so we can determine the parser that generated
     # the error.

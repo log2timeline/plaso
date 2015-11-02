@@ -208,7 +208,7 @@ class SQLiteDatabase(object):
     return cursor
 
 
-class SQLiteParser(interface.SingleFileBaseParser):
+class SQLiteParser(interface.FileObjectParser):
   """Parses SQLite database files."""
 
   NAME = u'sqlite'
@@ -240,9 +240,8 @@ class SQLiteParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_entry = parser_mediator.GetFileEntry()
-
-    database = SQLiteDatabase(file_entry.name)
+    filename = parser_mediator.GetFilename()
+    database = SQLiteDatabase(filename)
     try:
       database.Open(file_object)
 

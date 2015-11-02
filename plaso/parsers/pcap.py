@@ -469,7 +469,7 @@ class PcapEvent(time_events.PosixTimeEvent):
     self.stream_data = repr(stream_object.stream_data[:50])
 
 
-class PcapParser(interface.SingleFileBaseParser):
+class PcapParser(interface.FileObjectParser):
   """Parses PCAP files."""
 
   NAME = u'pcap'

@@ -16,7 +16,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class BencodeParser(interface.SingleFileBaseParser):
+class BencodeParser(interface.FileObjectParser):
   """Deserializes bencoded file; produces a dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. The Parse() function

@@ -17,11 +17,12 @@ class WinRecycleEvent(time_events.FiletimeEvent):
   DATA_TYPE = u'windows:metadata:deleted_item'
 
   def __init__(
-      self, filename_string, filename_utf, record_information, record_size,
-      encoding=None):
+      self, filetime, filename_string, filename_utf, record_information,
+      record_size, encoding=None):
     """Initializes the event object.
 
     Args:
+      filetime: the FILETIME timestamp value.
       filename_string: the short filename as an extended ASCII string (codepage
                       encoded).
       filename_utf: the filename in Unicode.
@@ -30,10 +31,9 @@ class WinRecycleEvent(time_events.FiletimeEvent):
       record_size: the size of the record.
       encoding: optional codepage used to encode the string with.
     """
-    timestamp = record_information.get(u'filetime', 0)
-
+    # TODO: pass values directly instead of reading record.
     super(WinRecycleEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.DELETED_TIME)
+        filetime, eventdata.EventTimestamp.DELETED_TIME)
 
     if u'index' in record_information:
       self.index = record_information.get(u'index', 0)
@@ -62,7 +62,7 @@ class WinRecycleEvent(time_events.FiletimeEvent):
       self.orig_filename = short_filename
 
 
-class WinRecycleBinParser(interface.SingleFileBaseParser):
+class WinRecycleBinParser(interface.FileObjectParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = u'recycle_bin'
@@ -88,7 +88,6 @@ class WinRecycleBinParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_entry = parser_mediator.GetFileEntry()
     try:
       magic_header = self.MAGIC_STRUCT.parse_stream(file_object)
     except (construct.FieldError, IOError) as exception:
@@ -101,18 +100,21 @@ class WinRecycleBinParser(interface.SingleFileBaseParser):
 
     # We may have to rely on filenames since this header is very generic.
     # TODO: Rethink this and potentially make a better test.
-    if not file_entry.name.startswith(u'$I'):
+    filename = parser_mediator.GetFilename()
+    if not filename.startswith(u'$I'):
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, filename doesn\'t start with $I.')
 
     record = self.RECORD_STRUCT.parse_stream(file_object)
     filename_utf = binary.ReadUtf16Stream(file_object)
 
-    event_object = WinRecycleEvent(u'', filename_utf, record, 0)
+    filetime = record.get(u'filetime', 0)
+    # TODO: handle missing timestamp.
+    event_object = WinRecycleEvent(filetime, u'', filename_utf, record, 0)
     parser_mediator.ProduceEvent(event_object)
 
 
-class WinRecyclerInfo2Parser(interface.SingleFileBaseParser):
+class WinRecyclerInfo2Parser(interface.FileObjectParser):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = u'recycle_bin_info2'
@@ -151,7 +153,6 @@ class WinRecyclerInfo2Parser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_entry = parser_mediator.GetFileEntry()
     try:
       magic_header = self.INT32_LE.parse_stream(file_object)
     except (construct.FieldError, IOError) as exception:
@@ -165,7 +166,8 @@ class WinRecyclerInfo2Parser(interface.SingleFileBaseParser):
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
     # TODO: Rethink this and potentially make a better test.
-    if not file_entry.name.startswith(u'INFO2'):
+    filename = parser_mediator.GetFilename()
+    if not filename.startswith(u'INFO2'):
       raise errors.UnableToParseFile(
           u'Not an INFO2 file, filename isn\'t INFO2.')
 
@@ -197,9 +199,11 @@ class WinRecyclerInfo2Parser(interface.SingleFileBaseParser):
       else:
         filename_utf = u''
 
+      filetime = record_information.get(u'filetime', 0)
+      # TODO: handle missing timestamp.
       event_object = WinRecycleEvent(
-          filename_string, filename_utf, record_information, record_size,
-          encoding=parser_mediator.codepage)
+          filetime, filename_string, filename_utf, record_information,
+          record_size, encoding=parser_mediator.codepage)
       parser_mediator.ProduceEvent(event_object)
 
       data = file_object.read(record_size)

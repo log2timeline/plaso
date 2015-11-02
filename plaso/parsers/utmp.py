@@ -53,7 +53,7 @@ class UtmpEvent(time_events.PosixTimeEvent):
     self.user = user
 
 
-class UtmpParser(interface.SingleFileBaseParser):
+class UtmpParser(interface.FileObjectParser):
   """Parser for Linux/Unix UTMP files."""
 
   _INITIAL_FILE_OFFSET = None

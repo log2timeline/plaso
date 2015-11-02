@@ -29,7 +29,7 @@ class EseDbCache(plugins.BasePluginCache):
     setattr(self, attribute_name, dict_object)
 
 
-class EseDbParser(interface.SingleFileBaseParser):
+class EseDbParser(interface.FileObjectParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
   _INITIAL_FILE_OFFSET = None

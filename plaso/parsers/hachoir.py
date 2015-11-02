@@ -44,7 +44,7 @@ class HachoirEvent(time_events.TimestampEvent):
     self.metadata = attributes
 
 
-class HachoirParser(interface.SingleFileBaseParser):
+class HachoirParser(interface.FileObjectParser):
   """Class to parse meta data from files using Hachoir."""
 
   NAME = u'hachoir'
