@@ -36,7 +36,6 @@ from plaso.parsers import safari_cookies
 from plaso.parsers import sccm
 from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
-from plaso.parsers import skydrivelog_old
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
 from plaso.parsers import syslog
