@@ -72,7 +72,7 @@ class NTFSMFTParser(interface.FileObjectParser):
             creation_time, eventdata.EventTimestamp.CREATION_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -90,7 +90,7 @@ class NTFSMFTParser(interface.FileObjectParser):
             modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -108,7 +108,7 @@ class NTFSMFTParser(interface.FileObjectParser):
             access_time, eventdata.EventTimestamp.ACCESS_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -128,7 +128,7 @@ class NTFSMFTParser(interface.FileObjectParser):
             eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
