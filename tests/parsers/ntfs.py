@@ -76,6 +76,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The creation timestamp.
     event_object = event_objects[0]
 
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_object.is_allocated, bool)
+    self.assertTrue(event_object.is_allocated)
+
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
@@ -84,6 +88,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The last modification timestamp.
     event_object = event_objects[1]
+
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_object.is_allocated, bool)
+    self.assertTrue(event_object.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
@@ -94,6 +102,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     event_object = event_objects[2]
 
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_object.is_allocated, bool)
+    self.assertTrue(event_object.is_allocated)
+
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
@@ -102,6 +114,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The entry modification timestamp.
     event_object = event_objects[3]
+
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_object.is_allocated, bool)
+    self.assertTrue(event_object.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
@@ -123,6 +139,10 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The creation timestamp.
     event_object = event_objects[4]
+
+    # Check that the allocation status is set correctly.
+    self.assertIsInstance(event_object.is_allocated, bool)
+    self.assertTrue(event_object.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
