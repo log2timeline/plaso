@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the NTFS metadata file parser."""
 
+import types
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -75,6 +76,11 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     # The creation timestamp.
     event_object = event_objects[0]
+
+    # Check that the event doesn't include any methods.
+    for key, value in event_object.GetValues().items():
+      self.assertNotIsInstance(
+          value, (types.BuiltinFunctionType, types.MethodType))
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
