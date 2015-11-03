@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the NTFS metadata file parser."""
 
-import types
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
