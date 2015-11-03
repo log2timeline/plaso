@@ -92,7 +92,7 @@ class KeychainApplicationRecordEvent(time_events.TimestampEvent):
     self.text_description = text_description
 
 
-class KeychainParser(interface.SingleFileBaseParser):
+class KeychainParser(interface.FileObjectParser):
   """Parser for Keychain files."""
 
   _INITIAL_FILE_OFFSET = None

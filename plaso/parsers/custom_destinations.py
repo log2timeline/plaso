@@ -16,7 +16,7 @@ from plaso.parsers import manager
 from plaso.parsers import winlnk
 
 
-class CustomDestinationsParser(interface.SingleFileBaseParser):
+class CustomDestinationsParser(interface.FileObjectParser):
   """Parses .customDestinations-ms files."""
 
   _INITIAL_FILE_OFFSET = None
@@ -87,7 +87,7 @@ class CustomDestinationsParser(interface.SingleFileBaseParser):
       parser_mediator.ProduceParseError(message)
       return 0
 
-    self._WINLNK_PARSER.UpdateChainAndParseFileObject(
+    self._WINLNK_PARSER.Parse(
         parser_mediator, lnk_file_object, display_name=display_name)
 
     # We cannot trust the file size in the LNK data so we get the last offset

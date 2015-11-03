@@ -105,7 +105,7 @@ class PELoadConfigModificationEvent(PETimeEvent):
   TIMESTAMP_TYPE = eventdata.EventTimestamp.MODIFICATION_TIME
 
 
-class PEParser(interface.SingleFileBaseParser):
+class PEParser(interface.FileObjectParser):
   """Parser for Portable Executable (PE) files."""
   _INITIAL_FILE_OFFSET = None
   NAME = u'pe'

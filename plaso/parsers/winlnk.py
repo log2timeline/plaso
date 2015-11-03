@@ -8,7 +8,6 @@ import pylnk
 from plaso import dependencies
 from plaso.events import time_events
 from plaso.events import windows_events
-from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -86,7 +85,7 @@ class WinLnkLinkEvent(time_events.FiletimeEvent):
     self.birth_droid_file_identifier = lnk_file.birth_droid_file_identifier
 
 
-class WinLnkParser(interface.SingleFileBaseParser):
+class WinLnkParser(interface.FileObjectParser):
   """Parses Windows Shortcut (LNK) files."""
 
   _INITIAL_FILE_OFFSET = None
@@ -111,9 +110,6 @@ class WinLnkParser(interface.SingleFileBaseParser):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
       display_name: Optional display name.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     if not display_name:
       display_name = parser_mediator.GetDisplayName()
@@ -124,19 +120,18 @@ class WinLnkParser(interface.SingleFileBaseParser):
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
+      return
 
     link_target = None
     if lnk_file.link_target_identifier_data:
       # TODO: change file_entry.name to display name once it is generated
       # correctly.
-      file_entry = parser_mediator.GetFileEntry()
-      display_name = file_entry.name
+      display_name = parser_mediator.GetFilename()
       shell_items_parser = shell_items.ShellItemsParser(display_name)
-      shell_items_parser.UpdateChainAndParse(
-          parser_mediator, lnk_file.link_target_identifier_data, None,
+      shell_items_parser.ParseByteStream(
+          parser_mediator, lnk_file.link_target_identifier_data,
           codepage=parser_mediator.codepage)
 
       link_target = shell_items_parser.CopyToPath()
@@ -174,24 +169,6 @@ class WinLnkParser(interface.SingleFileBaseParser):
       pass
 
     lnk_file.close()
-
-  def UpdateChainAndParseFileObject(
-      self, parser_mediator, file_object, display_name=None):
-    """Wrapper for ParseFileObject to synchronize the parser chain.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
-      display_name: Optional display name.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    parser_mediator.AppendToParserChain(self)
-    try:
-      self.ParseFileObject(parser_mediator, file_object, display_name)
-    finally:
-      parser_mediator.PopFromParserChain()
 
 
 manager.ParsersManager.RegisterParser(WinLnkParser)

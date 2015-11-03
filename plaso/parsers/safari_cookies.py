@@ -40,7 +40,7 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
     self.url = url
 
 
-class BinaryCookieParser(interface.SingleFileBaseParser):
+class BinaryCookieParser(interface.FileObjectParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = u'binary_cookies'

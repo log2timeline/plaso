@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Android usage-history.xml file."""
+"""Parser for the Android usage-history.xml files."""
 
 import os
 
-from dfvfs.helpers import text_file
 from xml.etree import ElementTree
 
 from plaso.events import time_events
@@ -14,33 +13,33 @@ from plaso.parsers import manager
 
 
 class AndroidAppUsageEvent(time_events.JavaTimeEvent):
-  """EventObject for an Android Application Last Resumed event."""
+  """Convenience class for an Android Application Last Resumed event."""
 
   DATA_TYPE = u'android:event:last_resume_time'
 
-  def __init__(self, last_resume_time, package, component):
+  def __init__(self, java_time, package_name, component_name):
     """Initializes the event object.
 
     Args:
-      last_resume_time: The Last Resume Time of an Android App with details of
-           individual components. The timestamp contains the number of
-           milli seconds since Jan 1, 1970 00:00:00 UTC.
-      package: The name of the Android App.
-      component: The individual component of the App.
+      java_time: the Java timestamp which is an integer containing the number
+                 of milliseconds since January 1, 1970, 00:00:00 UTC.
+      package_name: string containing the name of the Android application.
+      component_name: string containing the name of the individual component
+                      of the application.
     """
     super(AndroidAppUsageEvent, self).__init__(
-        last_resume_time, eventdata.EventTimestamp.LAST_RESUME_TIME)
-    self.component = component
-    self.package = package
+        java_time, eventdata.EventTimestamp.LAST_RESUME_TIME)
+    self.component = component_name
+    self.package = package_name
 
 
-class AndroidAppUsageParser(interface.SingleFileBaseParser):
+class AndroidAppUsageParser(interface.FileObjectParser):
   """Parses the Android usage-history.xml file."""
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = u'android_app_usage'
-  DESCRIPTION = u'Parser for the Android usage-history.xml file.'
+  DESCRIPTION = u'Parser for Android usage-history.xml files.'
+
+  _HEADER_READ_SIZE = 128
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an Android usage-history file-like object.
@@ -52,28 +51,13 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
-
-    # Need to verify the first line to make sure this is a) XML and
-    # b) the right XML.
-    first_line = text_file_object.readline(90)
-
-    # Note that we must check the data here as a string first, otherwise
-    # forcing first_line to convert to Unicode can raise a UnicodeDecodeError.
-    if not first_line.startswith(b'<?xml'):
+    data = file_object.read(self._HEADER_READ_SIZE)
+    if not data.startswith(b'<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [not XML]')
 
-    # We read in the second line due to the fact that ElementTree
-    # reads the entire file in memory to parse the XML string and
-    # we only care about the XML file with the correct root key,
-    # which denotes a typed_history.xml file.
-    second_line = text_file_object.readline(50).strip()
-
-    # Note that we must check the data here as a string first, otherwise
-    # forcing second_line to convert to Unicode can raise a UnicodeDecodeError.
-    if second_line != b'<usage-history>':
+    _, _, data = data.partition(b'\n')
+    if not data.startswith(b'<usage-history'):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [wrong XML root key]')
 
@@ -82,22 +66,32 @@ class AndroidAppUsageParser(interface.SingleFileBaseParser):
     file_object.seek(0, os.SEEK_SET)
 
     xml = ElementTree.parse(file_object)
-    root = xml.getroot()
+    root_node = xml.getroot()
 
-    for app in root:
-      for part in app.iter():
-        if part.tag == u'comp':
-          package = app.get(u'name', u'')
-          component = part.get(u'name', u'')
+    for application_node in root_node:
+      package_name = application_node.get(u'name', u'')
 
-          try:
-            last_resume_time = int(part.get(u'lrt', u''), 10)
-          except ValueError:
-            continue
+      for part_node in application_node.iter():
+        if part_node.tag != u'comp':
+          continue
 
-          event_object = AndroidAppUsageEvent(
-              last_resume_time, package, component)
-          parser_mediator.ProduceEvent(event_object)
+        component_name = part_node.get(u'name', u'')
+        last_resume_time = part_node.get(u'lrt', None)
+
+        if last_resume_time is None:
+          parser_mediator.ProduceParseError(u'missing last resume time.')
+          continue
+
+        try:
+          last_resume_time = int(last_resume_time, 10)
+        except ValueError:
+          parser_mediator.ProduceParseError(
+              u'unsupported last resume time: {0:s}.'.format(last_resume_time))
+          continue
+
+        event_object = AndroidAppUsageEvent(
+            last_resume_time, package_name, component_name)
+        parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(AndroidAppUsageParser)

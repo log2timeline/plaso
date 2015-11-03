@@ -18,6 +18,7 @@ from plaso.engine import queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.hashers import manager as hashers_manager
+from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
 
 
@@ -104,6 +105,23 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._parsers_profiler = None
     self._profiling_sample = 0
     self._profiling_sample_rate = 1000
+
+  def _CanProcessFileEntryWithParser(self, file_entry, parser_object):
+    """Determines if a parser can process a file entry.
+
+    Args:
+      file_entry: the file entry relating to the data to be hashed (instance of
+                  dfvfs.FileEntry)
+      parser_object: a parser object (instance of BaseParser).
+
+    Returns:
+      A boolean value that indicates a match.
+    """
+    for filter_object in parser_object.FILTERS:
+      if filter_object.Match(file_entry):
+        return True
+
+    return False
 
   def _ConsumeItem(self, path_spec, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
@@ -232,8 +250,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       self._parsers_profiler.StartTiming(parser_object.NAME)
 
     try:
-      parser_object.UpdateChainAndParse(
-          self._parser_mediator, file_object=file_object)
+      if isinstance(parser_object, parsers_interface.FileEntryParser):
+        parser_object.Parse(self._parser_mediator)
+      elif isinstance(parser_object, parsers_interface.FileObjectParser):
+        parser_object.Parse(self._parser_mediator, file_object)
+      else:
+        logging.warning(
+            u'{0:s} unsupported parser type.'.format(parser_object.NAME))
 
     # We catch the IOError so we can determine the parser that generated
     # the error.
@@ -421,6 +444,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         if not parser_object:
           logging.warning(u'No such parser: {0:s}'.format(parser_name))
           continue
+
+        if parser_object.FILTERS:
+          if not self._CanProcessFileEntryWithParser(file_entry, parser_object):
+            continue
 
         logging.debug((
             u'[ProcessDataStream] parsing file: {0:s} with parser: '

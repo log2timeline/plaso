@@ -67,13 +67,13 @@ class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
       self.description = u'Last Visit'
 
 
-class OperaTypedHistoryParser(interface.SingleFileBaseParser):
+class OperaTypedHistoryParser(interface.FileObjectParser):
   """Parses the Opera typed_history.xml file."""
-
-  _INITIAL_FILE_OFFSET = None
 
   NAME = u'opera_typed_history'
   DESCRIPTION = u'Parser for Opera typed_history.xml files.'
+
+  _HEADER_READ_SIZE = 128
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an Opera typed history file-like object.
@@ -85,29 +85,13 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
-
-    text_file_object = text_file.TextFile(file_object)
-
-    # Need to verify the first line to make sure this is a) XML and
-    # b) the right XML.
-    first_line = text_file_object.readline(90)
-
-    # Note that we must check the data here as a string first, otherwise
-    # forcing first_line to convert to Unicode can raise a UnicodeDecodeError.
-    if not first_line.startswith(b'<?xml version="1.0'):
+    data = file_object.read(self._HEADER_READ_SIZE)
+    if not data.startswith(b'<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
 
-    # We read in the second line due to the fact that ElementTree
-    # reads the entire file in memory to parse the XML string and
-    # we only care about the XML file with the correct root key,
-    # which denotes a typed_history.xml file.
-    second_line = text_file_object.readline(50).strip()
-
-    # Note that we must check the data here as a string first, otherwise
-    # forcing second_line to convert to Unicode can raise a UnicodeDecodeError.
-    if second_line != b'<typed_history>':
+    _, _, data = data.partition(b'\n')
+    if not data.startswith(b'<typed_history'):
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 
@@ -119,21 +103,25 @@ class OperaTypedHistoryParser(interface.SingleFileBaseParser):
 
     for history_item in xml.iterfind(u'typed_history_item'):
       content = history_item.get(u'content', u'')
-      last_typed = history_item.get(u'last_typed', u'')
+      last_typed_time = history_item.get(u'last_typed', None)
       entry_type = history_item.get(u'type', u'')
 
+      if last_typed_time is None:
+        parser_mediator.ProduceParseError(u'missing last typed time.')
+        continue
+
       try:
-        timestamp = timelib.Timestamp.FromTimeString(last_typed)
+        timestamp = timelib.Timestamp.FromTimeString(last_typed_time)
       except errors.TimestampError:
         parser_mediator.ProduceParseError(
-            u'Unable to parse time string: {0:s}'.format(last_typed))
+            u'unsupported last typed time: {0:s}.'.format(last_typed_time))
         continue
 
       event_object = OperaTypedHistoryEvent(timestamp, content, entry_type)
       parser_mediator.ProduceEvent(event_object)
 
 
-class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
+class OperaGlobalHistoryParser(interface.FileObjectParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = u'opera_global'

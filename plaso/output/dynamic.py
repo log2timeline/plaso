@@ -80,10 +80,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
+          u'{1:s}. Event {2!d}:{3!d} triggered the exception.').format(
               event_object.timestamp, exception,
-              getattr(event_object, 'store_number', u''),
-              getattr(event_object, 'store_index', u'')))
+              getattr(event_object, u'store_number', u'N/A'),
+              getattr(event_object, u'store_index', u'N/A')))
       return u'0000-00-00'
     return u'{0:04d}-{1:02d}-{2:02d}'.format(
         date_use.year, date_use.month, date_use.day)
@@ -105,10 +105,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
+          u'{1:s}. Event {2!d}:{3!d} triggered the exception.').format(
               event_object.timestamp, exception,
-              getattr(event_object, 'store_number', u''),
-              getattr(event_object, 'store_index', u'')))
+              getattr(event_object, u'store_number', u'N/A'),
+              getattr(event_object, u'store_index', u'N/A')))
 
       return u'0000-00-00T00:00:00'
 
@@ -270,8 +270,8 @@ class DynamicOutputModule(interface.LinearOutputModule):
           u'Unable to copy {0:d} into a human readable timestamp with error: '
           u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
               event_object.timestamp, exception,
-              getattr(event_object, 'store_number', u''),
-              getattr(event_object, 'store_index', u'')))
+              getattr(event_object, 'store_number', 0),
+              getattr(event_object, 'store_index', 0)))
       return u'00:00:00'
     return u'{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)

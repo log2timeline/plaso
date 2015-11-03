@@ -311,7 +311,7 @@ class ChromeCacheEntryEvent(time_events.WebKitTimeEvent):
     self.original_url = cache_entry.key
 
 
-class ChromeCacheParser(interface.BaseParser):
+class ChromeCacheParser(interface.FileEntryParser):
   """Parses Chrome Cache files."""
 
   NAME = u'chrome_cache'
@@ -357,31 +357,30 @@ class ChromeCacheParser(interface.BaseParser):
         cache_address = cache_entry.next
         cache_address_chain_length += 1
 
-  def Parse(self, parser_mediator, **kwargs):
+  def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses Chrome Cache files.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    display_name = parser_mediator.GetDisplayName()
-    file_object = parser_mediator.GetFileObject()
-
     index_file = IndexFile()
+    file_object = file_entry.GetFileObject()
     try:
       index_file.Open(file_object)
     except IOError as exception:
       file_object.close()
+
+      display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
               self.NAME, display_name, exception))
 
-    file_entry = parser_mediator.GetFileEntry()
-    file_system = file_entry.GetFileSystem()
-
     try:
+      file_system = file_entry.GetFileSystem()
       self.ParseIndexFile(
           parser_mediator, file_system, file_entry, index_file, **kwargs)
     finally:

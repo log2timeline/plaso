@@ -33,5 +33,28 @@ class SkyDriveLogFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
 
 
+class SkyDriveOldLogFormatterTest(test_lib.EventFormatterTestCase):
+  """Tests for the SkyDrive old log event formatter."""
+
+  def testInitialization(self):
+    """Tests the initialization."""
+    event_formatter = skydrivelog.SkyDriveOldLogFormatter()
+    self.assertNotEqual(event_formatter, None)
+
+  def testGetFormatStringAttributeNames(self):
+    """Tests the GetFormatStringAttributeNames function."""
+    event_formatter = skydrivelog.SkyDriveOldLogFormatter()
+
+    expected_attribute_names = [
+        u'source_code',
+        u'log_level',
+        u'text']
+
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
+
+  # TODO: add test for GetMessages.
+
+
 if __name__ == '__main__':
   unittest.main()

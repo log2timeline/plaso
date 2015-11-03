@@ -208,8 +208,8 @@ class SQLiteDatabase(object):
     return cursor
 
 
-class SQLiteParser(interface.BaseParser):
-  """A SQLite parser for Plaso."""
+class SQLiteParser(interface.FileObjectParser):
+  """Parses SQLite database files."""
 
   NAME = u'sqlite'
   DESCRIPTION = u'Parser for SQLite database files.'
@@ -230,38 +230,35 @@ class SQLiteParser(interface.BaseParser):
     format_specification.AddNewSignature(b'SQLite format 3', offset=0)
     return format_specification
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses an SQLite database.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a SQLite database file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
-    Returns:
-      A event object generator (EventObjects) extracted from the database.
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_entry = parser_mediator.GetFileEntry()
-
-    database = SQLiteDatabase(file_entry.name)
-    file_object = parser_mediator.GetFileObject()
+    filename = parser_mediator.GetFilename()
+    database = SQLiteDatabase(filename)
     try:
       database.Open(file_object)
 
     except (IOError, ValueError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to open database with error: {0:s}'.format(
-              repr(exception)))
+              exception))
 
     except sqlite3.DatabaseError as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse SQLite database with error: {0:s}.'.format(
-              repr(exception)))
-
-    finally:
-      file_object.close()
+              exception))
 
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
+      # TODO: add a table name filter and do the plugin selection here.
       for plugin_object in self._plugins:
         try:
           plugin_object.UpdateChainAndProcess(

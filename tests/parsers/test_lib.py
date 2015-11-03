@@ -14,6 +14,7 @@ from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
+from plaso.parsers import interface
 from plaso.parsers import mediator
 
 
@@ -207,10 +208,15 @@ class ParserTestCase(unittest.TestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
-    # AppendToParserChain needs to be run after SetFileEntry.
-    parser_mediator.AppendToParserChain(parser_object)
+    if isinstance(parser_object, interface.FileEntryParser):
+      parser_object.Parse(parser_mediator)
 
-    parser_object.Parse(parser_mediator)
+    elif isinstance(parser_object, interface.FileObjectParser):
+      file_object = file_entry.GetFileObject()
+      try:
+        parser_object.Parse(parser_mediator, file_object)
+      finally:
+        file_object.close()
 
     return event_queue_consumer
 
