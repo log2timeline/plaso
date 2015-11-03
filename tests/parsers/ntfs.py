@@ -78,7 +78,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     # Check that the event doesn't include any methods.
-    for key, value in event_object.GetValues().items():
+    for _, value in event_object.GetValues().items():
       self.assertNotIsInstance(
           value, (types.BuiltinFunctionType, types.MethodType))
 
