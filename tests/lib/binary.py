@@ -56,7 +56,7 @@ class BinaryTests(unittest.TestCase):
           binary.ReadUtf16Stream(file_object),
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
-  def testUt16StreamCopyToString(self):
+  def testUtf16StreamCopyToString(self):
     """Test copying an UTF-16 byte stream to a string."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
@@ -64,16 +64,16 @@ class BinaryTests(unittest.TestCase):
 
       # Read a null char terminated string.
       self.assertEqual(
-          binary.Ut16StreamCopyToString(byte_stream[0x10:]), u'PING.EXE')
+          binary.Utf16StreamCopyToString(byte_stream[0x10:]), u'PING.EXE')
 
       # Read a fixed size string.
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
-      string = binary.Ut16StreamCopyToString(
+      string = binary.Utf16StreamCopyToString(
           byte_stream[0x27f8:], byte_stream_size=44)
       self.assertEqual(string, expected_string)
 
       expected_string = u'\\DEVICE\\HARDDISKVOLUME1'
-      string = binary.Ut16StreamCopyToString(
+      string = binary.Utf16StreamCopyToString(
           byte_stream[0x27f8:], byte_stream_size=46)
       self.assertEqual(string, expected_string)
 
@@ -81,16 +81,16 @@ class BinaryTests(unittest.TestCase):
       expected_string = (
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
-      string = binary.Ut16StreamCopyToString(byte_stream[7236:])
+      string = binary.Utf16StreamCopyToString(byte_stream[7236:])
       self.assertEqual(string, expected_string)
 
-  def testArrayOfUt16StreamCopyToString(self):
+  def testArrayOfUtf16StreamCopyToString(self):
     """Test copying an array of UTF-16 byte streams to strings."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
       byte_stream = file_object.read()
 
-      strings_array = binary.ArrayOfUt16StreamCopyToString(
+      strings_array = binary.ArrayOfUtf16StreamCopyToString(
           byte_stream[0x1c44:], byte_stream_size=2876)
       expected_strings_array = [
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',
@@ -123,13 +123,13 @@ class BinaryTests(unittest.TestCase):
 
       self.assertEqual(strings_array, expected_strings_array)
 
-  def testArrayOfUt16StreamCopyToStringTable(self):
+  def testArrayOfUtf16StreamCopyToStringTable(self):
     """Test copying an array of UTF-16 byte streams to a string table."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
       byte_stream = file_object.read()
 
-      string_table = binary.ArrayOfUt16StreamCopyToStringTable(
+      string_table = binary.ArrayOfUtf16StreamCopyToStringTable(
           byte_stream[0x1c44:], byte_stream_size=2876)
       expected_string_table = {
           0: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',

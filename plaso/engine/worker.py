@@ -47,6 +47,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       u'/$Extend/$Reparse',
       u'/$Extend/$RmMetadata/$Repair',
       u'/$Extend/$RmMetadata/$TxfLog/$Tops',
+      u'/$Extend/$UsnJrnl',
       u'/$LogFile',
       u'/$MFT',
       u'/$MFTMirr',
@@ -92,6 +93,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._produced_number_of_path_specs = 0
     self._resolver_context = resolver_context
     self._specification_store = None
+    self._usnjrnl_parser_object = None
 
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer = parse_error_queue_producer
@@ -491,31 +493,49 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     is_metadata_file = self._IsMetadataFile(file_entry)
 
-    # Not every file entry has a data stream. In such cases we want to
-    # extract the metadata only.
-    has_data_stream = file_entry.HasDataStream(data_stream_name)
-
     try:
-      if has_data_stream:
-        self._HashDataStream(file_entry, data_stream_name=data_stream_name)
+      if is_metadata_file:
+        parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+        if (self._usnjrnl_parser_object and parent_path_spec and
+            file_entry.name == u'$UsnJrnl' and data_stream_name == u'$J'):
 
-      # We always want to use the filestat parser if set but we only want
-      # to invoke it once per file entry, so we only use it if we are
-      # processing the default (nameless) data stream.
-      if not data_stream_name and self._filestat_parser_object:
-        self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
+          # To be able to ignore the sparse data ranges the UsnJrnl parser
+          # requires to read directly from the volume.
+          volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
+              parent_path_spec, resolver_context=self._resolver_context)
 
-      is_archive = False
-      is_compressed_stream = False
+          try:
+            self._ParseFileEntryWithParser(
+                self._usnjrnl_parser_object, file_entry,
+                file_object=volume_file_object)
+          finally:
+            volume_file_object.close()
 
-      if not is_metadata_file and file_entry.IsFile():
-        is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
-        if not is_compressed_stream:
-          is_archive = self._ProcessArchiveFile(file_entry)
+      else:
+        # Not every file entry has a data stream. In such cases we want to
+        # extract the metadata only.
+        has_data_stream = file_entry.HasDataStream(data_stream_name)
 
-      if (has_data_stream and not is_archive and not is_compressed_stream and
-          not is_metadata_file):
-        self._ProcessDataStream(file_entry, data_stream_name=data_stream_name)
+        if has_data_stream:
+          self._HashDataStream(file_entry, data_stream_name=data_stream_name)
+
+        # We always want to use the filestat parser if set but we only want
+        # to invoke it once per file entry, so we only use it if we are
+        # processing the default (nameless) data stream.
+        if not data_stream_name and self._filestat_parser_object:
+          self._ParseFileEntryWithParser(
+              self._filestat_parser_object, file_entry)
+
+        is_archive = False
+        is_compressed_stream = False
+
+        if file_entry.IsFile():
+          is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
+          if not is_compressed_stream:
+            is_archive = self._ProcessArchiveFile(file_entry)
+
+        if has_data_stream and not is_archive and not is_compressed_stream:
+          self._ProcessDataStream(file_entry, data_stream_name=data_stream_name)
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
@@ -656,7 +676,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     self._non_sigscan_parser_names = []
     for parser_name in non_sigscan_parser_names:
-      if parser_name == u'filestat':
+      if parser_name in [u'filestat', u'usnjrnl']:
         continue
       self._non_sigscan_parser_names.append(parser_name)
 
@@ -669,6 +689,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
     if u'filestat' in self._parser_objects:
       del self._parser_objects[u'filestat']
+
+    self._usnjrnl_parser_object = self._parser_objects.get(u'usnjrnl', None)
+    if u'usnjrnl' in self._parser_objects:
+      del self._parser_objects[u'usnjrnl']
 
   def Run(self):
     """Extracts event objects from file entries."""

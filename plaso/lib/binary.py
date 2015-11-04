@@ -132,7 +132,7 @@ def ReadUtf16Stream(file_object, offset=None, byte_size=0):
   return ReadUtf16(b''.join(char_buffer))
 
 
-def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
+def Utf16StreamCopyToString(byte_stream, byte_stream_size=None):
   """Copies an UTF-16 formatted byte stream to a string.
 
   The UTF-16 formatted byte stream should be terminated by an end-of-string
@@ -158,7 +158,7 @@ def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
   return utf16_stream.decode(u'utf-16-le', errors=u'ignore')
 
 
-def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
+def ArrayOfUtf16StreamCopyToString(byte_stream, byte_stream_size=None):
   """Copies an array of UTF-16 formatted byte streams to an array of strings.
 
   The UTF-16 formatted byte stream should be terminated by an end-of-string
@@ -195,7 +195,7 @@ def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
   return array_of_strings
 
 
-def ArrayOfUt16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
+def ArrayOfUtf16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
   """Copies an array of UTF-16 formatted byte streams to a string table.
 
   The string table is a dict of strings with the byte offset as their key.

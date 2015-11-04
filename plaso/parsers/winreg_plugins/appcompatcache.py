@@ -476,7 +476,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
           break
         string_size += 2
 
-      cached_entry_object.path = binary.Ut16StreamCopyToString(
+      cached_entry_object.path = binary.Utf16StreamCopyToString(
           cached_entry_data[0:string_size])
 
     elif format_type in [
@@ -488,7 +488,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       path_size = cached_entry_struct.get(u'path_size')
 
       cached_entry_data_offset = 14 + path_size
-      cached_entry_object.path = binary.Ut16StreamCopyToString(
+      cached_entry_object.path = binary.Utf16StreamCopyToString(
           cached_entry_data[14:cached_entry_data_offset])
 
       if format_type == self._FORMAT_TYPE_8:
@@ -540,7 +540,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     if path_offset > 0 and path_size > 0:
       path_size += path_offset
 
-      cached_entry_object.path = binary.Ut16StreamCopyToString(
+      cached_entry_object.path = binary.Utf16StreamCopyToString(
           value_data[path_offset:path_size])
 
     if data_size > 0:

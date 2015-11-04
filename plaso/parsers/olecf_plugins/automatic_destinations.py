@@ -39,7 +39,7 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
 
     self.hostname = binary.ByteStreamCopyToString(
         dest_list_entry.hostname, codepage=u'ascii')
-    self.path = binary.Ut16StreamCopyToString(dest_list_entry.path)
+    self.path = binary.Utf16StreamCopyToString(dest_list_entry.path)
     self.pin_status = dest_list_entry.pin_status
 
     self.droid_volume_identifier = binary.ByteStreamCopyToGuid(

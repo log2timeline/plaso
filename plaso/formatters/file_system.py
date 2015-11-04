@@ -135,5 +135,102 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
+class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
+  """The NTFS USN change event formatter."""
+
+  DATA_TYPE = u'fs:ntfs:usn_change'
+
+  FORMAT_STRING_PIECES = [
+      u'{filename}',
+      u'File reference: {file_reference}',
+      u'Parent file reference: {parent_file_reference}',
+      u'Update source: {update_source}',
+      u'Update reason: {update_reason}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{filename}',
+      u'{file_reference}',
+      u'{update_reason}']
+
+  SOURCE_SHORT = u'FILE'
+
+  _USN_REASON_FLAGS = {
+      0x00000001: u'USN_REASON_DATA_OVERWRITE',
+      0x00000002: u'USN_REASON_DATA_EXTEND',
+      0x00000004: u'USN_REASON_DATA_TRUNCATION',
+      0x00000010: u'USN_REASON_NAMED_DATA_OVERWRITE',
+      0x00000020: u'USN_REASON_NAMED_DATA_EXTEND',
+      0x00000040: u'USN_REASON_NAMED_DATA_TRUNCATION',
+      0x00000100: u'USN_REASON_FILE_CREATE',
+      0x00000200: u'USN_REASON_FILE_DELETE',
+      0x00000400: u'USN_REASON_EA_CHANGE',
+      0x00000800: u'USN_REASON_SECURITY_CHANGE',
+      0x00001000: u'USN_REASON_RENAME_OLD_NAME',
+      0x00002000: u'USN_REASON_RENAME_NEW_NAME',
+      0x00004000: u'USN_REASON_INDEXABLE_CHANGE',
+      0x00008000: u'USN_REASON_BASIC_INFO_CHANGE',
+      0x00010000: u'USN_REASON_HARD_LINK_CHANGE',
+      0x00020000: u'USN_REASON_COMPRESSION_CHANGE',
+      0x00040000: u'USN_REASON_ENCRYPTION_CHANGE',
+      0x00080000: u'USN_REASON_OBJECT_ID_CHANGE',
+      0x00100000: u'USN_REASON_REPARSE_POINT_CHANGE',
+      0x00200000: u'USN_REASON_STREAM_CHANGE',
+      0x00400000: u'USN_REASON_TRANSACTED_CHANGE',
+      0x80000000: u'USN_REASON_CLOSE'}
+
+  _USN_SOURCE_FLAGS = {
+      0x00000001: u'USN_SOURCE_DATA_MANAGEMENT',
+      0x00000002: u'USN_SOURCE_AUXILIARY_DATA',
+      0x00000004: u'USN_SOURCE_REPLICATION_MANAGEMENT'}
+
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    event_values = event_object.GetValues()
+
+    file_reference = event_values.get(u'file_reference', 0)
+    event_values[u'file_reference'] = u'{0:d}-{1:d}'.format(
+        file_reference & 0xffffffffffff, file_reference >> 48)
+
+    parent_file_reference = event_values.get(u'parent_file_reference', 0)
+    if parent_file_reference:
+      event_values[u'parent_file_reference'] = u'{0:d}-{1:d}'.format(
+          parent_file_reference & 0xffffffffffff, parent_file_reference >> 48)
+
+    update_reason_flags = event_values.get(u'update_reason_flags', 0)
+    update_reasons = []
+    for bitmask, description in sorted(self._USN_REASON_FLAGS.items()):
+      if bitmask & update_reason_flags:
+        update_reasons.append(description)
+
+    event_values[u'update_reason'] = u', '.join(update_reasons)
+
+    update_source_flags = event_values.get(u'update_source_flags', 0)
+    update_sources = []
+    for bitmask, description in sorted(self._USN_SOURCE_FLAGS.items()):
+      if bitmask & update_source_flags:
+        update_sources.append(description)
+
+    event_values[u'update_source'] = u', '.join(update_sources)
+
+    return self._ConditionalFormatMessages(event_values)
+
+
 manager.FormattersManager.RegisterFormatters([
-    FileStatEventFormatter, NTFSFileStatEventFormatter])
+    FileStatEventFormatter, NTFSFileStatEventFormatter,
+    NTFSUSNChangeEventFormatter])
