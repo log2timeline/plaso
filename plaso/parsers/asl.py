@@ -66,7 +66,7 @@ class AslEvent(time_events.PosixTimeEvent):
     self.user_sid = u'{0:d}'.format(record_header.uid)
 
 
-class AslParser(interface.SingleFileBaseParser):
+class AslParser(interface.FileObjectParser):
   """Parser for ASL log files."""
 
   _INITIAL_FILE_OFFSET = None

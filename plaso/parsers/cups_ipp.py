@@ -108,7 +108,7 @@ class CupsIppEvent(time_events.PosixTimeEvent):
           u'Unable to parse log line, with error: {0:s}'.format(exception))
 
 
-class CupsIppParser(interface.SingleFileBaseParser):
+class CupsIppParser(interface.FileObjectParser):
   """Parser for CUPS IPP files. """
 
   NAME = u'cups_ipp'

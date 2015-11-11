@@ -8,7 +8,6 @@ import pyfsntfs
 from plaso import dependencies
 from plaso.events import file_system_events
 from plaso.events import windows_events
-from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -18,7 +17,7 @@ from plaso.parsers import manager
 dependencies.CheckModuleVersion(u'pyfsntfs')
 
 
-class NTFSMFTParser(interface.SingleFileBaseParser):
+class NTFSMFTParser(interface.FileObjectParser):
   """Parses a NTFS $MFT metadata file."""
 
   _INITIAL_FILE_OFFSET = None
@@ -73,7 +72,7 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
             creation_time, eventdata.EventTimestamp.CREATION_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -91,7 +90,7 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
             modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -109,7 +108,7 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
             access_time, eventdata.EventTimestamp.ACCESS_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -129,7 +128,7 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
             eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
             mft_entry.file_reference, mft_attribute.attribute_type,
             file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated, name=name,
+            is_allocated=mft_entry.is_allocated(), name=name,
             parent_file_reference=parent_file_reference)
         parser_mediator.ProduceEvent(event_object)
 
@@ -191,19 +190,14 @@ class NTFSMFTParser(interface.SingleFileBaseParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     mft_metadata_file = pyfsntfs.mft_metadata_file()
 
     try:
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
-      display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:

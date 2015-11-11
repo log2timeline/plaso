@@ -29,7 +29,7 @@ class EseDbCache(plugins.BasePluginCache):
     setattr(self, attribute_name, dict_object)
 
 
-class EseDbParser(interface.SingleFileBaseParser):
+class EseDbParser(interface.FileObjectParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
   _INITIAL_FILE_OFFSET = None
@@ -57,18 +57,15 @@ class EseDbParser(interface.SingleFileBaseParser):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     esedb_file = pyesedb.file()
 
     try:
       esedb_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, parser_mediator.GetDisplayName(), exception))
+      parser_mediator.ProduceParseError(
+          u'unable to open file with error: {0:s}'.format(exception))
+      return
 
     # Compare the list of available plugins.
     cache = EseDbCache()

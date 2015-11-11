@@ -330,14 +330,6 @@ plaso.parsers.skydrivelog module
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.skydrivelogerr module
------------------------------------
-
-.. automodule:: plaso.parsers.skydrivelogerr
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.parsers.sqlite module
 ---------------------------
 

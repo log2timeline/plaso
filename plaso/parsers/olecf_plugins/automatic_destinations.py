@@ -163,7 +163,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
         else:
           display_name = u'# {0:s}'.format(item.name)
 
-        self._WINLNK_PARSER.UpdateChainAndParseFileObject(
+        self._WINLNK_PARSER.Parse(
             parser_mediator, item, display_name=display_name)
 
         # TODO: check for trailing data?

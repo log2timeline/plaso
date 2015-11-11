@@ -19,32 +19,40 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class UtmpxMacOsXEvent(time_events.PosixTimeEvent):
-  """Convenience class for an event utmpx."""
+  """Convenience class for an event utmpx.
+
+  Attributes:
+    computer_name: string containing name of the host or IP address.
+    status_type: integer containing the terminal status type.
+    terminal: string containing the name of the terminal.
+    user: string containing the active user name.
+  """
   DATA_TYPE = u'mac:utmpx:event'
 
   def __init__(
-      self, posix_time, user, terminal, status, computer_name, micro_seconds=0):
+      self, posix_time, user, terminal, status_type, computer_name,
+      micro_seconds=0):
     """Initializes the event object.
 
     Args:
       posix_time: the POSIX time value, which contains the number of seconds
                   since January 1, 1970 00:00:00 UTC.
-      user: active user name
-      terminal: name of the terminal
-      status: terminal status
-      computer_name: name of the host or IP.
+      user: string containing the active user name.
+      terminal: string containing the name of the terminal.
+      status_type: integer containing the terminal status type.
+      computer_name: string containing name of the host or IP address.
       micro_seconds: optional number of micro seconds.
     """
     super(UtmpxMacOsXEvent, self).__init__(
         posix_time, eventdata.EventTimestamp.START_TIME,
         micro_seconds=micro_seconds)
     self.computer_name = computer_name
-    self.status = status
+    self.status_type = status_type
     self.terminal = terminal
     self.user = user
 
 
-class UtmpxParser(interface.SingleFileBaseParser):
+class UtmpxParser(interface.FileObjectParser):
   """Parser for UTMPX files."""
 
   NAME = u'utmpx'
@@ -53,7 +61,7 @@ class UtmpxParser(interface.SingleFileBaseParser):
   # INFO: Type is suppose to be a short (2 bytes),
   # however if we analyze the file it is always
   # byte follow by 3 bytes with \x00 value.
-  MAC_UTMPX_ENTRY = construct.Struct(
+  _UTMPX_ENTRY = construct.Struct(
       u'utmpx_mac',
       construct.String(u'user', 256),
       construct.ULInt32(u'id'),
@@ -66,22 +74,9 @@ class UtmpxParser(interface.SingleFileBaseParser):
       construct.String(u'hostname', 256),
       construct.Padding(64))
 
-  MAC_UTMPX_ENTRY_SIZE = MAC_UTMPX_ENTRY.sizeof()
+  _UTMPX_ENTRY_SIZE = _UTMPX_ENTRY.sizeof()
 
-  # 9, 10 and 11 are only for Darwin and IOS.
-  MAC_STATUS_TYPE = {
-      0: u'EMPTY',
-      1: u'RUN_LVL',
-      2: u'BOOT_TIME',
-      3: u'OLD_TIME',
-      4: u'NEW_TIME',
-      5: u'INIT_PROCESS',
-      6: u'LOGIN_PROCESS',
-      7: u'USER_PROCESS',
-      8: u'DEAD_PROCESS',
-      9: u'ACCOUNTING',
-      10: u'SIGNATURE',
-      11: u'SHUTDOWN_TIME'}
+  _STATUS_TYPE_SIGNATURE = 10
 
   def _ReadEntry(self, file_object):
     """Reads an UTMPX entry.
@@ -93,36 +88,33 @@ class UtmpxParser(interface.SingleFileBaseParser):
       An event object (instance of UtmpxMacOsXEvent) or None if
       the UTMPX entry cannot be read.
     """
-    data = file_object.read(self.MAC_UTMPX_ENTRY_SIZE)
-    if len(data) != self.MAC_UTMPX_ENTRY_SIZE:
+    data = file_object.read(self._UTMPX_ENTRY_SIZE)
+    if len(data) != self._UTMPX_ENTRY_SIZE:
       return
 
     try:
-      entry = self.MAC_UTMPX_ENTRY.parse(data)
+      entry_struct = self._UTMPX_ENTRY.parse(data)
     except (IOError, construct.FieldError) as exception:
       logging.warning(
           u'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(
               exception))
       return
 
-    user, _, _ = entry.user.partition(b'\x00')
+    user, _, _ = entry_struct.user.partition(b'\x00')
     if not user:
       user = u'N/A'
 
-    terminal, _, _ = entry.tty_name.partition(b'\x00')
+    terminal, _, _ = entry_struct.tty_name.partition(b'\x00')
     if not terminal:
       terminal = u'N/A'
 
-    computer_name, _, _ = entry.hostname.partition(b'\x00')
+    computer_name, _, _ = entry_struct.hostname.partition(b'\x00')
     if not computer_name:
       computer_name = u'localhost'
 
-    value_status = self.MAC_STATUS_TYPE.get(entry.status_type, u'N/A')
-    status = u'{0}'.format(value_status)
-
     return UtmpxMacOsXEvent(
-        entry.timestamp, user, terminal, status, computer_name,
-        micro_seconds=entry.microsecond)
+        entry_struct.timestamp, user, terminal, entry_struct.status_type,
+        computer_name, micro_seconds=entry_struct.microsecond)
 
   def _VerifyStructure(self, file_object):
     """Verify that we are dealing with an UTMPX entry.
@@ -135,10 +127,10 @@ class UtmpxParser(interface.SingleFileBaseParser):
     """
     # First entry is a SIGNAL entry of the file ("header").
     try:
-      header = self.MAC_UTMPX_ENTRY.parse_stream(file_object)
+      header_struct = self._UTMPX_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError):
       return False
-    user, _, _ = header.user.partition(b'\x00')
+    user, _, _ = header_struct.user.partition(b'\x00')
 
     # The UTMPX_ENTRY structure will often successfully compile on various
     # structures, such as binary plist files, and thus we need to do some
@@ -152,12 +144,13 @@ class UtmpxParser(interface.SingleFileBaseParser):
 
     if user != b'utmpx-1.00':
       return False
-    if self.MAC_STATUS_TYPE[header.status_type] != u'SIGNATURE':
+    if header_struct.status_type != self._STATUS_TYPE_SIGNATURE:
       return False
-    if header.timestamp != 0 or header.microsecond != 0 or header.pid != 0:
+    if (header_struct.timestamp != 0 or header_struct.microsecond != 0 or
+        header_struct.pid != 0):
       return False
-    tty_name, _, _ = header.tty_name.partition(b'\x00')
-    hostname, _, _ = header.hostname.partition(b'\x00')
+    tty_name, _, _ = header_struct.tty_name.partition(b'\x00')
+    hostname, _, _ = header_struct.hostname.partition(b'\x00')
     if tty_name or hostname:
       return False
 

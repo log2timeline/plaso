@@ -37,7 +37,7 @@ class PlsRecallEvent(time_events.DelphiTimeEvent):
     self.username = user
 
 
-class PlsRecallParser(interface.SingleFileBaseParser):
+class PlsRecallParser(interface.FileObjectParser):
   """Parse PL/SQL Recall files.
 
   Parser is based on a::

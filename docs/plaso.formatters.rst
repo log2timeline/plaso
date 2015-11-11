@@ -452,14 +452,6 @@ plaso.formatters.skydrivelog module
     :undoc-members:
     :show-inheritance:
 
-plaso.formatters.skydrivelogerr module
---------------------------------------
-
-.. automodule:: plaso.formatters.skydrivelogerr
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.formatters.skype module
 -----------------------------
 

@@ -68,7 +68,7 @@ class Timestamp(object):
   # The number of micro seconds per second
   MICRO_SECONDS_PER_SECOND = 1000000
 
-  # The multiplication factor to change milli seconds to micro seconds.
+  # The multiplication factor to change milliseconds to micro seconds.
   MILLI_SECONDS_TO_MICRO_SECONDS = 1000
 
   # The difference between Jan 1, 1980 and Jan 1, 1970 in seconds.

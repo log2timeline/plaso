@@ -103,7 +103,7 @@ class BsmEvent(time_events.TimestampEvent):
     self.offset = offset
 
 
-class BsmParser(interface.SingleFileBaseParser):
+class BsmParser(interface.FileObjectParser):
   """Parser for BSM files."""
 
   _INITIAL_FILE_OFFSET = None
