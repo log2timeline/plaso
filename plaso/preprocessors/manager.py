@@ -4,9 +4,101 @@
 import logging
 
 from dfvfs.helpers import file_system_searcher
+from dfvfs.helpers import windows_path_resolver
 
+from plaso.dfwinreg import interface as dfwinreg_interface
+from plaso.dfwinreg import regf as dfwinreg_regf
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.lib import errors
+
+
+class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
+  """A file system-based Windows Registry file reader."""
+
+  def __init__(self, file_system, mount_point, path_attributes=None):
+    """Initializes a Windows Registry file reader object.
+
+    Args:
+      file_system: the file system object (instance of vfs.FileSystem).
+      mount_point: the mount point path specification (instance of
+                   path.PathSpec).
+      path_attributes: optional dictionary of path attributes. The path
+                       attributes correspond to environment variable names
+                       that can be used in the Windows paths. E.g. the
+                       systemroot path attribute corresponds to the
+                       %SystemRoot% environment variable. At moment only
+                       the systemroot and userprofile path attributes are
+                       supported.
+    """
+    super(FileSystemWinRegistryFileReader, self).__init__()
+    self._file_system = file_system
+    self._path_resolver = windows_path_resolver.WindowsPathResolver(
+        file_system, mount_point)
+
+    if path_attributes:
+      for attribute_name, attribute_value in iter(path_attributes.items()):
+        # TODO: fix the call to this class and make sure only relevant
+        # values are passed.
+        if attribute_name == u'systemroot':
+          self._path_resolver.SetEnvironmentVariable(
+              u'SystemRoot', attribute_value)
+
+        elif attribute_name == u'userprofile':
+          self._path_resolver.SetEnvironmentVariable(
+              u'UserProfile', attribute_value)
+
+  def _OpenPathSpec(self, path_spec, ascii_codepage=u'cp1252'):
+    """Opens the Windows Registry file specified by the path specification.
+
+    Args:
+      path_spec: a path specfication (instance of dfvfs.PathSpec).
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+
+    Returns:
+      The Windows Registry file (instance of WinRegistryFile) or None.
+    """
+    if not path_spec:
+      return
+
+    file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
+    if file_entry is None:
+      return
+
+    file_object = file_entry.GetFileObject()
+    if file_object is None:
+      return
+
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage=ascii_codepage)
+
+    try:
+      registry_file.Open(file_object)
+    except IOError as exception:
+      logging.warning(
+          u'Unable to open Windows Registry file with error: {0:s}'.format(
+              exception))
+      file_object.close()
+      return
+
+    return registry_file
+
+  def Open(self, path, ascii_codepage=u'cp1252'):
+    """Opens the Windows Registry file specified by the path.
+
+    Args:
+      path: string containing the path of the Windows Registry file.
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+
+    Returns:
+      The Windows Registry file (instance of WinRegistryFile) or None.
+    """
+    path_spec = self._path_resolver.ResolvePath(path)
+    if path_spec is None:
+      return
+
+    return self._OpenPathSpec(path_spec)
 
 
 class PreprocessPluginsManager(object):
@@ -158,10 +250,8 @@ class PreprocessPluginsManager(object):
       pre_obj = None
       path_attributes = None
 
-    # TODO: do not pass the full pre_obj here but just
-    # the necessary values.
-    registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
-        searcher, path_attributes=path_attributes)
+    registry_file_reader = FileSystemWinRegistryFileReader(
+        file_system, mount_point, path_attributes=path_attributes)
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
