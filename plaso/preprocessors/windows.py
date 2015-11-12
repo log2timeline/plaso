@@ -107,8 +107,12 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
 
     registry_key = self._GetKeyByPath(
         win_registry, self.KEY_PATH, path_attributes)
+    if not registry_key:
+      return
 
     attribute_value = self._ParseKey(registry_key)
+    if not attribute_value:
+      return
 
     knowledge_base.SetValue(self.ATTRIBUTE, attribute_value)
 

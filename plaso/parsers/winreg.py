@@ -1,10 +1,42 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
+import logging
+
+from plaso.dfwinreg import interface as dfwinreg_interface
+from plaso.dfwinreg import regf as dfwinreg_regf
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
+
+
+class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
+  """A single file-like object Windows Registry file reader."""
+
+  def Open(self, file_object, ascii_codepage=u'cp1252'):
+    """Opens a Windows Registry file-like object.
+
+    Args:
+      file_object: the Windows Registry file-like object.
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+
+    Returns:
+      The Windows Registry file (instance of WinRegistryFile) or None.
+    """
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(
+        ascii_codepage=ascii_codepage)
+
+    try:
+      registry_file.Open(file_object)
+    except IOError as exception:
+      logging.warning(
+          u'Unable to open Windows Registry file with error: {0:s}'.format(
+              exception))
+      return
+
+    return registry_file
 
 
 # TODO: rename to REGFParser.
@@ -60,7 +92,7 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       file_object: a file-like object.
     """
-    win_registry_reader = dfwinreg_registry.FileObjectWinRegistryFileReader()
+    win_registry_reader = FileObjectWinRegistryFileReader()
     registry_file = win_registry_reader.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()
