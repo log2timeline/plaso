@@ -36,14 +36,6 @@ plaso.dfwinreg.interface module
     :undoc-members:
     :show-inheritance:
 
-plaso.dfwinreg.path_expander module
------------------------------------
-
-.. automodule:: plaso.dfwinreg.path_expander
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.dfwinreg.regf module
 --------------------------
 

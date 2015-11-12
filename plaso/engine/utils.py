@@ -5,7 +5,47 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.dfwinreg import path_expander as dfwinreg_path_expander
+
+class _PathExpander(object):
+  """Class that implements the path expander."""
+
+  def ExpandPath(self, path, path_attributes=None):
+    """Expands a path based on attributes in pre calculated values.
+
+       A path may contain paths that are attributes, based on calculations
+       from preprocessing.
+
+       A path attribute is defined as anything within a curly bracket, e.g.
+       "\\System\\{my_attribute}\\Path\\Keyname". If the path attribute
+       my_attribute is defined its value will be replaced with the attribute
+       name, e.g. "\\System\\MyValue\\Path\\Keyname".
+
+       If the path needs to have curly brackets in the path then they need
+       to be escaped with another curly bracket, e.g.
+       "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
+       case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
+
+    Args:
+      path: the path before being expanded.
+      path_attributes: optional dictionary of path attributes.
+
+    Returns:
+      A Registry key path that's expanded based on attribute values.
+
+    Raises:
+      KeyError: If an attribute name is in the key path not set in
+                the preprocessing object a KeyError will be raised.
+    """
+    if not path_attributes:
+      return path
+
+    try:
+      expanded_path = path.format(**path_attributes)
+    except KeyError as exception:
+      raise KeyError(
+          u'Unable to expand path with error: {0:s}'.format(exception))
+
+    return expanded_path
 
 
 def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
@@ -19,7 +59,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
   find_specs = []
 
   if pre_obj:
-    expander = dfwinreg_path_expander.WinRegistryKeyPathExpander()
+    expander = _PathExpander()
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:

@@ -9,6 +9,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import knowledge_base
+from plaso.preprocessors import manager
 from plaso.preprocessors import windows
 
 from tests.preprocessors import test_lib
@@ -19,18 +20,15 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    path_attributes = {u'systemroot': u'/Windows'}
+    path_attributes = {u'systemroot': u'\\Windows'}
 
     file_data = self._ReadTestFile([u'SOFTWARE'])
     self._fake_file_system = self._BuildSingleFileFakeFileSystem(
         u'/Windows/System32/config/SOFTWARE', file_data)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
-
-    registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
-        self._searcher, path_attributes=path_attributes)
+    registry_file_reader = manager.FileSystemWinRegistryFileReader(
+        self._fake_file_system, mount_point, path_attributes=path_attributes)
     self._win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
@@ -40,18 +38,15 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    path_attributes = {u'systemroot': u'/Windows'}
+    path_attributes = {u'systemroot': u'\\Windows'}
 
     file_data = self._ReadTestFile([u'SYSTEM'])
     self._fake_file_system = self._BuildSingleFileFakeFileSystem(
         u'/Windows/System32/config/SYSTEM', file_data)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
-
-    registry_file_reader = dfwinreg_registry.SearcherWinRegistryFileReader(
-        self._searcher, path_attributes=path_attributes)
+    registry_file_reader = manager.FileSystemWinRegistryFileReader(
+        self._fake_file_system, mount_point, path_attributes=path_attributes)
     self._win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
@@ -109,7 +104,7 @@ class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):
     path = knowledge_base_object.GetValue(u'programfilesx86')
     # The test SOFTWARE Registry file does not contain a value for
     # the Program Files X86 path.
-    self.assertEqual(path, None)
+    self.assertIsNone(path)
 
 
 class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
@@ -187,6 +182,7 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
     plugin.Run(self._win_registry, knowledge_base_object)
 
     users = knowledge_base_object.GetValue(u'users')
+    self.assertIsNotNone(users)
     self.assertEqual(len(users), 11)
 
     expected_sid = u'S-1-5-21-2036804247-3058324640-2116585241-1114'
