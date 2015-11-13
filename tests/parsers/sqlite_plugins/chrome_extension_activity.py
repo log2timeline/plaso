@@ -49,7 +49,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_msg = (
         u'Chrome extension: ognampngfcbddbfemdapefohjiobgbdl '
-        u'Action type: 1 '
+        u'Action type: API event callback (type 1) '
         u'Activity identifier: 48 '
         u'API name: browserAction.onClicked')
     expected_short = (
