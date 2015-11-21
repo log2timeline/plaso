@@ -86,7 +86,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       return enumerate([])
 
     try:
-      mru_list = self._MRULIST_STRUCT.parse(mru_list_value.raw_data)
+      mru_list = self._MRULIST_STRUCT.parse(mru_list_value.data)
     except construct.FieldError:
       logging.warning(u'[{0:s}] Unable to parse the MRU key: {1:s}'.format(
           self.NAME, key.path))
@@ -158,7 +158,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
               self.NAME, entry_letter, key.path))
 
     elif value.DataIsString():
-      value_string = value.data
+      value_string = value.GetData()
 
     elif value.DataIsBinaryData():
       logging.debug((

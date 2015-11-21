@@ -169,7 +169,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
               self.NAME, entry_number, key.path))
 
     elif value.DataIsString():
-      value_string = value.data
+      value_string = value.GetData()
 
     elif value.DataIsBinaryData():
       logging.debug((

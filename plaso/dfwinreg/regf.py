@@ -122,7 +122,38 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
 
   @property
   def data(self):
-    """The value data as a native Python object.
+    """The value data as a byte string.
+
+    Raises:
+      WinRegistryValueError: if the value data cannot be read.
+    """
+    try:
+      return self._pyregf_value.data
+    except IOError as exception:
+      raise errors.WinRegistryValueError(
+          u'Unable to read data from value: {0:s} with error: {1:s}'.format(
+              self._pyregf_value.name, exception))
+
+  @property
+  def data_type(self):
+    """Numeric value that contains the data type."""
+    return self._pyregf_value.type
+
+  @property
+  def name(self):
+    """The name of the value."""
+    return self._pyregf_value.name
+
+  @property
+  def offset(self):
+    """The offset of the value within the Windows Registry file."""
+    return self._pyregf_value.offset
+
+  def GetData(self):
+    """Retrieves the data.
+
+    Returns:
+      The data as a Python type.
 
     Raises:
       WinRegistryValueError: if the value data cannot be read.
@@ -158,35 +189,6 @@ class REGFWinRegistryValue(interface.WinRegistryValue):
                 self._pyregf_value.name, exception))
 
     return self._pyregf_value.data
-
-  @property
-  def data_type(self):
-    """Numeric value that contains the data type."""
-    return self._pyregf_value.type
-
-  @property
-  def name(self):
-    """The name of the value."""
-    return self._pyregf_value.name
-
-  @property
-  def offset(self):
-    """The offset of the value within the Windows Registry file."""
-    return self._pyregf_value.offset
-
-  @property
-  def raw_data(self):
-    """The value data as a byte string.
-
-    Raises:
-      WinRegistryValueError: if the value data cannot be read.
-    """
-    try:
-      return self._pyregf_value.data
-    except IOError as exception:
-      raise errors.WinRegistryValueError(
-          u'Unable to read data from value: {0:s} with error: {1:s}'.format(
-              self._pyregf_value.name, exception))
 
 
 class REGFWinRegistryFile(interface.WinRegistryFile):

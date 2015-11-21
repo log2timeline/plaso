@@ -164,23 +164,24 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
     values_dict = {}
 
     if registry_key.number_of_values > 0:
-      for value in registry_key.GetValues():
-        if not value.name:
-          value_name = u'(default)'
-        else:
-          value_name = u'{0:s}'.format(value.name)
+      for registry_value in registry_key.GetValues():
+        value_name = registry_value.name or u'(default)'
 
-        if value.DataIsString():
+        if registry_value.DataIsString():
           value_string = u'[{0:s}] {1:s}'.format(
-              value.data_type_string, value.data)
-        elif value.DataIsInteger():
+              registry_value.data_type_string, registry_value.GetData())
+
+        elif registry_value.DataIsInteger():
           value_string = u'[{0:s}] {1:d}'.format(
-              value.data_type_string, value.data)
-        elif value.DataIsMultiString():
+              registry_value.data_type_string, registry_value.GetData())
+
+        elif registry_value.DataIsMultiString():
           value_string = u'[{0:s}] {1:s}'.format(
-              value.data_type_string, u''.join(value.data))
+              registry_value.data_type_string, u''.join(
+                  registry_value.GetData()))
+
         else:
-          value_string = u'[{0:s}]'.format(value.data_type_string)
+          value_string = u'[{0:s}]'.format(registry_value.data_type_string)
 
         values_dict[value_name] = value_string
 
@@ -212,21 +213,24 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           continue
 
         if value.DataIsString():
-          value_string = value.data
+          value_string = value.GetData()
 
         elif value.DataIsInteger():
+          value_integer = value.GetData()
           if value.name in self._KNOWN_PERMISSIONS_VALUE_NAMES:
             value_string = self._CONTROL_VALUES_PERMISSIONS.get(
-                value.data, u'UNKNOWN')
+                value_integer, u'UNKNOWN')
           elif value.name == u'1A00':
-            value_string = self._CONTROL_VALUES_1A00.get(value.data, u'UNKNOWN')
+            value_string = self._CONTROL_VALUES_1A00.get(
+                value_integer, u'UNKNOWN')
           elif value.name == u'1C00':
-            value_string = self._CONTROL_VALUES_1C00.get(value.data, u'UNKNOWN')
+            value_string = self._CONTROL_VALUES_1C00.get(
+                value_integer, u'UNKNOWN')
           elif value.name == u'1E05':
             value_string = self._CONTROL_VALUES_SAFETY.get(
-                value.data, u'UNKNOWN')
+                value_integer, u'UNKNOWN')
           else:
-            value_string = u'{0:d}'.format(value.data)
+            value_string = u'{0:d}'.format(value_integer)
 
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)

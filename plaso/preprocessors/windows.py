@@ -139,9 +139,9 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
       # TODO: create a proper object for this.
       user = {}
       user[u'sid'] = subkey.name
-      value = subkey.GetValueByName(u'ProfileImagePath')
-      if value:
-        user[u'path'] = value.data
+      registry_value = subkey.GetValueByName(u'ProfileImagePath')
+      if registry_value:
+        user[u'path'] = registry_value.GetData()
         user[u'name'] = self._GetUsernameFromPath(user[u'path'])
 
       users.append(user)
@@ -186,7 +186,7 @@ class WindowsRegistryValuePreprocessPlugin(WindowsRegistryPreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    return registry_value.data
+    return registry_value.GetData()
 
 
 class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
@@ -207,7 +207,7 @@ class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    value_data = registry_value.data
+    value_data = registry_value.GetData()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       logging.warning(
           u'Unsupported Registry value: {0:s} data type'.format(
@@ -249,7 +249,7 @@ class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    value_data = registry_value.data
+    value_data = registry_value.GetData()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       logging.warning(
           u'Unsupported Registry value: {0:s} data type'.format(
@@ -282,7 +282,7 @@ class WindowsRegistryPathEnvironmentValue(WindowsRegistryValuePreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    value_data = registry_value.data
+    value_data = registry_value.GetData()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       logging.warning(
           u'Unsupported Registry value: {0:s} data type'.format(

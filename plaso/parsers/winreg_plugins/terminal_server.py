@@ -41,7 +41,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
 
       if (username_value and username_value.data and
           username_value.DataIsString()):
-        username = username_value.data
+        username = username_value.GetData()
       else:
         username = u'N/A'
 
@@ -94,7 +94,7 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
       if not value.data or not value.DataIsString():
         continue
 
-      values_dict[value.name] = value.data
+      values_dict[value.name] = value.GetData()
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
