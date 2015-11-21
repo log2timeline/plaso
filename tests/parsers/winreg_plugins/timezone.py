@@ -108,7 +108,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessMock(self):
     """Tests the Process function on created key."""
-    key_path = u'\\ControlSet001\\Control\\TimeZoneInformation'
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
+        u'TimeZoneInformation')
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -137,10 +139,13 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
-    key_path = u'\\ControlSet001\\Control\\TimeZoneInformation'
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
+        u'TimeZoneInformation')
 
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

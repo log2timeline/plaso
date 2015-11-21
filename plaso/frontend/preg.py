@@ -11,10 +11,12 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import queue
 from plaso.engine import single_process
+from plaso.engine import utils as engine_utils
 from plaso.frontend import extraction_frontend
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
+from plaso.parsers import winreg
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -592,25 +594,23 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
 
     # Expand all the paths.
-    win_registry = dfwinreg_registry.WinRegistry(
-        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
-
     # TODO: deprecate usage of pre_obj.
     path_attributes = self.knowledge_base_object.pre_obj.__dict__
 
-    expanded_key_paths = []
-    for key_path in paths:
+    path_expander = engine_utils.PathExpander()
+    expanded_paths = []
+    for path in paths:
       try:
-        expanded_key_path = win_registry.ExpandKeyPath(
-            key_path, path_attributes)
-        expanded_key_paths.append(expanded_key_path)
+        expanded_path = path_expander.ExpandPath(
+            path, path_attributes=path_attributes)
+        expanded_paths.append(expanded_path)
 
       except KeyError as exception:
         logging.error(
-            u'Unable to expand key path: {0:s} with error: {1:s}'.format(
-                key_path, exception))
+            u'Unable to expand path: {0:s} with error: {1:s}'.format(
+                path, exception))
 
-    return expanded_key_paths
+    return expanded_paths
 
   # TODO: refactor this function. Current implementation is too complex.
   def GetRegistryHelpers(
@@ -937,16 +937,16 @@ class PregRegistryHelper(object):
       codepage: optional codepage value used for the Registry file. The default
                 is cp1252.
     """
-    self._Reset()
+    super(PregRegistryHelper, self).__init__()
     self._codepage = codepage
     self._collector_name = collector_name
-    self._key_path_prefix = u''
+    self._currently_registry_key = None
+    self._key_path_prefix = None
     self._knowledge_base_object = knowledge_base_object
     self._registry_file = None
     self._registry_file_name = None
     self._registry_file_type = REGISTRY_FILE_TYPE_UNKNOWN
-    self._win_registry = dfwinreg_registry.WinRegistry(
-        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
+    self._win_registry = None
 
     self.file_entry = file_entry
 
@@ -984,57 +984,90 @@ class PregRegistryHelper(object):
 
   @property
   def root_key(self):
-    """The root key of the Registry file."""
-    if not self._registry_file:
-      return
-    return self._registry_file.GetKeyByPath(u'\\')
+    """The root key of the Registry file or None."""
+    if self._registry_file:
+      return self._registry_file.GetRootKey()
 
   def _Reset(self):
     """Reset all attributes of the Registry helper."""
-    self._currently_loaded_registry_key = None
+    self._currently_registry_key = None
+    self._key_path_prefix = None
     self._registry_file = None
     self._registry_file_name = None
     self._registry_file_type = REGISTRY_FILE_TYPE_UNKNOWN
+
+  def ChangeKeyByPath(self, key_path):
+    """Changes the current key defined by the Registry key path.
+
+    Args:
+      key_path: string containing an absolute or relative Registry key path.
+
+    Returns:
+      The key (instance of dfwinreg.WinRegistryKey) if available or
+      None otherwise.
+    """
+    if key_path == u'.':
+      return self._currently_registry_key
+
+    path_segments = []
+
+    # If the key path is relative to the root key add the key path prefix.
+    if not key_path or key_path.startswith(u'\\'):
+      path_segments.append(self._key_path_prefix)
+
+      # If no key path was provided then change to the root key.
+      if not key_path:
+        path_segments.append(u'\\')
+
+    else:
+      key_path_upper = key_path.upper()
+      if not key_path_upper.startswith(u'HKEY_'):
+        current_path = getattr(self._currently_registry_key, u'path', None)
+        if current_path:
+          path_segments.append(current_path)
+
+    path_segments.append(key_path)
+
+    # Split all the path segments based on the path (segment) separator.
+    path_segments = [
+        segment.split(u'\\') for segment in path_segments]
+
+    # Flatten the sublists into one list.
+    path_segments = [
+        element for sublist in path_segments for element in sublist]
+
+    # Remove empty and current ('.') path segments.
+    path_segments = [
+        segment for segment in path_segments
+        if segment not in [None, u'', u'.']]
+
+    # Remove parent ('..') path segments.
+    index = 0
+    while index < len(path_segments):
+      if path_segments[index] == u'..':
+        path_segments.pop(index)
+        index -= 1
+
+        if index > 0:
+          path_segments.pop(index)
+          index -= 1
+
+      index += 1
+
+    key_path = u'\\'.join(path_segments)
+    return self.GetKeyByPath(key_path)
 
   def Close(self):
     """Closes the helper."""
     self._Reset()
 
-  def ExpandKeyPath(self, key_path, path_attributes):
-    """Expand a Registry key path based on path attributes.
-
-     A Registry key path may contain path attributes. A path attribute is
-     defined as anything within a curly bracket, e.g.
-     "\\System\\{my_attribute}\\Path\\Keyname".
-
-     If the path attribute my_attribute is defined it's value will be replaced
-     with the attribute name, e.g. "\\System\\MyValue\\Path\\Keyname".
-
-     If the Registry path needs to have curly brackets in the path then
-     they need to be escaped with another curly bracket, e.g.
-     "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
-     case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
-
-    Args:
-      key_path: the Registry key path before being expanded.
-      path_attributes: a dictionary containing the path attributes.
-
-    Returns:
-      A Registry key path that's expanded based on attribute values.
-    """
-    return self._win_registry.ExpandKeyPath(key_path, path_attributes)
-
   def GetCurrentRegistryKey(self):
-    """Return the currently loaded Registry key."""
-    return self._currently_loaded_registry_key
+    """Return the currently Registry key."""
+    return self._currently_registry_key
 
   def GetCurrentRegistryPath(self):
-    """Return the loaded Registry key path or None if no key is loaded."""
-    registry_key = self._currently_loaded_registry_key
-    if not registry_key:
-      return
-
-    return registry_key.path
+    """Return the Registry key path or None."""
+    return getattr(self._currently_registry_key, u'path', None)
 
   def GetKeyByPath(self, key_path):
     """Retrieves a specific key defined by the Registry key path.
@@ -1047,36 +1080,11 @@ class PregRegistryHelper(object):
       The key (instance of dfwinreg.WinRegistryKey) if available or
       None otherwise.
     """
-    if not key_path:
-      return
-
-    key_path_upper = key_path.upper()
-    if key_path_upper.startswith(self._key_path_prefix.upper()):
-      key_path = key_path[len(self._key_path_prefix):]
-      key_path_upper = key_path_upper[len(self._key_path_prefix):]
-    elif not key_path.startswith(u'\\'):
-      return
-
-    # TODO: remove in preg refactor.
-    if (self._registry_file_type == REGISTRY_FILE_TYPE_SYSTEM and
-        key_path_upper.startswith(u'\\CurrentControlSet\\'.upper())):
-      key_path = u'\\{{current_control_set}}\\{0:s}'.format(
-          key_path[len(u'\\CurrentControlSet\\'):])
-
-    # TODO: deprecate usage of pre_obj.
-    path_attributes = self._knowledge_base_object.pre_obj.__dict__
-
-    try:
-      expanded_key_path = self._win_registry.ExpandKeyPath(
-          key_path, path_attributes)
-    except KeyError:
-      expanded_key_path = key_path
-
-    registry_key = self._registry_file.GetKeyByPath(expanded_key_path)
+    registry_key = self._win_registry.GetKeyByPath(key_path)
     if not registry_key:
       return
 
-    self._currently_loaded_registry_key = registry_key
+    self._currently_registry_key = registry_key
     return registry_key
 
   def GetRegistryFileType(self, registry_file):
@@ -1115,23 +1123,32 @@ class PregRegistryHelper(object):
     if self._registry_file:
       raise IOError(u'Registry file already open.')
 
-    self._registry_file = self._win_registry.OpenFileEntry(self.file_entry)
-    if not self._registry_file:
+    file_object = self.file_entry.GetFileObject()
+    if not file_object:
       logging.error(
           u'Unable to open Registry file: {0:s} [{1:s}]'.format(
               self.path, self._collector_name))
-
-      self.Close()
       raise IOError(u'Unable to open Registry file.')
+
+    win_registry_reader = winreg.FileObjectWinRegistryFileReader()
+    self._registry_file = win_registry_reader.Open(file_object)
+    if not self._registry_file:
+      file_object.close()
+
+      logging.error(
+          u'Unable to open Registry file: {0:s} [{1:s}]'.format(
+              self.path, self._collector_name))
+      raise IOError(u'Unable to open Registry file.')
+
+    self._win_registry = dfwinreg_registry.WinRegistry()
+    self._key_path_prefix = self._win_registry.GetRegistryFileMapping(
+        self._registry_file)
+    self._win_registry.MapFile(self._key_path_prefix, self._registry_file)
 
     self._registry_file_name = self.file_entry.name
     self._registry_file_type = self.GetRegistryFileType(self._registry_file)
-    self._key_path_prefix = self._win_registry.GetRegistryFileMapping(
-        self._registry_file)
-
-    self._registry_file.SetKeyPathPrefix(self._key_path_prefix)
 
     # Retrieve the Registry file root key because the Registry helper
-    # expects self._currently_loaded_registry_key to be set after
+    # expects self._currently_registry_key to be set after
     # the Registry file is opened.
-    self._currently_loaded_registry_key = self.GetKeyByPath(u'\\')
+    self._currently_registry_key = self._registry_file.GetRootKey()

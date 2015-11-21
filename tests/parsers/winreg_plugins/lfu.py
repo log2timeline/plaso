@@ -94,7 +94,8 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\ControlSet001\\Control\\Session Manager'
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager')
     time_string = u'2012-08-31 20:45:29'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -114,9 +115,10 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         u'[{0:s}] BootExecute: autocheck autochk *').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_message)
+        event_object, expected_message, expected_short_message)
 
     event_object = event_objects[1]
 
