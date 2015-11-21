@@ -64,7 +64,9 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        u'InterestingApp\\MRU')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -147,8 +149,8 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-        u'DesktopStreamMRU')
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Explorer\\DesktopStreamMRU')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -190,8 +192,8 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Origin: {0:s}').format(key_path)
     expected_short_message = (
         u'Name: Winnt '
-        u'Origin: \\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-        u'\\Deskt...')
+        u'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
+        u'CurrentVersi...')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

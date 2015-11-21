@@ -53,7 +53,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Software\\WinRAR\\ArcHistory'
+    key_path = u'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -75,12 +75,9 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
         u'[{0:s}] '
         u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
         u'1: C:\\Downloads\\plaso-static.rar').format(key_path)
-    expected_message_short = (
-        u'[{0:s}] '
-        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
-        u'1: ...').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

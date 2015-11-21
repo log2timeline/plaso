@@ -24,8 +24,10 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
-    key_path = u'\\ControlSet001\\Control\\Windows'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -48,11 +50,12 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, time)
 
     expected_message = (
-        u'[\\ControlSet001\\Control\\Windows] '
-        u'Description: ShutdownTime')
+        u'[{0:s}] '
+        u'Description: ShutdownTime').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_message)
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

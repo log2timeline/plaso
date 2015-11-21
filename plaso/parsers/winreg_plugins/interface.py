@@ -79,6 +79,8 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
 
       if wow64_prefix:
         key_path_suffix = self._key_path[len(wow64_prefix):]
+        if key_path_suffix.startswith(u'\\'):
+          key_path_suffix = key_path_suffix[1:]
         self._wow64_key_path = u'\\'.join([
             wow64_prefix, u'Wow6432Node', key_path_suffix])
         self._wow64_key_path_upper = self._wow64_key_path.upper()

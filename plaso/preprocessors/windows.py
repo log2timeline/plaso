@@ -45,34 +45,6 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
 
   KEY_PATH = u''
 
-  def _GetKeyByPath(self, win_registry, key_path, path_attributes):
-    """Retrieves the Windows Registry key.
-
-    Args:
-      win_registry: The Registry object (instance of WinRegistry).
-      key_path: The path of the Registry key.
-      path_attributes: a dictionary containing the path attributes.
-
-    Return:
-      A Registry key object (instance of WinRegistryKey) or None.
-
-    Raises:
-      PreProcessFail: If the preprocessing failed.
-    """
-    try:
-      expanded_key_path = win_registry.ExpandKeyPath(key_path, path_attributes)
-    except KeyError:
-      expanded_key_path = key_path
-
-    try:
-      registry_key = win_registry.GetKeyByPath(expanded_key_path)
-    except IOError as exception:
-      raise errors.PreProcessFail(
-          u'Unable to retrieve Registry key: {0:s} with error: {1:s}'.format(
-              expanded_key_path, exception))
-
-    return registry_key
-
   @abc.abstractmethod
   def _ParseKey(self, registry_key):
     """Parses a Windows Registry key for the preprocessing attribute.
@@ -102,11 +74,14 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
     Raises:
       PreProcessFail: If the preprocessing failed.
     """
-    # TODO: deprecate usage of pre_obj.
-    path_attributes = knowledge_base.pre_obj.__dict__
+    try:
+      registry_key = win_registry.GetKeyByPath(self.KEY_PATH)
 
-    registry_key = self._GetKeyByPath(
-        win_registry, self.KEY_PATH, path_attributes)
+    except IOError as exception:
+      raise errors.PreProcessFail(
+          u'Unable to retrieve Registry key: {0:s} with error: {1:s}'.format(
+              self.KEY_PATH, exception))
+
     if not registry_key:
       return
 

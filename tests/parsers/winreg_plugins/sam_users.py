@@ -23,10 +23,11 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\SAM\\Domains\\Account\\Users'
     test_file_entry = self._GetTestFileEntryFromPath([u'SAM'])
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = u'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
 
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -46,12 +47,12 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, time)
 
     expected_message = (
-        u'[\\SAM\\Domains\\Account\\Users] '
+        u'[{0:s}] '
         u'account_rid: 500 '
         u'comments: Built-in account for administering the computer/domain '
         u'login_count: 6 '
         u'user_guid: 000001F4 '
-        u'username: Administrator')
+        u'username: Administrator').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
