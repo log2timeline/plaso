@@ -30,8 +30,10 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
                     dfwinreg.WinRegistryKey).
     """
     values_dict = {}
-    for value in registry_key.GetValues():
-      values_dict[value.name] = value.data
+    for registry_value in registry_key.GetValues():
+      value_name = registry_value.name or u'(default)'
+      values_dict[value_name] = registry_value.GetData()
+
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, urls=self.URLS)
@@ -62,22 +64,28 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
                     dfwinreg.WinRegistryKey).
     """
     values_dict = {}
-    for value in registry_key.GetValues():
-      if value.name == u'BootExecute':
+    for registry_value in registry_key.GetValues():
+      value_name = registry_value.name or u'(default)'
+
+      if value_name == u'BootExecute':
         # MSDN: claims that the data type of this value is REG_BINARY
         # although REG_MULTI_SZ is known to be used as well.
-        if value.DataIsString():
-          value_string = value.data
-        elif value.DataIsMultiString():
-          value_string = u''.join(value.data)
-        elif value.DataIsBinaryData():
-          value_string = value.data
+        if registry_value.DataIsString():
+          value_string = registry_value.GetData()
+
+        elif registry_value.DataIsMultiString():
+          value_string = u''.join(registry_value.GetData())
+
+        elif registry_value.DataIsBinaryData():
+          value_string = registry_value.GetData()
+
         else:
           value_string = u''
           error_string = (
               u'Key: {0:s}, value: {1:s}: unsupported value data type: '
               u'{2:s}.').format(
-                  registry_key.path, value.name, value.data_type_string)
+                  registry_key.path, value_name,
+                  registry_value.data_type_string)
           parser_mediator.ProduceParseError(error_string)
 
         # TODO: why does this have a separate event object? Remove this.
@@ -88,7 +96,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         parser_mediator.ProduceEvent(event_object)
 
       else:
-        values_dict[value.name] = value.data
+        values_dict[value_name] = registry_value.GetData()
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Classes for Windows Registry access."""
 
-
 class WinRegistryFileMapping(object):
   """Class that defines a Windows Registry file mapping.
 
@@ -169,7 +168,7 @@ class WinRegistry(object):
       if not value or not value.DataIsInteger():
         continue
 
-      control_set = value.data
+      control_set = value.GetData()
       # If the control set is 0 then we need to check the other values.
       if control_set > 0 or control_set <= 999:
         break

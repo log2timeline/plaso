@@ -74,7 +74,8 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values = self._RE_VALUE_DATA.findall(registry_value.data)
+      value_string = registry_value.GetData()
+      values = self._RE_VALUE_DATA.findall(value_string)
 
       # Values will contain a list containing a tuple containing 2 values.
       if len(values) != 1 or len(values[0]) != 2:
@@ -88,10 +89,10 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
             u'value: {0:s}.').format(registry_value.name))
         continue
 
-      mru_values_dict[registry_value.name] = registry_value.data
+      mru_values_dict[registry_value.name] = value_string
 
       # TODO: change into a separate event object.
-      values_dict = {registry_value.name: registry_value.data}
+      values_dict = {registry_value.name: value_string}
       event_object = windows_events.WindowsRegistryEvent(
           filetime, registry_key.path, values_dict,
           offset=registry_key.offset, source_append=self._SOURCE_APPEND)

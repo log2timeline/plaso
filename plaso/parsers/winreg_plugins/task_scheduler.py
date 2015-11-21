@@ -91,25 +91,27 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
     task_guids = {}
     for sub_key in tree_key.GetSubkeys():
       for value_key, id_value in self._GetIdValue(sub_key):
+        # TODO: improve this check to a regex.
         # The GUID is in the form {%GUID%} and stored an UTF-16 little-endian
         # string and should be 78 bytes in size.
-        if len(id_value.raw_data) != 78:
+        if len(id_value.data) != 78:
           parser_mediator.ProduceParseError(u'Unsupported Id value data size.')
           continue
-        task_guids[id_value.data] = value_key.name
+        guid_string = id_value.GetData()
+        task_guids[guid_string] = value_key.name
 
     for sub_key in tasks_key.GetSubkeys():
       dynamic_info_value = sub_key.GetValueByName(u'DynamicInfo')
       if not dynamic_info_value:
         continue
 
-      if len(dynamic_info_value.raw_data) != self._DYNAMIC_INFO_STRUCT_SIZE:
+      if len(dynamic_info_value.data) != self._DYNAMIC_INFO_STRUCT_SIZE:
         parser_mediator.ProduceParseError(
             u'Unsupported DynamicInfo value data size.')
         continue
 
       dynamic_info = self._DYNAMIC_INFO_STRUCT.parse(
-          dynamic_info_value.raw_data)
+          dynamic_info_value.data)
 
       name = task_guids.get(sub_key.name, sub_key.name)
 
