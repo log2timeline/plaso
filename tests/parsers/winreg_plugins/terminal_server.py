@@ -51,7 +51,9 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Software\\Microsoft\\Terminal Server Client\\Servers'
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+        u'Servers')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -127,7 +129,9 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Software\\Microsoft\\Terminal Server Client\\Default'
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+        u'Default')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 

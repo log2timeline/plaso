@@ -65,7 +65,9 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        u'InterestingApp\\MRUlist')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -106,9 +108,11 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
-        u'OpenSavePidlMRU')
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Explorer\\ComDlg32\\OpenSavePidlMRU')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -156,7 +160,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     expected_short_message = (
         u'Name: Alloy Research '
         u'NTFS file reference: 44518-33 '
-        u'Origin: \\Software\\Microsof...')
+        u'Origin: HKEY_CURRENT_USER\\...')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -173,8 +177,11 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs')
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Explorer\\RecentDocs')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -253,9 +260,11 @@ class TestMRUListExStringAndShellItemListPlugin(
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
-        u'LastVisitedPidlMRU')
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Explorer\\ComDlg32\\LastVisitedPidlMRU')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

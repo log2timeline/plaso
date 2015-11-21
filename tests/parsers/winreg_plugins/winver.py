@@ -71,7 +71,8 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
     time_string = u'2012-08-31 20:09:55.123521'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -117,19 +118,22 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'MyTestOS 5.1 Service Pack 1 '
         u'Owner: owner '
-        u'Origin: \\Microsoft\\Windows NT\\CurrentVersion')
+        u'Origin: {0:s}').format(key_path)
     expected_short_message = (
         u'MyTestOS 5.1 Service Pack 1 '
-        u'Origin: \\Microsoft\\Windows NT\\CurrentVersion')
+        u'Origin: HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Win...')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on a Windows Registry file."""
-    key_path = u'\\Microsoft\\Windows NT\\CurrentVersion'
     test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
