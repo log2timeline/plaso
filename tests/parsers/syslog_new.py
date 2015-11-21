@@ -26,8 +26,6 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 13)
-
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-01-22 07:52:33')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
@@ -56,6 +54,7 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
         u'2013-03-23 23:01:18')
     self.assertEqual(event_objects[8].timestamp, expected_timestamp)
 
+    self.assertEqual(len(event_objects), 13)
 
 if __name__ == '__main__':
   unittest.main()
