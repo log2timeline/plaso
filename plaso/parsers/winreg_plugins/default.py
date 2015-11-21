@@ -33,31 +33,33 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
       values_dict[u'Value'] = u'No values stored in key.'
 
     else:
-      for value in registry_key.GetValues():
-        if not value.name:
-          value_name = u'(default)'
-        else:
-          value_name = u'{0:s}'.format(value.name)
+      for registry_value in registry_key.GetValues():
+        value_name = registry_value.name or u'(default)'
 
-        if value.data is None:
+        if registry_value.data is None:
           value_string = u'[{0:s}] Empty'.format(
-              value.data_type_string)
-        elif value.DataIsString():
-          string_decode = utils.GetUnicodeString(value.data)
+              registry_value.data_type_string)
+
+        elif registry_value.DataIsString():
+          string_decode = utils.GetUnicodeString(registry_value.GetData())
           value_string = u'[{0:s}] {1:s}'.format(
-              value.data_type_string, string_decode)
-        elif value.DataIsInteger():
+              registry_value.data_type_string, string_decode)
+
+        elif registry_value.DataIsInteger():
           value_string = u'[{0:s}] {1:d}'.format(
-              value.data_type_string, value.data)
-        elif value.DataIsMultiString():
-          if not isinstance(value.data, (list, tuple)):
-            value_string = u'[{0:s}]'.format(value.data_type_string)
+              registry_value.data_type_string, registry_value.GetData())
+
+        elif registry_value.DataIsMultiString():
+          multi_string = registry_value.GetData()
+          if not isinstance(multi_string, (list, tuple)):
+            value_string = u'[{0:s}]'.format(registry_value.data_type_string)
             # TODO: Add a flag or some sort of an anomaly alert.
           else:
             value_string = u'[{0:s}] {1:s}'.format(
-                value.data_type_string, u''.join(value.data))
+                registry_value.data_type_string, u''.join(multi_string))
+
         else:
-          value_string = u'[{0:s}]'.format(value.data_type_string)
+          value_string = u'[{0:s}]'.format(registry_value.data_type_string)
 
         values_dict[value_name] = value_string
 

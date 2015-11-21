@@ -185,7 +185,14 @@ class PregTool(storage_media_tool.StorageMediaTool):
     return hexdump.Hexdump.FormatData(data)
 
   def _GetFormatString(self, event_object):
-    """Return back a format string that can be used for a given event object."""
+    """Retrieves the format string for a given event object.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Returns:
+      A string containing the format string.
+    """
     # Go through the attributes and see if there is an attribute
     # value that is longer than the default font align length, and adjust
     # it accordingly if found.
@@ -198,6 +205,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     align_length = self._DEFAULT_FORMAT_ALIGN_LENGTH
     for attribute in attributes:
+      if attribute is None:
+        attribute = u''
+
       attribute_len = len(attribute)
       if attribute_len > align_length and attribute_len < 30:
         align_length = len(attribute)
@@ -437,8 +447,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     for event_timestamp in list_of_timestamps:
       if exclude_timestamp_in_header:
-        self._output_writer.Write(u'\n[{0:s}]\n'.format(
-            timelib.Timestamp.CopyToIsoFormat(event_timestamp)))
+        date_time_string = timelib.Timestamp.CopyToIsoFormat(event_timestamp)
+        output_text = u'\n[{0:s}]\n'.format(date_time_string)
+        self._output_writer.Write(output_text)
 
       for event_object in event_objects_and_timestamps[event_timestamp]:
         self._PrintEventBody(
@@ -1094,14 +1105,18 @@ class PregMagics(magic.Magics):
             u'', u'[' + value.data_type_string, value.name), False))
       else:
         if value.DataIsString():
-          value_string = u'{0:s}'.format(value.data)
+          value_string = value.GetData()
+
         elif value.DataIsInteger():
-          value_string = u'{0:d}'.format(value.data)
+          value_string = u'{0:d}'.format(value.GetData())
+
         elif value.DataIsMultiString():
-          value_string = u'{0:s}'.format(u''.join(value.data))
+          value_string = u'{0:s}'.format(u''.join(value.GetData()))
+
         elif value.DataIsBinaryData():
           value_string = hexdump.Hexdump.FormatData(
               value.data, maximum_data_size=16)
+
         else:
           value_string = u''
 
@@ -1328,11 +1343,11 @@ class PregConsole(object):
       The data from a Registry value if it exists, None if either there is no
       currently loaded Registry key or if the value does not exist.
     """
-    value = self._CommandGetValue(value_name)
-    if not value:
+    registry_value = self._CommandGetValue(value_name)
+    if not registry_value:
       return
 
-    return value.data
+    return registry_value.GetData()
 
   def _CommandGetRangeForAllLoadedHives(self):
     """Return a range or a list of all loaded hives."""
