@@ -21,8 +21,12 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
-    key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Run')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -50,8 +54,12 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
-    key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'RunOnce')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -80,8 +88,12 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
-    key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Run'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Run')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -114,8 +126,12 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
-    key_path = u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    key_path = (
+        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'RunOnce')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

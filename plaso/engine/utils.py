@@ -6,7 +6,7 @@ import logging
 from dfvfs.helpers import file_system_searcher
 
 
-class _PathExpander(object):
+class PathExpander(object):
   """Class that implements the path expander."""
 
   def ExpandPath(self, path, path_attributes=None):
@@ -59,7 +59,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
   find_specs = []
 
   if pre_obj:
-    expander = _PathExpander()
+    path_expander = PathExpander()
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:
@@ -70,7 +70,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
       if pre_obj:
         path_attributes = pre_obj.__dict__
         try:
-          line = expander.ExpandPath(line, path_attributes=path_attributes)
+          line = path_expander.ExpandPath(line, path_attributes=path_attributes)
         except KeyError as exception:
           logging.error((
               u'Unable to use collection filter line: {0:s} with error: '

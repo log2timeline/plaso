@@ -2,8 +2,8 @@
 """Windows Registry plugin related functions and classes for testing."""
 
 from plaso.dfwinreg import registry as dfwinreg_registry
-from plaso.dfwinreg import regf
 from plaso.engine import single_process
+from plaso.parsers import winreg
 
 from tests.parsers import test_lib
 
@@ -11,40 +11,31 @@ from tests.parsers import test_lib
 class RegistryPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a Windows Registry plugin."""
 
-  def _GetKeyFromFileEntry(self, file_entry, key_path):
-    """Retrieves a Windows Registry key from a file.
+  def _GetWinRegistryFromFileEntry(self, file_entry):
+    """Retrieves a Windows Registry from a file entry.
 
     Args:
-      file_entry: A dfVFS file_entry object that references a test file.
-      key_path: The path of the key to parse.
+      file_entry: A file entry object (instance of dfvfs.FileEntry) that
+                  references a test file.
 
     Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      A Windows Registry object (instance of dfwinreg.WinRegistry) or None.
     """
-    # TODO: refactor.
-    registry = dfwinreg_registry.WinRegistry(
-        backend=dfwinreg_registry.WinRegistry.BACKEND_PYREGF)
-    winreg_file = registry.OpenFileEntry(file_entry)
-    return winreg_file.GetKeyByPath(key_path)
-
-  def _OpenREGFRegistryFile(self, filename):
-    """Opens a REGF Windows Registry file.
-
-    Args:
-      filename: the name of the file relative to the test file path.
-
-    Returns:
-      The Windows Registry file object (instance of REGFWinRegistryFileTest) or
-      None.
-    """
-    test_file = self._GetTestFilePath([filename])
-    file_entry = self._GetTestFileEntry(test_file)
     file_object = file_entry.GetFileObject()
+    if not file_object:
+      return
 
-    registry_file = regf.REGFWinRegistryFile()
-    registry_file.Open(file_object)
+    win_registry_reader = winreg.FileObjectWinRegistryFileReader()
+    registry_file = win_registry_reader.Open(file_object)
+    if not registry_file:
+      file_object.close()
+      return
 
-    return registry_file
+    win_registry = dfwinreg_registry.WinRegistry()
+    key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
+    win_registry.MapFile(key_path_prefix, registry_file)
+
+    return win_registry
 
   def _ParseKeyWithPlugin(
       self, plugin_object, registry_key, file_entry=None,

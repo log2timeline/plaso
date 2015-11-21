@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Classes for Windows Registry access."""
 
-from plaso.dfwinreg import regf
-
 
 class WinRegistryFileMapping(object):
   """Class that defines a Windows Registry file mapping.
@@ -100,27 +98,17 @@ class WinRegistry(object):
       (u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet',
        u'_GetCurrentControlSet')]
 
-  # TODO: remove. This definition is a left over from previous times
-  # where on instantiation the backend was defined. This has been superseded
-  # by the registry_file_reader.
-  BACKEND_PYREGF = 1
-
-  # TODO: replace backend by registry_file_reader.
-  def __init__(
-      self, ascii_codepage=u'cp1252', backend=1, registry_file_reader=None):
+  def __init__(self, ascii_codepage=u'cp1252', registry_file_reader=None):
     """Initializes the Windows Registry.
 
     Args:
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
-      backend: The back-end to use to read the Windows Registry structures, the
-               default is 1 (pyregf).
       registry_file_reader: optional Windows Registry file reader (instance of
                             WinRegistryFileReader). The default is None.
     """
     super(WinRegistry, self).__init__()
     self._ascii_codepage = ascii_codepage
-    self._backend = backend
     self._registry_file_reader = registry_file_reader
     self._registry_files = {}
 
@@ -203,22 +191,19 @@ class WinRegistry(object):
       Windows Registry file object (instance of WinRegistryFile) or
       None if not available.
     """
-    if not self._registry_file_reader:
-      return None, None
-
     # TODO: handle HKEY_USERS in both 9X and NT.
 
     key_path_prefix, registry_file = self._GetCachedFileByPath(key_path_upper)
     if not registry_file:
       for mapping in self._GetFileMappingsByPath(key_path_upper):
-        registry_file = self.OpenFile(mapping.windows_path)
+        registry_file = self._OpenFile(mapping.windows_path)
         if not registry_file:
           continue
 
         if not key_path_prefix:
           key_path_prefix = mapping.key_path_prefix
 
-        self._MapFile(key_path_prefix, registry_file)
+        self.MapFile(key_path_prefix, registry_file)
         key_path_prefix = key_path_prefix.upper()
         break
 
@@ -245,54 +230,19 @@ class WinRegistry(object):
     for mapping in candidate_mappings:
       yield mapping
 
-  def _MapFile(self, key_path_prefix, registry_file):
-    """Maps the Windows Registry file to a specific key path prefix.
+  def _OpenFile(self, path):
+    """Opens a Windows Registry file.
 
     Args:
-      key_path_prefix: the key path prefix.
-      registry_file: a Windows Registry file (instance of
-                     dfwinreg.WinRegistryFile).
-    """
-    self._registry_files[key_path_prefix.upper()] = registry_file
-    registry_file.SetKeyPathPrefix(key_path_prefix)
-
-  # TODO: still needed?
-  def ExpandKeyPath(self, key_path, path_attributes):
-    """Expand a Windows Registry key path based on path attributes.
-
-     A Windows Registry key path may contain path attributes. A path
-     attribute is defined as anything within a curly bracket, e.g.
-     "\\System\\{my_attribute}\\Path\\Keyname".
-
-     If the path attribute my_attribute is defined it's value will be replaced
-     with the attribute name, e.g. "\\System\\MyValue\\Path\\Keyname".
-
-     If the Windows Registry key path needs to have curly brackets in the path
-     then they need to be escaped with another curly bracket, e.g.
-     "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
-     case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
-
-    Args:
-      key_path: the Windows Registry key path before being expanded.
-      path_attributes: a dictionary containing the path attributes.
+      path: the Windows Registry file path.
 
     Returns:
-      A Windows Registry key path that's expanded based on attribute values.
-
-    Raises:
-      KeyError: If an attribute name is in the key path not set in
-                the preprocessing object a KeyError will be raised.
+      A corresponding Windows Registry file object (instance of
+      WinRegistryFile) or None if not available.
     """
-    try:
-      expanded_key_path = key_path.format(**path_attributes)
-    except KeyError as exception:
-      raise KeyError(u'Unable to expand key path with error: {0:s}'.format(
-          exception))
-
-    if not expanded_key_path:
-      raise KeyError(u'Unable to expand key path.')
-
-    return expanded_key_path
+    if self._registry_file_reader:
+      return self._registry_file_reader.Open(
+          path, ascii_codepage=self._ascii_codepage)
 
   def GetKeyByPath(self, key_path):
     """Retrieves the key for a specific path.
@@ -391,38 +341,13 @@ class WinRegistry(object):
 
     raise RuntimeError(u'Unable to resolve Windows Registry file mapping.')
 
-  # TODO: deprecate direct usage of this method.
-  def OpenFile(self, path):
-    """Opens a Windows Registry file.
+  def MapFile(self, key_path_prefix, registry_file):
+    """Maps the Windows Registry file to a specific key path prefix.
 
     Args:
-      path: the Windows Registry file path.
-
-    Returns:
-      A corresponding Windows Registry file object (instance of
-      WinRegistryFile) or None if not available.
+      key_path_prefix: the key path prefix.
+      registry_file: a Windows Registry file (instance of
+                     dfwinreg.WinRegistryFile).
     """
-    return self._registry_file_reader.Open(
-        path, ascii_codepage=self._ascii_codepage)
-
-  # TODO: deprecate usage of this method.
-  def OpenFileEntry(self, file_entry):
-    """Opens a Windows Registry file entry.
-
-    Args:
-      file_entry: the file entry (instance of dfvfs.FileEntry).
-
-    Returns:
-      A corresponding Windows Registry file object (instance of
-      WinRegistryFile) or None if not available.
-    """
-    registry_file = regf.REGFWinRegistryFile()
-    file_object = file_entry.GetFileObject()
-
-    try:
-      registry_file.Open(file_object)
-    except IOError:
-      file_object.close()
-      registry_file = None
-
-    return registry_file
+    self._registry_files[key_path_prefix.upper()] = registry_file
+    registry_file.SetKeyPathPrefix(key_path_prefix)
