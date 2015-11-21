@@ -37,12 +37,13 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     if not shutdown_value:
       return
 
+    value_integer = shutdown_value.GetData()
     try:
-      filetime = self._UINT64_STRUCT.parse(shutdown_value.data)
+      filetime = self._UINT64_STRUCT.parse(value_integer)
     except construct.FieldError as exception:
-      parser_mediator.ProduceParseError(
-          u'Unable to extract shutdown timestamp with error: {0:s}'.format(
-              exception))
+      parser_mediator.ProduceParseError((
+          u'Unable to extract shutdown timestamp: {0:d} with error: '
+          u'{1:s}').format(value_integer, exception))
       return
 
     values_dict = {u'Description': shutdown_value.name}

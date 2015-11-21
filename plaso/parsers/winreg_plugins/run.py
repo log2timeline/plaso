@@ -47,16 +47,16 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
     """
-    for value in registry_key.GetValues():
+    for registry_value in registry_key.GetValues():
       # Ignore the default value.
-      if not value.name:
+      if not registry_value.name:
         continue
 
       # Ignore any value that is empty or that does not contain a string.
-      if not value.data or not value.DataIsString():
+      if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values_dict = {value.name: value.data}
+      values_dict = {registry_value.name: registry_value.GetData()}
       event_object = windows_events.WindowsRegistryEvent(
           registry_key.last_written_time, registry_key.path, values_dict,
           offset=registry_key.offset, source_append=self._SOURCE_APPEND,

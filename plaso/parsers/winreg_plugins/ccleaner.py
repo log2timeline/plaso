@@ -70,19 +70,20 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
         update_key_value = registry_value
 
       else:
-        values_dict[registry_value.name] = registry_value.data
+        values_dict[registry_value.name] = registry_value.GetData()
 
     if update_key_value:
+      date_time_string = update_key_value.GetData()
       try:
         # Date and time string in the form: MM/DD/YYYY hh:mm:ss [A|P]M
         # e.g. 07/13/2013 10:03:14 AM
         # TODO: does this hold for other locales?
         timestamp = timelib.Timestamp.FromTimeString(
-            update_key_value.data, timezone=parser_mediator.timezone)
+            date_time_string, timezone=parser_mediator.timezone)
       except errors.TimestampError:
         timestamp = None
         parser_mediator.ProduceParseError(
-            u'unable to parse time string: {0:s}'.format(update_key_value.data))
+            u'unable to parse time string: {0:s}'.format(date_time_string))
 
       if timestamp is not None:
         event_object = CCleanerUpdateEvent(timestamp, registry_key.path)
