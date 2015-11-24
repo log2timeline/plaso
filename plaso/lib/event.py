@@ -336,7 +336,7 @@ class EventTag(object):
   store_index will be used).
   """
 
-  TAG_STRING_REGEX = re.compile(r'[\w\-]+')
+  TAG_STRING_REGEX = re.compile(r'[A-Za-z0-9_]+')
 
   def __init__(self):
     """Initializes a new EventTag."""

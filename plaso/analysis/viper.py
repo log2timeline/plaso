@@ -7,6 +7,7 @@ import re
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import errors
+from plaso.lib import event
 
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
@@ -108,6 +109,8 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
   NAME = u'viper'
 
+  REPLACEMENT_REGEX = re.compile(u'[^A-Za-z0-9_]')
+
   def __init__(self, event_queue):
     """Initializes a Viper analysis plugin.
 
@@ -169,11 +172,11 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     strings = [u'viper_present']
 
     for project in projects:
-      project_name = re.sub(r'\W', u'_', project)
+      project_name = self.REPLACEMENT_REGEX.sub( u'_', project)
       strings.append(u'viper_project_{0:s}'.format(project_name))
 
     for tag in tags:
-      tag_name = re.sub(r'\W', u'_', tag)
+      tag_name = self.REPLACEMENT_REGEX.sub(u'_', tag)
       strings.append(u'viper_tag_{0:s}'.format(tag_name))
 
     return strings
