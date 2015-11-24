@@ -167,12 +167,10 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
           tags.extend(entry[u'tags'])
     if not projects:
       return [u'viper_not_present']
-    #projects = u', '.join(projects)
-    #tags = u', '.join(tags)
     strings = [u'viper_present']
 
     for project in projects:
-      project_name = self.REPLACEMENT_REGEX.sub( u'_', project)
+      project_name = self.REPLACEMENT_REGEX.sub(u'_', project)
       strings.append(u'viper_project_{0:s}'.format(project_name))
 
     for tag in tags:
