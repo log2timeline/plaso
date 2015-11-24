@@ -3,6 +3,7 @@
 
 import collections
 import logging
+import re
 import uuid
 
 from plaso.lib import definitions
@@ -335,6 +336,12 @@ class EventTag(object):
   store_index will be used).
   """
 
+  TAG_STRING_REGEX = re.compile(r'[\w\-]+')
+
+  def __init__(self):
+    """Initializes a new EventTag."""
+    self._tags = []
+
   # TODO: Enable __slots__ once we tested the first round of changes.
   @property
   def string_key(self):
@@ -347,6 +354,21 @@ class EventTag(object):
       return uuid_string
 
     return u'{0:d}:{1:d}'.format(self.store_number, self.store_index)
+
+  @property
+  def tags(self):
+    return self._tags
+
+  @tags.setter
+  def tags(self, value):
+    if not isinstance(value, list):
+      raise AttributeError(u'{0:s} is a not a list.'.format(value))
+    for tag in value:
+      if not self.TAG_STRING_REGEX.match(tag):
+        raise AttributeError(u'{0:s} is not a valid tag. '
+                             u'Tags must be alphanumeric strings.'.format(tag))
+    self._tags = value
+
 
   def GetString(self):
     """Retrieves a string representation of the event."""

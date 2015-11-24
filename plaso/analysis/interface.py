@@ -168,7 +168,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
 
-  def _GenerateTextLine(self, analysis_mediator, pathspec, tag_string):
+  def _GenerateTextLine(self, analysis_mediator, pathspec, tag_strings):
     """Generates a line of text regarding the plugins findings.
 
     Args:
@@ -176,39 +176,43 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
                          AnalysisMediator).
       pathspec: The pathspec (instance of dfvfs.PathSpec) whose hash was
                 looked up by the plugin.
-      tag_string: A string describing the plugin's results for a given pathspec.
+      tag_strings: A string describing the plugin's results for a given
+                   pathspec.
     """
     display_name = analysis_mediator.GetDisplayName(pathspec)
-    return u'{0:s}: {1:s}'.format(display_name, tag_string)
+    return u'{0:s}: {1:s}'.format(display_name, tag_strings)
 
   @abc.abstractmethod
-  def GenerateTagString(self, hash_information):
-    """Generates a string to tag events with.
+  def GenerateTagStrings(self, hash_information):
+    """Generates a list of strings to tag events with.
 
     Args:
       hash_information: An object that encapsulates the result of the
                         analysis of a hash, as returned by the Analyze() method
                         of the analyzer class associated with this plugin.
+
+    Returns:
+      A list of string tags to apply to events.
     """
 
-  def _CreateTag(self, event_uuid, tag_string):
+  def _CreateTag(self, event_uuid, tag_strings):
     """Creates an event tag.
 
     Args:
       event_uuid: The UUID of the event that should be tagged.
-      tag_string: The string that the event should be tagged with.
+      tag_strings: The string that the event should be tagged with.
     """
     event_tag = event.EventTag()
     event_tag.event_uuid = event_uuid
     event_tag.comment = u'Tag applied by {0:s} analysis plugin'.format(
         self.NAME)
-    event_tag.tags = [tag_string]
+    event_tag.tags = tag_strings
     return event_tag
 
   def _HandleHashAnalysis(self, hash_analysis):
     """Deals with a the results of the analysis of a hash.
 
-    This method ensures that a tag string is generated for the hash,
+    This method ensures that tag strings are generated for the hash,
     then tags all events derived from files with that hash.
 
     Args:
@@ -218,21 +222,21 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     Returns:
       A tuple of:
         pathspecs: A list of pathspecs that had the hash value looked up.
-        tag_string: The string that corresponds to the hash value that was
-                    looked up.
-        tags: A list of EventTags for the events that were extracted from the
+        tag_strings: A list of strings that corresponds to the hash value that
+                     was looked up.
+        tags: A list of EventTags for all events that were extracted from the
               pathspecs.
     """
     tags = []
     event_uuids = []
-    tag_string = self.GenerateTagString(hash_analysis.hash_information)
+    tag_strings = self.GenerateTagStrings(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs[hash_analysis.subject_hash]
     for pathspec in pathspecs:
       event_uuids.extend(self._event_uuids_by_pathspec[pathspec])
     for event_uuid in event_uuids:
-      tag = self._CreateTag(event_uuid, tag_string)
+      tag = self._CreateTag(event_uuid, tag_strings)
       tags.append(tag)
-    return pathspecs, tag_string, tags
+    return pathspecs, tag_strings, tags
 
   def _EnsureRequesterStarted(self):
     """Checks if the analyzer is running and starts it if not."""
@@ -336,12 +340,12 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         # The result queue is empty, but there could still be items that need
         # to be processed by the analyzer.
         continue
-      pathspecs, tag_string, new_tags = self._HandleHashAnalysis(
+      pathspecs, tag_strings, new_tags = self._HandleHashAnalysis(
           hash_analysis)
       tags.extend(new_tags)
       for pathspec in pathspecs:
         text_line = self._GenerateTextLine(
-            analysis_mediator, pathspec, tag_string)
+            analysis_mediator, pathspec, tag_strings)
         lines_of_text.append(text_line)
     self._analyzer.SignalAbort()
 
