@@ -14,7 +14,6 @@ import argparse
 import locale
 import logging
 import os
-import re
 import sys
 import textwrap
 
@@ -186,7 +185,14 @@ class PregTool(storage_media_tool.StorageMediaTool):
     return hexdump.Hexdump.FormatData(data)
 
   def _GetFormatString(self, event_object):
-    """Return back a format string that can be used for a given event object."""
+    """Retrieves the format string for a given event object.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Returns:
+      A string containing the format string.
+    """
     # Go through the attributes and see if there is an attribute
     # value that is longer than the default font align length, and adjust
     # it accordingly if found.
@@ -199,6 +205,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     align_length = self._DEFAULT_FORMAT_ALIGN_LENGTH
     for attribute in attributes:
+      if attribute is None:
+        attribute = u''
+
       attribute_len = len(attribute)
       if attribute_len > align_length and attribute_len < 30:
         align_length = len(attribute)
@@ -438,8 +447,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     for event_timestamp in list_of_timestamps:
       if exclude_timestamp_in_header:
-        self._output_writer.Write(u'\n[{0:s}]\n'.format(
-            timelib.Timestamp.CopyToIsoFormat(event_timestamp)))
+        date_time_string = timelib.Timestamp.CopyToIsoFormat(event_timestamp)
+        output_text = u'\n[{0:s}]\n'.format(date_time_string)
+        self._output_writer.Write(output_text)
 
       for event_object in event_objects_and_timestamps[event_timestamp]:
         self._PrintEventBody(
@@ -916,14 +926,9 @@ class PregMagics(magic.Magics):
   # for processing and formatting.
   console = None
 
-  EXPANSION_KEY_OPEN = r'{'
-  EXPANSION_KEY_CLOSE = r'}'
-
-  # Match against one instance, not two of the expansion key.
-  EXPANSION_RE = re.compile(r'{0:s}{{1}}[^{1:s}]+?{1:s}'.format(
-      EXPANSION_KEY_OPEN, EXPANSION_KEY_CLOSE))
-
   REGISTRY_KEY_PATH_SEPARATOR = u'\\'
+
+  # TODO: move into helper.
   REGISTRY_FILE_BASE_PATH = u'\\'
 
   # TODO: Use the output writer from the tool.
@@ -988,6 +993,37 @@ class PregMagics(magic.Magics):
 
     self.console.PrintRegistryFileList()
 
+  def _PrintPluginHelp(self, plugin_object):
+    """Prints the help information of a plugin.
+
+    Args:
+      plugin_object: a Windows Registry plugin object (instance of
+                     WindowsRegistryPlugin).
+    """
+    table_view = cli_views.CLITableView(title=plugin_object.NAME)
+
+    # TODO: replace __doc__ by DESCRIPTION.
+    description = plugin_object.__doc__
+    table_view.AddRow([u'Description', description])
+    self.output_writer.Write(u'\n')
+
+    for registry_key in plugin_object.expanded_keys:
+      table_view.AddRow([u'Registry Key', registry_key])
+    table_view.Write(self._output_writer)
+
+  def _SanitizeKeyPath(self, key_path):
+    """Sanitizes a Windows Registry key path.
+
+    Args:
+      key_path: a string containing a Registry key path.
+
+    Returns:
+      A string containing the sanitized Registry key path.
+    """
+    key_path = key_path.replace(u'}', u'}}')
+    key_path = key_path.replace(u'{', u'{{')
+    return key_path.replace(u'\\', u'\\\\')
+
   @magic.line_magic(u'cd')
   def ChangeDirectory(self, key_path):
     """Change between Registry keys, like a directory tree.
@@ -1007,89 +1043,13 @@ class PregMagics(magic.Magics):
     if not registry_helper:
       return
 
-    if not key_path:
-      key_path = self.REGISTRY_FILE_BASE_PATH
-
-    key_path_upper = key_path.upper()
-
-    # Check if we need to expand environment attributes.
-    match = self.EXPANSION_RE.search(key_path)
-    if match and u'{0:s}{0:s}'.format(
-        self.EXPANSION_KEY_OPEN) not in match.group(0):
-      pre_obj = self.console.preg_front_end.knowledge_base_object.pre_obj
-
-      # TODO: deprecate usage of pre_obj.
-      path_attributes = pre_obj.__dict__
-
-      try:
-        # TODO: create an ExpandKeyPath function.
-        key_path = registry_helper._win_registry.ExpandKeyPath(
-            key_path, path_attributes)
-      except (KeyError, IndexError):
-        pass
-
-    registry_key = None
-    relative_key_path = key_path
-    if (key_path.startswith(self.REGISTRY_KEY_PATH_SEPARATOR) or
-        key_path_upper.startswith(u'HKEY_')):
-      registry_key = registry_helper.GetKeyByPath(key_path)
-
-    elif key_path == u'.':
-      return
-
-    elif key_path.startswith(u'.\\'):
-      current_path = registry_helper.GetCurrentRegistryPath()
-      _, _, relative_key_path = key_path.partition(
-          self.REGISTRY_KEY_PATH_SEPARATOR)
-      registry_key = registry_helper.GetKeyByPath(u'{0:s}\\{1:s}'.format(
-          current_path, relative_key_path))
-
-    elif key_path.startswith(u'..'):
-      parent_path, _, _ = registry_helper.GetCurrentRegistryPath().rpartition(
-          self.REGISTRY_KEY_PATH_SEPARATOR)
-      # We know the path starts with a "..".
-      if len(key_path) == 2:
-        relative_key_path = u''
-      else:
-        relative_key_path = key_path[3:]
-
-      if parent_path:
-        if relative_key_path:
-          path = u'{0:s}\\{1:s}'.format(parent_path, relative_key_path)
-        else:
-          path = parent_path
-        registry_key = registry_helper.GetKeyByPath(path)
-      else:
-        registry_key = registry_helper.GetKeyByPath(
-            u'\\{0:s}'.format(relative_key_path))
-
-    else:
-      # Check if key is not set at all, then assume traversal from root.
-      if not registry_helper.GetCurrentRegistryPath():
-        _ = registry_helper.GetKeyByPath(self.REGISTRY_FILE_BASE_PATH)
-
-      current_key = registry_helper.GetCurrentRegistryKey()
-      if (not current_key or (
-          registry_helper.root_key and
-          current_key.name == registry_helper.root_key.name)):
-        relative_key_path = u'\\{0:s}'.format(key_path)
-      else:
-        relative_key_path = u'{0:s}\\{1:s}'.format(current_key.path, key_path)
-      registry_key = registry_helper.GetKeyByPath(relative_key_path)
-
+    registry_key = registry_helper.ChangeKeyByPath(key_path)
     if not registry_key:
       self.output_writer.Write(
-          u'Unable to change to: {0:s}\n'.format(relative_key_path))
+          u'Unable to change to key: {0:s}\n'.format(key_path))
       return
 
-    if relative_key_path == self.REGISTRY_FILE_BASE_PATH:
-      path = self.REGISTRY_FILE_BASE_PATH
-    else:
-      path = registry_key.path
-
-    sanitized_path = path.replace(u'}', u'}}').replace(u'{', u'{{')
-    sanitized_path = sanitized_path.replace(
-        self.REGISTRY_KEY_PATH_SEPARATOR, u'\\\\')
+    sanitized_path = self._SanitizeKeyPath(registry_key.path)
     self.console.SetPrompt(
         registry_file_path=registry_helper.path,
         prepend_string=sanitized_path)
@@ -1145,14 +1105,18 @@ class PregMagics(magic.Magics):
             u'', u'[' + value.data_type_string, value.name), False))
       else:
         if value.DataIsString():
-          value_string = u'{0:s}'.format(value.data)
+          value_string = value.GetData()
+
         elif value.DataIsInteger():
-          value_string = u'{0:d}'.format(value.data)
+          value_string = u'{0:d}'.format(value.GetData())
+
         elif value.DataIsMultiString():
-          value_string = u'{0:s}'.format(u''.join(value.data))
+          value_string = u'{0:s}'.format(u''.join(value.GetData()))
+
         elif value.DataIsBinaryData():
           value_string = hexdump.Hexdump.FormatData(
               value.data, maximum_data_size=16)
+
         else:
           value_string = u''
 
@@ -1216,24 +1180,6 @@ class PregMagics(magic.Magics):
         self.output_writer.Write(u'\n')
         self.output_writer.Write(u'+-'*40)
         self.output_writer.Write(u'\n')
-
-  def _PrintPluginHelp(self, plugin_object):
-    """Prints the help information of a plugin.
-
-    Args:
-      plugin_object: a Windows Registry plugin object (instance of
-                     WindowsRegistryPlugin).
-    """
-    table_view = cli_views.CLITableView(title=plugin_object.NAME)
-
-    # TODO: replace __doc__ by DESCRIPTION.
-    description = plugin_object.__doc__
-    table_view.AddRow([u'Description', description])
-    self.output_writer.Write(u'\n')
-
-    for registry_key in plugin_object.expanded_keys:
-      table_view.AddRow([u'Registry Key', registry_key])
-    table_view.Write(self._output_writer)
 
   @magic.line_magic(u'plugin')
   def ParseWithPlugin(self, line):
@@ -1397,11 +1343,11 @@ class PregConsole(object):
       The data from a Registry value if it exists, None if either there is no
       currently loaded Registry key or if the value does not exist.
     """
-    value = self._CommandGetValue(value_name)
-    if not value:
+    registry_value = self._CommandGetValue(value_name)
+    if not registry_value:
       return
 
-    return value.data
+    return registry_value.GetData()
 
   def _CommandGetRangeForAllLoadedHives(self):
     """Return a range or a list of all loaded hives."""

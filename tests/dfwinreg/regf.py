@@ -199,46 +199,46 @@ class REGFWinRegistryValueTest(REGFWinRegTestCase):
     registry_key = registry_file.GetKeyByPath(u'\\Console')
     value_name = u'ColorTable14'
     registry_value = registry_key.GetValueByName(value_name)
-    expected_raw_data = b'\xff\xff\x00\x00'
+    expected_data = b'\xff\xff\x00\x00'
 
     self.assertIsNotNone(registry_value)
     self.assertEqual(registry_value.data_type, 4)
     self.assertEqual(registry_value.data_type_string, u'REG_DWORD_LE')
-    self.assertEqual(registry_value.data, 65535)
+    self.assertEqual(registry_value.GetData(), 65535)
     self.assertEqual(registry_value.name, value_name)
     self.assertEqual(registry_value.offset, 29516)
-    self.assertEqual(registry_value.raw_data, expected_raw_data)
+    self.assertEqual(registry_value.data, expected_data)
 
     registry_key = registry_file.GetKeyByPath(
         u'\\AppEvents\\EventLabels\\CriticalBatteryAlarm')
     value_name = u'DispFileName'
     registry_value = registry_key.GetValueByName(value_name)
-    expected_raw_data = (
+    expected_data = (
         b'@\x00m\x00m\x00s\x00y\x00s\x00.\x00c\x00p\x00l\x00,\x00-\x005\x008'
         b'\x002\x007\x00\x00\x00')
 
     self.assertIsNotNone(registry_value)
     self.assertEqual(registry_value.data_type, 1)
     self.assertEqual(registry_value.data_type_string, u'REG_SZ')
-    self.assertEqual(registry_value.data, u'@mmsys.cpl,-5827')
+    self.assertEqual(registry_value.GetData(), u'@mmsys.cpl,-5827')
     self.assertEqual(registry_value.name, value_name)
     self.assertEqual(registry_value.offset, 6012)
-    self.assertEqual(registry_value.raw_data, expected_raw_data)
+    self.assertEqual(registry_value.data, expected_data)
 
     registry_key = registry_file.GetKeyByPath(
         u'\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
     value_name = u'0'
     registry_value = registry_key.GetValueByName(value_name)
-    expected_raw_data = (
+    expected_data = (
         b'\x14\x00\x1fP\xe0O\xd0 \xea:i\x10\xa2\xd8\x08\x00+00\x9d\x00\x00')
 
     self.assertIsNotNone(registry_value)
     self.assertEqual(registry_value.data_type, 3)
     self.assertEqual(registry_value.data_type_string, u'REG_BINARY')
-    self.assertEqual(registry_value.data, expected_raw_data)
+    self.assertEqual(registry_value.GetData(), expected_data)
     self.assertEqual(registry_value.name, value_name)
     self.assertEqual(registry_value.offset, 625588)
-    self.assertEqual(registry_value.raw_data, expected_raw_data)
+    self.assertEqual(registry_value.data, expected_data)
 
     registry_file.Close()
 
@@ -248,10 +248,10 @@ class REGFWinRegistryValueTest(REGFWinRegTestCase):
         u'\\Software\\Microsoft\\Cryptography\\CertificateTemplateCache\\User')
     value_name = u'SupportedCSPs'
     registry_value = registry_key.GetValueByName(value_name)
-    expected_data = [
+    expected_string = [
         u'Microsoft Enhanced Cryptographic Provider v1.0',
         u'Microsoft Base Cryptographic Provider v1.0']
-    expected_raw_data = (
+    expected_data = (
         b'M\x00i\x00c\x00r\x00o\x00s\x00o\x00f\x00t\x00 \x00E\x00n\x00h\x00a'
         b'\x00n\x00c\x00e\x00d\x00 \x00C\x00r\x00y\x00p\x00t\x00o\x00g\x00r'
         b'\x00a\x00p\x00h\x00i\x00c\x00 \x00P\x00r\x00o\x00v\x00i\x00d\x00e'
@@ -264,10 +264,10 @@ class REGFWinRegistryValueTest(REGFWinRegTestCase):
     self.assertIsNotNone(registry_value)
     self.assertEqual(registry_value.data_type, 7)
     self.assertEqual(registry_value.data_type_string, u'REG_MULTI_SZ')
-    self.assertEqual(registry_value.data, expected_data)
+    self.assertEqual(registry_value.GetData(), expected_string)
     self.assertEqual(registry_value.name, value_name)
     self.assertEqual(registry_value.offset, 241452)
-    self.assertEqual(registry_value.raw_data, expected_raw_data)
+    self.assertEqual(registry_value.data, expected_data)
 
     registry_file.Close()
 

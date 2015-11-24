@@ -368,13 +368,35 @@ class FakeWinRegistryValue(interface.WinRegistryValue):
 
   @property
   def data(self):
-    """The value data as a native Python object.
+    """The value data as a byte string."""
+    return self._data
+
+  @property
+  def data_type(self):
+    """Numeric value that contains the data type."""
+    return self._data_type
+
+  @property
+  def name(self):
+    """The name of the value."""
+    return self._name
+
+  @property
+  def offset(self):
+    """The offset of the value within the Windows Registry file."""
+    return self._pyregf_value.offset
+
+  def GetData(self):
+    """Retrieves the data.
+
+    Returns:
+      The data as a Python type.
 
     Raises:
       WinRegistryValueError: if the value data cannot be read.
     """
     if not self._data:
-      return None
+      return
 
     if self._data_type in self._STRING_VALUE_TYPES:
       try:
@@ -407,26 +429,6 @@ class FakeWinRegistryValue(interface.WinRegistryValue):
             u'Unable to read data from value: {0:s} with error: {1:s}'.format(
                 self._name, exception))
 
-    return self._data
-
-  @property
-  def data_type(self):
-    """Numeric value that contains the data type."""
-    return self._data_type
-
-  @property
-  def name(self):
-    """The name of the value."""
-    return self._name
-
-  @property
-  def offset(self):
-    """The offset of the value within the Windows Registry file."""
-    return self._pyregf_value.offset
-
-  @property
-  def raw_data(self):
-    """The value data as a byte string."""
     return self._data
 
 

@@ -40,7 +40,7 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     if not service_dll:
       return
 
-    return service_dll.data
+    return service_dll.GetData()
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Create one event for each subkey under Services that has Type and Start.
@@ -67,9 +67,9 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
           continue
         if value.name not in values_dict:
           if value.DataIsString() or value.DataIsInteger():
-            values_dict[value.name] = value.data
+            values_dict[value.name] = value.GetData()
           elif value.DataIsMultiString():
-            values_dict[value.name] = u', '.join(value.data)
+            values_dict[value.name] = u', '.join(value.GetData())
 
       # Create a specific service event, so that we can recognize and expand
       # certain values when we're outputting the event.

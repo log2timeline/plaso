@@ -157,8 +157,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
   def testParseRegistry(self):
     """Test the ParseRegistryFile and ParseRegistryKey functions."""
-    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
-    self._ConfigureSingleFileTest(knowledge_base_values=knowledge_base_values)
+    self._ConfigureSingleFileTest()
 
     registry_helpers = self._front_end.GetRegistryHelpers(
         registry_file_types=[u'SYSTEM'])

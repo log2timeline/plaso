@@ -37,16 +37,17 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
                     dfwinreg.WinRegistryKey).
     """
     values_dict = {}
-    for value in registry_key.GetValues():
+    for registry_value in registry_key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
-      if not value.name or not self._RE_VALUE_NAME.search(value.name):
+      if (not registry_value.name or
+          not self._RE_VALUE_NAME.search(registry_value.name)):
         continue
 
       # Ignore any value that is empty or that does not contain a string.
-      if not value.data or not value.DataIsString():
+      if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values_dict[value.name] = value.data
+      values_dict[registry_value.name] = registry_value.GetData()
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,

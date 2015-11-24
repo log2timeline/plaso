@@ -49,7 +49,9 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
+    key_path = (
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+        u'Search')
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
@@ -92,7 +94,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #   def testProcess(self):
 #     """Tests the Process function."""
 #     key_path = (
-#         u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog')
+#         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+#         u'Search\\Catalog')
 #     time_string = u'2012-08-28 09:23:49.002031'
 #
 #     filetime = dfwinreg_fake.Filetime()

@@ -22,9 +22,11 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function on a Windows XP Registry file."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
-        u'\\{75048700-EF1F-11D0-9888-006097DEACF9}')
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Explorer\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -56,11 +58,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
-
     key_path = (
-        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
-        u'\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
-    registry_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        u'Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
