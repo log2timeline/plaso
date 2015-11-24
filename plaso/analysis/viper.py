@@ -7,7 +7,6 @@ import re
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import errors
-from plaso.lib import event
 
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
