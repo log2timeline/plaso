@@ -35,16 +35,13 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
   REQUIRED_KEYS = frozenset([u'browser', u'extensions'])
 
-  def _ExtractExtensionInstallationEvents(self, settings_dict):
+  def _ExtractExtensionInstallEvents(self, settings_dict, parser_mediator):
     """Extract extension installation events.
 
     Args:
       settings_dict: A dictionary of settings data from Preferences file.
-
-    Returns:
-      result_dict: dict of ChromeExtensionInstallationEvents
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    result_dict = {}
     for extension_id, extension in sorted(settings_dict.items()):
       try:
         install_time = int(extension.get(u'install_time', u'0'), 10)
@@ -59,9 +56,9 @@ class ChromePreferencesParser(interface.FileObjectParser):
       else:
         extension_name = None
       path = extension.get(u'path')
-      result_dict.append(ChromeExtensionInstallationEvent(
-          install_time, extension_id, extension_name, path))
-    return result_dict
+      event_object = ChromeExtensionInstallationEvent(
+          install_time, extension_id, extension_name, path)
+      parser_mediator.ProduceEvent(event_object)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Chrome preferences file-like object.
@@ -115,8 +112,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
           u'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
-    event_object = self._ExtractExtensionInstallationEvent
-    parser_mediator.ProduceEvent(event_object)
+    self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
 
 manager.ParsersManager.RegisterParser(ChromePreferencesParser)
