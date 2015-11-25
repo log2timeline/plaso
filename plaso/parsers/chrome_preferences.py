@@ -44,6 +44,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
     Returns:
       result_dict: dict of ChromeExtensionInstallationEvents
     """
+    result_dict = {}
     for extension_id, extension in sorted(settings_dict.items()):
       try:
         install_time = int(extension.get(u'install_time', u'0'), 10)
