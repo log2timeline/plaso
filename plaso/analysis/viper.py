@@ -2,11 +2,11 @@
 """Analysis plugin to look up files in Viper and tag events."""
 
 import logging
-import re
 
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import errors
+from plaso.lib import event
 
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
@@ -108,8 +108,6 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
   NAME = u'viper'
 
-  REPLACEMENT_REGEX = re.compile(u'[^A-Za-z0-9_]')
-
   def __init__(self, event_queue):
     """Initializes a Viper analysis plugin.
 
@@ -142,7 +140,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     self._analyzer.SetProtocol(protocol)
 
   def GenerateTagStrings(self, hash_information):
-    """Generates a string that will be used in the event tag.
+    """Generates a list of strings that will be used in the event tag.
 
     Args:
       hash_information: A dictionary containing the JSON decoded contents of the
@@ -169,11 +167,12 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     strings = [u'viper_present']
 
     for project in projects:
-      project_name = self.REPLACEMENT_REGEX.sub(u'_', project)
+      project_name = event.EventTag.INVALID_TAG_CHARACTER_REGEX.sub(
+          u'_', project)
       strings.append(u'viper_project_{0:s}'.format(project_name))
 
     for tag in tags:
-      tag_name = self.REPLACEMENT_REGEX.sub(u'_', tag)
+      tag_name = event.EventTag.INVALID_TAG_CHARACTER_REGEX.sub(u'_', tag)
       strings.append(u'viper_tag_{0:s}'.format(tag_name))
 
     return strings

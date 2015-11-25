@@ -336,10 +336,12 @@ class EventTag(object):
   store_index will be used).
   """
 
-  TAG_STRING_REGEX = re.compile(r'[A-Za-z0-9_]+')
+  VALID_TAG_REGEX = re.compile(r'[A-Za-z0-9_]+')
+  INVALID_TAG_CHARACTER_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
   def __init__(self):
     """Initializes a new EventTag."""
+    super(EventTag, self).__init__()
     self._tags = []
 
   # TODO: Enable __slots__ once we tested the first round of changes.
@@ -357,16 +359,29 @@ class EventTag(object):
 
   @property
   def tags(self):
+    """The string tags in an event tag."""
     return self._tags
 
   @tags.setter
   def tags(self, value):
+    """Sets the string tags in an event tag.
+
+    Args:
+      value: a list of strings to set as string tags in this event tag. The tags
+             must only contain alphanumeric characters and underscores.
+
+    Raises:
+      AttributeError: If the provided value is not a list, or contains strings
+                      that are not valid string tags.
+    """
+
     if not isinstance(value, list):
       raise AttributeError(u'{0:s} is a not a list.'.format(value))
     for tag in value:
-      if not self.TAG_STRING_REGEX.match(tag):
-        raise AttributeError(u'{0:s} is not a valid tag. '
-                             u'Tags must be alphanumeric strings.'.format(tag))
+      if not self.VALID_TAG_REGEX.match(tag):
+        raise AttributeError((
+            u'{0:s} is not a valid tag. Tags must consist of alphanumeric '
+            u'characters and underscores only').format(tag))
     self._tags = value
 
 

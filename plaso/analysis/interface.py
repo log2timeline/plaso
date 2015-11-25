@@ -176,11 +176,11 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
                          AnalysisMediator).
       pathspec: The pathspec (instance of dfvfs.PathSpec) whose hash was
                 looked up by the plugin.
-      tag_strings: A string describing the plugin's results for a given
+      tag_strings: A list of strings describing the plugin's results for a given
                    pathspec.
     """
     display_name = analysis_mediator.GetDisplayName(pathspec)
-    return u'{0:s}: {1:s}'.format(display_name, tag_strings)
+    return u'{0:s}: {1:s}'.format(display_name, u', '.join(tag_strings))
 
   @abc.abstractmethod
   def GenerateTagStrings(self, hash_information):
@@ -200,7 +200,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     Args:
       event_uuid: The UUID of the event that should be tagged.
-      tag_strings: The string that the event should be tagged with.
+      tag_strings: A list of strings that the event should be tagged with.
     """
     event_tag = event.EventTag()
     event_tag.event_uuid = event_uuid

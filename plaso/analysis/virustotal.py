@@ -130,7 +130,7 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       self._analysis_queue_timeout = self._analyzer.wait_after_analysis + 1
 
   def GenerateTagStrings(self, hash_information):
-    """Generates a string that will be used in the event tag.
+    """Generates a list of strings that will be used in the event tag.
 
     Args:
       hash_information: A dictionary containing the JSON decoded contents of the
@@ -151,8 +151,9 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     elif response_code == self._VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE:
       return [u'virustotal_analysis_pending']
     else:
-      logging.error(u'VirusTotal returned unknown response code '
-                    u'{0!s}'.format(response_code))
+      logging.error(
+          u'VirusTotal returned unknown response code {0!s}'.format(
+              response_code))
       return [u'virustotal_unknown_response_code_{0:d}'.format(response_code)]
 
 
