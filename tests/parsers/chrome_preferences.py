@@ -25,8 +25,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    # event_object[0] from the sample is mgndgikekgjfcpckkfioiadnlibdjbkf
-    event_object = event_objects[0]
+    event_object = event_objects[14]
 
     self.assertIsInstance(
         event_object, chrome_preferences.ChromeExtensionInstallationEvent)
