@@ -121,10 +121,11 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(tags), 1)
     tag = tags[0]
     self.assertEqual(tag.event_uuid, u'8')
-    expected_string = (
-        u'File is present in Viper. Projects: \"default\" Tags \"'
-        u'rat, darkcomet\"')
-    self.assertEqual(tag.tags[0], expected_string)
+    expected_tag_strings = [
+        u'viper_present', u'viper_project_default', u'viper_tag_rat',
+        u'viper_tag_darkcomet'
+    ]
+    self.assertEqual(tag.tags, expected_tag_strings)
 
 
 class MockResponse(dict):

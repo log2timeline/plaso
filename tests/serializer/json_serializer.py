@@ -93,7 +93,7 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'[{"comment": "This is a test event tag.", '
         u'"event_uuid": "403818f93dce467bac497ef0f263fde8", '
         u'"__type__": "EventTag", '
-        u'"tags": ["This is a test.", "Also a test."]}]')
+        u'"_tags": ["This is a test.", "Also a test."]}]')
 
     self._json_dict = {
         u'__type__': u'AnalysisReport',
@@ -117,7 +117,7 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
 
     event_tag.event_uuid = u'403818f93dce467bac497ef0f263fde8'
     event_tag.comment = u'This is a test event tag.'
-    event_tag.tags = [u'This is a test.', u'Also a test.']
+    event_tag._tags = [u'This is a test.', u'Also a test.']
 
     self.assertTrue(event_tag.IsValidForSerialization())
     analysis_report = event.AnalysisReport(u'chrome_extension_test')
@@ -230,7 +230,7 @@ class JSONEventTagSerializerTest(JSONSerializerTestCase):
     self._json_dict = {
         u'event_uuid': self._event_uuid,
         u'comment': u'This is a test event tag.',
-        u'tags':  [u'This is a test.', u'Also a test.'],
+        u'_tags':  [u'This is a test.', u'Also a test.'],
     }
 
     self._serializer = json_serializer.JSONEventTagSerializer
@@ -245,7 +245,7 @@ class JSONEventTagSerializerTest(JSONSerializerTestCase):
 
     event_tag.event_uuid = self._event_uuid
     event_tag.comment = u'This is a test event tag.'
-    event_tag.tags = [u'This is a test.', u'Also a test.']
+    event_tag._tags = [u'This is a test.', u'Also a test.']
     self.assertTrue(event_tag.IsValidForSerialization())
     self._TestWriteSerialized(self._serializer, event_tag, self._json_dict)
 
