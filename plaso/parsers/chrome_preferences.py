@@ -35,16 +35,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
   REQUIRED_KEYS = frozenset([u'browser', u'extensions'])
 
-  def _ExtractExtensionInstallationEvents(self, settings_dict):
+  def _ExtractExtensionInstallEvents(self, settings_dict, parser_mediator):
     """Extract extension installation events.
 
     Args:
       settings_dict: A dictionary of settings data from Preferences file.
-
-    Yields:
-      A tuple of: install_time, extension_id, extension_name, path.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    for extension_id, extension in settings_dict.iteritems():
+    for extension_id, extension in sorted(settings_dict.items()):
       try:
         install_time = int(extension.get(u'install_time', u'0'), 10)
       except ValueError as exception:
@@ -58,7 +56,9 @@ class ChromePreferencesParser(interface.FileObjectParser):
       else:
         extension_name = None
       path = extension.get(u'path')
-      yield install_time, extension_id, extension_name, path
+      event_object = ChromeExtensionInstallationEvent(
+          install_time, extension_id, extension_name, path)
+      parser_mediator.ProduceEvent(event_object)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Chrome preferences file-like object.
@@ -111,13 +111,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
-    # Callback used due to line length constraints.
-    callback = self._ExtractExtensionInstallationEvents
-    for install_time, extension_id, extension_name, path in callback(
-        extensions_dict):
-      event_object = ChromeExtensionInstallationEvent(
-          install_time, extension_id, extension_name, path)
-      parser_mediator.ProduceEvent(event_object)
+
+    self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
 
 manager.ParsersManager.RegisterParser(ChromePreferencesParser)
