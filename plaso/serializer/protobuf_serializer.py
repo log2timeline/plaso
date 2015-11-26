@@ -540,9 +540,9 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
 
     for proto_attribute, attribute_value in proto.ListFields():
       if proto_attribute.name == u'tags':
-        event_tag.tags = []
+        event_tag._tags = []
         for proto_tag in proto.tags:
-          event_tag.tags.append(proto_tag.value)
+          event_tag._tags.append(proto_tag.value)
       else:
         setattr(event_tag, proto_attribute.name, attribute_value)
 
@@ -581,7 +581,7 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     for attribute_name in event_tag.__dict__:
       attribute_value = getattr(event_tag, attribute_name, None)
 
-      if (attribute_name == u'tags' and
+      if (attribute_name == u'_tags' and
           isinstance(attribute_value, (tuple, list))):
         for tag_string in attribute_value:
           proto_tag_add = proto.tags.add()

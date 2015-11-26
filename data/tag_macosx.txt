@@ -1,21 +1,21 @@
-Application Execution
+application_execution
   data_type is 'macosx:application_usage'
   data_type is 'syslog:line' AND body contains 'COMMAND=/bin/launchctl'
 
-Application Install
+application_install
   data_type is 'plist:key' AND plugin is 'plist_install_history'
 
-AutoRun
+autorun
   data_type is 'fs:stat' AND filename contains 'LaunchAgents/' AND timestamp_desc is 'HFS_DETECT crtime' AND filename contains '.plist'
 
-File Downloaded
+file_download
   data_type is 'chrome:history:file_downloaded'
   timestamp_desc is 'File Downloaded'
   data_type is 'macosx:lsquarantine'
 
-Device Connected
+device_connection
   data_type is 'ipod:device:entry'
   data_type is 'plist:key' and plugin is 'plist_airport'
 
-Document Printed
+document_print
   (data_type is 'metadata:hachoir' OR data_type is 'metadata:OLECF') AND timestamp_desc contains 'Printed'
