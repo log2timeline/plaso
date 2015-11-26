@@ -6,6 +6,7 @@ import logging
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import errors
+from plaso.lib import event
 
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
@@ -138,8 +139,8 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
 
-  def GenerateTagString(self, hash_information):
-    """Generates a string that will be used in the event tag.
+  def GenerateTagStrings(self, hash_information):
+    """Generates a list of strings that will be used in the event tag.
 
     Args:
       hash_information: A dictionary containing the JSON decoded contents of the
@@ -147,7 +148,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
                         ViperAnalyzer.
 
     Returns:
-      A string describing the results from Viper.
+      A list of strings describing the results from Viper.
     """
     if not hash_information:
       return u'File not present in Viper.'
@@ -162,13 +163,19 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
         if entry[u'tags']:
           tags.extend(entry[u'tags'])
     if not projects:
-      return u'File not present in Viper.'
-    projects = u', '.join(projects)
-    tags = u', '.join(tags)
-    string = (
-        u'File is present in Viper. Projects: "{0:s}" Tags "{1:s}"').format(
-            projects, tags)
-    return string
+      return [u'viper_not_present']
+    strings = [u'viper_present']
+
+    for project in projects:
+      project_name = event.EventTag.INVALID_TAG_CHARACTER_REGEX.sub(
+          u'_', project)
+      strings.append(u'viper_project_{0:s}'.format(project_name))
+
+    for tag in tags:
+      tag_name = event.EventTag.INVALID_TAG_CHARACTER_REGEX.sub(u'_', tag)
+      strings.append(u'viper_tag_{0:s}'.format(tag_name))
+
+    return strings
 
 
 manager.AnalysisPluginManager.RegisterPlugin(ViperAnalysisPlugin)
