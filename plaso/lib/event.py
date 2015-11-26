@@ -374,7 +374,6 @@ class EventTag(object):
       AttributeError: If the provided value is not a list, or contains strings
                       that are not valid string tags.
     """
-
     if not isinstance(value, list):
       raise AttributeError(u'{0:s} is a not a list.'.format(value))
     for tag in value:
