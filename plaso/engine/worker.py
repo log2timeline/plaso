@@ -185,6 +185,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
 
+    self._status = definitions.PROCESSING_STATUS_HASHING
+
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
       return
@@ -439,6 +441,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       if not parser_name_list:
         parser_name_list = self._non_sigscan_parser_names
 
+      self._status = definitions.PROCESSING_STATUS_PARSING
       for parser_name in parser_name_list:
         parser_object = self._parser_objects.get(parser_name, None)
         if not parser_object:
