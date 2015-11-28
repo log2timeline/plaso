@@ -87,7 +87,7 @@ class WinRegistryParser(interface.FileObjectParser):
     return format_specification
 
   def _ParseKeyWithPlugin(self, parser_mediator, registry_key, plugin_object):
-    """Parses the Registry keys recursively.
+    """Parses the Registry key with a specific plugin.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
