@@ -17,6 +17,10 @@ class MRUListExStringRegistryKeyFilter(
     interface.WindowsRegistryKeyWithValuesFilter):
   """Windows Registry key with values filter."""
 
+  _IGNORE_KEY_PATH_SEGMENTS = frozenset([
+      u'\\BagMRU\\'.upper(),
+      u'\\Explorer\\ComDlg32\\OpenSavePidlMRU\\'.upper()])
+
   _IGNORE_KEY_PATH_SUFFIXES = frozenset([
       u'\\BagMRU'.upper(),
       u'\\Explorer\\StreamMRU'.upper(),
@@ -38,14 +42,15 @@ class MRUListExStringRegistryKeyFilter(
     Returns:
       A boolean value that indicates a match.
     """
-    key_path = registry_key.path.upper()
+    key_path_upper = registry_key.path.upper()
     # Prevent this filter matching non-string MRUListEx values.
     for ignore_key_path_suffix in self._IGNORE_KEY_PATH_SUFFIXES:
-      if key_path.endswith(ignore_key_path_suffix):
+      if key_path_upper.endswith(ignore_key_path_suffix):
         return False
 
-    if u'\\BagMRU\\'.upper() in key_path:
-      return False
+    for ignore_key_path_segment in self._IGNORE_KEY_PATH_SEGMENTS:
+      if ignore_key_path_segment in key_path_upper:
+        return False
 
     return super(MRUListExStringRegistryKeyFilter, self).Match(registry_key)
 
