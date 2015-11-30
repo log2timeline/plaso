@@ -3,6 +3,7 @@
 
 import logging
 
+from plaso.dfwinreg import errors as dfwinreg_errors
 from plaso.dfwinreg import interface as dfwinreg_interface
 from plaso.dfwinreg import regf as dfwinreg_regf
 from plaso.dfwinreg import registry as dfwinreg_registry
@@ -85,6 +86,45 @@ class WinRegistryParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'regf', offset=0)
     return format_specification
 
+  def _ParseKeyWithPlugin(self, parser_mediator, registry_key, plugin_object):
+    """Parses the Registry key with a specific plugin.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      registry_key: a Registry key object (instance of
+                    dfwinreg.WinRegistryKey).
+      plugin_object: a Windows Registry plugin object (instance of
+                     WindowsRegistryPlugin).
+    """
+    try:
+      plugin_object.UpdateChainAndProcess(parser_mediator, registry_key)
+    except (IOError, dfwinreg_errors.WinRegistryValueError) as exception:
+      parser_mediator.ProduceParseError(u'{0:s}'.format(exception))
+
+  def _ParseRecurseKeys(self, parser_mediator, root_key):
+    """Parses the Registry keys recursively.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      root_key: a root Registry key object (instance of
+                dfwinreg.WinRegistryKey).
+    """
+    for registry_key in root_key.RecurseKeys():
+      # TODO: use a filter tree to optimize lookups.
+      found_matching_plugin = False
+      for plugin_object in self._plugins:
+        if parser_mediator.abort:
+          break
+
+        if self._CanProcessKeyWithPlugin(registry_key, plugin_object):
+          found_matching_plugin = True
+          self._ParseKeyWithPlugin(
+              parser_mediator, registry_key, plugin_object)
+
+      if not found_matching_plugin:
+        self._ParseKeyWithPlugin(
+            parser_mediator, registry_key, self._default_plugin)
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Registry file-like object.
 
@@ -103,21 +143,7 @@ class WinRegistryParser(interface.FileObjectParser):
       return
 
     try:
-      for registry_key in root_key.RecurseKeys():
-        # TODO: use a filter tree to optimize lookups.
-        found_matching_plugin = False
-        for plugin_object in self._plugins:
-          if parser_mediator.abort:
-            break
-
-          if self._CanProcessKeyWithPlugin(registry_key, plugin_object):
-            found_matching_plugin = True
-            plugin_object.UpdateChainAndProcess(parser_mediator, registry_key)
-
-        if not found_matching_plugin:
-          self._default_plugin.UpdateChainAndProcess(
-              parser_mediator, registry_key)
-
+      self._ParseRecurseKeys(parser_mediator, root_key)
     except IOError as exception:
       parser_mediator.ProduceParseError(u'{0:s}'.format(exception))
 
