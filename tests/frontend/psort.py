@@ -14,7 +14,7 @@ from plaso.lib import timelib
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
-from plaso.storage import filters as storage_filters
+from plaso.storage import time_range as storage_time_range
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -128,13 +128,12 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
     storage_file = storage_zip_file.StorageFile(
         storage_file_path, read_only=True)
-    time_range_filter = storage_filters.TimeRangeFilter(
+    time_range = storage_time_range.TimeRange(
         self._start_timestamp, self._end_timestamp)
 
     timestamp_list = []
     # TODO: refactor to use StorageReader.
-    for event_object in storage_file.GetSortedEntries(
-        time_range_filter=time_range_filter):
+    for event_object in storage_file.GetSortedEntries(time_range=time_range):
       timestamp_list.append(event_object.timestamp)
 
     self.assertEqual(len(timestamp_list), 15)

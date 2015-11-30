@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Storage specific filter objects."""
+"""Storage time range objects."""
 
-class TimeRangeFilter(object):
-  """A class that defines a date and time range filter.
+class TimeRange(object):
+  """A class that defines a date and time range.
 
   The timestamp are integers containing the number of micro seconds
   since January 1, 1970, 00:00:00 UTC.
@@ -15,7 +15,7 @@ class TimeRangeFilter(object):
   """
 
   def __init__(self, start_timestamp, end_timestamp):
-    """Initializes a date and time range filter object.
+    """Initializes a date and time range object.
 
     The timestamp are integers containing the number of micro seconds
     since January 1, 1970, 00:00:00 UTC.
@@ -27,16 +27,16 @@ class TimeRangeFilter(object):
                      the end of the range.
 
     Raises:
-      ValueError: If the filter is badly formed.
+      ValueError: If the time range is badly formed.
     """
     if start_timestamp is None or end_timestamp is None:
       raise ValueError(
-          u'Filter must have either a start and an end timestamp.')
+          u'Time range must have either a start and an end timestamp.')
 
     if start_timestamp > end_timestamp:
       raise ValueError(
           u'Invalid start must be earlier than end timestamp.')
 
-    super(TimeRangeFilter, self).__init__()
+    super(TimeRange, self).__init__()
     self.end_timestamp = end_timestamp
     self.start_timestamp = start_timestamp

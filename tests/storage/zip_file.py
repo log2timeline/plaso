@@ -13,7 +13,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
-from plaso.storage import filters
+from plaso.storage import time_range
 from plaso.storage import zip_file
 
 from tests import test_lib as shared_test_lib
@@ -399,7 +399,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test lower bound time range filter.
-    time_range_filter = filters.TimeRangeFilter(
+    test_time_range = time_range.TimeRange(
         timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
         timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
 
@@ -407,7 +407,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     timestamps = []
     for event_object in storage_file.GetSortedEntries(
-        time_range_filter=time_range_filter):
+        time_range=test_time_range):
       timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
@@ -421,7 +421,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test upper bound time range filter.
-    time_range_filter = filters.TimeRangeFilter(
+    test_time_range = time_range.TimeRange(
         timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
         timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
 
@@ -429,7 +429,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     timestamps = []
     for event_object in storage_file.GetSortedEntries(
-        time_range_filter=time_range_filter):
+        time_range=test_time_range):
       timestamps.append(event_object.timestamp)
 
     expected_timestamps = [

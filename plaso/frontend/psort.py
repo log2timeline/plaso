@@ -25,7 +25,7 @@ from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
-from plaso.storage import filters as storage_filters
+from plaso.storage import time_range as storage_time_range
 
 import pytz
 
@@ -409,7 +409,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # TODO: refactor to use StorageReader.
     for event_object in storage_file.GetSortedEntries(
-        time_range_filter=self._time_slice_filter):
+        time_range=self._time_slice_filter):
       # TODO: clean up this function.
       if not my_filter:
         counter[u'Events Included'] += 1
@@ -500,7 +500,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     if time_slice:
       if time_slice.event_timestamp:
-        self._time_slice_filter = storage_filters.TimeRangeFilter(
+        self._time_slice_filter = storage_time_range.TimeRange(
             time_slice.start_timestamp, time_slice.end_timestamp)
 
       elif use_time_slicer:

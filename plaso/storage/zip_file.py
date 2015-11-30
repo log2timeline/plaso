@@ -980,22 +980,21 @@ class StorageFile(ZIPStorageFile):
 
     return tag_index_value
 
-  def _InitializeMergeBuffer(self, time_range_filter=None):
+  def _InitializeMergeBuffer(self, time_range=None):
     """Initializes the event objects into the merge buffer.
 
     This function fills the merge buffer with the first relevant event object
     from each stream.
 
     Args:
-      time_range_filter: an optional time range filter object (instance of
-                         TimeRangeFilter).
+      time_range: an optional time range object (instance of TimeRange).
     """
     self._merge_buffer = []
 
     number_range = self._GetSerializedEventObjectStreamNumbers()
     for stream_number in number_range:
       entry_index = -1
-      if time_range_filter:
+      if time_range:
         stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
         if self._HasStream(stream_name):
           try:
@@ -1009,25 +1008,25 @@ class StorageFile(ZIPStorageFile):
           # If the start timestamp of the time range filter is larger than the
           # last timestamp in the timestamp table skip this stream.
           timestamp_compare = timestamp_table.GetTimestamp(-1)
-          if time_range_filter.start_timestamp > timestamp_compare:
+          if time_range.start_timestamp > timestamp_compare:
             continue
 
           for table_index in range(timestamp_table.number_of_timestamps - 1):
             timestamp_compare = timestamp_table.GetTimestamp(table_index)
-            if time_range_filter.start_timestamp >= timestamp_compare:
+            if time_range.start_timestamp >= timestamp_compare:
               entry_index = table_index
               break
 
       event_object = self._GetEventObject(
           stream_number, entry_index=entry_index)
       # Check the lower bound in case no timestamp table was available.
-      while (event_object and time_range_filter and
-             event_object.timestamp < time_range_filter.start_timestamp):
+      while (event_object and time_range and
+             event_object.timestamp < time_range.start_timestamp):
         event_object = self._GetEventObject(stream_number)
 
       if event_object:
-        if (time_range_filter and
-            event_object.timestamp > time_range_filter.end_timestamp):
+        if (time_range and
+            event_object.timestamp > time_range.end_timestamp):
           continue
 
         heapq.heappush(
@@ -1420,18 +1419,17 @@ class StorageFile(ZIPStorageFile):
       report_string = file_object.read(self.MAXIMUM_REPORT_PROTOBUF_SIZE)
       yield self._analysis_report_serializer.ReadSerialized(report_string)
 
-  def GetSortedEntry(self, time_range_filter=None):
+  def GetSortedEntry(self, time_range=None):
     """Retrieves a sorted entry.
 
     Args:
-      time_range_filter: an optional time range filter object (instance of
-                         TimeRangeFilter).
+      time_range: an optional time range object (instance of TimeRange).
 
     Returns:
       An event object (instance of EventObject).
     """
     if self._merge_buffer is None:
-      self._InitializeMergeBuffer(time_range_filter=time_range_filter)
+      self._InitializeMergeBuffer(time_range=time_range)
 
     if not self._merge_buffer:
       return
@@ -1441,8 +1439,7 @@ class StorageFile(ZIPStorageFile):
       return
 
     # Stop as soon as we hit the upper bound.
-    if (time_range_filter and
-        event_object.timestamp > time_range_filter.end_timestamp):
+    if time_range and event_object.timestamp > time_range.end_timestamp:
       return
 
     # Read the next event object in a stream.
@@ -1457,20 +1454,19 @@ class StorageFile(ZIPStorageFile):
 
     return event_object
 
-  def GetSortedEntries(self, time_range_filter=None):
+  def GetSortedEntries(self, time_range=None):
     """Retrieves a sorted entries.
 
     Args:
-      time_range_filter: an optional time range filter object (instance of
-                         TimeRangeFilter).
+      time_range: an optional time range object (instance of TimeRange).
 
     Yields:
       An event object (instance of EventObject).
     """
-    event_object = self.GetSortedEntry(time_range_filter=time_range_filter)
+    event_object = self.GetSortedEntry(time_range=time_range)
     while event_object:
       yield event_object
-      event_object = self.GetSortedEntry(time_range_filter=time_range_filter)
+      event_object = self.GetSortedEntry(time_range=time_range)
 
   def GetStorageInformation(self):
     """Retrieves storage (preprocessing) information stored in the storage file.
