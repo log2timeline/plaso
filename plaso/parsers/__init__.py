@@ -26,7 +26,9 @@ from plaso.parsers import ntfs
 from plaso.parsers import olecf
 from plaso.parsers import opera
 from plaso.parsers import oxml
-from plaso.parsers import pcap
+# Renable after rewrite as indicated in:
+# https://github.com/log2timeline/plaso/issues/360
+# from plaso.parsers import pcap
 from plaso.parsers import pe
 from plaso.parsers import plist
 from plaso.parsers import popcontest
