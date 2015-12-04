@@ -521,7 +521,9 @@ class MultiProcessEngine(engine.BaseEngine):
     if status_indicator not in [
         definitions.PROCESSING_STATUS_COMPLETED,
         definitions.PROCESSING_STATUS_INITIALIZED,
-        definitions.PROCESSING_STATUS_RUNNING]:
+        definitions.PROCESSING_STATUS_RUNNING,
+        definitions.PROCESSING_STATUS_PARSING,
+        definitions.PROCESSING_STATUS_HASHING]:
 
       logging.error(
           (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
