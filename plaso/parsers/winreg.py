@@ -99,7 +99,8 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       plugin_object.UpdateChainAndProcess(parser_mediator, registry_key)
     except (IOError, dfwinreg_errors.WinRegistryValueError) as exception:
-      parser_mediator.ProduceParseError(u'{0:s}'.format(exception))
+      parser_mediator.ProduceParseError(
+          u'in key: {0:s} {1:s}'.format(registry_key.path, exception))
 
   def _ParseRecurseKeys(self, parser_mediator, root_key):
     """Parses the Registry keys recursively.
