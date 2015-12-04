@@ -157,11 +157,11 @@ class ParserMediator(object):
     stat_object = file_entry.GetStat()
 
     posix_time = getattr(stat_object, u'crtime', None)
-    if posix_time is not None:
+    if posix_time is None:
       posix_time = getattr(stat_object, u'ctime', None)
 
     if posix_time is None:
-      logging.error(
+      logging.warning(
           u'Unable to determine creation year from file stat information.')
       return
 
