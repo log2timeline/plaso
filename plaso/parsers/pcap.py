@@ -31,7 +31,7 @@ def ParseDNS(dns_packet_data):
   try:
     dns = dpkt.dns.DNS(dns_packet_data)
     if dns.rcode is dpkt.dns.DNS_RCODE_NOERR:
-      if dns.get_qr() == 1:
+      if dns.qr == 1:
         if not dns.an:
           dns_data.append(u'DNS Response: No answer for ')
           dns_data.append(dns.qd[0].name)
@@ -53,7 +53,7 @@ def ParseDNS(dns_packet_data):
               dns_data.append(answer.name)
               dns_data.append(u' response: ')
               dns_data.append(answer.ptrname)
-      elif not dns.get_qr():
+      elif not dns.qr:
         dns_data.append(u'DNS Query for ')
         dns_data.append(dns.qd[0].name)
     else:
@@ -751,7 +751,7 @@ class PcapParser(interface.FileObjectParser):
     data = file_object.read(dpkt.pcap.PktHdr.__hdr_len__)
     while data:
       packet_header = packet_header_class(data)
-      timestamp = packet_header.tv_sec + (packet_header.tv_usec / 1000000.0)
+      timestamp = (packet_header.tv_sec * 1000000) + packet_header.tv_usec
       packet_data = file_object.read(packet_header.caplen)
 
       ethernet_frame = dpkt.ethernet.Ethernet(packet_data)

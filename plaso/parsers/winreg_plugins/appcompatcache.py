@@ -584,9 +584,9 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         format_type, value_data, cached_entry_offset)
 
     if not cached_entry_size:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceParseError((
           u'Unsupported cached entry size at offset {0:d} in AppCompatCache '
-          u'key: {1:s}'.format(cached_entry_offset, registry_key.path))
+          u'key: {1:s}').format(cached_entry_offset, registry_key.path))
       return
 
     cached_entry_index = 0
