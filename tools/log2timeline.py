@@ -134,7 +134,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       display_name: the display name of the file last processed.
     """
     if (number_of_events_delta == 0 and
-        status == definitions.PROCESSING_STATUS_RUNNING):
+        status in [definitions.PROCESSING_STATUS_RUNNING,
+                   definitions.PROCESSING_STATUS_HASHING,
+                   definitions.PROCESSING_STATUS_PARSING]):
       status = process_status
 
     # This check makes sure the columns are tab aligned.
@@ -316,7 +318,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                 extraction_worker_status.pid,
                 extraction_worker_status.number_of_events,
                 extraction_worker_status.display_name,
-                status == definitions.PROCESSING_STATUS_RUNNING,
+                status in [definitions.PROCESSING_STATUS_RUNNING,
+                           definitions.PROCESSING_STATUS_HASHING,
+                           definitions.PROCESSING_STATUS_PARSING],
                 extraction_worker_status.process_status))
 
   def AddExperimentalOptions(self, argument_group):
