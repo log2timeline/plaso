@@ -18,14 +18,14 @@ from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import bufferlib
 from plaso.lib import event
-from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
-from plaso.output import interface as output_interface
+from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
+from plaso.storage import time_range as storage_time_range
 
 import pytz
 
@@ -45,10 +45,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._data_location = None
     self._filter_buffer = None
     self._filter_expression = None
+    # Instance of EventObjectFilter.
     self._filter_object = None
     self._output_format = None
     self._preferred_language = u'en-US'
     self._quiet_mode = False
+    self._time_slice_filter = None
     self._use_zeromq = False
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
@@ -405,9 +407,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     if not analysis_queues:
       analysis_queues = []
 
-    event_object = storage_file.GetSortedEntry()
-    while event_object:
-      if my_filter:
+    # TODO: refactor to use StorageReader.
+    for event_object in storage_file.GetSortedEntries(
+        time_range=self._time_slice_filter):
+      # TODO: clean up this function.
+      if not my_filter:
+        counter[u'Events Included'] += 1
+        self._AppendEvent(event_object, output_buffer, analysis_queues)
+      else:
         event_match = event_object
         if isinstance(event_object, plaso_storage_pb2.EventObject):
           # TODO: move serialization to storage, if low-level filtering is
@@ -446,14 +453,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
             counter[u'Events Filtered Out'] += 1
           else:
             counter[u'Events Filtered Out'] += 1
-      else:
-        counter[u'Events Included'] += 1
-        self._AppendEvent(event_object, output_buffer, analysis_queues)
-
-      event_object = storage_file.GetSortedEntry()
 
     for analysis_queue in analysis_queues:
       analysis_queue.Close()
+
     if output_buffer.duplicate_counter:
       counter[u'Duplicate Removals'] = output_buffer.duplicate_counter
 
@@ -497,15 +500,13 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     if time_slice:
       if time_slice.event_timestamp:
-        pfilter.TimeRangeCache.SetLowerTimestamp(time_slice.start_timestamp)
-        pfilter.TimeRangeCache.SetUpperTimestamp(time_slice.end_timestamp)
+        self._time_slice_filter = storage_time_range.TimeRange(
+            time_slice.start_timestamp, time_slice.end_timestamp)
 
       elif use_time_slicer:
         self._filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
     with storage_file:
-      storage_file.SetStoreLimit(self._filter_object)
-
       # TODO: allow for single processing.
       # TODO: add upper queue limit.
       analysis_queue_port = None
@@ -539,7 +540,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       else:
         event_queue_producers = []
 
-      output_buffer = output_interface.EventBuffer(
+      output_buffer = output_event_buffer.EventBuffer(
           output_module, deduplicate_events)
       with output_buffer:
         counter = self.ProcessEventsFromStorage(
