@@ -39,7 +39,7 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
 
     self.hostname = binary.ByteStreamCopyToString(
         dest_list_entry.hostname, codepage=u'ascii')
-    self.path = binary.Utf16StreamCopyToString(dest_list_entry.path)
+    self.path = binary.UTF16StreamCopyToString(dest_list_entry.path)
     self.pin_status = dest_list_entry.pin_status
 
     self.droid_volume_identifier = binary.ByteStreamCopyToGuid(
@@ -81,7 +81,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
   # Using Construct's utf-16 encoding here will create strings with their
   # end-of-string characters exposed. Instead the strings are read as
-  # binary strings and converted using ReadUtf16().
+  # binary strings and converted using ReadUTF16().
   _DEST_LIST_STREAM_ENTRY = construct.Struct(
       u'dest_list_stream_entry',
       construct.ULInt64(u'unknown1'),

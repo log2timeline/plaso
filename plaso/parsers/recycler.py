@@ -106,7 +106,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
           u'Not an $Ixxx file, filename doesn\'t start with $I.')
 
     record = self.RECORD_STRUCT.parse_stream(file_object)
-    filename_utf = binary.ReadUtf16Stream(file_object)
+    filename_utf = binary.ReadUTF16Stream(file_object)
 
     filetime = record.get(u'filetime', 0)
     # TODO: handle missing timestamp.
@@ -194,7 +194,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       record_information = self.RECORD_STRUCT.parse(
           data[self.RECORD_INDEX_OFFSET:])
       if read_unicode_names:
-        filename_utf = binary.ReadUtf16(
+        filename_utf = binary.ReadUTF16(
             data[self.UNICODE_FILENAME_OFFSET:])
       else:
         filename_utf = u''

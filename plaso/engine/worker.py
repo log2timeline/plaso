@@ -488,7 +488,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     self._parser_mediator.SetFileEntry(file_entry)
 
-    logging.debug(u'[ProcessFileEntry] parsing file: {0:s}'.format(
+    logging.debug(u'[ProcessFileEntry] processing file entry: {0:s}'.format(
         self._current_display_name))
 
     is_metadata_file = self._IsMetadataFile(file_entry)
@@ -500,7 +500,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
             file_entry.name == u'$UsnJrnl' and data_stream_name == u'$J'):
 
           # To be able to ignore the sparse data ranges the UsnJrnl parser
-          # requires to read directly from the volume.
+          # needs to read directly from the volume.
           volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
               parent_path_spec, resolver_context=self._resolver_context)
 
@@ -557,8 +557,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if self._enable_profiling:
       self._ProfilingSampleMemory()
 
-    logging.debug(u'[ParseFileEntry] done processing: {0:s}'.format(
-        self._current_display_name))
+    logging.debug(
+        u'[ProcessFileEntry] done processing file entry: {0:s}'.format(
+            self._current_display_name))
 
   def _ProcessPathSpec(self, path_spec):
     """Processes a path specification.

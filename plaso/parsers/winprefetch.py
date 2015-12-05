@@ -42,7 +42,7 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
     self.offset = 0
 
     self.version = file_header.get(u'version', None)
-    self.executable = binary.Utf16StreamCopyToString(
+    self.executable = binary.UTF16StreamCopyToString(
         file_header.get(u'executable', u''))
     self.prefetch_hash = file_header.get(u'prefetch_hash', None)
 
@@ -298,7 +298,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     if filename_strings_offset > 0 and filename_strings_size > 0:
       file_object.seek(filename_strings_offset, os.SEEK_SET)
       filename_strings_data = file_object.read(filename_strings_size)
-      filename_strings = binary.ArrayOfUtf16StreamCopyToStringTable(
+      filename_strings = binary.ArrayOfUTF16StreamCopyToStringTable(
           filename_strings_data)
 
     else:
@@ -370,7 +370,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         current_offset = file_object.tell()
 
         file_object.seek(device_path_offset, os.SEEK_SET)
-        device_path = binary.ReadUtf16Stream(
+        device_path = binary.ReadUTF16Stream(
             file_object, byte_size=device_path_size)
 
         file_object.seek(current_offset, os.SEEK_SET)
@@ -421,7 +421,7 @@ class WinPrefetchParser(interface.FileObjectParser):
       logging.debug(
           u'Mismatch in number of metrics and filename strings array entries.')
 
-    executable = binary.Utf16StreamCopyToString(
+    executable = binary.UTF16StreamCopyToString(
         file_header.get(u'executable', u''))
 
     volume_serial_numbers = []

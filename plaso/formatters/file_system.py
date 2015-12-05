@@ -120,11 +120,12 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
     event_values[u'attribute_name'] = self._ATTRIBUTE_NAMES.get(
         attribute_type, u'UNKNOWN')
 
-    file_reference = event_values.get(u'file_reference', 0)
-    event_values[u'file_reference'] = u'{0:d}-{1:d}'.format(
-        file_reference & 0xffffffffffff, file_reference >> 48)
+    file_reference = event_values.get(u'file_reference', None)
+    if file_reference:
+      event_values[u'file_reference'] = u'{0:d}-{1:d}'.format(
+          file_reference & 0xffffffffffff, file_reference >> 48)
 
-    parent_file_reference = event_values.get(u'parent_file_reference', 0)
+    parent_file_reference = event_values.get(u'parent_file_reference', None)
     if parent_file_reference:
       event_values[u'parent_file_reference'] = u'{0:d}-{1:d}'.format(
           parent_file_reference & 0xffffffffffff, parent_file_reference >> 48)
@@ -203,11 +204,12 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
 
     event_values = event_object.GetValues()
 
-    file_reference = event_values.get(u'file_reference', 0)
-    event_values[u'file_reference'] = u'{0:d}-{1:d}'.format(
-        file_reference & 0xffffffffffff, file_reference >> 48)
+    file_reference = event_values.get(u'file_reference', None)
+    if file_reference:
+      event_values[u'file_reference'] = u'{0:d}-{1:d}'.format(
+          file_reference & 0xffffffffffff, file_reference >> 48)
 
-    parent_file_reference = event_values.get(u'parent_file_reference', 0)
+    parent_file_reference = event_values.get(u'parent_file_reference', None)
     if parent_file_reference:
       event_values[u'parent_file_reference'] = u'{0:d}-{1:d}'.format(
           parent_file_reference & 0xffffffffffff, parent_file_reference >> 48)

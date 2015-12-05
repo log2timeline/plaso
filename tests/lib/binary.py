@@ -31,32 +31,32 @@ class BinaryTests(unittest.TestCase):
         b'\x57\x00\x68\x00\x61\x00\x74\x00\x20\x00\x69\x00\x73\x00'
         b'\x20\x00\x74\x00\x68\x00\x69\x00\x73\x00\x3F\x00')
 
-  def testReadUtf16Stream(self):
+  def testReadUTF16Stream(self):
     """Test reading an UTF-16 stream from a file-like object."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
       # Read a null char terminated string.
       file_object.seek(0x10)
-      self.assertEqual(binary.ReadUtf16Stream(file_object), u'PING.EXE')
+      self.assertEqual(binary.ReadUTF16Stream(file_object), u'PING.EXE')
 
       # Read a fixed size string.
       file_object.seek(0x27f8)
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
-      string = binary.ReadUtf16Stream(file_object, byte_size=44)
+      string = binary.ReadUTF16Stream(file_object, byte_size=44)
       self.assertEqual(string, expected_string)
 
       file_object.seek(0x27f8)
       expected_string = u'\\DEVICE\\HARDDISKVOLUME1'
-      string = binary.ReadUtf16Stream(file_object, byte_size=46)
+      string = binary.ReadUTF16Stream(file_object, byte_size=46)
       self.assertEqual(string, expected_string)
 
       # Read another null char terminated string.
       file_object.seek(7236)
       self.assertEqual(
-          binary.ReadUtf16Stream(file_object),
+          binary.ReadUTF16Stream(file_object),
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
-  def testUtf16StreamCopyToString(self):
+  def testUTF16StreamCopyToString(self):
     """Test copying an UTF-16 byte stream to a string."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
@@ -64,16 +64,16 @@ class BinaryTests(unittest.TestCase):
 
       # Read a null char terminated string.
       self.assertEqual(
-          binary.Utf16StreamCopyToString(byte_stream[0x10:]), u'PING.EXE')
+          binary.UTF16StreamCopyToString(byte_stream[0x10:]), u'PING.EXE')
 
       # Read a fixed size string.
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
-      string = binary.Utf16StreamCopyToString(
+      string = binary.UTF16StreamCopyToString(
           byte_stream[0x27f8:], byte_stream_size=44)
       self.assertEqual(string, expected_string)
 
       expected_string = u'\\DEVICE\\HARDDISKVOLUME1'
-      string = binary.Utf16StreamCopyToString(
+      string = binary.UTF16StreamCopyToString(
           byte_stream[0x27f8:], byte_stream_size=46)
       self.assertEqual(string, expected_string)
 
@@ -81,16 +81,16 @@ class BinaryTests(unittest.TestCase):
       expected_string = (
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
-      string = binary.Utf16StreamCopyToString(byte_stream[7236:])
+      string = binary.UTF16StreamCopyToString(byte_stream[7236:])
       self.assertEqual(string, expected_string)
 
-  def testArrayOfUtf16StreamCopyToString(self):
+  def testArrayOfUTF16StreamCopyToString(self):
     """Test copying an array of UTF-16 byte streams to strings."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
       byte_stream = file_object.read()
 
-      strings_array = binary.ArrayOfUtf16StreamCopyToString(
+      strings_array = binary.ArrayOfUTF16StreamCopyToString(
           byte_stream[0x1c44:], byte_stream_size=2876)
       expected_strings_array = [
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',
@@ -123,13 +123,13 @@ class BinaryTests(unittest.TestCase):
 
       self.assertEqual(strings_array, expected_strings_array)
 
-  def testArrayOfUtf16StreamCopyToStringTable(self):
+  def testArrayOfUTF16StreamCopyToStringTable(self):
     """Test copying an array of UTF-16 byte streams to a string table."""
     path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as file_object:
       byte_stream = file_object.read()
 
-      string_table = binary.ArrayOfUtf16StreamCopyToStringTable(
+      string_table = binary.ArrayOfUTF16StreamCopyToStringTable(
           byte_stream[0x1c44:], byte_stream_size=2876)
       expected_string_table = {
           0: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',
@@ -166,11 +166,11 @@ class BinaryTests(unittest.TestCase):
 
   def testStringParsing(self):
     """Test parsing the ASCII string."""
-    self.assertEqual(binary.ReadUtf16(self._ascii_string_1), u'Whatis')
+    self.assertEqual(binary.ReadUTF16(self._ascii_string_1), u'Whatis')
 
-    self.assertEqual(binary.ReadUtf16(self._ascii_string_2), u'What is this?')
+    self.assertEqual(binary.ReadUTF16(self._ascii_string_2), u'What is this?')
 
-    uni_text = binary.ReadUtf16(self._unicode_string_1)
+    uni_text = binary.ReadUTF16(self._unicode_string_1)
     self.assertEqual(uni_text, u'þrándur')
 
   def testHex(self):

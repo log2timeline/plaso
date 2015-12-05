@@ -44,18 +44,17 @@ class NTFSFileStatEvent(time_events.FiletimeEvent):
   Attributes:
     attribute_type: the attribute type e.g. 0x00000030 which represents
                     $FILE_NAME.
-    file_attribute_flags: the NTFS file attribute flags, set to None
-                          if not available.
+    file_attribute_flags: the NTFS file attribute flags or None if
+                          not available.
     file_reference: integer containing the NTFS file reference.
     file_system_type: the file system type.
     is_allocated: boolean value to indicate the MFT entry is allocated
                  (marked as in use).
     name: string containing the name associated with the stat event, e.g.
-          that of a $FILE_NAME attribute, set to None if not available.
+          that of a $FILE_NAME attribute or None if not available.
     offset: integer containing the offset of the stat data.
     parent_file_reference: optional integer containing the NTFS file
-                           reference of the parent, set to None if not
-                           available.
+                           reference of the parent or None if not available.
   """
 
   DATA_TYPE = u'fs:stat:ntfs'
@@ -72,15 +71,14 @@ class NTFSFileStatEvent(time_events.FiletimeEvent):
       file_reference: integer containing the NTFS file reference.
       attribute_type: the attribute type e.g. 0x00000030 which represents
                       $FILE_NAME.
-      file_attribute_flags: optional NTFS file attribute flags, set to None
+      file_attribute_flags: optional NTFS file attribute flags or None
                             if not available.
       is_allocated: optional boolean value to indicate the MFT entry is
                     is allocated (marked as in use).
       name: optional string containing the name associated with the stat event,
-            e.g. that of a $FILE_NAME attribute, set to None if not available.
+            e.g. that of a $FILE_NAME attribute or None if not available.
       parent_file_reference: optional integer containing the NTFS file
-                             reference of the parent, set to None if not
-                             available.
+                             reference of the parent or None if not available.
     """
     super(NTFSFileStatEvent, self).__init__(timestamp, timestamp_description)
 
@@ -98,8 +96,8 @@ class NTFSUSNChangeEvent(time_events.FiletimeEvent):
   """NTFS USN change event.
 
   Attributes:
-    file_attribute_flags: the NTFS file attribute flags, set to None
-                          if not available.
+    file_attribute_flags: the NTFS file attribute flags or None if
+                          not available.
     file_reference: integer containing the NTFS file reference.
     update_sequence_number: integer containing the update sequence number.
     update_source_flags: integer containing the update source flags.
@@ -108,8 +106,7 @@ class NTFSUSNChangeEvent(time_events.FiletimeEvent):
     file_system_type: the file system type.
     offset: integer containing the offset of the corresponding USN record.
     parent_file_reference: optional integer containing the NTFS file
-                           reference of the parent, set to None if not
-                           available.
+                           reference of the parent or None if not available.
   """
 
   DATA_TYPE = u'fs:ntfs:usn_change'
@@ -129,11 +126,10 @@ class NTFSUSNChangeEvent(time_events.FiletimeEvent):
       update_sequence_number: integer containing the update sequence number.
       update_source_flags: integer containing the update source flags.
       update_reason_flags: integer containing the update reason flags.
-      file_attribute_flags: optional NTFS file attribute flags, set to None
+      file_attribute_flags: optional NTFS file attribute flags or None
                             if not available.
       parent_file_reference: optional integer containing the NTFS file
-                             reference of the parent, set to None if not
-                             available.
+                             reference of the parent or None if not available.
     """
     super(NTFSUSNChangeEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
