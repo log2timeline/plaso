@@ -20,6 +20,14 @@ plaso.storage.factory module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.time_range module
+-------------------------------
+
+.. automodule:: plaso.storage.time_range
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.storage.writer module
 ---------------------------
 
