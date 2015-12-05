@@ -96,8 +96,6 @@ import yaml
 from plaso.engine import profiler
 from plaso.lib import definitions
 from plaso.lib import event
-from plaso.lib import limit
-from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
@@ -734,10 +732,6 @@ class StorageFile(ZIPStorageFile):
       not exist.
     """
     super(StorageFile, self).__init__()
-    # bound_first and bound_last contain timestamps and None is used
-    # to indicate not set.
-    self._bound_first = None
-    self._bound_last = None
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
@@ -767,8 +761,6 @@ class StorageFile(ZIPStorageFile):
     self._enable_profiling = False
     self._profiling_sample = 0
     self._serializers_profiler = None
-
-    self.store_range = None
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -888,8 +880,8 @@ class StorageFile(ZIPStorageFile):
     Args:
       stream_number: an integer containing the number of the serialized event
                      object stream.
-      entry_index: an integer containing the number of the serialized event
-                   object within the stream. Where -1 represents the next
+      entry_index: an optional integer containing the number of the serialized
+                   event object within the stream. Where -1 represents the next
                    available event object.
 
     Returns:
@@ -922,8 +914,9 @@ class StorageFile(ZIPStorageFile):
 
     Args:
       stream_number: an integer containing the number of the stream.
-      entry_index: Read a specific entry in the file. The default is -1,
-                   which represents the first available entry.
+      entry_index: an optional integer containing the number of the serialized
+                   event object within the stream. Where -1 represents the next
+                   available event object.
 
     Returns:
       A tuple containing the event object serialized data and the entry index
@@ -939,41 +932,6 @@ class StorageFile(ZIPStorageFile):
           u'Unable to retrieve serialized data steam: {0:d} '
           u'with error: {1:s}.').format(stream_number, exception))
       return None, None
-
-    if (not data_stream.entry_index and entry_index == -1 and
-        self._bound_first is not None):
-      # We only get here if the following conditions are met:
-      #   1. data_stream.entry_index is not set (so this is the first read
-      #      from this file).
-      #   2. There is a lower bound (so we have a date filter).
-      #   3. We are accessing this function using 'get me the next entry' as an
-      #      opposed to the 'get me entry X', where we just want to server entry
-      #      X.
-      #
-      # The purpose: speed seeking into the storage file based on time. Instead
-      # of spending precious time reading through the storage file and
-      # deserializing protobufs just to compare timestamps we read a much
-      # 'cheaper' file, one that only contains timestamps to find the proper
-      # entry into the storage file. That way we'll get to the right place in
-      # the file and can start reading protobufs from the right location.
-
-      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
-      if self._HasStream(stream_name):
-        try:
-          entry_index = self._GetFirstSerializedDataStreamEntryIndex(
-              stream_number, self._bound_first)
-
-        except IOError as exception:
-          entry_index = None
-
-          logging.error(
-              u'Unable to read timestamp table from stream: {0:s}.'.format(
-                  stream_name))
-
-        if entry_index is None:
-          return None, None
-
-      # TODO: determine if anything else needs to be handled here.
 
     if entry_index >= 0:
       try:
@@ -1022,54 +980,58 @@ class StorageFile(ZIPStorageFile):
 
     return tag_index_value
 
-  def _GetFirstSerializedDataStreamEntryIndex(self, stream_number, timestamp):
-    """Retrieves the first serialized data stream entry index for a timestamp.
+  def _InitializeMergeBuffer(self, time_range=None):
+    """Initializes the event objects into the merge buffer.
 
-    The timestamp indicates the lower bound. The first entry with a timestamp
-    greater or equal to the lower bound will be returned.
+    This function fills the merge buffer with the first relevant event object
+    from each stream.
 
     Args:
-      stream_number: an integer containing the number of the stream.
-      timestamp: the lower bounds timestamp which is an integer containing
-                 the number of micro seconds since January 1, 1970,
-                 00:00:00 UTC.
-
-    Returns:
-      The index of the entry in the corresponding serialized data stream or
-      None if there was no matching entry.
-
-    Raises:
-      IOError: if the stream cannot be opened.
+      time_range: an optional time range object (instance of TimeRange).
     """
-    timestamp_table = self._GetSerializedEventObjectTimestampTable(
-        stream_number)
-
-    for entry_index in range(timestamp_table.number_of_timestamps):
-      timestamp_compare = timestamp_table.GetTimestamp(entry_index)
-      if timestamp_compare >= timestamp:
-        return entry_index
-
-  def _InitializeMergeBuffer(self):
-    """Initializes the merge buffer."""
-    if self.store_range is None:
-      number_range = self._GetSerializedEventObjectStreamNumbers()
-    else:
-      number_range = self.store_range
-
     self._merge_buffer = []
-    for store_number in number_range:
-      event_object = self._GetEventObject(store_number)
-      if not event_object:
-        return
 
-      while event_object.timestamp < self._bound_first:
-        event_object = self._GetEventObject(store_number)
-        if not event_object:
-          return
+    number_range = self._GetSerializedEventObjectStreamNumbers()
+    for stream_number in number_range:
+      entry_index = -1
+      if time_range:
+        stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+        if self._HasStream(stream_name):
+          try:
+            timestamp_table = self._GetSerializedEventObjectTimestampTable(
+                stream_number)
+          except IOError as exception:
+            logging.error((
+                u'Unable to read timestamp table from stream: {0:s} '
+                u'with error: {1:s}.').format(stream_name, exception))
 
-      heapq.heappush(
-          self._merge_buffer,
-          (event_object.timestamp, store_number, event_object))
+          # If the start timestamp of the time range filter is larger than the
+          # last timestamp in the timestamp table skip this stream.
+          timestamp_compare = timestamp_table.GetTimestamp(-1)
+          if time_range.start_timestamp > timestamp_compare:
+            continue
+
+          for table_index in range(timestamp_table.number_of_timestamps - 1):
+            timestamp_compare = timestamp_table.GetTimestamp(table_index)
+            if time_range.start_timestamp >= timestamp_compare:
+              entry_index = table_index
+              break
+
+      event_object = self._GetEventObject(
+          stream_number, entry_index=entry_index)
+      # Check the lower bound in case no timestamp table was available.
+      while (event_object and time_range and
+             event_object.timestamp < time_range.start_timestamp):
+        event_object = self._GetEventObject(stream_number)
+
+      if event_object:
+        if (time_range and
+            event_object.timestamp > time_range.end_timestamp):
+          continue
+
+        heapq.heappush(
+            self._merge_buffer,
+            (event_object.timestamp, stream_number, event_object))
 
   # pylint: disable=arguments-differ
   def _Open(
@@ -1311,13 +1273,6 @@ class StorageFile(ZIPStorageFile):
     # Store information about store range for this particular
     # preprocessing object. This will determine which stores
     # this information is applicable for.
-    stores = self._GetSerializedEventObjectStreamNumbers()
-    if stores:
-      end = stores[-1] + 1
-    else:
-      end = self._first_file_number
-    pre_obj.store_range = (self._first_file_number, end)
-
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'pre_obj')
 
@@ -1464,41 +1419,54 @@ class StorageFile(ZIPStorageFile):
       report_string = file_object.read(self.MAXIMUM_REPORT_PROTOBUF_SIZE)
       yield self._analysis_report_serializer.ReadSerialized(report_string)
 
-  def GetSortedEntry(self):
-    """Retrieves a sorted entry from the storage file.
+  def GetSortedEntry(self, time_range=None):
+    """Retrieves a sorted entry.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
 
     Returns:
       An event object (instance of EventObject).
     """
-    if self._bound_first is None:
-      self._bound_first, self._bound_last = (
-          pfilter.TimeRangeCache.GetTimeRange())
-
     if self._merge_buffer is None:
-      self._InitializeMergeBuffer()
+      self._InitializeMergeBuffer(time_range=time_range)
 
     if not self._merge_buffer:
       return
 
-    _, store_number, event_read = heapq.heappop(self._merge_buffer)
-    if not event_read:
+    _, stream_number, event_object = heapq.heappop(self._merge_buffer)
+    if not event_object:
       return
 
     # Stop as soon as we hit the upper bound.
-    if event_read.timestamp > self._bound_last:
+    if time_range and event_object.timestamp > time_range.end_timestamp:
       return
 
-    new_event_object = self._GetEventObject(store_number)
-
-    if new_event_object:
+    # Read the next event object in a stream.
+    next_event_object = self._GetEventObject(stream_number)
+    if next_event_object:
       heapq.heappush(
           self._merge_buffer,
-          (new_event_object.timestamp, store_number, new_event_object))
+          (next_event_object.timestamp, stream_number, next_event_object))
 
-    event_read.tag = self._ReadEventTagByIdentifier(
-        event_read.store_number, event_read.store_index, event_read.uuid)
+    event_object.tag = self._ReadEventTagByIdentifier(
+        event_object.store_number, event_object.store_index, event_object.uuid)
 
-    return event_read
+    return event_object
+
+  def GetSortedEntries(self, time_range=None):
+    """Retrieves a sorted entries.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Yields:
+      An event object (instance of EventObject).
+    """
+    event_object = self.GetSortedEntry(time_range=time_range)
+    while event_object:
+      yield event_object
+      event_object = self.GetSortedEntry(time_range=time_range)
 
   def GetStorageInformation(self):
     """Retrieves storage (preprocessing) information stored in the storage file.
@@ -1591,32 +1559,6 @@ class StorageFile(ZIPStorageFile):
       if (profiling_type in [u'all', u'serializers'] and
           not self._serializers_profiler):
         self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
-
-  def SetStoreLimit(self, unused_my_filter=None):
-    """Set a limit to the stores used for returning data."""
-    # Retrieve set first and last timestamps.
-    self._bound_first, self._bound_last = pfilter.TimeRangeCache.GetTimeRange()
-
-    self.store_range = []
-
-    # TODO: Fetch a filter object from the filter query.
-
-    for number in self._GetSerializedEventObjectStreamNumbers():
-      # TODO: Read more criteria from here.
-      first, last = self._ReadMeta(number).get(u'range', (0, limit.MAX_INT64))
-      if last < first:
-        logging.error(
-            u'last: {0:d} first: {1:d} container: {2:d} (last < first)'.format(
-                last, first, number))
-
-      if first <= self._bound_last and self._bound_first <= last:
-        # TODO: Check at least parser and data_type (stored in metadata).
-        # Check whether these attributes exist in filter, if so use the filter
-        # to determine whether the stores should be included.
-        self.store_range.append(number)
-
-      else:
-        logging.debug(u'Store [{0:d}] not used'.format(number))
 
   # TODO: move only used in testing.
   def StoreGrouping(self, rows):
