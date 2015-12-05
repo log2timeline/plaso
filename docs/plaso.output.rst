@@ -20,6 +20,14 @@ plaso.output.elastic module
     :undoc-members:
     :show-inheritance:
 
+plaso.output.event_buffer module
+--------------------------------
+
+.. automodule:: plaso.output.event_buffer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.output.interface module
 -----------------------------
 
