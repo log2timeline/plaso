@@ -80,7 +80,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2!d}:{3!d} triggered the exception.').format(
+          u'{1:s}. Event {2!s}:{3!s} triggered the exception.').format(
               event_object.timestamp, exception,
               getattr(event_object, u'store_number', u'N/A'),
               getattr(event_object, u'store_index', u'N/A')))
@@ -105,7 +105,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     except OverflowError as exception:
       logging.error((
           u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2!d}:{3!d} triggered the exception.').format(
+          u'{1:s}. Event {2!s}:{3!s} triggered the exception.').format(
               event_object.timestamp, exception,
               getattr(event_object, u'store_number', u'N/A'),
               getattr(event_object, u'store_index', u'N/A')))
