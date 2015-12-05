@@ -227,7 +227,8 @@ class FileSystemCollector(queue.ItemQueueProducer):
       # directly. Otherwise already produced path specifications can be
       # altered in the process.
       path_spec = copy.deepcopy(file_entry.path_spec)
-      setattr(path_spec, u'data_stream', data_stream.name)
+      if data_stream.name:
+        setattr(path_spec, u'data_stream', data_stream.name)
       self.ProduceItem(path_spec)
 
       if not data_stream.name:
