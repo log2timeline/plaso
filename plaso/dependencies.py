@@ -55,7 +55,6 @@ PYTHON_DEPENDENCIES = [
     (u'pytz', u'', u'', None),
     (u'requests', u'__version__', u'2.2.1', None),
     (u'six', u'__version__', u'1.1.0', None),
-    (u'sqlite3', u'sqlite_version', u'3.7.8', None),
     (u'xlsxwriter', u'__version__', u'0.6.5', None),
     (u'yaml', u'__version__', u'3.10', None),
     (u'zmq', u'__version__', u'2.1.11', None)]
@@ -64,6 +63,8 @@ PYTHON_DEPENDENCIES = [
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_TEST_DEPENDENCIES = [
     (u'mock', u'__version__', u'0.7.1', None)]
+
+_VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
 
 def _DownloadPageContent(download_url):
@@ -79,11 +80,33 @@ def _DownloadPageContent(download_url):
     return
 
   url_object = urllib2.urlopen(download_url)
-
-  if url_object.code != 200:
+  if not url_object or url_object.code != 200:
     return
 
   return url_object.read()
+
+
+def _ImportPythonModule(module_name):
+  """Imports a Python module.
+
+  Args:
+    module_name: the name of the module.
+
+  Returns:
+    The Python module object (instance of module) or None
+    if the module cannot be imported.
+  """
+  try:
+    module_object = map(__import__, [module_name])[0]
+  except ImportError:
+    return
+
+  # If the module name contains dots get the upper most module object.
+  if u'.' in module_name:
+    for submodule_name in module_name.split(u'.')[1:]:
+      module_object = getattr(module_object, submodule_name, None)
+
+  return module_object
 
 
 def _GetLibyalGithubReleasesLatestVersion(library_name):
@@ -165,8 +188,8 @@ def _CheckLibyal(libyal_python_modules, latest_version_check=False):
   """Checks the availability of libyal libraries.
 
   Args:
-    libyal_python_modules: a dictionary of libyal python module names (keys) and
-                           versions (values).
+    libyal_python_modules: a dictionary of libyal python module name as
+                           the key and version as the value.
     latest_version_check: optional boolean value to indicate if the project
                           site should be checked for the latest version.
                           The default is False.
@@ -177,9 +200,8 @@ def _CheckLibyal(libyal_python_modules, latest_version_check=False):
   connection_error = False
   result = True
   for module_name, module_version in sorted(libyal_python_modules.items()):
-    try:
-      module_object = map(__import__, [module_name])[0]
-    except ImportError:
+    module_object = _ImportPythonModule(module_name)
+    if not module_object:
       print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
       result = False
       continue
@@ -202,8 +224,8 @@ def _CheckLibyal(libyal_python_modules, latest_version_check=False):
           latest_version = None
 
       if not latest_version:
-        print((
-            u'Unable to determine latest version of {0:s} ({1:s}).\n').format(
+        print(
+            u'Unable to determine latest version of {0:s} ({1:s}).\n'.format(
                 libyal_name, module_name))
         latest_version = None
         connection_error = True
@@ -252,62 +274,58 @@ def _CheckPythonModule(
     True if the Python module is available and conforms to the minimum required
     version. False otherwise.
   """
-  try:
-    module_object = map(__import__, [module_name])[0]
-  except ImportError:
+  module_object = _ImportPythonModule(module_name)
+  if not module_object:
     print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
     return False
 
-  if version_attribute_name and minimum_version:
-    module_version = getattr(module_object, version_attribute_name, None)
-
-    if not module_version:
-      print((
-          u'[FAILURE]\tunable to determine version information '
-          u'for: {0:s}').format(module_name))
-      return False
-
-    # Split the version string and convert every digit into an integer.
-    # A string compare of both version strings will yield an incorrect result.
-    split_regex = re.compile(r'\.|\-')
-    module_version_map = map(int, split_regex.split(module_version))
-    minimum_version_map = map(int, split_regex.split(minimum_version))
-
-    if module_version_map < minimum_version_map:
-      print((
-          u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
-          u'required.').format(module_name, module_version, minimum_version))
-      return False
-
-    if maximum_version:
-      maximum_version_map = map(int, split_regex.split(maximum_version))
-      if module_version_map > maximum_version_map:
-        print((
-            u'[FAILURE]\t{0:s} version: {1:s} is too recent, {2:s} or earlier '
-            u'required.').format(module_name, module_version, maximum_version))
-        return False
-
-    print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
-  else:
+  if not version_attribute_name or not minimum_version:
     print(u'[OK]\t\t{0:s}'.format(module_name))
+    return True
+
+  module_version = getattr(module_object, version_attribute_name, None)
+  if not module_version:
+    print((
+        u'[FAILURE]\tunable to determine version information '
+        u'for: {0:s}').format(module_name))
+    return False
+
+  # Split the version string and convert every digit into an integer.
+  # A string compare of both version strings will yield an incorrect result.
+  module_version_map = map(int, _VERSION_SPLIT_REGEX.split(module_version))
+  minimum_version_map = map(int, _VERSION_SPLIT_REGEX.split(minimum_version))
+
+  if module_version_map < minimum_version_map:
+    print((
+        u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
+        u'required.').format(module_name, module_version, minimum_version))
+    return False
+
+  if maximum_version:
+    maximum_version_map = map(int, _VERSION_SPLIT_REGEX.split(maximum_version))
+    if module_version_map > maximum_version_map:
+      print((
+          u'[FAILURE]\t{0:s} version: {1:s} is too recent, {2:s} or earlier '
+          u'required.').format(module_name, module_version, maximum_version))
+      return False
+
+  print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
 
   return True
 
 
-def _CheckPytsk(module_name, minimum_version_libtsk, minimum_version_pytsk):
+def _CheckPytsk():
   """Checks the availability of pytsk.
-
-  Args:
-    module_name: the name of the module.
-    minimum_version_libtsk: the minimum required version of libtsk.
-    minimum_version_pytsk: the minimum required version of pytsk.
 
   Returns:
     True if the pytsk Python module is available, False otherwise.
   """
-  try:
-    module_object = map(__import__, [module_name])[0]
-  except ImportError:
+  module_name = u'pytsk3'
+  minimum_version_libtsk = u'4.1.2'
+  minimum_version_pytsk = u'20140506'
+
+  module_object = _ImportPythonModule(module_name)
+  if not module_object:
     print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
     return False
 
@@ -343,6 +361,42 @@ def _CheckPytsk(module_name, minimum_version_libtsk, minimum_version_pytsk):
   return True
 
 
+def _CheckSqlite3():
+  """Checks the availability of sqlite3.
+
+  Returns:
+    True if the sqlite3 Python module is available, False otherwise.
+  """
+  module_name = u'pysqlite2.dbapi2'
+  minimum_version = u'3.7.8'
+
+  module_object = _ImportPythonModule(module_name)
+  if not module_object:
+    module_name = u'sqlite3'
+
+  module_object = _ImportPythonModule(module_name)
+  if not module_object:
+    print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
+    return False
+
+  module_version = getattr(module_object, u'sqlite_version', None)
+  if not module_version:
+    return False
+
+  # Split the version string and convert every digit into an integer.
+  # A string compare of both version strings will yield an incorrect result.
+  module_version_map = map(int, _VERSION_SPLIT_REGEX.split(module_version))
+  minimum_version_map = map(int, _VERSION_SPLIT_REGEX.split(minimum_version))
+
+  if module_version_map < minimum_version_map:
+    print((
+        u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
+        u'required.').format(module_name, module_version, minimum_version))
+    return False
+
+  return True
+
+
 def CheckDependencies(latest_version_check=False):
   """Checks the availability of the dependencies.
 
@@ -362,7 +416,10 @@ def CheckDependencies(latest_version_check=False):
         values[0], values[1], values[2], maximum_version=values[3]):
       check_result = False
 
-  if not _CheckPytsk(u'pytsk3', u'4.1.2', u'20140506'):
+  if not _CheckSqlite3():
+    check_result = False
+
+  if not _CheckPytsk():
     check_result = False
 
   libyal_check_result = _CheckLibyal(
