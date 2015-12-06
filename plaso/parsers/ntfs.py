@@ -273,7 +273,8 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
         name_string = utf16_stream.decode(u'utf-16-le', errors=u'replace')
         parser_mediator.ProduceParseError((
             u'unable to decode USN record name string with error: '
-            u'{0:s}').format(exception))
+            u'{0:s}. Characters that cannot be decoded will be replaced '
+            u'with "?" or "\\ufffd".').format(exception))
 
       event_object = file_system_events.NTFSUSNChangeEvent(
           usn_record_struct.update_date_time, current_offset,
