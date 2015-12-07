@@ -10,10 +10,10 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
+from plaso.storage import time_range
 from plaso.storage import zip_file
 
 from tests import test_lib as shared_test_lib
@@ -380,6 +380,71 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_object.tag = event_tag
     return event_object
 
+  def testGetSortedEntries(self):
+    """Tests the GetSortedEntries function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamps = []
+    for event_object in storage_file.GetSortedEntries():
+      timestamps.append(event_object.timestamp)
+
+    expected_timestamps = [
+        1343166324000000, 1344270407000000, 1390377153000000, 1390377153000000,
+        1390377181000000, 1390377241000000, 1390377241000000, 1390377272000000,
+        1392438730000000, 1418925272000000, 1427151678000000, 1427151678000123,
+        1451584472000000, 1479431720000000, 1479431743000000]
+
+    self.assertEqual(sorted(timestamps), expected_timestamps)
+
+    # Test lower bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamps = []
+    for event_object in storage_file.GetSortedEntries(
+        time_range=test_time_range):
+      timestamps.append(event_object.timestamp)
+
+    expected_timestamps = [
+        1418925272000000,
+        1427151678000000,
+        1427151678000123,
+        1451584472000000,
+        1479431720000000,
+        1479431743000000]
+
+    self.assertEqual(sorted(timestamps), expected_timestamps)
+
+    # Test upper bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamps = []
+    for event_object in storage_file.GetSortedEntries(
+        time_range=test_time_range):
+      timestamps.append(event_object.timestamp)
+
+    expected_timestamps = [
+        1343166324000000,
+        1344270407000000,
+        1390377153000000,
+        1390377153000000,
+        1390377181000000,
+        1390377241000000,
+        1390377241000000,
+        1390377272000000,
+        1392438730000000]
+
+    self.assertEqual(sorted(timestamps), expected_timestamps)
+
   def testStorage(self):
     """Test the storage object."""
     formatter_mediator = formatters_mediator.FormatterMediator()
@@ -392,10 +457,6 @@ class StorageFileTest(test_lib.StorageTestCase):
     same_events = []
 
     serializer = protobuf_serializer.ProtobufEventObjectSerializer
-
-    # TODO: this is needed to work around static member issue of pfilter
-    # which is used in storage file.
-    pfilter.TimeRangeCache.ResetTimeConstraints()
 
     with shared_test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')
@@ -493,50 +554,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     self.assertEqual(same_events, proto_group_events)
 
-  def testStorageSort(self):
-    """This test ensures that items read and output are in the expected order.
-
-    This method by design outputs data as it runs. In order to test this a
-    a modified output renderer is used for which the flush functionality has
-    been removed.
-
-    The test will be to read the TestEventBuffer storage and check to see
-    if it matches the known good sort order.
-    """
-    # TODO: have sample output generated from the test.
-    # TODO: Use input data with a defined year. The syslog parser chooses a
-    # year based on system clock; forcing updates to test file if regenerated.
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
-    # First: 1342799054000000
-    first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
-    # Last: 1479431743000000
-    last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
-
-    pfilter.TimeRangeCache.ResetTimeConstraints()
-    pfilter.TimeRangeCache.SetUpperTimestamp(last)
-    pfilter.TimeRangeCache.SetLowerTimestamp(first)
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    storage_file.store_range = [1, 5, 6]
-
-    timestamps = []
-    event_object = storage_file.GetSortedEntry()
-    while event_object:
-      timestamps.append(event_object.timestamp)
-      event_object = storage_file.GetSortedEntry()
-
-    expected_timestamps = [
-        1343166324000000,
-        1344270407000000,
-        1392438730000000,
-        1418925272000000,
-        1427151678000000,
-        1427151678000123,
-        1451584472000000]
-
-    self.assertEqual(sorted(timestamps), expected_timestamps)
-
-  # TODO: add test for StoreReport
+  # TODO: add test for StoreReport.
 
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ from plaso.formatters import interface as formatters_interface
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.lib import timelib
+from plaso.output import interface
 from plaso.output import mediator
 
 
@@ -50,6 +51,40 @@ class TestEventFormatter(formatters_interface.EventFormatter):
   FORMAT_STRING = u'{text}'
   SOURCE_SHORT = u'LOG'
   SOURCE_LONG = u'Syslog'
+
+
+class TestOutputModule(interface.LinearOutputModule):
+  """This is a test output module that provides a simple XML."""
+
+  NAME = u'test_xml'
+  DESCRIPTION = u'Test output that provides a simple mocked XML.'
+
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+    self._WriteLine((
+        u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
+        u'\t<Entry>{2:s}</Entry>\n').format(
+            event_object.date, event_object.timestamp, event_object.entry))
+
+  def WriteEventEnd(self):
+    """Writes the end of an event object to the output."""
+    self._WriteLine(u'</Event>\n')
+
+  def WriteEventStart(self):
+    """Writes the start of an event object to the output."""
+    self._WriteLine(u'<Event>\n')
+
+  def WriteFooter(self):
+    """Writes the footer to the output."""
+    self._WriteLine(u'</EventFile>\n')
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    self._WriteLine(u'<EventFile>\n')
 
 
 class OutputModuleTestCase(unittest.TestCase):
