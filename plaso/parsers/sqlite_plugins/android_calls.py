@@ -40,6 +40,8 @@ class AndroidCallPlugin(interface.SQLitePlugin):
   NAME = u'android_calls'
   DESCRIPTION = u'Parser for Android calls SQLite database files.'
 
+  REQUIRED_TABLES = frozenset([u'calls'])
+
   # Define the needed queries.
   QUERIES = [
       (u'SELECT _id AS id, date, number, name, duration, type FROM calls',
