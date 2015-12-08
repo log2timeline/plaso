@@ -8,7 +8,6 @@ import unittest
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
-from plaso.lib import pfilter
 from plaso.output import manager as output_manager
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
@@ -126,10 +125,6 @@ class PsortToolTest(test_lib.ToolTestCase):
         TestOutputModuleMissingParameters)
     helpers_manager.ArgumentHelperManager.RegisterHelper(
         TestOutputModuleArgumentHelper)
-
-    # TODO: this is needed to work around static member issue of pfilter
-    # which is used in storage file.
-    pfilter.TimeRangeCache.ResetTimeConstraints()
 
     lines = []
     with shared_test_lib.TempDirectory() as temp_directory:

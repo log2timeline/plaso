@@ -12,7 +12,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.frontend import extraction_frontend
-from plaso.lib import pfilter
 from plaso.storage import zip_file as storage_zip_file
 
 from tests.frontend import test_lib
@@ -23,10 +22,6 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def setUp(self):
     """Sets up the objects used throughout the test."""
-    # This is necessary since TimeRangeCache uses class members.
-    # TODO: remove this work around and properly fix TimeRangeCache.
-    pfilter.TimeRangeCache.ResetTimeConstraints()
-
     self._temp_directory = tempfile.mkdtemp()
 
   def tearDown(self):
