@@ -181,5 +181,53 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 184)
 
 
+class NTFSUsnJrnlParser(test_lib.ParserTestCase):
+  """Tests for NTFS $UsnJrnl metadata file parser."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._parser = ntfs.NTFSUsnJrnlParser()
+
+  def testParseImage(self):
+    """Tests the Parse function on a storage media image."""
+    test_path = self._GetTestFilePath([u'usnjrnl.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
+        part_index=2, start_offset=0x00007e00, parent=qcow_path_spec)
+
+    # To be able to ignore the sparse data ranges the UsnJrnl parser
+    # requires to read directly from the volume.
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, volume_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEqual(len(event_objects), 19)
+
+    event_object = event_objects[0]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2015-11-30 21:15:27.203125')
+    self.assertEqual(
+        event_object.timestamp_desc,
+        eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_message = (
+        u'Nieuw - Tekstdocument.txt '
+        u'File reference: 30-1 '
+        u'Parent file reference: 5-5 '
+        u'Update reason: USN_REASON_FILE_CREATE')
+
+    expected_short_message = (
+        u'Nieuw - Tekstdocument.txt 30-1 USN_REASON_FILE_CREATE')
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
+
+
 if __name__ == '__main__':
   unittest.main()

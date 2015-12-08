@@ -98,7 +98,7 @@ class WinJobParser(interface.FileObjectParser):
 
   # Using Construct's utf-16 encoding here will create strings with their
   # null terminators exposed. Instead, we'll read these variables raw and
-  # convert them using Plaso's ReadUtf16() for proper formatting.
+  # convert them using Plaso's ReadUTF16() for proper formatting.
   _JOB_VARIABLE_STRUCT = construct.Struct(
       u'job_variable',
       construct.ULInt16(u'running_instance_count'),
@@ -205,11 +205,11 @@ class WinJobParser(interface.FileObjectParser):
         0,  # Seconds are not stored.
         timezone=parser_mediator.timezone)
 
-    application = binary.ReadUtf16(job_variable_struct.application)
-    description = binary.ReadUtf16(job_variable_struct.comment)
-    parameter = binary.ReadUtf16(job_variable_struct.parameter)
-    username = binary.ReadUtf16(job_variable_struct.username)
-    working_dir = binary.ReadUtf16(job_variable_struct.working_dir)
+    application = binary.ReadUTF16(job_variable_struct.application)
+    description = binary.ReadUTF16(job_variable_struct.comment)
+    parameter = binary.ReadUTF16(job_variable_struct.parameter)
+    username = binary.ReadUTF16(job_variable_struct.username)
+    working_dir = binary.ReadUTF16(job_variable_struct.working_dir)
 
     parser_mediator.ProduceEvents(
         [WinJobEvent(

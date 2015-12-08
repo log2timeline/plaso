@@ -3,6 +3,7 @@
 
 import uuid
 
+import construct
 import pyfsntfs
 
 from plaso import dependencies
@@ -212,4 +213,100 @@ class NTFSMFTParser(interface.FileObjectParser):
     mft_metadata_file.close()
 
 
-manager.ParsersManager.RegisterParser(NTFSMFTParser)
+class NTFSUsnJrnlParser(interface.FileObjectParser):
+  """Parses a NTFS USN change journal."""
+
+  _INITIAL_FILE_OFFSET = None
+
+  NAME = u'usnjrnl'
+  DESCRIPTION = u'Parser for NTFS USN change journal ($UsnJrnl).'
+
+  _USN_RECORD_V2 = construct.Struct(
+      u'usn_record_v2',
+      construct.ULInt32(u'size'),
+      construct.ULInt16(u'major_version'),
+      construct.ULInt16(u'minor_version'),
+      construct.ULInt64(u'file_reference'),
+      construct.ULInt64(u'parent_file_reference'),
+      construct.ULInt64(u'update_sequence_number'),
+      construct.ULInt64(u'update_date_time'),
+      construct.ULInt32(u'update_reason_flags'),
+      construct.ULInt32(u'update_source_flags'),
+      construct.ULInt32(u'security_descriptor_identifier'),
+      construct.ULInt32(u'file_attribute_flags'),
+      construct.ULInt16(u'name_size'),
+      construct.ULInt16(u'name_offset'),
+      construct.String(u'name', lambda ctx: ctx.size - 60))
+
+  # TODO: add support for USN_RECORD_V3 when actually seen to be used.
+
+  def _ParseUSNChangeJournal(self, parser_mediator, usn_change_journal):
+    """Parses an USN change journal.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      usn_change_journal: An USN change journal object (instance of
+                          pyfsntsfs.usn_change_journal).
+    """
+    if not usn_change_journal:
+      return
+
+    usn_record_data = usn_change_journal.read_usn_record()
+    while usn_record_data:
+      current_offset = usn_change_journal.get_offset()
+
+      try:
+        usn_record_struct = self._USN_RECORD_V2.parse(usn_record_data)
+      except (IOError, construct.FieldError) as exception:
+        parser_mediator.ProduceParseError((
+            u'unable to parse USN record at offset: 0x{0:08x} '
+            u'with error: {1:s}').format(current_offset, exception))
+        continue
+
+      name_offset = usn_record_struct.name_offset - 60
+      utf16_stream = usn_record_struct.name[
+          name_offset:usn_record_struct.name_size]
+
+      try:
+        name_string = utf16_stream.decode(u'utf-16-le')
+      except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+        name_string = utf16_stream.decode(u'utf-16-le', errors=u'replace')
+        parser_mediator.ProduceParseError((
+            u'unable to decode USN record name string with error: '
+            u'{0:s}. Characters that cannot be decoded will be replaced '
+            u'with "?" or "\\ufffd".').format(exception))
+
+      event_object = file_system_events.NTFSUSNChangeEvent(
+          usn_record_struct.update_date_time, current_offset,
+          name_string, usn_record_struct.file_reference,
+          usn_record_struct.update_sequence_number,
+          usn_record_struct.update_source_flags,
+          usn_record_struct.update_reason_flags,
+          file_attribute_flags=usn_record_struct.file_attribute_flags,
+          parent_file_reference=usn_record_struct.parent_file_reference)
+      parser_mediator.ProduceEvent(event_object)
+
+      usn_record_data = usn_change_journal.read_usn_record()
+
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a NTFS $UsnJrnl metadata file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+    """
+    volume = pyfsntfs.volume()
+    try:
+      volume.open_file_object(file_object)
+    except IOError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to open NTFS volume with error: {0:s}'.format(exception))
+
+    try:
+      usn_change_journal = volume.get_usn_change_journal()
+      self._ParseUSNChangeJournal(parser_mediator, usn_change_journal)
+    finally:
+      volume.close()
+
+
+manager.ParsersManager.RegisterParsers([NTFSMFTParser, NTFSUsnJrnlParser])
