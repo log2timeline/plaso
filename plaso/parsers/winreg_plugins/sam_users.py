@@ -96,9 +96,9 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
         full_name_offset:full_name_offset + structure.values()[0][7]]
     comments_raw = v_value.data[
         comments_offset:comments_offset + structure.values()[0][10]]
-    name = binary.ReadUtf16(name_raw)
-    full_name = binary.ReadUtf16(full_name_raw)
-    comments = binary.ReadUtf16(comments_raw)
+    name = binary.ReadUTF16(name_raw)
+    full_name = binary.ReadUTF16(full_name_raw)
+    comments = binary.ReadUTF16(comments_raw)
     return name, full_name, comments
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
