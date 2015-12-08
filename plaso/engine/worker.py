@@ -491,10 +491,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[ProcessFileEntry] processing file entry: {0:s}'.format(
         self._current_display_name))
 
-    is_metadata_file = self._IsMetadataFile(file_entry)
 
     try:
-      if is_metadata_file:
+      if self._IsMetadataFile(file_entry):
         parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
         if (self._usnjrnl_parser_object and parent_path_spec and
             file_entry.name == u'$UsnJrnl' and data_stream_name == u'$J'):
