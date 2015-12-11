@@ -367,6 +367,11 @@ def _CheckSqlite3():
   Returns:
     True if the sqlite3 Python module is available, False otherwise.
   """
+  # On Windows sqlite3 can be provided by both pysqlite2.dbapi2 and
+  # sqlite3. sqlite3 is provided with the Python installation and
+  # pysqlite2.dbapi2 by the pysqlite2 Python module. Typically
+  # pysqlite2.dbapi2 would contain a newer version of sqlite3, hence
+  # we check for its presence first.
   module_name = u'pysqlite2.dbapi2'
   minimum_version = u'3.7.8'
 
