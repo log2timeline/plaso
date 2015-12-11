@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Mozilla Firefox history."""
 
-import sqlite3
+try:
+  from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+  import sqlite3
 
 from plaso.events import time_events
 from plaso.lib import eventdata
