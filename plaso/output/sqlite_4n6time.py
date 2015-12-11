@@ -3,7 +3,10 @@
 
 import os
 
-import sqlite3
+try:
+  from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+  import sqlite3
 
 from plaso.output import manager
 from plaso.output import shared_4n6time
