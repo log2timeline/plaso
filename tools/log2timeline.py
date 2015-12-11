@@ -506,8 +506,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--status_view', u'--status-view', dest=u'status_view_mode',
         choices=[u'linear', u'none', u'window'], action=u'store',
         metavar=u'TYPE', default=default_status_view, help=(
-            u'The processing status view mode: "linear", "none" or "window". '
-            u'Note that the "window" mode is still experimental.'))
+            u'The processing status view mode: "linear", "none" or "window".'))
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
