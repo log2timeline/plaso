@@ -100,9 +100,6 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     08, Nov, [20, 36, 37]
 
     Args:
-      timestamp_string: The pyparsing ParseResults object
-
-    Args:
       day: an integer representing the day.
       month: an integer representing the month.
       year: an integer representing the year.
@@ -197,12 +194,19 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     try:
       line = self.FIREWALL_LINE.parseString(line)
-    except pyparsing.ParseException:
-      logging.debug(u'Not a Mac AppFirewall log file')
+    except pyparsing.ParseException as exception:
+      logging.debug((
+          u'Unable to parse file as a Mac AppFirewall log file with error: '
+          u'{0:s}').format(exception))
       return False
+
     if (line.action != u'creating /var/log/appfirewall.log' or
         line.status != u'Error'):
+      logging.debug(
+          u'Unsupported Mac AppFirewall action: {0:s} or status: {1:s}'.format(
+              line.action, line.status))
       return False
+
     return True
 
 

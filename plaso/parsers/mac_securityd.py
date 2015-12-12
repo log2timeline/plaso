@@ -108,10 +108,6 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   def _ConvertToTimestamp(self, day, month, year, time):
     """Converts date and time values into a timestamp.
 
-    This is a timestamp_string as returned by using
-    text_parser.PyparsingConstants structures:
-    08, Nov, [20, 36, 37]
-
     Args:
       day: an integer representing the day.
       month: an integer representing the month.
@@ -212,18 +208,23 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     try:
       line = self.SECURITYD_LINE.parseString(line)
-    except pyparsing.ParseException:
-      logging.debug(u'Not a ASL securityd log file')
+    except pyparsing.ParseException as exception:
+      logging.debug((
+          u'Unable to parse file as an ASL securityd log file with error: '
+          u'{0:s}').format(exception))
       return False
 
     # Check if the day, month and time is valid taking a random year.
     month = timelib.MONTH_DICT.get(line.month.lower())
     if not month:
+      logging.debug(u'Unsuported month value: {0:s}'.format(line.month))
       return False
 
     try:
       self._ConvertToTimestamp(line.day, month, self._DEFAULT_YEAR, line.time)
-    except errors.TimestampError:
+    except errors.TimestampError as exception:
+      logging.debug(u'Unable to determine timestamp with error: {0:s}'.format(
+          exception))
       return False
 
     return True

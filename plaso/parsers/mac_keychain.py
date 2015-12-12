@@ -144,7 +144,7 @@ class KeychainParser(interface.FileObjectParser):
       construct.UBInt32(u'ssgp_length'),
       construct.Padding(4),
       construct.UBInt32(u'creation_time'),
-      construct.UBInt32(u'last_mod_time'),
+      construct.UBInt32(u'last_modification_time'),
       construct.UBInt32(u'text_description'),
       construct.Padding(4),
       construct.UBInt32(u'comments'),
@@ -241,9 +241,9 @@ class KeychainParser(interface.FileObjectParser):
               self.NAME, offset, parser_mediator.GetDisplayName()))
       return
 
-    (ssgp_hash, creation_time, last_mod_time, text_description,
+    (ssgp_hash, creation_time, last_modification_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
-         file_object, record.record_header, offset)
+         parser_mediator, file_object, record.record_header, offset)
 
     # Move to the end of the record, and then, prepared for the next record.
     next_record_offset = (
@@ -255,16 +255,17 @@ class KeychainParser(interface.FileObjectParser):
         entry_name, account_name, text_description, comments, ssgp_hash)
     parser_mediator.ProduceEvent(event_object)
 
-    if creation_time != last_mod_time:
+    if creation_time != last_modification_time:
       event_object = KeychainApplicationRecordEvent(
-          last_mod_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           entry_name, account_name, text_description, comments, ssgp_hash)
       parser_mediator.ProduceEvent(event_object)
 
-  def _ReadEntryHeader(self, file_object, record, offset):
+  def _ReadEntryHeader(self, parser_mediator, file_object, record, offset):
     """Read the common record attributes.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
       file_object: A file-like object that points to an Keychain file.
       record: Structure with the header of the record.
@@ -274,7 +275,7 @@ class KeychainParser(interface.FileObjectParser):
       A tuple containing:
         ssgp_hash: Hash of the encrypted data (passwd, cert, note).
         creation_time: When the entry was created.
-        last_mod_time: Last time the entry was updated.
+        last_modification_time: Last time the entry was updated.
         text_description: A brief description of the entry.
         entry_name: Name of the entry
         account_name: Name of the account.
@@ -291,64 +292,72 @@ class KeychainParser(interface.FileObjectParser):
     file_object.seek(structure_offset, os.SEEK_CUR)
     try:
       time_structure = self.TIME.parse_stream(file_object)
-    except construct.FieldError:
-      pass
+      creation_time = self._GetTimestampFromEntry(time_structure)
+    except (construct.FieldError, errors.TimestampError) as exception:
+      creation_time = timelib.Timestamp.NONE_TIMESTAMP
+      parser_mediator.ProduceParseError(
+          u'unable to determine creation time with error: {0:s}'.format(
+              exception))
 
-    creation_time = self._GetTimestampFromEntry(time_structure)
-
-    structure_offset = record.last_mod_time - file_object.tell() + offset - 1
+    structure_offset = (
+        record.last_modification_time - file_object.tell() + offset - 1)
     file_object.seek(structure_offset, os.SEEK_CUR)
 
     try:
       time_structure = self.TIME.parse_stream(file_object)
-    except construct.FieldError:
-      pass
-    last_mod_time = self._GetTimestampFromEntry(time_structure)
+      last_modification_time = self._GetTimestampFromEntry(time_structure)
+    except (construct.FieldError, errors.TimestampError) as exception:
+      last_modification_time = timelib.Timestamp.NONE_TIMESTAMP
+      parser_mediator.ProduceParseError((
+          u'unable to determine last modification time with error: '
+          u'{0:s}').format(exception))
 
-    # The comment field does not always contain data.
-    if not record.text_description:
-      text_description = u'N/A'
-    else:
+    text_description = u'N/A'
+    if record.text_description:
       structure_offset = (
           record.text_description - file_object.tell() + offset - 1)
       file_object.seek(structure_offset, os.SEEK_CUR)
 
       try:
         text_description = self.TEXT.parse_stream(file_object)
-      except construct.FieldError:
-        text_description = u'N/A (error)'
+      except construct.FieldError as exception:
+        parser_mediator.ProduceParseError(
+            u'unable to parse text description with error: {0:s}'.format(
+                exception))
 
-    # The comment field does not always contain data.
-    if not record.comments:
-      comments = u'N/A'
-    else:
-      structure_offset = (
-          record.text_description - file_object.tell() + offset - 1)
+    comments = u'N/A'
+    if record.comments:
+      structure_offset = record.comments - file_object.tell() + offset - 1
       file_object.seek(structure_offset, os.SEEK_CUR)
 
       try:
         comments = self.TEXT.parse_stream(file_object)
-      except construct.FieldError:
-        comments = u'N/A (error)'
+      except construct.FieldError as exception:
+        parser_mediator.ProduceParseError(
+            u'unable to parse comments with error: {0:s}'.format(exception))
 
     structure_offset = record.entry_name - file_object.tell() + offset - 1
     file_object.seek(structure_offset, os.SEEK_CUR)
 
     try:
       entry_name = self.TEXT.parse_stream(file_object)
-    except construct.FieldError:
-      entry_name = u'N/A (error)'
+    except construct.FieldError as exception:
+      entry_name = u'N/A'
+      parser_mediator.ProduceParseError(
+          u'unable to parse entry name with error: {0:s}'.format(exception))
 
     structure_offset = record.account_name - file_object.tell() + offset - 1
     file_object.seek(structure_offset, os.SEEK_CUR)
 
     try:
       account_name = self.TEXT.parse_stream(file_object)
-    except construct.FieldError:
-      account_name = u'N/A (error)'
+    except construct.FieldError as exception:
+      account_name = u'N/A'
+      parser_mediator.ProduceParseError(
+          u'unable to parse account name with error: {0:s}'.format(exception))
 
     return (
-        ssgp_hash, creation_time, last_mod_time,
+        ssgp_hash, creation_time, last_modification_time,
         text_description, comments, entry_name, account_name)
 
   def _ReadEntryInternet(self, parser_mediator, file_object):
@@ -368,9 +377,9 @@ class KeychainParser(interface.FileObjectParser):
               self.NAME, offset, parser_mediator.GetDisplayName()))
       return
 
-    (ssgp_hash, creation_time, last_mod_time, text_description,
+    (ssgp_hash, creation_time, last_modification_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
-         file_object, record.record_header, offset)
+         parser_mediator, file_object, record.record_header, offset)
     if not record.where:
       where = u'N/A'
       protocol = u'N/A'
@@ -404,9 +413,9 @@ class KeychainParser(interface.FileObjectParser):
         comments, where, protocol, type_protocol, ssgp_hash)
     parser_mediator.ProduceEvent(event_object)
 
-    if creation_time != last_mod_time:
+    if creation_time != last_modification_time:
       event_object = KeychainInternetRecordEvent(
-          last_mod_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           entry_name, account_name, text_description,
           comments, where, protocol, type_protocol, ssgp_hash)
       parser_mediator.ProduceEvent(event_object)
