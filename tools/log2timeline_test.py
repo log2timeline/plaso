@@ -5,6 +5,8 @@
 import os
 import unittest
 
+from plaso.storage import zip_file as storage_zip_file
+
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
@@ -24,17 +26,14 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesDirectory(self):
     """Tests the ProcessSources function on a directory."""
-    test_source = self._GetTestFilePath([u'testdir'])
+    options = cli_test_lib.TestOptions()
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = u'none'
+    options.source = self._GetTestFilePath([u'testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_storage_file = os.path.join(temp_directory, u'test.plaso')
-
-      options = cli_test_lib.TestOptions()
-      options.output = test_storage_file
-      options.quiet = True
-      options.single_process = True
-      options.status_view_mode = u'none'
-      options.source = test_source
+      options.output = os.path.join(temp_directory, u'test.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -46,18 +45,15 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesBDEImage(self):
     """Tests the ProcessSources function on an image containing BDE."""
-    test_source = self._GetTestFilePath([u'bdetogo.raw'])
+    options = cli_test_lib.TestOptions()
+    options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = u'none'
+    options.source = self._GetTestFilePath([u'bdetogo.raw'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_storage_file = os.path.join(temp_directory, u'test.plaso')
-
-      options = cli_test_lib.TestOptions()
-      options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
-      options.output = test_storage_file
-      options.quiet = True
-      options.single_process = True
-      options.status_view_mode = u'none'
-      options.source = test_source
+      options.output = os.path.join(temp_directory, u'test.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -69,17 +65,14 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesImage(self):
     """Tests the ProcessSources function on a single partition image."""
-    test_source = self._GetTestFilePath([u'ímynd.dd'])
+    options = cli_test_lib.TestOptions()
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = u'none'
+    options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_storage_file = os.path.join(temp_directory, u'test.plaso')
-
-      options = cli_test_lib.TestOptions()
-      options.output = test_storage_file
-      options.quiet = True
-      options.single_process = True
-      options.status_view_mode = u'none'
-      options.source = test_source
+      options.output = os.path.join(temp_directory, u'test.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -91,20 +84,17 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesPartitionedImage(self):
     """Tests the ProcessSources function on a multi partition image."""
+    options = cli_test_lib.TestOptions()
+    # TODO: refactor to partitions.
+    options.partition_number = u'all'
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = u'none'
     # Note that the source file is a RAW (VMDK flat) image.
-    test_source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
+    options.source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_storage_file = os.path.join(temp_directory, u'test.plaso')
-
-      options = cli_test_lib.TestOptions()
-      # TODO: refactor to partitions.
-      options.partition_number = u'all'
-      options.output = test_storage_file
-      options.quiet = True
-      options.single_process = True
-      options.status_view_mode = u'none'
-      options.source = test_source
+      options.output = os.path.join(temp_directory, u'test.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -116,18 +106,15 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesVSSImage(self):
     """Tests the ProcessSources function on an image containing VSS."""
-    test_source = self._GetTestFilePath([u'vsstest.qcow2'])
+    options = cli_test_lib.TestOptions()
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = u'none'
+    options.source = self._GetTestFilePath([u'vsstest.qcow2'])
+    options.vss_stores = u'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_storage_file = os.path.join(temp_directory, u'test.plaso')
-
-      options = cli_test_lib.TestOptions()
-      options.output = test_storage_file
-      options.quiet = True
-      options.single_process = True
-      options.status_view_mode = u'none'
-      options.source = test_source
-      options.vss_stores = u'all'
+      options.output = os.path.join(temp_directory, u'test.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -139,17 +126,14 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesSingleFile(self):
     """Tests the ProcessSources function on a single file."""
-    test_source = self._GetTestFilePath([u'System.evtx'])
+    options = cli_test_lib.TestOptions()
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = u'none'
+    options.source = self._GetTestFilePath([u'System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_storage_file = os.path.join(temp_directory, u'test.plaso')
-
-      options = cli_test_lib.TestOptions()
-      options.output = test_storage_file
-      options.quiet = True
-      options.single_process = True
-      options.status_view_mode = u'none'
-      options.source = test_source
+      options.output = os.path.join(temp_directory, u'test.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -158,6 +142,36 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = self._output_writer.ReadOutput()
       # TODO: print summary and compare that against output.
       _ = output
+
+  def testProcessSourcesFilestat(self):
+    """Test if the filestat and other parsers ran."""
+    options = cli_test_lib.TestOptions()
+    options.quiet = True
+    options.parsers = u'filestat,pe'
+    options.single_process = True
+    options.status_view_mode = u'none'
+    options.source = self._GetTestFilePath([u'test_pe.exe'])
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.output = os.path.join(temp_directory, u'test.plaso')
+
+      self._test_tool.ParseOptions(options)
+
+      self._test_tool.ProcessSources()
+
+      try:
+        storage_file = storage_zip_file.StorageFile(
+            options.output, read_only=True)
+      except IOError:
+        self.fail(u'Unable to open storage file after processing.')
+
+      event_objects = []
+      event_object = storage_file.GetSortedEntry()
+      while event_object:
+        event_objects.append(event_objects)
+        event_object = storage_file.GetSortedEntry()
+
+      self.assertEquals(len(event_objects), 6)
 
 
 if __name__ == '__main__':

@@ -107,7 +107,7 @@ class PELoadConfigModificationEvent(PETimeEvent):
 
 class PEParser(interface.FileObjectParser):
   """Parser for Portable Executable (PE) files."""
-  _INITIAL_FILE_OFFSET = None
+
   NAME = u'pe'
   DESCRIPTION = u'Parser for Portable Executable (PE) files.'
 
