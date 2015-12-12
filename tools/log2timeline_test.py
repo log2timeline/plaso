@@ -171,6 +171,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
         event_objects.append(event_objects)
         event_object = storage_file.GetSortedEntry()
 
+      # There should be 3 filestat and 3 pe parser generated events.
       self.assertEquals(len(event_objects), 6)
 
 
