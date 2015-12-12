@@ -615,6 +615,32 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_sample_rate = profiling_sample_rate
     self._profiling_type = profiling_type
 
+  def SetShowMemoryInformation(self, show_memory=True):
+    """Sets a flag telling the worker monitor to show memory information.
+
+    Args:
+      show_memory: a boolean (defaults to True) that indicates whether or not
+                   the foreman should include memory information as part of
+                   the worker monitoring.
+    """
+    self._show_worker_memory_information = show_memory
+
+  def SetStorageFile(self, storage_file_path):
+    """Sets the storage file path.
+
+    Args:
+      storage_file_path: The path of the storage file.
+    """
+    self._storage_file_path = storage_file_path
+
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text prepend.
+
+    Args:
+      text_prepend: free form text that is prepended to each path.
+    """
+    self._text_prepend = text_prepend
+
   def SetUseOldPreprocess(self, use_old_preprocess):
     """Set the use old preprocess flag.
 
@@ -633,44 +659,3 @@ class ExtractionFrontend(frontend.Frontend):
                   for queuing.
     """
     self._use_zeromq = use_zeromq
-
-  def SetStorageFile(self, storage_file_path):
-    """Sets the storage file path.
-
-    Args:
-      storage_file_path: The path of the storage file.
-    """
-    self._storage_file_path = storage_file_path
-
-  def SetStorageSerializer(self, storage_serializer_format):
-    """Sets the storage serializer.
-
-    Args:
-      storage_serializer_format: string denoting the type of serializer
-                                 to be used in the storage. The values
-                                 can be either "proto" or "json".
-    """
-    if storage_serializer_format not in (
-        self._EVENT_SERIALIZER_FORMAT_JSON,
-        self._EVENT_SERIALIZER_FORMAT_PROTO):
-      return
-
-    self._storage_serializer_format = storage_serializer_format
-
-  def SetShowMemoryInformation(self, show_memory=True):
-    """Sets a flag telling the worker monitor to show memory information.
-
-    Args:
-      show_memory: a boolean (defaults to True) that indicates whether or not
-                   the foreman should include memory information as part of
-                   the worker monitoring.
-    """
-    self._show_worker_memory_information = show_memory
-
-  def SetTextPrepend(self, text_prepend):
-    """Sets the text prepend.
-
-    Args:
-      text_prepend: free form text that is prepended to each path.
-    """
-    self._text_prepend = text_prepend
