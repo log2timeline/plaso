@@ -13,6 +13,7 @@ import pyparsing
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -157,11 +158,10 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC.
     """
-    if date:
-      year, month, day = date[:3]
-    else:
+    if not date:
       return timelib.Timestamp.NONE_TIMESTAMP
 
+    year, month, day = date[:3]
     if time:
       hour, minute, second = time[:3]
     else:
@@ -207,7 +207,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     date = structure.get(u'date', self._date)
     time = structure.get(u'time', self._time)
 
-    timestamp = self._ConvertToTimestamp(date, time)
+    try:
+      timestamp = self._ConvertToTimestamp(date, time)
+    except errors.TimestampError as exception:
+      timestamp = timelib.Timestamp.NONE_TIMESTAMP
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
+
     event_object = IISEventObject(timestamp, structure)
     parser_mediator.ProduceEvent(event_object)
 

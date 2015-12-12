@@ -6,6 +6,7 @@ import logging
 import pyparsing
 
 from plaso.events import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
@@ -161,7 +162,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       structure: The parsed structure, which should be a timestamp.
 
     Returns:
-      timestamp: An integer containing the timestamp or 0 on error.
+      An integer containing the timestamp or 0 on error.
     """
     year, month, day = structure.date
     hour = structure.get(u'hh', 0)
@@ -183,7 +184,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       structure: The parsed structure.
 
     Returns:
-      timestamp: An integer containing the timestamp or 0 on error.
+      An integer containing the timestamp or 0 on error.
     """
     hour, minute, second = structure.time[0]
     microsecond = structure.time[1] * 1000
@@ -349,11 +350,11 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a parser object."""
     super(SkyDriveOldLogParser, self).__init__()
-    self.last_event_object = None
+    self._last_event_object = None
     self.offset = 0
 
-  def _GetTimestamp(self, sdol_timestamp):
-    """Gets a timestamp from a pyparsing ParseResults SkyDriveOld timestamp.
+  def _ConvertToTimestamp(self, sdol_timestamp):
+    """Converts the given parsed date and time to a timestamp.
 
     This is a sdol_timestamp object as returned by using
     text_parser.PyparsingConstants structures:
@@ -364,59 +365,57 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       sdol_timestamp: The pyparsing ParseResults object.
 
     Returns:
-      timestamp: A plaso timelib timestamp or None.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
-    try:
-      month, day, year = sdol_timestamp[0]
-      hour, minute, second = sdol_timestamp[1]
-      millisecond = sdol_timestamp[2]
-      return timelib.Timestamp.FromTimeParts(
-          year, month, day, hour, minute, second,
-          microseconds=millisecond * 1000)
-    except ValueError:
-      pass
+    month, day, year = sdol_timestamp[0]
+    hour, minute, second = sdol_timestamp[1]
+    millisecond = sdol_timestamp[2]
+    return timelib.Timestamp.FromTimeParts(
+        year, month, day, hour, minute, second,
+        microseconds=millisecond * 1000)
 
-  def _ParseLogline(self, structure):
+  def _ParseLogline(self, parser_mediator, structure):
     """Parse a logline and store appropriate attributes.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from a line in the log file.
-
-    Returns:
-      An event object (instance of SkyDriveOldLogEvent) or None.
     """
-    timestamp = self._GetTimestamp(structure.sdol_timestamp)
-    if not timestamp:
-      logging.debug(u'Invalid timestamp {0:s}'.format(
-          structure.sdol_timestamp))
+    try:
+      timestamp = self._ConvertToTimestamp(structure.sdol_timestamp)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
       return
 
     event_object = SkyDriveOldLogEvent(
         timestamp, self.offset, structure.source_code, structure.log_level,
         structure.text)
-    self.last_event_object = event_object
-    return event_object
+    parser_mediator.ProduceEvent(event_object)
 
-  def _ParseNoHeaderSingleLine(self, structure):
+    self._last_event_object = event_object
+
+  def _ParseNoHeaderSingleLine(self, parser_mediator, structure):
     """Parse an isolated header line and store appropriate attributes.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from an header line in the
                  log file.
-
-    Returns:
-      An event object (instance of SkyDriveOldLogEvent) or None.
     """
-    if not self.last_event_object:
+    if not self._last_event_object:
       logging.debug(u'SkyDrive, found isolated line with no previous events')
       return
 
     event_object = SkyDriveOldLogEvent(
-        self.last_event_object.timestamp, self.last_event_object.offset, None,
+        self._last_event_object.timestamp, self._last_event_object.offset, None,
         None, structure.text)
+    parser_mediator.ProduceEvent(event_object)
+
     # TODO think to a possible refactoring for the non-header lines.
-    self.last_event_object = None
-    return event_object
+    self._last_event_object = None
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse each record structure and return an EventObject if applicable.
@@ -427,14 +426,13 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
            structure.
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
     """
     if key == u'logline':
-      return self._ParseLogline(structure)
+      self._ParseLogline(parser_mediator, structure)
+
     elif key == u'no_header_single_line':
-      return self._ParseNoHeaderSingleLine(structure)
+      self._ParseNoHeaderSingleLine(parser_mediator, structure)
+
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
@@ -455,8 +453,9 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       logging.debug(u'Not a SkyDrive old log file')
       return False
 
-    timestamp = self._GetTimestamp(parsed_structure.sdol_timestamp)
-    if not timestamp:
+    try:
+      self._ConvertToTimestamp(parsed_structure.sdol_timestamp)
+    except errors.TimestampError:
       logging.debug(
           u'Not a SkyDrive old log file, invalid timestamp {0:s}'.format(
               parsed_structure.sdol_timestamp))

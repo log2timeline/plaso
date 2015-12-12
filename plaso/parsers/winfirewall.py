@@ -6,6 +6,7 @@ import logging
 import pyparsing
 
 from plaso.events import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
@@ -62,9 +63,9 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a parser object."""
     super(WinFirewallParser, self).__init__()
-    self.version = None
-    self.use_local_zone = False
-    self.software = None
+    self._software = None
+    self._use_local_zone = False
+    self._version = None
 
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes.
@@ -75,13 +76,13 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     comment = structure[1]
     if comment.startswith(u'Version'):
-      _, _, self.version = comment.partition(u':')
+      _, _, self._version = comment.partition(u':')
     elif comment.startswith(u'Software'):
-      _, _, self.software = comment.partition(u':')
+      _, _, self._software = comment.partition(u':')
     elif comment.startswith(u'Time'):
       _, _, time_format = comment.partition(u':')
       if u'local' in time_format.lower():
-        self.use_local_zone = True
+        self._use_local_zone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and and produce an event object.
@@ -96,21 +97,23 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     date = log_dict.get(u'date', None)
     time = log_dict.get(u'time', None)
 
-    if not (date and time):
-      logging.warning(u'Unable to extract timestamp from Winfirewall logline.')
+    if not date and not time:
+      parser_mediator.ProduceParseError(
+          u'unable to extract timestamp from logline.')
       return
 
-    year, month, day = date
-    hour, minute, second = time
-    if self.use_local_zone:
+    if self._use_local_zone:
       zone = parser_mediator.timezone
     else:
       zone = pytz.UTC
 
-    timestamp = timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, timezone=zone)
-
-    if not timestamp:
+    try:
+      timestamp = timelib.Timestamp.FromTimeParts(
+          date[0], date[1], date[2], time[0], time[1], time[2], timezone=zone)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
       return
 
     # TODO: refactor this into a WinFirewall specific event object.
@@ -118,15 +121,14 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME, self.DATA_TYPE)
 
     for key, value in log_dict.items():
-      if key in (u'time', u'date'):
-        continue
-      if value == u'-':
+      if key in (u'time', u'date') or value == u'-':
         continue
 
       if isinstance(value, pyparsing.ParseResults):
         setattr(event_object, key, u''.join(value))
 
       else:
+        # TODO: determine why this code construction is needed.
         try:
           save_value = int(value)
         except ValueError:
@@ -156,7 +158,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, parser_mediator, line):
+  def VerifyStructure(self, unused_parser_mediator, line):
     """Verify that this file is a firewall log file.
 
     Args:
@@ -168,10 +170,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.
-    if line == b'#Version: 1.5':
-      return True
-
-    return False
+    return line == b'#Version: 1.5'
 
 
 manager.ParsersManager.RegisterParser(WinFirewallParser)

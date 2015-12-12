@@ -108,28 +108,6 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
        LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS[u'lastline_remainder'] +
        pyparsing.lineEnd)]
 
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verify whether content corresponds to an SCCM log file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      lines: A buffer that contains content from the file.
-
-    Returns:
-      Returns True if the passed buffer appears to contain content
-      from an SCCM log file; returns False otherwise.
-    """
-    # Identify the token to which we attempt a match.
-    match = self._PARSING_COMPONENTS[u'msg_left_delimiter'].match
-
-    # Because logs files can lead with a partial event,
-    # we can't assume that the first character (post-BOM)
-    # in the file is the beginning of our match - so we
-    # look for match anywhere in lines.
-    if match in lines:
-      return True
-    return False
-
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse the record and return an SCCM log event object.
 
@@ -150,28 +128,36 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       structure.microsecond = structure.microsecond[0:6]
 
     try:
-      microsecond = int(structure.microsecond, 10)
-    except ValueError:
-      raise errors.TimestampError(
-          u'Unable to read number of microseconds value.')
+      microseconds = int(structure.microsecond, 10)
+    except ValueError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine microseconds with error: {0:s}'.format(
+              exception))
+      return
 
     # 3-digit precision is milliseconds,
     # so multiply by 1000 to convert to microseconds
     if len(structure.microsecond) == 3:
-      microsecond = microsecond * 1000
+      microseconds *= 1000
 
-    timestamp = timelib.Timestamp.FromTimeParts(
-        year=structure.year, month=structure.month, day=structure.day,
-        hour=structure.hour, minutes=structure.minute,
-        seconds=structure.second, microseconds=microsecond)
+    try:
+      timestamp = timelib.Timestamp.FromTimeParts(
+          structure.year, structure.month, structure.day,
+          structure.hour, structure.minute, structure.second, microseconds)
+    except errors.TimestampError as exception:
+      timestamp = timelib.Timestamp.NONE_TIMESTAMP
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
 
     # If an offset is given for the event, apply the offset to convert to UTC.
-    if u'offset' in key:
+    if timestamp and u'offset' in key:
       try:
         delta_microseconds = int(structure.utc_offset_minutes[1:], 10)
-      except (IndexError, ValueError):
+      except (IndexError, ValueError) as exception:
         raise errors.TimestampError(
-            u'Unable to parse minute offset from UTC.')
+            u'Unable to parse minute offset from UTC with error: {0:s}.'.format(
+                exception))
 
       delta_microseconds *= self._MICRO_SECONDS_PER_MINUTE
       if structure.utc_offset_minutes[0] == u'-':
@@ -180,6 +166,26 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
     event_object = SCCMLogEvent(timestamp, 0, structure)
     parser_mediator.ProduceEvent(event_object)
+
+  def VerifyStructure(self, parser_mediator, lines):
+    """Verifies whether content corresponds to an SCCM log file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      lines: A buffer containing lines from a log file.
+
+    Returns:
+      Returns a boolean that indicates the log lines appear to contain
+      content from an SCCM log file.
+    """
+    # Identify the token to which we attempt a match.
+    match = self._PARSING_COMPONENTS[u'msg_left_delimiter'].match
+
+    # Because logs files can lead with a partial event,
+    # we can't assume that the first character (post-BOM)
+    # in the file is the beginning of our match - so we
+    # look for match anywhere in lines.
+    return match in lines
 
 
 manager.ParsersManager.RegisterParser(SCCMParser)

@@ -7,6 +7,7 @@ import re
 import pyparsing
 
 from plaso.events import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
@@ -130,31 +131,33 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
             u'Security: {2:s}.').format(bssid, ssid, security)
     return text
 
-  def _GetTimestamp(self, day, month, year, time):
-    """Gets a timestamp from a pyparsing ParseResults timestamp.
+  def _ConvertToTimestamp(self, day, month, year, time):
+    """Converts date and time values into a timestamp.
 
     This is a timestamp_string as returned by using
     text_parser.PyparsingConstants structures:
     08, Nov, [20, 36, 37], 222]
 
     Args:
-      timestamp_string: The pyparsing ParseResults object
+      day: an integer representing the day.
+      month: an integer representing the month.
+      year: an integer representing the year.
+      time: a list containing integers with the number of
+            hours, minutes and seconds.
 
     Returns:
-      day: An integer representing the day.
-      month: An integer representing the month.
-      year: An integer representing the year.
-      timestamp: A plaso timelib timestamp event or 0.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
+
+    Raises:
+      TimestampError: if the timestamp cannot be created from the date and
+                      time values.
     """
-    try:
-      time_part, millisecond = time
-      hour, minute, second = time_part
-      timestamp = timelib.Timestamp.FromTimeParts(
-          year, month, day, hour, minute, second,
-          microseconds=(millisecond * 1000))
-    except ValueError:
-      timestamp = 0
-    return timestamp
+    time_values, milliseconds = time
+    hours, minutes, seconds = time_values
+    microseconds = milliseconds * 1000
+    return timelib.Timestamp.FromTimeParts(
+        year, month, day, hours, minutes, seconds, microseconds=microseconds)
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
@@ -175,11 +178,13 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     if month < self._last_month:
       self._year_use += 1
 
-    timestamp = self._GetTimestamp(
-        structure.day, month, self._year_use, structure.time)
-
-    if not timestamp:
-      logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
+    try:
+      timestamp = self._ConvertToTimestamp(
+          structure.day, month, self._year_use, structure.time)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
       return
 
     self._last_month = month
