@@ -14,8 +14,8 @@ from tests.parsers import test_lib
 class PECOFFTest(test_lib.ParserTestCase):
   """Tests for the PE file parser."""
 
-  def testParseFileObjectEXE(self):
-    """Tests the ParseFileObject method against an EXE PE file."""
+  def testParseFileObjectOnExecutable(self):
+    """Tests the ParseFileObject on a PE executable (EXE) file."""
     test_path = self._GetTestFilePath([u'test_pe.exe'])
     parser = pe.PEParser()
 
@@ -23,6 +23,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     events = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(events), 3)
+
     first_event = events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-04-21 14:53:56')
@@ -42,14 +43,15 @@ class PECOFFTest(test_lib.ParserTestCase):
     self.assertEqual(third_event.timestamp, expected_timestamp3)
     self.assertEqual(third_event.data_type, u'pe:delay_import:import_time')
 
-  def testDriver(self):
-    """Tests the ParseFileObject method against a driver (SYS) PE file."""
+  def testParseFileObjectOnDriver(self):
+    """Tests the ParseFileObject on a PE driver (SYS) file."""
     test_path = self._GetTestFilePath([u'test_driver.sys'])
     parser = pe.PEParser()
 
     event_queue_consumer = self._ParseFile(parser, test_path)
     events = self._GetEventObjectsFromQueue(event_queue_consumer)
     self.assertEqual(len(events), 1)
+
     first_event = events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-04-21 14:53:54')
