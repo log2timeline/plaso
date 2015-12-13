@@ -17,7 +17,7 @@ class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
   """Tests for the multi-process engine object."""
 
   def testProcessSources(self):
-    """Tests the PreprocessSource and ProcessSources function."""
+    """Tests the PreprocessSources and ProcessSources function."""
     test_engine = multi_process.MultiProcessEngine(
         maximum_number_of_queued_items=100)
 
@@ -28,7 +28,7 @@ class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    test_engine.PreprocessSource([source_path_spec], u'Windows')
+    test_engine.PreprocessSources([source_path_spec])
 
     parser_filter_string = u'filestat'
 
