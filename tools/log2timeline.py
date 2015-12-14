@@ -495,12 +495,18 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.AddLogFileOptions(info_group)
 
+    # The window status-view mode has an annoying flicker on Windows,
+    # hence we default to linear status-view mode instead.
+    if sys.platform.startswith(u'win'):
+      default_status_view = u'linear'
+    else:
+      default_status_view = u'window'
+
     info_group.add_argument(
         u'--status_view', u'--status-view', dest=u'status_view_mode',
         choices=[u'linear', u'none', u'window'], action=u'store',
-        metavar=u'TYPE', default=u'linear', help=(
-            u'The processing status view mode: "linear", "none" or "window". '
-            u'Note that the "window" mode is still experimental.'))
+        metavar=u'TYPE', default=default_status_view, help=(
+            u'The processing status view mode: "linear", "none" or "window".'))
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
