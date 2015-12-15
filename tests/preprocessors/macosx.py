@@ -10,6 +10,7 @@ from dfvfs.path import fake_path_spec
 from plaso.engine import knowledge_base
 from plaso.preprocessors import macosx
 
+from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -37,13 +38,14 @@ class MacOSXBuildTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
         u'/System/Library/CoreServices/SystemVersion.plist',
         self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""
@@ -89,13 +91,14 @@ class MacOSXHostname(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
         u'/Library/Preferences/SystemConfiguration/preferences.plist',
         self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""
@@ -112,14 +115,14 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    file_data = self._ReadTestFile([u'com.apple.HIToolbox.plist'])
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddTestFile(
         u'/Library/Preferences/com.apple.HIToolbox.plist',
-        file_data)
+        [u'com.apple.HIToolbox.plist'])
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""
@@ -137,12 +140,13 @@ class MacOSXTimezone(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleLinkFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddSymbolicLink(
         u'/private/etc/localtime', u'/usr/share/zoneinfo/Europe/Amsterdam')
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""
@@ -160,14 +164,14 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    file_data = self._ReadTestFile([u'com.apple.HIToolbox.plist'])
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddTestFile(
         u'/private/var/db/dslocal/nodes/Default/users/nobody.plist',
-        file_data)
+        [u'com.apple.HIToolbox.plist'])
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""

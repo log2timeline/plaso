@@ -74,14 +74,12 @@ class BaseEngine(object):
 
     return file_system, mount_point
 
-  def PreprocessSource(
-      self, source_path_specs, platform, resolver_context=None):
-    """Preprocesses the source and fills the preprocessing object.
+  def PreprocessSources(self, source_path_specs, resolver_context=None):
+    """Preprocesses the sources.
 
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
-      platform: string that indicates the platform (operating system).
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
                         must have its own resolver context.
