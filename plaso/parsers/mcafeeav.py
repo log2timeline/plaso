@@ -41,23 +41,22 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   COLUMNS = [u'date', u'time', u'status', u'username', u'filename',
              u'trigger_location', u'rule', u'action']
 
-  def _GetTimestamp(self, date, time, timezone):
-    """Determines a timestamp from the time string.
+  def _ConvertToTimestamp(self, date, time, timezone):
+    """Converts date and time values into a timestamp.
 
     The date and time are made up of two strings, the date and the time,
     separated by a tab. The time is in local time. The month and day can
     be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM
 
     Args:
-      date: the string representing the date.
-      time: the string representing the time.
-      timezone: timezone (instance of pytz.timezone) that the data and time
-                values represent.
+      date: a string representing the date.
+      time: a string representing the time.
+      timezone: a timezone (instance of pytz.timezone) that the date and
+                time values represent.
 
     Returns:
-      The timestamp time value. The timestamp contains the number of
-      microseconds since Jan 1, 1970 00:00:00 UTC or None if the time string
-      could not be parsed.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
 
     Raises:
       TimestampError: if the timestamp is badly formed or unable to transfer
@@ -65,7 +64,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     """
     # TODO: check if this is correct, likely not date or not time
     # is more accurate.
-    if not (date and time):
+    if not date and not time:
       raise errors.TimestampError(
           u'Unable to extract timestamp from McAfee AV logline.')
 
@@ -77,6 +76,30 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
       raise errors.TimestampError(u'Unable to form a timestamp string.')
 
     return timelib.Timestamp.FromTimeString(time_string, timezone=timezone)
+
+  def ParseRow(self, parser_mediator, row_offset, row):
+    """Parses a row and extract event objects.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      row_offset: the offset of the row.
+      row: a dictionary containing all the fields as denoted in the
+           COLUMNS class list.
+    """
+    try:
+      timestamp = self._ConvertToTimestamp(
+          row[u'date'], row[u'time'], parser_mediator.timezone)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(
+              repr(row[u'date']), repr(row[u'time']), exception))
+      return
+
+    if timestamp is None:
+      return
+
+    event_object = McafeeAVEvent(timestamp, row_offset, row)
+    parser_mediator.ProduceEvent(event_object)
 
   def VerifyRow(self, parser_mediator, row):
     """Verify that this is a McAfee AV Access Protection Log file.
@@ -101,7 +124,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # Check the date format!
     # If it doesn't parse, then this isn't a McAfee AV Access Protection Log
     try:
-      timestamp = self._GetTimestamp(
+      timestamp = self._ConvertToTimestamp(
           row[u'date'], row[u'time'], parser_mediator.timezone)
     except errors.TimestampError:
       return False
@@ -115,30 +138,6 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
       return False
 
     return True
-
-  def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract event objects.
-
-    Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row_offset: the offset of the row.
-      row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list.
-    """
-    try:
-      timestamp = self._GetTimestamp(
-          row[u'date'], row[u'time'], parser_mediator.timezone)
-    except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
-          u'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(
-              repr(row[u'date']), repr(row[u'time']), exception))
-      return
-
-    if timestamp is None:
-      return
-
-    event_object = McafeeAVEvent(timestamp, row_offset, row)
-    parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(McafeeAccessProtectionParser)

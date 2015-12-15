@@ -20,17 +20,19 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     self._parser = symantec.SymantecParser()
 
-  def testGetTimestamp(self):
-    """Tests the _GetTimestamp function."""
+  def testConvertToTimestamp(self):
+    """Tests the _ConvertToTimestamp function."""
     # pylint: disable=protected-access
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2002-11-19 08:01:34')
-    timestamp = self._parser._GetTimestamp(u'200A13080122', timezone=pytz.UTC)
+    timestamp = self._parser._ConvertToTimestamp(
+        u'200A13080122', timezone=pytz.UTC)
     self.assertEqual(timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-30 10:47:29')
-    timestamp = self._parser._GetTimestamp(u'2A0A1E0A2F1D', timezone=pytz.UTC)
+    timestamp = self._parser._ConvertToTimestamp(
+        u'2A0A1E0A2F1D', timezone=pytz.UTC)
     self.assertEqual(timestamp, expected_timestamp)
 
   def testParse(self):

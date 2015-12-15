@@ -2,6 +2,7 @@
 """This file contains a Symantec parser in plaso."""
 
 from plaso.events import text_events
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -42,10 +43,10 @@ class SymantecParser(text_parser.TextCSVParser):
       u'domain_guid', u'log_session_guid', u'vbin_session_id',
       u'login_domain', u'extra']
 
-  def _GetTimestamp(self, date_time_values, timezone=pytz.UTC):
-    """Returns a timetamp.
+  def _ConvertToTimestamp(self, date_time_values, timezone=pytz.UTC):
+    """Converts the given parsed date and time values to a timestamp.
 
-    The timestamp consists of six hexadecimal octets.
+    The date and time values consist of six hexadecimal octets.
     They represent the following:
       First octet: Number of years since 1970
       Second octet: Month, where January = 0
@@ -65,8 +66,8 @@ class SymantecParser(text_parser.TextCSVParser):
       A timestamp value, contains the number of micro seconds since
       January 1, 1970, 00:00:00 UTC.
     """
-    if date_time_values == u'':
-      return 0
+    if not date_time_values:
+      return timelib.Timestamp.NONE_TIMESTAMP
 
     year, month, day, hours, minutes, seconds = (
         int(hexdigit[0] + hexdigit[1], 16) for hexdigit in zip(
@@ -86,8 +87,9 @@ class SymantecParser(text_parser.TextCSVParser):
       True if this is the correct parser, False otherwise.
     """
     try:
-      timestamp = self._GetTimestamp(row[u'time'], parser_mediator.timezone)
-    except (TypeError, ValueError):
+      timestamp = self._ConvertToTimestamp(
+          row[u'time'], timezone=parser_mediator.timezone)
+    except (TypeError, ValueError, errors.TimestampError):
       return False
 
     if not timestamp:
@@ -121,7 +123,14 @@ class SymantecParser(text_parser.TextCSVParser):
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
     """
-    timestamp = self._GetTimestamp(row[u'time'], parser_mediator.timezone)
+    try:
+      timestamp = self._ConvertToTimestamp(
+          row[u'time'], timezone=parser_mediator.timezone)
+    except (TypeError, ValueError, errors.TimestampError) as exception:
+      timestamp = timelib.Timestamp.NONE_TIMESTAMP
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
 
     # TODO: Create new dict object that only contains valuable attributes.
     event_object = SymantecEvent(timestamp, row_offset, row)
