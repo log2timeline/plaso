@@ -57,6 +57,7 @@ import logging
 import pyparsing
 
 from plaso.events import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
@@ -133,43 +134,133 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a XChatLog parser object."""
     super(XChatLogParser, self).__init__()
+    self._xchat_year = 0
     self.offset = 0
-    self.xchat_year = 0
 
-  def _GetTimestamp(self, parse_result, timezone, year=0):
-    """Determines the timestamp from the pyparsing ParseResults.
+  def _ConvertToTimestamp(self, structure, timezone, year=0):
+    """Converts date and time values into a timestamp.
 
     Args:
-      parse_result: The pyparsing ParseResults object.
+      structure: a log line structure (instance of pyparsing.ParseResults)
+                 that contains the log header.
       timezone: The timezone object.
       year: Optional current year. The default is 0.
 
     Returns:
-      A timelib timestamp or 0.
-    """
-    month = timelib.MONTH_DICT.get(parse_result.month_name.lower(), None)
-    if not month:
-      logging.debug(u'XChatLog unmanaged month name [{0:s}]'.format(
-          parse_result.month_name))
-      return 0
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
 
-    hour, minute, second = parse_result.time
+    Raises:
+      TimestampError: if the timestamp cannot be created from the date and
+                      time values.
+    """
+    month = timelib.MONTH_DICT.get(structure.month_name.lower(), None)
+    if not month:
+      raise errors.TimestampError(
+          u'Unsupport month name: {0:s}'.format(structure.month_name))
+
+    hour, minute, second = structure.time
     if not year:
       # This condition could happen when parsing the header line: if unable
       # to get a valid year, returns a '0' timestamp, thus preventing any
       # log line parsing (since xchat_year is unset to '0') until a new good
       # (it means supported) header with a valid year information is found.
       # TODO: reconsider this behaviour.
-      year = parse_result.get(u'year', 0)
-
+      year = structure.get(u'year', 0)
       if not year:
-        return 0
+        raise errors.TimestampError(u'Missing year.')
 
-      self.xchat_year = year
+      self._xchat_year = year
 
-    day = parse_result.get(u'day', 0)
+    day = structure.get(u'day', 0)
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, timezone=timezone)
+
+  def _ParseHeader(self, parser_mediator, structure):
+    """Parses a log header.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      structure: a log line structure (instance of pyparsing.ParseResults)
+                 that contains the log header.
+    """
+    try:
+      timestamp = self._ConvertToTimestamp(structure, parser_mediator.timezone)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
+      return
+
+    if structure.log_action == u'BEGIN':
+      event_object = XChatLogEvent(timestamp, u'XChat start logging')
+      parser_mediator.ProduceEvent(event_object)
+
+    elif structure.log_action == u'END':
+      # End logging, unset year.
+      self._xchat_year = 0
+      event_object = XChatLogEvent(timestamp, u'XChat end logging')
+      parser_mediator.ProduceEvent(event_object)
+
+    else:
+      logging.warning(u'Unknown log action: {0:s}.'.format(
+          structure.log_action))
+
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parses a log line.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      structure: a log line structure (instance of pyparsing.ParseResults)
+                 that contains the log line.
+    """
+    if not self._xchat_year:
+      logging.debug(u'XChatLogParser, missing year information.')
+      return
+
+    try:
+      timestamp = self._ConvertToTimestamp(
+          structure, parser_mediator.timezone, year=self._xchat_year)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
+      return
+
+    # The text string contains multiple unnecessary whitespaces that need to
+    # be removed, thus the split and re-join.
+    event_object = XChatLogEvent(
+        timestamp, u' '.join(structure.text.split()), structure.nickname)
+    parser_mediator.ProduceEvent(event_object)
+
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: a log line structure (instance of pyparsing.ParseResults)
+                 that contains the log line.
+    """
+    if key == u'logline':
+      self._ParseLogLine(parser_mediator, structure)
+
+    elif key == u'header':
+      self._ParseHeader(parser_mediator, structure)
+
+    elif key == u'header_signature':
+      # If this key is matched (after others keys failed) we got a different
+      # localized header and we should stop parsing until a new good header
+      # is found. Stop parsing is done setting xchat_year to 0.
+      # Note that the code assumes that LINE_STRUCTURES will be used in the
+      # exact order as defined!
+      logging.warning(u'Unknown locale header.')
+      self._xchat_year = 0
+
+    else:
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a XChat log file.
@@ -186,74 +277,17 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException:
       logging.debug(u'Unable to parse, not a valid XChat log file header')
       return False
-    timestamp = self._GetTimestamp(parse_result, parser_mediator.timezone)
-    if not timestamp:
+
+    try:
+      self._ConvertToTimestamp(parse_result, parser_mediator.timezone)
+    except errors.TimestampError:
       logging.debug(u'Wrong XChat timestamp: {0:s}'.format(parse_result))
       return False
+
     # Unset the xchat_year since we are only verifying structure.
-    # The value gets set in _GetTimestamp during the actual parsing.
-    self.xchat_year = 0
+    # The value gets set in _ConvertToTimestamp during the actual parsing.
+    self._xchat_year = 0
     return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
-    """
-    if key == u'logline':
-      if not self.xchat_year:
-        logging.debug(u'XChatLogParser, missing year information.')
-        return
-
-      timestamp = self._GetTimestamp(
-          structure, parser_mediator.timezone, year=self.xchat_year)
-      if not timestamp:
-        logging.debug(u'XChatLogParser, cannot get timestamp from line.')
-        return
-
-      # The text string contains multiple unnecessary whitespaces that need to
-      # be removed, thus the split and re-join.
-      event_object = XChatLogEvent(
-          timestamp, u' '.join(structure.text.split()), structure.nickname)
-      parser_mediator.ProduceEvent(event_object)
-
-    elif key == u'header':
-      timestamp = self._GetTimestamp(structure, parser_mediator.timezone)
-      if not timestamp:
-        logging.warning(u'XChatLogParser, cannot get timestamp from header.')
-        return
-
-      if structure.log_action == u'BEGIN':
-        event_object = XChatLogEvent(timestamp, u'XChat start logging')
-        parser_mediator.ProduceEvent(event_object)
-
-      elif structure.log_action == u'END':
-        # End logging, unset year.
-        self.xchat_year = 0
-        event_object = XChatLogEvent(timestamp, u'XChat end logging')
-        parser_mediator.ProduceEvent(event_object)
-
-      else:
-        logging.warning(u'Unknown log action: {0:s}.'.format(
-            structure.log_action))
-
-    elif key == u'header_signature':
-      # If this key is matched (after others keys failed) we got a different
-      # localized header and we should stop parsing until a new good header
-      # is found. Stop parsing is done setting xchat_year to 0.
-      # Note that the code assumes that LINE_STRUCTURES will be used in the
-      # exact order as defined!
-      logging.warning(u'Unknown locale header.')
-      self.xchat_year = 0
-
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
 
 manager.ParsersManager.RegisterParser(XChatLogParser)
