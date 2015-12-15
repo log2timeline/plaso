@@ -280,56 +280,71 @@ class SlowLexicalTextParser(
     return line
 
   def ParseLine(self, parser_mediator):
-    """Return an event object extracted from the current line.
+    """Parses the current log line for events.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-
-    Raises:
-      TimestampError: if time is not defined or invalid.
     """
-    if not self.attributes[u'time']:
-      raise errors.TimestampError(
-          u'Unable to parse log line: {0:s} - missing time.'.format(
-              self.PrintLine()))
+    year_string = self.attributes.get(u'iyear')
+    if not year_string:
+      parser_mediator.ProduceParseError(
+          u'year missing in log line: {0:s}'.format(self.PrintLine()))
+      return
 
-    if not self.attributes[u'iyear']:
-      raise errors.TimestampError(
-          u'Unable to parse log line: {0:s} - missing year.'.format(
-              self.PrintLine()))
+    time_string = self.attributes.get(u'time')
+    if not time_string:
+      parser_mediator.ProduceParseError(
+          u'time values missing in log line: {0:s}'.format(self.PrintLine()))
+      return
 
-    times = self.attributes[u'time'].split(u':')
+    time_values = time_string.split(u':')
+    if len(time_values) < 3:
+      parser_mediator.ProduceParseError(
+          u'unsupported time format in log line: {0:s}'.format(
+              self.PrintLine()))
+      return
+
+    seconds_values = time_values[2].split('.')
+    if len(seconds_values) == 2:
+      seconds_string, microseconds_string = seconds_values
+    else:
+      seconds_string = time_values[2]
+      microseconds_string = 0
+
+    try:
+      # TODO: fix the need to convert non string values into integers and
+      # string to integer conversion without an explicit base.
+      year = int(year_string)
+      hours = int(time_values[0])
+      minutes = int(time_values[1])
+      seconds = int(seconds_string)
+      microseconds = int(microseconds_string)
+
+    except ValueError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to parse log line: {0:s} with error: {1:s}'.format(
+              self.PrintLine(), exception))
+      return
+
     if self.local_zone:
       timezone = parser_mediator.timezone
     else:
       timezone = pytz.UTC
 
-    if len(times) < 3:
-      raise errors.TimestampError(
-          u'Unable to parse log line - unsupported format: {0:s}'.format(
-              self.PrintLine()))
     try:
-      secs = times[2].split('.')
-      if len(secs) == 2:
-        sec, us = secs
-      else:
-        sec = times[2]
-        us = 0
-
       timestamp = timelib.Timestamp.FromTimeParts(
-          int(self.attributes[u'iyear']), self.attributes[u'imonth'],
-          self.attributes[u'iday'], int(times[0]), int(times[1]),
-          int(sec), microseconds=int(us), timezone=timezone)
-
-    except ValueError as exception:
-      raise errors.TimestampError(
-          u'Unable to parse log line: {0:s} with error: {1:s}'.format(
-              self.PrintLine(), exception))
+          year, self.attributes[u'imonth'], self.attributes[u'iday'],
+          hours, minutes, seconds, microseconds=microseconds,
+          timezone=timezone)
+    except errors.TimestampError as exception:
+      timestamp = timelib.Timestamp.NONE_TIMESTAMP
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
 
     event_object = self.CreateEvent(
         timestamp, getattr(self, u'entry_offset', 0), self.attributes)
     parser_mediator.ProduceEvent(event_object)
-
 
   def SetDay(self, match=None, **unused_kwargs):
     """Parses the day of the month.
