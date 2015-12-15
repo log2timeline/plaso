@@ -5,13 +5,15 @@
 import unittest
 
 from dfvfs.helpers import file_system_searcher
-from dfvfs.path import fake_path_spec
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
 from plaso.preprocessors import windows
 
+from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -22,13 +24,15 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
     """Sets up the needed objects used throughout the test."""
     path_attributes = {u'systemroot': u'\\Windows'}
 
-    file_data = self._ReadTestFile([u'SOFTWARE'])
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
-        u'/Windows/System32/config/SOFTWARE', file_data)
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddTestFile(
+        u'/Windows/System32/config/SOFTWARE', [u'SOFTWARE'])
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
     registry_file_reader = manager.FileSystemWinRegistryFileReader(
-        self._fake_file_system, mount_point, path_attributes=path_attributes)
+        file_system_builder.file_system, mount_point,
+        path_attributes=path_attributes)
     self._win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
@@ -40,13 +44,15 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
     """Sets up the needed objects used throughout the test."""
     path_attributes = {u'systemroot': u'\\Windows'}
 
-    file_data = self._ReadTestFile([u'SYSTEM'])
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
-        u'/Windows/System32/config/SYSTEM', file_data)
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddTestFile(
+        u'/Windows/System32/config/SYSTEM', [u'SYSTEM'])
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
     registry_file_reader = manager.FileSystemWinRegistryFileReader(
-        self._fake_file_system, mount_point, path_attributes=path_attributes)
+        file_system_builder.file_system, mount_point,
+        path_attributes=path_attributes)
     self._win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
@@ -114,12 +120,14 @@ class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""
@@ -139,12 +147,14 @@ class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""

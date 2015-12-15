@@ -10,7 +10,7 @@ from dfvfs.path import fake_path_spec
 from plaso.engine import knowledge_base
 from plaso.preprocessors import linux
 
-
+from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -22,12 +22,12 @@ class LinuxHostnameTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
-        u'/etc/hostname', self._FILE_DATA)
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddFile(u'/etc/hostname', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""
@@ -59,12 +59,12 @@ class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fake_file_system = self._BuildSingleFileFakeFileSystem(
-        u'/etc/passwd', self._FILE_DATA)
+    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder.AddFile(u'/etc/passwd', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-        self._fake_file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Tests the GetValue function."""

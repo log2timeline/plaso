@@ -151,8 +151,8 @@ class ExtractionFrontend(frontend.Frontend):
 
     return parser_filter_string
 
-  def _PreprocessSource(self, source_path_specs, source_type):
-    """Preprocesses the source.
+  def _PreprocessSources(self, source_path_specs, source_type):
+    """Preprocesses the sources.
 
     Args:
       source_path_specs: list of path specifications (instances of
@@ -188,9 +188,8 @@ class ExtractionFrontend(frontend.Frontend):
         source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
         source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]):
       try:
-        self._engine.PreprocessSource(
-            source_path_specs, self._operating_system,
-            resolver_context=self._resolver_context)
+        self._engine.PreprocessSources(
+            source_path_specs, resolver_context=self._resolver_context)
 
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
@@ -466,7 +465,7 @@ class ExtractionFrontend(frontend.Frontend):
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type)
 
-    pre_obj = self._PreprocessSource(source_path_specs, source_type)
+    pre_obj = self._PreprocessSources(source_path_specs, source_type)
 
     self._operating_system = getattr(pre_obj, u'guessed_os', None)
 
