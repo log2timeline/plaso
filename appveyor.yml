@@ -15,7 +15,7 @@ install:
   - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3081002.zip 2>&1"
   - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
   - cmd: git clone -b fixes2 https://github.com/joachimmetz/l2tdevtools.git && move l2tdevtools ..\
-  - cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86 --msi-targetdir "%PYTHON%"
+  - cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86 --msi-targetdir "%PYTHON%" --exclude requests
 
 build: off
 
