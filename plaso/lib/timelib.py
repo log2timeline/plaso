@@ -20,18 +20,18 @@ from plaso.lib import errors
 
 
 MONTH_DICT = {
-    'jan': 1,
-    'feb': 2,
-    'mar': 3,
-    'apr': 4,
-    'may': 5,
-    'jun': 6,
-    'jul': 7,
-    'aug': 8,
-    'sep': 9,
-    'oct': 10,
-    'nov': 11,
-    'dec': 12}
+    u'jan': 1,
+    u'feb': 2,
+    u'mar': 3,
+    u'apr': 4,
+    u'may': 5,
+    u'jun': 6,
+    u'jul': 7,
+    u'aug': 8,
+    u'sep': 9,
+    u'oct': 10,
+    u'nov': 11,
+    u'dec': 12}
 
 
 class Timestamp(object):
@@ -629,17 +629,19 @@ class Timestamp(object):
     Returns:
       The timestamp which is an integer containing the number of micro seconds
       since January 1, 1970, 00:00:00 UTC or 0 on error.
+
+    Raises:
+      TimestampError: if the timestamp cannot be created from the time parts.
     """
     try:
       date = datetime.datetime(
           year, month, day, hour, minutes, seconds, microseconds)
     except ValueError as exception:
-      logging.warning((
+      raise errors.TimestampError((
           u'Unable to create timestamp from {0:04d}-{1:02d}-{2:02d} '
           u'{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7:s}').format(
               year, month, day, hour, minutes, seconds, microseconds,
               exception))
-      return 0
 
     if isinstance(timezone, basestring):
       timezone = pytz.timezone(timezone)

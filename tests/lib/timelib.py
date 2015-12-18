@@ -516,7 +516,8 @@ class TimeLibTest(unittest.TestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-06-26 05:19:46.000542')
-    timestamp = timelib.Timestamp.FromTimeParts(2013, 6, 26, 5, 19, 46, 542)
+    timestamp = timelib.Timestamp.FromTimeParts(
+        2013, 6, 26, 5, 19, 46, microseconds=542)
     self.assertEqual(timestamp, expected_timestamp)
 
 

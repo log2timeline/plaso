@@ -6,6 +6,7 @@ import logging
 import pyparsing
 
 from plaso.events import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
@@ -87,45 +88,31 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a parser object."""
     super(MacAppFirewallParser, self).__init__()
-    self._year_use = 0
     self._last_month = None
-    self.previous_structure = None
+    self._previous_structure = None
+    self._year_use = 0
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Mac AppFirewall log file.
+  def _ConvertToTimestamp(self, day, month, year, time):
+    """Converts date and time values into a timestamp.
+
+    This is a timestamp_string as returned by using
+    text_parser.PyparsingConstants structures:
+    08, Nov, [20, 36, 37]
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      day: an integer representing the day.
+      month: an integer representing the month.
+      year: an integer representing the year.
+      time: a list containing integers with the number of
+            hours, minutes and seconds.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC.
     """
-    try:
-      line = self.FIREWALL_LINE.parseString(line)
-    except pyparsing.ParseException:
-      logging.debug(u'Not a Mac AppFirewall log file')
-      return False
-    if (line.action != u'creating /var/log/appfirewall.log' or
-        line.status != u'Error'):
-      return False
-    return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
-    """
-    if key in [u'logline', u'repeated']:
-      self._ParseLogLine(parser_mediator, structure, key)
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+    hour, minute, second = time
+    return timelib.Timestamp.FromTimeParts(
+        year, month, day, hour, minute, second)
 
   def _ParseLogLine(self, parser_mediator, structure, key):
     """Parse a single log line and produce an event object.
@@ -146,11 +133,13 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if month < self._last_month:
       self._year_use += 1
 
-    timestamp = self._GetTimestamp(
-        structure.day, month, self._year_use, structure.time)
-
-    if not timestamp:
-      logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
+    try:
+      timestamp = self._ConvertToTimestamp(
+          structure.day, month, self._year_use, structure.time)
+    except errors.TimestampError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to determine timestamp with error: {0:s}'.format(
+              exception))
       return
 
     self._last_month = month
@@ -158,9 +147,9 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but using the timestmap from the actual entry.
     if key == u'logline':
-      self.previous_structure = structure
+      self._previous_structure = structure
     else:
-      structure = self.previous_structure
+      structure = self._previous_structure
 
     # Pyparsing reads in RAW, but the text is in UTF8.
     try:
@@ -177,29 +166,48 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
         timestamp, structure, process_name, action)
     parser_mediator.ProduceEvent(event_object)
 
-  def _GetTimestamp(self, day, month, year, time):
-    """Gets a timestamp from a pyparsing ParseResults timestamp.
-
-    This is a timestamp_string as returned by using
-    text_parser.PyparsingConstants structures:
-    08, Nov, [20, 36, 37]
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
 
     Args:
-      timestamp_string: The pyparsing ParseResults object
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
+    if key in [u'logline', u'repeated']:
+      self._ParseLogLine(parser_mediator, structure, key)
+    else:
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify that this file is a Mac AppFirewall log file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      line: A single line from the text file.
 
     Returns:
-      day: An integer representing the day.
-      month: An integer representing the month.
-      year: An integer representing the year.
-      timestamp: A plaso timelib timestamp event or 0.
+      True if this is the correct parser, False otherwise.
     """
     try:
-      hour, minute, second = time
-      timestamp = timelib.Timestamp.FromTimeParts(
-          year, month, day, hour, minute, second)
-    except ValueError:
-      timestamp = 0
-    return timestamp
+      line = self.FIREWALL_LINE.parseString(line)
+    except pyparsing.ParseException as exception:
+      logging.debug((
+          u'Unable to parse file as a Mac AppFirewall log file with error: '
+          u'{0:s}').format(exception))
+      return False
+
+    if (line.action != u'creating /var/log/appfirewall.log' or
+        line.status != u'Error'):
+      logging.debug(
+          u'Unsupported Mac AppFirewall action: {0:s} or status: {1:s}'.format(
+              line.action, line.status))
+      return False
+
+    return True
 
 
 manager.ParsersManager.RegisterParser(MacAppFirewallParser)

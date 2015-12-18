@@ -186,24 +186,36 @@ class WinJobParser(interface.FileObjectParser):
           u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
-    last_run_date = timelib.Timestamp.FromTimeParts(
-        header_struct.ran_year,
-        header_struct.ran_month,
-        header_struct.ran_day,
-        header_struct.ran_hour,
-        header_struct.ran_minute,
-        header_struct.ran_second,
-        microseconds=header_struct.ran_millisecond * 1000,
-        timezone=parser_mediator.timezone)
+    try:
+      last_run_date = timelib.Timestamp.FromTimeParts(
+          header_struct.ran_year,
+          header_struct.ran_month,
+          header_struct.ran_day,
+          header_struct.ran_hour,
+          header_struct.ran_minute,
+          header_struct.ran_second,
+          microseconds=header_struct.ran_millisecond * 1000,
+          timezone=parser_mediator.timezone)
+    except errors.TimestampError as exception:
+      last_run_date = None
+      parser_mediator.ProduceParseError(
+          u'unable to determine last run date with error: {0:s}'.format(
+              exception))
 
-    scheduled_date = timelib.Timestamp.FromTimeParts(
-        job_variable_struct.sched_start_year,
-        job_variable_struct.sched_start_month,
-        job_variable_struct.sched_start_day,
-        job_variable_struct.sched_start_hour,
-        job_variable_struct.sched_start_minute,
-        0,  # Seconds are not stored.
-        timezone=parser_mediator.timezone)
+    try:
+      scheduled_date = timelib.Timestamp.FromTimeParts(
+          job_variable_struct.sched_start_year,
+          job_variable_struct.sched_start_month,
+          job_variable_struct.sched_start_day,
+          job_variable_struct.sched_start_hour,
+          job_variable_struct.sched_start_minute,
+          0,  # Seconds are not stored.
+          timezone=parser_mediator.timezone)
+    except errors.TimestampError as exception:
+      scheduled_date = None
+      parser_mediator.ProduceParseError(
+          u'unable to determine scheduled date with error: {0:s}'.format(
+              exception))
 
     application = binary.ReadUTF16(job_variable_struct.application)
     description = binary.ReadUTF16(job_variable_struct.comment)
@@ -211,30 +223,45 @@ class WinJobParser(interface.FileObjectParser):
     username = binary.ReadUTF16(job_variable_struct.username)
     working_dir = binary.ReadUTF16(job_variable_struct.working_dir)
 
-    parser_mediator.ProduceEvents(
-        [WinJobEvent(
-            last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, application,
-            parameter, working_dir, username, job_variable_struct.trigger_type,
-            description),
-         WinJobEvent(
-             scheduled_date, u'Scheduled To Start', application, parameter,
-             working_dir, username, job_variable_struct.trigger_type,
-             description)])
+    if last_run_date is not None:
+      event_object = WinJobEvent(
+          last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, application,
+          parameter, working_dir, username, job_variable_struct.trigger_type,
+          description)
+      parser_mediator.ProduceEvent(event_object)
+
+    if scheduled_date is not None:
+      event_object = WinJobEvent(
+          scheduled_date, u'Scheduled To Start', application, parameter,
+          working_dir, username, job_variable_struct.trigger_type,
+          description)
+      parser_mediator.ProduceEvent(event_object)
+
+    # TODO: create a timeless event object if last_run_date and scheduled_date
+    # are None? What should be the description of this event?
 
     if job_variable_struct.sched_end_year:
-      scheduled_end_date = timelib.Timestamp.FromTimeParts(
-          job_variable_struct.sched_end_year,
-          job_variable_struct.sched_end_month,
-          job_variable_struct.sched_end_day,
-          0,  # Hours are not stored.
-          0,  # Minutes are not stored.
-          0,  # Seconds are not stored.
-          timezone=parser_mediator.timezone)
+      try:
+        scheduled_end_date = timelib.Timestamp.FromTimeParts(
+            job_variable_struct.sched_end_year,
+            job_variable_struct.sched_end_month,
+            job_variable_struct.sched_end_day,
+            0,  # Hours are not stored.
+            0,  # Minutes are not stored.
+            0,  # Seconds are not stored.
+            timezone=parser_mediator.timezone)
+      except errors.TimestampError as exception:
+        scheduled_end_date = None
+        parser_mediator.ProduceParseError(
+            u'unable to determine scheduled end date with error: {0:s}'.format(
+                exception))
 
-      event_object = WinJobEvent(
-          scheduled_end_date, u'Scheduled To End', application, parameter,
-          working_dir, username, job_variable_struct.trigger_type, description)
-      parser_mediator.ProduceEvent(event_object)
+      if scheduled_end_date is not None:
+        event_object = WinJobEvent(
+            scheduled_end_date, u'Scheduled To End', application, parameter,
+            working_dir, username, job_variable_struct.trigger_type,
+            description)
+        parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(WinJobParser)
