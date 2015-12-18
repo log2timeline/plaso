@@ -214,6 +214,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._foreman_verbose = getattr(options, u'foreman_verbose', False)
 
+    self._number_of_extraction_workers = getattr(options, u'workers', 0)
+
     # TODO: add code to parse the worker options.
 
   def _PrintStatusHeader(self):
@@ -720,6 +722,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
+        number_of_extraction_workers=self._number_of_extraction_workers,
         parser_filter_string=self._parser_filter_string,
         preferred_encoding=self.preferred_encoding,
         single_process_mode=self._single_process_mode,

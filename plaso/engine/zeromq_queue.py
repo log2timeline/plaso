@@ -693,7 +693,10 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
       raise errors.QueueAlreadyClosed()
     if not self._zmq_socket:
       self._CreateZMQSocket()
-    self._queue.put(item, timeout=self._buffer_timeout_seconds)
+    if block:
+      self._queue.put(item, timeout=self._buffer_timeout_seconds)
+    else:
+      self._queue.put(item, block=False)
 
 
 class ZeroMQBufferedReplyBindQueue(ZeroMQBufferedReplyQueue):

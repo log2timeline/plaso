@@ -104,10 +104,12 @@ class StorageWriterStatus(object):
   def __init__(self):
     """Initializes the storage writer status object."""
     super(StorageWriterStatus, self).__init__()
+    self.event_object_queue_port = None
     self.identifier = None
     self.last_running_time = 0
     self.number_of_events = 0
     self.number_of_events_delta = 0
+    self.parse_error_queue_port = None
     self.pid = None
     self.process_status = None
     self.status = None
@@ -398,10 +400,11 @@ class ProcessingStatus(object):
 
   def WorkersRunning(self):
     """Determines if the workers are running."""
-    for extraction_worker_status in iter(self._extraction_workers.values()):
+    for worker_name, extraction_worker_status in iter(
+        self._extraction_workers.items()):
       if (extraction_worker_status.status ==
           definitions.PROCESSING_STATUS_COMPLETED):
-        logging.debug(u'Worker completed.')
+        logging.debug(u'{0:s} has completed.'.format(worker_name))
         continue
       if (extraction_worker_status.number_of_events_delta > 0 or
           extraction_worker_status.consumed_number_of_path_specs_delta > 0 or
