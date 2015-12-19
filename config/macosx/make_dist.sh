@@ -11,7 +11,6 @@ PKG_IDENTIFIER="com.github.log2timeline.plaso";
 PKG_FILENAME="../python-plaso-${PLASO_VERSION}.pkg";
 DEPSDIR="../l2tdevtools/build";
 DISTDIR="plaso-${PLASO_VERSION}";
-DISTFILE="../plaso-${PLASO_VERSION}_macosx-${MACOSX_VERSION}.dmg";
 
 if test ! -d ${DEPSDIR};
 then
@@ -27,10 +26,14 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-if test ! -z $1;
+if test -z "$1";
 then
-  PLASO_VERSION="${PLASO_VERSION}-$1";
+  DIST_VERSION="${PLASO_VERSION}";
+else
+  DIST_VERSION="${PLASO_VERSION}-$1";
 fi
+
+DISTFILE="../plaso-${DIST_VERSION}-macosx-${MACOSX_VERSION}.dmg";
 
 rm -rf build dist tmp ${DISTDIR} ${PKG_FILENAME} ${DISTFILE};
 
