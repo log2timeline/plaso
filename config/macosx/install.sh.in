@@ -20,9 +20,9 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
-echo "==============================================================="
-echo "        PLASO INSTALLER"
-echo "==============================================================="
+echo "===============================================================";
+echo "                       PLASO INSTALLER";
+echo "===============================================================";
 
 if test "$USER" != "root";
 then
@@ -57,9 +57,8 @@ if test -f "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/
 then
   if test -f "/Library/Python/2.7/site-packages/pyparsing.py";
   then
-    echo "Two versions of the pyparsing module exist. Deleting the system provided one.";
-    # Removing the pyparsing library, including the .py, .pyc and .pyo file if they exist.
-    /bin/rm -rf "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/pyparsing.*"
+    echo "WARNING: Detected multiple version of the pyparsing module on your system.";
+    echo "Use the plaso tools helper scripts e.g. log2timeline.sh instead of the Python scripts: log2timeline.py";
   fi
 fi
 
