@@ -174,6 +174,22 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       # There should be 3 filestat and 3 pe parser generated events.
       self.assertEquals(len(event_objects), 6)
 
+  def testShowInfo(self):
+    """Tests the output of the tool in info mode."""
+    options = cli_test_lib.TestOptions()
+    options.show_info = True
+    self._test_tool.ParseOptions(options)
+    self._test_tool.ShowInfo()
+    output = self._output_writer.ReadOutput()
+
+    section_headings = [
+        u'Parser Presets', u'Hashers', u'Parser Plugins', u'Versions',
+        u'Filters', u'Parsers', u'Output Modules']
+    for heading in section_headings:
+      self.assertIn(heading, output)
+
+    self.assertNotIn(u'<class', output)
+
 
 if __name__ == '__main__':
   unittest.main()
