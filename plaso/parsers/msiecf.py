@@ -70,45 +70,51 @@ class MsiecfRedirectedEvent(time_events.TimestampEvent):
 
 
 class MsiecfUrlEvent(time_events.TimestampEvent):
-  """Convenience class for an MSIECF URL event."""
+  """Convenience class for an MSIECF URL event.
+
+  Attributes:
+    cache_directory_index: an integer containing the cache directory index.
+    cache_directory_name: a string containing the cache directory name.
+    cached_filename: a string containing the cached filename.
+    cached_file_size: an integer containing the cached file size.
+    http_headers: a string containing the HTTP headers.
+    number_of_hits: an integer containing the number of hits.
+    offset: an integer containing the MSIECF record offset.
+    recovered: a boolean value to indicate the item was recovered.
+    url: a string containing the location URL.
+  """
 
   DATA_TYPE = u'msiecf:url'
 
   def __init__(
       self, timestamp, timestamp_description, cache_directories, msiecf_item,
-      recovered=False):
+      http_headers=u'', recovered=False):
     """Initializes the event.
 
     Args:
-      timestamp: The timestamp value.
-      timestamp_description: The usage string describing the timestamp.
-      cache_directories: A list of cache directory names.
-      msiecf_item: The MSIECF item (pymsiecf.url).
-      recovered: Boolean value to indicate the item was recovered, False
-                 by default.
+      timestamp: the timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description: the usage string for the timestamp value.
+      cache_directories: a list of cache directory names.
+      msiecf_item: the MSIECF item (pymsiecf.url).
+      http_headers: a string containing the HTTP headers.
+      recovered: a boolean value to indicate the item was recovered.
     """
     super(MsiecfUrlEvent, self).__init__(timestamp, timestamp_description)
 
-    self.recovered = recovered
-    self.offset = msiecf_item.offset
-
-    self.url = msiecf_item.location
-    self.number_of_hits = msiecf_item.number_of_hits
+    self.cache_directory_index = msiecf_item.cache_directory_index
     self.cached_filename = msiecf_item.filename
     self.cached_file_size = msiecf_item.cached_file_size
+    self.http_headers = http_headers
+    self.number_of_hits = msiecf_item.number_of_hits
+    self.offset = msiecf_item.offset
+    self.recovered = recovered
+    self.url = msiecf_item.location
 
-    self.cache_directory_index = msiecf_item.cache_directory_index
     if (msiecf_item.cache_directory_index >= 0 and
         msiecf_item.cache_directory_index < len(cache_directories)):
       self.cache_directory_name = (
           cache_directories[msiecf_item.cache_directory_index])
-
-    if msiecf_item.type and msiecf_item.data:
-      if msiecf_item.type == u'cache':
-        if msiecf_item.data[:4] == b'HTTP':
-          self.http_headers = msiecf_item.data[:-1]
-      # TODO: parse data of other URL item type like history which requires
-      # OLE VT parsing.
 
 
 class MsiecfParser(interface.FileObjectParser):
@@ -217,15 +223,36 @@ class MsiecfParser(interface.FileObjectParser):
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
             secondary_timestamp, parser_mediator.timezone)
 
+    http_headers = u''
+    if msiecf_item.type and msiecf_item.data:
+      if msiecf_item.type == u'cache':
+        if msiecf_item.data[:4] == b'HTTP':
+          # Make sure the HTTP headers are ASCII encoded.
+          # TODO: determine correct encoding currently indications that
+          # this could be the system narrow string codepage.
+          try:
+            http_headers = msiecf_item.data[:-1].decode(u'ascii')
+          except UnicodeDecodeError:
+            parser_mediator.ProduceParseError((
+                u'unable to decode HTTP headers of URL record at offset: '
+                u'0x{0:08x}. Characters that cannot be decoded will be '
+                u'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
+            http_headers = msiecf_item.data[:-1].decode(
+                u'ascii', errors=u'replace')
+
+      # TODO: parse data of other URL item type like history which requires
+      # OLE VT parsing.
+
     event_object = MsiecfUrlEvent(
         primary_timestamp, primary_timestamp_description, cache_directories,
-        msiecf_item, recovered=recovered)
+        msiecf_item, http_headers=http_headers, recovered=recovered)
     parser_mediator.ProduceEvent(event_object)
 
     if secondary_timestamp > 0:
       event_object = MsiecfUrlEvent(
           secondary_timestamp, secondary_timestamp_description,
-          cache_directories, msiecf_item, recovered=recovered)
+          cache_directories, msiecf_item, http_headers=http_headers,
+          recovered=recovered)
       parser_mediator.ProduceEvent(event_object)
 
     expiration_timestamp = msiecf_item.get_expiration_time_as_integer()
@@ -238,12 +265,12 @@ class MsiecfParser(interface.FileObjectParser):
         event_object = MsiecfUrlEvent(
             timelib.Timestamp.FromFiletime(expiration_timestamp),
             eventdata.EventTimestamp.EXPIRATION_TIME, cache_directories,
-            msiecf_item, recovered=recovered)
+            msiecf_item, http_headers=http_headers, recovered=recovered)
       else:
         event_object = MsiecfUrlEvent(
             timelib.Timestamp.FromFatDateTime(expiration_timestamp),
             eventdata.EventTimestamp.EXPIRATION_TIME, cache_directories,
-            msiecf_item, recovered=recovered)
+            msiecf_item, http_headers=http_headers, recovered=recovered)
 
       parser_mediator.ProduceEvent(event_object)
 
@@ -252,7 +279,7 @@ class MsiecfParser(interface.FileObjectParser):
       event_object = MsiecfUrlEvent(
           timelib.Timestamp.FromFatDateTime(last_checked_timestamp),
           eventdata.EventTimestamp.LAST_CHECKED_TIME, cache_directories,
-          msiecf_item, recovered=recovered)
+          msiecf_item, http_headers=http_headers, recovered=recovered)
       parser_mediator.ProduceEvent(event_object)
 
   @classmethod
