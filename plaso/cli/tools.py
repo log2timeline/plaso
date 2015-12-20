@@ -119,7 +119,8 @@ class CLITool(object):
       data_location = os.path.dirname(data_location)
       data_location = os.path.dirname(data_location)
 
-      # There are two options: running from source or from an egg file.
+      # There are multiple options to run a tool e.g. running from source or
+      # from an egg file.
       data_location_egg = os.path.join(data_location, u'share', u'plaso')
       data_location_source = os.path.join(data_location, u'data')
       data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
