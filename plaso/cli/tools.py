@@ -140,9 +140,6 @@ class CLITool(object):
     if not data_location:
       self._output_writer.Write(
           u'WARNING: unable to determine location of data files.\n')
-    else:
-      self._output_writer.Write(
-          u'Location of data files: {0:s}.\n'.format(data_location))
 
     self._data_location = data_location
 
