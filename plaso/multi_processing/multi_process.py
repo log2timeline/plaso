@@ -1279,8 +1279,6 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
         self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
-    self._extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
-
     self._extraction_worker.SetEnableProfiling(
         self._enable_profiling,
         profiling_sample_rate=self._profiling_sample_rate,

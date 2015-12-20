@@ -148,7 +148,8 @@ class SingleProcessEngine(engine.BaseEngine):
         self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
-    extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
+    # TODO: differentiate between debug output and debug mode.
+    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
 
     extraction_worker.SetEnableProfiling(
         self._enable_profiling,
@@ -269,8 +270,8 @@ class SingleProcessEngine(engine.BaseEngine):
 class SingleProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
   """Class that defines the single process event extraction worker."""
 
-  def _DebugParseFileEntry(self):
-    """Callback for debugging file entry parsing failures."""
+  def _DebugProcessPathSpec(self):
+    """Callback for debugging path specification processing failures."""
     pdb.post_mortem()
 
 
@@ -404,4 +405,11 @@ class SingleProcessQueue(queue.Queue):
 
     This method has no effect on for the single process queue, but is included
     for compatibility with the Multiprocessing queue."""
-    pass
+    return
+
+  def Open(self):
+    """Opens the queue, ready to enqueue or dequeue items.
+
+    This method has no effect on for the single process queue, but is included
+    for compatibility with the Multiprocessing queue."""
+    return
