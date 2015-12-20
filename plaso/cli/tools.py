@@ -113,28 +113,35 @@ class CLITool(object):
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
       data_location = os.path.dirname(__file__)
+
       # In order to get to the main path of the egg file we need to traverse
       # two directories up.
       data_location = os.path.dirname(data_location)
       data_location = os.path.dirname(data_location)
-      # There are two options: running from source or from an egg file.
+
+      # There are multiple options to run a tool e.g. running from source or
+      # from an egg file.
       data_location_egg = os.path.join(data_location, u'share', u'plaso')
       data_location_source = os.path.join(data_location, u'data')
+      data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
+      data_location_system_local = os.path.join(
+          sys.prefix, u'local', u'share', u'plaso')
 
       if os.path.exists(data_location_egg):
         data_location = data_location_egg
       elif os.path.exists(data_location_source):
         data_location = data_location_source
+      elif os.path.exists(data_location_system):
+        data_location = data_location_system
+      elif os.path.exists(data_location_system_local):
+        data_location = data_location_system_local
       else:
-        # Otherwise determine if there is shared plaso data location.
-        data_location = os.path.join(sys.prefix, u'share', u'plaso')
+        data_location = None
 
-        if not os.path.exists(data_location):
-          data_location = None
+    if not data_location:
+      self._output_writer.Write(
+          u'WARNING: unable to determine location of data files.\n')
 
-    logging.info(
-        u'Data files will be loaded from {0:s} by default.'.format(
-            data_location))
     self._data_location = data_location
 
   def _ParseInformationalOptions(self, options):
