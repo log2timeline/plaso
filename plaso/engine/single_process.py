@@ -247,6 +247,8 @@ class SingleProcessEngine(engine.BaseEngine):
     self._UpdateExtractionWorkerStatus()
     self._UpdateStorageWriterStatus()
 
+    # TODO: fix storage writer indicating completed status.
+
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
