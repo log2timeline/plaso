@@ -21,9 +21,7 @@ from plaso.parsers import mediator as parsers_mediator
 class SingleProcessCollector(collector.Collector):
   """Class that implements a single process collector object."""
 
-  def __init__(
-      self, path_spec_queue, resolver_context=None,
-      status_update_callback=None):
+  def __init__(self, path_spec_queue, resolver_context=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -36,9 +34,6 @@ class SingleProcessCollector(collector.Collector):
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
       resolver_context: optional resolver context (instance of dfvfs.Context).
-      status_update_callback: optional callback function for status updates.
-                              This callback is invoked when the collector
-                              or sub file system collector flushes its queue.
     """
     super(SingleProcessCollector, self).__init__(
         path_spec_queue, resolver_context=resolver_context)
@@ -47,21 +42,17 @@ class SingleProcessCollector(collector.Collector):
     self._fs_collector = SingleProcessFileSystemCollector(
         path_spec_queue, resolver_context=resolver_context,
         status_update_callback=self._UpdateStatus)
-    self._status_update_callback = status_update_callback
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
+    self._UpdateStatus()
     while not self._queue.IsEmpty():
-      self._UpdateStatus()
       self._extraction_worker.Run()
 
   def _UpdateStatus(self):
     """Updates the processing status."""
     # Set the collector status to waiting while emptying the queue.
     self._status = definitions.PROCESSING_STATUS_WAITING
-
-    if self._status_update_callback:
-      self._status_update_callback()
 
   def SetExtractionWorker(self, extraction_worker):
     """Sets the extraction worker.
@@ -128,8 +119,7 @@ class SingleProcessEngine(engine.BaseEngine):
       A collector object (instance of Collector).
     """
     collector_object = SingleProcessCollector(
-        self._path_spec_queue, resolver_context=resolver_context,
-        status_update_callback=self._UpdateStatus)
+        self._path_spec_queue, resolver_context=resolver_context)
 
     collector_object.SetCollectDirectoryMetadata(include_directory_stat)
 
@@ -227,7 +217,11 @@ class SingleProcessEngine(engine.BaseEngine):
     status_indicator = status.get(u'processing_status', None)
     number_of_events = status.get(u'number_of_events', 0)
 
-    if status_indicator == definitions.PROCESSING_STATUS_INITIALIZED:
+    if status_indicator in (
+        definitions.PROCESSING_STATUS_COMPLETED,
+        definitions.PROCESSING_STATUS_INITIALIZED):
+      # If the storage writer is initialized or completed in single
+      # processing it is actually waiting for input.
       status_indicator = definitions.PROCESSING_STATUS_WAITING
 
     self._processing_status.UpdateStorageWriterStatus(
@@ -243,8 +237,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._UpdateCollectorStatus()
     self._UpdateExtractionWorkerStatus()
     self._UpdateStorageWriterStatus()
-
-    # TODO: fix storage writer indicating completed status.
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
@@ -427,10 +419,10 @@ class SingleProcessFileSystemCollector(collector.FileSystemCollector):
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
-    while not self._queue.IsEmpty():
-      if self._status_update_callback:
-        self._status_update_callback()
+    if self._status_update_callback:
+      self._status_update_callback()
 
+    while not self._queue.IsEmpty():
       self._extraction_worker.Run()
 
   def SetExtractionWorker(self, extraction_worker):
