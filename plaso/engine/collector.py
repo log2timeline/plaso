@@ -115,16 +115,18 @@ class Collector(queue.ItemQueueProducer):
       logging.warning(u'No files to collect.')
       return
 
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-
     for source_path_spec in source_path_specs:
       if self._abort:
         break
 
+      self._status = definitions.PROCESSING_STATUS_RUNNING
       self._ProcessPathSpec(
           source_path_spec, find_specs=self._filter_find_specs)
 
-    self._status = definitions.PROCESSING_STATUS_COMPLETED
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""

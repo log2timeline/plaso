@@ -37,6 +37,8 @@ class SingleProcessCollector(collector.Collector):
                        to be processed.
       resolver_context: optional resolver context (instance of dfvfs.Context).
       status_update_callback: optional callback function for status updates.
+                              This callback is invoked when the collector
+                              or sub file system collector flushes its queue.
     """
     super(SingleProcessCollector, self).__init__(
         path_spec_queue, resolver_context=resolver_context)
@@ -49,18 +51,13 @@ class SingleProcessCollector(collector.Collector):
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
-    self._status = definitions.PROCESSING_STATUS_WAITING
-
     while not self._queue.IsEmpty():
-      if self._status_update_callback:
-        self._status_update_callback()
-
+      self._UpdateStatus()
       self._extraction_worker.Run()
-
-    self._status = definitions.PROCESSING_STATUS_RUNNING
 
   def _UpdateStatus(self):
     """Updates the processing status."""
+    # Set the collector status to waiting while emptying the queue.
     self._status = definitions.PROCESSING_STATUS_WAITING
 
     if self._status_update_callback:
@@ -419,6 +416,8 @@ class SingleProcessFileSystemCollector(collector.FileSystemCollector):
       processing_status: the processing status (instance of ProcessingStatus).
       resolver_context: optional resolver context (instance of dfvfs.Context).
       status_update_callback: optional callback function for status updates.
+                              This callback is invoked when the collector
+                              flushes its queue.
     """
     super(SingleProcessFileSystemCollector, self).__init__(
         path_spec_queue, resolver_context=resolver_context)
