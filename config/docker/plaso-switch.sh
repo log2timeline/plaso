@@ -13,7 +13,7 @@
 # or, if one wants to run it on actual data:
 # mkdir -p /data/artifacts  # put your artifacts to parse here
 # mkdir -p /data/results    # plaso dump will appear hear
-# docker run -v /data/:/data <containers_id> log2timeline \
+# docker run -v /data/:/data <container_id> log2timeline \
 #     /data/results/result.plaso /data/artifacts
 
 case "$1" in
