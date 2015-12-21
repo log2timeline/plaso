@@ -6,7 +6,7 @@ MAINTAINER Romain Gayon <romaing@google.com>
 #
 # Run log2timeline on artifacts stored in /data/artifacts
 # with :
-# docker run -ti -v /data/:/data/ <containers_id> log2timeline \
+# docker run -ti -v /data/:/data/ <container_id> log2timeline \
 #   /data/results/result.plaso /data/artifacts
 
 RUN apt-get -y install software-properties-common apt-transport-https
