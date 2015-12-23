@@ -47,7 +47,7 @@ do
   SH_FILE=${PY_FILE/.py/.sh};
   cat > ${SH_FILE} << EOT
 #!/bin/sh
-PYTHONPATH=/Library/Python/2.7/site-packages/ \${0/.sh/.py};
+PYTHONPATH=/Library/Python/2.7/site-packages/ \${0/.sh/.py} \$*;
 EOT
   chmod a+x ${SH_FILE};
 done
