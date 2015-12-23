@@ -398,8 +398,9 @@ class ExtractionFrontend(frontend.Frontend):
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,
       enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
-      parser_filter_string=None, preferred_encoding=u'utf-8',
-      single_process_mode=False, status_update_callback=None,
+      number_of_extraction_workers=0, parser_filter_string=None,
+      preferred_encoding=u'utf-8', single_process_mode=False,
+      status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
       timezone=pytz.UTC):
     """Processes the sources.
@@ -415,6 +416,9 @@ class ExtractionFrontend(frontend.Frontend):
       filter_file: optional path to a file that contains find specifications.
       hasher_names_string: optional comma separated string of names of
                            hashers to enable.
+      number_of_extraction_workers: the number of extraction workers to run. If
+                                    0, the number will be selected
+                                    automatically.
       parser_filter_string: optional parser filter string.
       preferred_encoding: optional preferred encoding.
       single_process_mode: optional boolean value to indicate if the front-end
@@ -553,6 +557,7 @@ class ExtractionFrontend(frontend.Frontend):
             hasher_names_string=hasher_names_string,
             include_directory_stat=include_directory_stat,
             mount_path=self._mount_path,
+            number_of_extraction_workers=number_of_extraction_workers,
             parser_filter_string=parser_filter_string,
             process_archive_files=self._process_archive_files,
             status_update_callback=status_update_callback,

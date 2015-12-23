@@ -79,7 +79,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._compressed_stream_path_spec = None
     self._current_display_name = u''
     self._current_file_entry = None
-    self._enable_debug_output = False
+    self._enable_debug_mode = False
     self._identifier = identifier
     self._identifier_string = u'Worker_{0:d}'.format(identifier)
     self._file_scanner = None
@@ -141,6 +141,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if self._compressed_stream_path_spec:
       self._ProcessPathSpec(self._compressed_stream_path_spec)
       self._compressed_stream_path_spec = None
+
+  def _DebugProcessPathSpec(self):
+    """Callback for debugging path specification processing failures."""
+    return
 
   def _GetSignatureMatchParserNames(self, file_object):
     """Determines if a file-like object matches one of the known signatures.
@@ -603,10 +607,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'Unhandled exception while processing path spec: {0:s}.'.format(
               path_spec.comparable))
       logging.exception(exception)
-      # TODO: Issue #314 - add a signal to the worker to indicate that
-      # the tool is run in single process mode with debug turned on and
-      # in that case start a pdb debugger here instead of just logging
-      # the exception.
+
+      if self._enable_debug_mode:
+        self._DebugProcessPathSpec()
 
     # Make sure frame.f_locals does not keep a reference to file_entry.
     file_entry = None
@@ -719,14 +722,14 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if self._enable_profiling:
       self._ProfilingStop()
 
-  def SetEnableDebugOutput(self, enable_debug_output):
-    """Enables or disables debug output.
+  def SetEnableDebugMode(self, enable_debug_mode):
+    """Enables or disables debug mode.
 
     Args:
-      enable_debug_output: boolean value to indicate if the debug output
-                           should be enabled.
+      enable_debug_mode: boolean value to indicate if the debug mode
+                         should be enabled.
     """
-    self._enable_debug_output = enable_debug_output
+    self._enable_debug_mode = enable_debug_mode
 
   def SetEnableProfiling(
       self, enable_profiling, profiling_sample_rate=1000,
