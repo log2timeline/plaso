@@ -67,8 +67,11 @@ class OleCfParser(interface.FileObjectParser):
           u'unable to open file with error: {0:s}'.format(exception))
       return
 
-    # Get a list of all root items from the OLE CF file.
     root_item = olecf_file.root_item
+    if not root_item:
+      return
+
+    # Get a list of all items in the root item from the OLE CF file.
     item_names = [item.name for item in root_item.sub_items]
 
     # Compare the list of available plugins.
