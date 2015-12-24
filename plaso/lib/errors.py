@@ -6,11 +6,11 @@ class Error(Exception):
 
 
 class BadConfigObject(Error):
-  """Raised when the CLI argument helper is of the wrong type."""
+  """Raised when the configuration object is of the wrong type."""
 
 
 class BadConfigOption(Error):
-  """Raised when the engine is started with a faulty parameter."""
+  """Raised when a faulty configuration option is encountered."""
 
 
 class CollectorError(Error):
