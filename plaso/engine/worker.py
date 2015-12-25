@@ -39,6 +39,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   # TSK metadata files that need special handling.
   _METADATA_FILE_LOCATIONS_TSK = frozenset([
+      # NTFS
       u'/$AttrDef',
       u'/$BadClus',
       u'/$Bitmap',
@@ -55,10 +56,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       u'/$Secure',
       u'/$UpCase',
       u'/$Volume',
+      # HFS+/HFSX
+      u'/$ExtentsFile',
+      u'/$CatalogFile',
+      u'/$BadBlockFile',
+      u'/$AllocationFile',
+      u'/$AttributesFile',
   ])
 
   _CHROME_CACHE_DATA_FILE_RE = re.compile(r'^[fF]_[0-9]{6}$')
-  _FIREFOX_CACHE_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
+  _FIREFOX_CACHE2_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
+  _FSEVENTSD_FILE_RE = re.compile(r'^[0-9a-fA-F]{16}$')
 
   def __init__(
       self, identifier, path_spec_queue, event_queue_producer,
@@ -125,6 +133,56 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     for filter_object in parser_object.FILTERS:
       if filter_object.Match(file_entry):
+        return True
+
+    return False
+
+  def _CanSkipContentExtraction(self, file_entry):
+    """Determines if content extraction of a file entry can be skipped.
+
+    Args:
+      file_entry: the file entry relating to the data to be hashed (instance of
+                  dfvfs.FileEntry)
+
+    Returns:
+      A boolean value to indicate the content extraction can be skipped.
+    """
+    # TODO: make the checks in this function more generic.
+    location = getattr(file_entry.path_spec, u'location', None)
+    if not location:
+      return False
+
+    data_stream_name = getattr(file_entry.path_spec, u'data_stream', None)
+    if data_stream_name:
+      return False
+
+    file_system = file_entry.GetFileSystem()
+
+    path_segments = file_system.SplitPath(location)
+
+    if self._CHROME_CACHE_DATA_FILE_RE.match(path_segments[-1]):
+      location = file_system.JoinPath([path_segments[:-1], u'index'])
+      index_path_spec = path_spec_factory.Factory.NewPathSpec(
+          file_entry.type_indicator, location=location,
+          parent=file_entry.parent)
+
+      if file_system.FileEntryExistsByPathSpec(index_path_spec):
+        # TODO: improve this check if "index" is a Chrome Cache index file.
+        return True
+
+    elif self._FIREFOX_CACHE2_DATA_FILE_RE.match(path_segments[-1]):
+      location = file_system.JoinPath([path_segments[:-2], u'index'])
+      index_path_spec = path_spec_factory.Factory.NewPathSpec(
+          file_entry.type_indicator, location=location,
+          parent=file_entry.parent)
+
+      if file_system.FileEntryExistsByPathSpec(index_path_spec):
+        # TODO: improve this check if "index" is a Firefox Cache version 2
+        # index file.
+        return True
+
+    elif self._FSEVENTSD_FILE_RE.match(path_segments[-1]):
+      if len(path_segments) == 2 and path_segments[0] == u'.fseventsd':
         return True
 
     return False
@@ -499,37 +557,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[ProcessFileEntry] processing file entry: {0:s}'.format(
         self._current_display_name))
 
-    # TODO: make these checks more generic.
-
-    # Determine if the content of the file entry should not be extracted.
-    skip_content_extraction = False
-
-    location = getattr(file_entry.path_spec, u'location', None)
-    if location:
-      file_system = file_entry.GetFileSystem()
-
-      path_segments = file_system.SplitPath(location)
-
-      if self._CHROME_CACHE_DATA_FILE_RE.match(path_segments[-1]):
-        location = file_system.JoinPath([path_segments[:-1], u'index'])
-        index_path_spec = path_spec_factory.Factory.NewPathSpec(
-            file_entry.type_indicator, location=location,
-            parent=file_entry.parent)
-
-        if file_system.FileEntryExistsByPathSpec(index_path_spec):
-          # TODO: improve this check if "index" is a Chrome Cache index file.
-          skip_content_extraction = True
-
-      elif self._FIREFOX_CACHE_DATA_FILE_RE.match(path_segments[-1]):
-        location = file_system.JoinPath([path_segments[:-2], u'index'])
-        index_path_spec = path_spec_factory.Factory.NewPathSpec(
-            file_entry.type_indicator, location=location,
-            parent=file_entry.parent)
-
-        if file_system.FileEntryExistsByPathSpec(index_path_spec):
-          # TODO: improve this check if "index" is a Firefox Cache index file.
-          skip_content_extraction = True
-
     try:
       if self._IsMetadataFile(file_entry):
         parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
@@ -563,6 +590,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           self._ParseFileEntryWithParser(
               self._filestat_parser_object, file_entry)
 
+        # Determine if the content of the file entry should not be extracted.
+        skip_content_extraction = self._CanSkipContentExtraction(file_entry)
         if not skip_content_extraction:
           is_archive = False
           is_compressed_stream = False
