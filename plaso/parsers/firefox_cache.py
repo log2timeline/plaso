@@ -43,8 +43,6 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
   # pylint: disable=abstract-method
 
-  DESCRIPTION = u'Parser for Firefox Cache files.'
-
   _MAXIMUM_URL_LENGTH = 65536
 
   _REQUEST_METHODS = frozenset([
@@ -129,11 +127,13 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
 
 class FirefoxCacheParser(BaseFirefoxCacheParser):
-  """Parses Firefox 31 or earlier cache files."""
+  """Parses Firefox cache version 1 files (Firefox 31 or earlier)."""
 
   NAME = u'firefox_cache'
+  DESCRIPTION = (
+      u'Parser for Firefox Cache version 1 files (Firefox 31 or earlier).')
 
-  CACHE_VERSION = 1
+  _CACHE_VERSION = 1
 
   # Initial size of Firefox 4 and later cache files.
   _INITIAL_CACHE_FILE_SIZE = 4 * 1024 * 1024
@@ -264,7 +264,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
         u'request_method': request_method,
         u'request_size': cache_record_header.request_size,
         u'response_code': response_code,
-        u'version': self.CACHE_VERSION,
+        u'version': self._CACHE_VERSION,
         u'url': url}
 
     fetched = FirefoxCacheEvent(
@@ -332,11 +332,13 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
 
 class FirefoxCache2Parser(BaseFirefoxCacheParser):
-  """Parses Firefox cache version 2 (Firefox 32 or later) files."""
+  """Parses Firefox cache version 2 files (Firefox 32 or later)."""
 
   NAME = u'firefox_cache2'
+  DESCRIPTION = (
+      u'Parser for Firefox Cache version 2 files (Firefox 32 or later).')
 
-  CACHE_VERSION = 2
+  _CACHE_VERSION = 2
 
   # Cache 2 filenames are SHA-1 hex digests.
   # TODO: change into regexp.
@@ -437,7 +439,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
         u'request_method': request_method,
         u'request_size': cache_record_header.request_size,
         u'response_code': response_code,
-        u'version': self.CACHE_VERSION,
+        u'version': self._CACHE_VERSION,
         u'url': url}
 
     event_object = FirefoxCacheEvent(
