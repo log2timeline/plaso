@@ -30,7 +30,6 @@ class Collector(queue.ItemQueueProducer):
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
       resolver_context: optional resolver context (instance of dfvfs.Context).
-                        The default is None.
     """
     super(Collector, self).__init__(path_spec_queue)
     self._filter_find_specs = None
@@ -46,7 +45,7 @@ class Collector(queue.ItemQueueProducer):
     Args:
       path_spec: the path specification of the root of the file system.
       find_specs: optional list of find specifications (instances of
-                  dfvfs.FindSpec). The default is None.
+                  dfvfs.FindSpec).
     """
     try:
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
@@ -76,7 +75,7 @@ class Collector(queue.ItemQueueProducer):
       path_spec: the path specification (instance of dfvfs.path.PathSpec)
                  to process.
       find_specs: optional list of find specifications (instances of
-                  dfvfs.FindSpec). The default is None.
+                  dfvfs.FindSpec).
     """
     try:
       file_entry = path_spec_resolver.Resolver.OpenFileEntry(
@@ -116,16 +115,18 @@ class Collector(queue.ItemQueueProducer):
       logging.warning(u'No files to collect.')
       return
 
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-
     for source_path_spec in source_path_specs:
       if self._abort:
         break
 
+      self._status = definitions.PROCESSING_STATUS_RUNNING
       self._ProcessPathSpec(
           source_path_spec, find_specs=self._filter_find_specs)
 
-    self._status = definitions.PROCESSING_STATUS_COMPLETED
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""
@@ -166,7 +167,7 @@ class Collector(queue.ItemQueueProducer):
 class FileSystemCollector(queue.ItemQueueProducer):
   """Class that implements a file system collector object."""
 
-  def __init__(self, path_spec_queue):
+  def __init__(self, path_spec_queue, resolver_context=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -178,11 +179,13 @@ class FileSystemCollector(queue.ItemQueueProducer):
                        This queue contains path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
+      resolver_context: optional resolver context (instance of dfvfs.Context).
     """
     super(FileSystemCollector, self).__init__(path_spec_queue)
     self._collect_directory_metadata = True
     self._duplicate_file_check = False
     self._hashlist = {}
+    self._resolver_context = resolver_context
 
   def _CalculateNTFSTimeHash(self, file_entry):
     """Return a hash value calculated from a NTFS file's metadata.
@@ -307,7 +310,7 @@ class FileSystemCollector(queue.ItemQueueProducer):
       file_system: the file system (instance of dfvfs.FileSystem).
       path_spec: the path specification (instance of dfvfs.PathSpec).
       find_specs: optional list of find specifications (instances of
-                  dfvfs.FindSpec). The default is None.
+                  dfvfs.FindSpec).
     """
     if find_specs:
       searcher = file_system_searcher.FileSystemSearcher(file_system, path_spec)
