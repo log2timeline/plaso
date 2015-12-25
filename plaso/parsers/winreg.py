@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
-import logging
-
 from plaso.dfwinreg import errors as dfwinreg_errors
 from plaso.dfwinreg import interface as dfwinreg_interface
 from plaso.dfwinreg import regf as dfwinreg_regf
@@ -29,13 +27,9 @@ class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
         ascii_codepage=ascii_codepage)
 
-    try:
-      registry_file.Open(file_object)
-    except IOError as exception:
-      logging.warning(
-          u'Unable to open Windows Registry file with error: {0:s}'.format(
-              exception))
-      return
+    # We don't catch any IOErrors here since we want to produce a parse error
+    # from the parser if this happens.
+    registry_file.Open(file_object)
 
     return registry_file
 
@@ -134,7 +128,14 @@ class WinRegistryParser(interface.FileObjectParser):
       file_object: a file-like object.
     """
     win_registry_reader = FileObjectWinRegistryFileReader()
-    registry_file = win_registry_reader.Open(file_object)
+
+    try:
+      registry_file = win_registry_reader.Open(file_object)
+    except IOError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to open Windows Registry file with error: {0:s}'.format(
+              exception))
+      return
 
     win_registry = dfwinreg_registry.WinRegistry()
     key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)

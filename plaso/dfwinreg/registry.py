@@ -307,6 +307,9 @@ class WinRegistry(object):
       RuntimeError: if there are multiple matching mappings and
                     the correct mapping cannot be resolved.
     """
+    if not registry_file:
+      return u''
+
     candidate_mappings = []
     for mapping in self._REGISTRY_FILE_MAPPINGS_NT:
       if not mapping.unique_key_paths:
