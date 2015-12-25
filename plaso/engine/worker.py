@@ -3,6 +3,7 @@
 
 import logging
 import os
+import re
 
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -55,6 +56,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       u'/$UpCase',
       u'/$Volume',
   ])
+
+  _CHROME_CACHE_DATA_FILE_RE = re.compile(r'^[fF]_[0-9]{6}$')
+  _FIREFOX_CACHE_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
 
   def __init__(
       self, identifier, path_spec_queue, event_queue_producer,
@@ -495,6 +499,36 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[ProcessFileEntry] processing file entry: {0:s}'.format(
         self._current_display_name))
 
+    # TODO: make these checks more generic.
+
+    # Determine if the content of the file entry should not be extracted.
+    skip_content_extraction = False
+
+    location = getattr(file_entry.path_spec, u'location', None)
+    if location:
+      file_system = file_entry.GetFileSystem()
+
+      path_segments = file_system.SplitPath(location)
+
+      if self._CHROME_CACHE_DATA_FILE_RE.match(path_segments[-1]):
+        location = file_system.JoinPath([path_segments[:-1], u'index'])
+        index_path_spec = path_spec_factory.Factory.NewPathSpec(
+            file_entry.type_indicator, location=location,
+            parent=file_entry.parent)
+
+        if file_system.FileEntryExistsByPathSpec(index_path_spec):
+          # TODO: improve this check if "index" is a Chrome Cache index file.
+          skip_content_extraction = True
+
+      elif self._FIREFOX_CACHE_DATA_FILE_RE.match(path_segments[-1]):
+        location = file_system.JoinPath([path_segments[:-2], u'index'])
+        index_path_spec = path_spec_factory.Factory.NewPathSpec(
+            file_entry.type_indicator, location=location,
+            parent=file_entry.parent)
+
+        if file_system.FileEntryExistsByPathSpec(index_path_spec):
+          # TODO: improve this check if "index" is a Firefox Cache index file.
+          skip_content_extraction = True
 
     try:
       if self._IsMetadataFile(file_entry):
@@ -529,16 +563,18 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           self._ParseFileEntryWithParser(
               self._filestat_parser_object, file_entry)
 
-        is_archive = False
-        is_compressed_stream = False
+        if not skip_content_extraction:
+          is_archive = False
+          is_compressed_stream = False
 
-        if file_entry.IsFile():
-          is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
-          if not is_compressed_stream:
-            is_archive = self._ProcessArchiveFile(file_entry)
+          if file_entry.IsFile():
+            is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
+            if not is_compressed_stream:
+              is_archive = self._ProcessArchiveFile(file_entry)
 
-        if has_data_stream and not is_archive and not is_compressed_stream:
-          self._ProcessDataStream(file_entry, data_stream_name=data_stream_name)
+          if has_data_stream and not is_archive and not is_compressed_stream:
+            self._ProcessDataStream(
+                file_entry, data_stream_name=data_stream_name)
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(

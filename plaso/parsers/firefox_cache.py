@@ -129,136 +129,9 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
 
 class FirefoxCacheParser(BaseFirefoxCacheParser):
-  """Parses Firefox 32 or later cache files."""
-
-  NAME = u'firefox_cache'
-
-  CACHE_VERSION = 2
-
-  # Cache 2 filenames are SHA-1 hex digests.
-  # TODO: change into regexp.
-  _CACHE_FILENAME = pyparsing.Word(pyparsing.hexnums, exact=40)
-
-  # The last four bytes of a file gives the size of the cached content.
-  _LENGTH = construct.UBInt32(u'length')
-
-  _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      u'record_header',
-      construct.UBInt32(u'major'),
-      construct.UBInt32(u'fetch_count'),
-      construct.UBInt32(u'last_fetched'),
-      construct.UBInt32(u'last_modified'),
-      construct.UBInt32(u'frequency'),
-      construct.UBInt32(u'expire_time'),
-      construct.UBInt32(u'request_size'))
-
-  _CHUNK_SIZE = 512 * 1024
-
-  def _GetStartOfMetadata(self, file_object):
-    """Determine the byte offset of the cache record metadata in cache file.
-
-     This method is inspired by the work of James Habben:
-     https://github.com/JamesHabben/FirefoxCache2
-
-    Args:
-      file_object: The file containing the cache record.
-    """
-    file_object.seek(-4, os.SEEK_END)
-
-    try:
-      length = self._LENGTH.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      raise IOError(u'Could not find metadata offset in Firefox cache file.')
-
-    # Firefox splits the content into chunks.
-    hash_chunks, remainder = divmod(length, self._CHUNK_SIZE)
-    if remainder != 0:
-      hash_chunks += 1
-
-    # Each chunk in the cached record is padded with two bytes.
-    return length + (hash_chunks * 2)
-
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a Firefox cache file-like object.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    # TODO: determine if the minimum file size is really 4 bytes.
-    if file_object.get_size() < 4:
-      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
-
-    filename = parser_mediator.GetFilename()
-    try:
-      # Match cache2 filename (SHA-1 hex of cache record key).
-      self._CACHE_FILENAME.parseString(filename)
-    except pyparsing.ParseException:
-      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
-
-    if file_object.get_size() == 0:
-      raise errors.UnableToParseFile(u'Empty file.')
-
-    meta_start = self._GetStartOfMetadata(file_object)
-
-    file_object.seek(meta_start, os.SEEK_SET)
-
-    # Skip the first 4 bytes of metadata which contains a hash value of
-    # the cached content.
-    file_object.seek(4, os.SEEK_CUR)
-
-    try:
-      cache_record_header = self._CACHE_RECORD_HEADER_STRUCT.parse_stream(
-          file_object)
-    except (IOError, construct.FieldError):
-      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
-
-    if not self._ValidateCacheRecordHeader(cache_record_header):
-      raise errors.UnableToParseFile(u'Not a valid Firefox cache2 record.')
-
-    url = file_object.read(cache_record_header.request_size)
-
-    header_data = file_object.read()
-
-    display_name = parser_mediator.GetDisplayName()
-    request_method, response_code = self._ParseHTTPHeaders(
-        header_data, meta_start, display_name)
-
-    cache_record_values = {
-        u'fetch_count': cache_record_header.fetch_count,
-        u'frequency': cache_record_header.frequency,
-        u'major': cache_record_header.major,
-        u'request_method': request_method,
-        u'request_size': cache_record_header.request_size,
-        u'response_code': response_code,
-        u'version': self.CACHE_VERSION,
-        u'url': url}
-
-    event_object = FirefoxCacheEvent(
-        cache_record_header.last_fetched,
-        eventdata.EventTimestamp.LAST_VISITED_TIME, cache_record_values)
-    parser_mediator.ProduceEvent(event_object)
-
-    if cache_record_header.last_modified:
-      event_object = FirefoxCacheEvent(
-          cache_record_header.last_modified,
-          eventdata.EventTimestamp.WRITTEN_TIME, cache_record_values)
-      parser_mediator.ProduceEvent(event_object)
-
-    if cache_record_header.expire_time:
-      event_object = FirefoxCacheEvent(
-          cache_record_header.expire_time,
-          eventdata.EventTimestamp.EXPIRATION_TIME, cache_record_values)
-      parser_mediator.ProduceEvent(event_object)
-
-
-class FirefoxOldCacheParser(BaseFirefoxCacheParser):
   """Parses Firefox 31 or earlier cache files."""
 
-  NAME = u'firefox_old_cache'
+  NAME = u'firefox_cache'
 
   CACHE_VERSION = 1
 
@@ -458,5 +331,132 @@ class FirefoxOldCacheParser(BaseFirefoxCacheParser):
             u'{2:d}.').format(self.NAME, display_name, file_offset))
 
 
+class FirefoxCache2Parser(BaseFirefoxCacheParser):
+  """Parses Firefox cache version 2 (Firefox 32 or later) files."""
+
+  NAME = u'firefox_cache2'
+
+  CACHE_VERSION = 2
+
+  # Cache 2 filenames are SHA-1 hex digests.
+  # TODO: change into regexp.
+  _CACHE_FILENAME = pyparsing.Word(pyparsing.hexnums, exact=40)
+
+  # The last four bytes of a file gives the size of the cached content.
+  _LENGTH = construct.UBInt32(u'length')
+
+  _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
+      u'record_header',
+      construct.UBInt32(u'major'),
+      construct.UBInt32(u'fetch_count'),
+      construct.UBInt32(u'last_fetched'),
+      construct.UBInt32(u'last_modified'),
+      construct.UBInt32(u'frequency'),
+      construct.UBInt32(u'expire_time'),
+      construct.UBInt32(u'request_size'))
+
+  _CHUNK_SIZE = 512 * 1024
+
+  def _GetStartOfMetadata(self, file_object):
+    """Determine the byte offset of the cache record metadata in cache file.
+
+     This method is inspired by the work of James Habben:
+     https://github.com/JamesHabben/FirefoxCache2
+
+    Args:
+      file_object: The file containing the cache record.
+    """
+    file_object.seek(-4, os.SEEK_END)
+
+    try:
+      length = self._LENGTH.parse_stream(file_object)
+    except (IOError, construct.FieldError):
+      raise IOError(u'Could not find metadata offset in Firefox cache file.')
+
+    # Firefox splits the content into chunks.
+    hash_chunks, remainder = divmod(length, self._CHUNK_SIZE)
+    if remainder != 0:
+      hash_chunks += 1
+
+    # Each chunk in the cached record is padded with two bytes.
+    return length + (hash_chunks * 2)
+
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Firefox cache file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    # TODO: determine if the minimum file size is really 4 bytes.
+    if file_object.get_size() < 4:
+      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
+
+    filename = parser_mediator.GetFilename()
+    try:
+      # Match cache2 filename (SHA-1 hex of cache record key).
+      self._CACHE_FILENAME.parseString(filename)
+    except pyparsing.ParseException:
+      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
+
+    if file_object.get_size() == 0:
+      raise errors.UnableToParseFile(u'Empty file.')
+
+    meta_start = self._GetStartOfMetadata(file_object)
+
+    file_object.seek(meta_start, os.SEEK_SET)
+
+    # Skip the first 4 bytes of metadata which contains a hash value of
+    # the cached content.
+    file_object.seek(4, os.SEEK_CUR)
+
+    try:
+      cache_record_header = self._CACHE_RECORD_HEADER_STRUCT.parse_stream(
+          file_object)
+    except (IOError, construct.FieldError):
+      raise errors.UnableToParseFile(u'Not a Firefox cache2 file.')
+
+    if not self._ValidateCacheRecordHeader(cache_record_header):
+      raise errors.UnableToParseFile(u'Not a valid Firefox cache2 record.')
+
+    url = file_object.read(cache_record_header.request_size)
+
+    header_data = file_object.read()
+
+    display_name = parser_mediator.GetDisplayName()
+    request_method, response_code = self._ParseHTTPHeaders(
+        header_data, meta_start, display_name)
+
+    cache_record_values = {
+        u'fetch_count': cache_record_header.fetch_count,
+        u'frequency': cache_record_header.frequency,
+        u'major': cache_record_header.major,
+        u'request_method': request_method,
+        u'request_size': cache_record_header.request_size,
+        u'response_code': response_code,
+        u'version': self.CACHE_VERSION,
+        u'url': url}
+
+    event_object = FirefoxCacheEvent(
+        cache_record_header.last_fetched,
+        eventdata.EventTimestamp.LAST_VISITED_TIME, cache_record_values)
+    parser_mediator.ProduceEvent(event_object)
+
+    if cache_record_header.last_modified:
+      event_object = FirefoxCacheEvent(
+          cache_record_header.last_modified,
+          eventdata.EventTimestamp.WRITTEN_TIME, cache_record_values)
+      parser_mediator.ProduceEvent(event_object)
+
+    if cache_record_header.expire_time:
+      event_object = FirefoxCacheEvent(
+          cache_record_header.expire_time,
+          eventdata.EventTimestamp.EXPIRATION_TIME, cache_record_values)
+      parser_mediator.ProduceEvent(event_object)
+
+
 manager.ParsersManager.RegisterParsers([
-    FirefoxCacheParser, FirefoxOldCacheParser])
+    FirefoxCacheParser, FirefoxCache2Parser])
