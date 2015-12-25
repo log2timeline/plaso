@@ -178,22 +178,34 @@ class SingleProcessEngine(engine.BaseEngine):
 
     return extraction_worker
 
-  def _UpdateCollectorStatus(self):
-    """Updates the collector status."""
+  def _UpdateCollectorStatus(self, processing_completed=False):
+    """Updates the collector status.
+
+    Args:
+      processing_completed: optional boolean value the processing has been
+                            completed.
+    """
     status = self._collector.GetStatus()
     status_indicator = status.get(u'processing_status', None)
     produced_number_of_path_specs = status.get(
         u'produced_number_of_path_specs', 0)
 
-    if status_indicator == definitions.PROCESSING_STATUS_INITIALIZED:
+    if processing_completed:
+      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
+    elif status_indicator == definitions.PROCESSING_STATUS_INITIALIZED:
       status_indicator = definitions.PROCESSING_STATUS_RUNNING
 
     self._processing_status.UpdateCollectorStatus(
         u'Collector', os.getpid(), produced_number_of_path_specs,
         status_indicator, None)
 
-  def _UpdateExtractionWorkerStatus(self):
-    """Updates the extraction worker status."""
+  def _UpdateExtractionWorkerStatus(self, processing_completed=False):
+    """Updates the extraction worker status.
+
+    Args:
+      processing_completed: optional boolean value the processing has been
+                            completed.
+    """
     status = self._extraction_worker.GetStatus()
     status_indicator = status.get(u'processing_status', None)
     consumed_number_of_path_specs = status.get(
@@ -203,7 +215,13 @@ class SingleProcessEngine(engine.BaseEngine):
     produced_number_of_path_specs = status.get(
         u'produced_number_of_path_specs', 0)
 
-    if status_indicator == definitions.PROCESSING_STATUS_INITIALIZED:
+    if processing_completed:
+      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
+    elif status_indicator in (
+        definitions.PROCESSING_STATUS_COMPLETED,
+        definitions.PROCESSING_STATUS_INITIALIZED):
+      # If the worker is initialized or completed in single
+      # processing mode it is actually waiting for input.
       status_indicator = definitions.PROCESSING_STATUS_WAITING
 
     self._processing_status.UpdateExtractionWorkerStatus(
@@ -211,32 +229,45 @@ class SingleProcessEngine(engine.BaseEngine):
         consumed_number_of_path_specs, produced_number_of_path_specs,
         status_indicator, None)
 
-  def _UpdateStorageWriterStatus(self):
-    """Updates the storage writer status."""
+  def _UpdateStorageWriterStatus(self, processing_completed=False):
+    """Updates the storage writer status.
+
+    Args:
+      processing_completed: optional boolean value the processing has been
+                            completed.
+    """
     status = self._storage_writer.GetStatus()
     status_indicator = status.get(u'processing_status', None)
     number_of_events = status.get(u'number_of_events', 0)
 
-    if status_indicator in (
+    if processing_completed:
+      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
+    elif status_indicator in (
         definitions.PROCESSING_STATUS_COMPLETED,
         definitions.PROCESSING_STATUS_INITIALIZED):
       # If the storage writer is initialized or completed in single
-      # processing it is actually waiting for input.
+      # processing mode it is actually waiting for input.
       status_indicator = definitions.PROCESSING_STATUS_WAITING
 
     self._processing_status.UpdateStorageWriterStatus(
         u'StorageWriter', os.getpid(), number_of_events, status_indicator, None)
 
-  def _UpdateStatus(self):
-    """Updates the processing status."""
+  def _UpdateStatus(self, processing_completed=False):
+    """Updates the processing status.
+
+    Args:
+      processing_completed: optional boolean value the processing has been
+                            completed.
+    """
     current_timestamp = time.time()
     if current_timestamp < (
         self._last_status_update_timestamp + self._STATUS_CHECK_SLEEP):
       return
 
-    self._UpdateCollectorStatus()
-    self._UpdateExtractionWorkerStatus()
-    self._UpdateStorageWriterStatus()
+    self._UpdateCollectorStatus(processing_completed=processing_completed)
+    self._UpdateExtractionWorkerStatus(
+        processing_completed=processing_completed)
+    self._UpdateStorageWriterStatus(processing_completed=processing_completed)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
@@ -312,7 +343,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._UpdateStatus()
     self._storage_writer.WriteEventObjects()
 
-    self._UpdateStatus()
+    self._UpdateStatus(processing_completed=True)
 
     # Reset the extraction worker and storage writer values to return
     # the objects in their original state. This will prevent access
