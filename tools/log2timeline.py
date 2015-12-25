@@ -133,13 +133,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       number_of_events_delta: the number of events since the last status update.
       display_name: the display name of the file last processed.
     """
-    if (number_of_events_delta == 0 and
+    if (process_status and number_of_events_delta == 0 and
         status in [definitions.PROCESSING_STATUS_RUNNING,
                    definitions.PROCESSING_STATUS_HASHING,
                    definitions.PROCESSING_STATUS_PARSING]):
       status = process_status
 
     # This check makes sure the columns are tab aligned.
+    if len(identifier) < 8:
+      identifier = u'{0:s}\t'.format(identifier)
+
     if len(status) < 8:
       status = u'{0:s}\t'.format(status)
 
@@ -274,13 +277,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       status_table.append(status_row)
 
-    status_row = self._FormatStatusTableRow(
-        processing_status.storage_writer.identifier,
-        processing_status.storage_writer.pid,
-        processing_status.storage_writer.status,
-        processing_status.storage_writer.process_status,
-        processing_status.storage_writer.number_of_events,
-        processing_status.storage_writer.number_of_events_delta, u'')
+    if processing_status.storage_writer:
+      status_row = self._FormatStatusTableRow(
+          processing_status.storage_writer.identifier,
+          processing_status.storage_writer.pid,
+          processing_status.storage_writer.status,
+          processing_status.storage_writer.process_status,
+          processing_status.storage_writer.number_of_events,
+          processing_status.storage_writer.number_of_events_delta, u'')
 
     status_table.append(status_row)
 
