@@ -32,7 +32,7 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
     values_dict = {}
     for registry_value in registry_key.GetValues():
       value_name = registry_value.name or u'(default)'
-      values_dict[value_name] = registry_value.GetData()
+      values_dict[value_name] = registry_value.GetDataAsObject()
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,
@@ -71,13 +71,13 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         # MSDN: claims that the data type of this value is REG_BINARY
         # although REG_MULTI_SZ is known to be used as well.
         if registry_value.DataIsString():
-          value_string = registry_value.GetData()
+          value_string = registry_value.GetDataAsObject()
 
         elif registry_value.DataIsMultiString():
-          value_string = u''.join(registry_value.GetData())
+          value_string = u''.join(registry_value.GetDataAsObject())
 
         elif registry_value.DataIsBinaryData():
-          value_string = registry_value.GetData()
+          value_string = registry_value.GetDataAsObject()
 
         else:
           value_string = u''
@@ -96,7 +96,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         parser_mediator.ProduceEvent(event_object)
 
       else:
-        values_dict[value_name] = registry_value.GetData()
+        values_dict[value_name] = registry_value.GetDataAsObject()
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,

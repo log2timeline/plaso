@@ -47,7 +47,7 @@ class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
       if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      values_dict[registry_value.name] = registry_value.GetData()
+      values_dict[registry_value.name] = registry_value.GetDataAsObject()
 
     event_object = windows_events.WindowsRegistryEvent(
         registry_key.last_written_time, registry_key.path, values_dict,

@@ -41,16 +41,17 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
               registry_value.data_type_string)
 
         elif registry_value.DataIsString():
-          string_decode = utils.GetUnicodeString(registry_value.GetData())
+          string_decode = utils.GetUnicodeString(
+              registry_value.GetDataAsObject())
           value_string = u'[{0:s}] {1:s}'.format(
               registry_value.data_type_string, string_decode)
 
         elif registry_value.DataIsInteger():
           value_string = u'[{0:s}] {1:d}'.format(
-              registry_value.data_type_string, registry_value.GetData())
+              registry_value.data_type_string, registry_value.GetDataAsObject())
 
         elif registry_value.DataIsMultiString():
-          multi_string = registry_value.GetData()
+          multi_string = registry_value.GetDataAsObject()
           if not isinstance(multi_string, (list, tuple)):
             value_string = u'[{0:s}]'.format(registry_value.data_type_string)
             # TODO: Add a flag or some sort of an anomaly alert.

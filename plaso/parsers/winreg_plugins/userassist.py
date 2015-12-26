@@ -105,7 +105,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceParseError(u'Unsupported version value data type')
       return
 
-    format_version = version_value.GetData()
+    format_version = version_value.GetDataAsObject()
     if format_version not in [3, 5]:
       parser_mediator.ProduceParseError(
           u'Unsupported format version: {0:d}'.format(format_version))

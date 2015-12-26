@@ -1105,13 +1105,13 @@ class PregMagics(magic.Magics):
             u'', u'[' + value.data_type_string, value.name), False))
       else:
         if value.DataIsString():
-          value_string = value.GetData()
+          value_string = value.GetDataAsObject()
 
         elif value.DataIsInteger():
-          value_string = u'{0:d}'.format(value.GetData())
+          value_string = u'{0:d}'.format(value.GetDataAsObject())
 
         elif value.DataIsMultiString():
-          value_string = u'{0:s}'.format(u''.join(value.GetData()))
+          value_string = u'{0:s}'.format(u''.join(value.GetDataAsObject()))
 
         elif value.DataIsBinaryData():
           value_string = hexdump.Hexdump.FormatData(
@@ -1347,7 +1347,7 @@ class PregConsole(object):
     if not registry_value:
       return
 
-    return registry_value.GetData()
+    return registry_value.GetDataAsObject()
 
   def _CommandGetRangeForAllLoadedHives(self):
     """Return a range or a list of all loaded hives."""
