@@ -311,7 +311,7 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(timelib.MONTH_DICT[u'may'], 5)
 
     month = timelib.MONTH_DICT.get(u'doesnotexist')
-    self.assertEqual(month, None)
+    self.assertIsNone(month)
 
   def testLocaltimeToUTC(self):
     """Test the localtime to UTC conversion."""

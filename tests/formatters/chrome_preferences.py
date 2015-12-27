@@ -17,7 +17,7 @@ class ChromeExtensionInstallationEventFormatterTest(
     """Tests the initialization."""
     event_formatter = (
         chrome_preferences.ChromeExtensionInstallationEventFormatter())
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

@@ -13,7 +13,7 @@ class FormatterMediatorTest(unittest.TestCase):
   def testInitialization(self):
     """Tests the initialization."""
     formatter_mediator = mediator.FormatterMediator()
-    self.assertNotEqual(formatter_mediator, None)
+    self.assertIsNotNone(formatter_mediator)
 
 
 if __name__ == '__main__':

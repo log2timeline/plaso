@@ -58,7 +58,7 @@ class EventFormatterTest(unittest.TestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = test_lib.TestEventFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -85,7 +85,7 @@ class ConditionalEventFormatterTest(unittest.TestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = ConditionalTestEventFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
     with self.assertRaises(RuntimeError):
       _ = BrokenConditionalEventFormatter()

@@ -30,7 +30,7 @@ class TestBuffer(unittest.TestCase):
     self.assertEqual(
         [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], list(circular_buffer.Flush()))
 
-    self.assertEqual(circular_buffer.GetCurrent(), None)
+    self.assertIsNone(circular_buffer.GetCurrent())
 
     new_items = range(1, 51)
     for item in new_items:
