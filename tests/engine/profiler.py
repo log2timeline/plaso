@@ -13,7 +13,7 @@ class CPUTimeProfilerTest(unittest.TestCase):
   def testInitialization(self):
     """Tests the initialization."""
     test_profiler = profiler.CPUTimeProfiler(u'test')
-    self.assertNotEqual(test_profiler, None)
+    self.assertIsNotNone(test_profiler)
 
   # TODO: add more tests.
 

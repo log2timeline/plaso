@@ -55,7 +55,7 @@ class DateTimeFileEntryFilter(test_lib.FrontendTestCase):
     date_filter = image_export.DateTimeFileEntryFilter()
 
     # When no date time ranges are specified the filter returns None.
-    self.assertEqual(date_filter.Matches(file_entry), None)
+    self.assertIsNone(date_filter.Matches(file_entry))
 
     # Add a date to the date filter.
     date_filter.AddDateTimeRange(

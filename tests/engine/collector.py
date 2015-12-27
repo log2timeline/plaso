@@ -426,7 +426,7 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(find_specs=find_specs)
-    self.assertNotEqual(path_spec_generator, None)
+    self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.

@@ -15,7 +15,7 @@ class TransmissionEventFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = bencode_parser.TransmissionEventFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -36,7 +36,7 @@ class UTorrentEventFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = bencode_parser.UTorrentEventFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

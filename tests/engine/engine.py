@@ -86,10 +86,10 @@ class BaseEngineTest(test_lib.EngineTestCase):
     test_file_system, test_mount_point = self._test_engine.GetSourceFileSystem(
         source_path_spec, resolver_context=resolver_context)
 
-    self.assertNotEqual(test_file_system, None)
+    self.assertIsNotNone(test_file_system)
     self.assertIsInstance(test_file_system, file_system.FileSystem)
 
-    self.assertNotEqual(test_mount_point, None)
+    self.assertIsNotNone(test_mount_point)
     self.assertIsInstance(test_mount_point, path_spec.PathSpec)
 
     test_file_system.Close()

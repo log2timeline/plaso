@@ -60,11 +60,11 @@ class HashersManagerTest(unittest.TestCase):
   def testGetHasherObject(self):
     """Tests the GetHasherObject function."""
     hasher_object = manager.HashersManager.GetHasherObject(u'md5')
-    self.assertNotEqual(hasher_object, None)
+    self.assertIsNotNone(hasher_object)
     self.assertEqual(hasher_object.NAME, u'md5')
 
     hasher_object = manager.HashersManager.GetHasherObject(u'sha1')
-    self.assertNotEqual(hasher_object, None)
+    self.assertIsNotNone(hasher_object)
     self.assertEqual(hasher_object.NAME, u'sha1')
 
     with self.assertRaises(KeyError):
