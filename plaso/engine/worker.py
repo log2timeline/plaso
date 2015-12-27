@@ -185,6 +185,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       if len(path_segments) == 2 and path_segments[0] == u'.fseventsd':
         return True
 
+    elif len(path_segments) == 1 and path_segments[0] in (
+        u'hiberfil.sys', u'pagefile.sys', u'swapfile.sys'):
+      return True
+
     return False
 
   def _ConsumeItem(self, path_spec, **unused_kwargs):
