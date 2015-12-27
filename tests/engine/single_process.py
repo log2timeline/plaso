@@ -30,14 +30,14 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
     test_collector = self._test_engine._CreateCollector(
         filter_find_specs=None, include_directory_stat=False,
         resolver_context=resolver_context)
-    self.assertNotEqual(test_collector, None)
+    self.assertIsNotNone(test_collector)
     self.assertIsInstance(
         test_collector, single_process.SingleProcessCollector)
 
   def testCreateExtractionWorker(self):
     """Tests the _CreateExtractionWorker function."""
     test_extraction_worker = self._test_engine._CreateExtractionWorker(0)
-    self.assertNotEqual(test_extraction_worker, None)
+    self.assertIsNotNone(test_extraction_worker)
     self.assertIsInstance(
         test_extraction_worker,
         single_process.SingleProcessEventExtractionWorker)

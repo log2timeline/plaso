@@ -28,7 +28,7 @@ class HelperManagerTest(unittest.TestCase):
     options = cli_test_lib.TestOptions()
 
     integer = test_helper._ParseIntegerOption(options, u'test')
-    self.assertEqual(integer, None)
+    self.assertIsNone(integer)
 
     integer = test_helper._ParseIntegerOption(
         options, u'test', default_value=expected_integer)
@@ -60,7 +60,7 @@ class HelperManagerTest(unittest.TestCase):
     options = cli_test_lib.TestOptions()
 
     string = test_helper._ParseStringOption(options, u'test')
-    self.assertEqual(string, None)
+    self.assertIsNone(string)
 
     string = test_helper._ParseStringOption(
         options, u'test', default_value=expected_string)

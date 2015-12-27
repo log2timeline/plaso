@@ -99,7 +99,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
 
     username = self._analysis_mediator.GetUsernameFromPath(
         user_paths, self.WIN_PATHS[0], u'/')
-    self.assertEqual(username, None)
+    self.assertIsNone(username)
 
     user_paths = self._analysis_mediator.GetUserPaths(self.WIN_USERS)
 
@@ -113,7 +113,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
 
     username = self._analysis_mediator.GetUsernameFromPath(
         user_paths, self.MAC_PATHS[2], u'\\')
-    self.assertEqual(username, None)
+    self.assertIsNone(username)
 
 
 if __name__ == '__main__':

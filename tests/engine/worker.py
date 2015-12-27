@@ -42,7 +42,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
         0, path_spec_queue, event_queue_producer, parse_error_queue_producer,
         parser_mediator, resolver_context=resolver_context)
 
-    self.assertNotEqual(extraction_worker, None)
+    self.assertIsNotNone(extraction_worker)
 
     extraction_worker.InitializeParserObjects()
 

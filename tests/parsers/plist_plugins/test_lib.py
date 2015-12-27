@@ -30,7 +30,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     file_entry = self._GetTestFileEntryFromPath(path_segments)
     file_object = file_entry.GetFileObject()
     top_level_object = parser_object.GetTopLevel(file_object)
-    self.assertNotEqual(top_level_object, None)
+    self.assertIsNotNone(top_level_object)
 
     return self._ParsePlistWithPlugin(
         plugin_object, plist_name, top_level_object,

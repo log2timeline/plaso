@@ -153,10 +153,10 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool.ParseOptions(options)
 
     scan_context = test_tool.ScanSource()
-    self.assertNotEqual(scan_context, None)
+    self.assertIsNotNone(scan_context)
 
     scan_node = scan_context.GetRootScanNode()
-    self.assertNotEqual(scan_node, None)
+    self.assertIsNotNone(scan_node)
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
 
@@ -176,10 +176,10 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool.ParseOptions(options)
 
     scan_context = test_tool.ScanSource()
-    self.assertNotEqual(scan_context, None)
+    self.assertIsNotNone(scan_context)
 
     scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
+    self.assertIsNotNone(scan_node)
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
 
@@ -197,10 +197,10 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool.ParseOptions(options)
 
     scan_context = test_tool.ScanSource()
-    self.assertNotEqual(scan_context, None)
+    self.assertIsNotNone(scan_context)
 
     scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
+    self.assertIsNotNone(scan_node)
     self.assertEqual(
         scan_node.type_indicator,
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
@@ -210,7 +210,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       if getattr(scan_node.path_spec, u'location', None) == u'/p2':
         break
 
-    self.assertNotEqual(scan_node, None)
+    self.assertIsNotNone(scan_node)
     self.assertEqual(
         scan_node.type_indicator,
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
@@ -220,7 +220,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(path_spec.start_offset, 180224)
 
     scan_node = scan_node.sub_nodes[0]
-    self.assertNotEqual(scan_node, None)
+    self.assertIsNotNone(scan_node)
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
 
@@ -238,10 +238,10 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool.ParseOptions(options)
 
     scan_context = test_tool.ScanSource()
-    self.assertNotEqual(scan_context, None)
+    self.assertIsNotNone(scan_context)
 
     scan_node = self._GetTestScanNode(scan_context)
-    self.assertNotEqual(scan_node, None)
+    self.assertIsNotNone(scan_node)
     self.assertEqual(
         scan_node.type_indicator,
         dfvfs_definitions.TYPE_INDICATOR_QCOW)
