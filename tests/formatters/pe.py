@@ -15,7 +15,7 @@ class PECompilationTimeFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = pe.PECompilationFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -37,7 +37,7 @@ class PEImportTimeFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = pe.PEImportFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -60,7 +60,7 @@ class PEDelayImportFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = pe.PEDelayImportFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -83,7 +83,7 @@ class PEResourceCreationFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = pe.PEResourceCreationFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -105,7 +105,7 @@ class PELoadConfigModificationEventTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = pe.PELoadConfigModificationEvent()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

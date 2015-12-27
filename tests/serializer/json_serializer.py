@@ -36,7 +36,7 @@ class JSONSerializerTestCase(unittest.TestCase):
     json_string = json.dumps(json_dict)
     unserialized_object = serializer_object.ReadSerialized(json_string)
 
-    self.assertNotEqual(unserialized_object, None)
+    self.assertIsNotNone(unserialized_object)
     return unserialized_object
 
   def _TestWriteSerialized(

@@ -140,7 +140,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
 
     string = cli_tool.ParseStringOption(options, u'test')
-    self.assertEqual(string, None)
+    self.assertIsNone(string)
 
     string = cli_tool.ParseStringOption(
         options, u'test', default_value=expected_string)

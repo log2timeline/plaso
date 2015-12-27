@@ -24,7 +24,7 @@ class KnowledgeBaseTest(unittest.TestCase):
     self.assertEqual(value, expected_value)
 
     value = knowledge_base_object.GetValue(u'Bogus')
-    self.assertEqual(value, None)
+    self.assertIsNone(value)
 
 
 if __name__ == '__main__':

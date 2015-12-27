@@ -35,7 +35,7 @@ class PlistTests(unittest.TestCase):
       plist_file = plist.PlistFile()
       plist_file.Read(file_object)
 
-      self.assertNotEqual(plist_file.root_key, None)
+      self.assertIsNotNone(plist_file.root_key)
 
   def testReadXML(self):
     """Tests the Read function on a XML plist file."""
@@ -44,7 +44,7 @@ class PlistTests(unittest.TestCase):
       plist_file = plist.PlistFile()
       plist_file.Read(file_object)
 
-      self.assertNotEqual(plist_file.root_key, None)
+      self.assertIsNotNone(plist_file.root_key)
 
 
 if __name__ == '__main__':

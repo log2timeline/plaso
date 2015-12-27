@@ -15,7 +15,7 @@ class ProcessInfoTest(unittest.TestCase):
     """Tests the initialization."""
     pid = os.getpid()
     process_information = process_info.ProcessInfo(pid)
-    self.assertNotEqual(process_information, None)
+    self.assertIsNotNone(process_information)
 
   def testProperties(self):
     """Tests the properties."""
@@ -31,7 +31,7 @@ class ProcessInfoTest(unittest.TestCase):
     process_information = process_info.ProcessInfo(pid)
 
     memory_information = process_information.GetMemoryInformation()
-    self.assertNotEqual(memory_information, None)
+    self.assertIsNotNone(memory_information)
 
 
 if __name__ == '__main__':
