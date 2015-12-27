@@ -15,7 +15,7 @@ class FirefoxBookmarkAnnotationFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = firefox.FirefoxBookmarkAnnotationFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -36,7 +36,7 @@ class FirefoxBookmarkFolderFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = firefox.FirefoxBookmarkFolderFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -57,7 +57,7 @@ class FirefoxBookmarkFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = firefox.FirefoxBookmarkFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -79,7 +79,7 @@ class FirefoxPageVisitFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = firefox.FirefoxPageVisitFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -101,7 +101,7 @@ class FirefoxDowloadFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = firefox.FirefoxDowloadFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

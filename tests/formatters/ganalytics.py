@@ -15,7 +15,7 @@ class AnalyticsUtmaCookieFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = ganalytics.AnalyticsUtmaCookieFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -37,7 +37,7 @@ class AnalyticsUtmbCookieFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = ganalytics.AnalyticsUtmbCookieFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -59,7 +59,7 @@ class AnalyticsUtmzCookieFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = ganalytics.AnalyticsUtmzCookieFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

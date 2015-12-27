@@ -15,7 +15,7 @@ class PlsRecallFormatterTest(test_lib.EventFormatterTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     event_formatter = pls_recall.PlsRecallFormatter()
-    self.assertNotEqual(event_formatter, None)
+    self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
