@@ -60,7 +60,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
 
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
-      value_integer = registry_value.GetData()
+      value_integer = registry_value.GetDataAsObject()
       values_dict[registry_value.name] = u'0x{0:08x}'.format(value_integer)
 
     event_object = windows_events.WindowsRegistryEvent(

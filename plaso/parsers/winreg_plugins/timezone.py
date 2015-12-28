@@ -43,7 +43,7 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
     """
     registry_value = registry_key.GetValueByName(value_name)
     if registry_value:
-      return registry_value.GetData()
+      return registry_value.GetDataAsObject()
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect values and return an event.
