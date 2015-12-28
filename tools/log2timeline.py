@@ -794,7 +794,8 @@ def Main():
   if have_list_option:
     return True
 
-  if tool.dependencies_check and not dependencies.CheckDependencies():
+  if tool.dependencies_check and not dependencies.CheckDependencies(
+      verbose_output=False):
     return False
 
   try:
