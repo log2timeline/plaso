@@ -37,7 +37,7 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
 
       label_value = subkey.GetValueByName(u'_LabelFromReg')
       if label_value:
-        values_dict[u'Label'] = label_value.GetData()
+        values_dict[u'Label'] = label_value.GetDataAsObject()
 
       if name.startswith(u'{'):
         values_dict[u'Type'] = u'Volume'

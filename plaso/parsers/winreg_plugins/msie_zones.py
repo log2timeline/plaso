@@ -169,16 +169,16 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
         if registry_value.DataIsString():
           value_string = u'[{0:s}] {1:s}'.format(
-              registry_value.data_type_string, registry_value.GetData())
+              registry_value.data_type_string, registry_value.GetDataAsObject())
 
         elif registry_value.DataIsInteger():
           value_string = u'[{0:s}] {1:d}'.format(
-              registry_value.data_type_string, registry_value.GetData())
+              registry_value.data_type_string, registry_value.GetDataAsObject())
 
         elif registry_value.DataIsMultiString():
           value_string = u'[{0:s}] {1:s}'.format(
               registry_value.data_type_string, u''.join(
-                  registry_value.GetData()))
+                  registry_value.GetDataAsObject()))
 
         else:
           value_string = u'[{0:s}]'.format(registry_value.data_type_string)
@@ -213,10 +213,10 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           continue
 
         if value.DataIsString():
-          value_string = value.GetData()
+          value_string = value.GetDataAsObject()
 
         elif value.DataIsInteger():
-          value_integer = value.GetData()
+          value_integer = value.GetDataAsObject()
           if value.name in self._KNOWN_PERMISSIONS_VALUE_NAMES:
             value_string = self._CONTROL_VALUES_PERMISSIONS.get(
                 value_integer, u'UNKNOWN')

@@ -37,7 +37,7 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     if not shutdown_value:
       return
 
-    value_integer = shutdown_value.GetData()
+    value_integer = shutdown_value.GetDataAsObject()
     try:
       filetime = self._UINT64_STRUCT.parse(value_integer)
     except construct.FieldError as exception:

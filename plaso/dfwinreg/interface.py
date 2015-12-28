@@ -324,8 +324,8 @@ class WinRegistryValue(object):
     return self.data_type in [definitions.REG_SZ, definitions.REG_EXPAND_SZ]
 
   @abc.abstractmethod
-  def GetData(self):
-    """Retrieves the data.
+  def GetDataAsObject(self):
+    """Retrieves the data as an object.
 
     Returns:
       The data as a Python type.

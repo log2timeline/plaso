@@ -11,21 +11,57 @@ from plaso.preprocessors import manager
 from plaso.winnt import time_zones
 
 
-class WindowsSystemRegistryPath(interface.PathPreprocessPlugin):
+class WindowsPathPreprocessPlugin(interface.PreprocessPlugin):
+  """Returns a Windows path."""
+
+  WEIGHT = 1
+
+  def GetValue(self, searcher, unused_knowledge_base):
+    """Returns the path as found by the searcher.
+
+    Args:
+      searcher: The file system searcher object (instance of
+                dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
+
+    Returns:
+      The first path location string.
+
+    Raises:
+      PreProcessFail: if the path could not be found.
+    """
+    path_specs = self._FindPathSpecs(searcher, self.PATH)
+    if not path_specs:
+      raise errors.PreProcessFail(
+          u'Unable to find path: {0:s}'.format(self.PATH))
+
+    relative_path = searcher.GetRelativePath(path_specs[0])
+    if not relative_path:
+      raise errors.PreProcessFail(
+          u'Missing relative path for: {0:s}'.format(self.PATH))
+
+    if relative_path.startswith(u'/'):
+      relative_path = u'\\'.join(relative_path.split(u'/'))
+    return relative_path
+
+
+class WindowsSystemRegistryPath(WindowsPathPreprocessPlugin):
   """Get the system registry path."""
   SUPPORTED_OS = [u'Windows']
   ATTRIBUTE = u'sysregistry'
   PATH = u'/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
 
 
-class WindowsSystemRootPath(interface.PathPreprocessPlugin):
+class WindowsSystemRootPath(WindowsPathPreprocessPlugin):
   """Get the system root path."""
   SUPPORTED_OS = [u'Windows']
   ATTRIBUTE = u'systemroot'
   PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
 
 
-class WindowsWinDirPath(interface.PathPreprocessPlugin):
+class WindowsWinDirPath(WindowsPathPreprocessPlugin):
   """Get the system path."""
   SUPPORTED_OS = [u'Windows']
   ATTRIBUTE = u'windir'
@@ -141,7 +177,7 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
       user[u'sid'] = subkey.name
       registry_value = subkey.GetValueByName(u'ProfileImagePath')
       if registry_value:
-        user[u'path'] = registry_value.GetData()
+        user[u'path'] = registry_value.GetDataAsObject()
         user[u'name'] = self._GetUsernameFromPath(user[u'path'])
 
       users.append(user)
@@ -186,7 +222,7 @@ class WindowsRegistryValuePreprocessPlugin(WindowsRegistryPreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    return registry_value.GetData()
+    return registry_value.GetDataAsObject()
 
 
 class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
@@ -207,7 +243,7 @@ class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    value_data = registry_value.GetData()
+    value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       logging.warning(
           u'Unsupported Registry value: {0:s} data type'.format(
@@ -249,7 +285,7 @@ class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    value_data = registry_value.GetData()
+    value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       logging.warning(
           u'Unsupported Registry value: {0:s} data type'.format(
@@ -282,7 +318,7 @@ class WindowsRegistryPathEnvironmentValue(WindowsRegistryValuePreprocessPlugin):
     Returns:
       The preprocessing attribute value or None.
     """
-    value_data = registry_value.GetData()
+    value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       logging.warning(
           u'Unsupported Registry value: {0:s} data type'.format(

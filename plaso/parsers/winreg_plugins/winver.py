@@ -57,7 +57,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
       if not string_value_name:
         continue
 
-      string_values[string_value_name] = registry_value.GetData()
+      string_values[string_value_name] = registry_value.GetDataAsObject()
 
     owner = string_values.get(u'owner', u'')
     product_name = string_values.get(u'product_name', u'')
@@ -79,7 +79,7 @@ class WinVerPlugin(interface.WindowsRegistryPlugin):
     # TODO: if not present indicate anomaly of missing installation
     # date and time.
     if installation_value:
-      posix_time = installation_value.GetData()
+      posix_time = installation_value.GetDataAsObject()
       event_object = windows_events.WindowsRegistryInstallationEvent(
           posix_time, registry_key.path, owner, product_name, service_pack,
           version)
