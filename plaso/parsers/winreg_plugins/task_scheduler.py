@@ -97,7 +97,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
         if len(id_value.data) != 78:
           parser_mediator.ProduceParseError(u'Unsupported Id value data size.')
           continue
-        guid_string = id_value.GetData()
+        guid_string = id_value.GetDataAsObject()
         task_guids[guid_string] = value_key.name
 
     for sub_key in tasks_key.GetSubkeys():

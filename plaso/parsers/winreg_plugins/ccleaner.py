@@ -70,10 +70,10 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
         update_key_value = registry_value
 
       else:
-        values_dict[registry_value.name] = registry_value.GetData()
+        values_dict[registry_value.name] = registry_value.GetDataAsObject()
 
     if update_key_value:
-      date_time_string = update_key_value.GetData()
+      date_time_string = update_key_value.GetDataAsObject()
       try:
         # Date and time string in the form: MM/DD/YYYY hh:mm:ss [A|P]M
         # e.g. 07/13/2013 10:03:14 AM

@@ -83,19 +83,15 @@ class PregFrontendTest(test_lib.FrontendTestCase):
   def testGetRegistryFilePaths(self):
     """Tests the GetRegistryFilePaths function."""
     self._ConfigureSingleFileTest()
-    expected_paths = [
-        u'/Documents And Settings/.+/NTUSER.DAT',
-        u'/Users/.+/NTUSER.DAT']
 
-    paths = self._front_end.GetRegistryFilePaths(plugin_name=u'userassist')
+    expected_paths = [u'%UserProfile%\\NTUSER.DAT']
+    registry_file_types = [u'NTUSER']
+    paths = self._front_end.GetRegistryFilePaths(registry_file_types)
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
-    # TODO: refactor this into a method.
-    self._knowledge_base_object.pre_obj.sysregistry = u'C:/Windows/Foo'
-    expected_paths = [u'C:/Windows/Foo/SOFTWARE']
-
-    paths = self._front_end.GetRegistryFilePaths(
-        registry_file_type=u'SOFTWARE')
+    expected_paths = [u'%SystemRoot%\\System32\\config\\SOFTWARE']
+    registry_file_types = [u'SOFTWARE']
+    paths = self._front_end.GetRegistryFilePaths(registry_file_types)
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
   def testGetRegistryHelpers(self):
