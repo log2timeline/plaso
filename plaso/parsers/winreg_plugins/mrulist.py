@@ -158,7 +158,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
               self.NAME, entry_letter, key.path))
 
     elif value.DataIsString():
-      value_string = value.GetData()
+      value_string = value.GetDataAsObject()
 
     elif value.DataIsBinaryData():
       logging.debug((

@@ -74,7 +74,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       if not registry_value.data or not registry_value.DataIsString():
         continue
 
-      value_string = registry_value.GetData()
+      value_string = registry_value.GetDataAsObject()
       values = self._RE_VALUE_DATA.findall(value_string)
 
       # Values will contain a list containing a tuple containing 2 values.

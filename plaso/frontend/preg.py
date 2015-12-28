@@ -4,6 +4,7 @@
 import logging
 
 from dfvfs.helpers import file_system_searcher
+from dfvfs.helpers import windows_path_resolver
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -11,9 +12,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.engine import utils as engine_utils
 from plaso.frontend import extraction_frontend
-from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg
@@ -321,7 +320,6 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     self._preprocess_completed = False
     self._registry_files = []
     self._registry_plugin_list = self.GetWindowsRegistryPlugins()
-    self._searcher = None
     self._single_file = False
     self._source_path = None
     self._source_path_specs = []
@@ -332,76 +330,6 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
   def registry_plugin_list(self):
     """The Windows Registry plugin list (instance of PluginList)."""
     return self._registry_plugin_list
-
-  # TODO: clean up this function as part of dfvfs find integration.
-  def _FindRegistryPaths(self, searcher, pattern):
-    """Return a list of Windows Registry file path specifications.
-
-    Args:
-      searcher: the file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      pattern: the pattern to find.
-
-    Returns:
-      A list of path specification objects (instance of PathSpec).
-    """
-    # TODO: optimize this in one find.
-    registry_file_paths = []
-    file_path, _, file_name = pattern.rpartition(u'/')
-
-    # The path is split in segments to make it path segment separator
-    # independent (and thus platform independent).
-    path_segments = file_path.split(u'/')
-    if not path_segments[0]:
-      path_segments = path_segments[1:]
-
-    find_spec = file_system_searcher.FindSpec(
-        location_regex=path_segments, case_sensitive=False)
-    path_specs = list(searcher.Find(find_specs=[find_spec]))
-
-    if not path_specs:
-      logging.debug(u'Directory: {0:s} not found'.format(file_path))
-      return registry_file_paths
-
-    for path_spec in path_specs:
-      directory_location = getattr(path_spec, u'location', None)
-      if not directory_location:
-        raise errors.PreProcessFail(
-            u'Missing directory location for: {0:s}'.format(file_path))
-
-      # The path is split in segments to make it path segment separator
-      # independent (and thus platform independent).
-      path_segments = searcher.SplitPath(directory_location)
-      path_segments.append(file_name)
-
-      # Remove mount part if OS mount path is set.
-      # TODO: Instead of using an absolute path spec, use a mount point one.
-      if self._mount_path_spec:
-        mount_point_location = getattr(self._mount_path_spec, u'location', u'')
-        mount_point_segments = mount_point_location.split(u'/')
-        if not mount_point_segments[0]:
-          mount_point_segments = mount_point_segments[1:]
-
-        remove_mount_point = True
-        for index in range(0, len(mount_point_segments)):
-          mount_point_segment = mount_point_segments[index]
-          if mount_point_segment != path_segments[index]:
-            remove_mount_point = False
-        if remove_mount_point:
-          path_segments = path_segments[len(mount_point_segments):]
-
-      find_spec = file_system_searcher.FindSpec(
-          location_regex=path_segments, case_sensitive=False)
-      fh_path_specs = list(searcher.Find(find_specs=[find_spec]))
-
-      if not fh_path_specs:
-        logging.debug(u'File: {0:s} not found in directory: {1:s}'.format(
-            file_name, directory_location))
-        continue
-
-      registry_file_paths.extend(fh_path_specs)
-
-    return registry_file_paths
 
   def _GetRegistryHelperFromPath(self, path, codepage):
     """Return a Registry helper object from a path.
@@ -418,53 +346,84 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Yields:
       A Registry helper object (instance of PregRegistryHelper).
     """
+    # TODO: deprecate usage of pre_obj.
+    path_attributes = self.knowledge_base_object.pre_obj.__dict__
+
     for source_path_spec in self._source_path_specs:
-      type_indicator = source_path_spec.TYPE_INDICATOR
-      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+      if source_path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
         if file_entry.IsFile():
           yield PregRegistryHelper(
               file_entry, u'OS', self.knowledge_base_object, codepage=codepage)
           continue
+
         # TODO: Change this into an actual mount point path spec.
         self._mount_path_spec = source_path_spec
 
-      collector_name = type_indicator
+      collector_name = source_path_spec.type_indicator
       parent_path_spec = getattr(source_path_spec, u'parent', None)
-      if parent_path_spec:
-        parent_type_indicator = parent_path_spec.TYPE_INDICATOR
-        if parent_type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-          vss_store = getattr(parent_path_spec, u'store_index', 0)
-          collector_name = u'VSS Store: {0:d}'.format(vss_store)
+      if parent_path_spec and parent_path_spec.type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
+        vss_store = getattr(parent_path_spec, u'store_index', 0)
+        collector_name = u'VSS Store: {0:d}'.format(vss_store)
 
-      searcher = self._GetSearcher()
-      for registry_file_path in self._FindRegistryPaths(searcher, path):
-        file_entry = searcher.GetFileEntryByPathSpec(registry_file_path)
-        yield PregRegistryHelper(
-            file_entry, collector_name, self.knowledge_base_object,
-            codepage=codepage)
+      file_system, mount_point = self._GetSourceFileSystem(source_path_spec)
 
-  def _GetSearcher(self):
-    """Retrieve a searcher for the first source path specification.
+      try:
+        path_resolver = windows_path_resolver.WindowsPathResolver(
+            file_system, mount_point)
 
-    Returns:
-      A file system searcher object (instance of dfvfs.FileSystemSearcher)
-      for the first discovered source path specification, or None if there are
-      no discovered source path specifications.
-    """
-    if not self._source_path_specs:
-      return
+        if path.startswith(u'%UserProfile%\\'):
+          searcher = file_system_searcher.FileSystemSearcher(
+              file_system, mount_point)
 
-    if self._searcher:
-      return self._searcher
+          user_profiles = []
+          # TODO: determine the users path properly instead of relying on
+          # common defaults. Note that these paths are language dependent.
+          for user_path in (u'/Documents and Settings/.+', u'/Users/.+'):
+            find_spec = file_system_searcher.FindSpec(
+                location_regex=user_path, case_sensitive=False)
+            for path_spec in searcher.Find(find_specs=[find_spec]):
+              location = getattr(path_spec, u'location', None)
+              if location:
+                if location.startswith(u'/'):
+                  location = u'\\'.join(location.split(u'/'))
+                user_profiles.append(location)
 
-    file_system, mount_point = self._GetSourceFileSystem(
-        self._source_path_specs[0])
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system, mount_point)
+          for user_profile in user_profiles:
+            path_resolver.SetEnvironmentVariable(u'UserProfile', user_profile)
 
-    # TODO: close file_system after usage.
-    return self._searcher
+            path_spec = path_resolver.ResolvePath(path)
+            if not path_spec:
+              continue
+
+            file_entry = file_system.GetFileEntryByPathSpec(path_spec)
+            if not file_entry:
+              continue
+
+            yield PregRegistryHelper(
+                file_entry, collector_name, self.knowledge_base_object,
+                codepage=codepage)
+        else:
+          path_attribute_value = path_attributes.get(u'systemroot', None)
+          if path_attribute_value:
+            path_resolver.SetEnvironmentVariable(
+                u'SystemRoot', path_attribute_value)
+
+          path_spec = path_resolver.ResolvePath(path)
+          if not path_spec:
+            continue
+
+          file_entry = file_system.GetFileEntryByPathSpec(path_spec)
+          if not file_entry:
+            continue
+
+          yield PregRegistryHelper(
+              file_entry, collector_name, self.knowledge_base_object,
+              codepage=codepage)
+
+      finally:
+        file_system.Close()
 
   # TODO: refactor, this is a duplicate of the function in engine.
   def _GetSourceFileSystem(self, source_path_spec, resolver_context=None):
@@ -535,82 +494,61 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         _, first, second = key.partition(u'\\Software')
         keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
 
-  def GetRegistryFilePaths(self, plugin_name=None, registry_file_type=None):
-    """Returns a list of Registry paths.
+  def GetRegistryFilePaths(self, registry_file_types):
+    """Returns a list of Windows Registry file paths.
 
-    If the Registry file type is not set this functions attempts to determine
-    it based on the presence of specific Registry keys.
+    If the Windows Registry file type is not set this functions attempts
+    to determine it based on the presence of specific Registry keys.
 
     Args:
-      plugin_name: optional string containing the name of the plugin or an empty
-                   string or None for all the types. The default is None.
-      registry_file_type: optional Windows Registry file type string.
-                          The default is None, which represents auto-detect.
+      registry_file_types: a set of Windows Registry file type strings.
 
     Returns:
-      A list of path names for Registry files.
+      A list of path of Windows Registry files.
     """
     if self._parse_restore_points:
-      restore_path = u'/System Volume Information/_restor.+/RP[0-9]+/snapshot/'
+      restore_path = (
+          u'\\System Volume Information\\_restore.+\\RP[0-9]+\\snapshot\\')
     else:
       restore_path = u''
 
-    if registry_file_type:
-      types = [registry_file_type]
-    else:
-      types = self._registry_plugin_list.GetRegistryTypes(plugin_name)
-
-    # Gather the Registry files to fetch.
     paths = []
-
-    for reg_type in types:
-      if reg_type == REGISTRY_FILE_TYPE_NTUSER:
-        paths.append(u'/Documents And Settings/.+/NTUSER.DAT')
-        paths.append(u'/Users/.+/NTUSER.DAT')
+    for registry_file_type in registry_file_types:
+      if registry_file_type == REGISTRY_FILE_TYPE_NTUSER:
+        paths.append(u'%UserProfile%\\NTUSER.DAT')
         if restore_path:
-          paths.append(u'{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
+          paths.append(u'{0:s}\\_REGISTRY_USER_NTUSER_.+'.format(restore_path))
 
-      elif reg_type == REGISTRY_FILE_TYPE_SAM:
-        paths.append(u'{sysregistry}/SAM')
+      elif registry_file_type == REGISTRY_FILE_TYPE_SAM:
+        paths.append(u'%SystemRoot%\\System32\\config\\SAM')
         if restore_path:
-          paths.append(u'{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
+          paths.append(u'{0:s}\\_REGISTRY_MACHINE_SAM'.format(restore_path))
 
-      elif reg_type == REGISTRY_FILE_TYPE_SECURITY:
-        paths.append(u'{sysregistry}/SECURITY')
+      elif registry_file_type == REGISTRY_FILE_TYPE_SECURITY:
+        paths.append(u'%SystemRoot%\\System32\\config\\SECURITY')
         if restore_path:
-          paths.append(u'{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
+          paths.append(
+              u'{0:s}\\_REGISTRY_MACHINE_SECURITY'.format(restore_path))
 
-      elif reg_type == REGISTRY_FILE_TYPE_SOFTWARE:
-        paths.append(u'{sysregistry}/SOFTWARE')
+      elif registry_file_type == REGISTRY_FILE_TYPE_SOFTWARE:
+        paths.append(u'%SystemRoot%\\System32\\config\\SOFTWARE')
         if restore_path:
-          paths.append(u'{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
+          paths.append(
+              u'{0:s}\\_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
 
-      elif reg_type == REGISTRY_FILE_TYPE_SYSTEM:
-        paths.append(u'{sysregistry}/SYSTEM')
+      elif registry_file_type == REGISTRY_FILE_TYPE_SYSTEM:
+        paths.append(u'%SystemRoot%\\System32\\config\\SYSTEM')
         if restore_path:
-          paths.append(u'{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
+          paths.append(u'{0:s}\\_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
 
-      elif reg_type == REGISTRY_FILE_TYPE_USRCLASS:
-        paths.append(u'/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
+      elif registry_file_type == REGISTRY_FILE_TYPE_USRCLASS:
+        paths.append(
+            u'%UserProfile%\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat')
+        if restore_path:
+          paths.append(
+              u'{0:s}\\_REGISTRY_USER_USRCLASS_.+'.format(restore_path))
 
-    # Expand all the paths.
-    # TODO: deprecate usage of pre_obj.
-    path_attributes = self.knowledge_base_object.pre_obj.__dict__
-
-    path_expander = engine_utils.PathExpander()
-    expanded_paths = []
-    for path in paths:
-      try:
-        expanded_path = path_expander.ExpandPath(
-            path, path_attributes=path_attributes)
-        expanded_paths.append(expanded_path)
-
-      except KeyError as exception:
-        logging.error(
-            u'Unable to expand path: {0:s} with error: {1:s}'.format(
-                path, exception))
-
-    return expanded_paths
+    return paths
 
   # TODO: refactor this function. Current implementation is too complex.
   def GetRegistryHelpers(
@@ -651,6 +589,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       self._preprocess_completed = True
       file_system.Close()
 
+    # TODO: fix issue handling Windows paths
     if registry_file_types is None:
       registry_file_types = []
 
@@ -658,23 +597,27 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
         self._registry_plugin_list.GetRegistryTypesFromPlugins(plugin_names))
     registry_file_types.extend(types_from_plugins)
 
-    paths = []
     if self._single_file:
       paths = [self._source_path]
-    elif registry_file_types:
-      for registry_file_type in registry_file_types:
-        paths.extend(self.GetRegistryFilePaths(
-            registry_file_type=registry_file_type.upper()))
+
     else:
-      for plugin_name in plugin_names:
-        paths.extend(self.GetRegistryFilePaths(plugin_name=plugin_name))
+      types = set()
+      if registry_file_types:
+        for registry_file_type in registry_file_types:
+          types.add(registry_file_type.upper())
+      else:
+        for plugin_name in plugin_names:
+          types.extend(self._registry_plugin_list.GetRegistryTypes(plugin_name))
+
+      paths = self.GetRegistryFilePaths(types)
 
     self.knowledge_base_object.SetDefaultCodepage(codepage)
-    registry_helpers = []
 
+    registry_helpers = []
     for path in paths:
-      registry_helpers.extend([
-          helper for helper in self._GetRegistryHelperFromPath(path, codepage)])
+      for helper in self._GetRegistryHelperFromPath(path, codepage):
+        registry_helpers.append(helper)
+
     return registry_helpers
 
   # TODO: remove after refactoring.
