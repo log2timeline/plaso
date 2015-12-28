@@ -362,7 +362,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
   def ProcessEventsFromStorage(
       self, storage_file, output_buffer, analysis_queues=None,
-      filter_buffer=None, my_filter=None, time_slice_range=None):
+      filter_buffer=None, my_filter=None, time_slice=None):
     """Reads event objects from the storage to process and filter them.
 
     Args:
@@ -372,8 +372,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       filter_buffer: optional filter buffer used to store previously discarded
                      events to store time slice history.
       my_filter: optional filter object (instance of PFilter).
-      time_slice_range: optional time slice range object (instance of
-                        TimeRange).
+      time_slice: optional time slice object (instance of TimeRange).
 
     Returns:
       A Counter object (instance of collections.Counter), that tracks the
@@ -386,8 +385,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       analysis_queues = []
 
     # TODO: refactor to use StorageReader.
-    for event_object in storage_file.GetSortedEntries(
-        time_range=time_slice_range):
+    for event_object in storage_file.GetSortedEntries(time_range=time_slice):
       # TODO: clean up this function.
       if not my_filter:
         counter[u'Events Included'] += 1
@@ -476,10 +474,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    time_slice_range = None
+    time_slice = None
     if time_slice:
       if time_slice.event_timestamp is not None:
-        time_slice_range = storage_time_range.TimeRange(
+        time_slice = storage_time_range.TimeRange(
             time_slice.start_timestamp, time_slice.end_timestamp)
 
       elif use_time_slicer:
@@ -525,7 +523,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         counter = self.ProcessEventsFromStorage(
             storage_file, output_buffer, analysis_queues=event_queue_producers,
             filter_buffer=self._filter_buffer, my_filter=self._filter_object,
-            time_slice_range=time_slice_range)
+            time_slice=time_slice)
 
       for information in storage_file.GetStorageInformation():
         if hasattr(information, u'counter'):
