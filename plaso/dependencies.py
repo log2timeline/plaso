@@ -184,7 +184,8 @@ def _GetLibyalGoogleDriveLatestVersion(library_name):
   return int(max(matches))
 
 
-def _CheckLibyal(libyal_python_modules, latest_version_check=False):
+def _CheckLibyal(
+    libyal_python_modules, latest_version_check=False, verbose_output=True):
   """Checks the availability of libyal libraries.
 
   Args:
@@ -192,7 +193,7 @@ def _CheckLibyal(libyal_python_modules, latest_version_check=False):
                            the key and version as the value.
     latest_version_check: optional boolean value to indicate if the project
                           site should be checked for the latest version.
-                          The default is False.
+    verbose_output: optional boolean to indicate output should be verbose.
 
   Returns:
     True if the libyal libraries are available, False otherwise.
@@ -237,15 +238,16 @@ def _CheckLibyal(libyal_python_modules, latest_version_check=False):
               libyal_name, module_name, installed_version, module_version))
       result = False
 
-    elif latest_version and installed_version != latest_version:
-      print((
-          u'[INFO]\t\t{0:s} ({1:s}) version: {2:d} installed, '
-          u'version: {3:d} available.').format(
-              libyal_name, module_name, installed_version, latest_version))
+    elif verbose_output:
+      if latest_version and installed_version != latest_version:
+        print((
+            u'[INFO]\t\t{0:s} ({1:s}) version: {2:d} installed, '
+            u'version: {3:d} available.').format(
+                libyal_name, module_name, installed_version, latest_version))
 
-    else:
-      print(u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
-          libyal_name, module_name, installed_version))
+      else:
+        print(u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
+            libyal_name, module_name, installed_version))
 
   if connection_error:
     print((
@@ -257,7 +259,7 @@ def _CheckLibyal(libyal_python_modules, latest_version_check=False):
 
 def _CheckPythonModule(
     module_name, version_attribute_name, minimum_version,
-    maximum_version=None):
+    maximum_version=None, verbose_output=True):
   """Checks the availability of a Python module.
 
   Args:
@@ -269,6 +271,7 @@ def _CheckPythonModule(
                      and should only be used if there is a recent API change
                      that prevents the tool from running if a later version
                      is used.
+    verbose_output: optional boolean to indicate output should be verbose.
 
   Returns:
     True if the Python module is available and conforms to the minimum required
@@ -280,7 +283,8 @@ def _CheckPythonModule(
     return False
 
   if not version_attribute_name or not minimum_version:
-    print(u'[OK]\t\t{0:s}'.format(module_name))
+    if verbose_output:
+      print(u'[OK]\t\t{0:s}'.format(module_name))
     return True
 
   module_version = getattr(module_object, version_attribute_name, None)
@@ -309,13 +313,17 @@ def _CheckPythonModule(
           u'required.').format(module_name, module_version, maximum_version))
       return False
 
-  print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
+  if verbose_output:
+    print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
 
   return True
 
 
-def _CheckPytsk():
+def _CheckPytsk(verbose_output=True):
   """Checks the availability of pytsk.
+
+  Args:
+    verbose_output: optional boolean to indicate output should be verbose.
 
   Returns:
     True if the pytsk Python module is available, False otherwise.
@@ -341,7 +349,8 @@ def _CheckPytsk():
         u'later required.').format(module_version, minimum_version_libtsk))
     return False
 
-  print(u'[OK]\t\tSleuthKit version: {0:s}'.format(module_version))
+  if verbose_output:
+    print(u'[OK]\t\tSleuthKit version: {0:s}'.format(module_version))
 
   if not hasattr(module_object, u'get_version'):
     print(u'[FAILURE]\t{0:s} is too old, {1:s} or later required.'.format(
@@ -356,13 +365,17 @@ def _CheckPytsk():
             module_name, module_version, minimum_version_pytsk))
     return False
 
-  print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
+  if verbose_output:
+    print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
 
   return True
 
 
-def _CheckSqlite3():
+def _CheckSqlite3(verbose_output=True):
   """Checks the availability of sqlite3.
+
+  Args:
+    verbose_output: optional boolean to indicate output should be verbose.
 
   Returns:
     True if the sqlite3 Python module is available, False otherwise.
@@ -399,16 +412,19 @@ def _CheckSqlite3():
         u'required.').format(module_name, module_version, minimum_version))
     return False
 
+  if verbose_output:
+    print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
+
   return True
 
 
-def CheckDependencies(latest_version_check=False):
+def CheckDependencies(latest_version_check=False, verbose_output=True):
   """Checks the availability of the dependencies.
 
   Args:
-    latest_version_check: Optional boolean value to indicate if the project
+    latest_version_check: optional boolean value to indicate if the project
                           site should be checked for the latest version.
-                          The default is False.
+    verbose_output: optional boolean to indicate output should be verbose.
 
   Returns:
     True if the dependencies are available, False otherwise.
@@ -418,20 +434,25 @@ def CheckDependencies(latest_version_check=False):
 
   for values in PYTHON_DEPENDENCIES:
     if not _CheckPythonModule(
-        values[0], values[1], values[2], maximum_version=values[3]):
+        values[0], values[1], values[2], maximum_version=values[3],
+        verbose_output=verbose_output):
       check_result = False
 
-  if not _CheckSqlite3():
+  if not _CheckSqlite3(verbose_output=verbose_output):
     check_result = False
 
-  if not _CheckPytsk():
+  if not _CheckPytsk(verbose_output=verbose_output):
     check_result = False
 
   libyal_check_result = _CheckLibyal(
-      LIBYAL_DEPENDENCIES, latest_version_check=latest_version_check)
+      LIBYAL_DEPENDENCIES, latest_version_check=latest_version_check,
+      verbose_output=verbose_output)
 
   if not libyal_check_result:
     check_result = False
+
+  if check_result and not verbose_output:
+    print(u'[OK]')
 
   print(u'')
   return check_result
@@ -472,14 +493,13 @@ def CheckTestDependencies(latest_version_check=False):
   """Checks the availability of the dependencies when running tests.
 
   Args:
-    latest_version_check: Optional boolean value to indicate if the project
+    latest_version_check: optional boolean value to indicate if the project
                           site should be checked for the latest version.
-                          The default is False.
 
   Returns:
     True if the dependencies are available, False otherwise.
   """
-  if not CheckDependencies(latest_version_check):
+  if not CheckDependencies(latest_version_check=latest_version_check):
     return False
 
   print(u'Checking availability and versions of plaso test dependencies.')
