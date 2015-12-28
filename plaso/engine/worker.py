@@ -64,6 +64,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       u'/$AttributesFile',
   ])
 
+  # TODO: make this filtering solution more generic. Also see:
+  # https://github.com/log2timeline/plaso/issues/467
   _CHROME_CACHE_DATA_FILE_RE = re.compile(r'^[fF]_[0-9]{6}$')
   _FIREFOX_CACHE2_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
   _FSEVENTSD_FILE_RE = re.compile(r'^[0-9a-fA-F]{16}$')
@@ -147,7 +149,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Returns:
       A boolean value to indicate the content extraction can be skipped.
     """
-    # TODO: make the checks in this function more generic.
+    # TODO: make this filtering solution more generic. Also see:
+    # https://github.com/log2timeline/plaso/issues/467
     location = getattr(file_entry.path_spec, u'location', None)
     if not location:
       return False
@@ -596,7 +599,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
         # Determine if the content of the file entry should not be extracted.
         skip_content_extraction = self._CanSkipContentExtraction(file_entry)
-        if not skip_content_extraction:
+        if skip_content_extraction:
+          logging.info(u'Skipping content extraction of: {0:s}'.format(
+              self._current_display_name))
+        else:
           is_archive = False
           is_compressed_stream = False
 
