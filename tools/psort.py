@@ -22,9 +22,11 @@ from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.filters import manager as filters_manager
+from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.winnt import language_ids
 
 
@@ -64,8 +66,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._front_end = psort.PsortFrontend()
     self._options = None
     self._output_format = None
-    self._time_slice_event_time_string = None
-    self._time_slice_duration = 5
+    self._time_slice = None
     self._use_time_slicer = False
 
     self.list_analysis_plugins = False
@@ -127,16 +128,30 @@ class PsortTool(analysis_tool.AnalysisTool):
         raise errors.BadConfigOption(
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
-    self._time_slice_event_time_string = getattr(options, u'slice', None)
-    self._time_slice_duration = getattr(options, u'slice_size', 5)
+    time_slice_event_time_string = getattr(options, u'slice', None)
+    time_slice_duration = getattr(options, u'slice_size', 5)
     self._use_time_slicer = getattr(options, u'slicer', False)
 
     self._front_end.SetFilter(self._filter_object, self._filter_expression)
 
     # The slice and slicer cannot be set at the same time.
-    if self._time_slice_event_time_string and self._use_time_slicer:
+    if time_slice_event_time_string and self._use_time_slicer:
       raise errors.BadConfigOption(
           u'Time slice and slicer cannot be used at the same time.')
+
+    time_slice_event_timestamp = None
+    if time_slice_event_time_string:
+      time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
+          time_slice_event_time_string, timezone=self._timezone)
+      if time_slice_event_timestamp is None:
+        raise errors.BadConfigOption(
+            u'Unsupported time slice event date and time: {0:s}'.format(
+                time_slice_event_time_string))
+
+    if time_slice_event_timestamp is not None or self._use_time_slicer:
+      # Note that time slicer uses the time slice to determine the duration.
+      self._time_slice = frontend.TimeSlice(
+          time_slice_event_timestamp, duration=time_slice_duration)
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
@@ -172,12 +187,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    time_slice = None
-    if self._time_slice_event_time_string is not None or self._use_time_slicer:
-      time_slice = self._front_end.GetTimeSlice(
-          self._time_slice_event_time_string,
-          duration=self._time_slice_duration, timezone=self._timezone)
-
     if self._analysis_plugins:
       read_only = False
     else:
@@ -255,7 +264,7 @@ class PsortTool(analysis_tool.AnalysisTool):
         command_line_arguments=self._command_line_arguments,
         deduplicate_events=self._deduplicate_events,
         preferred_encoding=self.preferred_encoding,
-        time_slice=time_slice, use_time_slicer=self._use_time_slicer)
+        time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
     storage_file.Close()
 
@@ -303,8 +312,8 @@ class PsortTool(analysis_tool.AnalysisTool):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
-        u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
-            u'Enables experimental queueing using ZeroMQ'))
+        u'--use_zeromq', u'--use-zeromq', action=u'store_true',
+        dest=u'use_zeromq', help=u'Enables experimental queueing using ZeroMQ')
 
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
@@ -322,8 +331,8 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'--slice_size but defaults to 5 minutes.'))
 
     argument_group.add_argument(
-        u'--slice_size', dest=u'slice_size', type=int, default=5,
-        action=u'store', help=(
+        u'--slice_size', u'--slice-size', dest=u'slice_size', type=int,
+        default=5, action=u'store', help=(
             u'Defines the slice size. In the case of a regular time slice it '
             u'defines the number of minutes the slice size should be. In the '
             u'case of the --slicer it determines the number of events before '
@@ -469,8 +478,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
     output_group.add_argument(
-        u'-a', u'--include_all', action=u'store_false', dest=u'dedup',
-        default=True, help=(
+        u'-a', u'--include_all', u'--include-all', action=u'store_false',
+        dest=u'dedup', default=True, help=(
             u'By default the psort removes duplicate entries from the '
             u'output. This parameter changes that behavior so all events '
             u'are included.'))

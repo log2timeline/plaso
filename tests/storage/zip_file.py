@@ -380,6 +380,12 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_object.tag = event_tag
     return event_object
 
+  # TODO: add test for AddEventObject
+  # TODO: add test for AddEventObjects
+  # TODO: add test for Close
+  # TODO: add test for GetReports
+  # TODO: add test for GetSortedEntry
+
   def testGetSortedEntries(self):
     """Tests the GetSortedEntries function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -444,6 +450,16 @@ class StorageFileTest(test_lib.StorageTestCase):
         1392438730000000]
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
+
+  # TODO: add test for GetStorageInformation
+  # TODO: add test for GetTagging
+  # TODO: add test for HasGrouping
+  # TODO: add test for HasReports
+  # TODO: add test for HasTagging
+  # TODO: add test for SetEnableProfiling
+  # TODO: add test for StoreGrouping
+  # TODO: add test for StoreReport
+  # TODO: add test for StoreTagging
 
   def testStorage(self):
     """Test the storage object."""
@@ -553,8 +569,6 @@ class StorageFileTest(test_lib.StorageTestCase):
       proto_group_events.append(serialized_event_object)
 
     self.assertEqual(same_events, proto_group_events)
-
-  # TODO: add test for StoreReport.
 
 
 if __name__ == '__main__':
