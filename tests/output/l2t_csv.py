@@ -47,7 +47,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   """Contains tests to validate the L2tCSV outputter."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
     self.formatter = l2t_csv.L2TCSVOutputModule(output_mediator)

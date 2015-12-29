@@ -112,7 +112,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
   """Tests for the psort front-end."""
 
   def setUp(self):
-    """Setup sets parameters that will be reused throughout this test."""
+    """Makes preparations before running an individual test."""
     self._formatter_mediator = formatters_mediator.FormatterMediator()
     self._front_end = psort.PsortFrontend()
 

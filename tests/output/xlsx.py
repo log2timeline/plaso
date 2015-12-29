@@ -115,8 +115,8 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
         u'message', u'parser', u'display_name', u'tag', u'store_number',
         u'store_index']
 
-    with shared_test_lib.TempDirectory() as dirname:
-      temp_file = os.path.join(dirname, u'xlsx.out')
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'xlsx.out')
       output_mediator = self._CreateOutputMediator(storage_object=temp_file)
       output_module = xlsx.XlsxOutputModule(output_mediator)
       output_module.SetFilename(temp_file)
@@ -147,8 +147,8 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
         u'closed for user root) Invalid character -> \ufffd',
         u'-', u'-', u'-', u'-', u'-']
 
-    with shared_test_lib.TempDirectory() as dirname:
-      temp_file = os.path.join(dirname, u'xlsx.out')
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'xlsx.out')
       output_mediator = self._CreateOutputMediator(storage_object=temp_file)
       output_module = xlsx.XlsxOutputModule(output_mediator)
       output_module.SetFilename(temp_file)

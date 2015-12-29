@@ -65,7 +65,7 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON analysis report serializer object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     # TODO: preserve the tuples in the report dict.
     self._report_dict = {
         u'dude': [
@@ -135,7 +135,7 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON event object serializer object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._json_dict = {
         u'__type__': u'EventObject',
         u'a_tuple': [
@@ -225,7 +225,7 @@ class JSONEventTagSerializerTest(JSONSerializerTestCase):
   """Test for the JSON Event Tag serializer object."""
 
   def setUp(self):
-    """Set up the necessary objects."""
+    """Makes preparations before running an individual test."""
     self._event_uuid = u'403818f93dce467bac497ef0f263fde8'
     self._json_dict = {
         u'event_uuid': self._event_uuid,
@@ -254,7 +254,7 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON preprocessing object serializer object."""
 
   def setUp(self):
-    """Set up the necessary objects."""
+    """Makes preparations before running an individual test."""
     self._parsers = [
         u'esedb', u'chrome_preferences', u'winfirewall', u'android_app_usage',
         u'selinux', u'recycle_bin', u'pls_recall', u'filestat', u'sqlite',
@@ -386,7 +386,7 @@ class JSONCollectionInformationSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON preprocessing collection information object."""
 
   def setUp(self):
-    """Set up the necessary objects."""
+    """Makes preparations before running an individual test."""
     self._json_dict = {
         u'__COUNTERS__': {
             u'foobar': {

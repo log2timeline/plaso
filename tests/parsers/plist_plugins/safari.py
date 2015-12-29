@@ -16,7 +16,7 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Safari history plist plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = safari.SafariHistoryPlugin()
     self._parser = plist.PlistParser()
 

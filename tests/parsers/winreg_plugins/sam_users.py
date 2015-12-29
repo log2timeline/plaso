@@ -18,7 +18,7 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the SAM Users key plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = sam_users.UsersPlugin()
 
   def testProcess(self):

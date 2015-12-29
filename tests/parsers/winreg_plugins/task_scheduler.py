@@ -15,7 +15,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Task Cache key Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = task_scheduler.TaskCachePlugin()
 
   def testProcess(self):

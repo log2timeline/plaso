@@ -24,38 +24,6 @@ class DummyObject(object):
   """Dummy object."""
 
 
-class GroupMock(object):
-  """Mock a class for grouping events together."""
-
-  def __init__(self):
-    """Initializes the mock group object."""
-    self.groups = []
-
-  def AddGroup(
-      self, name, events, desc=None, first=0, last=0, color=None, cat=None):
-    """Add a new group of events."""
-    self.groups.append((name, events, desc, first, last, color, cat))
-
-  def __iter__(self):
-    """Iterator."""
-    for name, events, desc, first, last, color, cat in self.groups:
-      dummy = DummyObject()
-      dummy.name = name
-      dummy.events = events
-      if desc:
-        dummy.description = desc
-      if first:
-        dummy.first_timestamp = int(first)
-      if last:
-        dummy.last_timestamp = int(last)
-      if color:
-        dummy.color = color
-      if cat:
-        dummy.category = cat
-
-      yield dummy
-
-
 class SerializedDataStream(test_lib.StorageTestCase):
   """Tests for the serialized data stream object."""
 
@@ -214,6 +182,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
     offset_table = storage_file._GetSerializedEventObjectOffsetTable(3)
     self.assertIsNotNone(offset_table)
 
+    storage_file.Close()
+
   def testGetSerializedEventObjectStream(self):
     """Tests the _GetSerializedEventObjectStream function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -221,6 +191,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
     data_stream = storage_file._GetSerializedEventObjectStream(3)
     self.assertIsNotNone(data_stream)
+
+    storage_file.Close()
 
   def testGetSerializedEventObjectStreamNumbers(self):
     """Tests the _GetSerializedEventObjectStreamNumbers function."""
@@ -230,6 +202,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
     stream_numbers = storage_file._GetSerializedEventObjectStreamNumbers()
     self.assertEqual(len(stream_numbers), 7)
 
+    storage_file.Close()
+
   def testGetSerializedEventObjectTimestampTable(self):
     """Tests the _GetSerializedEventObjectTimestampTable function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -237,6 +211,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
     timestamp_table = storage_file._GetSerializedEventObjectTimestampTable(3)
     self.assertIsNotNone(timestamp_table)
+
+    storage_file.Close()
 
   def testGetStreamNames(self):
     """Tests the _GetStreamNames function."""
@@ -246,6 +222,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
     stream_names = list(storage_file._GetStreamNames())
     self.assertEqual(len(stream_names), 29)
 
+    storage_file.Close()
+
   def testHasStream(self):
     """Tests the _HasStream function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -253,6 +231,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
     self.assertTrue(storage_file._HasStream(u'plaso_timestamps.000003'))
     self.assertFalse(storage_file._HasStream(u'bogus'))
+
+    storage_file.Close()
 
   # TODO: add _OpenStream test.
   # TODO: add _ReadStream test.
@@ -262,8 +242,46 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 class StorageFileTest(test_lib.StorageTestCase):
   """Tests for the ZIP storage file object."""
 
-  def _CreateStorageFile(self, path):
-    """Creates a storage file for testing.
+  def _CreateTestEventTags(self):
+    """Creates the event tags for testing.
+
+    Returns:
+      A list of event tags (instances of EventTag).
+    """
+    event_tags = []
+
+    event_tag = event.EventTag()
+    event_tag.store_index = 0
+    event_tag.store_number = 1
+    event_tag.comment = u'My comment'
+    event_tag.color = u'blue'
+    event_tags.append(event_tag)
+
+    event_tag = event.EventTag()
+    event_tag.store_index = 1
+    event_tag.store_number = 1
+    event_tag.tags = [u'Malware']
+    event_tag.color = u'red'
+    event_tags.append(event_tag)
+
+    event_tag = event.EventTag()
+    event_tag.store_number = 1
+    event_tag.store_index = 2
+    event_tag.comment = u'This is interesting'
+    event_tag.tags = [u'Malware', u'Benign']
+    event_tag.color = u'red'
+    event_tags.append(event_tag)
+
+    event_tag = event.EventTag()
+    event_tag.store_index = 1
+    event_tag.store_number = 1
+    event_tag.tags = [u'Interesting']
+    event_tags.append(event_tag)
+
+    return event_tags
+
+  def _CreateTestStorageFileWithTags(self, path):
+    """Creates a storage file with event tags for testing.
 
     Args:
       path: a string containing the path of the storage file.
@@ -272,60 +290,15 @@ class StorageFileTest(test_lib.StorageTestCase):
       A storage file object (instance of StorageFile).
     """
     test_event_objects = test_lib.CreateTestEventObjects()
+    test_event_tags = self._CreateTestEventTags()
 
     storage_file = zip_file.StorageFile(path)
     storage_file.AddEventObjects(test_event_objects)
 
-    tags_mock = []
+    storage_file.StoreTagging(test_event_tags[:-1])
+    storage_file.StoreTagging(test_event_tags[-1:])
 
-    # Add tagging.
-    tag_1 = event.EventTag()
-    tag_1.store_index = 0
-    tag_1.store_number = 1
-    tag_1.comment = u'My comment'
-    tag_1.color = u'blue'
-    tags_mock.append(tag_1)
-
-    tag_2 = event.EventTag()
-    tag_2.store_index = 1
-    tag_2.store_number = 1
-    tag_2.tags = [u'Malware']
-    tag_2.color = u'red'
-    tags_mock.append(tag_2)
-
-    tag_3 = event.EventTag()
-    tag_3.store_number = 1
-    tag_3.store_index = 2
-    tag_3.comment = u'This is interesting'
-    tag_3.tags = [u'Malware', u'Benign']
-    tag_3.color = u'red'
-    tags_mock.append(tag_3)
-
-    storage_file.StoreTagging(tags_mock)
-
-    # Add additional tagging, second round.
-    tag_4 = event.EventTag()
-    tag_4.store_index = 1
-    tag_4.store_number = 1
-    tag_4.tags = [u'Interesting']
-
-    storage_file.StoreTagging([tag_4])
-
-    group_mock = GroupMock()
-    group_mock.AddGroup(
-        u'Malicious', [(1, 1), (1, 2)], desc=u'Events that are malicious',
-        color=u'red', first=1334940286000000, last=1334961526929596,
-        cat=u'Malware')
-    storage_file.StoreGrouping(group_mock)
     storage_file.Close()
-
-  def testGetStorageInformation(self):
-    """Tests the GetStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    storage_information = storage_file.GetStorageInformation()
-    self.assertEqual(len(storage_information), 1)
 
   def _GetEventObjects(self, storage_file, stream_number):
     """Retrieves all the event object in specific serialized data stream.
@@ -380,11 +353,73 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_object.tag = event_tag
     return event_object
 
-  # TODO: add test for AddEventObject
-  # TODO: add test for AddEventObjects
-  # TODO: add test for Close
+  def testAddEventObject(self):
+    """Tests the AddEventObject function."""
+    test_event_objects = test_lib.CreateTestEventObjects()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      for test_event_object in test_event_objects:
+        storage_file.AddEventObject(test_event_object)
+
+      storage_file.Close()
+
+  def testAddEventObjects(self):
+    """Tests the AddEventObjects function."""
+    test_event_objects = test_lib.CreateTestEventObjects()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.AddEventObjects(test_event_objects)
+
+      storage_file.Close()
+
   # TODO: add test for GetReports
-  # TODO: add test for GetSortedEntry
+
+  def testGetSortedEntry(self):
+    """Tests the GetSortedEntry function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    expected_timestamp = 1343166324000000
+
+    event_object = storage_file.GetSortedEntry()
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    # Test lower bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
+
+    storage_file.Close()
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    expected_timestamp = 1418925272000000
+
+    event_object = storage_file.GetSortedEntry(time_range=test_time_range)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    # Test upper bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
+
+    storage_file.Close()
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    expected_timestamp = 1343166324000000
+
+    event_object = storage_file.GetSortedEntry(time_range=test_time_range)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    storage_file.Close()
 
   def testGetSortedEntries(self):
     """Tests the GetSortedEntries function."""
@@ -409,6 +444,8 @@ class StorageFileTest(test_lib.StorageTestCase):
         timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
         timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
 
+    storage_file.Close()
+
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     timestamps = []
@@ -431,6 +468,8 @@ class StorageFileTest(test_lib.StorageTestCase):
         timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
         timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
 
+    storage_file.Close()
+
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     timestamps = []
@@ -451,69 +490,36 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
-  # TODO: add test for GetStorageInformation
-  # TODO: add test for GetTagging
-  # TODO: add test for HasGrouping
-  # TODO: add test for HasReports
-  # TODO: add test for HasTagging
-  # TODO: add test for SetEnableProfiling
-  # TODO: add test for StoreGrouping
-  # TODO: add test for StoreReport
-  # TODO: add test for StoreTagging
+    storage_file.Close()
 
-  def testStorage(self):
-    """Test the storage object."""
+  def testGetStorageInformation(self):
+    """Tests the GetStorageInformation function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    storage_information = storage_file.GetStorageInformation()
+    self.assertEqual(len(storage_information), 1)
+
+    storage_file.Close()
+
+  def testGetTagging(self):
+    """Tests the GetTagging function."""
     formatter_mediator = formatters_mediator.FormatterMediator()
 
-    event_objects = []
     tagged_event_objects = []
-    timestamps = []
-    groups = []
-    group_events = []
-    same_events = []
 
-    serializer = protobuf_serializer.ProtobufEventObjectSerializer
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      self._CreateTestStorageFileWithTags(temp_file)
 
-    with shared_test_lib.TempDirectory() as dirname:
-      temp_file = os.path.join(dirname, u'plaso.db')
-      self._CreateStorageFile(temp_file)
+      storage_file = zip_file.StorageFile(temp_file, read_only=True)
 
-      read_store = zip_file.StorageFile(temp_file, read_only=True)
-
-      self.assertTrue(read_store.HasTagging())
-      self.assertTrue(read_store.HasGrouping())
-
-      for event_object in self._GetEventObjects(read_store, 1):
-        event_objects.append(event_object)
-        timestamps.append(event_object.timestamp)
-        if event_object.data_type == 'windows:registry:key_value':
-          self.assertEqual(
-              event_object.timestamp_desc,
-              eventdata.EventTimestamp.WRITTEN_TIME)
-        else:
-          self.assertEqual(
-              event_object.timestamp_desc,
-              eventdata.EventTimestamp.WRITTEN_TIME)
-
-      for tag in read_store.GetTagging():
-        event_object = self._GetTaggedEvent(read_store, tag)
+      for tag in storage_file.GetTagging():
+        event_object = self._GetTaggedEvent(storage_file, tag)
         tagged_event_objects.append(event_object)
 
-      groups = list(read_store.GetGrouping())
-      self.assertEqual(len(groups), 1)
-      group_events = self._GetEventsFromGroup(read_store, groups[0])
+      storage_file.Close()
 
-      # Read the same events that were put in the group, just to compare
-      # against.
-      event_object = read_store._GetEventObject(1, entry_index=1)
-      serialized_event_object = serializer.WriteSerialized(event_object)
-      same_events.append(serialized_event_object)
-
-      event_object = read_store._GetEventObject(1, entry_index=2)
-      serialized_event_object = serializer.WriteSerialized(event_object)
-      same_events.append(serialized_event_object)
-
-    self.assertEqual(len(event_objects), 4)
     self.assertEqual(len(tagged_event_objects), 4)
 
     event_object = tagged_event_objects[0]
@@ -525,15 +531,15 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.tag.comment, u'My comment')
     self.assertEqual(event_object.tag.color, u'blue')
 
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+    message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
-    self.assertEqual(msg[0:10], u'This is a ')
+    self.assertEqual(message[0:10], u'This is a ')
 
     event_object = tagged_event_objects[1]
     self.assertEqual(event_object.tag.tags[0], u'Malware')
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+    message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
-    self.assertEqual(msg[0:15], u'[\\HKCU\\Windows\\')
+    self.assertEqual(message[0:15], u'[\\HKCU\\Windows\\')
 
     event_object = tagged_event_objects[2]
     self.assertEqual(event_object.tag.comment, u'This is interesting')
@@ -542,33 +548,112 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     self.assertEqual(event_object.parser, u'UNKNOWN')
 
-    event_object = tagged_event_objects[3]
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
+    event_object = tagged_event_objects[3]
     self.assertEqual(event_object.tag.tags[0], u'Interesting')
     self.assertEqual(event_object.tag.tags[1], u'Malware')
+
+  def testHasReports(self):
+    """Tests the HasReports function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    self.assertFalse(storage_file.HasReports())
+
+    storage_file.Close()
+
+  def testHasTagging(self):
+    """Tests the HasTagging function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    self.assertFalse(storage_file.HasTagging())
+
+    storage_file.Close()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      self._CreateTestStorageFileWithTags(temp_file)
+
+      storage_file = zip_file.StorageFile(temp_file, read_only=True)
+
+      self.assertTrue(storage_file.HasTagging())
+
+      storage_file.Close()
+
+  def testSetEnableProfiling(self):
+    """Tests the SetEnableProfiling function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.SetEnableProfiling(True)
+
+      storage_file.Close()
+
+  # TODO: add test for StoreReport
+
+  def testStoreTagging(self):
+    """Tests the StoreTagging function."""
+    test_event_objects = test_lib.CreateTestEventObjects()
+    test_event_tags = self._CreateTestEventTags()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.AddEventObjects(test_event_objects)
+
+      storage_file.StoreTagging(test_event_tags[:-1])
+      storage_file.StoreTagging(test_event_tags[-1:])
+
+      storage_file.Close()
+
+  # TODO: move the functionality of this test to other more specific tests.
+  def testStorage(self):
+    """Test the storage object."""
+    event_objects = []
+    timestamps = []
+    same_events = []
+
+    serializer = protobuf_serializer.ProtobufEventObjectSerializer
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      self._CreateTestStorageFileWithTags(temp_file)
+
+      storage_file = zip_file.StorageFile(temp_file, read_only=True)
+
+      for event_object in self._GetEventObjects(storage_file, 1):
+        event_objects.append(event_object)
+        timestamps.append(event_object.timestamp)
+        if event_object.data_type == 'windows:registry:key_value':
+          self.assertEqual(
+              event_object.timestamp_desc,
+              eventdata.EventTimestamp.WRITTEN_TIME)
+        else:
+          self.assertEqual(
+              event_object.timestamp_desc,
+              eventdata.EventTimestamp.WRITTEN_TIME)
+
+      # Read the same events that were put in the group, just to compare
+      # against.
+      event_object = storage_file._GetEventObject(1, entry_index=1)
+      serialized_event_object = serializer.WriteSerialized(event_object)
+      same_events.append(serialized_event_object)
+
+      event_object = storage_file._GetEventObject(1, entry_index=2)
+      serialized_event_object = serializer.WriteSerialized(event_object)
+      same_events.append(serialized_event_object)
+
+      storage_file.Close()
+
+    self.assertEqual(len(event_objects), 4)
 
     expected_timestamps = [
         1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
     self.assertEqual(timestamps, expected_timestamps)
-
-    self.assertEqual(groups[0].name, u'Malicious')
-    self.assertEqual(groups[0].category, u'Malware')
-    self.assertEqual(groups[0].color, u'red')
-    self.assertEqual(groups[0].description, u'Events that are malicious')
-    self.assertEqual(groups[0].first_timestamp, 1334940286000000)
-    self.assertEqual(groups[0].last_timestamp, 1334961526929596)
-
-    self.assertEqual(len(group_events), 2)
-    self.assertEqual(group_events[0].timestamp, 1334940286000000)
-    self.assertEqual(group_events[1].timestamp, 1334961526929596)
-
-    proto_group_events = []
-    for group_event in group_events:
-      serialized_event_object = serializer.WriteSerialized(group_event)
-      proto_group_events.append(serialized_event_object)
-
-    self.assertEqual(same_events, proto_group_events)
 
 
 if __name__ == '__main__':

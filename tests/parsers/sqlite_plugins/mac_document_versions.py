@@ -17,7 +17,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mac OS X Document Versions plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mac_document_versions.MacDocumentVersionsPlugin()
 
   def testProcess(self):

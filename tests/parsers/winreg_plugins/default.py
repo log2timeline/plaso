@@ -17,7 +17,7 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
   """Tests for the default Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = default.DefaultPlugin()
 
   def _CreateTestKey(self, key_path, time_string):

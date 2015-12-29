@@ -16,7 +16,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
   """The unit test for Mac Cups IPP parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = cups_ipp.CupsIppParser()
 
   def testParse(self):

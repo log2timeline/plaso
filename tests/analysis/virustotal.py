@@ -21,19 +21,19 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
   EVENT_1_HASH = u'90'
   FAKE_API_KEY = u'4'
   TEST_EVENTS = [
-      {u'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+      {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
        u'sha256_hash': EVENT_1_HASH,
        u'uuid': u'8'
       }
   ]
 
   def setUp(self):
-    """Sets up required objects prior running the tests."""
-    self.requests_patcher = mock.patch('requests.get', self._MockGet)
+    """Makes preparations before running an individual test."""
+    self.requests_patcher = mock.patch(u'requests.get', self._MockGet)
     self.requests_patcher.start()
 
   def tearDown(self):
-    """Resets required object after testing."""
+    """Cleans up after running an individual test."""
     self.requests_patcher.stop()
 
   def _MockGet(self, url, params):
@@ -73,7 +73,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     test_pathspec = fake_path_spec.FakePathSpec(
         location=u'C:\\WINDOWS\\system32\\evil.exe')
     event_object = pe.PECompilationEvent(
-        pe_event[u'timestamp'], u'Executable (EXE)', [], '')
+        pe_event[u'timestamp'], u'Executable (EXE)', [], u'')
     event_object.pathspec = test_pathspec
     event_object.sha256_hash = pe_event[u'sha256_hash']
     event_object.uuid = pe_event[u'uuid']
