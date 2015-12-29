@@ -66,6 +66,7 @@ class SlowLexicalTextParser(
     # TODO: remove the multiple inheritance.
     lexer.SelfFeederMixIn.__init__(self)
     interface.FileObjectParser.__init__(self)
+    self.file_verified = False
     self.line_ready = False
     self.attributes = {
         u'body': u'',
@@ -149,6 +150,7 @@ class SlowLexicalTextParser(
 
     # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
     self.file_object = file_object
+    self.file_verified = False
 
     # Start by checking, is this a text file or not? Before we proceed
     # any further.
@@ -184,6 +186,7 @@ class SlowLexicalTextParser(
         try:
           self.ParseLine(parser_mediator)
           file_verified = True
+          self.file_verified = file_verified
 
         except errors.TimestampError as exception:
           error_count += 1
@@ -287,18 +290,24 @@ class SlowLexicalTextParser(
     """
     year_string = self.attributes.get(u'iyear')
     if not year_string:
+      if not self.file_verified:
+        raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'year missing in log line: {0:s}'.format(self.PrintLine()))
       return
 
     time_string = self.attributes.get(u'time')
     if not time_string:
+      if not self.file_verified:
+        raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'time values missing in log line: {0:s}'.format(self.PrintLine()))
       return
 
     time_values = time_string.split(u':')
     if len(time_values) < 3:
+      if not self.file_verified:
+        raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'unsupported time format in log line: {0:s}'.format(
               self.PrintLine()))
@@ -321,6 +330,8 @@ class SlowLexicalTextParser(
       microseconds = int(microseconds_string)
 
     except ValueError as exception:
+      if not self.file_verified:
+        raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'unable to parse log line: {0:s} with error: {1:s}'.format(
               self.PrintLine(), exception))
