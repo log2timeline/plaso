@@ -48,7 +48,6 @@ class AppleAccountPlugin(interface.PlistPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
-             The default is None.
     """
     root = u'/Accounts'
 

@@ -53,8 +53,9 @@ class TestEngine(engine.BaseEngine):
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) of the file system.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None. Note that every thread or process
-                        must have its own resolver context.
+                        The default is None which will use the built in context
+                        which is not multi process safe. Note that every thread
+                        or process must have its own resolver context.
 
     Returns:
       A tuple of the file system (instance of dfvfs.FileSystem) and

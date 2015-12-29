@@ -73,7 +73,6 @@ class MacUserPlugin(interface.PlistPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
-             The default is None.
     """
     if u'name' not in match or u'uid' not in match:
       return

@@ -177,7 +177,7 @@ class ShellItemsParser(object):
       byte_stream: a string holding the shell items data.
       parent_path_segments: optional list containing the parent shell item
                             path segments.
-      codepage: optional byte stream codepage. The default is cp1252.
+      codepage: optional byte stream codepage.
     """
     if parent_path_segments and isinstance(parent_path_segments, list):
       self._path_segments = list(parent_path_segments)

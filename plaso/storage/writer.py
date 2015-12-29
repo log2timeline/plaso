@@ -48,7 +48,7 @@ class StorageWriter(queue.ItemQueueConsumer):
     Args:
       enable_profiling: boolean value to indicate if profiling should
                         be enabled.
-      profiling_type: optional profiling type. The default is 'all'.
+      profiling_type: optional profiling type.
     """
     self._enable_profiling = enable_profiling
     self._profiling_type = profiling_type

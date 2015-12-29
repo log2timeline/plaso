@@ -107,9 +107,9 @@ class Sqlite3DatabaseFile(object):
     Args:
       filename: the filename of the database.
       read_only: optional boolean value to indicate the database should be
-                 opened in read-only mode. The default is false. Since sqlite3
-                 does not support a real read-only mode we fake it by only
-                 permitting SELECT queries.
+                 opened in read-only mode. Since sqlite3 does not support
+                 a real read-only mode we fake it by only permitting SELECT
+                 queries.
 
     Returns:
       A boolean containing True if successful or False if not.

@@ -336,9 +336,8 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file. The default is None.
+      root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
-                  The default is None.
     """
     root_creation_time, root_modification_time = self.GetTimestamps(root_item)
 
@@ -370,9 +369,8 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file. The default is None.
+      root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
-                  The default is None.
     """
     root_creation_time, root_modification_time = self.GetTimestamps(root_item)
 

@@ -163,7 +163,7 @@ class EseDbPlugin(plugins.BasePlugin):
       table_name: The name of the table.
       record: The ESE record object (instance of pyesedb.record).
       value_mappings: Optional dict of value mappings, which map the column
-                      name to a callback method. The default is None.
+                      name to a callback method.
 
     Returns:
       An dict containing the values.
@@ -222,9 +222,7 @@ class EseDbPlugin(plugins.BasePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional ESE database object (instance of pyesedb.file).
-                The default is None.
-      cache: Optional cache object (instance of EseDbCache). The default is
-             None.
+      cache: Optional cache object (instance of EseDbCache).
 
     Raises:
       ValueError: If the database attribute is not valid.
@@ -264,9 +262,7 @@ class EseDbPlugin(plugins.BasePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional ESE database object (instance of pyesedb.file).
-                The default is None.
-      cache: Optional cache object (instance of EseDbCache). The default is
-             None.
+      cache: Optional cache object (instance of EseDbCache).
 
     Raises:
       errors.WrongPlugin: If the database does not contain all the tables

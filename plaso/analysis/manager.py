@@ -58,7 +58,7 @@ class AnalysisPluginManager(object):
 
     Args:
       show_all: optional boolean value to indicate to list all the analysis
-                plugin names. The default is True.
+                plugin names.
 
     Returns:
       A sorted list of tuples containing the name, docstring and type string

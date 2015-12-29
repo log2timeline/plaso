@@ -26,7 +26,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
       target_filename: filename for a Plaso storage file to be tagged.
       tag_input: filesystem path to the tagging input file.
       quiet: Optional boolean value to indicate the progress output should
-             be suppressed. The default is False.
+             be suppressed.
     """
     super(TaggingPlugin, self).__init__(incoming_queue)
     self._autodetect_tag_file_attempt = False

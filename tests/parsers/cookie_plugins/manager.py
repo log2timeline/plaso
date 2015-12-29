@@ -20,8 +20,8 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_data: Optional cookie data, as a byte string. The default is None.
-      url: Optional URL or path where the cookie got set. The default is None.
+      cookie_data: Optional cookie data, as a byte string.
+      url: Optional URL or path where the cookie got set.
     """
     return
 

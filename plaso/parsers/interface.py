@@ -108,7 +108,7 @@ class BaseParser(object):
     """Retrieves the plugin names.
 
     Args:
-      parser_filter_string: optional parser filter string. The default is None.
+      parser_filter_string: optional parser filter string.
 
     Returns:
       A list of plugin names.
@@ -141,7 +141,7 @@ class BaseParser(object):
     """Retrieves the plugin objects.
 
     Args:
-      parser_filter_string: optional parser filter string. The default is None.
+      parser_filter_string: optional parser filter string.
 
     Returns:
       A list of plugin objects (instances of BasePlugin).
@@ -160,7 +160,7 @@ class BaseParser(object):
     """Retrieves the registered plugins.
 
     Args:
-      parser_filter_string: optional parser filter string. The default is None.
+      parser_filter_string: optional parser filter string.
 
     Yields:
       A tuple that contains the uniquely identifying name of the plugin

@@ -56,7 +56,6 @@ class Hexdump(object):
     Args:
       data: String containing the binary data.
       data_offset: Optional offset within the data to start formatting.
-                   The default is 0.
       maximum_data_size: Optional maximum size of the data to format.
                          The default is None which represents all of
                          the binary data.

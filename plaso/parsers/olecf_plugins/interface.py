@@ -61,9 +61,8 @@ class OlecfPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file. The default is None.
+      root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
-                  The default is None.
     """
 
   def Process(self, parser_mediator, root_item, item_names, **kwargs):
@@ -75,9 +74,8 @@ class OlecfPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file. The default is None.
+      root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
-                  The default is None.
 
     Raises:
       errors.WrongPlugin: If the set of required items is not a subset

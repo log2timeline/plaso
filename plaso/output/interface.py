@@ -133,7 +133,7 @@ class LinearOutputModule(OutputModule):
 
     Args:
       output_writer: Optional output writer object (instance of
-                     CLIOutputWriter). The default is None.
+                     CLIOutputWriter).
     """
     self._output_writer = output_writer
 

@@ -135,7 +135,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey).
       parent_path_segments: list containing the parent shell item path segments.
-      codepage: optional extended ASCII string codepage. The default is cp1252.
+      codepage: optional extended ASCII string codepage.
     """
     entry_numbers = {}
     values_dict = {}
@@ -187,7 +187,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       registry_key: a Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      codepage: optional extended ASCII string codepage. The default is cp1252.
+      codepage: optional extended ASCII string codepage.
     """
     self._ParseSubKey(parser_mediator, registry_key, [], codepage=codepage)
 
