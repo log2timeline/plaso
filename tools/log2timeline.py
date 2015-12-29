@@ -114,7 +114,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       console_size = screen_buffer_size.X * screen_buffer_size.Y
 
       screen_buffer.FillConsoleOutputCharacter(
-          b' ', console_size, top_left_coordinate)
+          u' ', console_size, top_left_coordinate)
       screen_buffer.FillConsoleOutputAttribute(
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
