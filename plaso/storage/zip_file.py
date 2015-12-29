@@ -6,8 +6,8 @@ that are stored together in a single ZIP compressed container.
 
 The storage file is essentially split up in two categories:
    +  A store file (further described below).
-   +  Other files, these contain grouping information, tag, collection
-      information or other metadata describing the content of the store files.
+   +  Other files, these contain tag, collection information or
+      other metadata describing the content of the store files.
 
 The store itself is a collection of four files:
   plaso_meta.<store_number>
@@ -1094,34 +1094,6 @@ class StorageFile(ZIPStorageFile):
     """Stops the profiling."""
     if self._serializers_profiler:
       self._serializers_profiler.Write()
-
-  def _ReadEventGroup(self, data_stream):
-    """Reads an event group.
-
-    Args:
-      data_stream: the data stream object (instance of _SerializedDataStream).
-
-    Returns:
-      An event group object (instance of plaso_storage_pb2.EventGroup) or None.
-    """
-    event_group_data = data_stream.ReadEntry()
-    if not event_group_data:
-      return
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'event_group')
-
-    # TODO: add event group serializers and use ReadSerialized.
-    # event_group = self._event_group_serializer.ReadSerialized(proto_string)
-
-    event_group = plaso_storage_pb2.EventGroup()
-    event_group.ParseFromString(event_group_data)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'event_group')
-
-    # TODO: return a Python object instead of a protobuf.
-    return event_group
 
   def _ReadEventTag(self, data_stream):
     """Reads an event tag.
