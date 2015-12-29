@@ -185,12 +185,11 @@ class SlowLexicalTextParser(
       if self.line_ready:
         try:
           self.ParseLine(parser_mediator)
-          file_verified = True
-          self.file_verified = file_verified
+          self.file_verified = True
 
         except errors.TimestampError as exception:
           error_count += 1
-          if file_verified:
+          if self.file_verified:
             logging.debug(
                 u'[{0:s} VERIFIED] Error count: {1:d} and ERROR: {2:d}'.format(
                     path_spec_printable, error_count, self.error))
