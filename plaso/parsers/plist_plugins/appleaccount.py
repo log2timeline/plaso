@@ -40,7 +40,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
     if not plist_name.startswith(self.PLIST_PATH):
       raise errors.WrongPlistPlugin(self.NAME, plist_name)
     super(AppleAccountPlugin, self).Process(
-      parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
+        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Apple Account entries.
