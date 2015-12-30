@@ -83,8 +83,7 @@ For further details about the storage design see:
 import collections
 import heapq
 import logging
-# TODO: replace all instances of struct by construct!
-import struct
+import os
 import sys
 import warnings
 import zipfile
@@ -103,77 +102,72 @@ from plaso.serializer import protobuf_serializer
 
 
 class _EventTagIndexValue(object):
-  """Class that defines the event tag index value."""
+  """Class that defines the event tag index value.
 
-  TAG_STORE_STRUCT = construct.Struct(
-      u'tag_store',
-      construct.ULInt32(u'store_number'),
-      construct.ULInt32(u'store_index'))
-
-  TAG_UUID_STRUCT = construct.Struct(
-      u'tag_uuid',
-      construct.PascalString(u'event_uuid'))
-
-  TAG_INDEX_STRUCT = construct.Struct(
-      u'tag_index',
-      construct.Byte(u'type'),
-      construct.ULInt32(u'offset'),
-      construct.IfThenElse(
-          u'tag',
-          lambda ctx: ctx[u'type'] == 1,
-          TAG_STORE_STRUCT,
-          TAG_UUID_STRUCT))
-
+  Arrtibutes:
+    event_uuid: optional string containing the event identifier (UUID).
+    offset: an integer containing the serialized event tag data offset.
+    store_number: optional integer containing the store number.
+    store_offset: optional integer containing the offset relative
+                  to the start of the store.
+    tag_type: an integer containin the tag type.
+  """
   TAG_TYPE_UNDEFINED = 0
   TAG_TYPE_NUMERIC = 1
   TAG_TYPE_UUID = 2
 
-  def __init__(self, identifier, store_number=0, store_offset=0):
+  def __init__(
+      self, tag_type, offset, event_uuid=None, store_number=None,
+      store_offset=None):
     """Initializes the tag index value.
 
     Args:
-      identifier: the identifier string.
-      store_number: optional store number.
-      store_offset: optional offset relative to the start of the store.
+      tag_type: an integer containing the tag type.
+      offset: an integer containing the serialized event tag data offset.
+      event_uuid: optional string containing the event identifier (UUID).
+      store_number: optional integer containing the store number.
+      store_offset: optional integer containing the offset relative
+                    to the start of the store.
     """
     super(_EventTagIndexValue, self).__init__()
-    self.identifier = identifier
+    self._identifier = None
+    self.event_uuid = event_uuid
+    self.offset = offset
     self.store_number = store_number
     self.store_offset = store_offset
+    self.tag_type = tag_type
 
-  @classmethod
-  def Read(cls, file_object, store_number):
-    """Reads a tag index value from the file-like object.
+  def __str__(self):
+    """Retrieve a string representation of the event tag identifier."""
+    string = u'tag_type: {0:d} offset: 0x{1:08x}'.format(
+        self.tag_type, self.offset)
 
-    Args:
-      file_object: the file-like object to read from.
-      store_number: the store number.
+    if self.tag_type == self.TAG_TYPE_NUMERIC:
+      return u'{0:s} store_number: {1:d} store_offset: {2:d}'.format(
+          string, self.store_number, self.store_offset)
 
-    Returns:
-      The tag index value if successful or None.
-    """
-    try:
-      tag_index_struct = cls.TAG_INDEX_STRUCT.parse_stream(file_object)
-    except (construct.FieldError, AttributeError):
-      return None
+    elif self.tag_type == self.TAG_TYPE_UUID:
+      return u'{0:s} event_uuid: {1:s}'.format(string, self.event_uuid)
 
-    tag_type = tag_index_struct.get(u'type', cls.TAG_TYPE_UNDEFINED)
-    if tag_type not in [cls.TAG_TYPE_NUMERIC, cls.TAG_TYPE_UUID]:
-      logging.warning(u'Unsupported tag type: {0:d}'.format(tag_type))
-      return None
+    return string
 
-    tag_entry = tag_index_struct.get('tag', {})
-    if tag_type == cls.TAG_TYPE_NUMERIC:
-      tag_identifier = u'{0:d}:{1:d}'.format(
-          tag_entry.get(u'store_number', 0),
-          tag_entry.get(u'store_index', 0))
+  @property
+  def identifier(self):
+    """A string containing the event object identifier."""
+    if not self._identifier:
+      if self.tag_type == self.TAG_TYPE_NUMERIC:
+        self._identifier = u'{0:d}:{1:d}'.format(
+            self.store_number, self.store_offset)
 
-    else:
-      tag_identifier = tag_entry.get(u'event_uuid', '0')
+      elif self.tag_type == self.TAG_TYPE_UUID:
+        self._identifier = self.event_uuid
 
-    store_offset = tag_index_struct.get(u'offset')
-    return _EventTagIndexValue(
-        tag_identifier, store_number=store_number, store_offset=store_offset)
+    return self._identifier
+
+  @property
+  def tag(self):
+    """The tag property to support construct.build()."""
+    return self
 
 
 class _SerializedDataStream(object):
@@ -187,17 +181,14 @@ class _SerializedDataStream(object):
   # The maximum serialized data size (40 MiB).
   _MAXIMUM_DATA_SIZE = 40 * 1024 * 1024
 
-  def __init__(self, zip_file, stream_name, access_mode='r'):
+  def __init__(self, zip_file, stream_name):
     """Initializes a serialized data stream object.
 
     Args:
       zip_file: the ZIP file object that contains the stream.
       stream_name: string containing the name of the stream.
-      access_mode: optional string containing the access mode.
-                   The default is read-only ('r').
     """
     super(_SerializedDataStream, self).__init__()
-    self._access_mode = access_mode
     self._entry_index = 0
     self._file_object = None
     self._stream_name = stream_name
@@ -216,8 +207,7 @@ class _SerializedDataStream(object):
       IOError: if the file-like object cannot be opened.
     """
     try:
-      self._file_object = self._zip_file.open(
-          self._stream_name, mode=self._access_mode)
+      self._file_object = self._zip_file.open(self._stream_name, mode='r')
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -230,8 +220,7 @@ class _SerializedDataStream(object):
       self._file_object.close()
       self._file_object = None
 
-    self._file_object = self._zip_file.open(
-        self._stream_name, mode=self._access_mode)
+    self._file_object = self._zip_file.open(self._stream_name, mode='r')
     self._stream_offset = 0
 
   def ReadEntry(self):
@@ -297,29 +286,101 @@ class _SerializedDataStream(object):
 
     self._entry_index = entry_index
 
+  def WriteAbort(self):
+    """Aborts the write of a serialized data stream."""
+    if self._file_object:
+      self._file_object.close()
+      self._file_object = None
+
+    if os.path.exists(self._stream_name):
+      os.remove(self._stream_name)
+
+  def WriteEntry(self, data):
+    """Writes an entry to the file-like object.
+
+    Args:
+      file_object: a file-like object.
+      data: a binary string containing the data.
+
+    Returns:
+      An integer containing the offset of the temporary file.
+
+    Raises:
+      IOError: if the entry cannot be written.
+    """
+    data_size = construct.ULInt32(u'size').build(len(data))
+    self._file_object.write(data_size)
+    self._file_object.write(data)
+
+    return self._file_object.tell()
+
+  def WriteFinalize(self):
+    """Finalize the write of a serialized data stream.
+
+    Writes the temporary file with the serialized data to the zip file.
+
+    Returns:
+      An integer containing the offset of the temporary file.
+
+    Raises:
+      IOError: if the serialized data stream cannot be written.
+    """
+    offset = self._file_object.tell()
+    self._file_object.close()
+    self._file_object = None
+
+    try:
+      self._zip_file.write(self._stream_name)
+    finally:
+      os.remove(self._stream_name)
+
+    return offset
+
+  def WriteInitialize(self):
+    """Initializes the write of a serialized data stream.
+
+    Creates a temporary file to store the serialized data.
+
+    Returns:
+      An integer containing the offset of the temporary file.
+
+    Raises:
+      IOError: if the serialized data stream cannot be written.
+    """
+    self._file_object = open(self._stream_name, 'wb')
+    return self._file_object.tell()
+
 
 class _SerializedDataOffsetTable(object):
   """Class that defines a serialized data offset table."""
+
+  _TABLE = construct.GreedyRange(
+      construct.ULInt32(u'offset'))
 
   _TABLE_ENTRY = construct.Struct(
       u'table_entry',
       construct.ULInt32(u'offset'))
   _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
-  def __init__(self, zip_file, stream_name, access_mode='r'):
+  def __init__(self, zip_file, stream_name):
     """Initializes a serialized data offset table object.
 
     Args:
       zip_file: the ZIP file object that contains the stream.
       stream_name: string containing the name of the stream.
-      access_mode: optional string containing the access mode.
-                   The default is read-only ('r').
     """
     super(_SerializedDataOffsetTable, self).__init__()
-    self._access_mode = access_mode
     self._offsets = []
     self._stream_name = stream_name
     self._zip_file = zip_file
+
+  def AddOffset(self, offset):
+    """Adds an offset.
+
+    Args:
+      offset: an integer containing the offset.
+    """
+    self._offsets.append(offset)
 
   def GetOffset(self, entry_index):
     """Retrieves a specific serialized data offset.
@@ -342,8 +403,7 @@ class _SerializedDataOffsetTable(object):
       IOError: if the offset table cannot be read.
     """
     try:
-      file_object = self._zip_file.open(
-          self._stream_name, mode=self._access_mode)
+      file_object = self._zip_file.open(self._stream_name, mode='r')
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -363,26 +423,35 @@ class _SerializedDataOffsetTable(object):
     finally:
       file_object.close()
 
+  def Write(self):
+    """Writes the offset table.
+
+    Raises:
+      IOError: if the offset table cannot be written.
+    """
+    table_data = self._TABLE.build(self._offsets)
+    self._zip_file.writestr(self._stream_name, table_data)
+
 
 class _SerializedDataTimestampTable(object):
   """Class that defines a serialized data timestamp table."""
+
+  _TABLE = construct.GreedyRange(
+      construct.SLInt64(u'timestamp'))
 
   _TABLE_ENTRY = construct.Struct(
       u'table_entry',
       construct.SLInt64(u'timestamp'))
   _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
-  def __init__(self, zip_file, stream_name, access_mode='r'):
+  def __init__(self, zip_file, stream_name):
     """Initializes a serialized data timestamp table object.
 
     Args:
       zip_file: the ZIP file object that contains the stream.
       stream_name: string containing the name of the stream.
-      access_mode: optional string containing the access mode.
-                   The default is read-only ('r').
     """
     super(_SerializedDataTimestampTable, self).__init__()
-    self._access_mode = access_mode
     self._timestamps = []
     self._stream_name = stream_name
     self._zip_file = zip_file
@@ -392,14 +461,22 @@ class _SerializedDataTimestampTable(object):
     """The number of timestamps."""
     return len(self._timestamps)
 
+  def AddTimestamp(self, timestamp):
+    """Adds a timestamp.
+
+    Args:
+      timestamp: an integer containing the timestamp.
+    """
+    self._timestamps.append(timestamp)
+
   def GetTimestamp(self, entry_index):
-    """Retrieves a specific serialized data timestamp.
+    """Retrieves a specific timestamp.
 
     Args:
       entry_index: an integer containing the table entry index.
 
     Returns:
-      An integer containing the serialized data timestamp.
+      An integer containing the timestamp.
 
     Raises:
       IndexError: if the table entry index is out of bounds.
@@ -413,8 +490,7 @@ class _SerializedDataTimestampTable(object):
       IOError: if the timestamp table cannot be read.
     """
     try:
-      file_object = self._zip_file.open(
-          self._stream_name, mode=self._access_mode)
+      file_object = self._zip_file.open(self._stream_name, mode='r')
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -433,6 +509,150 @@ class _SerializedDataTimestampTable(object):
 
     finally:
       file_object.close()
+
+  def Write(self):
+    """Writes the timestamp table.
+
+    Raises:
+      IOError: if the timestamp table cannot be written.
+    """
+    table_data = self._TABLE.build(self._timestamps)
+    self._zip_file.writestr(self._stream_name, table_data)
+
+
+class _SerializedEventTagIndexTable(object):
+  """Class that defines a serialized event tag index table."""
+
+  _TAG_STORE_STRUCT = construct.Struct(
+      u'tag_store',
+      construct.ULInt32(u'store_number'),
+      construct.ULInt32(u'store_offset'))
+
+  _TAG_UUID_STRUCT = construct.Struct(
+      u'tag_uuid',
+      construct.PascalString(u'event_uuid'))
+
+  _TAG_INDEX_STRUCT = construct.Struct(
+      u'tag_index',
+      construct.Byte(u'tag_type'),
+      construct.ULInt32(u'offset'),
+      construct.IfThenElse(
+          u'tag',
+          lambda ctx: ctx[u'tag_type'] == 1,
+          _TAG_STORE_STRUCT,
+          _TAG_UUID_STRUCT))
+
+  def __init__(self, zip_file, stream_name):
+    """Initializes a serialized event tag index table object.
+
+    Args:
+      zip_file: the ZIP file object that contains the stream.
+      stream_name: string containing the name of the stream.
+    """
+    super(_SerializedEventTagIndexTable, self).__init__()
+    self._event_tag_indexes = []
+    self._stream_name = stream_name
+    self._zip_file = zip_file
+
+  @property
+  def number_of_entries(self):
+    """The number of event tag index entries."""
+    return len(self._event_tag_indexes)
+
+  def AddEventTagIndex(
+      self, tag_type, offset, event_uuid=None, store_number=None,
+      store_offset=None):
+    """Adds an event tag index.
+
+    Args:
+      tag_type: an integer containin the tag type.
+      offset: an integer containing the serialized event tag data offset.
+      event_uuid: optional string containing the event identifier (UUID).
+      store_number: optional integer containing the store number.
+      store_offset: optional integer containing the offset relative
+                    to the start of the store.
+    """
+    event_tag_index = _EventTagIndexValue(
+        tag_type, offset, event_uuid=event_uuid, store_number=store_number,
+        store_offset=store_offset)
+    self._event_tag_indexes.append(event_tag_index)
+
+  def GetEventTagIndex(self, entry_index):
+    """Retrieves a specific event tag index.
+
+    Args:
+      entry_index: an integer containing the table entry index.
+
+    Returns:
+      An event tag index object (instance of _EventTagIndexValue).
+
+    Raises:
+      IndexError: if the table entry index is out of bounds.
+    """
+    return self._event_tag_indexes[entry_index]
+
+  def Read(self):
+    """Reads the serialized event tag index table.
+
+    Raises:
+      IOError: if the event tag index table cannot be read.
+    """
+    try:
+      _, _, stream_store_number = self._stream_name.rpartition(u'.')
+      stream_store_number = int(stream_store_number, 10)
+    except ValueError as exception:
+      raise IOError((
+          u'Unable to determine store number of stream: {0:s} '
+          u'with error: {1:s}').format(self._stream_name, exception))
+
+    try:
+      file_object = self._zip_file.open(self._stream_name, mode='r')
+    except KeyError as exception:
+      raise IOError(
+          u'Unable to open stream with error: {0:s}'.format(exception))
+
+    try:
+      while True:
+        try:
+          tag_index_struct = self._TAG_INDEX_STRUCT.parse_stream(file_object)
+        except (construct.FieldError, AttributeError):
+          break
+
+        tag_type = tag_index_struct.get(
+            u'tag_type', _EventTagIndexValue.TAG_TYPE_UNDEFINED)
+        if tag_type not in (
+            _EventTagIndexValue.TAG_TYPE_NUMERIC,
+            _EventTagIndexValue.TAG_TYPE_UUID):
+          logging.warning(u'Unsupported tag type: {0:d}'.format(tag_type))
+          break
+
+        offset = tag_index_struct.get(u'offset', None)
+        tag = tag_index_struct.get(u'tag', {})
+        event_uuid = tag.get(u'event_uuid', None)
+        store_number = tag.get(u'store_number', stream_store_number)
+        store_offset = tag.get(u'store_offset', None)
+
+        event_tag_index = _EventTagIndexValue(
+            tag_type, offset, event_uuid=event_uuid, store_number=store_number,
+            store_offset=store_offset)
+        self._event_tag_indexes.append(event_tag_index)
+
+    finally:
+      file_object.close()
+
+  def Write(self):
+    """Writes the event tag index table.
+
+    Raises:
+      IOError: if the event tag index table cannot be written.
+    """
+    serialized_entries = []
+    for event_tag_index in self._event_tag_indexes:
+      entry_data = self._TAG_INDEX_STRUCT.build(event_tag_index)
+      serialized_entries.append(entry_data)
+
+    table_data = b''.join(serialized_entries)
+    self._zip_file.writestr(self._stream_name, table_data)
 
 
 class ZIPStorageFile(object):
@@ -616,7 +836,7 @@ class ZIPStorageFile(object):
     file_object.close()
     return True
 
-  def _Open(self, path, access_mode=u'r'):
+  def _Open(self, path, access_mode='r'):
     """Opens the storage file.
 
     Args:
@@ -639,7 +859,7 @@ class ZIPStorageFile(object):
       raise IOError(
           u'Unable to open ZIP file with error: {0:s}'.format(exception))
 
-  def _OpenStream(self, stream_name, access_mode=u'r'):
+  def _OpenStream(self, stream_name, access_mode='r'):
     """Opens a stream.
 
     Args:
@@ -732,8 +952,10 @@ class StorageFile(ZIPStorageFile):
     super(StorageFile, self).__init__()
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
-    self._buffer_last_timestamp = 0
+    self._buffer_last_timestamp = -sys.maxint - 1
     self._buffer_size = 0
+    self._count_data_type = collections.Counter()
+    self._count_parser = collections.Counter()
     self._event_object_serializer = None
     self._event_tag_index = None
     self._file_number = 1
@@ -747,9 +969,9 @@ class StorageFile(ZIPStorageFile):
     self._write_counter = 0
 
     if self._read_only:
-      access_mode = u'r'
+      access_mode = 'r'
     else:
-      access_mode = u'a'
+      access_mode = 'a'
 
     self._Open(
         output_file, access_mode=access_mode,
@@ -790,87 +1012,13 @@ class StorageFile(ZIPStorageFile):
       if not stream_name.startswith(u'plaso_tag_index.'):
         continue
 
-      file_object = self._OpenStream(stream_name)
-      if file_object is None:
-        raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+      event_tag_index_table = _SerializedEventTagIndexTable(
+          self._zipfile, stream_name)
+      event_tag_index_table.Read()
 
-      _, _, store_number = stream_name.rpartition(u'.')
-      try:
-        store_number = int(store_number, 10)
-      except ValueError as exception:
-        raise IOError((
-            u'Unable to determine store number of stream: {0:s} '
-            u'with error: {1:s}').format(stream_name, exception))
-
-      while True:
-        tag_index_value = _EventTagIndexValue.Read(file_object, store_number)
-        if tag_index_value is None:
-          break
-
+      for entry_index in range(event_tag_index_table.number_of_entries):
+        tag_index_value = event_tag_index_table.GetEventTagIndex(entry_index)
         self._event_tag_index[tag_index_value.identifier] = tag_index_value
-
-  def _FlushBuffer(self):
-    """Flushes the buffered streams to disk."""
-    if not self._buffer_size:
-      return
-
-    yaml_dict = {
-        u'range': (self._buffer_first_timestamp, self._buffer_last_timestamp),
-        u'version': self.STORAGE_VERSION,
-        u'data_type': list(self._count_data_type.viewkeys()),
-        u'parsers': list(self._count_parser.viewkeys()),
-        u'count': len(self._buffer),
-        u'type_count': self._count_data_type.most_common()}
-    self._count_data_type = collections.Counter()
-    self._count_parser = collections.Counter()
-
-    stream_name = u'plaso_meta.{0:06d}'.format(self._file_number)
-    # TODO: why have YAML serialization here?
-    self._WriteStream(stream_name, yaml.safe_dump(yaml_dict))
-
-    ofs = 0
-    proto_str = []
-    index_str = []
-    timestamp_str = []
-    for _ in range(len(self._buffer)):
-      timestamp, entry = heapq.heappop(self._buffer)
-      # TODO: Instead of appending to an array
-      # which is not optimal (loads up the entire max file
-      # size into memory) Zipfile should be extended to
-      # allow appending to files (implement lock).
-      try:
-        # Appending a timestamp to the timestamp index, this is used during
-        # time based filtering. If this is not done we would need to unserialize
-        # all events to get the timestamp value which is really slow.
-        timestamp_str.append(struct.pack('<q', timestamp))
-      except struct.error as exception:
-        # TODO: Instead of just logging the error unserialize the event
-        # and print out information from the event, eg. parser and path spec
-        # location. That way we can find the root cause and fix that instead of
-        # just catching the exception.
-        logging.error((
-            u'Unable to store event, not able to index timestamp value with '
-            u'error: {0:s} [timestamp: {1:d}]').format(exception, timestamp))
-        continue
-      index_str.append(struct.pack('<I', ofs))
-      packed = struct.pack('<I', len(entry)) + entry
-      ofs += len(packed)
-      proto_str.append(packed)
-
-    stream_name = u'plaso_index.{0:06d}'.format(self._file_number)
-    self._WriteStream(stream_name, b''.join(index_str))
-
-    stream_name = u'plaso_proto.{0:06d}'.format(self._file_number)
-    self._WriteStream(stream_name, b''.join(proto_str))
-
-    stream_name = u'plaso_timestamps.{0:06d}'.format(self._file_number)
-    self._WriteStream(stream_name, b''.join(timestamp_str))
-
-    self._file_number += 1
-    self._buffer_size = 0
-    self._buffer = []
-    self._buffer_first_timestamp = sys.maxint
-    self._buffer_last_timestamp = 0
 
   def _GetEventObject(self, stream_number, entry_index=-1):
     """Reads an event object from a specific stream.
@@ -1033,7 +1181,7 @@ class StorageFile(ZIPStorageFile):
 
   # pylint: disable=arguments-differ
   def _Open(
-      self, path, access_mode=u'r',
+      self, path, access_mode='r',
       serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Opens the storage file.
 
@@ -1057,7 +1205,7 @@ class StorageFile(ZIPStorageFile):
 
     self._SetSerializerFormat(serializer_format)
 
-    if access_mode != u'r' and not has_serializer_stream:
+    if access_mode != 'r' and not has_serializer_stream:
       # Note that _serializer_format_string is set by _SetSerializerFormat().
       self._WriteStream(serializer_stream_name, self._serializer_format_string)
 
@@ -1228,6 +1376,92 @@ class StorageFile(ZIPStorageFile):
       raise ValueError(
           u'Unsupported serializer format: {0:s}'.format(serializer_format))
 
+  def _WriteBuffer(self):
+    """Writes the buffered event objects to the storage file."""
+    if not self._buffer_size:
+      return
+
+    stream_name = u'plaso_index.{0:06d}'.format(self._file_number)
+    offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
+
+    stream_name = u'plaso_timestamps.{0:06d}'.format(self._file_number)
+    timestamp_table = _SerializedDataTimestampTable(self._zipfile, stream_name)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'write')
+
+    stream_name = u'plaso_proto.{0:06d}'.format(self._file_number)
+    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    entry_data_offset = data_stream.WriteInitialize()
+    try:
+      for _ in range(len(self._buffer)):
+        timestamp, entry_data = heapq.heappop(self._buffer)
+
+        timestamp_table.AddTimestamp(timestamp)
+        offset_table.AddOffset(entry_data_offset)
+
+        entry_data_offset = data_stream.WriteEntry(entry_data)
+
+    except:
+      data_stream.WriteAbort()
+
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(u'write')
+
+      raise
+
+    self._WriteMetadata(
+        self._file_number, self._buffer_first_timestamp,
+        self._buffer_last_timestamp)
+
+    offset_table.Write()
+    data_stream.WriteFinalize()
+    timestamp_table.Write()
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'write')
+
+    # Reset the counters.
+    self._count_data_type = collections.Counter()
+    self._count_parser = collections.Counter()
+
+    self._file_number += 1
+    self._buffer_size = 0
+    self._buffer = []
+    self._buffer_first_timestamp = sys.maxint
+    self._buffer_last_timestamp = -sys.maxint - 1
+
+  def _WriteMetadata(self, stream_number, first_timestamp, last_timestamp):
+    """Writes the metadata to the storage file.
+
+    Args:
+      stream_number: an integer containing the number of the stream.
+      first_timestamp: the first timestamp time value in the corresponding
+                       serialized event object stream. The timestamp contains
+                       the number of microseconds since Jan 1, 1970
+                       00:00:00 UTC.
+      last_timestamp: the last timestamp time value in the corresponding
+                      serialized event object stream. The timestamp contains
+                      the number of microseconds since Jan 1, 1970
+                      00:00:00 UTC.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    yaml_dict = {
+        u'range': (first_timestamp, last_timestamp),
+        u'version': self.STORAGE_VERSION,
+        u'data_type': list(self._count_data_type.viewkeys()),
+        u'parsers': list(self._count_parser.viewkeys()),
+        u'count': len(self._buffer),
+        u'type_count': self._count_data_type.most_common()}
+
+    # TODO: why have YAML serialization here?
+    yaml_data = yaml.safe_dump(yaml_dict)
+
+    stream_name = u'plaso_meta.{0:06d}'.format(stream_number)
+    self._WriteStream(stream_name, yaml_data)
+
   def _WritePreprocessObject(self, pre_obj):
     """Writes a preprocess object to the storage file.
 
@@ -1250,9 +1484,10 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'pre_obj')
 
+    # TODO: use _SerializedDataStream.
+    pre_obj_data_size = construct.ULInt32(u'size').build(len(pre_obj_data))
     stream_data = b''.join([
-        existing_stream_data,
-        struct.pack('<I', len(pre_obj_data)), pre_obj_data])
+        existing_stream_data, pre_obj_data_size, pre_obj_data])
 
     self._WriteStream(u'information.dump', stream_data)
 
@@ -1311,7 +1546,7 @@ class StorageFile(ZIPStorageFile):
     self._write_counter += 1
 
     if self._buffer_size > self._max_buffer_size:
-      self._FlushBuffer()
+      self._WriteBuffer()
 
   def AddEventObjects(self, event_objects):
     """Adds event objects to the storage.
@@ -1331,7 +1566,7 @@ class StorageFile(ZIPStorageFile):
     if not self._read_only and self._pre_obj:
       self._WritePreprocessObject(self._pre_obj)
 
-    self._FlushBuffer()
+    self._WriteBuffer()
     self._Close()
 
     if not self._read_only:
@@ -1574,9 +1809,7 @@ class StorageFile(ZIPStorageFile):
       if self._event_tag_index is None:
         self._BuildTagIndex()
 
-    tag_packed = []
-    tag_index = []
-    size = 0
+    serialized_event_tags = []
     for tag in tags:
       self._pre_obj.counter[u'Total Tags'] += 1
       if hasattr(tag, u'tags'):
@@ -1600,7 +1833,7 @@ class StorageFile(ZIPStorageFile):
         data_stream = _SerializedDataStream(self._zipfile, stream_name)
         # TODO: replace 0 by the actual event tag entry index.
         # This is for code consistency rather then a functional purpose.
-        data_stream.SeekEntryAtOffset(0, tag_index_value.store_offset)
+        data_stream.SeekEntryAtOffset(0, tag_index_value.offset)
 
         # TODO: if old_tag is cached make sure to update cache after write.
         old_tag = self._ReadEventTag(data_stream)
@@ -1629,28 +1862,50 @@ class StorageFile(ZIPStorageFile):
       if self._serializers_profiler:
         self._serializers_profiler.StopTiming(u'event_tag')
 
-      # TODO: move to write class function of _EventTagIndexValue.
-      packed = (
-          struct.pack('<I', len(serialized_event_tag)) + serialized_event_tag)
-      ofs = struct.pack('<I', size)
-      if getattr(tag, u'store_number', 0):
-        struct_string = (
-            construct.Byte(u'type').build(1) + ofs +
-            _EventTagIndexValue.TAG_STORE_STRUCT.build(tag))
-      else:
-        struct_string = (
-            construct.Byte(u'type').build(2) + ofs +
-            _EventTagIndexValue.TAG_UUID_STRUCT.build(tag))
+      serialized_event_tags.append(serialized_event_tag)
 
-      tag_index.append(struct_string)
-      size += len(packed)
-      tag_packed.append(packed)
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'write')
 
     stream_name = u'plaso_tag_index.{0:06d}'.format(tag_number)
-    self._WriteStream(stream_name, b''.join(tag_index))
+    event_tag_index_table = _SerializedEventTagIndexTable(
+        self._zipfile, stream_name)
 
     stream_name = u'plaso_tagging.{0:06d}'.format(tag_number)
-    self._WriteStream(stream_name, b''.join(tag_packed))
+    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    entry_data_offset = data_stream.WriteInitialize()
+
+    try:
+      for tag_index, tag in enumerate(tags):
+        entry_data_offset = data_stream.WriteEntry(
+            serialized_event_tags[tag_index])
+
+        event_uuid = getattr(tag, u'event_uuid', None)
+        store_number = getattr(tag, u'store_number', None)
+        store_offset = getattr(tag, u'store_index', None)
+
+        if event_uuid:
+          tag_type = _EventTagIndexValue.TAG_TYPE_UUID
+        else:
+          tag_type = _EventTagIndexValue.TAG_TYPE_NUMERIC
+
+        event_tag_index_table.AddEventTagIndex(
+            tag_type, entry_data_offset, event_uuid=event_uuid,
+            store_number=store_number, store_offset=store_offset)
+
+    except:
+      data_stream.WriteAbort()
+
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(u'write')
+
+      raise
+
+    event_tag_index_table.Write()
+    data_stream.WriteFinalize()
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'write')
 
     # TODO: Update the tags that have changed in the index instead
     # of flushing the index.
