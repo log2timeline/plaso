@@ -15,7 +15,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
   """The unit test for UTMP parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = utmp.UtmpParser()
 
   def testParseUtmpFile(self):

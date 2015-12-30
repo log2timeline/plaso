@@ -16,7 +16,7 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacKeeper Cache database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mackeeper_cache.MacKeeperCachePlugin()
 
   def testProcess(self):

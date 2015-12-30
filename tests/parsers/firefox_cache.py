@@ -19,7 +19,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCacheParser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = firefox_cache.FirefoxCacheParser()
 
   def VerifyMajorMinor(self, events):
@@ -180,7 +180,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCache2Parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = firefox_cache.FirefoxCache2Parser()
 
   def testParseCache2Entry(self):

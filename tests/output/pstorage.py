@@ -17,12 +17,12 @@ class PstorageTest(test_lib.OutputModuleTestCase):
   """Tests for the plaso storage outputter."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     self.test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
 
   def testOutput(self):
-    with shared_test_lib.TempDirectory() as dirname:
-      storage_file = os.path.join(dirname, u'plaso.plaso')
+    with shared_test_lib.TempDirectory() as temp_directory:
+      storage_file = os.path.join(temp_directory, u'plaso.plaso')
       # Copy events to pstorage dump.
       with storage_zip_file.StorageFile(
           self.test_filename, read_only=True) as store:

@@ -17,7 +17,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Outlook Search MRU Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = outlook.OutlookSearchMRUPlugin()
 
   def _CreateTestKey(self, key_path, time_string):
@@ -88,7 +88,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #   """Tests for the Outlook Search Catalog MRU Windows Registry plugin."""
 #
 #   def setUp(self):
-#     """Sets up the needed objects used throughout the test."""
+#     """Makes preparations before running an individual test."""
 #     self._plugin = outlook.MSOutlook2013SearchCatalogMRUPlugin()
 #
 #   def testProcess(self):

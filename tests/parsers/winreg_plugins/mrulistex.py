@@ -17,7 +17,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUListEx plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mrulistex.MRUListExStringPlugin()
 
   def _CreateTestKey(self, key_path, time_string):
@@ -101,7 +101,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUListEx plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mrulistex.MRUListExShellItemListPlugin()
 
   def testProcess(self):
@@ -170,7 +170,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item MRUListEx plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mrulistex.MRUListExStringAndShellItemPlugin()
 
   def testProcess(self):
@@ -253,7 +253,7 @@ class TestMRUListExStringAndShellItemListPlugin(
   """Tests for the string and shell item list MRUListEx plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mrulistex.MRUListExStringAndShellItemListPlugin()
 
   def testProcess(self):

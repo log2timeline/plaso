@@ -15,7 +15,7 @@ class PlistParserTest(test_lib.ParserTestCase):
   """Tests the plist parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = plist.PlistParser()
 
   def testParse(self):

@@ -20,7 +20,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
   """Tests for NTFS $MFT metadata file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = ntfs.NTFSMFTParser()
 
   def testParseFile(self):
@@ -185,7 +185,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
   """Tests for NTFS $UsnJrnl metadata file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = ntfs.NTFSUsnJrnlParser()
 
   def testParseImage(self):

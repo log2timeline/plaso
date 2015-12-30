@@ -16,7 +16,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
   """Tests for the MSIE Cache Files (MSIECF) parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = msiecf.MsiecfParser()
 
   def testParse(self):

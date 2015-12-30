@@ -17,7 +17,7 @@ class BencodeTest(test_lib.ParserTestCase):
   """Tests for Bencode file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = bencode_parser.BencodeParser()
 
   # TODO: Move this to bencode_plugins/transmission_test.py

@@ -15,7 +15,7 @@ class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Zeitgeist activity database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = zeitgeist.ZeitgeistPlugin()
 
   def testProcess(self):

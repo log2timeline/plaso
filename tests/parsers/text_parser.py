@@ -70,7 +70,7 @@ class TextParserTest(test_lib.ParserTestCase):
   """An unit test for the plaso parser library."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = TestTextParser()
 
   def testTextParserFail(self):

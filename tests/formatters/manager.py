@@ -16,7 +16,7 @@ class FormattersManagerTest(unittest.TestCase):
   """Tests for the event formatters manager."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._event_objects = event_test_lib.GetEventObjects()
 
   def testFormatterRegistration(self):
