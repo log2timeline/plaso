@@ -18,7 +18,7 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the USB Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = usb.USBPlugin()
 
   def testProcess(self):

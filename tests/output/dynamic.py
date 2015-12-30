@@ -22,8 +22,8 @@ class TestEvent(event.EventObject):
     super(TestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.CHANGE_TIME
-    self.hostname = 'ubuntu'
-    self.filename = 'log/syslog.1'
+    self.hostname = u'ubuntu'
+    self.filename = u'log/syslog.1'
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
         u'closed for user root)')
@@ -33,8 +33,8 @@ class TestEventFormatter(formatters_interface.EventFormatter):
   DATA_TYPE = 'test:dynamic'
   FORMAT_STRING = u'{text}'
 
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'Syslog'
+  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = u'Syslog'
 
 
 class FakeFilter(object):
@@ -78,7 +78,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     filter_object = FakeFilter(
         [u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'],
-        separator='@')
+        separator=u'@')
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)

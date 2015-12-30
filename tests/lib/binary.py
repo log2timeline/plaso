@@ -16,7 +16,7 @@ class BinaryTests(unittest.TestCase):
   maxDiff = None
 
   def setUp(self):
-    """Set up the needed variables used througout tests."""
+    """Makes preparations before running an individual test."""
     # String: "þrándur" - uses surrogate pairs to test four byte character
     # decoding.
     self._unicode_string_1 = (

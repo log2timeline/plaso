@@ -15,7 +15,7 @@ class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF summary information plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._summary_plugin = summary.SummaryInfoOlecfPlugin()
     self._test_file = self._GetTestFilePath([u'Document.doc'])
 
@@ -72,7 +72,7 @@ class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF document summary information plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._document_summary_plugin = summary.DocumentSummaryOlecfPlugin()
     self._test_file = self._GetTestFilePath([u'Document.doc'])
 

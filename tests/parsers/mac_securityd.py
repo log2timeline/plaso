@@ -15,7 +15,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
   """A unit test for the ASL securityd log parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = mac_securityd.MacSecuritydLogParser()
 
   def testParseFile(self):

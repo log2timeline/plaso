@@ -16,7 +16,7 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the install history plist plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = install_history.InstallHistoryPlugin()
     self._parser = plist.PlistParser()
 

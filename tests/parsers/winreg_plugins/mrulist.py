@@ -17,7 +17,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUList plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mrulist.MRUListStringPlugin()
 
   def _CreateTestKey(self, key_path, time_string):
@@ -99,7 +99,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUList plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = mrulist.MRUListShellItemListPlugin()
 
   def _CreateTestKey(self, key_path, time_string):

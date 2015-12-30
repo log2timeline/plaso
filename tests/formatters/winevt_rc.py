@@ -16,7 +16,7 @@ class WinevtResourcesSqlite3DatabaseReaderTest(unittest.TestCase):
   maxDiff = None
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._database_path = os.path.join(
         os.getcwd(), u'test_data', u'winevt-rc.db')
 

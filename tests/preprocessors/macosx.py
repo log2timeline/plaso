@@ -37,7 +37,7 @@ class MacOSXBuildTest(test_lib.PreprocessPluginTest):
       '</plist>\n')
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/System/Library/CoreServices/SystemVersion.plist',
@@ -90,7 +90,7 @@ class MacOSXHostname(test_lib.PreprocessPluginTest):
       '</plist>\n')
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Library/Preferences/SystemConfiguration/preferences.plist',
@@ -114,7 +114,7 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
   """Tests for the Mac OS X keyboard layout preprocess plug-in object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddTestFile(
         u'/Library/Preferences/com.apple.HIToolbox.plist',
@@ -139,7 +139,7 @@ class MacOSXTimezone(test_lib.PreprocessPluginTest):
   """Tests for the Mac OS X timezone preprocess plug-in object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddSymbolicLink(
         u'/private/etc/localtime', u'/usr/share/zoneinfo/Europe/Amsterdam')
@@ -163,7 +163,7 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
   """Tests for the Mac OS X usernames preprocess plug-in object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddTestFile(
         u'/private/var/db/dslocal/nodes/Default/users/nobody.plist',

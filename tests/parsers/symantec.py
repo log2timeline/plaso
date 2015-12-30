@@ -17,7 +17,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the Symantec AV Log parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = symantec.SymantecParser()
 
   def testConvertToTimestamp(self):

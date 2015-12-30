@@ -18,7 +18,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MSIE typed URLs Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = typedurls.TypedURLsPlugin()
 
   def testProcess(self):
@@ -76,7 +76,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the typed paths Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = typedurls.TypedURLsPlugin()
 
   def testProcess(self):

@@ -15,7 +15,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
   """Tests for PL-SQL recall file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = pls_recall.PlsRecallParser()
 
   def testParse(self):

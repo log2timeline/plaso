@@ -95,12 +95,12 @@ class CollectorTest(CollectorTestCase):
         self._GetTestFilePath([u'syslog.bz2']),
         self._GetTestFilePath([u'wtmp.1'])]
 
-    with shared_test_lib.TempDirectory() as dirname:
+    with shared_test_lib.TempDirectory() as temp_directory:
       for a_file in test_files:
-        shutil.copy(a_file, dirname)
+        shutil.copy(a_file, temp_directory)
 
       path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+          dfvfs_definitions.TYPE_INDICATOR_OS, location=temp_directory)
 
       test_path_spec_queue = single_process.SingleProcessQueue()
       resolver_context = context.Context()
@@ -116,9 +116,8 @@ class CollectorTest(CollectorTestCase):
 
   def testFileSystemWithFilterCollection(self):
     """Test collection on the file system with a filter."""
-    dirname = u'.'
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
 
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -418,9 +417,8 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
 
     self.assertEqual(len(find_specs), 4)
 
-    dirname = u'.'
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
     file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
     searcher = file_system_searcher.FileSystemSearcher(
         file_system, path_spec)

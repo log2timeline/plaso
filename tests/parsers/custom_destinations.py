@@ -16,7 +16,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
   """Tests for the .customDestinations-ms file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = custom_destinations.CustomDestinationsParser()
 
   def testParse(self):

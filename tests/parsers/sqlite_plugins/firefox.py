@@ -18,7 +18,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mozilla Firefox history database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = firefox.FirefoxHistoryPlugin()
 
   def testProcessPriorTo24(self):
@@ -220,7 +220,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mozilla Firefox downloads database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = firefox.FirefoxDownloadsPlugin()
 
   def testProcessVersion25(self):

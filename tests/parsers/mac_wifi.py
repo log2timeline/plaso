@@ -15,7 +15,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
   """Tests for the Mac wifi.log parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = mac_wifi.MacWifiLogParser()
 
   def testParse(self):

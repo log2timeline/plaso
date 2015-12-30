@@ -17,7 +17,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   """Tests for the Android Application Usage History parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = android_app_usage.AndroidAppUsageParser()
 
   def testParse(self):

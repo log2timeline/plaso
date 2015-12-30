@@ -13,7 +13,7 @@ class WinRegTest(test_lib.ParserTestCase):
   """Tests for the Windows Registry file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = winreg.WinRegistryParser()
 
   def _GetParserChains(self, event_objects):

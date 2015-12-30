@@ -17,11 +17,10 @@ from tests.preprocessors import test_lib
 class LinuxHostnameTest(test_lib.PreprocessPluginTest):
   """Tests for the Linux hostname preprocess plug-in object."""
 
-  _FILE_DATA = (
-      'plaso.kiddaland.net\n')
+  _FILE_DATA = 'plaso.kiddaland.net\n'
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/hostname', self._FILE_DATA)
 
@@ -58,7 +57,7 @@ class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
       'nobody:x:99:99:Nobody:/:/sbin/nologin\n')
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/passwd', self._FILE_DATA)
 
