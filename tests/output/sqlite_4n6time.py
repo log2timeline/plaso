@@ -98,7 +98,7 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
       self._sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
           output_mediator)
 
-      sqlite_file = os.path.join(dirname, u'4n6time.db')
+      sqlite_file = os.path.join(temp_directory, u'4n6time.db')
       self._sqlite_output.SetFilename(sqlite_file)
 
       self._sqlite_output.Open()

@@ -78,8 +78,8 @@ class OutputMediator(object):
 
   @property
   def storage_file_path(self):
-    """The storage file path."""
-    return self._storage_file.file_path
+    """The path of the storage file if set, None otherwise."""
+    return getattr(self._storage_file, u'file_path', None)
 
   @property
   def timezone(self):

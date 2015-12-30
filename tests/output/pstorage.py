@@ -28,7 +28,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
         output_mediator = self._CreateOutputMediator(storage_file=storage_file)
         output_module = pstorage.PlasoStorageOutputModule(output_mediator)
 
-        plaso_file = os.path.join(dirname, u'pstorage.plaso')
+        plaso_file = os.path.join(temp_directory, u'pstorage.plaso')
         output_module.SetFilePath(plaso_file)
 
         with event_buffer.EventBuffer(

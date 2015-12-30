@@ -119,7 +119,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
       output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XlsxOutputModule(output_mediator)
 
-      xlsx_file = os.path.join(dirname, u'xlsx.out')
+      xlsx_file = os.path.join(temp_directory, u'xlsx.out')
       output_module.SetFilename(xlsx_file)
 
       output_module.Open()
@@ -152,7 +152,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
       output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XlsxOutputModule(output_mediator)
 
-      xslx_file = os.path.join(dirname, u'xlsx.out')
+      xslx_file = os.path.join(temp_directory, u'xlsx.out')
       output_module.SetFilename(xslx_file)
 
       output_module.Open()
