@@ -66,7 +66,7 @@ class SlowLexicalTextParser(
     # TODO: remove the multiple inheritance.
     lexer.SelfFeederMixIn.__init__(self)
     interface.FileObjectParser.__init__(self)
-    self.file_verified = False
+    self._file_verified = False
     self.line_ready = False
     self.attributes = {
         u'body': u'',
@@ -150,7 +150,7 @@ class SlowLexicalTextParser(
 
     # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
     self.file_object = file_object
-    self.file_verified = False
+    self._file_verified = False
 
     # Start by checking, is this a text file or not? Before we proceed
     # any further.
@@ -173,7 +173,7 @@ class SlowLexicalTextParser(
         self.entry_offset = getattr(self, u'next_entry_offset', 0)
         self.next_entry_offset = file_object.tell() - len(self.buffer)
 
-      if not self.file_verified and self.error >= self.MAX_LINES * 2:
+      if not self._file_verified and self.error >= self.MAX_LINES * 2:
         logging.debug(
             u'Lexer error count: {0:d} and current state {1:s}'.format(
                 self.error, self.state))
@@ -184,11 +184,11 @@ class SlowLexicalTextParser(
       if self.line_ready:
         try:
           self.ParseLine(parser_mediator)
-          self.file_verified = True
+          self._file_verified = True
 
         except errors.TimestampError as exception:
           error_count += 1
-          if self.file_verified:
+          if self._file_verified:
             logging.debug(
                 u'[{0:s} VERIFIED] Error count: {1:d} and ERROR: {2:d}'.format(
                     path_spec_printable, error_count, self.error))
@@ -216,7 +216,7 @@ class SlowLexicalTextParser(
       if self.Empty():
         break
 
-    if not self.file_verified:
+    if not self._file_verified:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s}.'.format(
               self.NAME, path_spec_printable))
@@ -288,7 +288,7 @@ class SlowLexicalTextParser(
     """
     year_string = self.attributes.get(u'iyear')
     if not year_string:
-      if not self.file_verified:
+      if not self._file_verified:
         raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'year missing in log line: {0:s}'.format(self.PrintLine()))
@@ -296,7 +296,7 @@ class SlowLexicalTextParser(
 
     time_string = self.attributes.get(u'time')
     if not time_string:
-      if not self.file_verified:
+      if not self._file_verified:
         raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'time values missing in log line: {0:s}'.format(self.PrintLine()))
@@ -304,14 +304,14 @@ class SlowLexicalTextParser(
 
     time_values = time_string.split(u':')
     if len(time_values) < 3:
-      if not self.file_verified:
+      if not self._file_verified:
         raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'unsupported time format in log line: {0:s}'.format(
               self.PrintLine()))
       return
 
-    seconds_values = time_values[2].split('.')
+    seconds_values = time_values[2].split(u'.')
     if len(seconds_values) == 2:
       seconds_string, microseconds_string = seconds_values
     else:
@@ -328,7 +328,7 @@ class SlowLexicalTextParser(
       microseconds = int(microseconds_string)
 
     except ValueError as exception:
-      if not self.file_verified:
+      if not self._file_verified:
         raise errors.UnableToParseFile()
       parser_mediator.ProduceParseError(
           u'unable to parse log line: {0:s} with error: {1:s}'.format(
