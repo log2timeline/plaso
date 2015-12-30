@@ -471,7 +471,7 @@ class ExtractAndOutputTestCase(TestCase):
           temp_directory, u'{0:s}-pinfo.err'.format(
               test_definition.name))
       command = (
-          u'{0:s} {1:s} > {3:s} 2> {4:s}').format(
+          u'{0:s} {1:s} > {2:s} 2> {3:s}').format(
               self._pinfo_path, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
@@ -493,7 +493,7 @@ class ExtractAndOutputTestCase(TestCase):
           temp_directory, u'{0:s}-psort.err'.format(
               test_definition.name))
       command = (
-          u'{0:s} {1:s} > {3:s} 2> {4:s}').format(
+          u'{0:s} {1:s} > {2:s} 2> {3:s}').format(
               self._psort_path, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
