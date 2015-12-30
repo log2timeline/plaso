@@ -41,7 +41,7 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
         help=u'Set the evidence field to a specific value, defaults to empty.')
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
-        nargs=u'*', default=u', '.join(cls._DEFAULT_FIELDS),
+        nargs=u'*', default=u','.join(cls._DEFAULT_FIELDS),
         help=u'Defines which fields should be indexed in the database.')
 
   @classmethod
@@ -67,4 +67,5 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
 
     output_module.SetAppendMode(append)
     output_module.SetEvidence(evidence)
-    output_module.SetFields(fields)
+    output_module.SetFields([
+        field_name.strip() for field_name in fields.split(u',')])

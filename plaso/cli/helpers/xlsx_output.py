@@ -43,6 +43,7 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
+      BadConfigOption: when the output filename was not provided.
     """
     if not isinstance(output_module, xlsx.XlsxOutputModule):
       raise errors.BadConfigObject(
@@ -54,8 +55,11 @@ class XlsxOutputHelper(interface.ArgumentsHelper):
     output_module.SetTimestampFormat(timestamp_format)
 
     filename = getattr(options, u'write', None)
-    if filename:
-      output_module.SetFilename(filename)
+    if not filename:
+      raise errors.BadConfigOption(
+          u'Output filename was not provided use "-w filename" to specify.')
+
+    output_module.SetFilename(filename)
 
 
 manager.ArgumentHelperManager.RegisterHelper(XlsxOutputHelper)

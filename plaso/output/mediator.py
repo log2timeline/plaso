@@ -11,15 +11,13 @@ class OutputMediator(object):
   """Class that implements the output mediator."""
 
   def __init__(
-      self, formatter_mediator, storage_object, fields_filter=None,
+      self, formatter_mediator, fields_filter=None,
       preferred_encoding=u'utf-8', timezone=pytz.UTC):
     """Initializes a output mediator object.
 
     Args:
       formatter_mediator: the formatter mediator object (instance of
                           FormatterMediator).
-      storage_object: a storage file object (instance of StorageFile)
-                      that defines the storage.
       fields_filter: optional filter object (instance of FilterObject) to
                      indicate which fields should be outputed. The default
                      is None.
@@ -31,7 +29,7 @@ class OutputMediator(object):
     self._hostnames = None
     self._preferred_encoding = preferred_encoding
     self._preprocess_objects = None
-    self._storage_object = storage_object
+    self._storage_file = None
     self._timezone = timezone
 
     self.fields_filter = fields_filter
@@ -45,11 +43,11 @@ class OutputMediator(object):
     self._hostnames = {}
     self._preprocess_objects = {}
 
-    if (not self._storage_object or
-        not hasattr(self._storage_object, u'GetStorageInformation')):
+    if (not self._storage_file or
+        not hasattr(self._storage_file, u'GetStorageInformation')):
       return
 
-    for info in self._storage_object.GetStorageInformation():
+    for info in self._storage_file.GetStorageInformation():
       store_range = getattr(info, u'store_range', None)
       if not store_range:
         continue
@@ -81,7 +79,7 @@ class OutputMediator(object):
   @property
   def storage_file_path(self):
     """The storage file path."""
-    return self._storage_object.file_path
+    return self._storage_file.file_path
 
   @property
   def timezone(self):
@@ -306,3 +304,12 @@ class OutputMediator(object):
       return preprocess_username
 
     return username
+
+  # TODO: refactor to use a storage reader interface.
+  def SetStorageFile(self, storage_file):
+    """Sets the storage file.
+
+    Args:
+      storage_file: a storage file object (instance of StorageFile).
+    """
+    self._storage_file = storage_file

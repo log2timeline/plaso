@@ -94,16 +94,17 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
         u'user': u'-'
     }
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'sqlite_4n6.out')
-      output_mediator = self._CreateOutputMediator(storage_object=temp_file)
+      output_mediator = self._CreateOutputMediator()
       self._sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
           output_mediator)
-      self._sqlite_output.SetFilename(temp_file)
+
+      sqlite_file = os.path.join(dirname, u'4n6time.db')
+      self._sqlite_output.SetFilename(sqlite_file)
 
       self._sqlite_output.Open()
       self._sqlite_output.WriteEventBody(self._event_object)
       self._sqlite_output.Close()
-      self.conn = sqlite3.connect(temp_file)
+      self.conn = sqlite3.connect(sqlite_file)
       self.conn.row_factory = sqlite3.Row
 
       res = self.conn.execute(u'SELECT * from log2timeline')

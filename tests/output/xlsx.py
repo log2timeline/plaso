@@ -116,10 +116,11 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
         u'store_index']
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'xlsx.out')
-      output_mediator = self._CreateOutputMediator(storage_object=temp_file)
+      output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XlsxOutputModule(output_mediator)
-      output_module.SetFilename(temp_file)
+
+      xlsx_file = os.path.join(dirname, u'xlsx.out')
+      output_module.SetFilename(xlsx_file)
 
       output_module.Open()
       output_module.WriteHeader()
@@ -127,7 +128,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module.Close()
 
       try:
-        rows = self._GetSheetRows(temp_file)
+        rows = self._GetSheetRows(xlsx_file)
       except ValueError as exception:
         self.fail(exception)
 
@@ -148,10 +149,11 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
         u'-', u'-', u'-', u'-', u'-']
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'xlsx.out')
-      output_mediator = self._CreateOutputMediator(storage_object=temp_file)
+      output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XlsxOutputModule(output_mediator)
-      output_module.SetFilename(temp_file)
+
+      xslx_file = os.path.join(dirname, u'xlsx.out')
+      output_module.SetFilename(xslx_file)
 
       output_module.Open()
       output_module.WriteHeader()
@@ -160,7 +162,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
       output_module.Close()
 
       try:
-        rows = self._GetSheetRows(temp_file)
+        rows = self._GetSheetRows(xslx_file)
       except ValueError as exception:
         self.fail(exception)
 

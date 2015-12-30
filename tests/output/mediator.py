@@ -40,7 +40,7 @@ class OutputMediatorTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._output_mediator = mediator.OutputMediator(None, None)
+    self._output_mediator = mediator.OutputMediator(None)
 
   def testGetEventFormatter(self):
     """Tests the GetEventFormatter function."""

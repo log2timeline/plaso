@@ -205,10 +205,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         return True
 
     elif self._FSEVENTSD_FILE_RE.match(path_segments[-1]):
-      if len(path_segments) == 2 and path_segments[0] == u'.fseventsd':
+      if len(path_segments) == 2 and path_segments[0].lower() == u'.fseventsd':
         return True
 
-    elif len(path_segments) == 1 and path_segments[0] in (
+    elif len(path_segments) == 1 and path_segments[0].lower() in (
         u'hiberfil.sys', u'pagefile.sys', u'swapfile.sys'):
       return True
 
