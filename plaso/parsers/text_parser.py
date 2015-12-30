@@ -161,7 +161,6 @@ class SlowLexicalTextParser(
     file_object.seek(0, os.SEEK_SET)
 
     error_count = 0
-    file_verified = False
     # We need to clear out few values in the Lexer before continuing.
     # There might be some leftovers from previous run.
     self.error = 0
@@ -174,7 +173,7 @@ class SlowLexicalTextParser(
         self.entry_offset = getattr(self, u'next_entry_offset', 0)
         self.next_entry_offset = file_object.tell() - len(self.buffer)
 
-      if not file_verified and self.error >= self.MAX_LINES * 2:
+      if not self.file_verified and self.error >= self.MAX_LINES * 2:
         logging.debug(
             u'Lexer error count: {0:d} and current state {1:s}'.format(
                 self.error, self.state))
@@ -217,9 +216,9 @@ class SlowLexicalTextParser(
       if self.Empty():
         break
 
-    if not file_verified:
+    if not self.file_verified:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parser file: {1:s}.'.format(
+          u'[{0:s}] unable to parse file: {1:s}.'.format(
               self.NAME, path_spec_printable))
 
     file_offset = file_object.get_offset()
