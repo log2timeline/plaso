@@ -471,7 +471,7 @@ class ExtractAndOutputTestCase(TestCase):
               test_definition.name))
       command = (
           u'{0:s} {1:s} > {3:s} 2> {4:s}').format(
-              self._pinfo, storage_file, stdout_file, stderr_file)
+              self._pinfo_path, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
@@ -493,7 +493,7 @@ class ExtractAndOutputTestCase(TestCase):
               test_definition.name))
       command = (
           u'{0:s} {1:s} > {3:s} 2> {4:s}').format(
-              self._psort, storage_file, stdout_file, stderr_file)
+              self._psort_path, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
