@@ -32,7 +32,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
   """Tests for the plist plugin interface."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._top_level_dict = {
         u'DeviceCache': {
             u'44-00-00-00-00-04': {

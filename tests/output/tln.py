@@ -15,7 +15,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the TLN output module."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     self._output_writer = cli_test_lib.TestOutputWriter()
     output_mediator = self._CreateOutputMediator()
     self._output_module = tln.TLNOutputModule(output_mediator)
@@ -56,7 +56,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the log2timeline TLN output module."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
     self._output_module = tln.L2TTLNOutputModule(output_mediator)

@@ -42,7 +42,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the AppCompatCache Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = appcompatcache.AppCompatCachePlugin()
 
   def _CreateTestKey(self, time_string, binary_data):

@@ -26,12 +26,12 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       u'uuid': u'8'}]
 
   def setUp(self):
-    """Sets up required objects prior running the tests."""
+    """Makes preparations before running an individual test."""
     self.requests_patcher = mock.patch('requests.post', self._MockPost)
     self.requests_patcher.start()
 
   def tearDown(self):
-    """Resets required object after testing."""
+    """Cleans up after running an individual test."""
     self.requests_patcher.stop()
 
   def _MockPost(self, unused_url, data=None):

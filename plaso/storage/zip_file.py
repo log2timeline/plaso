@@ -6,8 +6,8 @@ that are stored together in a single ZIP compressed container.
 
 The storage file is essentially split up in two categories:
    +  A store file (further described below).
-   +  Other files, these contain grouping information, tag, collection
-      information or other metadata describing the content of the store files.
+   +  Other files, these contain tag, collection information or
+      other metadata describing the content of the store files.
 
 The store itself is a collection of four files:
   plaso_meta.<store_number>
@@ -97,7 +97,6 @@ from plaso.engine import profiler
 from plaso.lib import definitions
 from plaso.lib import event
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
@@ -1096,34 +1095,6 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.Write()
 
-  def _ReadEventGroup(self, data_stream):
-    """Reads an event group.
-
-    Args:
-      data_stream: the data stream object (instance of _SerializedDataStream).
-
-    Returns:
-      An event group object (instance of plaso_storage_pb2.EventGroup) or None.
-    """
-    event_group_data = data_stream.ReadEntry()
-    if not event_group_data:
-      return
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'event_group')
-
-    # TODO: add event group serializers and use ReadSerialized.
-    # event_group = self._event_group_serializer.ReadSerialized(proto_string)
-
-    event_group = plaso_storage_pb2.EventGroup()
-    event_group.ParseFromString(event_group_data)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'event_group')
-
-    # TODO: return a Python object instead of a protobuf.
-    return event_group
-
   def _ReadEventTag(self, data_stream):
     """Reads an event tag.
 
@@ -1372,33 +1343,6 @@ class StorageFile(ZIPStorageFile):
 
     self._ProfilingStop()
 
-  # TODO: move only used in testing.
-  def GetGrouping(self):
-    """Retrieves event groups.
-
-    Yields:
-      An event group protobuf object (instance of plaso_storage_pb2.EventGroup).
-
-    Raises:
-      IOError: if the event group data stream cannot be opened.
-    """
-    if not self.HasGrouping():
-      return
-
-    for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(u'plaso_grouping.'):
-        continue
-
-      if not self._HasStream(stream_name):
-        raise IOError(u'No such stream: {0:s}'.format(stream_name))
-
-      data_stream = _SerializedDataStream(self._zipfile, stream_name)
-
-      event_group = self._ReadEventGroup(data_stream)
-      while event_group:
-        yield event_group
-        event_group = self._ReadEventGroup(data_stream)
-
   def GetReports(self):
     """Retrieves the analysis reports.
 
@@ -1496,15 +1440,11 @@ class StorageFile(ZIPStorageFile):
 
     return information
 
-  # TODO: move only used in testing.
   def GetTagging(self):
-    """Return a generator that reads all tagging information from storage.
-
-    This function reads all tagging files inside the storage and returns
-    back the EventTagging protobuf, and only that protobuf.
+    """Retrieves the event tags.
 
     Yields:
-      All EventTag objects stored inside the storage container.
+      An event tag object (instance of EventTag).
 
     Raises:
       IOError: if the stream cannot be opened.
@@ -1523,23 +1463,23 @@ class StorageFile(ZIPStorageFile):
         yield event_tag
         event_tag = self._ReadEventTag(data_stream)
 
-  def HasGrouping(self):
-    """Return a bool indicating whether or not a Group file is stored."""
-    for name in self._GetStreamNames():
-      if name.startswith(u'plaso_grouping.'):
-        return True
-    return False
-
   def HasReports(self):
-    """Return a bool indicating whether or not a Report file is stored."""
+    """Determines if a storage file contains reports.
+
+    Returns:
+      A boolean value indicating if the storage file contains reports.
+    """
     for name in self._GetStreamNames():
       if name.startswith(u'plaso_report'):
         return True
     return False
 
-  # TODO: move only used in testing.
   def HasTagging(self):
-    """Return a bool indicating whether or not a Tag file is stored."""
+    """Determines if a storage file contains event tags.
+
+    Returns:
+      A boolean value indicating if the storage file contains event tags.
+    """
     for name in self._GetStreamNames():
       if name.startswith(u'plaso_tagging.'):
         return True
@@ -1559,84 +1499,6 @@ class StorageFile(ZIPStorageFile):
       if (profiling_type in [u'all', u'serializers'] and
           not self._serializers_profiler):
         self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
-
-  # TODO: move only used in testing.
-  def StoreGrouping(self, rows):
-    """Store group information into the storage file.
-
-    An EventGroup protobuf stores information about several
-    EventObjects that belong to the same behavior or action. It can then
-    be used to group similar events together to create a super event, or
-    a higher level event.
-
-    This function is used to store that information inside the storage
-    file so it can be read later.
-
-    The object that is passed in needs to have an iterator implemented
-    and has to implement the following attributes (optional names within
-    bracket)::
-
-      name - The name of the grouped event.
-      [description] - More detailed description of the event.
-      [category] - If this group of events falls into a specific category.
-      [color] - To highlight this particular group with a HTML color tag.
-      [first_timestamp] - The first timestamp if applicable of the group.
-      [last_timestamp] - The last timestamp if applicable of the group.
-      events - A list of tuples (store_number and store_index of the
-      EventObject protobuf that belongs to this group of events).
-
-    Args:
-      rows: An object that contains the necessary fields to construct
-      an EventGroup. Has to be a generator object or an object that implements
-      an iterator.
-    """
-    group_number = 1
-    if self.HasGrouping():
-      for name in self._GetStreamNames():
-        if name.startswith(u'plaso_grouping.'):
-          _, _, number_string = name.partition(u'.')
-          try:
-            number = int(number_string, 10)
-            if number >= group_number:
-              group_number = number + 1
-          except ValueError:
-            pass
-
-    group_packed = []
-    size = 0
-    for row in rows:
-      group = plaso_storage_pb2.EventGroup()
-      group.name = row.name
-      if hasattr(row, u'description'):
-        group.description = utils.GetUnicodeString(row.description)
-      if hasattr(row, u'category'):
-        group.category = utils.GetUnicodeString(row.category)
-      if hasattr(row, u'color'):
-        group.color = utils.GetUnicodeString(row.color)
-
-      for number, index in row.events:
-        event_object = group.events.add()
-        event_object.store_number = int(number)
-        event_object.store_index = int(index)
-
-      if hasattr(row, u'first_timestamp'):
-        group.first_timestamp = int(row.first_timestamp)
-      if hasattr(row, u'last_timestamp'):
-        group.last_timestamp = int(row.last_timestamp)
-
-      # TODO: implement event grouping.
-      group_str = group.SerializeToString()
-      packed = struct.pack('<I', len(group_str)) + group_str
-      # TODO: Size is defined, should be used to determine if we've filled
-      # our buffer size of group information. Check that and write a new
-      # group store file in that case.
-      size += len(packed)
-      if size > self._max_buffer_size:
-        logging.warning(u'Grouping has outgrown buffer size.')
-      group_packed.append(packed)
-
-    stream_name = u'plaso_grouping.{0:06d}'.format(group_number)
-    self._WriteStream(stream_name, b''.join(group_packed))
 
   def StoreReport(self, analysis_report):
     """Store an analysis report.
@@ -1680,7 +1542,7 @@ class StorageFile(ZIPStorageFile):
     that contains EventTag objects (event.EventTag).
 
     Args:
-      tags: A list or an object providing an iterator that contains
+      A list or an object providing an iterator that contains
       EventTag objects.
 
     Raises:

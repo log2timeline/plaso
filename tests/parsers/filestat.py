@@ -19,7 +19,7 @@ class FileStatTest(test_lib.ParserTestCase):
   """Tests for filestat parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = filestat.FileStatParser()
 
   def testTSKFile(self):

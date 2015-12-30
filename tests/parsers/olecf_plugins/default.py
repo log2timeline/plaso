@@ -16,7 +16,7 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF default plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = default.DefaultOleCFPlugin()
 
   def testProcess(self):

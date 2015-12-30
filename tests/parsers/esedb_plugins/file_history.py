@@ -16,7 +16,7 @@ class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
   """Tests for the File History ESE database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = file_history.FileHistoryEseDbPlugin()
 
   def testProcess(self):

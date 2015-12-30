@@ -42,7 +42,7 @@ class RegistryTest(test_lib.WinRegTestCase):
   """Tests for the Windows Registry library."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._registry = registry.WinRegistry(
         registry_file_reader=TestWinRegistryFileReader())
 

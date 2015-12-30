@@ -16,7 +16,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycle Bin parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = recycler.WinRecycleBinParser()
 
   def testParse(self):
@@ -51,7 +51,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycler INFO2 parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = recycler.WinRecyclerInfo2Parser()
 
   def testParse(self):

@@ -52,7 +52,7 @@ class EventFormatterTest(unittest.TestCase):
   """Tests for the event formatter."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._event_objects = event_test.GetEventObjects()
 
   def testInitialization(self):
@@ -77,7 +77,7 @@ class ConditionalEventFormatterTest(unittest.TestCase):
   """Tests for the conditional event formatter."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._event_object = ConditionalTestEvent(1335791207939596, {
         u'numeric': 12, u'description': u'this is beyond words',
         u'text': u'but we\'re still trying to say something about the event'})

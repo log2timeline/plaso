@@ -47,7 +47,7 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the sqlite output class."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     plaso_timestamp = timelib.Timestamp()
     self._event_timestamp = plaso_timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')
@@ -93,8 +93,8 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
         u'vss_store_number': -1,
         u'user': u'-'
     }
-    with shared_test_lib.TempDirectory() as dirname:
-      temp_file = os.path.join(dirname, u'sqlite_4n6.out')
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'sqlite_4n6.out')
       output_mediator = self._CreateOutputMediator(storage_object=temp_file)
       self._sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
           output_mediator)

@@ -18,7 +18,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the CCleaner Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = ccleaner.CCleanerPlugin()
 
   def testProcess(self):

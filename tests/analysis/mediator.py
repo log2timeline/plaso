@@ -48,7 +48,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
       {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_report_queue = single_process.SingleProcessQueue()
