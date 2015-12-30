@@ -14,7 +14,7 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
   """Tests for the SCCM Logs Parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = sccm.SCCMParser()
 
   def testParse(self):
@@ -26,22 +26,22 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 10)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-11-28 14:03:19.766')
+        u'2014-11-28 14:03:19.766')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     # Test timestamps with seven digits after seconds.
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-01-02 10:22:50.873496')
+        u'2015-01-02 10:22:50.873496')
     self.assertEqual(event_objects[3].timestamp, expected_timestamp)
 
     # Test timestamps with '-' in microseconds.
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-12-28 07:59:43.373')
+        u'2014-12-28 07:59:43.373')
     self.assertEqual(event_objects[7].timestamp, expected_timestamp)
 
     # Test timestamps with '+' in microseconds.
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-11-24 09:52:13.827')
+        u'2014-11-24 09:52:13.827')
     self.assertEqual(event_objects[9].timestamp, expected_timestamp)
 
     # Test full and short message formats.

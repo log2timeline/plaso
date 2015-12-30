@@ -15,7 +15,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = bsm.BsmParser()
 
   def testParse(self):
@@ -122,7 +122,7 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = bsm.BsmParser()
 
   def testParse(self):

@@ -133,7 +133,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     return results
 
   def setUp(self):
-    """Sets up the objects used by an individual test."""
+    """Makes preparations before running an individual test."""
     self._temp_directory = tempfile.mkdtemp()
 
     # TODO: do not use a class attribute here.
@@ -141,7 +141,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     image_export.FileSaver.md5_dict = {}
 
   def tearDown(self):
-    """Cleans up the objects used an individual test."""
+    """Cleans up after running an individual test."""
     shutil.rmtree(self._temp_directory, True)
     self._temp_directory = None
 

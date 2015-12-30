@@ -17,9 +17,6 @@ from tests.parsers.sqlite_plugins import test_lib as sqlite_plugins_test_lib
 class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
   """Tests for the Google Analytics plugin."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-
   def _GetAnalyticsCookies(self, event_queue_consumer):
     """Return a list of analytics cookies."""
     cookies = []

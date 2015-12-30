@@ -19,7 +19,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive log parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = skydrivelog.SkyDriveLogParser()
 
   def testParseErrorLog(self):
@@ -43,11 +43,11 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     self.assertEqual(event_objects[18].timestamp, expected_timestamp)
 
     expected_string = (
-        'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
-        '2013-07-25-180323.291 PID=0x8f4 TID=0x718 ContinuedFrom=')
+        u'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
+        u'2013-07-25-180323.291 PID=0x8f4 TID=0x718 ContinuedFrom=')
     expected_string_short = (
         u'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
-        '2013-07-25-180323.29...')
+        u'2013-07-25-180323.29...')
     self._TestGetMessageStrings(
         event_objects[0], expected_string, expected_string_short)
 
@@ -65,7 +65,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
         u'<wait>44</wait></ping-response>')
     expected_string_short = (
         u'Received data from server,dwID=0x0;dwSize=0x3e;pbData=PNG 9 CON 48  '
-        '<ping-res...')
+        u'<ping-res...')
     self._TestGetMessageStrings(
         event_objects[18], expected_string, expected_string_short)
 
@@ -105,15 +105,15 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     expected_string = (
         u'[WNS absconn.cpp(177) VRB] Received data from server,dwID=0x0;'
-        'dwSize=0x15a;pbData=GET 5 WNS 331 Context: 2891  <channel-response>'
-        '<id>1;13714367258539257282</id><exp>2013-09-11T02:52:37Z</exp><url>'
-        'https://bn1.notify.windows.com/?token=AgYAAAAdkHjSxiNH1mbF0Rp5TIv0K'
-        'z317BKYIAfBNO6szULCOEE2393owBINnPC5xoika5SJlNtXZ%2bwzaRVsPRcP1p64XF'
-        'n90vGwr07DGZxfna%2bxBpBBplzZhLV9y%2fNV%2bBPxNmTI5sRgaZ%2foGvYCIj6Md'
-        'eU1</url></channel-response>')
+        u'dwSize=0x15a;pbData=GET 5 WNS 331 Context: 2891  <channel-response>'
+        u'<id>1;13714367258539257282</id><exp>2013-09-11T02:52:37Z</exp><url>'
+        u'https://bn1.notify.windows.com/?token=AgYAAAAdkHjSxiNH1mbF0Rp5TIv0K'
+        u'z317BKYIAfBNO6szULCOEE2393owBINnPC5xoika5SJlNtXZ%2bwzaRVsPRcP1p64XF'
+        u'n90vGwr07DGZxfna%2bxBpBBplzZhLV9y%2fNV%2bBPxNmTI5sRgaZ%2foGvYCIj6Md'
+        u'eU1</url></channel-response>')
     expected_string_short = (
         u'Received data from server,dwID=0x0;dwSize=0x15a;pbData=GET 5 WNS '
-        '331 Context:...')
+        u'331 Context:...')
     self._TestGetMessageStrings(
         event_objects[11], expected_string, expected_string_short)
 
@@ -123,10 +123,10 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     expected_string = (
         u'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
-        '2013-08-11-231857.232 PID=0x1ef0 TID=0x1ef4 ContinuedFrom=')
+        u'2013-08-11-231857.232 PID=0x1ef0 TID=0x1ef4 ContinuedFrom=')
     expected_string_short = (
         u'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
-        '2013-08-11-231857.23...')
+        u'2013-08-11-231857.23...')
     self._TestGetMessageStrings(
         event_objects[13], expected_string, expected_string_short)
 
@@ -136,13 +136,13 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     expected_string = (
         u'[PAL cwinhttp.cpp(1581) VRB] ,output=GET <- /MyData/LiveFolders?'
-        'Filter=changes&InlineBlobs=false&MaxItemCount=50&SyncToken=LM%3d6351'
-        '1875645970%3bID%3d7F095149027848ED!103%3bLR%3d63513517536493%3bEP%3d'
-        '2%3bTD%3dTrue&View=SkyDriveSync;m_httpStatus=0x130;hr=8004db30;'
-        'm_pSink=null;cb=0x0;msec=0x4e')
+        u'Filter=changes&InlineBlobs=false&MaxItemCount=50&SyncToken=LM%3d6351'
+        u'1875645970%3bID%3d7F095149027848ED!103%3bLR%3d63513517536493%3bEP%3d'
+        u'2%3bTD%3dTrue&View=SkyDriveSync;m_httpStatus=0x130;hr=8004db30;'
+        u'm_pSink=null;cb=0x0;msec=0x4e')
     expected_string_short = (
         u',output=GET <- /MyData/LiveFolders?Filter=changes&InlineBlobs='
-        'false&MaxItemCo...')
+        u'false&MaxItemCo...')
     self._TestGetMessageStrings(
         event_objects[15], expected_string, expected_string_short)
 
@@ -151,7 +151,7 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive old log parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = skydrivelog.SkyDriveOldLogParser()
 
   def testParse(self):

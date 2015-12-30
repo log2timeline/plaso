@@ -15,7 +15,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Typed History parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = opera.OperaTypedHistoryParser()
 
   def testParse(self):
@@ -53,7 +53,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Global History parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = opera.OperaGlobalHistoryParser()
 
   def testParseFile(self):

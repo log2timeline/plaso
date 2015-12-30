@@ -64,7 +64,7 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the Timesketch output class."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     plaso_timestamp = timelib.Timestamp()
     self._event_timestamp = plaso_timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')

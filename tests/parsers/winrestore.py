@@ -16,7 +16,7 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Restore Point (rp.log) file parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = winrestore.RestorePointLogParser()
 
   def testParse(self):

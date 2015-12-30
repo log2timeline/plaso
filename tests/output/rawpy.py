@@ -16,7 +16,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
   """Tests for the "raw" (or native) Python output module."""
 
   def setUp(self):
-    """Sets up the objects needed for this test."""
+    """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
     self._output_module = rawpy.NativePythonOutputModule(output_mediator)

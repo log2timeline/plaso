@@ -16,7 +16,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Skype main.db history database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = skype.SkypePlugin()
 
   def testProcess(self):

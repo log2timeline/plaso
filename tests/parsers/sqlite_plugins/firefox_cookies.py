@@ -16,7 +16,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Firefox cookie database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = firefox_cookies.FirefoxCookiePlugin()
 
   def testProcess(self):

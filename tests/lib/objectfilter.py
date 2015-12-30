@@ -98,7 +98,9 @@ class DummyFile(object):
 
 
 class ObjectFilterTest(unittest.TestCase):
+
   def setUp(self):
+    """Makes preparations before running an individual test."""
     self.file = DummyFile()
     self.filter_imp = objectfilter.LowercaseAttributeFilterImplementation
     self.value_expander = self.filter_imp.FILTERS['ValueExpander']

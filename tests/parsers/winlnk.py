@@ -16,7 +16,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Shortcut (LNK) parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = winlnk.WinLnkParser()
 
   def testParse(self):

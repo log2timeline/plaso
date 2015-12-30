@@ -53,7 +53,7 @@ class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf analysis report serializer object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._report_dict = {
         u'dude': [
             [u'Google Keep - notes and lists',
@@ -117,7 +117,7 @@ class ProtobufEventObjectSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf event object serializer object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     proto = plaso_storage_pb2.EventObject()
 
     proto.data_type = u'test:event2'
@@ -223,7 +223,7 @@ class ProtobufEventTagSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf event tag serializer object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     proto = plaso_storage_pb2.EventTagging()
     proto.store_number = 234
     proto.store_index = 18
@@ -264,7 +264,7 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
   """Tests for the protobuf preprocess object serializer object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     parsers = [
         u'esedb', u'chrome_preferences', u'winfirewall', u'android_app_usage',
         u'selinux', u'recycle_bin', u'pls_recall', u'filestat', u'sqlite',
@@ -392,7 +392,7 @@ class ProtobufCollectionInformationObjectSerializerTest(
   """Tests for the collection information object protobuf serializer."""
 
   def setUp(self):
-    """Sets up the necessary objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._collection_object = collection.CollectionInformation()
     self._collection_object.AddCounter(u'foobar')
     self._collection_object.IncrementCounter(

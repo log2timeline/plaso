@@ -19,7 +19,7 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
   """Tests for the single process engine object."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout a test."""
+    """Makes preparations before running an individual test."""
     self._test_engine = single_process.SingleProcessEngine(
         maximum_number_of_queued_items=100)
 

@@ -17,7 +17,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """The unit test for Services Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = services.ServicesPlugin()
 
   def _CreateTestKey(self, key_path, time_string):

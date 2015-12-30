@@ -15,7 +15,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
   """Tests for the Chrome Cache files parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = chrome_cache.ChromeCacheParser()
 
   def testParse(self):

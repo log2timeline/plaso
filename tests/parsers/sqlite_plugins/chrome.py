@@ -17,7 +17,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome History database plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = chrome.ChromeHistoryPlugin()
 
   def testProcess(self):

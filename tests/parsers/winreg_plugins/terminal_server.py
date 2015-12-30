@@ -17,7 +17,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Terminal Server Client Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = terminal_server.TerminalServerClientPlugin()
 
   def _CreateTestKey(self, key_path, time_string):
@@ -94,7 +94,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Terminal Server Client MRU Windows Registry plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = terminal_server.TerminalServerClientMRUPlugin()
 
   def _CreateTestKey(self, key_path, time_string):

@@ -17,7 +17,7 @@ class MactimeUnitTest(test_lib.ParserTestCase):
   """Tests the for mactime parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser = mactime.MactimeParser()
 
   def testParse(self):

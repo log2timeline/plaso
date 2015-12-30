@@ -21,7 +21,7 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
   """Base class for tests that use the SOFTWARE Registry file."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     path_attributes = {u'systemroot': u'\\Windows'}
 
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
@@ -41,7 +41,7 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
   """Base class for tests that use the SYSTEM Registry file."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     path_attributes = {u'systemroot': u'\\Windows'}
 
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
@@ -119,7 +119,7 @@ class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
   _FILE_DATA = b'regf'
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
@@ -146,7 +146,7 @@ class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
   _FILE_DATA = b'regf'
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     file_system_builder = shared_test_lib.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)

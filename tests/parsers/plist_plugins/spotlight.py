@@ -16,7 +16,7 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the spotlight plist plugin."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._plugin = spotlight.SpotlightPlugin()
     self._parser = plist.PlistParser()
 

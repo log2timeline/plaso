@@ -22,11 +22,11 @@ class PfilterFakeFormatter(formatters_interface.EventFormatter):
   """A formatter for this fake class."""
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
-  FORMAT_STRING = '{text}'
-  FORMAT_STRING_SHORT = '{text_short}'
+  FORMAT_STRING = u'{text}'
+  FORMAT_STRING_SHORT = u'{text_short}'
 
-  SOURCE_LONG = 'Fake Parsing Source'
-  SOURCE_SHORT = 'REG'
+  SOURCE_LONG = u'Fake Parsing Source'
+  SOURCE_SHORT = u'REG'
 
 
 formatters_manager.FormattersManager.RegisterFormatter(PfilterFakeFormatter)
@@ -44,7 +44,7 @@ class PFilterTest(unittest.TestCase):
     self.assertEqual(result, matcher.Matches(event_object))
 
   def setUp(self):
-    """Set up the necessary variables used in tests."""
+    """Makes preparations before running an individual test."""
     self._pre = Empty()
     self._pre.zone = pytz.UTC
 
@@ -61,96 +61,98 @@ class PFilterTest(unittest.TestCase):
     event_object.data_type = 'Weirdo:Made up Source:Last Written'
     event_object.timestamp = timelib.Timestamp.CopyFromString(
         u'2015-11-18 01:15:43')
-    event_object.timestamp_desc = 'Last Written'
-    event_object.text_short = 'This description is different than the long one.'
+    event_object.timestamp_desc = u'Last Written'
+    event_object.text_short = (
+        u'This description is different than the long one.')
     event_object.text = (
         u'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
     event_object.filename = (
         u'/My Documents/goodfella/Documents/Hideout/myfile.txt')
-    event_object.hostname = 'Agrabah'
-    event_object.parser = 'Weirdo'
+    event_object.hostname = u'Agrabah'
+    event_object.parser = u'Weirdo'
     event_object.inode = 1245
     event_object.mydict = {
-        'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'}
+        u'value': 134, u'another': u'value', u'A Key (with stuff)': u'Here'}
     event_object.display_name = u'unknown:{0:s}'.format(event_object.filename)
 
     # Series of tests.
-    query = 'filename contains \'GoodFella\''
+    query = u'filename contains \'GoodFella\''
     self._RunPlasoTest(event_object, query, True)
 
     # Double negative matching -> should be the same
     # as a positive one.
-    query = 'filename not not contains \'GoodFella\''
+    query = u'filename not not contains \'GoodFella\''
     my_parser = pfilter.BaseParser(query)
     self.assertRaises(errors.ParseError, my_parser.Parse)
 
     # Test date filtering.
-    query = 'date >= \'2015-11-18\''
+    query = u'date >= \'2015-11-18\''
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'date < \'2015-11-19\''
+    query = u'date < \'2015-11-19\''
     self._RunPlasoTest(event_object, query, True)
 
     # 2015-11-18T01:15:43
     query = (
-        'date < \'2015-11-18T01:15:44.341\' and date > \'2015-11-18 01:15:42\'')
+        u'date < \'2015-11-18T01:15:44.341\' and '
+        u'date > \'2015-11-18 01:15:42\'')
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'date > \'2015-11-19\''
+    query = u'date > \'2015-11-19\''
     self._RunPlasoTest(event_object, query, False)
 
     # Perform few attribute tests.
-    query = 'filename not contains \'sometext\''
+    query = u'filename not contains \'sometext\''
     self._RunPlasoTest(event_object, query, True)
 
     query = (
-        'timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' AND '
-        'date < \'2015-11-25 12:56:21\' AND (source_short contains \'LOG\' or '
-        'source_short CONTAINS \'REG\')')
+        u'timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' AND '
+        u'date < \'2015-11-25 12:56:21\' AND (source_short contains \'LOG\' or '
+        u'source_short CONTAINS \'REG\')')
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'parser is not \'Made\''
+    query = u'parser is not \'Made\''
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'parser is not \'Weirdo\''
+    query = u'parser is not \'Weirdo\''
     self._RunPlasoTest(event_object, query, False)
 
-    query = 'mydict.value is 123'
+    query = u'mydict.value is 123'
     self._RunPlasoTest(event_object, query, False)
 
-    query = 'mydict.akeywithstuff contains "ere"'
+    query = u'mydict.akeywithstuff contains "ere"'
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'mydict.value is 134'
+    query = u'mydict.value is 134'
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'mydict.value < 200'
+    query = u'mydict.value < 200'
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'mydict.another contains "val"'
+    query = u'mydict.another contains "val"'
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'mydict.notthere is 123'
+    query = u'mydict.notthere is 123'
     self._RunPlasoTest(event_object, query, False)
 
-    query = 'source_long not contains \'Fake\''
+    query = u'source_long not contains \'Fake\''
     self._RunPlasoTest(event_object, query, False)
 
-    query = 'source is \'REG\''
+    query = u'source is \'REG\''
     self._RunPlasoTest(event_object, query, True)
 
-    query = 'source is not \'FILE\''
+    query = u'source is not \'FILE\''
     self._RunPlasoTest(event_object, query, True)
 
     # Multiple attributes.
     query = (
-        'source_long is \'Fake Parsing Source\' AND description_long '
-        'regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
+        u'source_long is \'Fake Parsing Source\' AND description_long '
+        u'regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
     self._RunPlasoTest(event_object, query, False)
 
     query = (
-        'source_long is \'Fake Parsing Source\' AND text iregexp '
-        '\'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
+        u'source_long is \'Fake Parsing Source\' AND text iregexp '
+        u'\'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
     self._RunPlasoTest(event_object, query, True)
 
 
