@@ -431,6 +431,9 @@ class ExtractAndOutputTestCase(TestCase):
       logging.error(u'No such source: {0:s}'.format(test_definition.source))
       return False
 
+    # TODO: allow to set path from tool.
+    test_results_path = os.getcwd()
+
     with TempDirectory() as temp_directory:
       storage_file = os.path.join(
           temp_directory, u'{0:s}.plaso'.format(test_definition.name))
@@ -450,7 +453,13 @@ class ExtractAndOutputTestCase(TestCase):
               test_definition.source, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
-      if not self._RunCommand(command):
+      result = self._RunCommand(command)
+
+      shutil.copy(stdout_file, test_results_path)
+      shutil.copy(stderr_file, test_results_path)
+      # TODO: store storage file in results directory?
+
+      if not result:
         return False
 
       # Check if the resulting storage file can be opened with pinfo.
@@ -465,7 +474,12 @@ class ExtractAndOutputTestCase(TestCase):
               self._pinfo, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
-      if not self._RunCommand(command):
+      result = self._RunCommand(command)
+
+      shutil.copy(stdout_file, test_results_path)
+      shutil.copy(stderr_file, test_results_path)
+
+      if not result:
         return False
 
       # TODO: add support to compare storage file with a reference file.
@@ -482,11 +496,13 @@ class ExtractAndOutputTestCase(TestCase):
               self._psort, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
-      if not self._RunCommand(command):
-        return False
+      result = self._RunCommand(command)
 
-      # TODO: store output and error to results directory.
-      # TODO: store storage file in output directory.
+      shutil.copy(stdout_file, test_results_path)
+      shutil.copy(stderr_file, test_results_path)
+
+      if not result:
+        return False
 
     return True
 
