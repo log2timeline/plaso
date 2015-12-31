@@ -268,52 +268,52 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the AddCredentialOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddCredentialOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_CREDENTIAL_OPTIONS)
 
   def testAddFilterOptions(self):
     """Tests the AddFilterOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddFilterOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_FILTER_OPTIONS)
 
   def testAddStorageMediaImageOptions(self):
     """Tests the AddStorageMediaImageOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddStorageMediaImageOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS)
 
   def testAddVSSProcessingOptions(self):
     """Tests the AddVSSProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddVSSProcessingOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
 
   def testParseOptions(self):

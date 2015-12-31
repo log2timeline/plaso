@@ -136,53 +136,49 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   def testAddExtractionOptions(self):
     """Tests the AddExtractionOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddExtractionOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_EXTRACTION_OPTIONS)
 
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddPerformanceOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PERFOMANCE_OPTIONS)
 
   def testAddProfilingOptions(self):
     """Tests the AddProfilingOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddProfilingOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
 
   def testAddStorageOptions(self):
     """Tests the AddStorageOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddStorageOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_STORAGE_OPTIONS)
 
   def testParseOptions(self):
