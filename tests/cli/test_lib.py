@@ -59,3 +59,26 @@ class CLIToolTestCase(unittest.TestCase):
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
+
+  def _RunArgparseFormatHelp(self, argument_parser):
+    """Runs argparse.format_help() with test conditions.
+
+    Args:
+      argument_parser: an argument parser object (instance of
+                       argparse.ArgumentParser).
+
+    Returns:
+      A binary string containing the output of argparse.format_help().
+    """
+    columns_environment_variable = os.environ.get(u'COLUMNS', None)
+    os.environ[u'COLUMNS'] = u'80'
+
+    try:
+      output = argument_parser.format_help()
+    finally:
+      if columns_environment_variable:
+        os.environ[u'COLUMNS'] = columns_environment_variable
+      else:
+        del os.environ[u'COLUMNS']
+
+    return output

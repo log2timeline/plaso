@@ -62,53 +62,49 @@ class CLIToolTest(test_lib.CLIToolTestCase):
   def testAddBasicOptions(self):
     """Tests the AddBasicOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddBasicOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_BASIC_OPTIONS)
 
   def testAddDataLocationOption(self):
     """Tests the AddDataLocationOption function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddDataLocationOption(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_DATA_OPTION)
 
   def testAddInformationalOptions(self):
     """Tests the AddInformationalOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddInformationalOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
 
   def testAddTimezoneOption(self):
     """Tests the AddTimezoneOption function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddTimezoneOption(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)
 
   def testGetCommandLineArguments(self):
