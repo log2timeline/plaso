@@ -88,7 +88,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                                   ItemQueueProducer).
       parser_mediator: A parser mediator object (instance of ParserMediator).
       resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None.
+                        The default is None which will use the built in context
+                        which is not multi process safe. Note that every thread
+                        or process must have its own resolver context.
     """
     super(BaseEventExtractionWorker, self).__init__(path_spec_queue)
     self._compressed_stream_path_spec = None
@@ -764,7 +766,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     * A glob name for a single parser, eg: '*msie*' (case insensitive).
 
     Args:
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string.
     """
     self._specification_store, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetSpecificationStore(
@@ -835,7 +837,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
-      profiling_type: optional profiling type. The default is 'all'.
+      profiling_type: optional profiling type.
     """
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate

@@ -83,7 +83,7 @@ class CollectionInformation(object):
 
     Args:
       identifier: the value identifier.
-      default_value: optional default value. The default is None.
+      default_value: optional default value.
 
     Returns:
       The value or None if not available.

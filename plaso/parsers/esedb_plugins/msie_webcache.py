@@ -213,9 +213,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
-                The default is None.
       table: Optional table object (instance of pyesedb.table).
-             The default is None.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -262,9 +260,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
-                The default is None.
       table: Optional table object (instance of pyesedb.table).
-             The default is None.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -290,9 +286,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
-                The default is None.
       table: Optional table object (instance of pyesedb.table).
-             The default is None.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))

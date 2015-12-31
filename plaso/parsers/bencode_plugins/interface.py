@@ -132,9 +132,9 @@ class BencodePlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Bencode data in dictionary form. The default is None.
+      data: Bencode data in dictionary form.
       match: Optional dictionary containing only the keys selected in the
-             BENCODE_KEYS. The default is None.
+             BENCODE_KEYS.
     """
 
   def Process(self, parser_mediator, data, **kwargs):
@@ -151,7 +151,7 @@ class BencodePlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Bencode data in dictionary form. The default is None.
+      data: Bencode data in dictionary form.
 
     Raises:
       WrongBencodePlugin: If this plugin is not able to process the given file.

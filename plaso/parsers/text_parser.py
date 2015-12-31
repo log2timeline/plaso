@@ -115,7 +115,6 @@ class SlowLexicalTextParser(
 
     Args:
       match: optional regular expression match object (instance of SRE_Match).
-             The default is None.
     """
     if not match:
       return
@@ -233,7 +232,6 @@ class SlowLexicalTextParser(
 
     Args:
       match: optional regular expression match object (instance of SRE_Match).
-             The default is None.
 
     Returns:
       A string that combines the values that are so far
@@ -363,7 +361,6 @@ class SlowLexicalTextParser(
 
     Args:
       match: optional regular expression match object (instance of SRE_Match).
-             The default is None.
     """
     self.attributes[u'iday'] = int(match.group(1))
   def SetMonth(self, match=None, **unused_kwargs):
@@ -374,7 +371,6 @@ class SlowLexicalTextParser(
 
     Args:
       match: optional regular expression match object (instance of SRE_Match).
-             The default is None.
     """
     self.attributes[u'imonth'] = int(
         timelib.MONTH_DICT.get(match.group(1).lower(), 1))
@@ -384,7 +380,6 @@ class SlowLexicalTextParser(
 
     Args:
       match: optional regular expression match object (instance of SRE_Match).
-             The default is None.
     """
     self.attributes[u'time'] = match.group(1)
 
@@ -396,7 +391,6 @@ class SlowLexicalTextParser(
 
     Args:
       match: optional regular expression match object (instance of SRE_Match).
-             The default is None.
     """
     self.attributes[u'iyear'] = int(match.group(1))
 
@@ -901,8 +895,8 @@ class EncodedTextReader(object):
     """Initializes the encoded test reader object.
 
     Args:
-      buffer_size: optional buffer size. The default is 2048.
-      encoding: optional encoding. The default is None.
+      buffer_size: optional buffer size.
+      encoding: optional encoding.
     """
     super(EncodedTextReader, self).__init__()
     self._buffer = b''

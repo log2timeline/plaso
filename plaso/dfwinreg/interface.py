@@ -15,8 +15,7 @@ class WinRegistryFile(object):
     """Initializes the Windows Registry file.
 
     Args:
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
+      ascii_codepage: optional ASCII string codepage.
       key_path_prefix: optional Windows Registry key path prefix.
     """
     super(WinRegistryFile, self).__init__()
@@ -108,8 +107,7 @@ class WinRegistryFileReader(object):
             is a Windows path relative to the root of the file system that
             contains the specfic Windows Registry file. E.g.
             C:\\Windows\\System32\\config\\SYSTEM
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
+      ascii_codepage: optional ASCII string codepage.
 
     Returns:
       The Windows Registry file (instance of WinRegistryFile) or None.

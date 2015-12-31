@@ -411,7 +411,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
                            PreprocessObject).
       storage_file: The storage file (instance of StorageFile).
       last_entry: Optional boolean value to indicate this is the last
-                  information entry. The default is False.
+                  information entry.
 
     Returns:
       A string containing the formatted storage information.

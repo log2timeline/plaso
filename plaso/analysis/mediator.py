@@ -182,7 +182,7 @@ class AnalysisMediator(object):
 
     Args:
       analysis_report: the analysis report object (instance of AnalysisReport).
-      plugin_name: Optional name of the plugin. The default is None.
+      plugin_name: Optional name of the plugin.
     """
     if not getattr(analysis_report, u'plugin_name', None) and plugin_name:
       analysis_report.plugin_name = plugin_name
@@ -192,7 +192,7 @@ class AnalysisMediator(object):
 
     Args:
       analysis_report: the analysis report object (instance of AnalysisReport).
-      plugin_name: Optional name of the plugin. The default is None.
+      plugin_name: Optional name of the plugin.
     """
     self.ProcessAnalysisReport(analysis_report, plugin_name=plugin_name)
 

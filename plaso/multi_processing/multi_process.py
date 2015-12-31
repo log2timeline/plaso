@@ -42,7 +42,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     Args:
       process_type: the process type.
       enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled. The default is False.
+                              handler should be enabled.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
@@ -243,10 +243,9 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
       path_spec_queue: the path specification queue object (instance of
                        MultiProcessingQueue).
       filter_find_specs: Optional list of filter find specifications (instances
-                         of dfvfs.FindSpec). The default is None.
+                         of dfvfs.FindSpec).
       include_directory_stat: Optional boolean value to indicate whether
                               directory stat information should be collected.
-                              The default is True.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessCollectorProcess, self).__init__(
@@ -984,32 +983,28 @@ class MultiProcessEngine(engine.BaseEngine):
                          dfvfs.PathSpec) to process.
       storage_writer: A storage writer object (instance of BaseStorageWriter).
       enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled. The default is False.
+                              handler should be enabled.
       filter_find_specs: Optional list of filter find specifications (instances
-                         of dfvfs.FindSpec). The default is None.
+                         of dfvfs.FindSpec).
       filter_object: Optional filter object (instance of objectfilter.Filter).
-                     The default is None.
       hasher_names_string: Optional comma separated string of names of
-                           hashers to enable enable. The default is None.
+                           hashers to enable enable.
       include_directory_stat: Optional boolean value to indicate whether
                               directory stat information should be collected.
-                              The default is True.
       mount_path: Optional string containing the mount path. The default
                   is None.
       number_of_extraction_workers: Optional number of extraction worker
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string.
       process_archive_files: Optional boolean value to indicate if the worker
                              should scan for file entries inside files.
-                             The default is False.
       status_update_callback: Optional callback function for status updates.
-                              The default is None.
       show_memory_usage: Optional boolean value to indicate memory information
-                         should be included in logging. The default is False.
+                         should be included in logging.
       text_prepend: Optional string that contains the text to prepend to every
-                    event object. The default is None.
+                    event object.
 
     Returns:
       The processing status (instance of ProcessingStatus).
@@ -1195,25 +1190,23 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
                       for parsing.
       worker_number: A number that identifies the worker.
       enable_debug_output: Optional boolean value to indicate if the debug
-                           output should be enabled. The default is False.
+                           output should be enabled.
       enable_profiling: Optional boolean value to indicate if profiling should
-                        be enabled. The default is False.
+                        be enabled.
       filter_object: Optional filter object (instance of objectfilter.Filter).
-                     The default is None.
       hasher_names_string: Optional comma separated string of names of
-                           hashers to enable enable. The default is None.
+                           hashers to enable enable.
       mount_path: Optional string containing the mount path. The default
                   is None.
-      parser_filter_string: Optional parser filter string. The default is None.
+      parser_filter_string: Optional parser filter string.
       process_archive_files: Optional boolean value to indicate if the worker
                              should scan for file entries inside files.
-                             The default is False.
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
-      profiling_type: optional profiling type. The default is 'all'.
+      profiling_type: optional profiling type.
       text_prepend: Optional string that contains the text to prepend to every
-                    event object. The default is None.
+                    event object.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessEventExtractionWorkerProcess, self).__init__(
