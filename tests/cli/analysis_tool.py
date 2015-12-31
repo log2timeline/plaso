@@ -26,14 +26,13 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   def testAddStorageFileOptions(self):
     """Tests the AddStorageFileOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'analysis_tool_test.py',
-        description=u'Test argument parser.',
-        add_help=False)
+        prog=u'analysis_tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = analysis_tool.AnalysisTool()
     test_tool.AddStorageFileOptions(argument_parser)
 
-    output = argument_parser.format_help()
+    output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS)
 
   def testParseOptions(self):
