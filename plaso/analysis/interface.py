@@ -386,7 +386,7 @@ class HashAnalyzer(threading.Thread):
       hashes_per_batch: The number of hashes to analyze at once. The default
                         is 1.
       wait_after_analysis: The number of seconds to wait after each batch is
-                           analyzed. The default is 0.
+                           analyzed.
     """
     super(HashAnalyzer, self).__init__()
     self._abort = False

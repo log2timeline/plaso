@@ -24,7 +24,6 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
-             The default is None.
     """
     for volume_name, volume in match[u'Stores'].iteritems():
       description = u'Spotlight Volume {0:s} ({1:s}) activated.'.format(

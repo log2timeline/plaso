@@ -21,7 +21,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
                      test file.
       plist_name: the name of the plist to parse.
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An event object queue consumer object (instance of
@@ -46,7 +46,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       plist_name: the name of the plist to parse.
       top_level_object: the top-level plist object.
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An event object queue consumer object (instance of

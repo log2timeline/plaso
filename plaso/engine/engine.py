@@ -46,8 +46,9 @@ class BaseEngine(object):
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) of the file system.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None. Note that every thread or process
-                        must have its own resolver context.
+                        The default is None which will use the built in context
+                        which is not multi process safe. Note that every thread
+                        or process must have its own resolver context.
 
     Returns:
       A tuple of the file system (instance of dfvfs.FileSystem) and
@@ -81,8 +82,9 @@ class BaseEngine(object):
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None. Note that every thread or process
-                        must have its own resolver context.
+                        The default is None which will use the built in context
+                        which is not multi process safe. Note that every thread
+                        or process must have its own resolver context.
     """
     for source_path_spec in source_path_specs:
       file_system, mount_point = self.GetSourceFileSystem(
@@ -124,7 +126,7 @@ class BaseEngine(object):
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
-      profiling_type: optional profiling type. The default is 'all'.
+      profiling_type: optional profiling type.
     """
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate

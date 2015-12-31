@@ -40,7 +40,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
     if not plist_name.startswith(self.PLIST_PATH):
       raise errors.WrongPlistPlugin(self.NAME, plist_name)
     super(AppleAccountPlugin, self).Process(
-      parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
+        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Apple Account entries.
@@ -48,7 +48,6 @@ class AppleAccountPlugin(interface.PlistPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
-             The default is None.
     """
     root = u'/Accounts'
 

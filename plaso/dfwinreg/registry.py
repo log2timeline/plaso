@@ -101,10 +101,9 @@ class WinRegistry(object):
     """Initializes the Windows Registry.
 
     Args:
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
+      ascii_codepage: optional ASCII string codepage.
       registry_file_reader: optional Windows Registry file reader (instance of
-                            WinRegistryFileReader). The default is None.
+                            WinRegistryFileReader).
     """
     super(WinRegistry, self).__init__()
     self._ascii_codepage = ascii_codepage

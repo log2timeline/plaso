@@ -38,7 +38,6 @@ class SpotlightPlugin(interface.PlistPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
-             The default is None.
     """
     for search_text, data in match.get(u'UserShortcuts', {}).iteritems():
       if not u'LAST_USED' in data:

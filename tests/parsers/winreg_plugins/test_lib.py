@@ -46,11 +46,10 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       plugin_object: The plugin object.
       registry_key: The Windows Registry Key.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       knowledge_base_values: Optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
       parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+                    point.
 
     Returns:
       An event object queue consumer object (instance of

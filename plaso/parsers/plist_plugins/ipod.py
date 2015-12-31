@@ -48,7 +48,6 @@ class IPodPlugin(interface.PlistPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
-             The default is None.
     """
     if not u'Devices' in match:
       return

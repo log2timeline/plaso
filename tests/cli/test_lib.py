@@ -15,7 +15,7 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     """Initializes the output writer object.
 
     Args:
-      encoding: optional output encoding. The default is "utf-8".
+      encoding: optional output encoding.
     """
     file_object = io.BytesIO()
     super(TestOutputWriter, self).__init__(file_object, encoding=encoding)

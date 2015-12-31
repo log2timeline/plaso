@@ -100,7 +100,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      codepage: Optional extended ASCII string codepage.
     """
     values_dict = {}
     for entry_index, entry_letter in self._ParseMRUListValue(key):
@@ -185,7 +185,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      codepage: Optional extended ASCII string codepage.
     """
     self._ParseMRUListKey(parser_mediator, registry_key, codepage=codepage)
 
@@ -214,7 +214,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      codepage: Optional extended ASCII string codepage.
 
     Returns:
       A string containing the value.
@@ -250,7 +250,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
       parser_mediator: A parser mediator object (instance of ParserMediator).
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      codepage: Optional extended ASCII string codepage.
     """
     self._ParseMRUListKey(parser_mediator, registry_key, codepage=codepage)
 

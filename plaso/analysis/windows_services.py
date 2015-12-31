@@ -36,7 +36,7 @@ class WindowsService(yaml.YAMLObject):
       source: A tuple of (pathspec, Registry key) describing where the
           service was found
       service_dll: Optional string value of the ServiceDll value in the
-          service's Parameters subkey. The default is None.
+          service's Parameters subkey.
 
     Raises:
       TypeError: If a tuple with two elements is not passed as the 'source'

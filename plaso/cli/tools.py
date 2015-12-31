@@ -382,7 +382,7 @@ class CLIInputReader(object):
     """Initializes the input reader object.
 
     Args:
-      encoding: optional input encoding. The default is "utf-8".
+      encoding: optional input encoding.
     """
     super(CLIInputReader, self).__init__()
     self._encoding = encoding
@@ -403,7 +403,7 @@ class CLIOutputWriter(object):
     """Initializes the output writer object.
 
     Args:
-      encoding: optional output encoding. The default is "utf-8".
+      encoding: optional output encoding.
     """
     super(CLIOutputWriter, self).__init__()
     self._encoding = encoding
@@ -428,7 +428,7 @@ class FileObjectInputReader(CLIInputReader):
 
     Args:
       file_object: the file-like object to read from.
-      encoding: optional input encoding. The default is "utf-8".
+      encoding: optional input encoding.
     """
     super(FileObjectInputReader, self).__init__(encoding=encoding)
     self._errors = u'strict'
@@ -465,7 +465,7 @@ class StdinInputReader(FileObjectInputReader):
     """Initializes the input reader object.
 
     Args:
-      encoding: optional input encoding. The default is "utf-8".
+      encoding: optional input encoding.
     """
     super(StdinInputReader, self).__init__(sys.stdin, encoding=encoding)
 
@@ -481,7 +481,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
 
     Args:
       file_object: the file-like object to write to.
-      encoding: optional output encoding. The default is "utf-8".
+      encoding: optional output encoding.
     """
     super(FileObjectOutputWriter, self).__init__(encoding=encoding)
     self._errors = u'strict'
@@ -518,6 +518,6 @@ class StdoutOutputWriter(FileObjectOutputWriter):
     """Initializes the output writer object.
 
     Args:
-      encoding: optional output encoding. The default is "utf-8".
+      encoding: optional output encoding.
     """
     super(StdoutOutputWriter, self).__init__(sys.stdout, encoding=encoding)

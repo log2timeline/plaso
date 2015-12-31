@@ -291,7 +291,6 @@ class Timestamp(object):
       timestamp: The timestamp which is an integer containing the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
       timezone: Optional timezone (instance of pytz.timezone).
-                The default is UTC.
       raise_error: Boolean that if set to True will not absorb an OverflowError
                    if the timestamp is out of bounds. By default there will be
                    no error raised.
@@ -507,7 +506,6 @@ class Timestamp(object):
       timezone: The timezone object of the system's local time.
       is_dst: A boolean to indicate the timestamp is corrected for daylight
               savings time (DST) only used for the DST transition period.
-              The default is false.
 
     Returns:
       The timestamp which is an integer containing the number of micro seconds
@@ -622,9 +620,8 @@ class Timestamp(object):
       minutes: An integer, 0 <= minute < 60.
       seconds: An integer, 0 <= second < 60.
       microseconds: Optional number of microseconds ranging from:
-                    0 <= microsecond < 1000000. The default is 0.
+                    0 <= microsecond < 1000000.
       timezone: Optional timezone (instance of pytz.timezone).
-                The default is UTC.
 
     Returns:
       The timestamp which is an integer containing the number of micro seconds
@@ -775,7 +772,6 @@ class Timestamp(object):
       timezone: The timezone (pytz.timezone) object.
       is_dst: A boolean to indicate the timestamp is corrected for daylight
               savings time (DST) only used for the DST transition period.
-              The default is false.
 
     Returns:
       The timestamp which is an integer containing the number of micro seconds

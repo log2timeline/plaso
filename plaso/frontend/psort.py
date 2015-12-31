@@ -126,7 +126,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
                                       Queue).
       storage_file: a storage file object (instance of StorageFile).
       counter: a counter object (instance of collections.Counter).
-      preferred_encoding: optional preferred encoding. The default is "utf-8".
+      preferred_encoding: optional preferred encoding.
     """
     if not analysis_plugins:
       return
@@ -281,8 +281,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     Args:
       storage_file: the storage file object (instance of StorageFile).
-      preferred_encoding: optional preferred encoding. The default is "utf-8".
-      timezone: optional timezone. The default is UTC.
+      preferred_encoding: optional preferred encoding.
+      timezone: optional timezone.
 
     Returns:
       an output module object (instance of OutputModule) or None if not able to
@@ -458,14 +458,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       command_line_arguments: optional string of the command line arguments or
                               None if not set.
       deduplicate_events: optional boolean value to indicate if the event
-                          objects should be deduplicated. The default is True.
-      preferred_encoding: optional preferred encoding. The default is "utf-8".
+                          objects should be deduplicated.
+      preferred_encoding: optional preferred encoding.
       time_slice: optional time slice object (instance of TimeSlice).
-                  The default is None.
       use_time_slicer: optional boolean value to indicate the 'time slicer'
-                       should be used. The default is False. The 'time slicer'
-                       will provide a context of events around an event of
-                       interest.
+                       should be used. The 'time slicer' will provide a
+                       context of events around an event of interest.
 
     Returns:
       A counter (an instance of collections.Counter) that tracks the number of
@@ -600,7 +598,7 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
       queue_object: the queue object (instance of Queue).
       storage_file: the storage file (instance of StorageFile).
       filter_string: the filter string.
-      preferred_encoding: optional preferred encoding. The default is "utf-8".
+      preferred_encoding: optional preferred encoding.
     """
     super(PsortAnalysisReportQueueConsumer, self).__init__(queue_object)
     self._filter_string = filter_string
