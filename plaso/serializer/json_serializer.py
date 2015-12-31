@@ -245,7 +245,7 @@ class _EventObjectJSONDecoder(json.JSONDecoder):
 
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
-    if class_type == u'PathSpec':
+    elif class_type == u'PathSpec':
       return self._ConvertDictToPathSpec(json_dict)
 
     return self._ConvertDictToEventObject(json_dict)
