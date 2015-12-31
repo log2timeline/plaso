@@ -200,7 +200,9 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       with storage_zip_file.StorageFile(
           temp_file, read_only=True) as storage_file:
         output_mediator_object = output_mediator.OutputMediator(
-            self._formatter_mediator, storage_file)
+            self._formatter_mediator)
+        output_mediator_object.SetStorageFile(storage_file)
+
         output_module = TestOutputModule(output_mediator_object)
         output_module.SetOutputWriter(output_writer)
         event_buffer = TestEventBuffer(
