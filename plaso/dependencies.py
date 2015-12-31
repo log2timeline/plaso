@@ -40,6 +40,7 @@ PYTHON_DEPENDENCIES = [
     (u'construct', u'__version__', u'2.5.2', None),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfvfs', u'__version__', u'20160108', None),
+    (u'dfwinreg', u'__version__', u'20151025', None),
     (u'dpkt', u'__version__', u'1.8', None),
     # The protobuf module does not appear to have version information.
     (u'google.protobuf', u'', u'', None),

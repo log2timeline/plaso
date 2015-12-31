@@ -4,7 +4,8 @@
 import os
 import unittest
 
-from plaso.dfwinreg import fake as dfwinreg_fake
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.events import text_events
 from plaso.events import windows_events
 from plaso.lib import timelib

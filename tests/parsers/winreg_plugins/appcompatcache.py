@@ -5,9 +5,9 @@
 import unittest
 
 from dfvfs.path import fake_path_spec
+from dfwinreg import definitions as dfwinreg_definitions
+from dfwinreg import fake as dfwinreg_fake
 
-from plaso.dfwinreg import definitions as dfwinreg_definitions
-from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
