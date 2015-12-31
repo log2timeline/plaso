@@ -455,10 +455,13 @@ class ExtractAndOutputTestCase(TestCase):
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
 
-      shutil.copy(storage_file, test_results_path)
+      if os.path.exists(storage_file):
+        shutil.copy(storage_file, test_results_path)
 
-      shutil.copy(stdout_file, test_results_path)
-      shutil.copy(stderr_file, test_results_path)
+      if os.path.exists(stdout_file):
+        shutil.copy(stdout_file, test_results_path)
+      if os.path.exists(stderr_file):
+        shutil.copy(stderr_file, test_results_path)
 
       if not result:
         return False
@@ -477,8 +480,10 @@ class ExtractAndOutputTestCase(TestCase):
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
 
-      shutil.copy(stdout_file, test_results_path)
-      shutil.copy(stderr_file, test_results_path)
+      if os.path.exists(stdout_file):
+        shutil.copy(stdout_file, test_results_path)
+      if os.path.exists(stderr_file):
+        shutil.copy(stderr_file, test_results_path)
 
       if not result:
         return False
@@ -499,8 +504,10 @@ class ExtractAndOutputTestCase(TestCase):
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
 
-      shutil.copy(stdout_file, test_results_path)
-      shutil.copy(stderr_file, test_results_path)
+      if os.path.exists(stdout_file):
+        shutil.copy(stdout_file, test_results_path)
+      if os.path.exists(stderr_file):
+        shutil.copy(stderr_file, test_results_path)
 
       if not result:
         return False
