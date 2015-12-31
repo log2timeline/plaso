@@ -16,7 +16,15 @@ from plaso.parsers import manager
 
 
 class CacheAddress(object):
-  """Class that contains a cache address."""
+  """Class that contains a cache address.
+
+  Attributes:
+    block_number: an integer containing the block data file number.
+    block_offset: an integer containing the offset within the block data file.
+    block_size: an integer containing the block size.
+    filename: a string containing the name of the block data file.
+    value: an integer containing the cache address.
+  """
   FILE_TYPE_SEPARATE = 0
   FILE_TYPE_BLOCK_RANKINGS = 1
   FILE_TYPE_BLOCK_256 = 2
@@ -32,10 +40,10 @@ class CacheAddress(object):
   _FILE_TYPE_BLOCK_SIZES = [0, 36, 256, 1024, 4096]
 
   def __init__(self, cache_address):
-    """Initializes the cache address object.
+    """Initializes a cache address object.
 
     Args:
-      cache_address: the cache address value.
+      cache_address: an integer containing the cache address.
     """
     super(CacheAddress, self).__init__()
     self.block_number = None
@@ -67,10 +75,20 @@ class CacheAddress(object):
 
 
 class CacheEntry(object):
-  """Class that contains a cache entry."""
+  """Class that contains a cache entry.
+
+  Attributes:
+    creation_time: an integer containing the creation time, in number of
+                   micro seconds since January 1, 1970, 00:00:00 UTC.
+    hash: an integer containing the super fast hash of the key.
+    key: a binary string containing the key.
+    next: an integer containing the cache address of the next cache entry.
+    rankings_node: an integer containing the cache address of the rankings
+                   node.
+  """
 
   def __init__(self):
-    """Initializes the cache entry object."""
+    """Initializes a cache entry object."""
     super(CacheEntry, self).__init__()
     self.creation_time = None
     self.hash = None
@@ -274,8 +292,8 @@ class DataBlockFile(object):
     cache_entry.creation_time = cache_entry_struct.get(u'creation_time')
 
     byte_array = cache_entry_struct.get(u'key')
-    string = u''.join(map(chr, byte_array))
-    cache_entry.key, _, _ = string.partition(u'\x00')
+    byte_string = b''.join(map(chr, byte_array))
+    cache_entry.key, _, _ = byte_string.partition(b'\x00')
 
     return cache_entry
 
@@ -300,15 +318,18 @@ class ChromeCacheEntryEvent(time_events.WebKitTimeEvent):
 
   DATA_TYPE = u'chrome:cache:entry'
 
-  def __init__(self, cache_entry):
+  def __init__(self, creation_time, original_url):
     """Initializes the event object.
 
     Args:
-      cache_entry: the cache entry (instance of CacheEntry).
+      creation_time: an integer containing the creation time, in number of
+                     micro seconds since January 1, 1970, 00:00:00 UTC.
+      original_url: a string containing the original URL or an empty string
+                    if not available.
     """
     super(ChromeCacheEntryEvent, self).__init__(
-        cache_entry.creation_time, eventdata.EventTimestamp.CREATION_TIME)
-    self.original_url = cache_entry.key
+        creation_time, eventdata.EventTimestamp.CREATION_TIME)
+    self.original_url = original_url
 
 
 class ChromeCacheParser(interface.FileEntryParser):
@@ -351,7 +372,17 @@ class ChromeCacheParser(interface.FileEntryParser):
                   exception))
           break
 
-        event_object = ChromeCacheEntryEvent(cache_entry)
+        try:
+          original_url = cache_entry.key.decode(u'ascii')
+        except UnicodeDecodeError:
+          original_url = cache_entry.key.decode(u'ascii', errors=u'replace')
+          parser_mediator.ProduceParseError((
+              u'unable to decode cache entry key at cache address: '
+              u'0x{0:08x}. Characters that cannot be decoded will be '
+              u'replaced with "?" or "\\ufffd".').format(cache_address.value))
+
+        event_object = ChromeCacheEntryEvent(
+            cache_entry.creation_time, original_url)
         parser_mediator.ProduceEvent(event_object)
 
         cache_address = cache_entry.next
@@ -451,7 +482,7 @@ class ChromeCacheParser(interface.FileEntryParser):
     try:
       self._ParseCacheEntries(parser_mediator, index_file, data_block_files)
     finally:
-      for data_block_file in data_block_files.itervalues():
+      for data_block_file in iter(data_block_files.values()):
         if data_block_file:
           data_block_file.Close()
 
