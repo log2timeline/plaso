@@ -154,9 +154,9 @@ class PregTool(storage_media_tool.StorageMediaTool):
     Args:
       event_object: The event object (instance of EventObject).
       before: Optional number of bytes to include in the output before
-              the event. The default is none.
+              the event.
       maximum_number_of_lines: Optional maximum number of lines to include
-                               in the output. The default is 20.
+                               in the output.
 
     Returns:
       A string that contains the hexadecimal representation of the event data.
@@ -340,8 +340,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       file_entry: optional file entry object (instance of dfvfs.FileEntry)
                   that the event originated from. Default is None.
       show_hex: optional boolean to indicate that the hexadecimal representation
-                of the event should be included in the output. The default is
-                False.
+                of the event should be included in the output.
     """
     format_string = self._GetFormatString(event_object)
 
@@ -421,8 +420,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   Defaults to None.
       show_hex: optional boolean to indicate that the hexadecimal representation
-                of the event should be included in the output. The default is
-                False.
+                of the event should be included in the output.
     """
     event_objects_and_timestamps = {}
     for event_object in event_objects:
@@ -490,7 +488,6 @@ class PregTool(storage_media_tool.StorageMediaTool):
       key_path: path of the parsed Registry key.
       parsed_data: dict object returned from ParseRegisterFile.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
     """
     registry_key = parsed_data.get(u'key', None)
     if registry_key:
@@ -549,7 +546,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
 
     Args:
       text: The header text.
-      character: Optional header line character. The default is '*'.
+      character: Optional header line character.
     """
     self._output_writer.Write(u'\n')
 
@@ -563,10 +560,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     Args:
       key_data: dict object returned from ParseRegisterKey.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       show_hex: optional boolean to indicate that the hexadecimal representation
-                of the event should be included in the output. The default is
-                False.
+                of the event should be included in the output.
     """
     self.PrintHeader(u'Plugins', character=u'-')
     for plugin, event_objects in iter(key_data.items()):
@@ -1509,10 +1504,10 @@ class PregConsole(object):
                           default is None which sets the value to a string
                           indicating an unknown Registry file.
       config: optional IPython configuration object (instance of
-              IPython.terminal.embed.InteractiveShellEmbed). The default is None
+              IPython.terminal.embed.InteractiveShellEmbed).
               and an attempt to automatically derive the config is done.
       prepend_string: optional string that can be injected into the prompt
-                      just prior to the command count. The default is None.
+                      just prior to the command count.
     """
     if registry_file_path is None:
       path_string = u'Unknown Registry file loaded'

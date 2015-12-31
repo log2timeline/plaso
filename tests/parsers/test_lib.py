@@ -96,11 +96,11 @@ class ParserTestCase(unittest.TestCase):
       event_queue: the event queue (instance of Queue).
       parse_error_queue: the parse error queue (instance of Queue).
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
       file_entry: optional dfVFS file_entry object (instance of dfvfs.FileEntry)
                   being parsed.
       parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+                    point.
 
     Returns:
       A parser mediator object (instance of ParserMediator).
@@ -172,7 +172,7 @@ class ParserTestCase(unittest.TestCase):
       parser_object: the parser object.
       path: the path of the file to parse.
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An event object queue consumer object (instance of
@@ -191,7 +191,7 @@ class ParserTestCase(unittest.TestCase):
       parser_object: the parser object.
       path_spec: the path specification of the file to parse.
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An event object queue consumer object (instance of

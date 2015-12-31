@@ -20,8 +20,7 @@ class TestWinRegistryFileReader(interface.WinRegistryFileReader):
 
     Args:
       path: the path of the Windows Registry file.
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
+      ascii_codepage: optional ASCII string codepage.
 
     Returns:
       The Windows Registry file (instance of WinRegistryFile) or None.

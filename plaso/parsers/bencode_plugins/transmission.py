@@ -49,7 +49,7 @@ class TransmissionPlugin(interface.BencodePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Optional bencode data in dictionary form. The default is None.
+      data: Optional bencode data in dictionary form.
     """
     # Place the obtained values into the event.
     destination = data.get(u'destination', None)

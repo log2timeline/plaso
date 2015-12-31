@@ -25,7 +25,7 @@ class InstallHistoryPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      top_level: Optional plist in dictionary form. The default is None.
+      top_level: Optional plist in dictionary form.
     """
     for entry in top_level:
       packages = []

@@ -11,7 +11,7 @@ def ByteArrayCopyToString(byte_array, codepage=u'utf-8'):
 
   Args:
     byte_array: A byte array containing an UTF-8 encoded string.
-    codepage: The codepage of the byte stream. The default is utf-8.
+    codepage: The codepage of the byte stream.
 
   Returns:
     A Unicode string.
@@ -25,7 +25,7 @@ def ByteStreamCopyToString(byte_stream, codepage=u'utf-8'):
 
   Args:
     byte_stream: A byte stream containing an UTF-8 encoded string.
-    codepage: The codepage of the byte stream. The default is utf-8.
+    codepage: The codepage of the byte stream.
 
   Returns:
     A Unicode string.
@@ -46,8 +46,7 @@ def ByteStreamCopyToGuid(byte_stream, byte_order=u'little-endian'):
 
   Args:
     byte_stream: The byte stream that contains the UTF-16 formatted stream.
-    byte_order: The byte order, either big- or little-endian. The default is
-                little-endian.
+    byte_order: The byte order, either big- or little-endian.
 
   Returns:
     String containing the GUID.
@@ -77,7 +76,7 @@ def ByteStreamCopyToUTF16Stream(byte_stream, byte_stream_size=None):
   Args:
     byte_stream: The byte stream that contains the UTF-16 formatted stream.
     byte_stream_size: Optional byte stream size or None if the entire
-                      byte stream should be read. The default is None.
+                      byte stream should be read.
 
   Returns:
     String containing the UTF-16 formatted stream.

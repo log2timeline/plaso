@@ -512,6 +512,6 @@ class PreprocessObject(object):
 #   name: The parser or plugin name.
 #   description: The description of the error.
 #   path_spec: Optional path specification of the file entry (instance of
-#              dfvfs.PathSpec). The default is None.
+#              dfvfs.PathSpec).
 ParseError = collections.namedtuple(
     u'ParseError', u'name description path_spec')

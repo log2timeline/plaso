@@ -99,7 +99,7 @@ class OutputModuleTestCase(unittest.TestCase):
 
     Args:
       storage_object: optional storage file object (instance of StorageFile)
-                      that defines the storage. The default is None.
+                      that defines the storage.
 
     Returns:
       An output mediator (instance of OutputMediator).

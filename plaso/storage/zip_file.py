@@ -720,11 +720,10 @@ class StorageFile(ZIPStorageFile):
       buffer_size: Optional maximum size of a single storage (protobuf) file.
                    The default is 0, which indicates no limit.
       read_only: Optional boolean to indicate we are opening the storage file
-                 for reading only. The default is false.
+                 for reading only.
       pre_obj: Optional preprocessing object that gets stored inside
-               the storage file. The default is None.
-      serializer_format: Optional storage serializer format. The default is
-                         protobuf.
+               the storage file.
+      serializer_format: Optional storage serializer format.
 
     Raises:
       IOError: if we open up the file in read only mode and the file does
@@ -1041,8 +1040,7 @@ class StorageFile(ZIPStorageFile):
     Args:
       path: string containing the path of the storage file.
       access_mode: optional string indicating the access mode.
-      serializer_format: Optional storage serializer format. The default is
-                         protobuf.
+      serializer_format: Optional storage serializer format.
 
     Raises:
       IOError: if the file is opened in read only mode and the file does
@@ -1491,7 +1489,7 @@ class StorageFile(ZIPStorageFile):
     Args:
       enable_profiling: boolean value to indicate if profiling should
                         be enabled.
-      profiling_type: optional profiling type. The default is 'all'.
+      profiling_type: optional profiling type.
     """
     self._enable_profiling = enable_profiling
 

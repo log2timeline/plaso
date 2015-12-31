@@ -439,8 +439,7 @@ class FakeWinRegistryFile(interface.WinRegistryFile):
     """Initializes the Windows Registry file.
 
     Args:
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
+      ascii_codepage: optional ASCII string codepage.
       key_path_prefix: optional Windows Registry key path prefix.
     """
     super(FakeWinRegistryFile, self).__init__(

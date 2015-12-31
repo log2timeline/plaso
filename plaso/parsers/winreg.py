@@ -18,8 +18,7 @@ class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 
     Args:
       file_object: the Windows Registry file-like object.
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
+      ascii_codepage: optional ASCII string codepage.
 
     Returns:
       The Windows Registry file (instance of WinRegistryFile) or None.

@@ -63,7 +63,7 @@ class UTorrentPlugin(interface.BencodePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Optional bencode data in dictionary form. The default is None.
+      data: Optional bencode data in dictionary form.
     """
     # Walk through one of the torrent keys to ensure it's from a valid file.
     for key, value in data.iteritems():
