@@ -110,7 +110,7 @@ class _EventTagIndexValue(object):
     store_number: optional integer containing the store number.
     store_offset: optional integer containing the offset relative
                   to the start of the store.
-    tag_type: an integer containin the tag type.
+    tag_type: an integer containing the tag type.
   """
   TAG_TYPE_UNDEFINED = 0
   TAG_TYPE_NUMERIC = 1
@@ -299,7 +299,6 @@ class _SerializedDataStream(object):
     """Writes an entry to the file-like object.
 
     Args:
-      file_object: a file-like object.
       data: a binary string containing the data.
 
     Returns:
@@ -565,7 +564,7 @@ class _SerializedEventTagIndexTable(object):
     """Adds an event tag index.
 
     Args:
-      tag_type: an integer containin the tag type.
+      tag_type: an integer containing the tag type.
       offset: an integer containing the serialized event tag data offset.
       event_uuid: optional string containing the event identifier (UUID).
       store_number: optional integer containing the store number.
