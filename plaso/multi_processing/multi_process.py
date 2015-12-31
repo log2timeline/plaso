@@ -352,7 +352,7 @@ class MultiProcessEngine(engine.BaseEngine):
                   queuing. If False, the multiprocessing queue will be used.
     """
     self._use_zeromq = use_zeromq
-    if use_zeromq:
+    if self._use_zeromq:
       path_spec_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
           delay_open=True, name=u'Pathspec inbound', buffer_timeout_seconds=300)
       path_spec_queue = path_spec_outbound_queue
@@ -523,12 +523,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateProcessingStatus(pid, process_status)
 
-    if status_indicator not in [
+    if status_indicator not in (
         definitions.PROCESSING_STATUS_COMPLETED,
         definitions.PROCESSING_STATUS_INITIALIZED,
         definitions.PROCESSING_STATUS_RUNNING,
         definitions.PROCESSING_STATUS_PARSING,
-        definitions.PROCESSING_STATUS_HASHING]:
+        definitions.PROCESSING_STATUS_HASHING):
 
       logging.error(
           (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
@@ -580,7 +580,7 @@ class MultiProcessEngine(engine.BaseEngine):
   def _CloseStorageZeroMQQueues(self):
     """Closes all ZeroMQ queues being used by the storage writer."""
     logging.debug(u'Closing ZeroMQ storage queues.')
-    for port in [self._event_object_queue_port, self._parse_error_queue_port]:
+    for port in (self._event_object_queue_port, self._parse_error_queue_port):
       terminate_queue = zeromq_queue.ZeroMQPushConnectQueue(
           linger_seconds=0, port=port, timeout_seconds=0, name=u'Termination')
       terminate_queue.PushItem(queue.QueueAbort(), block=False)
@@ -734,6 +734,7 @@ class MultiProcessEngine(engine.BaseEngine):
       for _ in range(self._number_of_extraction_workers):
         self._path_spec_queue.PushItem(queue.QueueAbort(), block=False)
       self.event_object_queue.PushItem(queue.QueueAbort(), block=False)
+      self._parse_error_queue.PushItem(queue.QueueAbort(), block=False)
     else:
       self._CloseStorageZeroMQQueues()
 
@@ -741,6 +742,10 @@ class MultiProcessEngine(engine.BaseEngine):
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     if not abort:
+      # The storage writer process sometimes needs some additional time to
+      # exit normally.
+      time.sleep(0.5)
+
       # Check if the processes are still alive and terminate them if necessary.
       self._AbortTerminate()
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
@@ -1047,6 +1052,7 @@ class MultiProcessEngine(engine.BaseEngine):
     # Start the storage writer first, as we need it to start up and bind its
     # queues to ports before we can start the workers.
     self._extraction_complete_event = multiprocessing.Event()
+
     storage_writer_process = MultiProcessStorageWriterProcess(
         self.event_object_queue, self._extraction_complete_event,
         self._parse_error_queue, storage_writer,
@@ -1091,6 +1097,7 @@ class MultiProcessEngine(engine.BaseEngine):
           self._extraction_complete_event.set()
         time.sleep(self._STATUS_CHECK_SLEEP)
         extraction_completed, processing_completed = self._CheckStatus()
+
       # If the storage writer finishes writing very soon after the workers,
       # we may not set the event before the storage writer finishes, so set it
       # explicitly here.
