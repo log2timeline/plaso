@@ -162,10 +162,10 @@ class ProcessingStatus(object):
     """Determines whether extraction is completed.
 
     Extraction is considered complete when the collector has finished producing
-    path specifications, and all workers have stopped running.
+    path specifications and all workers have stopped running.
 
     Returns:
-      A boolean value indicating the extraction completed status.
+      A boolean value indicating the completed status.
     """
     if not self._collector_completed:
       return False
@@ -222,21 +222,24 @@ class ProcessingStatus(object):
   def GetProcessingCompleted(self):
     """Determines the processing completed status.
 
+    Processing is considered complete when the storage writer has consumed
+    the event objects produces by the workers.
+
     Returns:
-      A boolean value indicating the extraction completed status.
+      A boolean value indicating the completed status.
     """
-    extraction_completed = self.GetExtractionCompleted()
-    number_of_extracted_events = self.GetNumberOfExtractedEvents()
-
-    number_of_written_events = 0
-    if self._storage_writer:
-      number_of_written_events = self._storage_writer.number_of_events
-
-    events_remaining = number_of_extracted_events - number_of_written_events
-
-    if not extraction_completed:
-      logging.debug(u'Processing incomplete, extraction still in progress.')
+    if not self._storage_writer:
+      logging.debug(u'Processing incomplete - missing storage writer.')
       return False
+
+    extraction_completed = self.GetExtractionCompleted()
+    if not extraction_completed:
+      logging.debug(u'Processing incomplete - extraction still in progress.')
+      return False
+
+    number_of_extracted_events = self.GetNumberOfExtractedEvents()
+    number_of_written_events = self._storage_writer.number_of_events
+    events_remaining = number_of_extracted_events - number_of_written_events
 
     if events_remaining > 0:
       logging.debug((
