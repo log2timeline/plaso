@@ -280,7 +280,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Return an output module.
 
     Args:
-      storage_file: the storage file object (instance of StorageFile).
+      storage_file: a storage file object (instance of StorageFile).
       preferred_encoding: optional preferred encoding.
       timezone: optional timezone.
 
@@ -300,8 +300,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       raise RuntimeError(exception)
 
     output_mediator_object = output_mediator.OutputMediator(
-        formatter_mediator, storage_file,
-        preferred_encoding=preferred_encoding, timezone=timezone)
+        formatter_mediator, preferred_encoding=preferred_encoding,
+        timezone=timezone)
+    output_mediator_object.SetStorageFile(storage_file)
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
