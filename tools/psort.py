@@ -185,6 +185,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Processes a plaso storage file.
 
     Raises:
+      BadConfigOption: when a configuration parameter fails validation.
       RuntimeError: if a non-recoverable situation is encountered.
     """
     if self._analysis_plugins:
@@ -221,11 +222,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     if hasattr(output_module, u'SetFieldsFilter') and self._filter_object:
       output_module.SetFieldsFilter(self._filter_object)
 
-    try:
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          self._options, output_module)
-    except errors.BadConfigOption as exception:
-      raise RuntimeError(exception)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        self._options, output_module)
 
     # Check if there are parameters that have not been defined and need to
     # in order for the output module to continue. Prompt user to supply
@@ -243,7 +241,9 @@ class PsortTool(analysis_tool.AnalysisTool):
               u'Unable to set the missing parameter for: {0:s}'.format(
                   parameter))
           continue
+
         setattr(configuration_object, parameter, value)
+
       helpers_manager.ArgumentHelperManager.ParseOptions(
           configuration_object, output_module)
       missing_parameters = output_module.GetMissingArguments()
@@ -646,6 +646,9 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     except KeyboardInterrupt:
       pass
+
+    except errors.BadConfigOption as exception:
+      logging.error(u'{0:s}'.format(exception))
 
     # Catching every remaining exception in case we are debugging.
     except Exception as exception:
