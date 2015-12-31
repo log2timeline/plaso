@@ -592,6 +592,10 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+      profiling_data_file = u'serializers-Storage.csv'
+      if os.path.exists(profiling_data_file):
+        os.remove(profiling_data_file)
+
   # TODO: add test for StoreReport
 
   def testStoreTagging(self):
