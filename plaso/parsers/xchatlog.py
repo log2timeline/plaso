@@ -144,7 +144,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       structure: a log line structure (instance of pyparsing.ParseResults)
                  that contains the log header.
       timezone: The timezone object.
-      year: Optional current year. The default is 0.
+      year: Optional current year.
 
     Returns:
       The timestamp which is an integer containing the number of micro seconds

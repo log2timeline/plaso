@@ -145,7 +145,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
     Args:
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An knowledge base object (instance of KnowledgeBase).

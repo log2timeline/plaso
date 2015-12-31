@@ -183,7 +183,7 @@ class SelfFeederMixIn(Lexer):
     """Initializes the lexer feeder min object.
 
     Args:
-      file_object: Optional file-like object. The default is None.
+      file_object: Optional file-like object.
     """
     super(SelfFeederMixIn, self).__init__()
     self.file_object = file_object

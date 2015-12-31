@@ -107,10 +107,9 @@ class ExtractionFrontend(frontend.Frontend):
 
     Args:
       os_guess: optional string containing the operating system guessed by
-                the preprocessing. The default is an empty string.
+                the preprocessing.
       os_version: optional string containing the operating system version
-                  determined by the preprocessing. The default is an empty
-                  string.
+                  determined by the preprocessing.
 
     Returns:
       The parser filter string or None.
@@ -317,7 +316,7 @@ class ExtractionFrontend(frontend.Frontend):
     Args:
       pre_obj: the previously created preprocessing object (instance of
                PreprocessObject) or None.
-      timezone: optional preferred timezone. The default is UTC.
+      timezone: optional preferred timezone.
     """
     if not timezone:
       timezone = pytz.UTC
@@ -613,7 +612,7 @@ class ExtractionFrontend(frontend.Frontend):
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
-      profiling_type: optional profiling type. The default is 'all'.
+      profiling_type: optional profiling type.
     """
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate

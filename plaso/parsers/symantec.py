@@ -60,7 +60,6 @@ class SymantecParser(text_parser.TextCSVParser):
     Args:
       date_time_values: The hexadecimal encoded date and time values.
       timezone: Optional timezone (instance of pytz.timezone).
-                The default is UTC.
 
     Returns:
       A timestamp value, contains the number of micro seconds since

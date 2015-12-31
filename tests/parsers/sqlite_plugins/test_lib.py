@@ -24,7 +24,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       path: The path to the SQLite database file.
       cache: A cache object (instance of SQLiteCache).
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An event object queue consumer object (instance of

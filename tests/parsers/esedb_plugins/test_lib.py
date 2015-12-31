@@ -36,7 +36,7 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
       plugin_object: The plugin object that is used to extract an event
                      generator.
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
 
     Returns:
       An event object queue consumer object (instance of

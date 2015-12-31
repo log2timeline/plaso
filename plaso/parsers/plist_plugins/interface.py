@@ -141,9 +141,8 @@ class PlistPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      top_level: Optional plist in dictionary form. The default is None.
+      top_level: Optional plist in dictionary form.
       match: Optional dictionary containing extracted keys from PLIST_KEYS.
-             The default is None.
     """
 
   # pylint: disable=arguments-differ
@@ -229,9 +228,7 @@ def RecurseKey(recur_item, depth=15, key_path=u''):
     recur_item: An object to be checked for additional nested items.
     depth: Optional integer indication the current recursion depth.
            This value is used to ensure we stop at the maximum recursion depth.
-           The default is 15.
-    key_path: Optional path of the current working key. The default is
-              an emtpy string.
+    key_path: Optional path of the current working key.
 
   Yields:
     A tuple of the key path, key, and value from a plist.

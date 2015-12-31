@@ -23,8 +23,8 @@ class OutputMediator(object):
       fields_filter: optional filter object (instance of FilterObject) to
                      indicate which fields should be outputed. The default
                      is None.
-      preferred_encoding: optional preferred encoding. The default is "utf-8".
-      timezone: optional timezone. The default is UTC.
+      preferred_encoding: optional preferred encoding.
+      timezone: optional timezone.
     """
     super(OutputMediator, self).__init__()
     self._formatter_mediator = formatter_mediator
@@ -163,7 +163,6 @@ class OutputMediator(object):
     Args:
       event_object: the event object (instance of EventObject).
       default_hostname: optional string string containing the default hostname.
-                        The default is '-'.
 
     Returns:
       A string containing the hostname.
@@ -275,7 +274,6 @@ class OutputMediator(object):
     Args:
       event_object: the event object (instance of EventObject).
       default_username: optional string string containing the default username.
-                        The default is '-'.
 
     Returns:
       A string containing the username.

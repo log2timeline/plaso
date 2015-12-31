@@ -230,7 +230,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -254,7 +254,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -283,7 +283,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     if row['dateAdded']:
       event_object = FirefoxPlacesBookmark(
@@ -309,7 +309,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      query: Optional query string. The default is None.
+      query: Optional query string.
       cache: A cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
     """
@@ -412,7 +412,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

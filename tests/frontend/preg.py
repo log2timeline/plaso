@@ -22,7 +22,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     Args:
       knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+                             values.
     """
     self._front_end = preg.PregFrontend()
     self._front_end.SetSingleFile(True)

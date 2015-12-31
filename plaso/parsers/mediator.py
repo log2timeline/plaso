@@ -330,11 +330,11 @@ class ParserMediator(object):
     Args:
       event_object: the event object (instance of EventObject).
       parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+                    point.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None, which will default to the current
                   file entry set in the mediator.
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     # TODO: rename this to event_object.parser_chain or equivalent.
     if not getattr(event_object, u'parser', None) and parser_chain:
@@ -391,7 +391,7 @@ class ParserMediator(object):
 
     Args:
       event_object: the event object (instance of EventObject).
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     self.ProcessEvent(
         event_object, parser_chain=self.GetParserChain(),
@@ -409,7 +409,7 @@ class ParserMediator(object):
     Args:
       event_objects: a list or generator of event objects (instances of
                      EventObject).
-      query: Optional query string. The default is None.
+      query: Optional query string.
     """
     for event_object in event_objects:
       self.ProduceEvent(event_object, query=query)

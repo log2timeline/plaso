@@ -341,7 +341,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     Args:
       path: the path filter to a Registry file.
-      codepage: the codepage used for the Registry file. The default is cp1252.
+      codepage: the codepage used for the Registry file.
 
     Yields:
       A Registry helper object (instance of PregRegistryHelper).
@@ -438,8 +438,9 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) of the file system.
       resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None. Note that every thread or process
-                        must have its own resolver context.
+                        The default is None which will use the built in context
+                        which is not multi process safe. Note that every thread
+                        or process must have its own resolver context.
 
     Returns:
       A tuple of the file system (instance of dfvfs.FileSystem) and
@@ -467,7 +468,6 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     Args:
       event_queue: an optional event queue object (instance of Queue).
-                   The default is None.
 
     Returns:
       A parser mediator object (instance of parsers_mediator.ParserMediator).
@@ -558,11 +558,10 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Args:
       registry_file_types: optional list of Windows Registry file types,
                            e.g.: NTUSER, SAM, etc that should be included.
-                           The default is None.
       plugin_names: optional list of strings containing the name of the
                     plugin(s) or an empty string for all the types. The default
                     is None.
-      codepage: the codepage used for the Registry file. The default is cp1252.
+      codepage: the codepage used for the Registry file.
 
     Returns:
       A list of Registry helper objects (instance of PregRegistryHelper).
@@ -813,7 +812,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Args:
       single_file: boolean value, if set to True the tool treats the
                    source as a single file input, otherwise as a storage
-                   media format. The default is False.
+                   media format.
     """
     self._single_file = single_file
 

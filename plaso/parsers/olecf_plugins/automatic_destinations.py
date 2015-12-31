@@ -143,8 +143,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      root_item: Optional root item of the OLECF file. The default is None.
+      root_item: Optional root item of the OLECF file.
 
     Raises:
       ValueError: If the root_item is not set.

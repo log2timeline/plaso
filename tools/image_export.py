@@ -185,7 +185,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
-      source_option: optional name of the source option. The default is source.
+      source_option: optional name of the source option.
 
     Raises:
       BadConfigOption: if the options are invalid.
