@@ -67,6 +67,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   # TODO: make this filtering solution more generic. Also see:
   # https://github.com/log2timeline/plaso/issues/467
   _CHROME_CACHE_DATA_FILE_RE = re.compile(r'^[fF]_[0-9]{6}$')
+  _FIREFOX_CACHE_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{5}[dm][0-9]{2}$')
   _FIREFOX_CACHE2_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
   _FSEVENTSD_FILE_RE = re.compile(r'^[0-9a-fA-F]{16}$')
 
@@ -164,7 +165,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     path_segments = file_system.SplitPath(location)
 
     if self._CHROME_CACHE_DATA_FILE_RE.match(path_segments[-1]):
-      location = file_system.JoinPath([path_segments[:-1], u'index'])
+      location_segments = path_segments[:-1]
+      location_segments.append(u'index')
+      location = file_system.JoinPath(location_segments)
       index_path_spec = path_spec_factory.Factory.NewPathSpec(
           file_entry.type_indicator, location=location,
           parent=file_entry.parent)
@@ -173,8 +176,23 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         # TODO: improve this check if "index" is a Chrome Cache index file.
         return True
 
+    elif self._FIREFOX_CACHE_DATA_FILE_RE.match(path_segments[-1]):
+      location_segments = path_segments[:-4]
+      location_segments.append(u'_CACHE_MAP_')
+      location = file_system.JoinPath(location_segments)
+      cache_map_path_spec = path_spec_factory.Factory.NewPathSpec(
+          file_entry.type_indicator, location=location,
+          parent=file_entry.parent)
+
+      if file_system.FileEntryExistsByPathSpec(cache_map_path_spec):
+        # TODO: improve this check if "_CACHE_MAP_" is a Firefox Cache
+        # version 1 cache map file.
+        return True
+
     elif self._FIREFOX_CACHE2_DATA_FILE_RE.match(path_segments[-1]):
-      location = file_system.JoinPath([path_segments[:-2], u'index'])
+      location_segments = path_segments[:-2]
+      location_segments.append(u'index')
+      location = file_system.JoinPath(location_segments)
       index_path_spec = path_spec_factory.Factory.NewPathSpec(
           file_entry.type_indicator, location=location,
           parent=file_entry.parent)
