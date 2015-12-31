@@ -38,6 +38,7 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
+      BadConfigOption: when the output filename was not provided.
     """
     if not isinstance(output_module, sqlite_4n6time.SQLite4n6TimeOutputModule):
       raise errors.BadConfigObject(
@@ -47,8 +48,11 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
         options, output_module)
 
     filename = getattr(options, u'write', None)
-    if filename:
-      output_module.SetFilename(filename)
+    if not filename:
+      raise errors.BadConfigOption(
+          u'Output filename was not provided use "-w filename" to specify.')
+
+    output_module.SetFilename(filename)
 
 
 manager.ArgumentHelperManager.RegisterHelper(SQLite4n6TimeOutputHelper)

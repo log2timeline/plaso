@@ -29,8 +29,8 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u'user TEXT, host TEXT, description TEXT, filename TEXT, '
       u'inode TEXT, notes TEXT, format TEXT, extra TEXT, '
       u'datetime datetime, reportnotes TEXT, '
-      u'inreport TEXT, tag TEXT, color TEXT, offset INT,'
-      u'store_number INT, store_index INT, vss_store_number INT,'
+      u'inreport TEXT, tag TEXT, color TEXT, offset INT, '
+      u'store_number INT, store_index INT, vss_store_number INT, '
       u'url TEXT, record_number TEXT, event_identifier TEXT, '
       u'event_type TEXT, source_name TEXT, user_sid TEXT, '
       u'computer_name TEXT, evidence TEXT)')
@@ -38,17 +38,16 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
   _INSERT_QUERY = (
       u'INSERT INTO log2timeline(timezone, MACB, source, '
       u'sourcetype, type, user, host, description, filename, '
-      u'inode, notes, format, extra, datetime, reportnotes, inreport,'
-      u'tag, color, offset, store_number, store_index, vss_store_number,'
-      u'URL, record_number, event_identifier, event_type,'
+      u'inode, notes, format, extra, datetime, reportnotes, inreport, '
+      u'tag, color, offset, store_number, store_index, vss_store_number, '
+      u'URL, record_number, event_identifier, event_type, '
       u'source_name, user_sid, computer_name, evidence) '
       u'VALUES (:timezone, :MACB, :source, :sourcetype, :type, :user, :host, '
       u':description, :filename, :inode, :notes, :format, :extra, :datetime, '
-      u':reportnotes, :inreport, '
-      u':tag, :color, :offset, :store_number, :store_index, '
-      u':vss_store_number,'
-      u':URL, :record_number, :event_identifier, :event_type,'
-      u':source_name, :user_sid, :computer_name, :evidence)')
+      u':reportnotes, :inreport, :tag, :color, :offset, :store_number, '
+      u':store_index, :vss_store_number, :URL, :record_number, '
+      u':event_identifier, :event_type, :source_name, :user_sid, '
+      u':computer_name, :evidence)')
 
   def __init__(self, output_mediator):
     """Initializes the output module object.
@@ -145,8 +144,12 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     """Connects to the database and creates the required tables.
 
     Raises:
-      IOError: if a file with filename already exists.
+      IOError: if the specified output file already exists.
+      ValueError: if the filename is not set.
     """
+    if not self._filename:
+      raise ValueError(u'Missing filename.')
+
     if not self._append and os.path.isfile(self._filename):
       raise IOError((
           u'Unable to use an already existing file for output '
@@ -210,7 +213,10 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     if u'timestamp' not in event_object.GetAttributes():
       return
 
+    # sqlite seems to support milli seconds precision but that seems
+    # not to be used by 4n6time
     row = self._GetSanitizedEventValues(event_object)
+
     self._cursor.execute(self._INSERT_QUERY, row)
     self.count += 1
     # Commit the current transaction every 10000 inserts.

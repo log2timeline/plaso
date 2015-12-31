@@ -78,12 +78,11 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     """Creates a new workbook.
 
     Raises:
-      ValueError: Invalid filename.
-      IOError: Filename already exists.
+      IOError: if the specified output file already exists.
+      ValueError: if the filename is not set.
     """
     if not self._filename:
-      raise ValueError((
-          u'Unable to create XLSX workbook. Output filename was not provided.'))
+      raise ValueError(u'Missing filename.')
 
     if os.path.isfile(self._filename):
       raise IOError((
@@ -121,8 +120,8 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    for field in self._fields:
-      callback_name = self.FIELD_FORMAT_CALLBACKS.get(field, None)
+    for field_name in self._fields:
+      callback_name = self.FIELD_FORMAT_CALLBACKS.get(field_name, None)
       callback_function = None
       if callback_name:
         callback_function = getattr(self, callback_name, None)
@@ -130,7 +129,7 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
       if callback_function:
         value = callback_function(event_object)
       else:
-        value = getattr(event_object, field, u'-')
+        value = getattr(event_object, field_name, u'-')
 
       if not isinstance(value, (
           bool, py2to3.INTEGER_TYPES, float, datetime.datetime)):
@@ -138,7 +137,7 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
         value = utils.RemoveIllegalXMLCharacters(value)
 
       # Auto adjust column width based on length of value.
-      column_index = self._fields.index(field)
+      column_index = self._fields.index(field_name)
       self._column_widths.setdefault(column_index, 0)
       self._column_widths[column_index] = max(
           self._MIN_COLUMN_WIDTH,
@@ -160,9 +159,9 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     self._column_widths = {}
     bold = self._workbook.add_format({u'bold': True})
     bold.set_align(u'center')
-    for index, field in enumerate(self._fields):
-      self._sheet.write(self._current_row, index, field, bold)
-      self._column_widths[index] = len(field) + 2
+    for index, field_name in enumerate(self._fields):
+      self._sheet.write(self._current_row, index, field_name, bold)
+      self._column_widths[index] = len(field_name) + 2
     self._current_row += 1
     self._sheet.autofilter(0, len(self._fields) - 1, 0, 0)
     self._sheet.freeze_panes(1, 0)
