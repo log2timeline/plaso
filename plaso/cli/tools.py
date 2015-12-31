@@ -58,6 +58,7 @@ class CLITool(object):
 
     self._data_location = None
     self._debug_mode = False
+    self._encode_errors = u'strict'
     self._input_reader = input_reader
     self._log_file = None
     self._output_writer = output_writer
@@ -101,6 +102,31 @@ class CLITool(object):
           filemode=u'w')
     else:
       logging.basicConfig(level=log_level, format=format_string)
+
+  def _EncodeString(self, string):
+    """Encodes a string in the preferred encoding.
+
+    Returns:
+      A byte string containing the encoded string.
+    """
+    try:
+      # Note that encode() will first convert string into a Unicode string
+      # if necessary.
+      encoded_string = string.encode(
+          self.preferred_encoding, errors=self._encode_errors)
+    except UnicodeEncodeError:
+      if self._encode_errors == u'strict':
+        logging.error(
+            u'Unable to properly write output due to encoding error. '
+            u'Switching to error tolerant encoding which can result in '
+            u'non Basic Latin (C0) characters to be replaced with "?" or '
+            u'"\\ufffd".')
+        self._encode_errors = u'replace'
+
+      encoded_string = string.encode(
+          self.preferred_encoding, errors=self._encode_errors)
+
+    return encoded_string
 
   def _ParseDataLocationOption(self, options):
     """Parses the data location option.
