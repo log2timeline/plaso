@@ -12,5 +12,6 @@ script:
   - ./setup.py bdist
   - mkdir -p ${PWD}/tmp/lib/python2.7/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python2.7/site-packages/ ./setup.py install --prefix=${PWD}/tmp/
   - coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
+  - ./tests/end-to-end.py -c config/end-to-end.ini
 after_success:
   - coveralls --verbose
