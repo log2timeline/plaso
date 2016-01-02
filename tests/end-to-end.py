@@ -51,14 +51,17 @@ class TestCase(object):
 
   NAME = None
 
-  def __init__(self, tools_path, test_results_path):
+  def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test case object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
       test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
     """
     super(TestCase, self).__init__()
+    self._debug_output = debug_output
     self._test_results_path = test_results_path
     self._tools_path = tools_path
 
@@ -130,13 +133,16 @@ class TestCasesManager(object):
     del cls._test_case_classes[test_case_name]
 
   @classmethod
-  def GetTestCaseObject(cls, name, tools_path, test_results_path):
+  def GetTestCaseObject(
+      cls, name, tools_path, test_results_path, debug_output=False):
     """Retrieves the test case object for a specific name.
 
     Args:
       name: a string containing the name of the test case.
       tools_path: a string containing the path to the plaso tools.
       test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
 
     Returns:
       The corresponding test case (instance of TestCase) or
@@ -148,7 +154,8 @@ class TestCasesManager(object):
 
       if name in cls._test_case_classes:
         test_case_class = cls._test_case_classes[name]
-        test_case_object = test_case_class(tools_path, test_results_path)
+        test_case_object = test_case_class(
+            tools_path, test_results_path, debug_output=debug_output)
 
       if not test_case_object:
         return
@@ -217,15 +224,18 @@ class TestDefinition(object):
 class TestDefinitionReader(object):
   """Class that implements a test definition reader."""
 
-  def __init__(self, tools_path, test_results_path):
+  def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test definition reader object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
       test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
     """
     super(TestDefinitionReader, self).__init__()
     self._config_parser = None
+    self._debug_output = debug_output
     self._test_results_path = test_results_path
     self._tools_path = tools_path
 
@@ -278,7 +288,8 @@ class TestDefinitionReader(object):
           continue
 
         test_case = TestCasesManager.GetTestCaseObject(
-            test_definition.case, self._tools_path, self._test_results_path)
+            test_definition.case, self._tools_path, self._test_results_path,
+            debug_output=self._debug_output)
         if not test_case:
           logging.warning(u'Undefined test case: {0:s}'.format(
               test_definition.case))
@@ -299,14 +310,17 @@ class TestDefinitionReader(object):
 class TestLauncher(object):
   """Class that implements the test launcher."""
 
-  def __init__(self, tools_path, test_results_path):
+  def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test launcher object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
       test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
     """
     super(TestLauncher, self).__init__()
+    self._debug_output = debug_output
     self._test_definitions = []
     self._test_results_path = test_results_path
     self._tools_path = tools_path
@@ -462,6 +476,11 @@ class ExtractAndOutputTestCase(TestCase):
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
 
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
+
       if os.path.exists(storage_file):
         shutil.copy(storage_file, self._test_results_path)
 
@@ -487,6 +506,11 @@ class ExtractAndOutputTestCase(TestCase):
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
 
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
+
       if os.path.exists(stdout_file):
         shutil.copy(stdout_file, self._test_results_path)
       if os.path.exists(stderr_file):
@@ -510,6 +534,11 @@ class ExtractAndOutputTestCase(TestCase):
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
+
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
 
       if os.path.exists(stdout_file):
         shutil.copy(stdout_file, self._test_results_path)
@@ -600,6 +629,11 @@ class OutputTestCase(TestCase):
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
 
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
+
       if os.path.exists(stdout_file):
         shutil.copy(stdout_file, self._test_results_path)
       if os.path.exists(stderr_file):
@@ -625,6 +659,10 @@ def Main():
       u'-c', u'--config', dest=u'config_file', action=u'store',
       metavar=u'CONFIG_FILE', default=None,
       help=u'path of the test configuration file.')
+
+  argument_parser.add_argument(
+      '-d', '--debug', dest='debug_output', action='store_true', default=False,
+      help=u'enable debug output.')
 
   argument_parser.add_argument(
       u'--tools-directory', u'--tools_directory', action=u'store',
@@ -670,11 +708,12 @@ def Main():
   tests = []
   with open(options.config_file) as file_object:
     test_definition_reader = TestDefinitionReader(
-        tools_path, test_results_path)
+        tools_path, test_results_path, debug_output=options.debug_output)
     for test_definition in test_definition_reader.Read(file_object):
       tests.append(test_definition)
 
-  test_launcher = TestLauncher(tools_path, test_results_path)
+  test_launcher = TestLauncher(
+      tools_path, test_results_path, debug_output=options.debug_output)
   test_launcher.ReadDefinitions(options.config_file)
 
   failed_tests = test_launcher.RunTests()
