@@ -378,15 +378,17 @@ class ExtractAndOutputTestCase(TestCase):
 
   NAME = u'extract_and_output'
 
-  def __init__(self, tools_path, test_results_path):
+  def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test case object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
       test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
     """
     super(ExtractAndOutputTestCase, self).__init__(
-        tools_path, test_results_path)
+        tools_path, test_results_path, debug_output=debug_output)
     self._log2timeline_path = None
     self._pinfo_path = None
     self._psort_path = None
@@ -556,14 +558,17 @@ class OutputTestCase(TestCase):
 
   NAME = u'output'
 
-  def __init__(self, tools_path, test_results_path):
+  def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test case object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
       test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
     """
-    super(OutputTestCase, self).__init__(tools_path, test_results_path)
+    super(OutputTestCase, self).__init__(
+        tools_path, test_results_path, debug_output=debug_output)
     self._psort_path = None
 
     for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
