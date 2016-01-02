@@ -661,7 +661,7 @@ def Main():
       help=u'path of the test configuration file.')
 
   argument_parser.add_argument(
-      '-d', '--debug', dest='debug_output', action='store_true', default=False,
+      u'--debug', dest=u'debug_output', action=u'store_true', default=False,
       help=u'enable debug output.')
 
   argument_parser.add_argument(
