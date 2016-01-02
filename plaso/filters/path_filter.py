@@ -9,6 +9,7 @@ class _PathFilterTable(object):
   to construct a scan tree.
   """
 
+  # TODO: add support for caseless compare.
   def __init__(self, paths, ignore_list, path_segment_separator=u'/'):
     """Initializes and builds the path filter table from a list of paths.
 
@@ -21,23 +22,21 @@ class _PathFilterTable(object):
     """
     super(_PathFilterTable, self).__init__()
     self._path_segments_per_index = {}
+    self._path_segment_separator = path_segment_separator
     self.paths = list(paths)
 
     for path in self.paths:
-      self._AddPathSegments(
-          path, ignore_list, path_segment_separator=path_segment_separator)
+      self._AddPathSegments(path, ignore_list)
 
-  def _AddPathSegments(self, path, ignore_list, path_segment_separator=u'/'):
+  def _AddPathSegments(self, path, ignore_list):
     """Adds the path segments to the table.
 
     Args:
       path: a string containing the path.
       ignore_list: a list of path segment indexes to ignore, where 0 is the
                    index of the first path segment relative from the root.
-      path_segment_separator: optional string containing the path segment
-                              separator.
     """
-    path_segments = path.split(path_segment_separator)
+    path_segments = path.split(self._path_segment_separator)
     for path_segment_index, path_segment in enumerate(path_segments):
       if path_segment_index not in self._path_segments_per_index:
         self._path_segments_per_index[path_segment_index] = {}
@@ -191,6 +190,7 @@ class _PathSegmentWeights(object):
 class PathFilterScanTree(object):
   """Class that implements a path filter scan tree."""
 
+  # TODO: add support for caseless compare.
   def __init__(self, paths, path_segment_separator=u'/'):
     """Initializes and builds a path filter scan tree.
 
@@ -200,21 +200,16 @@ class PathFilterScanTree(object):
                               separator.
     """
     super(PathFilterScanTree, self).__init__()
-    self.paths = list(paths)
-    self.root_node = None
+    self._path_segment_separator = path_segment_separator
+    self._root_node = None
 
-    # Create the scan tree starting with the root node.
-    ignore_list = []
     path_filter_table = _PathFilterTable(
-        self.paths, ignore_list, path_segment_separator=path_segment_separator)
+        paths, [], path_segment_separator=self._path_segment_separator)
 
     if path_filter_table.paths:
-      self.root_node = self._BuildScanTreeNode(
-          path_filter_table, ignore_list,
-          path_segment_separator=path_segment_separator)
+      self._root_node = self._BuildScanTreeNode(path_filter_table, [])
 
-  def _BuildScanTreeNode(
-      self, path_filter_table, ignore_list, path_segment_separator=u'/'):
+  def _BuildScanTreeNode(self, path_filter_table, ignore_list):
     """Builds a scan tree node.
 
     Args:
@@ -222,8 +217,6 @@ class PathFilterScanTree(object):
                          _PathFilterTable).
       ignore_list: a list of path segment indexes to ignore, where 0 is the
                    index of the first path segment relative from the root.
-      path_segment_separator: optional string containing the path segment
-                              separator.
 
     Returns:
       A scan tree node (instance of PathFilterScanTreeNode).
@@ -282,11 +275,10 @@ class PathFilterScanTree(object):
       else:
         sub_path_filter_table = _PathFilterTable(
             paths_per_segment_list, ignore_list,
-            path_segment_separator=path_segment_separator)
+            path_segment_separator=self._path_segment_separator)
 
         scan_sub_node = self._BuildScanTreeNode(
-            sub_path_filter_table, ignore_list,
-            path_segment_separator=path_segment_separator)
+            sub_path_filter_table, ignore_list)
 
         scan_tree_node.AddPathSegment(path_segment, scan_sub_node)
 
@@ -301,11 +293,9 @@ class PathFilterScanTree(object):
     elif number_of_paths > 1:
       path_filter_table = _PathFilterTable(
           paths_list, ignore_list,
-          path_segment_separator=path_segment_separator)
+          path_segment_separator=self._path_segment_separator)
 
-      scan_sub_node = self._BuildScanTreeNode(
-          path_filter_table, ignore_list,
-          path_segment_separator=path_segment_separator)
+      scan_sub_node = self._BuildScanTreeNode(path_filter_table, ignore_list)
 
       scan_tree_node.SetDefaultValue(scan_sub_node)
 
@@ -471,6 +461,39 @@ class PathFilterScanTree(object):
 
     return value_weight_indexes[0]
 
+  def ComparePath(self, path, path_segment_separator=u'/'):
+    """Compares a path with the scan tree-based path filter.
+
+    Args:
+      path: a string containing the path.
+      path_segment_separator: optional string containing the path segment
+                              separator.
+
+    Returns:
+      A boolean indicating if the path matches the filter.
+    """
+    path_segments = path.split(path_segment_separator)
+    number_of_path_segments = len(path_segments)
+
+    scan_object = self._root_node
+    while scan_object:
+      if isinstance(scan_object, basestring):
+        break
+
+      if scan_object.path_segment_index >= number_of_path_segments:
+        scan_object = scan_object.default_value
+        continue
+
+      path_segment = path_segments[scan_object.path_segment_index]
+      # TODO: add support for caseless compare.
+      scan_object = scan_object.GetScanObject(path_segment)
+
+    if not isinstance(scan_object, basestring):
+      return False
+
+    filter_path_segments = scan_object.split(self._path_segment_separator)
+    return filter_path_segments == path_segments
+
 
 class PathFilterScanTreeNode(object):
   """Class that implements a path filter scan tree node."""
@@ -486,6 +509,11 @@ class PathFilterScanTreeNode(object):
     self.default_value = None
     self.parent = None
     self.path_segment_index = path_segment_index
+
+  @property
+  def path_segments(self):
+    """A list of strings containing the path segments."""
+    return self._path_segments.keys()
 
   def AddPathSegment(self, path_segment, scan_object):
     """Adds a path segment.
@@ -506,6 +534,19 @@ class PathFilterScanTreeNode(object):
       scan_object.parent = self
 
     self._path_segments[path_segment] = scan_object
+
+  def GetScanObject(self, path_segment):
+    """Retrieves the scan object for a specific path segment.
+
+    Args:
+      path_segment: a string containing the path segment.
+
+    Returns:
+      A scan object, which is either a scan tree sub node (instance of
+      PathFilterScanTreeNode) or a path, or None. If the path segment
+      is not available the default value is returned.
+    """
+    return self._path_segments.get(path_segment, self.default_value)
 
   def SetDefaultValue(self, scan_object):
     """Sets the default (non-match) value.

@@ -16,7 +16,7 @@ class PathFilterScanTreeTest(test_lib.FilterTestCase):
   def testInitialize(self):
     """Tests the initialize function."""
     scan_tree = path_filter.PathFilterScanTree([])
-    self.assertIsNone(scan_tree.root_node)
+    self.assertIsNone(scan_tree._root_node)
 
     paths = [
         u'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory',
@@ -69,7 +69,15 @@ class PathFilterScanTreeTest(test_lib.FilterTestCase):
 
     scan_tree = path_filter.PathFilterScanTree(
         paths, path_segment_separator=u'\\')
-    self.assertIsNotNone(scan_tree.root_node)
+    self.assertIsNotNone(scan_tree._root_node)
+
+    path = u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows'
+    self.assertFalse(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+
+    path = (
+        u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+        u'Session Manager\\AppCompatCache')
+    self.assertTrue(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
 
 
 if __name__ == '__main__':
