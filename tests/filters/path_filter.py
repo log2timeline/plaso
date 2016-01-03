@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.filters import path_filter
-from plaso.lib import errors
 
 from tests.filters import test_lib
 
@@ -72,34 +71,44 @@ class PathFilterScanTreeTest(test_lib.FilterTestCase):
     self.assertIsNotNone(scan_tree._root_node)
 
     path = u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows'
-    self.assertFalse(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+    self.assertFalse(scan_tree.ComparePath(path))
 
     path = (
         u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
         u'Session Manager\\AppCompatCache')
-    self.assertTrue(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+    self.assertTrue(scan_tree.ComparePath(path))
 
     path = (
         u'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\'
         u'Session Manager\\AppCompatCache')
-    self.assertFalse(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+    self.assertFalse(scan_tree.ComparePath(path))
+
+    path = (
+        u'HKEY_LOCAL_MACHINE/System/CurrentControlSet/Control/'
+        u'Session Manager/AppCompatCache')
+    self.assertTrue(scan_tree.ComparePath(path, path_segment_separator=u'/'))
 
     scan_tree = path_filter.PathFilterScanTree(
         paths, case_sensitive=False, path_segment_separator=u'\\')
     self.assertIsNotNone(scan_tree._root_node)
 
     path = u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows'
-    self.assertFalse(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+    self.assertFalse(scan_tree.ComparePath(path))
 
     path = (
         u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
         u'Session Manager\\AppCompatCache')
-    self.assertTrue(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+    self.assertTrue(scan_tree.ComparePath(path))
 
     path = (
         u'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\'
         u'Session Manager\\AppCompatCache')
-    self.assertTrue(scan_tree.ComparePath(path, path_segment_separator=u'\\'))
+    self.assertTrue(scan_tree.ComparePath(path))
+
+    path = (
+        u'HKEY_LOCAL_MACHINE/System/CurrentControlSet/Control/'
+        u'Session Manager/AppCompatCache')
+    self.assertTrue(scan_tree.ComparePath(path, path_segment_separator=u'/'))
 
 
 if __name__ == '__main__':
