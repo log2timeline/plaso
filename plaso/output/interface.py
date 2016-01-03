@@ -25,6 +25,23 @@ class OutputModule(object):
     super(OutputModule, self).__init__()
     self._output_mediator = output_mediator
 
+  def _GetEventStorageIdentifier(self, event_object):
+    """Retrieves the event storage identifier of an event object.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Returns:
+      A string containing the event storage identifier or "N/A".
+    """
+    store_number = getattr(event_object, u'store_number', None)
+    store_index = getattr(event_object, u'store_index', None)
+
+    if store_number is None or store_index is None:
+      return u'N/A'
+
+    return u'{0:d}:{1:d}'.format(store_number, store_index)
+
   def Close(self):
     """Closes the output."""
     pass

@@ -269,6 +269,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     storage_file.Close()
 
     if not self._quiet_mode:
+      self._output_writer.Write(u'Processing completed.\n')
+
       table_view = cli_views.ViewsFactory.GetTableView(
           self._views_format_type, title=u'Counter')
       for element, count in counter.most_common():

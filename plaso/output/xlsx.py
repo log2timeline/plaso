@@ -55,18 +55,22 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     """
     try:
       timestamp = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, timezone=self._output_mediator.timezone,
+          event_object.timestamp, self._output_mediator.timezone,
           raise_error=True)
 
       return timestamp.replace(tzinfo=None)
 
     except OverflowError as exception:
+      event_storage_identifier = self._GetEventStorageIdentifier(event_object)
       logging.error((
-          u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2!s}:{3!s} triggered the exception.').format(
-              event_object.timestamp, exception,
-              getattr(event_object, u'store_number', u'N/A'),
-              getattr(event_object, u'store_index', u'N/A')))
+          u'Unable to copy timestamp: {0:d} from event: {1:s} into a human '
+          u'readable date and time with error: {2:s}. Defaulting to: '
+          u'"ERROR"').format(
+              event_object.timestamp, event_storage_identifier, exception))
+      logging.error(
+          u'Event: {0:s} data type: {1:s} display name: {2:s}'.format(
+              event_storage_identifier, event_object.data_type,
+              event_object.display_name))
 
       return u'ERROR'
 
