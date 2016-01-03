@@ -9,8 +9,8 @@ class _PathFilterTable(object):
   to construct a scan tree.
   """
 
-  # TODO: add support for caseless compare.
-  def __init__(self, paths, ignore_list, path_segment_separator=u'/'):
+  def __init__(
+      self, paths, ignore_list, path_segment_separator=u'/'):
     """Initializes and builds the path filter table from a list of paths.
 
     Args:
@@ -190,18 +190,23 @@ class _PathSegmentWeights(object):
 class PathFilterScanTree(object):
   """Class that implements a path filter scan tree."""
 
-  # TODO: add support for caseless compare.
-  def __init__(self, paths, path_segment_separator=u'/'):
+  def __init__(self, paths, case_sensitive=True, path_segment_separator=u'/'):
     """Initializes and builds a path filter scan tree.
 
     Args:
       paths: a list of strings containing the paths.
+      case_sensitive: optional boolean value to indicate string matches should
+                      be case sensitive.
       path_segment_separator: optional string containing the path segment
                               separator.
     """
     super(PathFilterScanTree, self).__init__()
+    self._case_sensitive = case_sensitive
     self._path_segment_separator = path_segment_separator
     self._root_node = None
+
+    if not self._case_sensitive:
+      paths = [path.lower() for path in paths]
 
     path_filter_table = _PathFilterTable(
         paths, [], path_segment_separator=self._path_segment_separator)
@@ -472,6 +477,9 @@ class PathFilterScanTree(object):
     Returns:
       A boolean indicating if the path matches the filter.
     """
+    if not self._case_sensitive:
+      path = path.lower()
+
     path_segments = path.split(path_segment_separator)
     number_of_path_segments = len(path_segments)
 
@@ -485,7 +493,6 @@ class PathFilterScanTree(object):
         continue
 
       path_segment = path_segments[scan_object.path_segment_index]
-      # TODO: add support for caseless compare.
       scan_object = scan_object.GetScanObject(path_segment)
 
     if not isinstance(scan_object, basestring):
