@@ -12,155 +12,194 @@ __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 
 class SkypeChatEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Skype event."""
+  """Convenience class for a Skype event.
+
+  Attributes:
+    from_account: a string containing the from display name and the author.
+    to_account: a string containing the accounts (excluding the
+                author) of the conversation.
+    text: a string containing the body XML.
+    title: a string containing the title.
+  """
 
   DATA_TYPE = u'skype:event:chat'
 
-  def __init__(self, row, to_account):
+  def __init__(
+      self, posix_time, from_displayname, author, to_account, title, body_xml):
     """Build a Skype Event from a single row.
 
     Args:
-      row: A row object (instance of sqlite3.Row) that contains the
-           extracted data from a single row in the database.
-      to_account: A string containing the accounts (excluding the
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      from_displayname: a string containing the from display name.
+      author: a string containing the author.
+      to_account: a string containing the accounts (excluding the
                   author) of the conversation.
+      title: a string containing the title.
+      body_xml: a string containing the body XML.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
-
-    super(SkypeChatEvent, self).__init__(
-        row['timestamp'], u'Chat from Skype', self.DATA_TYPE)
-
-    self.title = row['title']
-    self.text = row['body_xml']
-    self.from_account = u'{0:s} <{1:s}>'.format(
-        row['from_displayname'], row['author'])
+    super(SkypeChatEvent, self).__init__(posix_time, u'Chat from Skype')
+    self.from_account = u'{0:s} <{1:s}>'.format(from_displayname, author)
+    self.text = body_xml
+    self.title = title
     self.to_account = to_account
 
 
 class SkypeAccountEvent(time_events.PosixTimeEvent):
-  """Convenience class for account information."""
+  """Convenience class for account information.
+
+  Attributes:
+    country: a string containing the chosen home country of the account
+             holder.
+    display_name: a string containing the chosen display name of the account
+                  holder.
+    email: a string containing the registered email address of the account
+           holder.
+    offset: an integer containing the row identifier.
+    username: a string containing the full name of the Skype account holder and
+              display name.
+  """
 
   DATA_TYPE = u'skype:event:account'
 
   def __init__(
-      self, timestamp, usage, identifier, full_name, display_name, email,
+      self, posix_time, usage, identifier, full_name, display_name, email,
       country):
     """Initialize the event.
 
     Args:
-      timestamp: The POSIX timestamp value.
-      usage: A string containing the description string of the timestamp.
-      identifier: The row identifier.
-      full_name: A string containing the full name of the Skype account holder.
-      display_name: A string containing the chosen display name of the account
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      usage: a string containing the description string of the timestamp.
+      identifier: an integer containing the row identifier.
+      full_name: a string containing the full name of the Skype account holder.
+      display_name: a string containing the chosen display name of the account
                     holder.
-      email: A string containing the registered email address of the account
+      email: a string containing the registered email address of the account
              holder.
-      country: A string containing the chosen home country of the account
+      country: a string containing the chosen home country of the account
                holder.
     """
-    super(SkypeAccountEvent, self).__init__(timestamp, usage)
-
-    self.offset = identifier
-    self.username = u'{0:s} <{1:s}>'.format(full_name, display_name)
+    super(SkypeAccountEvent, self).__init__(posix_time, usage)
+    self.country = country
     self.display_name = display_name
     self.email = email
-    self.country = country
-    self.data_type = self.DATA_TYPE
+    self.offset = identifier
+    self.username = u'{0:s} <{1:s}>'.format(full_name, display_name)
 
 
 class SkypeSMSEvent(time_events.PosixTimeEvent):
-  """Convenience EventObject for SMS."""
+  """Convenience EventObject for SMS.
+
+  Attributes:
+    number: a string containing the phone number where the SMS was sent.
+    text: a string containing the text (SMS body) that was sent.
+  """
 
   DATA_TYPE = u'skype:event:sms'
 
-  def __init__(self, row, dst_number):
+  def __init__(self, posix_time, phone_number, text):
     """Read the information related with the SMS.
 
-      Args:
-        row: row form the sql query.
-          row['time_sms']: timestamp when the sms was send.
-          row['dstnum_sms']: number which receives the sms.
-          row['msg_sms']: text send to this sms.
-        dst_number: phone number where the user send the sms.
+    Args:
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      phone_number: a string containing the phone number where the SMS was sent.
+      text: a string containing the text (SMS body) that was sent.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
-
-    super(SkypeSMSEvent, self).__init__(
-        row['time_sms'], u'SMS from Skype', self.DATA_TYPE)
-
-    self.number = dst_number
-    self.text = row['msg_sms']
+    super(SkypeSMSEvent, self).__init__(posix_time, u'SMS from Skype')
+    self.number = phone_number
+    self.text = text
 
 
 class SkypeCallEvent(time_events.PosixTimeEvent):
-  """Convenience EventObject for the calls."""
+  """Convenience EventObject for the calls.
+
+  Attributes:
+    call_type: a string containing the call type e.g. WAITING, STARTED,
+               FINISHED.
+    dst_call: a string containing the account which gets the call.
+    src_call: a string containing the account which started the call.
+    user_start_call: a boolean which indicates that the owner account
+                     started the call.
+    video_conference: a boolean which indicates if the call was a video
+                      conference.
+  """
 
   DATA_TYPE = u'skype:event:call'
 
-  def __init__(self, timestamp, call_type, user_start_call,
-               source, destination, video_conference):
+  def __init__(
+      self, posix_time, call_type, user_start_call, source, destination,
+      video_conference):
     """Contains information if the call was cancelled, accepted or finished.
 
-      Args:
-        timestamp: the timestamp of the event.
-        call_type: WAITING, STARTED, FINISHED.
-        user_start_call: boolean, true indicates that the owner
-                         account started the call.
-        source: the account which started the call.
-        destination: the account which gets the call.
-        video_conference: boolean, if is true it was a videoconference.
+    Args:
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      call_type: a string containing the call type e.g. WAITING, STARTED,
+                 FINISHED.
+      user_start_call: a boolean which indicates that the owner account
+                       started the call.
+      source: a string containing the account which started the call.
+      destination: a string containing the account which gets the call.
+      video_conference: a boolean which indicates if the call was a video
+                        conference.
     """
 
-    super(SkypeCallEvent, self).__init__(
-        timestamp, u'Call from Skype', self.DATA_TYPE)
-
+    super(SkypeCallEvent, self).__init__(posix_time, u'Call from Skype')
     self.call_type = call_type
-    self.user_start_call = user_start_call
-    self.src_call = source
     self.dst_call = destination
+    self.src_call = source
+    self.user_start_call = user_start_call
     self.video_conference = video_conference
 
 
 class SkypeTransferFileEvent(time_events.PosixTimeEvent):
-  """Evaluate the action of send a file."""
+  """Evaluate the action of send a file.
+
+  Attributes:
+    action_type: a string containing the action type e.g. GETSOLICITUDE,
+                 SENDSOLICITUDE, ACCEPTED, FINISHED.
+    destination: a string containing the account that received the file.
+    offset: an integer containing the row identifier.
+    source: a string containing the account that sent the file.
+    transferred_filename: a string containing the name of the file transferred.
+    transferred_file_path: a string containing the path of the file transferred.
+    transferred_filesize: an integer containing the size of the file
+                          transferred.
+  """
 
   DATA_TYPE = u'skype:event:transferfile'
 
-  def __init__(self, row, timestamp, action_type, source, destination):
+  def __init__(
+      self, posix_time, identifier, action_type, source, destination, filename,
+      file_path, file_size):
     """Actions related with sending files.
 
-      Args:
-        row:
-          filepath: path from the file.
-          filename: name of the file.
-          filesize: size of the file.
-        timestamp: when the action happens.
-        action_type: GETSOLICITUDE, SENDSOLICITUDE, ACCEPTED, FINISHED.
-        source: The account that sent the file.
-        destination: The account that received the file.
+    Args:
+      posix_time: the POSIX time value, which contains the number of seconds
+                  since January 1, 1970 00:00:00 UTC.
+      identifier: an integer containing the row identifier.
+      action_type: a string containing the action type e.g. GETSOLICITUDE,
+                   SENDSOLICITUDE, ACCEPTED, FINISHED.
+      source: a string containing the account that sent the file.
+      destination: a string containing the account that received the file.
+      filename: a string containing the name of the file transferred.
+      file_path: a string containing the path of the file transferred.
+      file_size: an integer containing the size of the file transferred.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
     super(SkypeTransferFileEvent, self).__init__(
-        timestamp, u'File transfer from Skype', self.DATA_TYPE)
-
-    self.offset = row['id']
+        posix_time, u'File transfer from Skype')
     self.action_type = action_type
-    self.source = source
     self.destination = destination
-    self.transferred_filepath = row['filepath']
-    self.transferred_filename = row['filename']
-
-    try:
-      self.transferred_filesize = int(row['filesize'])
-    except ValueError:
-      logging.debug(u'Unknown filesize {0:s}'.format(
-          self.transferred_filename))
-      self.transferred_filesize = 0
+    self.offset = identifier
+    self.source = source
+    self.transferred_filename = filename
+    self.transferred_filepath = file_path
+    self.transferred_filesize = file_size
 
 
 class SkypePlugin(interface.SQLitePlugin):
@@ -282,7 +321,9 @@ class SkypePlugin(interface.SQLitePlugin):
       else:
         to_account = u'Unknown User'
 
-    event_object = SkypeChatEvent(row, to_account)
+    event_object = SkypeChatEvent(
+        row['timestamp'], row['from_displayname'], row['author'], to_account,
+        row['title'], row['body_xml'])
     parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseSMS(self, parser_mediator, row, query=None, **unused_kwargs):
@@ -296,9 +337,11 @@ class SkypePlugin(interface.SQLitePlugin):
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    dst_number = row['dstnum_sms'].replace(u' ', u'')
+    phone_number = row['dstnum_sms']
+    if phone_number:
+      phone_number = phone_number.replace(u' ', u'')
 
-    event_object = SkypeSMSEvent(row, dst_number)
+    event_object = SkypeSMSEvent(row['time_sms'], phone_number, row['msg_sms'])
     parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseCall(self, parser_mediator, row, query=None, **unused_kwargs):
@@ -422,25 +465,38 @@ class SkypePlugin(interface.SQLitePlugin):
         if skype_name:
           destination = u'{0:s} <{1:s}>'.format(skype_id, skype_name)
 
+    try:
+      # TODO: add a conversion base.
+      file_size = int(row['filesize'])
+    except ValueError:
+      parser_mediator.ProduceParseError(
+          u'unable to convert file size: {0!s} of file: {1:s}'.format(
+              row['filesize'], row['filename']))
+      file_size = 0
+
     if row['status'] == 8:
       if row['starttime']:
         event_object = SkypeTransferFileEvent(
-            row, row['starttime'], u'GETSOLICITUDE', source, destination)
+            row['starttime'], row['id'], u'GETSOLICITUDE', source, destination,
+            row['filename'], row['filepath'], file_size)
         parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['accepttime']:
         event_object = SkypeTransferFileEvent(
-            row, row['accepttime'], u'ACCEPTED', source, destination)
+            row['accepttime'], row['id'], u'ACCEPTED', source, destination,
+            row['filename'], row['filepath'], file_size)
         parser_mediator.ProduceEvent(event_object, query=query)
 
       if row['finishtime']:
         event_object = SkypeTransferFileEvent(
-            row, row['finishtime'], u'FINISHED', source, destination)
+            row['finishtime'], row['id'], u'FINISHED', source, destination,
+            row['filename'], row['filepath'], file_size)
         parser_mediator.ProduceEvent(event_object, query=query)
 
     elif row['status'] == 2 and row['starttime']:
       event_object = SkypeTransferFileEvent(
-          row, row['starttime'], u'SENDSOLICITUDE', source, destination)
+          row['starttime'], row['id'], u'SENDSOLICITUDE', source, destination,
+          row['filename'], row['filepath'], file_size)
       parser_mediator.ProduceEvent(event_object, query=query)
 
 
