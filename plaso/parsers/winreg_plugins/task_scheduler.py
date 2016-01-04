@@ -42,16 +42,30 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
           u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
           u'CurrentVersion\\Schedule\\TaskCache')])
 
-  URLS = [u'https://code.google.com/p/winreg-kb/wiki/TaskSchedulerKeys']
+  URLS = [(
+      u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
+      u'Task%20Scheduler%20Keys.asciidoc')]
 
   _DYNAMIC_INFO_STRUCT = construct.Struct(
       u'dynamic_info_record',
-      construct.ULInt32(u'version'),
+      construct.ULInt32(u'unknown1'),
       construct.ULInt64(u'last_registered_time'),
       construct.ULInt64(u'launch_time'),
-      construct.Padding(8))
+      construct.ULInt32(u'unknown2'),
+      construct.ULInt32(u'unknown3'))
 
   _DYNAMIC_INFO_STRUCT_SIZE = _DYNAMIC_INFO_STRUCT.sizeof()
+
+  _DYNAMIC_INFO2_STRUCT = construct.Struct(
+      u'dynamic_info2_record',
+      construct.ULInt32(u'unknown1'),
+      construct.ULInt64(u'last_registered_time'),
+      construct.ULInt64(u'launch_time'),
+      construct.ULInt32(u'unknown2'),
+      construct.ULInt32(u'unknown3'),
+      construct.ULInt64(u'unknown_time'))
+
+  _DYNAMIC_INFO2_STRUCT_SIZE = _DYNAMIC_INFO2_STRUCT.sizeof()
 
   def _GetIdValue(self, key):
     """Retrieves the Id value from Task Cache Tree key.
@@ -80,6 +94,8 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       registry_key: A Windows Registry key (instance of
                     dfwinreg.WinRegistryKey).
     """
+    dynamic_info_size_error_reported = False
+
     tasks_key = registry_key.GetSubkeyByName(u'Tasks')
     tree_key = registry_key.GetSubkeyByName(u'Tree')
 
@@ -94,9 +110,13 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
         # TODO: improve this check to a regex.
         # The GUID is in the form {%GUID%} and stored an UTF-16 little-endian
         # string and should be 78 bytes in size.
-        if len(id_value.data) != 78:
-          parser_mediator.ProduceParseError(u'Unsupported Id value data size.')
+        id_value_data_size = len(id_value.data)
+        if id_value_data_size != 78:
+          parser_mediator.ProduceParseError(
+              u'unsupported Id value data size: {0:d}.'.format(
+                  id_value_data_size))
           continue
+
         guid_string = id_value.GetDataAsObject()
         task_guids[guid_string] = value_key.name
 
@@ -105,13 +125,22 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       if not dynamic_info_value:
         continue
 
-      if len(dynamic_info_value.data) != self._DYNAMIC_INFO_STRUCT_SIZE:
-        parser_mediator.ProduceParseError(
-            u'Unsupported DynamicInfo value data size.')
-        continue
+      dynamic_info_value_data_size = len(dynamic_info_value.data)
+      if dynamic_info_value_data_size == self._DYNAMIC_INFO_STRUCT_SIZE:
+        dynamic_info_struct = self._DYNAMIC_INFO_STRUCT.parse(
+            dynamic_info_value.data)
 
-      dynamic_info = self._DYNAMIC_INFO_STRUCT.parse(
-          dynamic_info_value.data)
+      elif dynamic_info_value_data_size == self._DYNAMIC_INFO2_STRUCT_SIZE:
+        dynamic_info_struct = self._DYNAMIC_INFO_STRUCT.parse(
+            dynamic_info_value.data)
+
+      else:
+        if not dynamic_info_size_error_reported:
+          parser_mediator.ProduceParseError(
+              u'unsupported DynamicInfo value data size: {0:d}.'.format(
+                  dynamic_info_value_data_size))
+          dynamic_info_size_error_reported = True
+        continue
 
       name = task_guids.get(sub_key.name, sub_key.name)
 
@@ -123,18 +152,25 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
           offset=registry_key.offset)
       parser_mediator.ProduceEvent(event_object)
 
-      if dynamic_info.last_registered_time:
+      last_registered_time = dynamic_info_struct.get(u'last_registered_time')
+      if last_registered_time:
         # Note this is likely either the last registered time or
         # the update time.
         event_object = TaskCacheEvent(
-            dynamic_info.last_registered_time, u'Last registered time', name,
-            sub_key.name)
+            last_registered_time, u'Last registered time', name, sub_key.name)
         parser_mediator.ProduceEvent(event_object)
 
-      if dynamic_info.launch_time:
+      launch_time = dynamic_info_struct.get(u'launch_time')
+      if launch_time:
         # Note this is likely the launch time.
         event_object = TaskCacheEvent(
-            dynamic_info.launch_time, u'Launch time', name, sub_key.name)
+            launch_time, u'Launch time', name, sub_key.name)
+        parser_mediator.ProduceEvent(event_object)
+
+      unknown_time = dynamic_info_struct.get(u'unknown_time')
+      if unknown_time:
+        event_object = TaskCacheEvent(
+            unknown_time, u'Unknown time', name, sub_key.name)
         parser_mediator.ProduceEvent(event_object)
 
     # TODO: Add support for the Triggers value.
