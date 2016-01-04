@@ -15,6 +15,7 @@ import logging
 import re
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 
 
 class EventFormatter(object):
@@ -60,8 +61,7 @@ class EventFormatter(object):
     Returns:
       The formatted message string.
     """
-    # TODO: this does not work in Python 3.
-    if not isinstance(format_string, unicode):
+    if not isinstance(format_string, py2to3.UNICODE_TYPE):
       logging.warning(u'Format string: {0:s} is non-Unicode.'.format(
           format_string))
 

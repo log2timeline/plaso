@@ -8,6 +8,7 @@ codepage of the source data.
 """
 
 from plaso.lib import event
+from plaso.lib import py2to3
 
 import pytz
 
@@ -102,7 +103,7 @@ class KnowledgeBase(object):
     Returns:
       The value or None if not available.
     """
-    if isinstance(identifier, basestring):
+    if isinstance(identifier, py2to3.STRING_TYPES):
       identifier = identifier.lower()
     return getattr(self._pre_obj, identifier, default_value)
 
@@ -133,6 +134,6 @@ class KnowledgeBase(object):
       identifier: the value identifier.
       value: the value.
     """
-    if isinstance(identifier, basestring):
+    if isinstance(identifier, py2to3.STRING_TYPES):
       identifier = identifier.lower()
     setattr(self._pre_obj, identifier, value)

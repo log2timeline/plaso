@@ -46,7 +46,8 @@ class ProtobufSerializerTestCase(unittest.TestCase):
       expected_proto_string: the expected protobuf string.
     """
     proto_string = serializer.WriteSerialized(unserialized_object)
-    self.assertEqual(proto_string, expected_proto_string)
+    self.assertEqual(
+        proto_string.split(b'\n'), expected_proto_string.split(b'\n'))
 
 
 class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):

@@ -2,13 +2,15 @@
 """This file contains utility functions."""
 
 import logging
-import re
+
+from plaso.lib import py2to3
 
 
-# Illegal Unicode characters for XML.
-ILLEGAL_XML_RE = re.compile(
-    ur'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f'
-    ur'\ud800-\udfff\ufdd0-\ufddf\ufffe-\uffff]')
+def GetUnicodeString(string):
+  """Converts the string to Unicode if necessary."""
+  if not isinstance(string, py2to3.UNICODE_TYPE):
+    return str(string).decode(u'utf8', errors=u'ignore')
+  return string
 
 
 def IsText(bytes_in, encoding=None):
@@ -45,8 +47,7 @@ def IsText(bytes_in, encoding=None):
   if is_ascii:
     return is_ascii
 
-  # Is this already a unicode text?
-  if isinstance(bytes_in, unicode):
+  if isinstance(bytes_in, py2to3.UNICODE_TYPE):
     return True
 
   # Check if this is UTF-8
@@ -77,27 +78,3 @@ def IsText(bytes_in, encoding=None):
           u'String encoding not recognized: {0:s}'.format(encoding))
 
   return False
-
-
-def GetUnicodeString(string):
-  """Converts the string to Unicode if necessary."""
-  if not isinstance(string, unicode):
-    return str(string).decode('utf8', 'ignore')
-  return string
-
-
-def RemoveIllegalXMLCharacters(string, replacement=u'\ufffd'):
-  """Removes illegal Unicode characters for XML.
-
-  Args:
-    string: A string to replace all illegal characters for XML.
-    replacement: A replacement character to use in replacement of all
-        found illegal characters.
-
-  Return:
-    A string where all illegal Unicode characters for XML have been removed.
-    If the input is not a string it will be returned unchanged."""
-  if isinstance(string, basestring):
-    return ILLEGAL_XML_RE.sub(replacement, string)
-  return string
-

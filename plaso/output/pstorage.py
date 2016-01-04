@@ -2,6 +2,7 @@
 """Implements a StorageFile output module."""
 
 from plaso.lib import event
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -61,7 +62,7 @@ class PlasoStorageOutputModule(interface.OutputModule):
     # Needed due to duplicate removals, if two events
     # are merged then we'll just pick the first inode value.
     inode = getattr(event_object, u'inode', None)
-    if isinstance(inode, basestring):
+    if isinstance(inode, py2to3.STRING_TYPES):
       inode_list = inode.split(u';')
       try:
         new_inode = int(inode_list[0])

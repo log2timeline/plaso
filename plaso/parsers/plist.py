@@ -53,9 +53,11 @@ class PlistParser(interface.FileObjectParser):
     try:
       top_level_object = binplist.readPlist(file_object)
     except binplist.FormatError as exception:
+      # TODO: remove need for GetUnicodeString.
+      error_string = utils.GetUnicodeString(exception)
       raise errors.UnableToParseFile(
           u'[{0:s}] File is not a plist file: {1:s}'.format(
-              self.NAME, utils.GetUnicodeString(exception)))
+              self.NAME, error_string))
     except (
         LookupError, binascii.Error, ValueError, AttributeError) as exception:
       raise errors.UnableToParseFile(
@@ -67,9 +69,10 @@ class PlistParser(interface.FileObjectParser):
               self.NAME, file_name, exception))
 
     if not top_level_object:
+      error_string = utils.GetUnicodeString(exception)
       raise errors.UnableToParseFile(
           u'[{0:s}] File is not a plist: {1:s}'.format(
-              self.NAME, utils.GetUnicodeString(file_name)))
+              self.NAME, error_string))
 
     # Since we are using readPlist from binplist now instead of manually
     # opening  the binary plist file we loose this option. Keep it commented

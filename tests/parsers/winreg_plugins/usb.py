@@ -47,9 +47,9 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'product', u'PID_0002')
 
     # Match UTC timestamp.
-    time = long(timelib.Timestamp.CopyFromString(
-        u'2012-04-07 10:31:37.625246'))
-    self.assertEqual(event_object.timestamp, time)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-04-07 10:31:37.625246')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '

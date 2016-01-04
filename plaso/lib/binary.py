@@ -5,6 +5,8 @@ import binascii
 import logging
 import os
 
+from plaso.lib import py2to3
+
 
 def ByteArrayCopyToString(byte_array, codepage=u'utf-8'):
   """Copies a UTF-8 encoded byte array into a Unicode string.
@@ -239,7 +241,7 @@ def ReadUTF16(string_buffer):
   else:
     use_buffer = string_buffer
 
-  if not isinstance(use_buffer, basestring):
+  if not isinstance(use_buffer, py2to3.STRING_TYPES):
     return u''
 
   try:

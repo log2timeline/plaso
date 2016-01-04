@@ -4,6 +4,7 @@
 import re
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -355,7 +356,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
       else:
         output_value = getattr(event_object, field, u'-')
 
-      if not isinstance(output_value, basestring):
+      if not isinstance(output_value, py2to3.STRING_TYPES):
         output_value = u'{0!s}'.format(output_value)
 
       output_value = output_value.replace(self._field_delimiter, u' ')

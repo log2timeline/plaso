@@ -3,7 +3,6 @@
 
 from plaso.events import text_events
 from plaso.lib import lexer
-from plaso.lib import utils
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -121,7 +120,16 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     Args:
       match: The regular expression match object.
     """
-    self.attributes[u'body'] += utils.GetUnicodeString(match.group(1))
+    if not match:
+      return
+
+    try:
+      self.attributes[u'body'] += match.group(1)
+    except UnicodeDecodeError:
+      # TODO: Support other encodings than UTF-8 here, read from the
+      # knowledge base or parse from the file itself.
+      self.attributes[u'body'] += u'{0:s}'.format(
+          match.group(1).decode(u'utf-8', errors=u'replace'))
 
   def PrintLine(self):
     """Prints a log line."""

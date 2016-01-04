@@ -3,6 +3,7 @@
 
 import datetime
 import os
+import re
 
 try:
   import xlsxwriter
@@ -24,6 +25,11 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
 
   _MAX_COLUMN_WIDTH = 50
   _MIN_COLUMN_WIDTH = 6
+
+  # Illegal Unicode characters for XML.
+  _ILLEGAL_XML_RE = re.compile((
+      ur'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf'
+      ur'\ufffe-\uffff]'))
 
   def __init__(self, output_mediator):
     """Initializes the output module object.
@@ -65,6 +71,21 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
           u'with error: {1:s}. Defaulting to: "ERROR"').format(
               event_object.timestamp, exception))
       return u'ERROR'
+
+  def _RemoveIllegalXMLCharacters(self, xml_string):
+    """Removes illegal characters for XML.
+
+    Args:
+      xml_string: a string containing XML with possible illegal characters.
+
+    Returns:
+      A string containing XML where all illegal characters have been removed.
+      If the input is not a string it will be returned unchanged.
+    """
+    if not isinstance(xml_string, py2to3.STRING_TYPES):
+      return xml_string
+
+    return self._ILLEGAL_XML_RE.sub(u'\ufffd', xml_string)
 
   def Close(self):
     """Closes the output."""
@@ -129,8 +150,9 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
 
       if not isinstance(value, (
           bool, py2to3.INTEGER_TYPES, float, datetime.datetime)):
+        # TODO: remove need for GetUnicodeString.
         value = utils.GetUnicodeString(value)
-        value = utils.RemoveIllegalXMLCharacters(value)
+        value = self._RemoveIllegalXMLCharacters(value)
 
       # Auto adjust column width based on length of value.
       column_index = self._fields.index(field_name)

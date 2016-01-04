@@ -9,6 +9,7 @@ import logging
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.lib import py2to3
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -68,12 +69,12 @@ class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
 
     # Ignore non-Unicode request headers values.
     request_headers = record_values.get(u'RequestHeaders', u'')
-    if isinstance(request_headers, unicode) and request_headers:
+    if isinstance(request_headers, py2to3.UNICODE_TYPE) and request_headers:
       self.request_headers = request_headers
 
     # Ignore non-Unicode response headers values.
     response_headers = record_values.get(u'ResponseHeaders', u'')
-    if isinstance(response_headers, unicode) and response_headers:
+    if isinstance(response_headers, py2to3.UNICODE_TYPE) and response_headers:
       self.response_headers = response_headers
 
 
