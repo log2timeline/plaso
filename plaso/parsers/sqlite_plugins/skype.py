@@ -92,8 +92,8 @@ class SkypeSMSEvent(time_events.PosixTimeEvent):
   """Convenience EventObject for SMS.
 
   Attributes:
-    number: phone number where the user send the SMS.
-    text: a string containing the text (SMS body).
+    number: a string containing the phone number where the SMS was sent.
+    text: a string containing the text (SMS body) that was sent.
   """
 
   DATA_TYPE = u'skype:event:sms'
@@ -104,8 +104,8 @@ class SkypeSMSEvent(time_events.PosixTimeEvent):
     Args:
       posix_time: the POSIX time value, which contains the number of seconds
                   since January 1, 1970 00:00:00 UTC.
-      phone_number: phone number where the user send the SMS.
-      text: a string containing the text (SMS body).
+      phone_number: a string containing the phone number where the SMS was sent.
+      text: a string containing the text (SMS body) that was sent.
     """
     super(SkypeSMSEvent, self).__init__(posix_time, u'SMS from Skype')
     self.number = phone_number
