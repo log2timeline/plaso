@@ -115,6 +115,23 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     command_line_arguments = cli_tool.GetCommandLineArguments()
     self.assertIsNotNone(command_line_arguments)
 
+  def testListTimeZones(self):
+    """Tests the ListTimeZones function."""
+    output_writer = test_lib.TestOutputWriter()
+    cli_tool = tools.CLITool(output_writer=output_writer)
+
+    cli_tool.ListTimeZones()
+
+    string = output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'************************************ Zones '
+        b'*************************************\n'
+        b'                        Timezone : UTC Offset\n'
+        b'----------------------------------------'
+        b'----------------------------------------\n')
+    self.assertTrue(string.startswith(expected_string))
+
   def testParseStringOption(self):
     """Tests the ParseStringOption function."""
     encoding = sys.stdin.encoding
