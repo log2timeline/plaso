@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Contains a formatter for a dynamic output module for plaso."""
 
-import logging
 import re
 
 from plaso.lib import errors
@@ -78,16 +77,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
           event_object.timestamp, self._output_mediator.timezone,
           raise_error=True)
     except OverflowError as exception:
-      event_storage_identifier = self._GetEventStorageIdentifier(event_object)
-      logging.error((
-          u'Unable to copy timestamp: {0:d} from event: {1:s} into a human '
-          u'readable date with error: {2:s}. Defaulting to: '
-          u'"0000-00-00"').format(
-              event_object.timestamp, event_storage_identifier, exception))
-      logging.error(
-          u'Event: {0:s} data type: {1:s} display name: {2:s}'.format(
-              event_storage_identifier, event_object.data_type,
-              event_object.display_name))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable date '
+          u'with error: {1:s}. Defaulting to: "0000-00-00"').format(
+              event_object.timestamp, exception))
 
       return u'0000-00-00'
 
@@ -109,16 +102,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
           raise_error=True)
 
     except OverflowError as exception:
-      event_storage_identifier = self._GetEventStorageIdentifier(event_object)
-      logging.error((
-          u'Unable to copy timestamp: {0:d} from event: {1:s} into a human '
-          u'readable date and time with error: {2:s}. Defaulting to: '
-          u'"0000-00-00T00:00:00"').format(
-              event_object.timestamp, event_storage_identifier, exception))
-      logging.error(
-          u'Event: {0:s} data type: {1:s} display name: {2:s}'.format(
-              event_storage_identifier, event_object.data_type,
-              event_object.display_name))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable date and time '
+          u'with error: {1:s}. Defaulting to: "0000-00-00T00:00:00"').format(
+              event_object.timestamp, exception))
 
       return u'0000-00-00T00:00:00'
 
@@ -276,15 +263,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
           event_object.timestamp, self._output_mediator.timezone,
           raise_error=True)
     except OverflowError as exception:
-      event_storage_identifier = self._GetEventStorageIdentifier(event_object)
-      logging.error((
-          u'Unable to copy timestamp: {0:d} from event: {1:s} into a human '
-          u'readable time with error: {2:s}. Defaulting to: "00:00:00"').format(
-              event_object.timestamp, event_storage_identifier, exception))
-      logging.error(
-          u'Event: {0:s} data type: {1:s} display name: {2:s}'.format(
-              event_storage_identifier, event_object.data_type,
-              event_object.display_name))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable time '
+          u'with error: {1:s}. Defaulting to: "00:00:00"').format(
+              event_object.timestamp, exception))
 
       return u'00:00:00'
 

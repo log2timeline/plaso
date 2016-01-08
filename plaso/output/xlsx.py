@@ -2,7 +2,6 @@
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
 import datetime
-import logging
 import os
 
 try:
@@ -61,17 +60,10 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
       return timestamp.replace(tzinfo=None)
 
     except OverflowError as exception:
-      event_storage_identifier = self._GetEventStorageIdentifier(event_object)
-      logging.error((
-          u'Unable to copy timestamp: {0:d} from event: {1:s} into a human '
-          u'readable date and time with error: {2:s}. Defaulting to: '
-          u'"ERROR"').format(
-              event_object.timestamp, event_storage_identifier, exception))
-      logging.error(
-          u'Event: {0:s} data type: {1:s} display name: {2:s}'.format(
-              event_storage_identifier, event_object.data_type,
-              event_object.display_name))
-
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable date and time '
+          u'with error: {1:s}. Defaulting to: "ERROR"').format(
+              event_object.timestamp, exception))
       return u'ERROR'
 
   def Close(self):

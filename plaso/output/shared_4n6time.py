@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Defines the shared code for 4n6time output modules."""
 
-import logging
-
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -69,7 +67,8 @@ class Base4n6TimeOutputModule(interface.OutputModule):
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self._output_mediator.timezone)
     if not date_use:
-      logging.error(u'Unable to process date for entry: {0:s}'.format(message))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to datetime object.'))
       return
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
