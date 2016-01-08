@@ -172,7 +172,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       location = file_system.JoinPath(location_segments)
       index_path_spec = path_spec_factory.Factory.NewPathSpec(
           file_entry.type_indicator, location=location,
-          parent=file_entry.parent)
+          parent=file_entry.path_spec.parent)
 
       if file_system.FileEntryExistsByPathSpec(index_path_spec):
         # TODO: improve this check if "index" is a Chrome Cache index file.
@@ -184,7 +184,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       location = file_system.JoinPath(location_segments)
       cache_map_path_spec = path_spec_factory.Factory.NewPathSpec(
           file_entry.type_indicator, location=location,
-          parent=file_entry.parent)
+          parent=file_entry.path_spec.parent)
 
       if file_system.FileEntryExistsByPathSpec(cache_map_path_spec):
         # TODO: improve this check if "_CACHE_MAP_" is a Firefox Cache
@@ -197,7 +197,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       location = file_system.JoinPath(location_segments)
       index_path_spec = path_spec_factory.Factory.NewPathSpec(
           file_entry.type_indicator, location=location,
-          parent=file_entry.parent)
+          parent=file_entry.path_spec.parent)
 
       if file_system.FileEntryExistsByPathSpec(index_path_spec):
         # TODO: improve this check if "index" is a Firefox Cache version 2
