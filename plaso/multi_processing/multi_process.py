@@ -393,8 +393,8 @@ class MultiProcessEngine(engine.BaseEngine):
     self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
-    self._storage_writer_completed = False
     self._show_memory_usage = False
+    self._storage_writer_complete_event = None
     self._stop_collector_event = None
     self._text_prepend = None
 
@@ -724,28 +724,36 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue not to be full.
-    if not self._use_zeromq:
+    if self._use_zeromq:
+      self._CloseStorageZeroMQQueues()
+    else:
       logging.debug(u'Emptying queues.')
       self._path_spec_queue.Empty()
       self.event_object_queue.Empty()
       self._parse_error_queue.Empty()
+
       # Wake the processes to make sure that they are not blocking
       # waiting for new items.
       for _ in range(self._number_of_extraction_workers):
         self._path_spec_queue.PushItem(queue.QueueAbort(), block=False)
       self.event_object_queue.PushItem(queue.QueueAbort(), block=False)
-      self._parse_error_queue.PushItem(queue.QueueAbort(), block=False)
-    else:
-      self._CloseStorageZeroMQQueues()
+
+      # TODO: The following line is commented out as a work around for
+      # infinite blocking wait in storage writer process. Fix this by
+      # using a phased processing approach. For now we remove the parse
+      # error queue from the storage writer.
+      # self._parse_error_queue.PushItem(queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
-    if not abort:
-      # The storage writer process sometimes needs some additional time to
-      # exit normally.
-      time.sleep(0.5)
+    # The storage writer process sometimes needs some additional time to
+    # close the storage file.
+    while not self._storage_writer_complete_event.is_set():
+      logging.info(u'Waiting for storage writer to close storage file.')
+      time.sleep(self._STATUS_CHECK_SLEEP)
 
+    if not abort:
       # Check if the processes are still alive and terminate them if necessary.
       self._AbortTerminate()
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
@@ -1052,11 +1060,20 @@ class MultiProcessEngine(engine.BaseEngine):
     # Start the storage writer first, as we need it to start up and bind its
     # queues to ports before we can start the workers.
     self._extraction_complete_event = multiprocessing.Event()
+    self._storage_writer_complete_event = multiprocessing.Event()
+
+    if self._use_zeromq:
+      parse_error_queue = self._parse_error_queue
+    else:
+      # TODO: This is a work around for infinite blocking wait in storage
+      # writer process. Fix this by using a phased processing approach.
+      # For now we remove the parse error queue from the storage writer.
+      parse_error_queue = None
 
     storage_writer_process = MultiProcessStorageWriterProcess(
         self.event_object_queue, self._extraction_complete_event,
-        self._parse_error_queue, storage_writer,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
+        self._storage_writer_complete_event, parse_error_queue,
+        storage_writer, enable_sigsegv_handler=self._enable_sigsegv_handler,
         name=u'StorageWriter')
     storage_writer_process.start()
     self._RegisterProcess(storage_writer_process)
@@ -1093,8 +1110,10 @@ class MultiProcessEngine(engine.BaseEngine):
       while not processing_completed:
         if status_update_callback:
           status_update_callback(self._processing_status)
+
         if extraction_completed:
           self._extraction_complete_event.set()
+
         time.sleep(self._STATUS_CHECK_SLEEP)
         extraction_completed, processing_completed = self._CheckStatus()
 
@@ -1104,6 +1123,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._extraction_complete_event.set()
 
       logging.debug(u'Processing stopped.')
+
     except errors.EngineAbort as exception:
       logging.warning(
           u'Processing aborted with engine error: {0:s}.'.format(exception))
@@ -1349,15 +1369,21 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing storage writer process."""
 
   def __init__(
-      self, event_object_queue, extraction_complete_event, parse_error_queue,
-      storage_writer, **kwargs):
+      self, event_object_queue, extraction_complete_event,
+      storage_writer_complete_event, parse_error_queue, storage_writer,
+      **kwargs):
     """Initializes the process object.
 
     Args:
       event_object_queue: the event object queue object (instance of
                           MultiProcessingQueue).
-      extraction_complete_event: an Event that, when set, indicates that
-                                 extraction is complete.
+      extraction_complete_event: a multi processing event (instance of
+                                 multiprocessing.Event) that, when set,
+                                 indicates that extraction is complete.
+      storage_writer_complete_event: a multi processing event (instance of
+                                     multiprocessing.Event) that, when set,
+                                     indicates that the storage writer is
+                                     complete.
       parse_error_queue: the parser error queue object (instance of Queue).
       storage_writer: a storage writer object (instance of BaseStorageWriter).
     """
@@ -1369,6 +1395,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
     self._parse_error_queue = parse_error_queue
     self._parse_error_queue_port = None
     self._storage_writer = storage_writer
+    self._storage_writer_complete_event = storage_writer_complete_event
 
   def _GetStatus(self):
     """Returns a status dictionary."""
@@ -1401,8 +1428,9 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
       self._storage_writer.WriteEventObjects()
       while (event_queue_is_zeromq and
              not self._extraction_complete_event.is_set()):
-        logging.debug(u'Storage writer event queue stalled. Restarting and '
-                      u'waiting for extraction to complete.')
+        logging.debug(
+            u'Storage writer event queue stalled - restarting and waiting for '
+            u'extraction to complete.')
         self._storage_writer.WriteEventObjects()
     except Exception as exception:
       logging.warning(
@@ -1410,8 +1438,17 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
               self._pid))
       logging.exception(exception)
 
+    # Set the storage writer completion event to indicate that it is complete
+    # and the process can be terminated.
+    self._storage_writer_complete_event.set()
+
     self._event_object_queue.Close()
-    self._parse_error_queue.Close()
+
+    # TODO: This is a work around for infinite blocking wait in storage
+    # writer process. Fix this by using a phased processing approach.
+    # For now we remove the parse error queue from the storage writer.
+    if self._parse_error_queue:
+      self._parse_error_queue.Close()
 
     logging.debug(u'Storage writer (PID: {0:d}) stopped.'.format(self._pid))
 
