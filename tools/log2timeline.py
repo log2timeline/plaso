@@ -59,7 +59,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       u'',
       u'Instead of answering questions, indicate some of the options on the',
       u'command line (including data from particular VSS stores).',
-      (u'    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.plaso'
+      (u'    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.plaso '
        u'image.E01'),
       u'',
       u'And that is how you build a timeline using log2timeline...',
