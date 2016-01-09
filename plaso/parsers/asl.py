@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """The Apple System Log Parser."""
 
-import construct
-import logging
 import os
+
+import construct
 
 from plaso.events import time_events
 from plaso.lib import errors
@@ -14,16 +14,31 @@ from plaso.parsers import manager
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
-# TODO: get the real name for the user of the group having the uid or gid.
-
 
 class AslEvent(time_events.PosixTimeEvent):
-  """Convenience class for an asl event."""
+  """Convenience class for an ASL event.
+
+  Attributes:
+    computer_name: a string containing the name of the host.
+    extra_information: a string containing extra fields associated
+                       to the event.
+    facility: a string containing the facility.
+    group_id: an integer containing the group identifer (GID).
+    level: a string containing the level of criticality of the event.
+    message_id: an integer containing the message identifier.
+    message: a string containing the message of the event.
+    pid: an integer containing the process identifier (PID).
+    read_uid: the user ID that can read this file. If -1: all.
+    read_gid: the group ID that can read this file. If -1: all.
+    record_position: an integer containing the position of the event record.
+    sender: a string containing the sender or process that created the event.
+    user_sid: a string containing the user identifier (UID).
+  """
 
   DATA_TYPE = u'mac:asl:event'
 
   def __init__(
-      self, posix_time, record_position, message_id, level, record_header,
+      self, posix_time, offset, message_id, level, pid, uid, gid,
       read_uid, read_gid, computer_name, sender, facility, message,
       extra_information, micro_seconds=0):
     """Initializes the event object.
@@ -31,20 +46,20 @@ class AslEvent(time_events.PosixTimeEvent):
     Args:
       posix_time: the POSIX time value, which contains the number of seconds
                   since January 1, 1970 00:00:00 UTC.
-      record_position: position where the record start.
-      message_id: Identification value for an ASL message.
-      level: level of criticality.
-      record_header: header of the entry.
-        pid: identification number of the process.
-        uid: identification number of the owner of the process.
-        gid: identification number of the group of the process.
+      offset: an integer containing the offset of the event record.
+      message_id: an integer containing the message identifier.
+      level: a string containing the level of criticality of the event.
+      pid: an integer containing the process identifier (PID).
+      uid: an integer containing the user identifier (UID).
+      gid: an integer containing the group identifier (GID).
       read_uid: the user ID that can read this file. If -1: all.
       read_gid: the group ID that can read this file. If -1: all.
-      computer_name: name of the host.
-      sender: the process that insert the event.
-      facility: the part of the sender that create the event.
-      message: message of the event.
-      extra_information: extra fields associated to each entry.
+      computer_name: a string containing the name of the host.
+      sender: a string containing the sender or process that created the event.
+      facility: a string containing the facility.
+      message: a string containing the message of the event.
+      extra_information: a string containing extra fields associated
+                         to the event.
       micro_seconds: optional number of micro seconds.
     """
     super(AslEvent, self).__init__(
@@ -53,17 +68,17 @@ class AslEvent(time_events.PosixTimeEvent):
     self.computer_name = computer_name
     self.extra_information = extra_information
     self.facility = facility
-    self.group_id = record_header.gid
+    self.group_id = gid
     self.level = level
     self.message_id = message_id
     self.message = message
-    self.pid = record_header.pid
+    self.pid = pid
     self.read_gid = read_gid
     self.read_uid = read_uid
-    self.record_position = record_position
+    self.record_position = offset
     self.sender = sender
     # Note that the user_sid value is expected to be a string.
-    self.user_sid = u'{0:d}'.format(record_header.uid)
+    self.user_sid = u'{0:d}'.format(uid)
 
 
 class AslParser(interface.FileObjectParser):
@@ -74,7 +89,7 @@ class AslParser(interface.FileObjectParser):
   NAME = u'asl_log'
   DESCRIPTION = u'Parser for ASL log files.'
 
-  ASL_MAGIC = b'ASL DB\x00\x00\x00\x00\x00\x00'
+  _ASL_MAGIC = b'ASL DB\x00\x00\x00\x00\x00\x00'
 
   # ASL File header.
   # magic: magic number that identify ASL files.
@@ -83,7 +98,7 @@ class AslParser(interface.FileObjectParser):
   # timestamp: time when the first entry was written.
   #     Contains the number of seconds since January 1, 1970 00:00:00 UTC.
   # last_offset: last record in the file.
-  ASL_HEADER_STRUCT = construct.Struct(
+  _ASL_HEADER_STRUCT = construct.Struct(
       u'asl_header_struct',
       construct.String(u'magic', 12),
       construct.UBInt32(u'version'),
@@ -110,7 +125,7 @@ class AslParser(interface.FileObjectParser):
   # read_uid: identification id of a user. Only applied if is not -1 (all FF).
   #           Only root and this user can read the entry.
   # read_gid: the same than read_uid, but for the group.
-  ASL_RECORD_STRUCT = construct.Struct(
+  _ASL_RECORD_STRUCT = construct.Struct(
       u'asl_record_struct',
       construct.Padding(2),
       construct.UBInt32(u'tam_entry'),
@@ -127,7 +142,7 @@ class AslParser(interface.FileObjectParser):
       construct.UBInt32(u'read_gid'),
       construct.UBInt64(u'ref_pid'))
 
-  ASL_RECORD_STRUCT_SIZE = ASL_RECORD_STRUCT.sizeof()
+  _ASL_RECORD_STRUCT_SIZE = _ASL_RECORD_STRUCT.sizeof()
 
   # 8-byte fields, they can be:
   # - String: [Nibble = 1000 (8)][Nibble = Length][7 Bytes = String].
@@ -137,7 +152,7 @@ class AslParser(interface.FileObjectParser):
 
   # If the field is a String, we use this structure to decode each
   # integer byte in the corresponding character (ASCII Char).
-  ASL_OCTET_STRING = construct.ExprAdapter(
+  _ASL_OCTET_STRING = construct.ExprAdapter(
       construct.Octet(u'string'),
       encoder=lambda obj, ctx: ord(obj),
       decoder=lambda obj, ctx: chr(obj))
@@ -145,7 +160,7 @@ class AslParser(interface.FileObjectParser):
   # Field string structure. If the first bit is 1, it means that it
   # is a String (1000) = 8, then the next nibble has the number of
   # characters. The last 7 bytes are the number of bytes.
-  ASL_STRING = construct.BitStruct(
+  _ASL_STRING = construct.BitStruct(
       u'string',
       construct.Flag(u'type'),
       construct.Bits(u'filler', 3),
@@ -154,25 +169,25 @@ class AslParser(interface.FileObjectParser):
           construct.Nibble(u'string_length')),
       construct.If(
           lambda ctx: ctx.type,
-          construct.Array(7, ASL_OCTET_STRING)))
+          construct.Array(7, _ASL_OCTET_STRING)))
 
   # 8-byte pointer to a byte position in the file.
-  ASL_POINTER = construct.UBInt64(u'pointer')
+  _ASL_POINTER = construct.UBInt64(u'pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
-  # [2 bytes padding][4 bytes length of String][String].
-  ASL_RECORD_DYN_VALUE = construct.Struct(
+  # [2 bytes padding][4 bytes size of String][String].
+  _ASL_RECORD_DYN_VALUE = construct.Struct(
       u'asl_record_dyn_value',
       construct.Padding(2),
-      construct.PascalString(
-          u'value', length_field=construct.UBInt32(u'length')))
+      construct.UBInt32(u'size'),
+      construct.Bytes(u'value', lambda ctx: ctx.size))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an ALS file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_object: a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -180,43 +195,41 @@ class AslParser(interface.FileObjectParser):
     file_object.seek(0, os.SEEK_SET)
 
     try:
-      header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
+      header = self._ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
-    if header.magic != self.ASL_MAGIC:
+    if header.magic != self._ASL_MAGIC:
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
 
-    # Get the first and the last entry.
     offset = header.offset
-    old_offset = header.offset
-    last_offset_header = header.last_offset
+    if not offset:
+      return
 
-    # If the ASL file has entries.
-    if offset:
+    header_last_offset = header.last_offset
+
+    previous_offset = offset
+    event_object, offset = self.ReadAslEvent(
+        parser_mediator, file_object, offset)
+    while event_object:
+      # Sanity check, the last read element must be the same as
+      # indicated by the header.
+      if offset == 0 and previous_offset != header_last_offset:
+        parser_mediator.ProduceParseError(
+            u'Unable to parse header. Last element header does not match '
+            u'header offset.')
+      previous_offset = offset
       event_object, offset = self.ReadAslEvent(
-          file_object, parser_mediator, offset)
-      while event_object:
-        parser_mediator.ProduceEvent(event_object)
+          parser_mediator, file_object, offset)
 
-        # Sanity check, the last read element must be the same as
-        # indicated by the header.
-        if offset == 0 and old_offset != last_offset_header:
-          parser_mediator.ProduceParseError(
-              u'Unable to parse header. Last element header does not match '
-              u'header offset.')
-        old_offset = offset
-        event_object, offset = self.ReadAslEvent(
-            file_object, parser_mediator, offset)
-
-  def ReadAslEvent(self, file_object, parser_mediator, offset):
+  def ReadAslEvent(self, parser_mediator, file_object, offset):
     """Reads an ASL record at a specific offset.
 
     Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       file_object: a file-like object that points to an ASL file.
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      offset: offset where the static part of the entry starts.
+      offset: an integer containing the offset of the ASL record.
 
     Returns:
       A tuple of an event object extracted from the ASL record,
@@ -224,17 +237,24 @@ class AslParser(interface.FileObjectParser):
     """
     # The heap of the entry is saved to try to avoid seek (performance issue).
     # It has the real start position of the entry.
-    dynamic_start = file_object.tell()
-    dynamic_part = file_object.read(offset - file_object.tell())
+    dynamic_data_offset = file_object.tell()
+
+    try:
+      dynamic_data = file_object.read(offset - dynamic_data_offset)
+    except IOError as exception:
+      parser_mediator.ProduceParseError(
+          u'unable to read ASL record dynamic data with error: {0:s}'.format(
+              exception))
+      return None, None
 
     if not offset:
       return None, None
 
     try:
-      record_header = self.ASL_RECORD_STRUCT.parse_stream(file_object)
+      record_struct = self._ASL_RECORD_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      logging.warning(
-          u'Unable to parse ASL event with error: {0:s}'.format(exception))
+      parser_mediator.ProduceParseError(
+          u'unable to parse ASL record with error: {0:s}'.format(exception))
       return None, None
 
     # Variable tam_fields = is the real length of the dynamic fields.
@@ -248,10 +268,10 @@ class AslParser(interface.FileObjectParser):
     # tam_entry = ([Record_Struct]-6)+[Dynamic_Fields]+[Pointer_Entry_Before]
     # [Dynamic_Fields] = tam_entry - [Record_Struct] + 6 - 8
     # [Dynamic_Fields] = tam_entry - [Record_Struct] - 2
-    tam_fields = record_header.tam_entry - self.ASL_RECORD_STRUCT_SIZE - 2
+    tam_fields = record_struct.tam_entry - self._ASL_RECORD_STRUCT_SIZE - 2
 
     # Dynamic part of the entry that contains minimal four fields of 8 bytes
-    # plus 2x[8bytes] fields for each extra ASL_Field.
+    # plus 2 x [8 bytes] fields for each extra ASL_Field.
     # The four first fields are always the Host, Sender, Facility and Message.
     # After the four first fields, the entry might have extra ASL_Fields.
     # For each extra ASL_field, it has a pair of 8-byte fields where the first
@@ -274,66 +294,93 @@ class AslParser(interface.FileObjectParser):
     values = []
     while tam_fields > 0:
       try:
-        raw_field = file_object.read(8)
+        field_data = file_object.read(8)
       except IOError as exception:
-        logging.warning(
-            u'Unable to read ASL event with error: {0:d}'.format(exception))
+        parser_mediator.ProduceParseError(
+            u'unable to read ASL field with error: {0:s}'.format(exception))
         return None, None
 
+      # Try to read the field data as a string.
       try:
-        # Try to read as a String.
-        field = self.ASL_STRING.parse(raw_field)
-        values.append(b''.join(field.string[0:field.string_length]))
+        asl_string_struct = self._ASL_STRING.parse(field_data)
+        string_data = b''.join(
+            asl_string_struct.string[0:asl_string_struct.string_length])
+        values.append(string_data)
+
         # Go to parse the next extra field.
         tam_fields -= 8
         continue
+
       except ValueError:
         pass
-      # If it is not a string, it must be a pointer.
+
+      # If the field is not a string it must be a pointer.
       try:
-        field = self.ASL_POINTER.parse(raw_field)
+        pointer_value = self._ASL_POINTER.parse(field_data)
       except ValueError as exception:
-        logging.warning(
-            u'Unable to parse ASL event with error: {0:s}'.format(exception))
+        parser_mediator.ProduceParseError(
+            u'unable to parse ASL field with error: {0:s}'.format(exception))
         return None, None
-      if field != 0:
-        # The next IF ELSE is only for performance issues, avoiding seek.
-        # If the pointer points a lower position than where the actual entry
-        # starts, it means that it points to a previous entry.
-        pos = field - dynamic_start
-        # Bigger or equal 0 means that the data is in the actual entry.
-        if pos >= 0:
+
+      if not pointer_value:
+        # Next extra field: 8 bytes more.
+        tam_fields -= 8
+        continue
+
+      # The next IF ELSE is only for performance issues, avoiding seek.
+      # If the pointer points a lower position than where the actual entry
+      # starts, it means that it points to a previous entry.
+      pos = pointer_value - dynamic_data_offset
+
+      # Greater or equal 0 means that the data is in the actual entry.
+      if pos >= 0:
+        try:
+          dyn_value_struct = self._ASL_RECORD_DYN_VALUE.parse(
+              dynamic_data[pos:])
+          dyn_value = dyn_value_struct.value.partition(b'\x00')[0]
+          values.append(dyn_value)
+
+        except (IOError, construct.FieldError) as exception:
+          parser_mediator.ProduceParseError((
+              u'unable to parse ASL record dynamic value with error: '
+              u'{0:s}').format(exception))
+          return None, None
+
+      else:
+        # Only if it is a pointer that points to the
+        # heap from another entry we use the seek method.
+        main_position = file_object.tell()
+
+        # If the pointer is in a previous entry.
+        if main_position > pointer_value:
+          file_object.seek(pointer_value - main_position, os.SEEK_CUR)
+
           try:
-            values.append((self.ASL_RECORD_DYN_VALUE.parse(
-                dynamic_part[pos:])).value.partition(b'\x00')[0])
-          except (IOError, construct.FieldError) as exception:
-            logging.warning(
-                u'Unable to parse ASL event with error: {0:s}'.format(
-                    exception))
-            return None, None
+            dyn_value_struct = self._ASL_RECORD_DYN_VALUE.parse_stream(
+                file_object)
+            dyn_value = dyn_value_struct.value.partition(b'\x00')[0]
+            values.append(dyn_value)
+
+          except (IOError, construct.FieldError):
+            parser_mediator.ProduceParseError((
+                u'the pointer at {0:d} (0x{0:08x}) points to invalid '
+                u'information.').format(
+                    main_position - self._ASL_POINTER.sizeof()))
+
+          # Come back to the position in the entry.
+          _ = file_object.read(main_position - file_object.tell())
+
         else:
-          # Only if it is a pointer that points to the
-          # heap from another entry we use the seek method.
-          main_position = file_object.tell()
-          # If the pointer is in a previous entry.
-          if main_position > field:
-            file_object.seek(field - main_position, os.SEEK_CUR)
-            try:
-              values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
-                  file_object)).value.partition(b'\x00')[0])
-            except (IOError, construct.FieldError):
-              logging.warning((
-                  u'The pointer at {0:d} (0x{0:x}) points to invalid '
-                  u'information.').format(
-                      main_position - self.ASL_POINTER.sizeof()))
-            # Come back to the position in the entry.
-            _ = file_object.read(main_position - file_object.tell())
-          else:
-            _ = file_object.read(field - main_position)
-            values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
-                file_object)).value.partition(b'\x00')[0])
-            # Come back to the position in the entry.
-            file_object.seek(main_position - file_object.tell(), os.SEEK_CUR)
+          _ = file_object.read(pointer_value - main_position)
+
+          dyn_value_struct = self._ASL_RECORD_DYN_VALUE.parse_stream(
+              file_object)
+          dyn_value = dyn_value_struct.value.partition(b'\x00')[0]
+          values.append(dyn_value)
+
+          # Come back to the position in the entry.
+          file_object.seek(main_position - file_object.tell(), os.SEEK_CUR)
+
       # Next extra field: 8 bytes more.
       tam_fields -= 8
 
@@ -341,37 +388,31 @@ class AslParser(interface.FileObjectParser):
     _ = file_object.read(8)
 
     # Parsed section, we translate the read data to an appropriate format.
-    micro_seconds, _ = divmod(record_header.nanosec, 1000)
-    record_position = offset
-    message_id = record_header.asl_message_id
+    micro_seconds, _ = divmod(record_struct.nanosec, 1000)
 
     # Parsing the dynamic values (text or pointers to position with text).
     # The first four are always the host, sender, facility, and message.
     number_of_values = len(values)
-
     if number_of_values < 4:
       parser_mediator.ProduceParseError(
-          u'Less than four values read from an ASL event.')
+          u'less than four values read from an ASL event.')
+
+    computer_name = u'N/A'
+    sender = u'N/A'
+    facility = u'N/A'
+    message = u'N/A'
 
     if number_of_values >= 1:
-      computer_name = values[0]
-    else:
-      computer_name = u'N/A'
+      computer_name = values[0].decode(u'utf-8')
 
     if number_of_values >= 2:
-      sender = values[1]
-    else:
-      sender = u'N/A'
+      sender = values[1].decode(u'utf-8')
 
     if number_of_values >= 3:
-      facility = values[2]
-    else:
-      facility = u'N/A'
+      facility = values[2].decode(u'utf-8')
 
     if number_of_values >= 4:
-      message = values[3]
-    else:
-      message = u'N/A'
+      message = values[3].decode(u'utf-8')
 
     # If the entry has an extra fields, they works as a pairs:
     # The first is the name of the field and the second the value.
@@ -387,13 +428,15 @@ class AslParser(interface.FileObjectParser):
         parser_mediator.ProduceParseError(
             u'Unable to decode all ASL values in the extra information fields.')
 
-    # Return the event and the offset for the next entry.
     event_object = AslEvent(
-        record_header.timestamp, record_position, message_id,
-        record_header.level, record_header, record_header.read_uid,
-        record_header.read_gid, computer_name, sender, facility, message,
-        extra_information, micro_seconds=micro_seconds)
-    return (event_object, record_header.next_offset)
+        record_struct.timestamp, offset, record_struct.asl_message_id,
+        record_struct.level, record_struct.pid, record_struct.uid,
+        record_struct.gid, record_struct.read_uid, record_struct.read_gid,
+        computer_name, sender, facility, message, extra_information,
+        micro_seconds=micro_seconds)
+    parser_mediator.ProduceEvent(event_object)
+
+    return (event_object, record_struct.next_offset)
 
 
 manager.ParsersManager.RegisterParser(AslParser)

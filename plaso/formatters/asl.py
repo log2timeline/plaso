@@ -79,6 +79,7 @@ class AslFormatter(interface.ConditionalEventFormatter):
     if read_gid == 0xffffffff:
       event_values[u'read_gid'] = u'ALL'
 
+    # TODO: get the real name for the user of the group having the uid or gid.
     return self._ConditionalFormatMessages(event_values)
 
 
