@@ -34,7 +34,8 @@ class SerializedDataStream(test_lib.StorageTestCase):
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
     stream_name = u'plaso_proto.000003'
-    data_stream = zip_file._SerializedDataStream(zip_file_object, stream_name)
+    data_stream = zip_file._SerializedDataStream(
+        zip_file_object, test_file, stream_name)
 
     # The plaso_index.000003 stream contains 2 protobuf serialized
     # event objects. One at offset 0 of size 271 (including the 4 bytes of
@@ -73,7 +74,8 @@ class SerializedDataStream(test_lib.StorageTestCase):
       data_stream.ReadEntry()
 
     stream_name = u'plaso_proto.000009'
-    data_stream = zip_file._SerializedDataStream(zip_file_object, stream_name)
+    data_stream = zip_file._SerializedDataStream(
+        zip_file_object, test_file, stream_name)
 
     with self.assertRaises(IOError):
       data_stream.ReadEntry()

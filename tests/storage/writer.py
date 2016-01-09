@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage writer."""
 
-import tempfile
+import os
 import unittest
 import zipfile
 
@@ -11,6 +11,7 @@ from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.storage import writer
 
+from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
@@ -35,19 +36,21 @@ class FileStorageWriterTest(unittest.TestCase):
 
     test_queue_producer.SignalAbort()
 
-    with tempfile.NamedTemporaryFile() as temp_file:
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
       storage_writer = writer.FileStorageWriter(test_queue, temp_file)
       storage_writer.WriteEventObjects()
 
-      z_file = zipfile.ZipFile(temp_file, 'r', zipfile.ZIP_DEFLATED)
+      zip_file = zipfile.ZipFile(
+          temp_file, mode='r', compression=zipfile.ZIP_DEFLATED)
 
-      expected_z_filename_list = [
+      expected_filename_list = [
           u'plaso_index.000001', u'plaso_meta.000001', u'plaso_proto.000001',
           u'plaso_timestamps.000001', u'serializer.txt']
 
-      z_filename_list = sorted(z_file.namelist())
-      self.assertEqual(len(z_filename_list), 5)
-      self.assertEqual(z_filename_list, expected_z_filename_list)
+      filename_list = sorted(zip_file.namelist())
+      self.assertEqual(len(filename_list), 5)
+      self.assertEqual(filename_list, expected_filename_list)
 
 
 # TODO: add BypassStorageWriterTest
