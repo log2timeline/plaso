@@ -582,7 +582,7 @@ class StorageMediaTool(tools.CLITool):
       if print_header:
         self._output_writer.Write(
             u'The following Volume Shadow Snapshots (VSS) were found:\n'
-            u'Identifier\tVSS store identifier\t\t\tCreation Time\n')
+            u'Identifier\t\tCreation Time\n')
 
         for volume_identifier in volume_identifiers:
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
@@ -591,14 +591,19 @@ class StorageMediaTool(tools.CLITool):
                 u'Volume missing for identifier: {0:s}.'.format(
                     volume_identifier))
 
-          vss_identifier = volume.GetAttribute(u'identifier')
           vss_creation_time = volume.GetAttribute(u'creation_time')
           vss_creation_time = timelib.Timestamp.FromFiletime(
               vss_creation_time.value)
           vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
               vss_creation_time)
-          self._output_writer.Write(u'{0:s}\t\t{1:s}\t{2:s}\n'.format(
-              volume.identifier, vss_identifier.value, vss_creation_time))
+
+          if volume.HasExternalData():
+            external_data = u'\tWARNING: data stored outside volume'
+          else:
+            external_data = u''
+
+          self._output_writer.Write(u'{0:s}\t\t\t{1:s}{2:s}\n'.format(
+              volume.identifier, vss_creation_time, external_data))
 
         self._output_writer.Write(u'\n')
 
