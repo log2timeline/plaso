@@ -67,7 +67,8 @@ class WinJobParser(interface.FileObjectParser):
       0x0600: u'Windows Vista',
       0x0601: u'Windows 7',
       0x0602: u'Windows 8',
-      0x0603: u'Windows 8.1'
+      0x0603: u'Windows 8.1',
+      0x0a00: u'Windows 10',
   }
 
   _JOB_FIXED_STRUCT = construct.Struct(
