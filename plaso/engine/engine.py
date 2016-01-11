@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """The processing engine."""
 
+import logging
+
 from dfvfs.helpers import file_system_searcher
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -43,9 +46,9 @@ class BaseEngine(object):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec: The source path specification (instance of
+      source_path_spec: the source path specification (instance of
                         dfvfs.PathSpec) of the file system.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
+      resolver_context: optional resolver context (instance of dfvfs.Context).
                         The default is None which will use the built in context
                         which is not multi process safe. Note that every thread
                         or process must have its own resolver context.
@@ -59,10 +62,10 @@ class BaseEngine(object):
       the base location of the file system.
 
     Raises:
-      RuntimeError: if source path specification is not set.
+      RuntimeError: if source file system path specification is not set.
     """
     if not source_path_spec:
-      raise RuntimeError(u'Missing source.')
+      raise RuntimeError(u'Missing source path specification.')
 
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
         source_path_spec, resolver_context=resolver_context)
@@ -81,14 +84,18 @@ class BaseEngine(object):
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
+      resolver_context: optional resolver context (instance of dfvfs.Context).
                         The default is None which will use the built in context
                         which is not multi process safe. Note that every thread
                         or process must have its own resolver context.
     """
     for source_path_spec in source_path_specs:
-      file_system, mount_point = self.GetSourceFileSystem(
-          source_path_spec, resolver_context=resolver_context)
+      try:
+        file_system, mount_point = self.GetSourceFileSystem(
+            source_path_spec, resolver_context=resolver_context)
+      except (RuntimeError, dfvfs_errors.BackEndError) as exception:
+        logging.error(exception)
+        continue
 
       try:
         searcher = file_system_searcher.FileSystemSearcher(
