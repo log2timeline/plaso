@@ -28,7 +28,7 @@ LIBYAL_DEPENDENCIES = {
     u'pysmraw': 20140612,
     u'pyvhdi': 20131210,
     u'pyvmdk': 20140421,
-    u'pyvshadow': 20131209}
+    u'pyvshadow': 20160109}
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
