@@ -18,18 +18,22 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
+    self._test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
 
   def testOutput(self):
+    """Tests the Output function."""
     with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'pstorage.plaso')
+
       # Copy events to pstorage dump.
-      with storage_zip_file.StorageFile(
-          self.test_filename, read_only=True) as storage_file:
+      storage_file = storage_zip_file.StorageFile(
+          self._test_filename, read_only=True)
+
+      with storage_file:
         output_mediator = self._CreateOutputMediator(storage_file=storage_file)
         output_module = pstorage.PlasoStorageOutputModule(output_mediator)
 
-        plaso_file = os.path.join(temp_directory, u'pstorage.plaso')
-        output_module.SetFilePath(plaso_file)
+        output_module.SetFilePath(temp_file)
 
         with event_buffer.EventBuffer(
             output_module, check_dedups=False) as output_buffer:
@@ -38,8 +42,8 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
       # Make sure original and dump have the same events.
       original = storage_zip_file.StorageFile(
-          self.test_filename, read_only=True)
-      dump = storage_zip_file.StorageFile(plaso_file, read_only=True)
+          self._test_filename, read_only=True)
+      dump = storage_zip_file.StorageFile(temp_file, read_only=True)
       event_object_original = original.GetSortedEntry()
       event_object_dump = dump.GetSortedEntry()
       original_list = []
