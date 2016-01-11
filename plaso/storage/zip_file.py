@@ -181,16 +181,18 @@ class _SerializedDataStream(object):
   # The maximum serialized data size (40 MiB).
   _MAXIMUM_DATA_SIZE = 40 * 1024 * 1024
 
-  def __init__(self, zip_file, stream_name):
+  def __init__(self, zip_file, storage_file_path, stream_name):
     """Initializes a serialized data stream object.
 
     Args:
       zip_file: the ZIP file object that contains the stream.
+      storage_file_path: string containing the path of the storage file.
       stream_name: string containing the name of the stream.
     """
     super(_SerializedDataStream, self).__init__()
     self._entry_index = 0
     self._file_object = None
+    self._path = os.path.dirname(os.path.abspath(storage_file_path))
     self._stream_name = stream_name
     self._stream_offset = 0
     self._zip_file = zip_file
@@ -328,10 +330,13 @@ class _SerializedDataStream(object):
     self._file_object.close()
     self._file_object = None
 
+    current_working_directory = os.getcwd()
     try:
+      os.chdir(self._path)
       self._zip_file.write(self._stream_name)
     finally:
       os.remove(self._stream_name)
+      os.chdir(current_working_directory)
 
     return offset
 
@@ -346,7 +351,8 @@ class _SerializedDataStream(object):
     Raises:
       IOError: if the serialized data stream cannot be written.
     """
-    self._file_object = open(self._stream_name, 'wb')
+    stream_file_path = os.path.join(self._path, self._stream_name)
+    self._file_object = open(stream_file_path, 'wb')
     return self._file_object.tell()
 
 
@@ -676,6 +682,7 @@ class ZIPStorageFile(object):
     self._event_object_streams = {}
     self._offset_tables = {}
     self._offset_tables_lfu = []
+    self._path = None
     self._timestamp_tables = {}
     self._timestamp_tables_lfu = []
     self._zipfile = None
@@ -747,7 +754,8 @@ class ZIPStorageFile(object):
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-      data_stream = _SerializedDataStream(self._zipfile, stream_name)
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._path, stream_name)
       self._event_object_streams[stream_number] = data_stream
 
     return data_stream
@@ -849,9 +857,11 @@ class ZIPStorageFile(object):
     if self._zipfile:
       raise IOError(u'ZIP file already opened.')
 
+    self._path = path
+
     try:
       self._zipfile = zipfile.ZipFile(
-          path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
+          self._path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
 
     except zipfile.BadZipfile as exception:
@@ -935,14 +945,14 @@ class StorageFile(ZIPStorageFile):
     """Initializes the storage file.
 
     Args:
-      output_file: The name of the output file.
-      buffer_size: Optional maximum size of a single storage (protobuf) file.
+      output_file: a string containing the name of the output file.
+      buffer_size: optional maximum size of a single storage (protobuf) file.
                    The default is 0, which indicates no limit.
-      read_only: Optional boolean to indicate we are opening the storage file
+      read_only: optional boolean to indicate we are opening the storage file
                  for reading only.
-      pre_obj: Optional preprocessing object that gets stored inside
+      pre_obj: optional preprocessing object that gets stored inside
                the storage file.
-      serializer_format: Optional storage serializer format.
+      serializer_format: optional storage serializer format.
 
     Raises:
       IOError: if we open up the file in read only mode and the file does
@@ -1187,7 +1197,7 @@ class StorageFile(ZIPStorageFile):
     Args:
       path: string containing the path of the storage file.
       access_mode: optional string indicating the access mode.
-      serializer_format: Optional storage serializer format.
+      serializer_format: optional storage serializer format.
 
     Raises:
       IOError: if the file is opened in read only mode and the file does
@@ -1286,7 +1296,7 @@ class StorageFile(ZIPStorageFile):
     if not self._HasStream(stream_name):
       raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_offset)
     return data_stream.ReadEntry()
 
@@ -1342,7 +1352,7 @@ class StorageFile(ZIPStorageFile):
     """Set the serializer format.
 
     Args:
-      serializer_format: The storage serializer format.
+      serializer_format: the storage serializer format.
 
     Raises:
       ValueError: if the serializer format is not supported.
@@ -1390,7 +1400,7 @@ class StorageFile(ZIPStorageFile):
       self._serializers_profiler.StartTiming(u'write')
 
     stream_name = u'plaso_proto.{0:06d}'.format(self._file_number)
-    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
     try:
       for _ in range(len(self._buffer)):
@@ -1497,7 +1507,7 @@ class StorageFile(ZIPStorageFile):
       event_object: an event object (instance of EventObject).
 
     Raises:
-      IOError: When trying to write to a closed storage file.
+      IOError: when trying to write to a closed storage file.
     """
     if not self._zipfile:
       raise IOError(u'Trying to add an entry to a closed storage file.')
@@ -1655,7 +1665,7 @@ class StorageFile(ZIPStorageFile):
     if not self._HasStream(stream_name):
       return []
 
-    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
 
     information = []
     preprocess_object = self._ReadPreprocessObject(data_stream)
@@ -1688,7 +1698,8 @@ class StorageFile(ZIPStorageFile):
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-      data_stream = _SerializedDataStream(self._zipfile, stream_name)
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._path, stream_name)
 
       event_tag = self._ReadEventTag(data_stream)
       while event_tag:
@@ -1736,7 +1747,7 @@ class StorageFile(ZIPStorageFile):
     """Store an analysis report.
 
     Args:
-      analysis_report: An analysis report object (instance of AnalysisReport).
+      analysis_report: an analysis report object (instance of AnalysisReport).
     """
     report_number = 1
     for name in self._GetStreamNames():
@@ -1829,7 +1840,8 @@ class StorageFile(ZIPStorageFile):
         if not self._HasStream(stream_name):
           raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-        data_stream = _SerializedDataStream(self._zipfile, stream_name)
+        data_stream = _SerializedDataStream(
+            self._zipfile, self._path, stream_name)
         # TODO: replace 0 by the actual event tag entry index.
         # This is for code consistency rather then a functional purpose.
         data_stream.SeekEntryAtOffset(0, tag_index_value.offset)
@@ -1871,7 +1883,7 @@ class StorageFile(ZIPStorageFile):
         self._zipfile, stream_name)
 
     stream_name = u'plaso_tagging.{0:06d}'.format(tag_number)
-    data_stream = _SerializedDataStream(self._zipfile, stream_name)
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
