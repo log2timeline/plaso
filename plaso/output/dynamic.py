@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Contains a formatter for a dynamic output module for plaso."""
 
-import logging
 import re
 
 from plaso.lib import errors
@@ -17,7 +16,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
   DESCRIPTION = (
       u'Dynamic selection of fields for a separated value output format.')
 
-  FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
+  FORMAT_ATTRIBUTE_RE = re.compile(r'{([^}]+)}')
 
   # TODO: Evaluate which fields should be included by default.
   _DEFAULT_FIELDS = [
@@ -55,7 +54,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
   }
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes an output module object.
 
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
@@ -68,23 +67,23 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the date.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the date field.
+    Returns:
+      A string containing the value for the date field.
     """
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
           event_object.timestamp, self._output_mediator.timezone,
           raise_error=True)
     except OverflowError as exception:
-      logging.error((
-          u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2!s}:{3!s} triggered the exception.').format(
-              event_object.timestamp, exception,
-              getattr(event_object, u'store_number', u'N/A'),
-              getattr(event_object, u'store_index', u'N/A')))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable date '
+          u'with error: {1:s}. Defaulting to: "0000-00-00"').format(
+              event_object.timestamp, exception))
+
       return u'0000-00-00'
+
     return u'{0:04d}-{1:02d}-{2:02d}'.format(
         date_use.year, date_use.month, date_use.day)
 
@@ -92,10 +91,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the date and time in ISO 8601 format.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the date field.
+    Returns:
+      A string containing the value for the date field.
     """
     try:
       return timelib.Timestamp.CopyToIsoFormat(
@@ -103,12 +102,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
           raise_error=True)
 
     except OverflowError as exception:
-      logging.error((
-          u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2!s}:{3!s} triggered the exception.').format(
-              event_object.timestamp, exception,
-              getattr(event_object, u'store_number', u'N/A'),
-              getattr(event_object, u'store_index', u'N/A')))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable date and time '
+          u'with error: {1:s}. Defaulting to: "0000-00-00T00:00:00"').format(
+              event_object.timestamp, exception))
 
       return u'0000-00-00T00:00:00'
 
@@ -116,22 +113,50 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the hostname.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the hostname field.
+    Returns:
+      A string containing the value for the hostname field.
     """
     hostname = self._output_mediator.GetHostname(event_object)
     return self._SanitizeField(hostname)
+
+  def _FormatInode(self, event_object):
+    """Formats the inode.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Returns:
+      A string containing the value for the inode field.
+    """
+    inode = getattr(event_object, u'inode', u'-')
+    if inode == u'-':
+      if hasattr(event_object, u'pathspec') and hasattr(
+          event_object.pathspec, u'image_inode'):
+        inode = event_object.pathspec.image_inode
+
+    return inode
+
+  def _FormatMACB(self, event_object):
+    """Formats the legacy MACB representation.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Returns:
+      A string containing the value for the MACB field.
+    """
+    return self._output_mediator.GetMACBRepresentation(event_object)
 
   def _FormatMessage(self, event_object):
     """Formats the message.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the message field.
+    Returns:
+      A string containing the value for the message field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
@@ -149,10 +174,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the short message.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the short message field.
+    Returns:
+      A string containing the value for the short message field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
@@ -170,10 +195,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the source.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the source field.
+    Returns:
+      A string containing the value for the source field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
@@ -191,10 +216,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the short source.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the short source field.
+    Returns:
+      A string containing the value for the short source field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
@@ -208,44 +233,16 @@ class DynamicOutputModule(interface.LinearOutputModule):
 
     return self._SanitizeField(source_short)
 
-  def _FormatInode(self, event_object):
-    """Formats the inode.
-
-    Args:
-      event_object: the event object (instance of EventObject).
-
-     Returns:
-       A string containing the value for the inode field.
-    """
-    inode = getattr(event_object, 'inode', '-')
-    if inode == '-':
-      if hasattr(event_object, 'pathspec') and hasattr(
-          event_object.pathspec, 'image_inode'):
-        inode = event_object.pathspec.image_inode
-
-    return inode
-
-  def _FormatMACB(self, event_object):
-    """Formats the legacy MACB representation.
-
-    Args:
-      event_object: the event object (instance of EventObject).
-
-     Returns:
-       A string containing the value for the MACB field.
-    """
-    return self._output_mediator.GetMACBRepresentation(event_object)
-
   def _FormatTag(self, event_object):
     """Formats the event tag.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the event tag field.
+    Returns:
+      A string containing the value for the event tag field.
     """
-    tag = getattr(event_object, 'tag', None)
+    tag = getattr(event_object, u'tag', None)
 
     if not tag:
       return u'-'
@@ -256,23 +253,23 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the timestamp.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the timestamp field.
+    Returns:
+      A string containing the value for the timestamp field.
     """
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
           event_object.timestamp, self._output_mediator.timezone,
           raise_error=True)
     except OverflowError as exception:
-      logging.error((
-          u'Unable to copy {0:d} into a human readable timestamp with error: '
-          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
-              event_object.timestamp, exception,
-              getattr(event_object, 'store_number', 0),
-              getattr(event_object, 'store_index', 0)))
+      self._ReportEventError(event_object, (
+          u'unable to copy timestamp: {0:d} to a human readable time '
+          u'with error: {1:s}. Defaulting to: "00:00:00"').format(
+              event_object.timestamp, exception))
+
       return u'00:00:00'
+
     return u'{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)
 
@@ -280,21 +277,21 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the timestamp description.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the timestamp description field.
+    Returns:
+      A string containing the value for the timestamp description field.
     """
-    return getattr(event_object, 'timestamp_desc', '-')
+    return getattr(event_object, u'timestamp_desc', u'-')
 
   def _FormatUsername(self, event_object):
     """Formats the username.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the username field.
+    Returns:
+      A string containing the value for the username field.
     """
     username = self._output_mediator.GetUsername(event_object)
     return self._SanitizeField(username)
@@ -303,10 +300,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Formats the timezone.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
 
-     Returns:
-       A string containing the value for the timezone field.
+    Returns:
+      A string containing the value for the timezone field.
     """
     return self._output_mediator.timezone
 
@@ -318,8 +315,8 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Args:
       field: the string that makes up the field.
 
-     Returns:
-       A string containing the value for the field.
+    Returns:
+      A string containing the value for the field.
     """
     if self._field_delimiter:
       return field.replace(self._field_delimiter, u' ')
@@ -344,7 +341,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
     """
     output_values = []
     for field in self._fields:
