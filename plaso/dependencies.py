@@ -28,7 +28,7 @@ LIBYAL_DEPENDENCIES = {
     u'pysmraw': 20140612,
     u'pyvhdi': 20131210,
     u'pyvmdk': 20140421,
-    u'pyvshadow': 20131209}
+    u'pyvshadow': 20160109}
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
@@ -39,7 +39,7 @@ PYTHON_DEPENDENCIES = [
     (u'binplist', u'__version__', u'0.1.4', None),
     (u'construct', u'__version__', u'2.5.2', None),
     (u'dateutil', u'__version__', u'1.5', None),
-    (u'dfvfs', u'__version__', u'20151227', None),
+    (u'dfvfs', u'__version__', u'20160108', None),
     (u'dpkt', u'__version__', u'1.8', None),
     # The protobuf module does not appear to have version information.
     (u'google.protobuf', u'', u'', None),
