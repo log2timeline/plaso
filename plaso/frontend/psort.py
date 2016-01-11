@@ -528,9 +528,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         if hasattr(information, u'counter'):
           counter[u'Stored Events'] += information.counter[u'total']
 
-      if not self._quiet_mode:
-        logging.info(u'Output processing is done.')
-
       # Get all reports and tags from analysis plugins.
       self._ProcessAnalysisPlugins(
           analysis_plugins, analysis_report_incoming_queue, storage_file,
