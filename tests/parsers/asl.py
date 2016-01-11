@@ -11,12 +11,12 @@ from plaso.parsers import asl
 from tests.parsers import test_lib
 
 
-class AslParserTest(test_lib.ParserTestCase):
+class ASLParserTest(test_lib.ParserTestCase):
   """Tests for Apple System Log file parser."""
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._parser = asl.AslParser()
+    self._parser = asl.ASLParser()
 
   def testParse(self):
     """Tests the Parse function."""

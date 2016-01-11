@@ -15,7 +15,7 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class AslEvent(time_events.PosixTimeEvent):
+class ASLEvent(time_events.PosixTimeEvent):
   """Convenience class for an ASL event.
 
   Attributes:
@@ -62,7 +62,7 @@ class AslEvent(time_events.PosixTimeEvent):
                          to the event.
       micro_seconds: optional number of micro seconds.
     """
-    super(AslEvent, self).__init__(
+    super(ASLEvent, self).__init__(
         posix_time, eventdata.EventTimestamp.CREATION_TIME,
         micro_seconds=micro_seconds)
     self.computer_name = computer_name
@@ -81,7 +81,7 @@ class AslEvent(time_events.PosixTimeEvent):
     self.user_sid = u'{0:d}'.format(uid)
 
 
-class AslParser(interface.FileObjectParser):
+class ASLParser(interface.FileObjectParser):
   """Parser for ASL log files."""
 
   _INITIAL_FILE_OFFSET = None
@@ -210,7 +210,7 @@ class AslParser(interface.FileObjectParser):
     header_last_offset = header.last_offset
 
     previous_offset = offset
-    event_object, offset = self.ReadAslEvent(
+    event_object, offset = self.ReadASLEvent(
         parser_mediator, file_object, offset)
     while event_object:
       # Sanity check, the last read element must be the same as
@@ -220,10 +220,10 @@ class AslParser(interface.FileObjectParser):
             u'Unable to parse header. Last element header does not match '
             u'header offset.')
       previous_offset = offset
-      event_object, offset = self.ReadAslEvent(
+      event_object, offset = self.ReadASLEvent(
           parser_mediator, file_object, offset)
 
-  def ReadAslEvent(self, parser_mediator, file_object, offset):
+  def ReadASLEvent(self, parser_mediator, file_object, offset):
     """Reads an ASL record at a specific offset.
 
     Args:
@@ -428,7 +428,7 @@ class AslParser(interface.FileObjectParser):
         parser_mediator.ProduceParseError(
             u'Unable to decode all ASL values in the extra information fields.')
 
-    event_object = AslEvent(
+    event_object = ASLEvent(
         record_struct.timestamp, offset, record_struct.asl_message_id,
         record_struct.level, record_struct.pid, record_struct.uid,
         record_struct.gid, record_struct.read_uid, record_struct.read_gid,
@@ -439,4 +439,4 @@ class AslParser(interface.FileObjectParser):
     return (event_object, record_struct.next_offset)
 
 
-manager.ParsersManager.RegisterParser(AslParser)
+manager.ParsersManager.RegisterParser(ASLParser)
