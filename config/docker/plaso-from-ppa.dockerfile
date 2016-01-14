@@ -14,7 +14,6 @@ RUN add-apt-repository -y ppa:gift/stable
 
 RUN apt-get update && apt-get -y upgrade
 
-
 RUN apt-get -y install python-plaso
 RUN apt-get clean &&  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 

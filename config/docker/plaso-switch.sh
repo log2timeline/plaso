@@ -3,13 +3,13 @@
 # Since docker run can only have one "entry point"
 # this script enables calling either log2timeline, or
 # other utility scripts
-# Ex: 
+# Ex:
 # docker run <container_id> log2timeline
 # docker run <container_id> psort
 # docker run <container_id> pinfo
 # docker run <container_id> preg
 # docker run <container_id> preg
-# 
+#
 # or, if one wants to run it on actual data:
 # mkdir -p /data/artifacts  # put your artifacts to parse here
 # mkdir -p /data/results    # plaso dump will appear hear
