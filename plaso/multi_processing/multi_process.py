@@ -749,7 +749,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # The storage writer process sometimes needs some additional time to
     # close the storage file.
-    while not self._storage_writer_complete_event.is_set():
+    while not abort and not self._storage_writer_complete_event.is_set():
       logging.info(u'Waiting for storage writer to close storage file.')
       time.sleep(self._STATUS_CHECK_SLEEP)
 
