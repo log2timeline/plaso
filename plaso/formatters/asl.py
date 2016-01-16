@@ -7,7 +7,7 @@ from plaso.lib import errors
 from plaso.lib import py2to3
 
 
-class AslFormatter(interface.ConditionalEventFormatter):
+class ASLFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Apple System Log (ASL) log event."""
 
   DATA_TYPE = u'mac:asl:event'
@@ -79,7 +79,8 @@ class AslFormatter(interface.ConditionalEventFormatter):
     if read_gid == 0xffffffff:
       event_values[u'read_gid'] = u'ALL'
 
+    # TODO: get the real name for the user of the group having the uid or gid.
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(AslFormatter)
+manager.FormattersManager.RegisterFormatter(ASLFormatter)
