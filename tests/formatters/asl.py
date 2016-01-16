@@ -9,17 +9,17 @@ from plaso.formatters import asl
 from tests.formatters import test_lib
 
 
-class AslFormatterTest(test_lib.EventFormatterTestCase):
+class ASLFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Apple System Log (ASL) log event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = asl.AslFormatter()
+    event_formatter = asl.ASLFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = asl.AslFormatter()
+    event_formatter = asl.ASLFormatter()
 
     expected_attribute_names = [
         u'message_id', u'level', u'user_sid', u'group_id', u'read_uid',
