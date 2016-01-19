@@ -45,6 +45,10 @@ class TempDirectory(object):
 class TestCase(object):
   """Class that defines the test case object interface.
 
+  The test case defines what aspect of the plaso tools to test.
+  A test definition is used to provide parameters for the test
+  case so it can be easily run on different input files.
+
   Attributes:
     name: a string containing the name of the test case.
   """
@@ -96,7 +100,7 @@ class TestCase(object):
 
   @abc.abstractmethod
   def Run(self, test_definition):
-    """Runs the tests.
+    """Runs the test case with the parameters specified by the test definition.
 
     Args:
       test_definition: a test definition object (instance of TestDefinition).
@@ -308,7 +312,12 @@ class TestDefinitionReader(object):
 
 
 class TestLauncher(object):
-  """Class that implements the test launcher."""
+  """Class that implements the test launcher.
+
+  The test launches reads the test definitions from a file, looks up
+  the corresponding test cases in the test case manager and then runs
+  the test case with the parameters specified in the test definition.
+  """
 
   def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test launcher object.
@@ -374,7 +383,13 @@ class TestLauncher(object):
 
 
 class ExtractAndOutputTestCase(TestCase):
-  """Class that implements the extract and output test case."""
+  """Class that implements the extract and output test case.
+
+  The extract and output test case runs log2timeline to extract data
+  from a source, specified by the test definition. After the data has been
+  extracted pinfo and psort are run to validate if the resulting storage
+  file is readable.
+  """
 
   NAME = u'extract_and_output'
 
@@ -445,7 +460,7 @@ class ExtractAndOutputTestCase(TestCase):
     return True
 
   def Run(self, test_definition):
-    """Runs the tests.
+    """Runs the test case with the parameters specified by the test definition.
 
     Args:
       test_definition: a test definition object (instance of TestDefinition).
@@ -494,7 +509,7 @@ class ExtractAndOutputTestCase(TestCase):
       if not result:
         return False
 
-      # Check if the resulting storage file can be opened with pinfo.
+      # Check if the resulting storage file can be read with pinfo.
       stdout_file = os.path.join(
           temp_directory, u'{0:s}-pinfo.out'.format(
               test_definition.name))
@@ -523,7 +538,7 @@ class ExtractAndOutputTestCase(TestCase):
 
       # TODO: add support to compare storage file with a reference file.
 
-      # Check if the resulting storage file can be opened with psort.
+      # Check if the resulting storage file can be read with psort.
       stdout_file = os.path.join(
           temp_directory, u'{0:s}-psort.out'.format(
               test_definition.name))
@@ -554,7 +569,11 @@ class ExtractAndOutputTestCase(TestCase):
 
 
 class OutputTestCase(TestCase):
-  """Class that implements the output test case."""
+  """Class that implements the output test case.
+
+  The output test case runs psort on a storage file to its various
+  output modules.
+  """
 
   NAME = u'output'
 
@@ -605,7 +624,7 @@ class OutputTestCase(TestCase):
     return True
 
   def Run(self, test_definition):
-    """Runs the tests.
+    """Runs the test case with the parameters specified by the test definition.
 
     Args:
       test_definition: a test definition object (instance of TestDefinition).
