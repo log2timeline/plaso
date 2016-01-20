@@ -1538,8 +1538,11 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'event_object')
 
-    event_object_data = self._event_object_serializer.WriteSerialized(
-        event_object)
+    try:
+      event_object_data = self._event_object_serializer.WriteSerialized(
+          event_object)
+    except UnicodeDecodeError:
+      logging.error(u'Error with serialization')
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'event_object')
