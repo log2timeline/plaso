@@ -98,7 +98,7 @@ class CupsIppEvent(time_events.PosixTimeEvent):
       return
 
     for index, value in enumerate(values):
-      if ',' in value:
+      if u',' in value:
         values[index] = u'"{0:s}"'.format(value)
 
     try:
@@ -163,6 +163,7 @@ class CupsIppParser(interface.FileObjectParser):
   INTEGER_32 = construct.UBInt32(u'integer')
   TEXT = construct.PascalString(
       u'text',
+      encoding='ascii',
       length_field=construct.UBInt8(u'length'))
   BOOLEAN = construct.Struct(
       u'boolean_value',
@@ -229,21 +230,27 @@ class CupsIppParser(interface.FileObjectParser):
       data_dict.setdefault(pretty_name, []).append(value)
       name, value = self.ReadPair(parser_mediator, file_object)
 
-    if u'time-at-creation' in data_dict:
+    time_dict = {}
+    for key, value in data_dict.items():
+      if key.startswith(u'time-'):
+        time_dict[key] = value
+        del data_dict[key]
+
+    if u'time-at-creation' in time_dict:
       event_object = CupsIppEvent(
-          data_dict[u'time-at-creation'][0],
+          time_dict[u'time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-processing' in data_dict:
+    if u'time-at-processing' in time_dict:
       event_object = CupsIppEvent(
-          data_dict[u'time-at-processing'][0],
+          time_dict[u'time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-completed' in data_dict:
+    if u'time-at-completed' in time_dict:
       event_object = CupsIppEvent(
-          data_dict[u'time-at-completed'][0],
+          time_dict[u'time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
