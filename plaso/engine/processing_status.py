@@ -405,15 +405,20 @@ class ProcessingStatus(object):
     """Determines if the workers are running."""
     for worker_name, extraction_worker_status in iter(
         self._extraction_workers.items()):
+
       if (extraction_worker_status.status ==
           definitions.PROCESSING_STATUS_COMPLETED):
         logging.debug(u'{0:s} has completed.'.format(worker_name))
         continue
+      logging.debug(u'{0:s} is {1:s}.'.format(
+          worker_name, extraction_worker_status.status))
       if (extraction_worker_status.number_of_events_delta > 0 or
           extraction_worker_status.consumed_number_of_path_specs_delta > 0 or
           extraction_worker_status.produced_number_of_path_specs_delta > 0 or
           (extraction_worker_status.status ==
            definitions.PROCESSING_STATUS_HASHING)):
+        logging.debug(u'Workers are running.')
         return True
 
+    logging.debug(u'Workers are not running.')
     return False
