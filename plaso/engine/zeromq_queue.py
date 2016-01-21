@@ -6,6 +6,7 @@ import errno
 import logging
 import Queue
 import threading
+import time
 
 import zmq
 
@@ -827,7 +828,8 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
   """
 
   _SOCKET_TYPE = zmq.PULL
-  _DOWNSTREAM_QUEUE_MAX_TRIES = 3
+  _DOWNSTREAM_QUEUE_MAX_TRIES = 10
+  _DOWNSTREAM_QUEUE_SLEEP_TIME = 0.2
 
   def _ZeroMQResponder(self, source_queue, socket, terminate_event):
     """Listens for requests and replies to clients.
@@ -865,8 +867,9 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
           if retries >= self._DOWNSTREAM_QUEUE_MAX_TRIES:
             logging.error(u'Queue {0:s} unserved for too long, aborting'.format(
                 self.name))
-            return
+            break
           else:
+            time.sleep(self._DOWNSTREAM_QUEUE_SLEEP_TIME)
             continue
     logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
 
