@@ -26,6 +26,7 @@ import construct
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -38,17 +39,17 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # TODO: Only tested against CUPS IPP Mac OS X.
 
 
-class CupsIppEvent(time_events.PosixTimeEvent):
+class CupsIppEvent(time_events.TimestampEvent):
   """Convenience class for an cups ipp event."""
 
   DATA_TYPE = u'cups:ipp:event'
 
-  def __init__(self, posix_time, timestamp_description, data_dict):
+  def __init__(self, timestamp, timestamp_description, data_dict):
     """Initializes the event object.
 
     Args:
-      posix_time: the POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
+      timestamp: the timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       data_dict: Dictionary with all the pairs coming from IPP file.
         user: String with the system user name.
@@ -63,7 +64,7 @@ class CupsIppEvent(time_events.PosixTimeEvent):
         doc_type: String with the type of document.
         data_dict: Dictionary with all the parsed data coming from the file.
     """
-    super(CupsIppEvent, self).__init__(posix_time, timestamp_description)
+    super(CupsIppEvent, self).__init__(timestamp, timestamp_description)
     # TODO: Find a better solution than to have join for each attribute.
     self.user = self._ListToString(data_dict.get(u'user', None))
     self.owner = self._ListToString(data_dict.get(u'owner', None))
@@ -98,14 +99,10 @@ class CupsIppEvent(time_events.PosixTimeEvent):
       return
 
     for index, value in enumerate(values):
-      if ',' in value:
+      if u',' in value:
         values[index] = u'"{0:s}"'.format(value)
 
-    try:
-      return u', '.join(values)
-    except UnicodeDecodeError as exception:
-      logging.error(
-          u'Unable to parse log line, with error: {0:s}'.format(exception))
+    return u', '.join(values)
 
 
 class CupsIppParser(interface.FileObjectParser):
@@ -152,17 +149,19 @@ class CupsIppParser(interface.FileObjectParser):
   # Identification Groups.
   GROUP_LIST = [1, 2, 4, 5, 6, 7]
 
-  # Type ID.
-  TYPE_GENERAL_INTEGER = 32
-  TYPE_INTEGER = 33
-  TYPE_ENUMERATION = 35
-  TYPE_BOOL = 34
+  # Type ID, per cups source file ipp-support.c.
+  TYPE_GENERAL_INTEGER = 0x20
+  TYPE_INTEGER = 0x21
+  TYPE_BOOL = 0x22
+  TYPE_ENUMERATION = 0x23
+  TYPE_DATETIME = 0x31
 
   # Type of values that can be extracted.
   INTEGER_8 = construct.UBInt8(u'integer')
   INTEGER_32 = construct.UBInt32(u'integer')
   TEXT = construct.PascalString(
       u'text',
+      encoding='utf-8',
       length_field=construct.UBInt8(u'length'))
   BOOLEAN = construct.Struct(
       u'boolean_value',
@@ -172,6 +171,22 @@ class CupsIppParser(interface.FileObjectParser):
       u'integer_value',
       construct.Padding(1),
       INTEGER_32)
+
+  # This is an RFC 2579 datetime.
+  DATETIME = construct.Struct(
+      u'datetime',
+      construct.Padding(1),
+      construct.UBInt16(u'year'),
+      construct.UBInt8(u'month'),
+      construct.UBInt8(u'day'),
+      construct.UBInt8(u'hour'),
+      construct.UBInt8(u'minutes'),
+      construct.UBInt8(u'seconds'),
+      construct.UBInt8(u'deciseconds'),
+      construct.String(u'direction_from_utc', length=1, encoding='ascii'),
+      construct.UBInt8(u'hours_from_utc'),
+      construct.UBInt8(u'minutes_from_utc'),
+  )
 
   # Name of the pair.
   PAIR_NAME = construct.Struct(
@@ -229,22 +244,50 @@ class CupsIppParser(interface.FileObjectParser):
       data_dict.setdefault(pretty_name, []).append(value)
       name, value = self.ReadPair(parser_mediator, file_object)
 
-    if u'time-at-creation' in data_dict:
+    # TODO: Refactor to use a lookup table to do event production.
+    time_dict = {}
+    for key, value in data_dict.items():
+      if key.startswith(u'date-time-') or key.startswith(u'time-'):
+        time_dict[key] = value
+        del data_dict[key]
+
+    if u'date-time-at-creation' in time_dict:
       event_object = CupsIppEvent(
-          data_dict[u'time-at-creation'][0],
+          time_dict[u'date-time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-processing' in data_dict:
+    if u'date-time-at-processing' in time_dict:
       event_object = CupsIppEvent(
-          data_dict[u'time-at-processing'][0],
+          time_dict[u'date-time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-completed' in data_dict:
+    if u'date-time-at-completed' in time_dict:
       event_object = CupsIppEvent(
-          data_dict[u'time-at-completed'][0],
+          time_dict[u'date-time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME, data_dict)
+      parser_mediator.ProduceEvent(event_object)
+
+    if u'time-at-creation' in time_dict:
+      time_value = time_dict[u'time-at-creation'][0]
+      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+      event_object = CupsIppEvent(
+          timestamp, eventdata.EventTimestamp.CREATION_TIME, data_dict)
+      parser_mediator.ProduceEvent(event_object)
+
+    if u'time-at-processing' in time_dict:
+      time_value = time_dict[u'time-at-processing'][0]
+      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+      event_object = CupsIppEvent(
+          timestamp, eventdata.EventTimestamp.START_TIME, data_dict)
+      parser_mediator.ProduceEvent(event_object)
+
+    if u'time-at-completed' in time_dict:
+      time_value = time_dict[u'time-at-completed'][0]
+      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+      event_object = CupsIppEvent(
+          timestamp, eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
   def ReadPair(self, parser_mediator, file_object):
@@ -299,10 +342,18 @@ class CupsIppParser(interface.FileObjectParser):
       elif type_id == self.TYPE_BOOL:
         value = bool(self.BOOLEAN.parse_stream(file_object).integer)
 
+      elif type_id == self.TYPE_DATETIME:
+        datetime = self.DATETIME.parse_stream(file_object)
+        value = timelib.Timestamp.FromRFC2579Datetime(
+            datetime.year, datetime.month, datetime.day, datetime.hour,
+            datetime.minutes, datetime.seconds, datetime.deciseconds,
+            datetime.direction_from_utc, datetime.hours_from_utc,
+            datetime.minutes_from_utc)
+
       else:
         value = self.TEXT.parse_stream(file_object)
 
-    except (IOError, construct.FieldError):
+    except (IOError, UnicodeDecodeError, construct.FieldError):
       logging.warning(
           u'[{0:s}] Unsupported value in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
