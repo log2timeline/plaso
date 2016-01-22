@@ -102,11 +102,7 @@ class CupsIppEvent(time_events.TimestampEvent):
       if u',' in value:
         values[index] = u'"{0:s}"'.format(value)
 
-    try:
-      return u', '.join(values)
-    except UnicodeDecodeError as exception:
-      logging.error(
-          u'Unable to parse log line, with error: {0:s}'.format(exception))
+    return u', '.join(values)
 
 
 class CupsIppParser(interface.FileObjectParser):
