@@ -1525,11 +1525,10 @@ class StorageFile(ZIPStorageFile):
         return
     except UnicodeDecodeError:
       error_message = (
-        u'Unicode error while serializing event. It will not be included in '
-        u'output. Details: Event: {0:s} data type: {1:s} display name: {2:s} '
-        u'parser chain: {3:s}').format(
-            event_object[u'uuid'], event_object[u'data_type'],
-            event_object[u'display_name'], event_object[u'parser'])
+          u'Unicode error while serializing event. It will be excluded from '
+          u'output. Details: Event: "{0:s}" data type: "{1:s}" '
+          u'parser: "{2:s}"').format(
+              event_object.uuid, event_object.data_type, event_object.parser)
       logging.error(error_message)
       return
     finally:

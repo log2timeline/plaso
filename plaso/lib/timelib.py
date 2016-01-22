@@ -11,10 +11,11 @@ human readable form.
 
 import calendar
 import datetime
-import dateutil.parser
 import logging
 import time
 import pytz
+
+import dateutil.parser
 
 from plaso.lib import errors
 
@@ -605,6 +606,43 @@ class Timestamp(object):
 
     posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
     return cls.FromPosixTime(posix_time) + datetime_object.microsecond
+
+  @classmethod
+  def FromRFC2579Datetime(
+      cls, year, month, day, hour, minutes, seconds, deciseconds,
+      direction_from_utc, hours_from_utc, minutes_from_utc):
+    """Converts values from an RFC2579 time to a timestamp.
+
+    See https://tools.ietf.org/html/rfc2579.
+
+    Args:
+      year: An integer representing the year.
+      month: An integer between 1 and 12.
+      day: An integer representing the number of day in the month.
+      hour: An integer representing the hour, 0 <= hour < 24.
+      minutes: An integer, 0 <= minute < 60.
+      seconds: An integer, 0 <= second < 60.
+      deciseconds: An integer, 0 <= deciseconds < 10
+      direction_from_utc: An ascii character, either '+' or '-'.
+      hours_from_utc: An integer representing the number of hours the time is
+                      offset from UTC.
+      minutes_from_utc: An integer representing the number of seconds the time
+                        is offset from UTC.
+
+    Returns:
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
+
+    Raises:
+      TimestampError: if the timestamp cannot be created from the time parts.
+    """
+    microseconds = deciseconds * 100000
+    utc_offset_minutes = (hours_from_utc * 60) + minutes_from_utc
+    if direction_from_utc == u'-':
+      utc_offset_minutes = -utc_offset_minutes
+    timezone = pytz.FixedOffset(utc_offset_minutes)
+    return cls.FromTimeParts(
+        year, month, day, hour, minutes, seconds, microseconds, timezone)
 
   @classmethod
   def FromTimeParts(

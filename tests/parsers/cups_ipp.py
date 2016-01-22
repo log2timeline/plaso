@@ -36,13 +36,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.CREATION_TIME)
-    unicode_attributes = [
-      u'application', u'job_name', u'computer_name', u'doc_type',
-      u'job_id', u'owner', u'user', u'printer_id', u'uri',
-      u'date-time-at-completed']
-    event_attributes = event_object.GetValues()
-    for attribute in unicode_attributes:
-      self.assertIsInstance(event_attributes.get(attribute), unicode)
 
     self.assertEqual(event_object.application, u'LibreOffice')
     self.assertEqual(event_object.job_name, u'Assignament 1')
