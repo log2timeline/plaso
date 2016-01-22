@@ -48,7 +48,8 @@ class CupsIppEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: the timestamp of the event.
+      timestamp: the timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
       timestamp_description: The usage string for the timestamp value.
       data_dict: Dictionary with all the pairs coming from IPP file.
         user: String with the system user name.
@@ -247,6 +248,7 @@ class CupsIppParser(interface.FileObjectParser):
       data_dict.setdefault(pretty_name, []).append(value)
       name, value = self.ReadPair(parser_mediator, file_object)
 
+    # TODO: Refactor to use a lookup table to do jevent production.
     time_dict = {}
     for key, value in data_dict.items():
       if key.startswith(u'date-time-') or key.startswith(u'time-'):
