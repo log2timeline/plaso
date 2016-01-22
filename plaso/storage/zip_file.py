@@ -1512,6 +1512,29 @@ class StorageFile(ZIPStorageFile):
     if not self._zipfile:
       raise IOError(u'Trying to add an entry to a closed storage file.')
 
+    # We try to serialize the event object first, so we can skip some
+    # processing if it's invalid.
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'event_object')
+    try:
+      event_object_data = self._event_object_serializer.WriteSerialized(
+          event_object)
+      # TODO: Re-think this approach with the re-design of the storage.
+      # Check if the event object failed to serialize (none is returned).
+      if event_object_data is None:
+        return
+    except UnicodeDecodeError:
+      error_message = (
+          u'Unicode error while serializing event. It will be excluded from '
+          u'output. Details: Event: "{0:s}" data type: "{1:s}" '
+          u'parser: "{2:s}"').format(
+              event_object.uuid, event_object.data_type, event_object.parser)
+      logging.error(error_message)
+      return
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(u'event_object')
+
     if event_object.timestamp > self._buffer_last_timestamp:
       self._buffer_last_timestamp = event_object.timestamp
 
@@ -1534,20 +1557,6 @@ class StorageFile(ZIPStorageFile):
     self._count_data_type[event_object.data_type] += 1
     parser = attributes.get(u'parser', u'unknown_parser')
     self._count_parser[parser] += 1
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'event_object')
-
-    event_object_data = self._event_object_serializer.WriteSerialized(
-        event_object)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'event_object')
-
-    # TODO: Re-think this approach with the re-design of the storage.
-    # Check if the event object failed to serialize (none is returned).
-    if event_object_data is None:
-      return
 
     heapq.heappush(
         self._buffer, (event_object.timestamp, event_object_data))

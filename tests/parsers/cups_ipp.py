@@ -36,6 +36,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.CREATION_TIME)
+
     self.assertEqual(event_object.application, u'LibreOffice')
     self.assertEqual(event_object.job_name, u'Assignament 1')
     self.assertEqual(event_object.computer_name, u'localhost')
