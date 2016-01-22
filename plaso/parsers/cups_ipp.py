@@ -248,7 +248,7 @@ class CupsIppParser(interface.FileObjectParser):
       data_dict.setdefault(pretty_name, []).append(value)
       name, value = self.ReadPair(parser_mediator, file_object)
 
-    # TODO: Refactor to use a lookup table to do jevent production.
+    # TODO: Refactor to use a lookup table to do event production.
     time_dict = {}
     for key, value in data_dict.items():
       if key.startswith(u'date-time-') or key.startswith(u'time-'):
