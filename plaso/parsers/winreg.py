@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
-from plaso.dfwinreg import errors as dfwinreg_errors
-from plaso.dfwinreg import interface as dfwinreg_interface
-from plaso.dfwinreg import regf as dfwinreg_regf
-from plaso.dfwinreg import registry as dfwinreg_registry
+from dfwinreg import errors as dfwinreg_errors
+from dfwinreg import interface as dfwinreg_interface
+from dfwinreg import regf as dfwinreg_regf
+from dfwinreg import registry as dfwinreg_registry
+
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager

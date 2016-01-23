@@ -5,9 +5,10 @@
 import unittest
 
 from dfvfs.path import fake_path_spec
+from dfwinreg import definitions as dfwinreg_definitions
+from dfwinreg import fake as dfwinreg_fake
+from dfwinreg import filetime as dfwinreg_filetime
 
-from plaso.dfwinreg import definitions as dfwinreg_definitions
-from plaso.dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
@@ -56,7 +57,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
-    filetime = dfwinreg_fake.Filetime()
+    filetime = dfwinreg_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         u'AppCompatCache', key_path=key_path,

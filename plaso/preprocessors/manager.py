@@ -5,10 +5,10 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.helpers import windows_path_resolver
+from dfwinreg import interface as dfwinreg_interface
+from dfwinreg import regf as dfwinreg_regf
+from dfwinreg import registry as dfwinreg_registry
 
-from plaso.dfwinreg import interface as dfwinreg_interface
-from plaso.dfwinreg import regf as dfwinreg_regf
-from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.lib import errors
 
 
