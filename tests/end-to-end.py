@@ -87,7 +87,7 @@ class TestCase(object):
 
   @abc.abstractmethod
   def ReadAttributes(self, test_definition_reader, test_definition):
-    """Reads the test definition attributes.
+    """Reads the test definition attributes into to the test definition.
 
     Args:
       test_definition_reader: a test definition reader object (instance of
@@ -106,7 +106,7 @@ class TestCase(object):
       test_definition: a test definition object (instance of TestDefinition).
 
     Returns:
-      A boolean value indicating the tests ran successfully.
+      A boolean value indicating the test ran successfully.
     """
 
 
@@ -226,7 +226,11 @@ class TestDefinition(object):
 
 
 class TestDefinitionReader(object):
-  """Class that implements a test definition reader."""
+  """Class that implements a test definition reader.
+
+  The test definition reader reads tests definitions from a configuration
+  file.
+  """
 
   def __init__(self, tools_path, test_results_path, debug_output=False):
     """Initializes a test definition reader object.
@@ -314,7 +318,7 @@ class TestDefinitionReader(object):
 class TestLauncher(object):
   """Class that implements the test launcher.
 
-  The test launches reads the test definitions from a file, looks up
+  The test launcher reads the test definitions from a file, looks up
   the corresponding test cases in the test case manager and then runs
   the test case with the parameters specified in the test definition.
   """
@@ -435,7 +439,7 @@ class ExtractAndOutputTestCase(TestCase):
       self._psort_path = u' '.join([sys.executable, self._psort_path])
 
   def ReadAttributes(self, test_definition_reader, test_definition):
-    """Reads the test definition attributes.
+    """Reads the test definition attributes into to the test definition.
 
     Args:
       test_definition_reader: a test definition reader object (instance of
@@ -466,7 +470,7 @@ class ExtractAndOutputTestCase(TestCase):
       test_definition: a test definition object (instance of TestDefinition).
 
     Returns:
-      A boolean value indicating the tests ran successfully.
+      A boolean value indicating the test ran successfully.
     """
     if not os.path.exists(test_definition.source):
       logging.error(u'No such source: {0:s}'.format(test_definition.source))
@@ -572,7 +576,7 @@ class OutputTestCase(TestCase):
   """Class that implements the output test case.
 
   The output test case runs psort on a storage file to its various
-  output modules.
+  output formats.
   """
 
   NAME = u'output'
@@ -599,7 +603,7 @@ class OutputTestCase(TestCase):
       self._psort_path = u' '.join([sys.executable, self._psort_path])
 
   def ReadAttributes(self, test_definition_reader, test_definition):
-    """Reads the test definition attributes.
+    """Reads the test definition attributes into to the test definition.
 
     Args:
       test_definition_reader: a test definition reader object (instance of
@@ -630,7 +634,7 @@ class OutputTestCase(TestCase):
       test_definition: a test definition object (instance of TestDefinition).
 
     Returns:
-      A boolean value indicating the tests ran successfully.
+      A boolean value indicating the test ran successfully.
     """
     if not os.path.exists(test_definition.source):
       logging.error(u'No such source: {0:s}'.format(test_definition.source))
