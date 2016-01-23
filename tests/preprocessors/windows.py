@@ -7,8 +7,8 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfwinreg import registry as dfwinreg_registry
 
-from plaso.dfwinreg import registry as dfwinreg_registry
 from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
 from plaso.preprocessors import windows

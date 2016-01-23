@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin related functions and classes for testing."""
 
-from plaso.dfwinreg import registry as dfwinreg_registry
+from dfwinreg import registry as dfwinreg_registry
+
 from plaso.engine import single_process
 from plaso.parsers import winreg
 

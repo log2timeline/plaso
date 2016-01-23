@@ -106,7 +106,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       return
 
     format_version = version_value.GetDataAsObject()
-    if format_version not in [3, 5]:
+    if format_version not in (3, 5):
       parser_mediator.ProduceParseError(
           u'Unsupported format version: {0:d}'.format(format_version))
       return
