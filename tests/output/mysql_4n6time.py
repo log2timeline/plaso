@@ -38,8 +38,6 @@ class MySQL4n6TimeTestEvent(event.EventObject):
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         u'closed for user root)')
-    self.store_number = 1
-    self.store_index = 1
 
 
 class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
@@ -78,10 +76,8 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
         u'reportnotes': u'',
         u'sourcetype': u'Log File',
         u'event_identifier': u'-',
-        u'store_number': 1,
         u'format': u'-',
         u'URL': u'-',
-        u'store_index': 1,
         u'record_number': 0,
         u'MACB': u'M...',
         u'computer_name': u'-',
