@@ -172,7 +172,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     expected_line = (
         u'2015-12-31T17:54:32+00:00,Entry Written,LOG,Log File,[anacron  '
         u'pid: 1234] : Another one just like this (124 job run),syslog,'
-        u'OS:syslog,-,6,1\n')
+        u'OS:syslog,-\n')
     self.assertEquals(lines[13], expected_line)
 
   def testOutput(self):
