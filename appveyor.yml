@@ -4,7 +4,7 @@ environment:
 
 install:
   - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
-  - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:\Projects\get-pip.py')
+  - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\Projects\get-pip.py')
   - ps: (new-object net.webclient).DownloadFile('https://downloads.sourceforge.net/project/pywin32/pywin32/Build%20219/pywin32-219.win32-py2.7.exe', 'C:\Projects\pywin32-219.win32-py2.7.exe')
   - ps: (new-object net.webclient).DownloadFile('https://pypi.python.org/packages/any/W/WMI/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
   - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2015/sqlite-dll-win32-x86-3081002.zip', 'C:\Projects\sqlite-dll-win32-x86-3081002.zip')

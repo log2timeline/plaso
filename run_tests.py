@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Script to run the tests."""
 
-import unittest
 import sys
+import unittest
 
 # Change PYTHONPATH to include plaso.
 sys.path.insert(0, u'.')
