@@ -97,18 +97,21 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    extras = []
-    for key in event_object.GetAttributes():
+    extra_attributes = []
+    for key in sorted(event_object.GetAttributes()):
       if (key in definitions.RESERVED_VARIABLE_NAMES or
           key in format_variables):
         continue
+
       value = getattr(event_object, key)
 
       # With ! in {1!s} we force a string conversion since some of
       # the extra attributes values can be integer, float point or
       # boolean values.
-      extras.append(u'{0:s}: {1!s} '.format(key, value))
-    extra = u' '.join(extras)
+      extra_attributes.append(u'{0:s}: {1!s} '.format(key, value))
+
+    extra_attributes = u' '.join(extra_attributes)
+    extra_attributes = extra_attributes.replace(u'\n', u'-').replace(u'\r', u'')
 
     inode = getattr(event_object, u'inode', u'-')
     if inode == u'-':
@@ -153,7 +156,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         u'{0!s}'.format(inode),
         u' '.join(notes),
         getattr(event_object, u'parser', u'-'),
-        extra.replace(u'\n', u'-').replace(u'\r', u''))
+        extra_attributes)
 
     output_line = u'{0:s}\n'.format(
         u','.join(value.replace(u',', u' ') for value in output_values))

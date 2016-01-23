@@ -30,7 +30,7 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(event_objects), 4)
 
-    event_object = event_objects[1]
+    event_object = event_objects[2]
 
     timestamp = timelib.Timestamp.CopyFromString(u'2013-10-09 19:27:54')
     self.assertEqual(event_object.timestamp, timestamp)
@@ -51,7 +51,7 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     self.assertEqual(event_object.imei, u'012345678901234')
     self.assertEqual(event_object.use_count, 1)
 
-    event_object = event_objects[3]
+    event_object = event_objects[0]
     timestamp = timelib.Timestamp.CopyFromString(u'1995-11-22 18:25:07')
     self.assertEqual(event_object.timestamp, timestamp)
     self.assertEqual(event_object.device_id, u'0000A11300000000')
