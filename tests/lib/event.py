@@ -13,7 +13,7 @@ Error handling. The following tests are performed for error handling:
 
 import unittest
 
-from dfwinreg import fake as dfwinreg_fake
+from dfwinreg import filetime as dfwinreg_filetime
 
 from plaso.events import text_events
 from plaso.events import windows_events
@@ -53,7 +53,7 @@ def GetEventObjects():
   event_object.text = u''
   event_objects.append(event_object)
 
-  filetime = dfwinreg_fake.Filetime()
+  filetime = dfwinreg_filetime.Filetime()
 
   # TODO: move this to a WindowsRegistryEvent unit test.
   filetime.CopyFromString(u'2012-04-20 22:38:46.929596')

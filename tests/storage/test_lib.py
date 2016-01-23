@@ -4,7 +4,7 @@
 import os
 import unittest
 
-from dfwinreg import fake as dfwinreg_fake
+from dfwinreg import filetime as dfwinreg_filetime
 
 from plaso.events import text_events
 from plaso.events import windows_events
@@ -18,7 +18,7 @@ def CreateTestEventObjects():
     A list of event objects (instances of EventObject).
   """
   event_objects = []
-  filetime = dfwinreg_fake.Filetime()
+  filetime = dfwinreg_filetime.Filetime()
 
   filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
   values_dict = {u'Value': u'c:/Temp/evil.exe'}
