@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '1.3.1'
+__version__ = '1.4.0'
 
-VERSION_DEV = True
-VERSION_DATE = '20160122'
+VERSION_DEV = False
+VERSION_DATE = '20160123'
 
 
 def GetVersion():
