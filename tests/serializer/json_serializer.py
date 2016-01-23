@@ -89,16 +89,15 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
 
     # TODO: add report_array and _anomalies tests.
 
-    self._event_tag_json_string = (
-        u'[{"comment": "This is a test event tag.", '
-        u'"event_uuid": "403818f93dce467bac497ef0f263fde8", '
-        u'"__type__": "EventTag", '
-        u'"_tags": ["This is a test.", "Also a test."]}]')
-
     self._json_dict = {
         u'__type__': u'AnalysisReport',
         u'_anomalies': [],
-        u'_tags': self._event_tag_json_string,
+        u'_tags': [{
+            u'__type__': u'EventTag',
+            u'_tags': [u'This is a test.', u'Also a test.'],
+            u'comment': u'This is a test event tag.',
+            u'event_uuid': u'403818f93dce467bac497ef0f263fde8'
+        }],
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': self._report_dict,
         u'text': self._report_text,

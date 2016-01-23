@@ -449,7 +449,7 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
         event_tags = []
         for event_tag in attribute_value:
           event_tags.append(self._ConvertEventTagToDict(event_tag))
-        attribute_value = json.dumps(event_tags)
+        attribute_value = event_tags
 
       elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
