@@ -21,8 +21,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
   # TODO: Evaluate which fields should be included by default.
   _DEFAULT_FIELDS = [
       u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag', u'store_number',
-      u'store_index']
+      u'message', u'parser', u'display_name', u'tag']
 
   _FIELD_DELIMITER = u','
 

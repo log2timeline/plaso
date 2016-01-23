@@ -112,8 +112,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_header = [
         u'datetime', u'timestamp_desc', u'source', u'source_long',
-        u'message', u'parser', u'display_name', u'tag', u'store_number',
-        u'store_index']
+        u'message', u'parser', u'display_name', u'tag']
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
@@ -140,13 +139,12 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_header = [
         u'datetime', u'timestamp_desc', u'source', u'source_long',
-        u'message', u'parser', u'display_name', u'tag', u'store_number',
-        u'store_index']
+        u'message', u'parser', u'display_name', u'tag']
     expected_event_body = [
         u'41087.7618171296', u'Metadata Modification Time', u'LOG', u'Syslog',
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         u'closed for user root) Invalid character -> \ufffd',
-        u'-', u'-', u'-', u'-', u'-']
+        u'-', u'-', u'-']
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()

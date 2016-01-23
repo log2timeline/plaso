@@ -57,7 +57,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.SetOutputWriter(output_writer)
     expected_header = (
         b'datetime,timestamp_desc,source,source_long,message,parser,'
-        b'display_name,tag,store_number,store_index\n')
+        b'display_name,tag\n')
 
     output_module.WriteHeader()
     header = output_writer.ReadOutput()
