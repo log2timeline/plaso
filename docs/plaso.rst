@@ -8,7 +8,6 @@ Subpackages
 
     plaso.analysis
     plaso.cli
-    plaso.dfwinreg
     plaso.engine
     plaso.events
     plaso.filters
