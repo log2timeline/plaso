@@ -4,8 +4,10 @@
 
 import unittest
 
-from plaso.dfwinreg import definitions as dfwinreg_definitions
-from plaso.dfwinreg import fake as dfwinreg_fake
+from dfwinreg import definitions as dfwinreg_definitions
+from dfwinreg import fake as dfwinreg_fake
+from dfwinreg import filetime as dfwinreg_filetime
+
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulist
@@ -30,7 +32,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    filetime = dfwinreg_fake.Filetime()
+    filetime = dfwinreg_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         u'MRU', key_path=key_path, last_written_time=filetime.timestamp,
@@ -112,7 +114,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     Returns:
       A Windows Registry key (instance of dfwinreg.WinRegistryKey).
     """
-    filetime = dfwinreg_fake.Filetime()
+    filetime = dfwinreg_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         u'DesktopStreamMRU', key_path=key_path,

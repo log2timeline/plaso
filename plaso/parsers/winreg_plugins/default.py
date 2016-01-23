@@ -2,7 +2,6 @@
 """The default Windows Registry plugin."""
 
 from plaso.events import windows_events
-from plaso.lib import utils
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -41,14 +40,14 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
               registry_value.data_type_string)
 
         elif registry_value.DataIsString():
-          string_decode = utils.GetUnicodeString(
-              registry_value.GetDataAsObject())
+          value_string = registry_value.GetDataAsObject()
           value_string = u'[{0:s}] {1:s}'.format(
-              registry_value.data_type_string, string_decode)
+              registry_value.data_type_string, value_string)
 
         elif registry_value.DataIsInteger():
+          value_integer = registry_value.GetDataAsObject()
           value_string = u'[{0:s}] {1:d}'.format(
-              registry_value.data_type_string, registry_value.GetDataAsObject())
+              registry_value.data_type_string, value_integer)
 
         elif registry_value.DataIsMultiString():
           multi_string = registry_value.GetDataAsObject()
