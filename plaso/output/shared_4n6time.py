@@ -125,8 +125,6 @@ class Base4n6TimeOutputModule(interface.OutputModule):
         u'tag': taglist,
         u'color': u'',
         u'offset': getattr(event_object, u'offset', 0),
-        u'store_number': event_object.store_number,
-        u'store_index': event_object.store_index,
         u'vss_store_number': self._GetVSSNumber(event_object),
         u'URL': getattr(event_object, u'url', u'-'),
         u'record_number': getattr(event_object, u'record_number', 0),
