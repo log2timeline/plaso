@@ -30,24 +30,22 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u'inode TEXT, notes TEXT, format TEXT, extra TEXT, '
       u'datetime datetime, reportnotes TEXT, '
       u'inreport TEXT, tag TEXT, color TEXT, offset INT, '
-      u'store_number INT, store_index INT, vss_store_number INT, '
-      u'url TEXT, record_number TEXT, event_identifier TEXT, '
-      u'event_type TEXT, source_name TEXT, user_sid TEXT, '
-      u'computer_name TEXT, evidence TEXT)')
+      u'vss_store_number INT, url TEXT, record_number TEXT, '
+      u'event_identifier TEXT, event_type TEXT, source_name TEXT, '
+      u'user_sid TEXT, computer_name TEXT, evidence TEXT)')
 
   _INSERT_QUERY = (
       u'INSERT INTO log2timeline(timezone, MACB, source, '
       u'sourcetype, type, user, host, description, filename, '
       u'inode, notes, format, extra, datetime, reportnotes, inreport, '
-      u'tag, color, offset, store_number, store_index, vss_store_number, '
-      u'URL, record_number, event_identifier, event_type, '
-      u'source_name, user_sid, computer_name, evidence) '
+      u'tag, color, offset, vss_store_number, URL, record_number, '
+      u'event_identifier, event_type, source_name, user_sid, computer_name, '
+      u'evidence) '
       u'VALUES (:timezone, :MACB, :source, :sourcetype, :type, :user, :host, '
       u':description, :filename, :inode, :notes, :format, :extra, :datetime, '
-      u':reportnotes, :inreport, :tag, :color, :offset, :store_number, '
-      u':store_index, :vss_store_number, :URL, :record_number, '
-      u':event_identifier, :event_type, :source_name, :user_sid, '
-      u':computer_name, :evidence)')
+      u':reportnotes, :inreport, :tag, :color, :offset, :vss_store_number, '
+      u':URL, :record_number, :event_identifier, :event_type, :source_name, '
+      u':user_sid, :computer_name, :evidence)')
 
   def __init__(self, output_mediator):
     """Initializes the output module object.
