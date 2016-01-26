@@ -102,6 +102,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._file_scanner = None
     self._filestat_parser_object = None
     self._hasher_names = None
+    self._mft_parser_object = None
     self._non_sigscan_parser_names = None
     self._open_files = False
     self._parser_mediator = parser_mediator
@@ -587,6 +588,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     try:
       if self._IsMetadataFile(file_entry):
         parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+        if (self._mft_parser_object and parent_path_spec and
+            file_entry.name == u'$MFT' and data_stream_name == u''):
+          self._ParseFileEntryWithParser(
+              self._mft_parser_object, file_entry)
+
         if (self._usnjrnl_parser_object and parent_path_spec and
             file_entry.name == u'$UsnJrnl' and data_stream_name == u'$J'):
 
@@ -787,6 +793,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
     if u'filestat' in self._parser_objects:
       del self._parser_objects[u'filestat']
+
+    self._mft_parser_object = self._parser_objects.get(u'mft', None)
 
     self._usnjrnl_parser_object = self._parser_objects.get(u'usnjrnl', None)
     if u'usnjrnl' in self._parser_objects:
