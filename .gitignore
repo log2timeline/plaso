@@ -9,9 +9,10 @@
 *.pyo
 
 # Specific auto-generated build files
+/.eggs
+/.tox
 /__pycache__
 /build/
-/dependencies/
 /docs/_build/doctrees/
 /docs/_build/html
 /dist/
