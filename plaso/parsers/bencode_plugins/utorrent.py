@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a bencode plugin for uTorrent data."""
+"""Bencode parser plugin for uTorrent files."""
 
 from plaso.events import time_events
 from plaso.lib import errors

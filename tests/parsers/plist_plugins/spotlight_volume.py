@@ -36,7 +36,7 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
         1372139683000000, 1369657656000000])
     self.assertTrue(set(timestamps) == expected_timestamps)
 
-    event_object = event_objects[0]
+    event_object = event_objects[1]
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/Stores')
     expected_desc = (u'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-'
