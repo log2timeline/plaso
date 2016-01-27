@@ -27,7 +27,7 @@ class MactimeTest(test_lib.ParserTestCase):
     """
     # The inner workings of csv does not provide a predictable order
     # of events. Hence sort the resulting event objects to make sure they are
-    # predicatable for the tests.
+    # predictable for the tests.
     event_objects = super(MactimeTest, self)._GetEventObjectsFromQueue(
         event_queue_consumer)
     return sorted(

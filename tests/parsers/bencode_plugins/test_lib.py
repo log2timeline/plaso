@@ -19,7 +19,7 @@ class BencodePluginTestCase(test_lib.ParserTestCase):
     """
     # The inner workings of bencode does not provide a predictable order
     # of events. Hence sort the resulting event objects to make sure they are
-    # predicatable for the tests.
+    # predictable for the tests.
     event_objects = super(
         BencodePluginTestCase, self)._GetEventObjectsFromQueue(
             event_queue_consumer)
