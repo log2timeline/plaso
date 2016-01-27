@@ -9,6 +9,24 @@ from tests.parsers import test_lib
 class PlistPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a plist plugin."""
 
+  def _GetEventObjectsFromQueue(self, event_queue_consumer):
+    """Retrieves the event objects from the queue consumer.
+
+    Args:
+      event_queue_consumer: an event object queue consumer object (instance of
+                            TestItemQueueConsumer).
+
+    Returns:
+      A list of event objects (instances of EventObject).
+    """
+    # The inner workings of binplist does not provide a predictable order
+    # of events. Hence sort the resulting event objects to make sure they are
+    # predictable for the tests.
+    event_objects = super(PlistPluginTestCase, self)._GetEventObjectsFromQueue(
+        event_queue_consumer)
+    return sorted(
+        event_objects, key=lambda event_object: event_object.timestamp)
+
   def _ParsePlistFileWithPlugin(
       self, parser_object, plugin_object, path_segments, plist_name,
       knowledge_base_values=None):

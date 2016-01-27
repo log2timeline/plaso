@@ -38,7 +38,7 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
         1386111811136093])
     self.assertTrue(set(timestamps) == expected_timestamps)
 
-    event_object = event_objects[1]
+    event_object = event_objects[6]
     self.assertEqual(event_object.key, u'gr')
     self.assertEqual(event_object.root, u'/UserShortcuts')
     expected_desc = (u'Spotlight term searched "gr" associate to '

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a bencode plugin for Transmission BitTorrent data."""
+"""Bencode parser plugin for Transmission BitTorrent files."""
 
 from plaso.events import time_events
 from plaso.lib import eventdata

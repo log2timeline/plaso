@@ -1135,7 +1135,7 @@ class SphinxAPIDocHelper(CLIHelper):
 
   def UpdateAPIDocs(self):
     """Updates the API docs."""
-    command = u'sphinx-apidoc -f -o docs {0:s}'.format(self._project_name)
+    command = u'sphinx-apidoc -f -o docs {0:s}'.format(self._project)
     exit_code, output, _ = self.RunCommand(command)
     print(output)
 
