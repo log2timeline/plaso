@@ -15,13 +15,13 @@ from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
-class L2tTestEvent(event.EventObject):
+class L2TTestEvent(event.EventObject):
   """Simplified EventObject for testing."""
   DATA_TYPE = 'test:l2t_csv'
 
   def __init__(self):
     """Initialize event with data."""
-    super(L2tTestEvent, self).__init__()
+    super(L2TTestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
     self.hostname = u'ubuntu'
@@ -34,7 +34,7 @@ class L2tTestEvent(event.EventObject):
         u'closed for user root)')
 
 
-class L2tTestEventFormatter(formatters_interface.EventFormatter):
+class L2TTestEventFormatter(formatters_interface.EventFormatter):
   """Formatter for the test event."""
   DATA_TYPE = 'test:l2t_csv'
   FORMAT_STRING = u'{text}'
@@ -50,9 +50,9 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
     self._output_writer = cli_test_lib.TestOutputWriter()
-    self.formatter = l2t_csv.L2TCSVOutputModule(output_mediator)
-    self.formatter.SetOutputWriter(self._output_writer)
-    self.event_object = L2tTestEvent()
+    self._formatter = l2t_csv.L2TCSVOutputModule(output_mediator)
+    self._formatter.SetOutputWriter(self._output_writer)
+    self._event_object = L2TTestEvent()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
@@ -60,7 +60,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         b'version,filename,inode,notes,format,extra\n')
 
-    self.formatter.WriteHeader()
+    self._formatter.WriteHeader()
 
     header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
@@ -68,14 +68,14 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
     formatters_manager.FormattersManager.RegisterFormatter(
-        L2tTestEventFormatter)
+        L2TTestEventFormatter)
 
     event_tag = event.EventTag()
     event_tag.tags = [u'Malware', u'Document Printed']
-    event_tag.uuid = self.event_object.uuid
+    event_tag.uuid = self._event_object.uuid
 
-    self.event_object.tag = event_tag
-    self.formatter.WriteEventBody(self.event_object)
+    self._event_object.tag = event_tag
+    self._formatter.WriteEventBody(self._event_object)
 
     expected_event_body = (
         b'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
@@ -92,7 +92,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     self.assertEqual(event_body.count(b','), 16)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
-        L2tTestEventFormatter)
+        L2TTestEventFormatter)
 
 
 if __name__ == '__main__':
