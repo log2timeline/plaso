@@ -561,6 +561,36 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       # Make sure frame.f_locals does not keep a reference to file_entry.
       file_entry = None
 
+  def _ProcessDataStreamWithParser(
+      self, parser_object, file_entry, data_stream_name=u''):
+    """Processes a specific data stream of a file entry with a specific parser.
+
+    Args:
+      parser_object: a parser object (instance of BaseParser).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      data_stream_name: optional data stream name. The default is
+                        an empty string which represents the default
+                        data stream.
+    """
+    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
+    if not file_object:
+      return
+
+    try:
+      self._status = definitions.PROCESSING_STATUS_PARSING
+      logging.debug((
+          u'[ProcessDataStreamWithParser] parsing file: {0:s} with parser: '
+          u'{1:s}').format(self._current_display_name, parser_object.NAME))
+
+      self._ParseFileEntryWithParser(
+          parser_object, file_entry, file_object=file_object)
+
+    finally:
+      file_object.close()
+
+      # Make sure frame.f_locals does not keep a reference to file_entry.
+      file_entry = None
+
   def _ProcessFileEntry(self, file_entry, data_stream_name=u''):
     """Processes a specific data stream of a file entry.
 
@@ -588,13 +618,14 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     try:
       if self._IsMetadataFile(file_entry):
         parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+        filename_upper = file_entry.name.upper()
         if (self._mft_parser_object and parent_path_spec and
-            file_entry.name == u'$MFT' and data_stream_name == u''):
-          self._ParseFileEntryWithParser(
+            filename_upper in (u'$MFT', u'$MFTMIRR') and not data_stream_name):
+          self._ProcessDataStreamWithParser(
               self._mft_parser_object, file_entry)
 
-        if (self._usnjrnl_parser_object and parent_path_spec and
-            file_entry.name == u'$UsnJrnl' and data_stream_name == u'$J'):
+        elif (self._usnjrnl_parser_object and parent_path_spec and
+              filename_upper == u'$USNJRNL' and data_stream_name == u'$J'):
 
           # To be able to ignore the sparse data ranges the UsnJrnl parser
           # needs to read directly from the volume.
