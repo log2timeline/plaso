@@ -17,6 +17,7 @@ from plaso.engine import zeromq_queue
 from plaso.frontend import analysis_frontend
 from plaso.lib import bufferlib
 from plaso.lib import event
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.output import event_buffer as output_event_buffer
@@ -65,7 +66,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     # Needed due to duplicate removals, if two events
     # are merged then we'll just pick the first inode value.
     inode = getattr(event_object, u'inode', None)
-    if isinstance(inode, basestring):
+    if isinstance(inode, py2to3.STRING_TYPES):
       inode_list = inode.split(u';')
       try:
         new_inode = int(inode_list[0], 10)
@@ -633,7 +634,7 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
       print(report_string.encode(self._preferred_encoding))
     except UnicodeDecodeError:
       logging.error(
-          u'Unable to print report due to an unicode decode error. '
+          u'Unable to print report due to a Unicode decode error. '
           u'The report is stored inside the storage file and can be '
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')

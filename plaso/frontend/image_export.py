@@ -20,6 +20,7 @@ from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.frontend import frontend
 from plaso.hashers import manager as hashers_manager
+from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.lib import timelib
 from plaso.preprocessors import interface as preprocess_interface
@@ -83,7 +84,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     Raises:
       ValueError: If the filter is badly formed.
     """
-    if not isinstance(time_value, basestring):
+    if not isinstance(time_value, py2to3.STRING_TYPES):
       raise ValueError(u'Filter type must be a string.')
 
     if start_time_string is None and end_time_string is None:

@@ -16,6 +16,7 @@ from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 
 
@@ -286,7 +287,7 @@ class StorageMediaTool(tools.CLITool):
     """
     self._partition_string = getattr(options, u'partition_number', None)
     if self._partition_string not in [None, u'all']:
-      if not isinstance(self._partition_string, basestring):
+      if not isinstance(self._partition_string, py2to3.STRING_TYPES):
         raise errors.BadConfigOption(
             u'Invalid partition number {0!s}.'.format(
                 self._partition_string))
@@ -299,7 +300,7 @@ class StorageMediaTool(tools.CLITool):
 
     self._partition_offset = getattr(options, u'image_offset_bytes', None)
     if (self._partition_offset is not None and
-        isinstance(self._partition_offset, basestring)):
+        isinstance(self._partition_offset, py2to3.STRING_TYPES)):
       try:
         self._partition_offset = int(self._partition_offset, 10)
       except ValueError:
@@ -312,14 +313,14 @@ class StorageMediaTool(tools.CLITool):
       bytes_per_sector = getattr(
           options, u'bytes_per_sector', self._DEFAULT_BYTES_PER_SECTOR)
 
-      if isinstance(image_offset, basestring):
+      if isinstance(image_offset, py2to3.STRING_TYPES):
         try:
           image_offset = int(image_offset, 10)
         except ValueError:
           raise errors.BadConfigOption(
               u'Invalid image offset: {0:s}.'.format(image_offset))
 
-      if isinstance(bytes_per_sector, basestring):
+      if isinstance(bytes_per_sector, py2to3.STRING_TYPES):
         try:
           bytes_per_sector = int(bytes_per_sector, 10)
         except ValueError:

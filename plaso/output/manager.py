@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the output manager class."""
 
+from plaso.lib import py2to3
+
 
 class OutputManager(object):
   """Class that implements the output manager."""
@@ -58,7 +60,7 @@ class OutputManager(object):
       KeyError: if there is no output class found with the supplied name.
       ValueError: if name is not a string.
     """
-    if not isinstance(name, basestring):
+    if not isinstance(name, py2to3.STRING_TYPES):
       raise ValueError(u'Name attribute is not a string.')
 
     name = name.lower()
@@ -88,7 +90,7 @@ class OutputManager(object):
     Returns:
       A boolean indicating if the output class is registered.
     """
-    if not isinstance(name, basestring):
+    if not isinstance(name, py2to3.STRING_TYPES):
       return False
 
     return name.lower() in cls._output_classes

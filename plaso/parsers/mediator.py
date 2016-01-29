@@ -97,7 +97,7 @@ class ParserMediator(object):
     if isinstance(inode_value, float):
       return int(inode_value)
 
-    if not isinstance(inode_value, basestring):
+    if not isinstance(inode_value, py2to3.STRING_TYPES):
       return -1
 
     if b'-' in inode_value:

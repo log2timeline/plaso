@@ -5,6 +5,7 @@ Android Call History is stored in SQLite database files named contacts2.db.
 """
 
 from plaso.events import time_events
+from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -71,7 +72,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEvent(event_object, query=query)
 
     duration = row['duration']
-    if isinstance(duration, basestring):
+    if isinstance(duration, py2to3.STRING_TYPES):
       try:
         duration = int(duration, 10)
       except ValueError:

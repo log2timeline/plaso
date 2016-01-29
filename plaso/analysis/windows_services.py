@@ -6,6 +6,7 @@ import yaml
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import event
+from plaso.lib import py2to3
 from plaso.winnt import human_readable_service_enums
 
 
@@ -85,14 +86,14 @@ class WindowsService(yaml.YAMLObject):
 
   def HumanReadableType(self):
     """Return a human readable string describing the type value."""
-    if isinstance(self.service_type, basestring):
+    if isinstance(self.service_type, py2to3.STRING_TYPES):
       return self.service_type
     return human_readable_service_enums.SERVICE_ENUMS[u'Type'].get(
         self.service_type, u'{0:d}'.format(self.service_type))
 
   def HumanReadableStartType(self):
     """Return a human readable string describing the start_type value."""
-    if isinstance(self.start_type, basestring):
+    if isinstance(self.start_type, py2to3.STRING_TYPES):
       return self.start_type
     return human_readable_service_enums.SERVICE_ENUMS[u'Start'].get(
         self.start_type, u'{0:d}'.format(self.start_type))

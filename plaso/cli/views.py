@@ -3,6 +3,8 @@
 
 import abc
 
+from plaso.lib import py2to3
+
 
 class BaseTableView(object):
   """Class that implements the table view interface."""
@@ -88,7 +90,7 @@ class CLITableView(BaseTableView):
     secondary_format_string = u'{{0:<{0:d}s}}{{1:s}}\n'.format(
         self._column_width + 3)
 
-    if isinstance(values[1], basestring):
+    if isinstance(values[1], py2to3.STRING_TYPES):
       value_string = values[1]
     else:
       value_string = u'{0!s}'.format(values[1])

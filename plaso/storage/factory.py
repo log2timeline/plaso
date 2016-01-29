@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the storage factory class."""
 
+from plaso.lib import py2to3
+
 
 class StorageFactory(object):
   """Class that implements the storage factory."""
@@ -46,7 +48,7 @@ class StorageFactory(object):
       KeyError: if the type indicator is not registered.
       ValueError: if the type indicator is not a string.
     """
-    if not isinstance(type_indicator, basestring):
+    if not isinstance(type_indicator, py2to3.STRING_TYPES):
       raise ValueError(u'Type indicator is not a string.')
 
     type_indicator = type_indicator.lower()

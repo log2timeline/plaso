@@ -64,7 +64,7 @@ class OpenXMLParser(interface.FileObjectParser):
 
   def _FixString(self, key):
     """Convert CamelCase to lower_with_underscore."""
-    # TODO: Add unicode support.
+    # TODO: Add Unicode support.
     fix_key = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 

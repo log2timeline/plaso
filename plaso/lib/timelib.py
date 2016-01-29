@@ -18,6 +18,7 @@ import pytz
 import dateutil.parser
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 
 
 MONTH_DICT = {
@@ -678,7 +679,7 @@ class Timestamp(object):
               year, month, day, hour, minutes, seconds, microseconds,
               exception))
 
-    if isinstance(timezone, basestring):
+    if isinstance(timezone, py2to3.STRING_TYPES):
       timezone = pytz.timezone(timezone)
 
     date_use = timezone.localize(date)

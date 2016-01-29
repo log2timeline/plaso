@@ -128,7 +128,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       construct.Padding(8),
       construct.ULInt32(u'record_size'))
 
-  # Struct based on (-both unicode and legacy string):
+  # Struct based on (-both Unicode and byte strings):
   # https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti.h
   RECORD_STRUCT = construct.Struct(
       u'record',
@@ -181,7 +181,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
           u'65535').format(record_size))
       record_size = 65535
 
-    # If recordsize is 0x320 then we have UTF/unicode names as well.
+    # If recordsize is 0x320 then we have Unicode names as well.
     read_unicode_names = False
     if record_size == 0x320:
       read_unicode_names = True

@@ -7,6 +7,7 @@ import re
 import uuid
 
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.lib import utils
 
@@ -31,6 +32,7 @@ class AnalysisReport(object):
     self.plugin_name = plugin_name
     self._tags = []
 
+  # TODO: replace with a Python 3 compatible solution.
   def __unicode__(self):
     """Returns a Unicode representation of the report."""
     return self.GetString()
@@ -209,6 +211,7 @@ class EventObject(object):
     string = self.GetString()
     return string.encode(u'utf-8')
 
+  # TODO: replace with a Python 3 compatible solution.
   def __unicode__(self):
     """Returns a string representation."""
     return self.GetString()
@@ -261,8 +264,8 @@ class EventObject(object):
       identity.append(inode)
 
     try:
-      text = u'|'.join(map(unicode, identity))
-      return text
+      return u'|'.join(map(py2to3.UNICODE_TYPE, identity))
+
     except UnicodeDecodeError:
       # If we cannot properly decode the equality string we give back the UUID
       # which is unique to this event and thus will not trigger an equal string

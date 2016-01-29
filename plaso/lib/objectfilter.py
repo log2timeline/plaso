@@ -102,6 +102,7 @@ import re
 
 from plaso.lib import errors
 from plaso.lib import lexer
+from plaso.lib import py2to3
 from plaso.lib import utils
 
 
@@ -295,7 +296,7 @@ class Contains(GenericBinaryOperator):
   """Whether the right operand is contained in the value."""
 
   def Operation(self, x, y):
-    if isinstance(x, str) or isinstance(x, unicode):
+    if isinstance(x, py2to3.STRING_TYPES):
       return y.lower() in x.lower()
 
     return y in x
@@ -312,7 +313,7 @@ class InSet(GenericBinaryOperator):
 
     # x might be an iterable
     # first we need to skip strings or we'll do silly things
-    if (isinstance(x, basestring)
+    if (isinstance(x, py2to3.STRING_TYPES)
         or isinstance(x, bytes)):
       return False
 
@@ -520,7 +521,7 @@ class ValueExpander(object):
     Yields:
       The values once the object is traversed.
     """
-    if isinstance(path, basestring):
+    if isinstance(path, py2to3.STRING_TYPES):
       path = path.split(self.FIELD_SEPARATOR)
 
     attr_name = self._GetAttributeName(path)

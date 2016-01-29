@@ -125,7 +125,7 @@ class SlowLexicalTextParser(
       # TODO: Support other encodings than UTF-8 here, read from the
       # knowledge base or parse from the file itself.
       self.attributes[u'body'] += u'{0:s}'.format(
-          match.group(0).decode(u'utf-8', errors=u'ignore'))
+          match.group(0).decode(u'utf-8', errors=u'replace'))
 
     self.line_ready = True
 
@@ -435,7 +435,7 @@ class TextCSVParser(interface.FileObjectParser):
     self.encoding = encoding
 
   def _ConvertRowToUnicode(self, parser_mediator, row):
-    """Converts all strings in a CSV row dict to unicode.
+    """Converts all strings in a CSV row dict to Unicode.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
@@ -444,7 +444,7 @@ class TextCSVParser(interface.FileObjectParser):
 
     Returns:
       A dict containing data from the CSV file, with all strings converted to
-      unicode.
+      Unicode.
     """
     if not self.encoding:
       # If no encoding is set, we default to the system codepage.
@@ -481,7 +481,7 @@ class TextCSVParser(interface.FileObjectParser):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       row_offset: the offset of the row.
       row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list. Strings in this dict are unicode strings.
+           COLUMNS class list. Strings in this dict are Unicode strings.
     """
     event_object = event.EventObject()
     if row_offset is not None:
