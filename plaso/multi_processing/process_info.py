@@ -62,11 +62,17 @@ class ProcessInfo(object):
       lib, data, dirty, percent.
     """
     try:
-      external_information = self._process.get_ext_memory_info()
+      if self._psutil_pre_v2:
+        external_information = self._process.get_ext_memory_info()
+      else:
+        external_information = self._process.memory_info_ex()
     except psutil.NoSuchProcess:
       return
 
-    percent = self._process.get_memory_percent()
+    if self._psutil_pre_v2:
+      percent = self._process.get_memory_percent()
+    else:
+      percent = self._process.memory_percent()
 
     # Psutil will return different memory information depending on what is
     # available in that platform.
