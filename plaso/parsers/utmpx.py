@@ -135,7 +135,7 @@ class UtmpxParser(interface.FileObjectParser):
     # The UTMPX_ENTRY structure will often successfully compile on various
     # structures, such as binary plist files, and thus we need to do some
     # additional validation. The first one is to check if the user name
-    # can be converted into a unicode string, otherwise we can assume
+    # can be converted into a Unicode string, otherwise we can assume
     # we are dealing with non UTMPX data.
     try:
       user.decode(u'utf-8')

@@ -13,6 +13,7 @@ from dfwinreg import registry as dfwinreg_registry
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.frontend import extraction_frontend
+from plaso.lib import py2to3
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg
@@ -752,7 +753,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not registry_helper:
       return {}
 
-    if isinstance(registry_key, basestring):
+    if isinstance(registry_key, py2to3.STRING_TYPES):
       registry_key = registry_helper.GetKeyByPath(registry_key)
 
     if not registry_key:

@@ -42,9 +42,9 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'username', u'Administrator')
 
     # Match UTC timestamp.
-    time = long(timelib.Timestamp.CopyFromString(
-        u'2014-09-24 03:36:06.358837'))
-    self.assertEqual(event_object.timestamp, time)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-09-24 03:36:06.358837')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '

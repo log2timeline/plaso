@@ -8,6 +8,7 @@ import construct
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -421,7 +422,7 @@ class ASLParser(interface.FileObjectParser):
       # Taking all the extra attributes and merging them together,
       # eg: a = [1, 2, 3, 4] will look like "1: 2, 3: 4".
       try:
-        extra_values = map(unicode, values[4:])
+        extra_values = map(py2to3.UNICODE_TYPE, values[4:])
         extra_information = u', '.join(
             map(u': '.join, zip(extra_values[0::2], extra_values[1::2])))
       except UnicodeDecodeError as exception:

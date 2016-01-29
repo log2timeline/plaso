@@ -201,11 +201,12 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
             u'bad line]')
       return None, None, None, None
 
-    # Try to get the data into unicode.
+    # Try to get the data into Unicode.
     try:
       title_unicode = title.decode(u'utf-8')
     except UnicodeDecodeError:
-      partial_title = title.decode(u'utf-8', u'ignore')
+      partial_title = title.decode(u'utf-8', errors=u'replace')
+      # TODO: replace with parse error.
       title_unicode = u'Warning: partial line, starts with: {0:s}'.format(
           partial_title)
 

@@ -88,8 +88,13 @@ class EventBuffer(object):
 
     self._buffer_dict = {}
 
-  def JoinEvents(self, event_a, event_b):
-    """Join this EventObject with another one."""
+  def JoinEvents(self, first_event, second_event):
+    """Joins two event objects.
+
+    Args:
+      first_event: the first event object (instance of EventObject).
+      second_event: the second event object (instance of EventObject).
+    """
     self.duplicate_counter += 1
     # TODO: Currently we are using the first event pathspec, perhaps that
     # is not the best approach. There is no need to have all the pathspecs
@@ -98,20 +103,22 @@ class EventBuffer(object):
     # an event stored deep inside a VSS for instance).
     for attr in self.MERGE_ATTRIBUTES:
       # TODO: remove need for GetUnicodeString.
-      val_a = set(utils.GetUnicodeString(
-          getattr(event_a, attr, u'')).split(u';'))
-      val_b = set(utils.GetUnicodeString(
-          getattr(event_b, attr, u'')).split(u';'))
-      values_list = list(val_a | val_b)
+      first_value = set(utils.GetUnicodeString(
+          getattr(first_event, attr, u'')).split(u';'))
+      second_value = set(utils.GetUnicodeString(
+          getattr(second_event, attr, u'')).split(u';'))
+      values_list = list(first_value | second_value)
       values_list.sort() # keeping this consistent across runs helps with diffs
-      setattr(event_a, attr, u';'.join(values_list))
+      setattr(first_event, attr, u';'.join(values_list))
 
     # Special instance if this is a filestat entry we need to combine the
     # description field.
-    if getattr(event_a, u'parser', u'') == u'filestat':
-      description_a = set(getattr(event_a, u'timestamp_desc', u'').split(u';'))
-      description_b = set(getattr(event_b, u'timestamp_desc', u'').split(u';'))
-      descriptions = list(description_a | description_b)
+    if getattr(first_event, u'parser', u'') == u'filestat':
+      first_description = set(
+          getattr(first_event, u'timestamp_desc', u'').split(u';'))
+      second_description = set(
+          getattr(second_event, u'timestamp_desc', u'').split(u';'))
+      descriptions = list(first_description | second_description)
       descriptions.sort()
-      if event_b.timestamp_desc not in event_a.timestamp_desc:
-        setattr(event_a, u'timestamp_desc', u';'.join(descriptions))
+      if second_event.timestamp_desc not in first_event.timestamp_desc:
+        setattr(first_event, u'timestamp_desc', u';'.join(descriptions))

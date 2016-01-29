@@ -30,11 +30,11 @@ class MD5Hasher(interface.BaseHasher):
     self._md5_context.update(data)
 
   def GetStringDigest(self):
-    """Returns the digest of the hash function expressed as a unicode string.
+    """Returns the digest of the hash function expressed as a Unicode string.
 
     Returns:
       A string hash digest calculated over the data blocks passed to
-      Update(). The string will consist of printable unicode characters.
+      Update(). The string will consist of printable Unicode characters.
     """
     return u'{0:s}'.format(self._md5_context.hexdigest())
 

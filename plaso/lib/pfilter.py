@@ -13,6 +13,7 @@ from plaso.frontend import presets
 from plaso.lib import errors
 from plaso.lib import limit
 from plaso.lib import objectfilter
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.lib import utils
 
@@ -263,21 +264,29 @@ class DateCompareObject(object):
     Raises:
       ValueError: if the date string is invalid.
     """
-    self.text = utils.GetUnicodeString(data)
-    if isinstance(data, int) or isinstance(data, long):
+    if isinstance(data, py2to3.INTEGER_TYPES):
       self.data = data
+      self.text = u'{0:d}'.format(data)
+
     elif isinstance(data, float):
-      self.data = long(data)
-    elif isinstance(data, str) or isinstance(data, unicode):
+      self.data = py2to3.LONG_TYPE(data)
+      self.text = u'{0:f}'.format(data)
+
+    elif isinstance(data, py2to3.STRING_TYPES):
+      self.text = utils.GetUnicodeString(data)
       try:
-        self.data = timelib.Timestamp.FromTimeString(
-            utils.GetUnicodeString(data))
+        self.data = timelib.Timestamp.FromTimeString(data)
       except (ValueError, errors.TimestampError):
         raise ValueError(u'Wrongly formatted date string: {0:s}'.format(data))
+
     elif isinstance(data, datetime.datetime):
       self.data = timelib.Timestamp.FromPythonDatetime(data)
-    elif isinstance(DateCompareObject, data):
+      self.text = u'{0!s}'.format(data)
+
+    elif isinstance(data, DateCompareObject):
       self.data = data.data
+      self.text = u'{0!s}'.format(data)
+
     else:
       raise ValueError(u'Unsupported type: {0:s}.'.format(type(data)))
 

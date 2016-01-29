@@ -3,9 +3,17 @@
 
 from __future__ import print_function
 import re
-# Keep urllib2 here since we this code should be able to be used
-# by a default Python set up.
-import urllib2
+import sys
+
+# pylint: disable=no-name-in-module
+if sys.version_info[0] < 3:
+  # Keep urllib2 here since we this code should be able to be used
+  # by a default Python set up.
+  import urllib2 as urllib_error
+  from urllib2 import urlopen
+else:
+  import urllib.error as urllib_error
+  from urllib.request import urlopen
 
 
 # The dictionary values are:
@@ -80,7 +88,7 @@ def _DownloadPageContent(download_url):
   if not download_url:
     return
 
-  url_object = urllib2.urlopen(download_url)
+  url_object = urlopen(download_url)
   if not url_object or url_object.code != 200:
     return
 
@@ -98,7 +106,7 @@ def _ImportPythonModule(module_name):
     if the module cannot be imported.
   """
   try:
-    module_object = map(__import__, [module_name])[0]
+    module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
     return
 
@@ -216,13 +224,13 @@ def _CheckLibyal(
     if latest_version_check:
       try:
         latest_version = _GetLibyalGithubReleasesLatestVersion(libyal_name)
-      except urllib2.URLError:
+      except urllib_error.URLError:
         latest_version = None
 
       if not latest_version:
         try:
           latest_version = _GetLibyalGoogleDriveLatestVersion(libyal_name)
-        except urllib2.URLError:
+        except urllib_error.URLError:
           latest_version = None
 
       if not latest_version:
@@ -297,8 +305,10 @@ def _CheckPythonModule(
 
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
-  module_version_map = map(int, _VERSION_SPLIT_REGEX.split(module_version))
-  minimum_version_map = map(int, _VERSION_SPLIT_REGEX.split(minimum_version))
+  module_version_map = list(
+      map(int, _VERSION_SPLIT_REGEX.split(module_version)))
+  minimum_version_map = list(
+      map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
   if module_version_map < minimum_version_map:
     print((
@@ -307,7 +317,8 @@ def _CheckPythonModule(
     return False
 
   if maximum_version:
-    maximum_version_map = map(int, _VERSION_SPLIT_REGEX.split(maximum_version))
+    maximum_version_map = list(
+        map(int, _VERSION_SPLIT_REGEX.split(maximum_version)))
     if module_version_map > maximum_version_map:
       print((
           u'[FAILURE]\t{0:s} version: {1:s} is too recent, {2:s} or earlier '
@@ -342,8 +353,8 @@ def _CheckPytsk(verbose_output=True):
 
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
-  module_version_map = map(int, module_version.split(u'.'))
-  minimum_version_map = map(int, minimum_version_libtsk.split(u'.'))
+  module_version_map = list(map(int, module_version.split(u'.')))
+  minimum_version_map = list(map(int, minimum_version_libtsk.split(u'.')))
   if module_version_map < minimum_version_map:
     print((
         u'[FAILURE]\tSleuthKit (libtsk) version: {0:s} is too old, {1:s} or '
@@ -404,8 +415,10 @@ def _CheckSqlite3(verbose_output=True):
 
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
-  module_version_map = map(int, _VERSION_SPLIT_REGEX.split(module_version))
-  minimum_version_map = map(int, _VERSION_SPLIT_REGEX.split(minimum_version))
+  module_version_map = list(
+      map(int, _VERSION_SPLIT_REGEX.split(module_version)))
+  minimum_version_map = list(
+      map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
   if module_version_map < minimum_version_map:
     print((
@@ -474,7 +487,7 @@ def CheckModuleVersion(module_name):
     return
 
   try:
-    module_object = map(__import__, [module_name])[0]
+    module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
     raise
 

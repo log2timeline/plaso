@@ -8,7 +8,6 @@ from google.protobuf import message
 
 from plaso.lib import event
 from plaso.lib import py2to3
-from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import interface
 from plaso.storage import collection
@@ -134,8 +133,11 @@ class ProtobufEventAttributeSerializer(object):
     if attribute_name:
       proto_attribute.key = attribute_name
 
-    if isinstance(attribute_value, basestring):
-      proto_attribute.string = utils.GetUnicodeString(attribute_value)
+    if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      proto_attribute.data = attribute_value
+
+    elif isinstance(attribute_value, py2to3.UNICODE_TYPE):
+      proto_attribute.string = attribute_value
 
     elif isinstance(attribute_value, bool):
       proto_attribute.boolean = attribute_value
@@ -460,8 +462,7 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
         if attribute_value is None:
           continue
 
-        if isinstance(attribute_value, basestring):
-          attribute_value = utils.GetUnicodeString(attribute_value)
+        if isinstance(attribute_value, py2to3.STRING_TYPES):
           if not attribute_value:
             continue
 
@@ -492,9 +493,9 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
 
         # TODO: check if the next TODO still applies.
         # Serialize the attribute value only if it is an integer type
-        # (int or long) or if it has a value.
+        # or if it has a value.
         # TODO: fix logic.
-        if (isinstance(attribute_value, (bool, int, float, long)) or
+        if (isinstance(attribute_value, (bool, float, py2to3.INTEGER_TYPES)) or
             attribute_value):
           proto_attribute = proto.attributes.add()
           ProtobufEventAttributeSerializer.WriteSerializedObject(
@@ -700,7 +701,7 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
       if attribute == u'collection_information':
         zone = value.get(u'configured_zone', u'')
         if zone and hasattr(zone, u'zone'):
-          value[u'configured_zone'] = zone.zone
+          value[u'configured_zone'] = u'{0:s}'.format(zone.zone)
         ProtobufEventAttributeSerializer.WriteSerializedDictObject(
             proto, u'collection_information', value)
 
@@ -724,8 +725,8 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
 
       else:
         if attribute == u'zone':
-          value = value.zone
-        if isinstance(value, (bool, int, float, long)) or value:
+          value = u'{0:s}'.format(value.zone)
+        if isinstance(value, (bool, float, py2to3.INTEGER_TYPES)) or value:
           proto_attribute = proto.attributes.add()
           ProtobufEventAttributeSerializer.WriteSerializedObject(
               proto_attribute, attribute, value)
@@ -812,7 +813,7 @@ class ProtobufCollectionInformationObjectSerializer(
     dict_object = collection_information_object.GetValueDict()
     for key, value in iter(dict_object. items()):
       attribute = proto.attributes.add()
-      if u'zone' in key and not isinstance(value, basestring):
+      if u'zone' in key and not isinstance(value, py2to3.STRING_TYPES):
         value = getattr(value, u'zone', u'{0!s}'.format(value))
 
       ProtobufEventAttributeSerializer.WriteSerializedObject(

@@ -285,7 +285,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       except UnicodeDecodeError:
         value_line = utf_stream.decode(u'utf-8', errors=u'replace')
         parser_mediator.ProduceParseError(
-            u'Cookie value did not decode to value unicode string. Non UTF-8 '
+            u'Cookie value did not decode to Unicode string. Non UTF-8 '
             u'characters have been replaced.')
 
       kwargs[key] = value_line

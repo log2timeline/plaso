@@ -45,9 +45,9 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'Description', expected_value)
 
     # Match UTC timestamp.
-    time = long(timelib.Timestamp.CopyFromString(
-        u'2012-04-04 01:58:40.839249'))
-    self.assertEqual(event_object.timestamp, time)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-04-04 01:58:40.839249')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '

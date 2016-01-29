@@ -3,6 +3,8 @@
 
 import re
 
+from plaso.lib import py2to3
+
 
 # TODO: Remove this file once we have a better replacement for it, either
 # to use the artifact library or dfVFS, since this is part of both of these
@@ -27,7 +29,7 @@ def ExpandWindowsEnvironmentVariables(data_string, pre_obj):
 
     kb_value = getattr(
         pre_obj, match.group(1).lower(), None)
-    if isinstance(kb_value, basestring) and kb_value:
+    if isinstance(kb_value, py2to3.STRING_TYPES) and kb_value:
       components.append(kb_value)
     else:
       components.append(u'%%{0:s}%%'.format(match.group(1)))
