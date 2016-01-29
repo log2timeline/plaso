@@ -3,6 +3,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.lib import py2to3
 
 
 class TextEvent(time_events.TimestampEvent):
@@ -27,6 +28,6 @@ class TextEvent(time_events.TimestampEvent):
     for name, value in iter(attributes.items()):
       # TODO: Revisit this constraints and see if we can implement
       # it using a more sane solution.
-      if isinstance(value, basestring) and not value:
+      if isinstance(value, py2to3.STRING_TYPES) and not value:
         continue
       setattr(self, name, value)

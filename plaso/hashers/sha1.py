@@ -30,7 +30,7 @@ class SHA1Hasher(interface.BaseHasher):
     self._sha1_context.update(data)
 
   def GetStringDigest(self):
-    """Returns the digest of the hash function expressed as a unicode string.
+    """Returns the digest of the hash function expressed as a Unicode string.
 
     Returns:
       A string hash digest calculated over the data blocks passed to

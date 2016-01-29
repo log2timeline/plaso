@@ -194,7 +194,7 @@ class CLITool(object):
       BadConfigOption: if the options are invalid.
     """
     timezone_string = self.ParseStringOption(options, u'timezone')
-    if isinstance(timezone_string, basestring):
+    if isinstance(timezone_string, py2to3.STRING_TYPES):
       if timezone_string.lower() == u'list':
         self.list_timezones = True
 

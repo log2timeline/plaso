@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """The storage collection information object."""
+
 import collections
+
+from plaso.lib import py2to3
 
 
 class CollectionInformation(object):
@@ -31,7 +34,7 @@ class CollectionInformation(object):
     if identifier in self._counters:
       raise KeyError(u'Counter [{0:s}] already added.'.format(identifier))
 
-    if not isinstance(identifier, basestring):
+    if not isinstance(identifier, py2to3.STRING_TYPES):
       raise KeyError(u'Counter identifier [{0!s}] is not a string value.')
 
     self._counters[identifier] = collections.Counter()

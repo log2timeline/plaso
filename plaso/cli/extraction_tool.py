@@ -7,6 +7,7 @@ from plaso.cli import storage_media_tool
 from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import py2to3
 
 
 class ExtractionTool(storage_media_tool.StorageMediaTool):
@@ -72,14 +73,14 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """
     self._hasher_names_string = getattr(
         options, u'hashers', self._DEFAULT_HASHER_STRING)
-    if isinstance(self._hasher_names_string, basestring):
+    if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
 
     self._parser_filter_string = self.ParseStringOption(
         options, u'parsers', default_value=u'')
 
-    if (isinstance(self._parser_filter_string, basestring) and
+    if (isinstance(self._parser_filter_string, py2to3.STRING_TYPES) and
         self._parser_filter_string.lower() == u'list'):
       self.list_parsers_and_plugins = True
 

@@ -37,7 +37,7 @@ class BaseHasher(object):
 
   @abc.abstractmethod
   def GetStringDigest(self):
-    """Retrieves the digest of the hash function expressed as a unicode string.
+    """Retrieves the digest of the hash function expressed as a Unicode string.
 
     Returns:
       A string hash digest calculated over the data blocks passed to
