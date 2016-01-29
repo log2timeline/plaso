@@ -31,6 +31,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyolecf': 20151223,
     u'pyqcow': 20131204,
     u'pyregf': 20150315,
+    u'pyscca': 20151226,
     u'pysigscan': 20150627,
     u'pysmdev': 20140529,
     u'pysmraw': 20140612,
