@@ -52,6 +52,14 @@ plaso.output.json_out module
     :undoc-members:
     :show-inheritance:
 
+plaso.output.kml module
+-----------------------
+
+.. automodule:: plaso.output.kml
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.output.l2t_csv module
 ---------------------------
 
