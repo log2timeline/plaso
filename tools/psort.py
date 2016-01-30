@@ -5,7 +5,8 @@
 Sample Usage:
   psort.py /tmp/mystorage.dump "date > '01-06-2012'"
 
-See additional details here: http://plaso.kiddaland.net/usage/psort
+See additional details here:
+  https://github.com/log2timeline/plaso/wiki/Using-psort
 """
 
 import argparse
@@ -37,7 +38,7 @@ class PsortOptions(object):
 class PsortTool(analysis_tool.AnalysisTool):
   """Class that implements the psort CLI tool."""
 
-  _FILTERS_URL = u'http://plaso.kiddaland.net/usage/filters'
+  _FILTERS_URL = u'https://github.com/log2timeline/plaso/wiki/Filters'
 
   NAME = u'psort'
   DESCRIPTION = (
@@ -205,22 +206,13 @@ class PsortTool(analysis_tool.AnalysisTool):
         storage_file, preferred_encoding=self.preferred_encoding,
         timezone=self._timezone)
 
-    # TODO: Remove this check for the xlsx output module when
-    # DynamicOutputModule no longer inherits LinearOutputModule. (issue #393)
-    if (isinstance(output_module, output_interface.LinearOutputModule) and
-        output_module.NAME != u'xlsx'):
+    if isinstance(output_module, output_interface.LinearOutputModule):
       if self._output_filename:
         output_file_object = open(self._output_filename, u'wb')
         output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
       else:
         output_writer = cli_tools.StdoutOutputWriter()
       output_module.SetOutputWriter(output_writer)
-
-    # TODO: To set the filter we need to have the filter object. This may
-    # be better handled in an argument helper, but ATM the argument helper
-    # does not have access to the actual filter object.
-    if hasattr(output_module, u'SetFieldsFilter') and self._filter_object:
-      output_module.SetFieldsFilter(self._filter_object)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         self._options, output_module)
