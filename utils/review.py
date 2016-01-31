@@ -1076,7 +1076,7 @@ class ReadTheDocsHelper(object):
       A boolean indicating the build was triggered.
     """
     readthedocs_url = u'https://readthedocs.org/build/{0:s}'.format(
-        self._project_name)
+        self._project)
 
     request = urllib2.Request(readthedocs_url)
 
