@@ -71,7 +71,7 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     drive_number = event_values.get(u'drive_number', None)
     event_values[u'drive_letter'] = self._DRIVE_LETTER.get(

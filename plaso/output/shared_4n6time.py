@@ -63,12 +63,14 @@ class Base4n6TimeOutputModule(interface.OutputModule):
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self._output_mediator.timezone)
-    if not date_use:
-      self._ReportEventError(event_object, (
-          u'unable to copy timestamp: {0:d} to datetime object.'))
-      return
+    datetime_object = None
+    if event_object.timestamp is not None:
+      datetime_object = timelib.Timestamp.CopyToDatetime(
+          event_object.timestamp, self._output_mediator.timezone)
+      if not datetime_object:
+        self._ReportEventError(event_object, (
+            u'unable to copy timestamp: {0:d} to datetime object.'))
+        return
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
         event_object)
@@ -76,23 +78,28 @@ class Base4n6TimeOutputModule(interface.OutputModule):
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    extra = []
-    for attribute_name in event_object.GetAttributes():
+    extra_attributes = []
+    for attribute_name, attribute_value in event_object.GetAttributes():
       if (attribute_name in definitions.RESERVED_VARIABLE_NAMES or
           attribute_name in format_variables):
         continue
-      attribute_value = getattr(event_object, attribute_name, None)
-      extra.append(u'{0:s}: {1!s} '.format(attribute_name, attribute_value))
+      extra_attributes.append(
+          u'{0:s}: {1!s} '.format(attribute_name, attribute_value))
 
-    extra = u' '.join(extra)
+    extra_attributes = u' '.join(extra_attributes)
 
     inode = getattr(event_object, u'inode', u'-')
     if inode == u'-' and hasattr(event_object, u'pathspec'):
       inode = getattr(event_object.pathspec, u'inode', u'-')
 
-    date_use_string = u'{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
-        date_use.year, date_use.month, date_use.day, date_use.hour,
-        date_use.minute, date_use.second)
+    if datetime_object:
+      datetime_string = (
+          u'{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
+              datetime_object.year, datetime_object.month, datetime_object.day,
+              datetime_object.hour, datetime_object.minute,
+              datetime_object.second))
+    else:
+      datetime_string = u'N/A'
 
     if getattr(event_object, u'tag', None):
       tags = getattr(event_object.tag, u'tags', None)
@@ -117,8 +124,8 @@ class Base4n6TimeOutputModule(interface.OutputModule):
         u'inode': inode,
         u'notes': getattr(event_object, u'notes', u'-'),
         u'format': getattr(event_object, u'parser', u'-'),
-        u'extra': extra,
-        u'datetime': date_use_string,
+        u'extra': extra_attributes,
+        u'datetime': datetime_string,
         u'reportnotes': u'',
         u'inreport': u'',
         u'tag': taglist,

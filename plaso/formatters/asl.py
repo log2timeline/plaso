@@ -62,7 +62,7 @@ class ASLFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     priority_level = event_values.get(u'level', None)
     if isinstance(priority_level, py2to3.INTEGER_TYPES):

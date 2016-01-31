@@ -61,7 +61,7 @@ class ChromeExtensionActivityEventFormatter(
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     action_type = event_values.get(u'action_type')
     event_values[u'action_type'] = u'%s (type %d)'%(

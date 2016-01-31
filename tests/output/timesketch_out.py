@@ -83,21 +83,21 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   def testEventToDict(self):
     """Tests the _EventToDict function."""
     expected_dict = {
-        u'my_number': 123,
-        u'display_name': u'log/syslog.1',
-        u'timestamp_desc': u'Content Modification Time',
-        u'timestamp': self._event_timestamp,
-        u'some_additional_foo': True,
-        u'hostname': u'ubuntu',
-        u'filename': u'log/syslog.1',
         u'data_type': u'syslog:line',
+        u'datetime': u'2012-06-27T18:17:01+00:00',
+        u'display_name': u'log/syslog.1',
+        u'filename': u'log/syslog.1',
+        u'hostname': u'ubuntu',
+        u'message': u'[',
+        u'my_number': 123,
+        u'some_additional_foo': True,
         u'source_long': u'Log File',
         u'source_short': u'LOG',
         u'tag': [self._label],
         u'text': (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                   u'session\n closed for user root)'),
-        u'message': u'[',
-        u'datetime': u'2012-06-27T18:17:01+00:00'
+        u'timestamp': self._event_timestamp,
+        u'timestamp_desc': u'Content Modification Time',
     }
     # pylint: disable=protected-access
     event_dict = self._timesketch_output._GetSanitizedEventValues(

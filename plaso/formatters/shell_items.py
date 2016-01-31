@@ -45,7 +45,7 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     event_values[u'file_entry_name'] = event_values.get(u'long_name', None)
     if not event_values[u'file_entry_name']:

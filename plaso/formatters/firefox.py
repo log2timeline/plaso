@@ -104,7 +104,7 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     visit_type = event_values.get(u'visit_type', 0)
     transition = self._URL_TRANSITIONS.get(visit_type, None)
