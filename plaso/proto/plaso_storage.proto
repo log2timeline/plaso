@@ -93,9 +93,9 @@ message EventObject {
   optional int64 store_number = 10;
   optional int64 store_index = 11;
 
-  // EventTagging is a message that can be added that include information
+  // EventTag is a message that can be added that include information
   // about coloring, tagging or comments that this object contains.
-  optional EventTagging tag = 12;
+  optional EventTag tag = 12;
 
   // Description of the origin of the event in generic terms that
   // mostly adhere to the definition of the TLN format.
@@ -210,11 +210,11 @@ message EventObject {
   optional string uuid = 41;
 };
 
-// The EventTagging is a simple message that describes comments,
+// The EventTag is a simple message that describes comments,
 // color information or tagging of EventObjects. This information
 // is usually manually added by an investigator and can be used
 // to add more context to certain events.
-message EventTagging {
+message EventTag {
   // Description of where the EventObject is stored that this
   // tag is describing. It is necessary to either define these
   // two values or the event_uuid, otherwise it will not be
@@ -235,11 +235,11 @@ message EventTagging {
   // A short string or a tag that describes that can be used to
   // group together events that are related to one another, eg
   // "Malware", "Entry Point", "Event of Interest", etc.
-  message Tag {
+  message Label {
     required string value = 1;
   };
 
-  repeated Tag tags = 5;
+  repeated Label labels = 5;
 
   // An UUID value of the particular event object that this tag
   // belongs to. This value has to be set if the store_number and

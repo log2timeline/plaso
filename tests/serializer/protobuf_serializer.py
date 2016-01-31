@@ -225,40 +225,37 @@ class ProtobufEventTagSerializerTest(ProtobufSerializerTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    proto = plaso_storage_pb2.EventTagging()
-    proto.store_number = 234
-    proto.store_index = 18
-    proto.comment = u'My first comment.'
-    proto.color = u'Red'
-    proto_tag = proto.tags.add()
-    proto_tag.value = u'Malware'
-    proto_tag = proto.tags.add()
-    proto_tag.value = u'Common'
+    self._event_tag = event.EventTag(comment=u'My first comment.')
+    self._event_tag.color = u'Red'
+    self._event_tag.store_number = 234
+    self._event_tag.store_index = 18
+    self._event_tag.AddLabels([u'Malware', u'Common'])
 
-    self._proto_string = proto.SerializeToString()
-    self._serializer = protobuf_serializer.ProtobufEventTagSerializer
+    self._event_tag_dict = {
+        u'color': u'Red',
+        u'comment': u'My first comment.',
+        u'labels': [u'Malware', u'Common'],
+        u'store_index': 18,
+        u'store_number': 234,
+    }
 
-  def testReadSerialized(self):
-    """Tests the ReadSerialized function."""
-    event_tag = self._serializer.ReadSerialized(self._proto_string)
+  def testReadAndWriteSerializedObject(self):
+    """Test the ReadSerializedObject and WriteSerializedObject functions."""
+    serialized_event_tag = (
+        protobuf_serializer.ProtobufEventTagSerializer.WriteSerializedObject(
+            self._event_tag))
 
-    self.assertEqual(event_tag.color, u'Red')
-    self.assertEqual(event_tag.comment, u'My first comment.')
-    self.assertEqual(event_tag.store_index, 18)
-    self.assertEqual(len(event_tag.tags), 2)
-    self.assertEqual(event_tag.tags, [u'Malware', u'Common'])
+    self.assertIsNotNone(serialized_event_tag)
 
-  def testWriteSerialized(self):
-    """Tests the WriteSerialized function."""
-    event_tag = event.EventTag()
+    event_tag = (
+        protobuf_serializer.ProtobufEventTagSerializer.ReadSerializedObject(
+            serialized_event_tag))
 
-    event_tag.store_number = 234
-    event_tag.store_index = 18
-    event_tag.comment = u'My first comment.'
-    event_tag.color = u'Red'
-    event_tag.tags = [u'Malware', u'Common']
+    self.assertIsNotNone(event_tag)
 
-    self._TestWriteSerialized(self._serializer, event_tag, self._proto_string)
+    event_tag_dict = event_tag.CopyToDict()
+    self.assertEqual(
+        sorted(event_tag_dict.items()), sorted(self._event_tag_dict.items()))
 
 
 class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):

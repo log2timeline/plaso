@@ -262,22 +262,22 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_tag = event.EventTag()
     event_tag.store_index = 1
     event_tag.store_number = 1
-    event_tag.tags = [u'Malware']
     event_tag.color = u'red'
+    event_tag.AddLabel(u'Malware')
     event_tags.append(event_tag)
 
     event_tag = event.EventTag()
     event_tag.store_number = 1
     event_tag.store_index = 2
     event_tag.comment = u'This is interesting'
-    event_tag.tags = [u'Malware', u'Benign']
     event_tag.color = u'red'
+    event_tag.AddLabels([u'Malware', u'Benign'])
     event_tags.append(event_tag)
 
     event_tag = event.EventTag()
     event_tag.store_index = 1
     event_tag.store_number = 1
-    event_tag.tags = [u'Interesting']
+    event_tag.AddLabel(u'Interesting')
     event_tags.append(event_tag)
 
     return event_tags
@@ -470,23 +470,23 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(message[0:10], u'This is a ')
 
     event_object = tagged_event_objects[1]
-    self.assertEqual(event_object.tag.tags[0], u'Malware')
+    self.assertEqual(event_object.tag.labels[0], u'Malware')
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
     self.assertEqual(message[0:15], u'[\\HKCU\\Windows\\')
 
     event_object = tagged_event_objects[2]
     self.assertEqual(event_object.tag.comment, u'This is interesting')
-    self.assertEqual(event_object.tag.tags[0], u'Malware')
-    self.assertEqual(event_object.tag.tags[1], u'Benign')
+    self.assertEqual(event_object.tag.labels[0], u'Malware')
+    self.assertEqual(event_object.tag.labels[1], u'Benign')
 
     self.assertEqual(event_object.parser, u'UNKNOWN')
 
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
     event_object = tagged_event_objects[3]
-    self.assertEqual(event_object.tag.tags[0], u'Interesting')
-    self.assertEqual(event_object.tag.tags[1], u'Malware')
+    self.assertEqual(event_object.tag.labels[0], u'Interesting')
+    self.assertEqual(event_object.tag.labels[1], u'Malware')
 
   def testHasReports(self):
     """Tests the HasReports function."""

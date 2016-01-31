@@ -203,10 +203,10 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       tag_strings: A list of strings that the event should be tagged with.
     """
     event_tag = event.EventTag()
+    event_tag.comment = (
+        u'Tag applied by {0:s} analysis plugin'.format(self.NAME))
     event_tag.event_uuid = event_uuid
-    event_tag.comment = u'Tag applied by {0:s} analysis plugin'.format(
-        self.NAME)
-    event_tag.tags = tag_strings
+    event_tag.AddLabels(tag_strings)
     return event_tag
 
   def _HandleHashAnalysis(self, hash_analysis):

@@ -57,32 +57,6 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
 
     return analysis_report
 
-  def _ConvertDictToEventTag(self, json_dict):
-    """Converts a JSON dict into an event tag object.
-
-    The dictionary of the JSON serialized objects consists of:
-    {
-        '__type__': 'EventTag'
-        ...
-    }
-
-    Here '__type__' indicates the object base type. In this case this should
-    be 'EventTag'. The rest of the elements of the dictionary make up the
-    event tag object properties.
-
-    Args:
-      json_dict: a dictionary of the JSON serialized objects.
-
-    Returns:
-      An event tag (instance of EventTag).
-    """
-    event_tag = event.EventTag()
-
-    for key, value in iter(json_dict.items()):
-      setattr(event_tag, key, value)
-
-    return event_tag
-
   def _ConvertDictToObject(self, json_dict):
     """Converts a JSON dict into an object.
 
@@ -112,7 +86,7 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
       return binascii.a2b_qp(json_dict[u'stream'])
 
     elif class_type == u'EventTag':
-      return self._ConvertDictToEventTag(json_dict)
+      return JSONEventTagSerializer.ReadSerializedDict(json_dict)
 
     return self._ConvertDictToAnalysisReport(json_dict)
 
@@ -155,32 +129,6 @@ class _EventObjectJSONDecoder(json.JSONDecoder):
       setattr(event_object, key, value)
 
     return event_object
-
-  def _ConvertDictToEventTag(self, json_dict):
-    """Converts a JSON dict into an event tag object.
-
-    The dictionary of the JSON serialized objects consists of:
-    {
-        '__type__': 'EventTag'
-        ...
-    }
-
-    Here '__type__' indicates the object base type. In this case this should
-    be 'EventTag'. The rest of the elements of the dictionary make up the
-    event tag object properties.
-
-    Args:
-      json_dict: a dictionary of the JSON serialized objects.
-
-    Returns:
-      An event tag (instance of EventTag).
-    """
-    event_tag = event.EventTag()
-
-    for key, value in iter(json_dict.items()):
-      setattr(event_tag, key, value)
-
-    return event_tag
 
   def _ConvertDictToPathSpec(self, json_dict):
     """Converts a JSON dict into a path specification object.
@@ -241,7 +189,7 @@ class _EventObjectJSONDecoder(json.JSONDecoder):
       return binascii.a2b_qp(json_dict[u'stream'])
 
     elif class_type == u'EventTag':
-      return self._ConvertDictToEventTag(json_dict)
+      return JSONEventTagSerializer.ReadSerializedDict(json_dict)
 
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
@@ -369,46 +317,6 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
   # Note: that the following functions do not follow the style guide
   # because they are part of the json.JSONEncoder object interface.
 
-  def _ConvertEventTagToDict(self, event_tag):
-    """Converts an event tag object into a JSON dictionary.
-
-    The resulting dictionary of the JSON serialized objects consists of:
-    {
-        '__type__': 'EventTag'
-        ...
-    }
-
-    Here '__type__' indicates the object base type. In this case 'EventTag'.
-    The rest of the elements of the dictionary make up the event tag object
-    attributes.
-
-    Args:
-      event_tag: an event tag object (instance of EventTag).
-
-    Returns:
-      A dictionary of the JSON serialized objects.
-
-    Raises:
-      TypeError: if not an instance of EventTag.
-    """
-    if not isinstance(event_tag, event.EventTag):
-      raise TypeError
-
-    json_dict = {u'__type__': u'EventTag'}
-    for attribute_name, attribute_value in iter(event_tag.__dict__.items()):
-      if attribute_value is None:
-        continue
-
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
-        attribute_value = {
-            u'__type__': u'bytes',
-            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
-        }
-
-      json_dict[attribute_name] = attribute_value
-
-    return json_dict
-
   # pylint: disable=method-hidden
   def default(self, analysis_report):
     """Converts an analysis report object into a JSON dictionary.
@@ -448,7 +356,8 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
       if attribute_name == u'_tags':
         event_tags = []
         for event_tag in attribute_value:
-          event_tags.append(self._ConvertEventTagToDict(event_tag))
+          event_tag = JSONEventTagSerializer.WriteSerializedDict(event_tag)
+          event_tags.append(event_tag)
         attribute_value = event_tags
 
       elif isinstance(attribute_value, py2to3.BYTES_TYPE):
@@ -464,46 +373,6 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
 
 class _EventObjectJSONEncoder(json.JSONEncoder):
   """A class that implements an event object JSON encoder."""
-
-  def _ConvertEventTagToDict(self, event_tag):
-    """Converts an event tag object into a JSON dictionary.
-
-    The resulting dictionary of the JSON serialized objects consists of:
-    {
-        '__type__': 'EventTag'
-        ...
-    }
-
-    Here '__type__' indicates the object base type. In this case 'EventTag'.
-    The rest of the elements of the dictionary make up the event tag object
-    attributes.
-
-    Args:
-      event_tag: an event tag object (instance of EventTag).
-
-    Returns:
-      A dictionary of the JSON serialized objects.
-
-    Raises:
-      TypeError: if not an instance of EventTag.
-    """
-    if not isinstance(event_tag, event.EventTag):
-      raise TypeError
-
-    json_dict = {u'__type__': u'EventTag'}
-    for attribute_name, attribute_value in iter(event_tag.__dict__.items()):
-      if attribute_value is None:
-        continue
-
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
-        attribute_value = {
-            u'__type__': u'bytes',
-            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
-        }
-
-      json_dict[attribute_name] = attribute_value
-
-    return json_dict
 
   def _ConvertPathSpecToDict(self, path_spec_object):
     """Converts a path specification object into a JSON dictionary.
@@ -593,7 +462,8 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
         attribute_value = self._ConvertPathSpecToDict(attribute_value)
 
       elif attribute_name == u'tag':
-        attribute_value = self._ConvertEventTagToDict(attribute_value)
+        attribute_value = JSONEventTagSerializer.WriteSerializedDict(
+            attribute_value)
 
       elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
@@ -817,7 +687,7 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
 
   @classmethod
   def ReadSerialized(cls, json_string):
-    """Reads an event tag from serialized form.
+    """Reads an event tag from serialized string form.
 
     Args:
       json_string: a JSON string containing the serialized form.
@@ -828,18 +698,43 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
     if not json_string:
       return
 
+    json_dict = json.loads(json_string)
+    return cls.ReadSerializedDict(json_dict)
+
+  @classmethod
+  def ReadSerializedDict(cls, json_dict):
+    """Reads an event tag from serialized dict form.
+
+    Args:
+      json_dict: a dictionary of the JSON serialized objects.
+
+    Returns:
+      An event tag (instance of EventTag).
+    """
+    if not json_dict:
+      return
+
     event_tag = event.EventTag()
 
-    json_attributes = json.loads(json_string)
+    for key, value in iter(json_dict.items()):
+      if value is None:
+        continue
 
-    for key, value in iter(json_attributes.items()):
-      setattr(event_tag, key, value)
+      # Note that "_tags" is the name for "labels" prior to version
+      # 1.4.1-20160131
+      if key == u'_tags':
+        key = u'lables'
+
+      if key == u'labels':
+        event_tag.AddLabels(value)
+      else:
+        setattr(event_tag, key, value)
 
     return event_tag
 
   @classmethod
   def WriteSerialized(cls, event_tag):
-    """Writes an event tag to serialized form.
+    """Writes an event tag to serialized string form.
 
     Args:
       event_tag: an event tag (instance of EventTag).
@@ -853,7 +748,46 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
     if not event_tag.IsValidForSerialization():
       raise RuntimeError(u'Invalid tag object not valid for serialization.')
 
-    return json.dumps(event_tag.__dict__)
+    json_dict = cls.WriteSerializedDict(event_tag)
+    return json.dumps(json_dict)
+
+  @classmethod
+  def WriteSerializedDict(cls, event_tag):
+    """Writes an event tag to serialized dict form.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'EventTag'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case 'EventTag'.
+    The rest of the elements of the dictionary make up the event tag object
+    attributes.
+
+    Args:
+      event_tag: an event tag object (instance of EventTag).
+
+    Returns:
+      A dictionary of the JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of EventTag.
+    """
+    if not isinstance(event_tag, event.EventTag):
+      raise TypeError
+
+    json_dict = {u'__type__': u'EventTag'}
+    for attribute_name, attribute_value in event_tag.GetAttributes():
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
 
 
 class JSONPreprocessObjectSerializer(interface.PreprocessObjectSerializer):

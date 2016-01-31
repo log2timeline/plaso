@@ -125,7 +125,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
         u'viper_present', u'viper_project_default', u'viper_tag_rat',
         u'viper_tag_darkcomet'
     ]
-    self.assertEqual(tag.tags, expected_tag_strings)
+    self.assertEqual(tag.labels, expected_tag_strings)
 
 
 class MockResponse(dict):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The core object definitions, e.g. the event object."""
 
+import abc
 import collections
 import logging
 import re
@@ -12,6 +13,28 @@ from plaso.lib import timelib
 from plaso.lib import utils
 
 import pytz
+
+
+class ValueObject(object):
+  """Class that defines the value object interface."""
+
+  @abc.abstractmethod
+  def CopyToDict(self):
+    """Copies the value object to a dictionary.
+
+    Returns:
+      A dictionary containing the value object attributes.
+    """
+
+  @abc.abstractmethod
+  def GetAttributes(self):
+    """Retrieves the attributes from the value object.
+
+    Attributes that are set to None are ignored.
+
+    Yields:
+      A tuple containing the event tag attribute name and value.
+    """
 
 
 class AnalysisReport(object):
@@ -29,13 +52,8 @@ class AnalysisReport(object):
     """
     super(AnalysisReport, self).__init__()
     self._anomalies = []
-    self.plugin_name = plugin_name
     self._tags = []
-
-  # TODO: replace with a Python 3 compatible solution.
-  def __unicode__(self):
-    """Returns a Unicode representation of the report."""
-    return self.GetString()
+    self.plugin_name = plugin_name
 
   def GetAnomalies(self):
     """Retrieves the list of anomalies that are attached to the report."""
@@ -322,96 +340,147 @@ class EventObject(object):
     return values
 
 
-class EventTag(object):
-  """A native Python object for the EventTagging protobuf.
+# TODO: deprecate store number and index.
 
-  The EventTag object should have the following attributes:
-  (optional attributes surrounded with brackets)
-  * store_number: An integer, pointing to the store the EventObject is.
-  * store_index: An index into the store where the EventObject is.
-  * event_uuid: An UUID value of the event this tag belongs to.
-  * [comment]: An arbitrary string containing comments about the event.
-  * [color]: A string containing color information.
-  * [tags]: A list of strings with tags, eg: 'Malware', 'Entry Point'.
+class EventTag(ValueObject):
+  """Class to represent an event tag value object.
 
-  The tag either needs to have an event_uuid defined or both the store_number
-  and store_index to be valid (not both, if both defined the store_number and
-  store_index will be used).
+  The event tag either needs to have an event_uuid defined or both
+  the store_number and store_index to be valid. If both defined
+  the store_number and store_index is preferred.
+
+  Attributes:
+    color: a string containing a color name or None if not set.
+    comment: a string containing comments or None if not set.
+    event_uuid: a string containing the event identifier (UUID) or None
+                if not set.
+    labels: a list of strings containing labels. e.g. "malware",
+            "application_execution".
+    store_index: an integer containing the store index of the corresponding
+                 event or None if not set.
+    store_number: an integer containing the store number of the corresponding
+                  event or None if not set.
   """
+  _ATTRIBUTE_NAMES = frozenset([
+      u'color', u'comment', u'event_uuid', u'labels', u'store_index',
+      u'store_number'])
 
-  VALID_TAG_REGEX = re.compile(r'[A-Za-z0-9_]+')
+  _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
+
   INVALID_TAG_CHARACTER_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
-  def __init__(self):
-    """Initializes a new EventTag."""
-    super(EventTag, self).__init__()
-    self._tags = []
+  def __init__(self, color=None, comment=None, event_uuid=None):
+    """Initializes an event tag.
 
-  # TODO: Enable __slots__ once we tested the first round of changes.
+    Args:
+      color: optional string containing a color name.
+      comment: optional string containing comments.
+      event_uuid: optional string containing the event identifier (UUID).
+    """
+    super(EventTag, self).__init__()
+    self.color = color
+    self.comment = comment
+    self.event_uuid = event_uuid
+    self.labels = []
+    self.store_index = None
+    self.store_number = None
+
   @property
   def string_key(self):
     """Return a string index key for this tag."""
     if not self.IsValidForSerialization():
       return u''
 
-    uuid_string = getattr(self, u'event_uuid', None)
-    if uuid_string:
-      return uuid_string
+    if self.event_uuid is not None:
+      return self.event_uuid
 
     return u'{0:d}:{1:d}'.format(self.store_number, self.store_index)
 
-  @property
-  def tags(self):
-    """The string tags in an event tag."""
-    return self._tags
-
-  @tags.setter
-  def tags(self, value):
-    """Sets the string tags in an event tag.
+  def AddComment(self, comment):
+    """Adds comment to the event tag.
 
     Args:
-      value: a list of strings to set as string tags in this event tag. The tags
-             must only contain alphanumeric characters and underscores.
+      label: a string containing the label.
+    """
+    if not comment:
+      return
+
+    if not self.comment:
+      self.comment = comment
+    else:
+      self.comment = u''.join([self.comment, comment])
+
+  def AddLabel(self, label):
+    """Adds a label to the event tag.
+
+    Args:
+      label: a string containing the label.
 
     Raises:
-      AttributeError: If the provided value is not a list, or contains strings
-                      that are not valid string tags.
+      ValueError: if the label is malformed.
     """
-    if not isinstance(value, list):
-      raise AttributeError(u'{0:s} is a not a list.'.format(value))
-    for tag in value:
-      if not self.VALID_TAG_REGEX.match(tag):
-        raise AttributeError((
-            u'{0:s} is not a valid tag. Tags must consist of alphanumeric '
-            u'characters and underscores only').format(tag))
-    self._tags = value
+    if not self._VALID_LABEL_REGEX.match(label):
+      raise ValueError((
+          u'Unusupported label: "{0:s}". A label must only consist of '
+          u'alphanumeric characters or underscores.').format(label))
 
+    self.labels.append(label)
 
-  def GetString(self):
-    """Retrieves a string representation of the event."""
-    ret = []
-    ret.append(u'-' * 50)
-    if getattr(self, u'store_number', 0):
-      ret.append(u'{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
-          u'Store', self.store_number, self.store_index))
+  def AddLabels(self, labels):
+    """Adds labels to the event tag.
+
+    Args:
+      labels: a list of strings containing the labels.
+
+    Raises:
+      ValueError: if the label is malformed.
+    """
+    for label in labels:
+      self.AddLabel(label)
+
+  def CopyToDict(self):
+    """Copies the event tag to a dictionary.
+
+    Returns:
+      A dictionary containing the event tag attributes.
+    """
+    result_dict = {
+        u'labels': self.labels
+    }
+    if (self.store_number is not None and self.store_index is not None and
+        self.store_number > -1 and self.store_index > -1):
+      result_dict[u'store_number'] = self.store_number
+      result_dict[u'store_index'] = self.store_index
     else:
-      ret.append(u'{0:>7}:\n\tUUID: {1}'.format(u'Store', self.event_uuid))
-    if hasattr(self, u'comment'):
-      ret.append(u'{:>7}: {}'.format(u'Comment', self.comment))
-    if hasattr(self, u'color'):
-      ret.append(u'{:>7}: {}'.format(u'Color', self.color))
-    if hasattr(self, u'tags'):
-      ret.append(u'{:>7}: {}'.format(u'Tags', u','.join(self.tags)))
+      result_dict[u'event_uuid'] = self.event_uuid
 
-    return u'\n'.join(ret)
+    if self.color:
+      result_dict[u'color'] = self.color
+    if self.comment:
+      result_dict[u'comment'] = self.comment
+
+    return result_dict
+
+  def GetAttributes(self):
+    """Retrieves the attributes from the event tag object.
+
+    Attributes that are set to None are ignored.
+
+    Yields:
+      A tuple containing the event tag attribute name and value.
+    """
+    for attribute_name in self._ATTRIBUTE_NAMES:
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is not None:
+        yield attribute_name, attribute_value
 
   def IsValidForSerialization(self):
     """Return whether or not this is a valid tag object."""
-    if getattr(self, u'event_uuid', None):
+    if self.event_uuid is not None:
       return True
 
-    if getattr(self, u'store_number', 0) and getattr(
-        self, u'store_index', -1) >= 0:
+    if (self.store_number is not None and self.store_index is not None and
+        self.store_number > -1 and self.store_index > -1):
       return True
 
     return False
