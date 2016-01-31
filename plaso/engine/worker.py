@@ -274,6 +274,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       data_stream_name: optional data stream name. The default is
                         an empty string which represents the default
                         data stream.
+
+    Raises:
+      RuntimeError: if the file-like object is missing.
     """
     if not self._hasher_names:
       return
@@ -285,7 +288,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
-      return
+      raise RuntimeError(
+          u'Unable to retrieve file-like object from file entry.')
 
     # Make sure frame.f_locals does not keep a reference to file_entry.
     file_entry = None
@@ -527,10 +531,14 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       data_stream_name: optional data stream name. The default is
                         an empty string which represents the default
                         data stream.
+
+    Raises:
+      RuntimeError: if the file-like object is missing.
     """
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
-      return
+      raise RuntimeError(
+          u'Unable to retrieve file-like object from file entry.')
 
     try:
       parser_name_list = self._GetSignatureMatchParserNames(file_object)
@@ -571,10 +579,14 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       data_stream_name: optional data stream name. The default is
                         an empty string which represents the default
                         data stream.
+
+    Raises:
+      RuntimeError: if the file-like object is missing.
     """
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
-      return
+      raise RuntimeError(
+          u'Unable to retrieve file-like object from file entry.')
 
     try:
       self._status = definitions.PROCESSING_STATUS_PARSING
