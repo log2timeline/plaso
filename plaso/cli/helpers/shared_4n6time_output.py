@@ -15,9 +15,8 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
 
   _DEFAULT_APPEND = False
   _DEFAULT_EVIDENCE = u'-'
-  _DEFAULT_FIELDS = u','.join([
-      u'color', u'datetime', u'host', u'source', u'sourcetype', u'user',
-      u'type'])
+  _DEFAULT_FIELDS = [
+      u'datetime', u'host', u'source', u'sourcetype', u'user', u'type']
 
   @classmethod
   def AddArguments(cls, argument_group):

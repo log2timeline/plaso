@@ -230,13 +230,11 @@ class JSONEventTagSerializerTest(JSONSerializerTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._event_tag = event.EventTag(comment=u'My first comment.')
-    self._event_tag.color = u'Red'
     self._event_tag.store_number = 234
     self._event_tag.store_index = 18
     self._event_tag.AddLabels([u'Malware', u'Common'])
 
     self._event_tag_dict = {
-        u'color': u'Red',
         u'comment': u'My first comment.',
         u'labels': [u'Malware', u'Common'],
         u'store_index': 18,

@@ -20,7 +20,7 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u'Saves the data in a SQLite database, used by the tool 4n6time.')
 
   _META_FIELDS = frozenset([
-      u'sourcetype', u'source', u'user', u'host', u'MACB', u'color', u'type',
+      u'sourcetype', u'source', u'user', u'host', u'MACB', u'type',
       u'record_number'])
 
   _CREATE_TABLE_QUERY = (
@@ -29,21 +29,21 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u'user TEXT, host TEXT, description TEXT, filename TEXT, '
       u'inode TEXT, notes TEXT, format TEXT, extra TEXT, '
       u'datetime datetime, reportnotes TEXT, '
-      u'inreport TEXT, tag TEXT, color TEXT, offset INT, '
-      u'vss_store_number INT, url TEXT, record_number TEXT, '
-      u'event_identifier TEXT, event_type TEXT, source_name TEXT, '
-      u'user_sid TEXT, computer_name TEXT, evidence TEXT)')
+      u'inreport TEXT, tag TEXT, offset INT, vss_store_number INT, '
+      u'url TEXT, record_number TEXT, event_identifier TEXT, '
+      u'event_type TEXT, source_name TEXT, user_sid TEXT, '
+      u'computer_name TEXT, evidence TEXT)')
 
   _INSERT_QUERY = (
       u'INSERT INTO log2timeline(timezone, MACB, source, '
       u'sourcetype, type, user, host, description, filename, '
       u'inode, notes, format, extra, datetime, reportnotes, inreport, '
-      u'tag, color, offset, vss_store_number, URL, record_number, '
+      u'tag, offset, vss_store_number, URL, record_number, '
       u'event_identifier, event_type, source_name, user_sid, computer_name, '
       u'evidence) '
       u'VALUES (:timezone, :MACB, :source, :sourcetype, :type, :user, :host, '
       u':description, :filename, :inode, :notes, :format, :extra, :datetime, '
-      u':reportnotes, :inreport, :tag, :color, :offset, :vss_store_number, '
+      u':reportnotes, :inreport, :tag, :offset, :vss_store_number, '
       u':URL, :record_number, :event_identifier, :event_type, :source_name, '
       u':user_sid, :computer_name, :evidence)')
 

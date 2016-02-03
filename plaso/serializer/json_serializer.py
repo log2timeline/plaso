@@ -723,7 +723,7 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
       # Note that "_tags" is the name for "labels" prior to version
       # 1.4.1-20160131
       if key == u'_tags':
-        key = u'lables'
+        key = u'labels'
 
       if key == u'labels':
         event_tag.AddLabels(value)

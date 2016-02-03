@@ -230,6 +230,7 @@ message EventTag {
   // event stand out. This should be either a simple description
   // of the color, eg "red", "yellow", etc or a HTML color code,
   // eg: "#E11414".
+  // NOTE: This field is deprecated and should no longer be used.
   optional string color = 4;
 
   // A short string or a tag that describes that can be used to

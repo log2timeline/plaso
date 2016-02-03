@@ -256,13 +256,11 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_tag.store_index = 0
     event_tag.store_number = 1
     event_tag.comment = u'My comment'
-    event_tag.color = u'blue'
     event_tags.append(event_tag)
 
     event_tag = event.EventTag()
     event_tag.store_index = 1
     event_tag.store_number = 1
-    event_tag.color = u'red'
     event_tag.AddLabel(u'Malware')
     event_tags.append(event_tag)
 
@@ -270,7 +268,6 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_tag.store_number = 1
     event_tag.store_index = 2
     event_tag.comment = u'This is interesting'
-    event_tag.color = u'red'
     event_tag.AddLabels([u'Malware', u'Benign'])
     event_tags.append(event_tag)
 
@@ -463,7 +460,6 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.store_number, 1)
     self.assertEqual(event_object.store_index, 0)
     self.assertEqual(event_object.tag.comment, u'My comment')
-    self.assertEqual(event_object.tag.color, u'blue')
 
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)

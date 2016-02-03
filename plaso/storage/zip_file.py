@@ -1842,9 +1842,6 @@ class StorageFile(ZIPStorageFile):
         tag.AddComment(old_tag.comment)
         tag.AddLabels(old_tag.labels)
 
-        if not tag.color and old_tag.color:
-          tag.color = old_tag.color
-
       if self._serializers_profiler:
         self._serializers_profiler.StartTiming(u'event_tag')
 

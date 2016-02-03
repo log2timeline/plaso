@@ -33,7 +33,7 @@ class ValueObject(object):
     Attributes that are set to None are ignored.
 
     Yields:
-      A tuple containing the event tag attribute name and value.
+      A tuple containing the value object attribute name and value.
     """
 
 
@@ -350,7 +350,6 @@ class EventTag(ValueObject):
   the store_number and store_index is preferred.
 
   Attributes:
-    color: a string containing a color name or None if not set.
     comment: a string containing comments or None if not set.
     event_uuid: a string containing the event identifier (UUID) or None
                 if not set.
@@ -362,23 +361,20 @@ class EventTag(ValueObject):
                   event or None if not set.
   """
   _ATTRIBUTE_NAMES = frozenset([
-      u'color', u'comment', u'event_uuid', u'labels', u'store_index',
-      u'store_number'])
+      u'comment', u'event_uuid', u'labels', u'store_index', u'store_number'])
 
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
   INVALID_TAG_CHARACTER_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
-  def __init__(self, color=None, comment=None, event_uuid=None):
+  def __init__(self, comment=None, event_uuid=None):
     """Initializes an event tag.
 
     Args:
-      color: optional string containing a color name.
       comment: optional string containing comments.
       event_uuid: optional string containing the event identifier (UUID).
     """
     super(EventTag, self).__init__()
-    self.color = color
     self.comment = comment
     self.event_uuid = event_uuid
     self.labels = []
@@ -397,7 +393,7 @@ class EventTag(ValueObject):
     return u'{0:d}:{1:d}'.format(self.store_number, self.store_index)
 
   def AddComment(self, comment):
-    """Adds comment to the event tag.
+    """Adds a comment to the event tag.
 
     Args:
       label: a string containing the label.
@@ -454,8 +450,6 @@ class EventTag(ValueObject):
     else:
       result_dict[u'event_uuid'] = self.event_uuid
 
-    if self.color:
-      result_dict[u'color'] = self.color
     if self.comment:
       result_dict[u'comment'] = self.comment
 
