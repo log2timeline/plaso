@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Contains a formatter for a dynamic output module for plaso."""
 
-import re
-
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -10,27 +8,12 @@ from plaso.output import interface
 from plaso.output import manager
 
 
-class DynamicOutputModule(interface.LinearOutputModule):
-  """Dynamic selection of fields for a separated value output format."""
-
-  NAME = u'dynamic'
-  DESCRIPTION = (
-      u'Dynamic selection of fields for a separated value output format.')
-
-  FORMAT_ATTRIBUTE_RE = re.compile(r'{([^}]+)}')
-
-  # TODO: Evaluate which fields should be included by default.
-  _DEFAULT_FIELDS = [
-      u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag']
-
-  _FIELD_DELIMITER = u','
+class DynamicFieldsHelper(object):
+  """Helper for outputting a dynamic selection of fields."""
 
   # A dict containing mappings between the name of fields and
   # a callback function that formats the field value.
-  # They should be documented here:
-  #   http://plaso.kiddaland.net/usage/psort/output
-  FIELD_FORMAT_CALLBACKS = {
+  _FIELD_FORMAT_CALLBACKS = {
       u'date': u'_FormatDate',
       u'datetime': u'_FormatDateTime',
       u'description': u'_FormatMessage',
@@ -54,14 +37,13 @@ class DynamicOutputModule(interface.LinearOutputModule):
   }
 
   def __init__(self, output_mediator):
-    """Initializes an output module object.
+    """Initializes a dynamic fields helper object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator: the output mediator object (instance of OutputMediator).
     """
-    super(DynamicOutputModule, self).__init__(output_mediator)
-    self._field_delimiter = self._FIELD_DELIMITER
-    self._fields = self._DEFAULT_FIELDS
+    super(DynamicFieldsHelper, self).__init__()
+    self._output_mediator = output_mediator
 
   def _FormatDate(self, event_object):
     """Formats the date.
@@ -118,8 +100,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Returns:
       A string containing the value for the hostname field.
     """
-    hostname = self._output_mediator.GetHostname(event_object)
-    return self._SanitizeField(hostname)
+    return self._output_mediator.GetHostname(event_object)
 
   def _FormatInode(self, event_object):
     """Formats the inode.
@@ -168,7 +149,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    return self._SanitizeField(message)
+    return message
 
   def _FormatMessageShort(self, event_object):
     """Formats the short message.
@@ -189,7 +170,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    return self._SanitizeField(message_short)
+    return message_short
 
   def _FormatSource(self, event_object):
     """Formats the source.
@@ -210,7 +191,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    return self._SanitizeField(source)
+    return source
 
   def _FormatSourceShort(self, event_object):
     """Formats the short source.
@@ -231,7 +212,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    return self._SanitizeField(source_short)
+    return source_short
 
   def _FormatTag(self, event_object):
     """Formats the event tag.
@@ -293,8 +274,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Returns:
       A string containing the value for the username field.
     """
-    username = self._output_mediator.GetUsername(event_object)
-    return self._SanitizeField(username)
+    return self._output_mediator.GetUsername(event_object)
 
   def _FormatZone(self, unused_event_object):
     """Formats the timezone.
@@ -307,10 +287,60 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """
     return self._output_mediator.timezone
 
+  def GetFormattedField(self, event_object, field_name):
+    """Formats the specified field.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+      field_name: a string containing the name of the field.
+
+    Returns:
+      A string containing the value for the field.
+    """
+    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
+    callback_function = None
+    if callback_name:
+      callback_function = getattr(self, callback_name, None)
+
+    if callback_function:
+      output_value = callback_function(event_object)
+    else:
+      output_value = getattr(event_object, field_name, u'-')
+
+    if not isinstance(output_value, py2to3.STRING_TYPES):
+      output_value = u'{0!s}'.format(output_value)
+
+    return output_value
+
+
+class DynamicOutputModule(interface.LinearOutputModule):
+  """Dynamic selection of fields for a separated value output format."""
+
+  NAME = u'dynamic'
+  DESCRIPTION = (
+      u'Dynamic selection of fields for a separated value output format.')
+
+  _DEFAULT_FIELD_DELIMITER = u','
+
+  _DEFAULT_FIELDS = [
+      u'datetime', u'timestamp_desc', u'source', u'source_long',
+      u'message', u'parser', u'display_name', u'tag']
+
+  def __init__(self, output_mediator):
+    """Initializes an output module object.
+
+    Args:
+      output_mediator: The output mediator object (instance of OutputMediator).
+    """
+    super(DynamicOutputModule, self).__init__(output_mediator)
+    self._dynamic_fields_helper = DynamicFieldsHelper(output_mediator)
+    self._field_delimiter = self._DEFAULT_FIELD_DELIMITER
+    self._fields = self._DEFAULT_FIELDS
+
   def _SanitizeField(self, field):
     """Sanitizes a field for output.
 
-    This method removes the field delimiter from the field string.
+    This method replaces any field delimiters with a space.
 
     Args:
       field: the string that makes up the field.
@@ -318,24 +348,26 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Returns:
       A string containing the value for the field.
     """
-    if self._field_delimiter:
-      return field.replace(self._field_delimiter, u' ')
-    return field
+    if not self._field_delimiter:
+      return field
 
-  def SetFieldsFilter(self, fields_filter):
-    """Set the fields filter.
+    return field.replace(self._field_delimiter, u' ')
+
+  def SetFieldDelimiter(self, field_delimiter):
+    """Sets the field delimiter.
 
     Args:
-      fields_filter: filter object (instance of FilterObject) to
-                     indicate which fields should be outputed.
+      field_delimiter: a string containing the field delimiter
     """
-    if not fields_filter:
-      return
+    self._field_delimiter = field_delimiter
 
-    if fields_filter.fields:
-      self._fields = fields_filter.fields
-    if fields_filter.separator:
-      self._field_delimiter = fields_filter.separator
+  def SetFields(self, fields):
+    """Sets the fields to output.
+
+    Args:
+      fields: a list of strings containing the names of the fields to output.
+    """
+    self._fields = fields
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
@@ -344,22 +376,11 @@ class DynamicOutputModule(interface.LinearOutputModule):
       event_object: an event object (instance of EventObject).
     """
     output_values = []
-    for field in self._fields:
-      callback_name = self.FIELD_FORMAT_CALLBACKS.get(field, None)
-      if callback_name:
-        callback_function = getattr(self, callback_name, None)
-      else:
-        callback_function = None
+    for field_name in self._fields:
+      output_value = self._dynamic_fields_helper.GetFormattedField(
+          event_object, field_name)
 
-      if callback_function:
-        output_value = callback_function(event_object)
-      else:
-        output_value = getattr(event_object, field, u'-')
-
-      if not isinstance(output_value, py2to3.STRING_TYPES):
-        output_value = u'{0!s}'.format(output_value)
-
-      output_value = output_value.replace(self._field_delimiter, u' ')
+      output_value = self._SanitizeField(output_value)
       output_values.append(output_value)
 
     output_line = u'{0:s}\n'.format(self._field_delimiter.join(output_values))
@@ -367,7 +388,6 @@ class DynamicOutputModule(interface.LinearOutputModule):
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    # Start by finding out which fields are to be used.
     self._WriteLine(u'{0:s}\n'.format(self._field_delimiter.join(self._fields)))
 
 

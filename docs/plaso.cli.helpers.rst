@@ -12,6 +12,14 @@ plaso.cli.helpers.database_config module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.dynamic_output module
+---------------------------------------
+
+.. automodule:: plaso.cli.helpers.dynamic_output
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.elastic_output module
 ---------------------------------------
 

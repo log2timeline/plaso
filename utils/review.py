@@ -934,7 +934,7 @@ class ProjectHelper(object):
     dpkg_maintainter = u'Log2Timeline <log2timeline-dev@googlegroups.com>'
     dpkg_date = time.strftime(u'%a, %d %b %Y %H:%M:%S %z')
     dpkg_changelog_content = u'\n'.join([
-        u'python-{0:s} ({1:s}-1) unstable; urgency=low'.format(
+        u'{0:s} ({1:s}-1) unstable; urgency=low'.format(
             project_name, project_version),
         u'',
         u'  * Auto-generated',
