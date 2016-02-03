@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
-import datetime
 import os
 import re
 
@@ -12,16 +11,22 @@ except ImportError:
 
 from plaso.lib import py2to3
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.output import dynamic
+from plaso.output import interface
 from plaso.output import manager
 
 
-class XlsxOutputModule(dynamic.DynamicOutputModule):
+class XLSXOutputModule(interface.OutputModule):
   """Output module for the Excel Spreadsheet (XLSX) output format."""
 
   NAME = u'xlsx'
   DESCRIPTION = u'Excel Spreadsheet (XLSX) output'
+
+  _DEFAULT_FIELDS = [
+      u'datetime', u'timestamp_desc', u'source', u'source_long',
+      u'message', u'parser', u'display_name', u'tag']
+
+  _DEFAULT_TIMESTAMP_FORMAT = u'YYYY-MM-DD HH:MM:SS.000'
 
   _MAX_COLUMN_WIDTH = 50
   _MIN_COLUMN_WIDTH = 6
@@ -37,12 +42,14 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     Args:
       output_mediator: The output mediator object (instance of OutputMediator).
     """
-    super(XlsxOutputModule, self).__init__(output_mediator)
+    super(XLSXOutputModule, self).__init__(output_mediator)
     self._column_widths = {}
     self._current_row = 0
+    self._dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
+    self._fields = self._DEFAULT_FIELDS
     self._filename = None
     self._sheet = None
-    self._timestamp_format = None
+    self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
     self._workbook = None
 
   def _FormatDateTime(self, event_object):
@@ -115,6 +122,14 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
     self._sheet = self._workbook.add_worksheet(u'Sheet')
     self._current_row = 0
 
+  def SetFields(self, fields):
+    """Sets the fields to output.
+
+    Args:
+      fields: a list of strings containing the names of the fields to output.
+    """
+    self._fields = fields
+
   def SetFilename(self, filename):
     """Sets the filename.
 
@@ -138,37 +153,35 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
       event_object: the event object (instance of EventObject).
     """
     for field_name in self._fields:
-      callback_name = self.FIELD_FORMAT_CALLBACKS.get(field_name, None)
-      callback_function = None
-      if callback_name:
-        callback_function = getattr(self, callback_name, None)
-
-      if callback_function:
-        value = callback_function(event_object)
+      if field_name == u'datetime':
+        output_value = self._FormatDateTime(event_object)
       else:
-        value = getattr(event_object, field_name, u'-')
+        output_value = self._dynamic_fields_helper.GetFormattedField(
+            event_object, field_name)
 
-      if not isinstance(value, (
-          bool, py2to3.INTEGER_TYPES, float, datetime.datetime)):
-        # TODO: remove need for GetUnicodeString.
-        value = utils.GetUnicodeString(value)
-        value = self._RemoveIllegalXMLCharacters(value)
+      output_value = self._RemoveIllegalXMLCharacters(output_value)
 
-      # Auto adjust column width based on length of value.
+      # Auto adjust the column width based on the length of the output value.
       column_index = self._fields.index(field_name)
       self._column_widths.setdefault(column_index, 0)
+
+      if field_name == u'datetime':
+        column_width = min(
+            self._MAX_COLUMN_WIDTH, len(self._timestamp_format) + 2)
+      else:
+        column_width = min(self._MAX_COLUMN_WIDTH, len(output_value) + 2)
+
       self._column_widths[column_index] = max(
-          self._MIN_COLUMN_WIDTH,
-          self._column_widths[column_index],
-          min(self._MAX_COLUMN_WIDTH, len(utils.GetUnicodeString(value)) + 2))
+          self._MIN_COLUMN_WIDTH, self._column_widths[column_index],
+          column_width)
       self._sheet.set_column(
           column_index, column_index, self._column_widths[column_index])
 
-      if isinstance(value, datetime.datetime):
+      if field_name == u'datetime':
         self._sheet.write_datetime(
-            self._current_row, column_index, value)
+            self._current_row, column_index, output_value)
       else:
-        self._sheet.write(self._current_row, column_index, value)
+        self._sheet.write(self._current_row, column_index, output_value)
 
     self._current_row += 1
 
@@ -186,4 +199,4 @@ class XlsxOutputModule(dynamic.DynamicOutputModule):
 
 
 manager.OutputManager.RegisterOutput(
-    XlsxOutputModule, disabled=xlsxwriter is None)
+    XLSXOutputModule, disabled=xlsxwriter is None)

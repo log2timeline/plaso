@@ -40,7 +40,7 @@ class TestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = u'Syslog'
 
 
-class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
+class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the XLSX output module."""
 
   _SHARED_STRINGS = u'xl/sharedStrings.xml'
@@ -116,7 +116,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XlsxOutputModule(output_mediator)
+      output_module = xlsx.XLSXOutputModule(output_mediator)
 
       xlsx_file = os.path.join(temp_directory, u'xlsx.out')
       output_module.SetFilename(xlsx_file)
@@ -148,7 +148,7 @@ class XlsxOutputModuleTest(test_lib.OutputModuleTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XlsxOutputModule(output_mediator)
+      output_module = xlsx.XLSXOutputModule(output_mediator)
 
       xslx_file = os.path.join(temp_directory, u'xlsx.out')
       output_module.SetFilename(xslx_file)

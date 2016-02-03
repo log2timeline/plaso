@@ -37,15 +37,6 @@ class TestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = u'Syslog'
 
 
-class FakeFilter(object):
-  """Provide a fake filter, that defines which fields to use."""
-
-  def __init__(self, fields, separator=u','):
-    super(FakeFilter, self).__init__()
-    self.fields = fields
-    self.separator = separator
-
-
 class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the dynamic output module."""
 
@@ -63,12 +54,11 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
-    filter_object = FakeFilter([
-        u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
-    output_module.SetFieldsFilter(filter_object)
+    output_module.SetFields([
+        u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
     output_module.SetOutputWriter(output_writer)
 
     expected_header = b'date,time,message,hostname,filename,some_stuff\n'
@@ -76,13 +66,12 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
-    filter_object = FakeFilter(
-        [u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'],
-        separator=u'@')
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
-    output_module.SetFieldsFilter(filter_object)
+    output_module.SetFields([
+        u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
+    output_module.SetFieldDelimiter(u'@')
     output_module.SetOutputWriter(output_writer)
 
     expected_header = b'date@time@message@hostname@filename@some_stuff\n'
@@ -97,14 +86,13 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event_object = TestEvent()
 
-    filter_object = FakeFilter([
-        u'date', u'time', u'timezone', u'macb', u'source', u'sourcetype',
-        u'type', u'user', u'host', u'message_short', u'message',
-        u'filename', u'inode', u'notes', u'format', u'extra'])
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
-    output_module.SetFieldsFilter(filter_object)
+    output_module.SetFields([
+        u'date', u'time', u'timezone', u'macb', u'source', u'sourcetype',
+        u'type', u'user', u'host', u'message_short', u'message',
+        u'filename', u'inode', u'notes', u'format', u'extra'])
     output_module.SetOutputWriter(output_writer)
 
     output_module.WriteHeader()
@@ -124,12 +112,11 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
-    filter_object = FakeFilter([
-        u'datetime', u'nonsense', u'hostname', u'message'])
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
-    output_module.SetFieldsFilter(filter_object)
+    output_module.SetFields([
+        u'datetime', u'nonsense', u'hostname', u'message'])
     output_module.SetOutputWriter(output_writer)
 
     expected_header = b'datetime,nonsense,hostname,message\n'
