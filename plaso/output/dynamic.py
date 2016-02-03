@@ -340,7 +340,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
   def _SanitizeField(self, field):
     """Sanitizes a field for output.
 
-    This method removes the field delimiter from the field string.
+    This method replaces any field delimiters with a space.
 
     Args:
       field: the string that makes up the field.
