@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains an import statement for each argument helper."""
 
+from plaso.cli.helpers import dynamic_output
 from plaso.cli.helpers import elastic_output
 from plaso.cli.helpers import mysql_4n6time_output
 from plaso.cli.helpers import sqlite_4n6time_output
