@@ -14,9 +14,9 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the dynamic output module.'
 
-  _DEFAULT_FIELDS = [
+  _DEFAULT_FIELDS = u','.join([
       u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag']
+      u'message', u'parser', u'display_name', u'tag'])
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -31,7 +31,7 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
-        nargs=u'*', default=u','.join(cls._DEFAULT_FIELDS),
+        nargs=u'*', default=cls._DEFAULT_FIELDS,
         help=u'Defines which fields should be included in the output.')
 
   @classmethod

@@ -14,9 +14,9 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the XLSX output module.'
 
-  _DEFAULT_FIELDS = [
+  _DEFAULT_FIELDS = u','.join([
       u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag']
+      u'message', u'parser', u'display_name', u'tag'])
 
   _DEFAULT_TIMESTAMP_FORMAT = u'YYYY-MM-DD HH:MM:SS.000'
 
@@ -33,7 +33,7 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
-        nargs=u'*', default=u','.join(cls._DEFAULT_FIELDS),
+        nargs=u'*', default=cls._DEFAULT_FIELDS,
         help=u'Defines which fields should be included in the output.')
     argument_group.add_argument(
         u'--timestamp_format', dest=u'timestamp_format', type=str,
