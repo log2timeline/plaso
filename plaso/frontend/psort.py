@@ -26,6 +26,7 @@ from plaso.output import mediator as output_mediator
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 from plaso.storage import time_range as storage_time_range
+from plaso.storage import zip_file as storage_zip_file
 
 import pytz
 
@@ -363,13 +364,13 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return analysis_plugins, event_producers
 
   def ProcessEventsFromStorage(
-      self, storage_file, output_buffer, analysis_queues=None,
+      self, storage_reader, output_buffer, analysis_queues=None,
       filter_buffer=None, my_filter=None, time_slice=None):
     """Reads event objects from the storage to process and filter them.
 
     Args:
-      storage_file: the storage file object (instance of StorageFile).
-      output_buffer: the output buffer object (instance of EventBuffer).
+      storage_reader: a storage reader object (instance of StorageReader).
+      output_buffer: an output buffer object (instance of EventBuffer).
       analysis_queues: optional list of analysis queues.
       filter_buffer: optional filter buffer used to store previously discarded
                      events to store time slice history.
@@ -386,8 +387,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     if not analysis_queues:
       analysis_queues = []
 
-    # TODO: refactor to use StorageReader.
-    for event_object in storage_file.GetSortedEntries(time_range=time_slice):
+    for event_object in storage_reader.GetEvents(time_range=time_slice):
       # TODO: clean up this function.
       if not my_filter:
         counter[u'Events Included'] += 1
@@ -483,56 +483,56 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       elif use_time_slicer:
         self._filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
-    with storage_file:
-      # TODO: allow for single processing.
-      # TODO: add upper queue limit.
-      analysis_queue_port = None
-      if self._use_zeromq:
-        analysis_report_incoming_queue = zeromq_queue.ZeroMQPullBindQueue(
-            delay_open=False, port=None, linger_seconds=5)
-        analysis_queue_port = analysis_report_incoming_queue.port
-      else:
-        analysis_report_incoming_queue = multi_process.MultiProcessingQueue(
-            timeout=5)
+    # TODO: allow for single processing.
+    # TODO: add upper queue limit.
+    analysis_queue_port = None
+    if self._use_zeromq:
+      analysis_report_incoming_queue = zeromq_queue.ZeroMQPullBindQueue(
+          delay_open=False, port=None, linger_seconds=5)
+      analysis_queue_port = analysis_report_incoming_queue.port
+    else:
+      analysis_report_incoming_queue = multi_process.MultiProcessingQueue(
+          timeout=5)
 
-      pre_obj = self._GetLastGoodPreprocess(storage_file)
-      if pre_obj is None:
-        pre_obj = event.PreprocessObject()
+    pre_obj = self._GetLastGoodPreprocess(storage_file)
+    if pre_obj is None:
+      pre_obj = event.PreprocessObject()
 
-      if analysis_plugins:
-        self._StartAnalysisPlugins(
-            storage_file_path, analysis_plugins, pre_obj,
-            analysis_queue_port=analysis_queue_port,
-            analysis_report_incoming_queue=analysis_report_incoming_queue,
-            command_line_arguments=command_line_arguments)
+    if analysis_plugins:
+      self._StartAnalysisPlugins(
+          storage_file_path, analysis_plugins, pre_obj,
+          analysis_queue_port=analysis_queue_port,
+          analysis_report_incoming_queue=analysis_report_incoming_queue,
+          command_line_arguments=command_line_arguments)
 
-        # Assign the preprocessing object to the storage.
-        # This is normally done in the construction of the storage object,
-        # however we cannot do that here since the preprocessing object is
-        # stored inside the storage file, so we need to open it first to
-        # be able to read it in, before we make changes to it. Thus we need
-        # to access this protected member of the class.
-        # pylint: disable=protected-access
-        storage_file._pre_obj = pre_obj
-      else:
-        event_queue_producers = []
+      # Assign the preprocessing object to the storage.
+      # This is normally done in the construction of the storage object,
+      # however we cannot do that here since the preprocessing object is
+      # stored inside the storage file, so we need to open it first to
+      # be able to read it in, before we make changes to it. Thus we need
+      # to access this protected member of the class.
+      # pylint: disable=protected-access
+      storage_file._pre_obj = pre_obj
+    else:
+      event_queue_producers = []
 
-      output_buffer = output_event_buffer.EventBuffer(
-          output_module, deduplicate_events)
-      with output_buffer:
-        counter = self.ProcessEventsFromStorage(
-            storage_file, output_buffer, analysis_queues=event_queue_producers,
-            filter_buffer=self._filter_buffer, my_filter=self._filter_object,
-            time_slice=time_slice)
+    output_buffer = output_event_buffer.EventBuffer(
+        output_module, deduplicate_events)
+    with output_buffer:
+      storage_reader = storage_zip_file.ZIPStorageFileReader(storage_file)
+      counter = self.ProcessEventsFromStorage(
+          storage_reader, output_buffer, analysis_queues=event_queue_producers,
+          filter_buffer=self._filter_buffer, my_filter=self._filter_object,
+          time_slice=time_slice)
 
-      for information in storage_file.GetStorageInformation():
-        if hasattr(information, u'counter'):
-          counter[u'Stored Events'] += information.counter[u'total']
+    for information in storage_file.GetStorageInformation():
+      if hasattr(information, u'counter'):
+        counter[u'Stored Events'] += information.counter[u'total']
 
-      # Get all reports and tags from analysis plugins.
-      self._ProcessAnalysisPlugins(
-          analysis_plugins, analysis_report_incoming_queue, storage_file,
-          counter, preferred_encoding=preferred_encoding)
+    # Get all reports and tags from analysis plugins.
+    self._ProcessAnalysisPlugins(
+        analysis_plugins, analysis_report_incoming_queue, storage_file,
+        counter, preferred_encoding=preferred_encoding)
 
     if self._filter_object and not counter[u'Limited By']:
       counter[u'Filter By Date'] = (
