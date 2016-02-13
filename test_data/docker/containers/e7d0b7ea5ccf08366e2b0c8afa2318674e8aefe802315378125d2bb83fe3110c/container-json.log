@@ -1,0 +1,10 @@
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.0"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.2Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.23Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.237Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.2372Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.23722Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.237222Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.2372227Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.23722272Z"}
+{"log":"\u001b]0;root@e7d0b7ea5ccf: /home/plaso\u0007root@e7d0b7ea5ccf:/home/plaso# ls\r\n","stream":"stdout","time":"2016-01-07T16:49:10.237222729Z"}
