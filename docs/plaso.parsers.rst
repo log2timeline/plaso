@@ -82,6 +82,14 @@ plaso.parsers.custom_destinations module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.docker module
+---------------------------
+
+.. automodule:: plaso.parsers.docker
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.esedb module
 --------------------------
 
