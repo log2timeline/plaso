@@ -294,8 +294,15 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     lines_of_text.append(u'{0:s}:'.format(description))
 
-    for key, value in counter_information.most_common():
-      lines_of_text.append(u'\tCounter: {0:s} = {1:d}'.format(key, value))
+    total_value = None
+    for key, value in sorted(counter_information.most_common()):
+      if key == u'total':
+        total_value = value
+      else:
+        lines_of_text.append(u'\t{0:s} = {1:d}'.format(key, value))
+
+    if total_value is not None:
+      lines_of_text.append(u'\tTotal = {0:d}'.format(total_value))
 
   def _FormatHeader(self, lines_of_text):
     """Formats a header.
