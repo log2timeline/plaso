@@ -132,6 +132,14 @@ plaso.formatters.default module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.docker module
+------------------------------
+
+.. automodule:: plaso.formatters.docker
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.file_history module
 ------------------------------------
 
