@@ -18,6 +18,11 @@ except ImportError:
   import configparser
 
 
+if sys.version_info[0] < 3:
+  STRING_TYPES = (basestring, )
+else:
+  STRING_TYPES = (str, )
+
 # Since os.path.abspath() uses the current working directory (cwd)
 # os.path.abspath(__file__) will point to a different location if
 # cwd has been changed. Hence we preserve the absolute location of __file__.
@@ -454,7 +459,7 @@ class ExtractAndOutputTestCase(TestCase):
 
     if test_definition.extract_options is None:
       test_definition.extract_options = []
-    elif isinstance(test_definition.extract_options, basestring):
+    elif isinstance(test_definition.extract_options, STRING_TYPES):
       test_definition.extract_options = test_definition.extract_options.split(
           u',')
 
@@ -489,10 +494,9 @@ class ExtractAndOutputTestCase(TestCase):
       stderr_file = os.path.join(
           temp_directory, u'{0:s}-log2timeline.err'.format(
               test_definition.name))
-      command = (
-          u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}').format(
-              self._log2timeline_path, extract_options, storage_file,
-              test_definition.source, stdout_file, stderr_file)
+      command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
+          self._log2timeline_path, extract_options, storage_file,
+          test_definition.source, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
@@ -520,9 +524,8 @@ class ExtractAndOutputTestCase(TestCase):
       stderr_file = os.path.join(
           temp_directory, u'{0:s}-pinfo.err'.format(
               test_definition.name))
-      command = (
-          u'{0:s} {1:s} > {2:s} 2> {3:s}').format(
-              self._pinfo_path, storage_file, stdout_file, stderr_file)
+      command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
+          self._pinfo_path, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
@@ -549,9 +552,187 @@ class ExtractAndOutputTestCase(TestCase):
       stderr_file = os.path.join(
           temp_directory, u'{0:s}-psort.err'.format(
               test_definition.name))
-      command = (
-          u'{0:s} {1:s} > {2:s} 2> {3:s}').format(
-              self._psort_path, storage_file, stdout_file, stderr_file)
+      command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
+          self._psort_path, storage_file, stdout_file, stderr_file)
+
+      logging.info(u'Running: {0:s}'.format(command))
+      result = self._RunCommand(command)
+
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
+
+      if os.path.exists(stdout_file):
+        shutil.copy(stdout_file, self._test_results_path)
+      if os.path.exists(stderr_file):
+        shutil.copy(stderr_file, self._test_results_path)
+
+      if not result:
+        return False
+
+    return True
+
+
+class ExtractAndTagTestCase(TestCase):
+  """Class that implements the extract and tag test case.
+
+  The extract and tag test case runs log2timeline to extract data
+  from a source, specified by the test definition. After the data has been
+  extracted psort is run to tag events in the resulting storage file.
+  """
+
+  NAME = u'extract_and_tag'
+
+  def __init__(self, tools_path, test_results_path, debug_output=False):
+    """Initializes a test case object.
+
+    Args:
+      tools_path: a string containing the path to the plaso tools.
+      test_results_path: a string containing the path to store test results.
+      debug_output: optional boolean value to indicate that debug output
+                    should be generated.
+    """
+    super(ExtractAndTagTestCase, self).__init__(
+        tools_path, test_results_path, debug_output=debug_output)
+    self._log2timeline_path = None
+    self._psort_path = None
+
+    for filename in (
+        u'log2timeline.exe', u'log2timeline.sh', u'log2timeline.py'):
+      self._log2timeline_path = os.path.join(tools_path, filename)
+      if os.path.exists(self._log2timeline_path):
+        break
+
+    if self._log2timeline_path.endswith(u'.py'):
+      self._log2timeline_path = u' '.join([
+          sys.executable, self._log2timeline_path])
+
+    for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
+      self._psort_path = os.path.join(tools_path, filename)
+      if os.path.exists(self._psort_path):
+        break
+
+    if self._psort_path.endswith(u'.py'):
+      self._psort_path = u' '.join([sys.executable, self._psort_path])
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader: a test definition reader object (instance of
+                              TestDefinitionReader).
+      test_definition: a test definition object (instance of TestDefinition).
+
+    Returns:
+      A boolean indicating the read was successful.
+    """
+    test_definition.extract_options = test_definition_reader.GetConfigValue(
+        test_definition.name, u'extract_options')
+
+    if test_definition.extract_options is None:
+      test_definition.extract_options = []
+    elif isinstance(test_definition.extract_options, STRING_TYPES):
+      test_definition.extract_options = test_definition.extract_options.split(
+          u',')
+
+    test_definition.source = test_definition_reader.GetConfigValue(
+        test_definition.name, u'source')
+
+    test_definition.tagging_file = test_definition_reader.GetConfigValue(
+        test_definition.name, u'tagging_file')
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+
+    Returns:
+      A boolean value indicating the test ran successfully.
+    """
+    if not os.path.exists(test_definition.source):
+      logging.error(u'No such source: {0:s}'.format(test_definition.source))
+      return False
+
+    with TempDirectory() as temp_directory:
+      storage_file = os.path.join(
+          temp_directory, u'{0:s}.plaso'.format(test_definition.name))
+
+      # Extract events with log2timeline.
+      extract_options = u'--status-view=none {0:s}'.format(
+          u' '.join(test_definition.extract_options))
+      stdout_file = os.path.join(
+          temp_directory, u'{0:s}-log2timeline.out'.format(
+              test_definition.name))
+      stderr_file = os.path.join(
+          temp_directory, u'{0:s}-log2timeline.err'.format(
+              test_definition.name))
+      command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
+          self._log2timeline_path, extract_options, storage_file,
+          test_definition.source, stdout_file, stderr_file)
+
+      logging.info(u'Running: {0:s}'.format(command))
+      result = self._RunCommand(command)
+
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
+
+      if os.path.exists(storage_file):
+        shutil.copy(storage_file, self._test_results_path)
+
+      if os.path.exists(stdout_file):
+        shutil.copy(stdout_file, self._test_results_path)
+      if os.path.exists(stderr_file):
+        shutil.copy(stderr_file, self._test_results_path)
+
+      if not result:
+        return False
+
+      # Add tags to the resulting storage file with psort.
+      tagging_options = (
+          u'--analysis=tagging --output-format=null '
+          u'--tagging-file={0:s}').format(test_definition.tagging_file)
+
+      stdout_file = os.path.join(
+          temp_directory, u'{0:s}-psort-tagging.out'.format(
+              test_definition.name))
+      stderr_file = os.path.join(
+          temp_directory, u'{0:s}-psort-tagging.err'.format(
+              test_definition.name))
+      command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+          self._psort_path, tagging_options, storage_file, stdout_file,
+          stderr_file)
+
+      logging.info(u'Running: {0:s}'.format(command))
+      result = self._RunCommand(command)
+
+      if self._debug_output:
+        with open(stderr_file, 'rb') as file_object:
+          output_data = file_object.read()
+          print(output_data)
+
+      if os.path.exists(stdout_file):
+        shutil.copy(stdout_file, self._test_results_path)
+      if os.path.exists(stderr_file):
+        shutil.copy(stderr_file, self._test_results_path)
+
+      if not result:
+        return False
+
+      # Check if the resulting storage file can be read with psort.
+      stdout_file = os.path.join(
+          temp_directory, u'{0:s}-psort.out'.format(
+              test_definition.name))
+      stderr_file = os.path.join(
+          temp_directory, u'{0:s}-psort.err'.format(
+              test_definition.name))
+      command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
+          self._psort_path, storage_file, stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
@@ -618,7 +799,7 @@ class OutputTestCase(TestCase):
 
     if test_definition.output_options is None:
       test_definition.output_options = []
-    elif isinstance(test_definition.output_options, basestring):
+    elif isinstance(test_definition.output_options, STRING_TYPES):
       test_definition.output_options = test_definition.output_options.split(
           u',')
 
@@ -649,10 +830,9 @@ class OutputTestCase(TestCase):
       stderr_file = os.path.join(
           temp_directory, u'{0:s}-psort.err'.format(
               test_definition.name))
-      command = (
-          u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}').format(
-              self._psort_path, output_options, test_definition.source,
-              stdout_file, stderr_file)
+      command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+          self._psort_path, output_options, test_definition.source,
+          stdout_file, stderr_file)
 
       logging.info(u'Running: {0:s}'.format(command))
       result = self._RunCommand(command)
@@ -674,7 +854,7 @@ class OutputTestCase(TestCase):
 
 
 TestCasesManager.RegisterTestCases([
-    ExtractAndOutputTestCase, OutputTestCase])
+    ExtractAndOutputTestCase, ExtractAndTagTestCase, OutputTestCase])
 
 
 def Main():
