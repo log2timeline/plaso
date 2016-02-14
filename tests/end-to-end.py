@@ -694,9 +694,10 @@ class ExtractAndTagTestCase(TestCase):
         return False
 
       # Add tags to the resulting storage file with psort.
+      # TODO: determine why --analysis=tagging fails.
       tagging_options = (
-          u'--analysis=tagging --output-format=null '
-          u'--tagging-file={0:s}').format(test_definition.tagging_file)
+          u'--analysis tagging --output-format=null '
+          u'--tagging-file {0:s}').format(test_definition.tagging_file)
 
       stdout_file = os.path.join(
           temp_directory, u'{0:s}-psort-tagging.out'.format(
