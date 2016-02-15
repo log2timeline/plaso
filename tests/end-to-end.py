@@ -658,8 +658,7 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     if os.path.exists(stderr_file):
       shutil.copy(stderr_file, self._test_results_path)
 
-    if not result:
-      return False
+    return result
 
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
