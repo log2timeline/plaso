@@ -19,7 +19,7 @@ class AttributeContainer(object):
   """Class that defines the attribute container interface.
 
   This is the the base class for those object that exists primarily as
-  a container of attributes with basis accessors and mutators.
+  a container of attributes with basic accessors and mutators.
   """
 
   @abc.abstractmethod
@@ -148,7 +148,7 @@ class EventObject(object):
     uuid: unique identifier (UUID) for the event object.
   """
   # This is a convenience variable to define event object as
-  # simple attribute containers. Its runtime equivalent data_type
+  # simple value objects. Its runtime equivalent data_type
   # should be used in code logic.
   DATA_TYPE = u''
 
