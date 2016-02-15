@@ -443,6 +443,111 @@ class ExtractAndOutputTestCase(TestCase):
     if self._psort_path.endswith(u'.py'):
       self._psort_path = u' '.join([sys.executable, self._psort_path])
 
+  def _RunLog2Timeline(self, test_definition, temp_directory, storage_file):
+    """Runs log2timeline with the parameters specified by the test definition.
+
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+      storage_file: a string containing the path of the storage file.
+
+    Returns:
+      A boolean value indicating log2timeline ran successfully.
+    """
+    extract_options = u'--status-view=none {0:s}'.format(
+        u' '.join(test_definition.extract_options))
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-log2timeline.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-log2timeline.err'.format(test_definition.name))
+    command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
+        self._log2timeline_path, extract_options, storage_file,
+        test_definition.source, stdout_file, stderr_file)
+
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if os.path.exists(storage_file):
+      shutil.copy(storage_file, self._test_results_path)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
+  def _RunPinfo(self, test_definition, temp_directory, storage_file):
+    """Runs pinfo on the storage file.
+
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+      storage_file: a string containing the path of the storage file.
+
+    Returns:
+      A boolean value indicating pinfo ran successfully.
+    """
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-pinfo.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-pinfo.err'.format(test_definition.name))
+    command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
+        self._pinfo_path, storage_file, stdout_file, stderr_file)
+
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
+  def _RunPsort(self, test_definition, temp_directory, storage_file):
+    """Runs psort on the storage file.
+
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+      storage_file: a string containing the path of the storage file.
+
+    Returns:
+      A boolean value indicating psort ran successfully.
+    """
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
+    command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
+        self._psort_path, storage_file, stdout_file, stderr_file)
+
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
 
@@ -486,95 +591,26 @@ class ExtractAndOutputTestCase(TestCase):
           temp_directory, u'{0:s}.plaso'.format(test_definition.name))
 
       # Extract events with log2timeline.
-      extract_options = u'--status-view=none {0:s}'.format(
-          u' '.join(test_definition.extract_options))
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-log2timeline.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-log2timeline.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
-          self._log2timeline_path, extract_options, storage_file,
-          test_definition.source, stdout_file, stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(storage_file):
-        shutil.copy(storage_file, self._test_results_path)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunLog2Timeline(
+          test_definition, temp_directory, storage_file):
         return False
 
       # Check if the resulting storage file can be read with pinfo.
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-pinfo.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-pinfo.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
-          self._pinfo_path, storage_file, stdout_file, stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunPinfo(
+          test_definition, temp_directory, storage_file):
         return False
 
       # TODO: add support to compare storage file with a reference file.
 
       # Check if the resulting storage file can be read with psort.
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-psort.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-psort.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
-          self._psort_path, storage_file, stdout_file, stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file):
         return False
 
     return True
 
 
-class ExtractAndTagTestCase(TestCase):
+class ExtractAndTagTestCase(ExtractAndOutputTestCase):
   """Class that implements the extract and tag test case.
 
   The extract and tag test case runs log2timeline to extract data
@@ -584,37 +620,46 @@ class ExtractAndTagTestCase(TestCase):
 
   NAME = u'extract_and_tag'
 
-  def __init__(self, tools_path, test_results_path, debug_output=False):
-    """Initializes a test case object.
+  def _RunPsortWithTagging(
+      self, test_definition, temp_directory, storage_file):
+    """Runs psort with the parameters specified by the test definition.
 
     Args:
-      tools_path: a string containing the path to the plaso tools.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+      storage_file: a string containing the path of the storage file.
+
+    Returns:
+      A boolean value indicating psort ran successfully.
     """
-    super(ExtractAndTagTestCase, self).__init__(
-        tools_path, test_results_path, debug_output=debug_output)
-    self._log2timeline_path = None
-    self._psort_path = None
+    # TODO: determine why --analysis=tagging fails.
+    tagging_options = (
+        u'--analysis tagging --output-format=null '
+        u'--tagging-file {0:s}').format(test_definition.tagging_file)
 
-    for filename in (
-        u'log2timeline.exe', u'log2timeline.sh', u'log2timeline.py'):
-      self._log2timeline_path = os.path.join(tools_path, filename)
-      if os.path.exists(self._log2timeline_path):
-        break
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-psort-tagging.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-psort-tagging.err'.format(test_definition.name))
+    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+        self._psort_path, tagging_options, storage_file, stdout_file,
+        stderr_file)
 
-    if self._log2timeline_path.endswith(u'.py'):
-      self._log2timeline_path = u' '.join([
-          sys.executable, self._log2timeline_path])
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
 
-    for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
-      self._psort_path = os.path.join(tools_path, filename)
-      if os.path.exists(self._psort_path):
-        break
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
 
-    if self._psort_path.endswith(u'.py'):
-      self._psort_path = u' '.join([sys.executable, self._psort_path])
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    if not result:
+      return False
 
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
@@ -627,17 +672,9 @@ class ExtractAndTagTestCase(TestCase):
     Returns:
       A boolean indicating the read was successful.
     """
-    test_definition.extract_options = test_definition_reader.GetConfigValue(
-        test_definition.name, u'extract_options')
-
-    if test_definition.extract_options is None:
-      test_definition.extract_options = []
-    elif isinstance(test_definition.extract_options, STRING_TYPES):
-      test_definition.extract_options = test_definition.extract_options.split(
-          u',')
-
-    test_definition.source = test_definition_reader.GetConfigValue(
-        test_definition.name, u'source')
+    if not super(ExtractAndTagTestCase, self).ReadAttributes(
+        test_definition_reader, test_definition):
+      return False
 
     test_definition.tagging_file = test_definition_reader.GetConfigValue(
         test_definition.name, u'tagging_file')
@@ -662,93 +699,18 @@ class ExtractAndTagTestCase(TestCase):
           temp_directory, u'{0:s}.plaso'.format(test_definition.name))
 
       # Extract events with log2timeline.
-      extract_options = u'--status-view=none {0:s}'.format(
-          u' '.join(test_definition.extract_options))
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-log2timeline.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-log2timeline.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
-          self._log2timeline_path, extract_options, storage_file,
-          test_definition.source, stdout_file, stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(storage_file):
-        shutil.copy(storage_file, self._test_results_path)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunLog2Timeline(
+          test_definition, temp_directory, storage_file):
         return False
 
       # Add tags to the resulting storage file with psort.
-      # TODO: determine why --analysis=tagging fails.
-      tagging_options = (
-          u'--analysis tagging --output-format=null '
-          u'--tagging-file {0:s}').format(test_definition.tagging_file)
-
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-psort-tagging.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-psort-tagging.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-          self._psort_path, tagging_options, storage_file, stdout_file,
-          stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunPsortWithTagging(
+          test_definition, temp_directory, storage_file):
         return False
 
       # Check if the resulting storage file can be read with psort.
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-psort.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-psort.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
-          self._psort_path, storage_file, stdout_file, stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file):
         return False
 
     return True
