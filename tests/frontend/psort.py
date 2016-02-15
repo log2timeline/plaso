@@ -132,15 +132,13 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         self._start_timestamp, self._end_timestamp)
 
     timestamp_list = []
-    # TODO: refactor to use StorageReader.
-    for event_object in storage_file.GetSortedEntries(time_range=time_range):
-      timestamp_list.append(event_object.timestamp)
+    with storage_zip_file.ZIPStorageFileReader(storage_file) as storage_reader:
+      for event_object in storage_reader.GetEvents(time_range=time_range):
+        timestamp_list.append(event_object.timestamp)
 
     self.assertEqual(len(timestamp_list), 15)
     self.assertEqual(timestamp_list[0], self._start_timestamp)
     self.assertEqual(timestamp_list[-1], self._end_timestamp)
-
-    storage_file.Close()
 
   def testProcessStorage(self):
     """Test the ProcessStorage function."""
@@ -152,12 +150,17 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
     storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
 
-    output_writer = test_lib.StringIOOutputWriter()
-    output_module = test_front_end.GetOutputModule(storage_file)
-    output_module.SetOutputWriter(output_writer)
+    try:
+      output_writer = test_lib.StringIOOutputWriter()
+      output_module = test_front_end.GetOutputModule(storage_file)
+      output_module.SetOutputWriter(output_writer)
 
-    counter = test_front_end.ProcessStorage(
-        output_module, storage_file, storage_file_path, [], [])
+      counter = test_front_end.ProcessStorage(
+          output_module, storage_file, storage_file_path, [], [])
+
+    finally:
+      storage_file.Close()
+
     self.assertEqual(counter[u'Stored Events'], 15)
 
     output_writer.SeekToBeginning()
@@ -197,8 +200,11 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       storage_file.AddEventObjects(events)
       storage_file.Close()
 
-      with storage_zip_file.StorageFile(
-          temp_file, read_only=True) as storage_file:
+      storage_file = storage_zip_file.StorageFile(
+          temp_file, read_only=True)
+
+      with storage_zip_file.ZIPStorageFileReader(
+          storage_file) as storage_reader:
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator)
         output_mediator_object.SetStorageFile(storage_file)
@@ -208,7 +214,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         event_buffer = TestEventBuffer(
             output_module, check_dedups=False, store=storage_file)
 
-        self._front_end.ProcessEventsFromStorage(storage_file, event_buffer)
+        self._front_end.ProcessEventsFromStorage(storage_reader, event_buffer)
 
     event_buffer.Flush()
     lines = []

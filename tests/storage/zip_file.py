@@ -426,77 +426,6 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testGetSortedEntries(self):
-    """Tests the GetSortedEntries function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
-
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    timestamps = []
-    for event_object in storage_file.GetSortedEntries():
-      timestamps.append(event_object.timestamp)
-
-    expected_timestamps = [
-        1343166324000000, 1344270407000000, 1390377153000000, 1390377153000000,
-        1390377181000000, 1390377241000000, 1390377241000000, 1390377272000000,
-        1392438730000000, 1418925272000000, 1427151678000000, 1427151678000123,
-        1451584472000000, 1479431720000000, 1479431743000000]
-
-    self.assertEqual(sorted(timestamps), expected_timestamps)
-
-    # Test lower bound time range filter.
-    test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
-
-    storage_file.Close()
-
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    timestamps = []
-    for event_object in storage_file.GetSortedEntries(
-        time_range=test_time_range):
-      timestamps.append(event_object.timestamp)
-
-    expected_timestamps = [
-        1418925272000000,
-        1427151678000000,
-        1427151678000123,
-        1451584472000000,
-        1479431720000000,
-        1479431743000000]
-
-    self.assertEqual(sorted(timestamps), expected_timestamps)
-
-    # Test upper bound time range filter.
-    test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
-
-    storage_file.Close()
-
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    timestamps = []
-    for event_object in storage_file.GetSortedEntries(
-        time_range=test_time_range):
-      timestamps.append(event_object.timestamp)
-
-    expected_timestamps = [
-        1343166324000000,
-        1344270407000000,
-        1390377153000000,
-        1390377153000000,
-        1390377181000000,
-        1390377241000000,
-        1390377241000000,
-        1390377272000000,
-        1392438730000000]
-
-    self.assertEqual(sorted(timestamps), expected_timestamps)
-
-    storage_file.Close()
-
   def testGetStorageInformation(self):
     """Tests the GetStorageInformation function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -663,6 +592,78 @@ class StorageFileTest(test_lib.StorageTestCase):
     expected_timestamps = [
         1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
     self.assertEqual(timestamps, expected_timestamps)
+
+
+class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
+  """Tests for the ZIP-based storage file reader object."""
+
+  def testGetEvents(self):
+    """Tests the GetEvents function."""
+    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamps = []
+    with zip_file.ZIPStorageFileReader(storage_file) as storage_reader:
+      for event_object in storage_reader.GetEvents():
+        timestamps.append(event_object.timestamp)
+
+    expected_timestamps = [
+        1343166324000000, 1344270407000000, 1390377153000000, 1390377153000000,
+        1390377181000000, 1390377241000000, 1390377241000000, 1390377272000000,
+        1392438730000000, 1418925272000000, 1427151678000000, 1427151678000123,
+        1451584472000000, 1479431720000000, 1479431743000000]
+
+    self.assertEqual(sorted(timestamps), expected_timestamps)
+
+    # Test lower bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamps = []
+    with zip_file.ZIPStorageFileReader(storage_file) as storage_reader:
+      for event_object in storage_reader.GetEvents(
+          time_range=test_time_range):
+        timestamps.append(event_object.timestamp)
+
+    expected_timestamps = [
+        1418925272000000,
+        1427151678000000,
+        1427151678000123,
+        1451584472000000,
+        1479431720000000,
+        1479431743000000]
+
+    self.assertEqual(sorted(timestamps), expected_timestamps)
+
+    # Test upper bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    timestamps = []
+    with zip_file.ZIPStorageFileReader(storage_file) as storage_reader:
+      for event_object in storage_reader.GetEvents(
+          time_range=test_time_range):
+        timestamps.append(event_object.timestamp)
+
+    expected_timestamps = [
+        1343166324000000,
+        1344270407000000,
+        1390377153000000,
+        1390377153000000,
+        1390377181000000,
+        1390377241000000,
+        1390377241000000,
+        1390377272000000,
+        1392438730000000]
+
+    self.assertEqual(sorted(timestamps), expected_timestamps)
 
 
 if __name__ == '__main__':

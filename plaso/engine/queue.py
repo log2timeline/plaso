@@ -55,7 +55,7 @@ class Queue(object):
 class QueueConsumer(object):
   """Class that implements the queue consumer interface.
 
-     The consumer subscribes to updates on the queue.
+  The consumer subscribes to updates on the queue.
   """
 
   def __init__(self, queue_object):
@@ -76,7 +76,7 @@ class QueueConsumer(object):
 class QueueProducer(object):
   """Class that implements the queue producer interface.
 
-     The producer generates updates on the queue.
+  The producer generates updates on the queue.
   """
 
   def __init__(self, queue_object):
@@ -97,7 +97,7 @@ class QueueProducer(object):
 class ItemQueueConsumer(QueueConsumer):
   """Class that implements an item queue consumer.
 
-     The consumer subscribes to updates on the queue.
+  The consumer subscribes to updates on the queue.
   """
 
   def __init__(self, queue_object):
@@ -148,7 +148,7 @@ class ItemQueueConsumer(QueueConsumer):
 class ItemQueueProducer(QueueProducer):
   """Class that implements an item queue producer.
 
-     The producer generates updates on the queue.
+  The producer generates updates on the queue.
   """
 
   def __init__(self, queue_object):
