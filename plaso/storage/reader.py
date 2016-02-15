@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The storage reader objects."""
+"""The storage reader interface."""
 
 import abc
 
