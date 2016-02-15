@@ -99,6 +99,7 @@ from plaso.lib import timelib
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
+from plaso.storage import reader
 
 
 class _EventTagIndexValue(object):
@@ -991,14 +992,6 @@ class StorageFile(ZIPStorageFile):
     self._profiling_sample = 0
     self._serializers_profiler = None
 
-  def __enter__(self):
-    """Make usable with "with" statement."""
-    return self
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self.Close()
-
   @property
   def file_path(self):
     """The file path."""
@@ -1649,20 +1642,6 @@ class StorageFile(ZIPStorageFile):
 
     return event_object
 
-  def GetSortedEntries(self, time_range=None):
-    """Retrieves a sorted entries.
-
-    Args:
-      time_range: an optional time range object (instance of TimeRange).
-
-    Yields:
-      An event object (instance of EventObject).
-    """
-    event_object = self.GetSortedEntry(time_range=time_range)
-    while event_object:
-      yield event_object
-      event_object = self.GetSortedEntry(time_range=time_range)
-
   def GetStorageInformation(self):
     """Retrieves storage (preprocessing) information stored in the storage file.
 
@@ -1934,3 +1913,37 @@ class StorageFile(ZIPStorageFile):
     # since the tags have changed.
     if self._event_tag_index is not None:
       del self._event_tag_index
+
+
+class ZIPStorageFileReader(reader.StorageReader):
+  """Class that implements the ZIP-based storage file reader."""
+
+  def __init__(self, zip_storage_file):
+    """Initializes a storage reader object.
+
+    Args:
+      zip_storage_file: a ZIP-based storage file (instance of ZIPStorageFile).
+    """
+    super(ZIPStorageFileReader, self).__init__()
+    self._zip_storage_file = zip_storage_file
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self._zip_storage_file.Close()
+
+  def GetEvents(self, time_range=None):
+    """Retrieves events.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Yields:
+      An event object (instance of EventObject).
+    """
+    event_object = self._zip_storage_file.GetSortedEntry(
+        time_range=time_range)
+
+    while event_object:
+      yield event_object
+      event_object = self._zip_storage_file.GetSortedEntry(
+          time_range=time_range)
