@@ -121,11 +121,11 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(tags), 1)
     tag = tags[0]
     self.assertEqual(tag.event_uuid, u'8')
-    expected_tag_strings = [
+    expected_labels = [
         u'viper_present', u'viper_project_default', u'viper_tag_rat',
         u'viper_tag_darkcomet'
     ]
-    self.assertEqual(tag.labels, expected_tag_strings)
+    self.assertEqual(tag.labels, expected_labels)
 
 
 class MockResponse(dict):

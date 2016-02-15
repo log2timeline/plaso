@@ -15,25 +15,29 @@ from plaso.lib import utils
 import pytz
 
 
-class ValueObject(object):
-  """Class that defines the value object interface."""
+class AttributeContainer(object):
+  """Class that defines the attribute container interface.
+
+  This is the the base class for those object that exists primarily as
+  a container of attributes with basis accessors and mutators.
+  """
 
   @abc.abstractmethod
   def CopyToDict(self):
-    """Copies the value object to a dictionary.
+    """Copies the attribute container to a dictionary.
 
     Returns:
-      A dictionary containing the value object attributes.
+      A dictionary containing the attribute container attributes.
     """
 
   @abc.abstractmethod
   def GetAttributes(self):
-    """Retrieves the attributes from the value object.
+    """Retrieves the attributes from the attribute container.
 
     Attributes that are set to None are ignored.
 
     Yields:
-      A tuple containing the value object attribute name and value.
+      A tuple containing the attribute container attribute name and value.
     """
 
 
@@ -144,7 +148,7 @@ class EventObject(object):
     uuid: unique identifier (UUID) for the event object.
   """
   # This is a convenience variable to define event object as
-  # simple value objects. Its runtime equivalent data_type
+  # simple attribute containers. Its runtime equivalent data_type
   # should be used in code logic.
   DATA_TYPE = u''
 
@@ -342,8 +346,8 @@ class EventObject(object):
 
 # TODO: deprecate store number and index.
 
-class EventTag(ValueObject):
-  """Class to represent an event tag value object.
+class EventTag(AttributeContainer):
+  """Class to represent an event tag attribute container.
 
   The event tag either needs to have an event_uuid defined or both
   the store_number and store_index to be valid. If both defined
@@ -396,7 +400,7 @@ class EventTag(ValueObject):
     """Adds a comment to the event tag.
 
     Args:
-      label: a string containing the label.
+      comment: a string containing the comment.
     """
     if not comment:
       return
@@ -413,14 +417,15 @@ class EventTag(ValueObject):
       label: a string containing the label.
 
     Raises:
-      ValueError: if the label is malformed.
+      ValueError: if a label is malformed.
     """
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
           u'Unusupported label: "{0:s}". A label must only consist of '
           u'alphanumeric characters or underscores.').format(label))
 
-    self.labels.append(label)
+    if not label in self.labels:
+      self.labels.append(label)
 
   def AddLabels(self, labels):
     """Adds labels to the event tag.
@@ -429,10 +434,17 @@ class EventTag(ValueObject):
       labels: a list of strings containing the labels.
 
     Raises:
-      ValueError: if the label is malformed.
+      ValueError: if a label is malformed.
     """
     for label in labels:
-      self.AddLabel(label)
+      if not self._VALID_LABEL_REGEX.match(label):
+        raise ValueError((
+            u'Unusupported label: "{0:s}". A label must only consist of '
+            u'alphanumeric characters or underscores.').format(label))
+
+    for label in labels:
+      if not label in self.labels:
+        self.labels.append(label)
 
   def CopyToDict(self):
     """Copies the event tag to a dictionary.
