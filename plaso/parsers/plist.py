@@ -48,6 +48,9 @@ class PlistParser(interface.FileObjectParser):
 
     Returns:
       A dictionary object representing the contents of the plist.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     # Note that binplist.readPlist does not seek to offset 0.
     try:
@@ -57,19 +60,20 @@ class PlistParser(interface.FileObjectParser):
       error_string = utils.GetUnicodeString(exception)
       raise errors.UnableToParseFile(
           u'File is not a plist file: {0:s}'.format(error_string))
+
     except (
         LookupError, binascii.Error, ValueError, AttributeError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse XML file, reason: {0:s}'.format(exception))
+
     except OverflowError as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse: {0:s} with error: {1:s}'.format(
               file_name, exception))
 
     if not top_level_object:
-      error_string = utils.GetUnicodeString(exception)
       raise errors.UnableToParseFile(
-          u'File is not a plist: {0:s}'.format(error_string))
+          u'File is not a plist: missing top level object')
 
     # Since we are using readPlist from binplist now instead of manually
     # opening  the binary plist file we loose this option. Keep it commented
