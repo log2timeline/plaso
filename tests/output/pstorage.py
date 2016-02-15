@@ -29,7 +29,9 @@ class PstorageTest(test_lib.OutputModuleTestCase):
       storage_file = storage_zip_file.StorageFile(
           self._test_filename, read_only=True)
 
-      with storage_file:
+      with storage_zip_file.ZIPStorageFileReader(
+          storage_file) as storage_reader:
+
         output_mediator = self._CreateOutputMediator(storage_file=storage_file)
         output_module = pstorage.PlasoStorageOutputModule(output_mediator)
 
@@ -37,7 +39,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
 
         with event_buffer.EventBuffer(
             output_module, check_dedups=False) as output_buffer:
-          for event_object in storage_file.GetSortedEntries():
+          for event_object in storage_reader.GetEvents():
             output_buffer.Append(event_object)
 
       # Make sure original and dump have the same events.

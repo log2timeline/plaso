@@ -250,15 +250,17 @@ class PsortTool(analysis_tool.AnalysisTool):
       helpers_manager.ArgumentHelperManager.ParseOptions(
           self._options, analysis_plugin)
 
-    counter = self._front_end.ProcessStorage(
-        output_module, storage_file, self._storage_file_path,
-        analysis_plugins, event_queue_producers,
-        command_line_arguments=self._command_line_arguments,
-        deduplicate_events=self._deduplicate_events,
-        preferred_encoding=self.preferred_encoding,
-        time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+    try:
+      counter = self._front_end.ProcessStorage(
+          output_module, storage_file, self._storage_file_path,
+          analysis_plugins, event_queue_producers,
+          command_line_arguments=self._command_line_arguments,
+          deduplicate_events=self._deduplicate_events,
+          preferred_encoding=self.preferred_encoding,
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
-    storage_file.Close()
+    finally:
+      storage_file.Close()
 
     if not self._quiet_mode:
       self._output_writer.Write(u'Processing completed.\n')

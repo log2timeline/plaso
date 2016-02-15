@@ -109,7 +109,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       storage_file_path = os.path.join(temp_directory, u'plaso.db')
-      test_front_end.SetStorageFile(storage_file_path=storage_file_path)
+      test_front_end.SetStorageFile(storage_file_path)
 
       test_front_end.ProcessSources([path_spec], source_type)
 
