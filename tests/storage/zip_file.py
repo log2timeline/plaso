@@ -355,6 +355,9 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_object.tag = event_tag
     return event_object
 
+  # TODO: add test for _ReadEventTag
+  # TODO: add test for _ReadEventTagByIdentifier
+
   def testAddEventObject(self):
     """Tests the AddEventObject function."""
     test_event_objects = test_lib.CreateTestEventObjects()

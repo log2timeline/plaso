@@ -1298,7 +1298,7 @@ class StorageFile(ZIPStorageFile):
 
     data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_offset)
-    return data_stream.ReadEntry()
+    return self._ReadEventTag(data_stream)
 
   def _ReadMeta(self, stream_number):
     """Return a dict with the metadata entries.
