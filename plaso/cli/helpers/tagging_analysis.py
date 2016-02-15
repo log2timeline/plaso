@@ -28,9 +28,8 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--tagging-file', dest=u'tagging_file', type=str,
-        help=u'Specify a file to read tagging criteria from.',
-        action=u'store')
+        u'--tagging-file', u'--tagging_file', dest=u'tagging_file', type=str,
+        help=u'Specify a file to read tagging criteria from.', action=u'store')
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
