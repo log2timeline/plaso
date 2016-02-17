@@ -19,7 +19,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
   DESCRIPTION = u'MySQL database output for the 4n6time tool.'
 
   _META_FIELDS = frozenset([
-      u'sourcetype', u'source', u'user', u'host', u'MACB', u'color', u'type',
+      u'sourcetype', u'source', u'user', u'host', u'MACB', u'type',
       u'record_number'])
 
   _CREATE_TABLE_QUERY = (
@@ -30,27 +30,25 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       u'description TEXT, filename VARCHAR(256), inode VARCHAR(256), '
       u'notes VARCHAR(256), format VARCHAR(256), '
       u'extra TEXT, datetime datetime, reportnotes VARCHAR(256), '
-      u'inreport VARCHAR(256), tag VARCHAR(256), color VARCHAR(256), '
-      u'offset INT, vss_store_number INT, URL TEXT, '
-      u'record_number VARCHAR(256), event_identifier VARCHAR(256), '
-      u'event_type VARCHAR(256), source_name VARCHAR(256), '
-      u'user_sid VARCHAR(256), computer_name VARCHAR(256), '
-      u'evidence VARCHAR(256), '
+      u'inreport VARCHAR(256), tag VARCHAR(256), offset INT, '
+      u'vss_store_number INT, URL TEXT, record_number VARCHAR(256), '
+      u'event_identifier VARCHAR(256), event_type VARCHAR(256), '
+      u'source_name VARCHAR(256), user_sid VARCHAR(256), '
+      u'computer_name VARCHAR(256), evidence VARCHAR(256), '
       u'PRIMARY KEY (rowid)) ENGINE=InnoDB ROW_FORMAT=COMPRESSED')
 
   _INSERT_QUERY = (
       u'INSERT INTO log2timeline(timezone, MACB, source, '
       u'sourcetype, type, user, host, description, filename, '
       u'inode, notes, format, extra, datetime, reportnotes, inreport, '
-      u'tag, color, offset, vss_store_number, URL, record_number, '
+      u'tag, offset, vss_store_number, URL, record_number, '
       u'event_identifier, event_type, source_name, user_sid, computer_name, '
       u'evidence) '
       u'VALUES (:timezone, :MACB, :source, :sourcetype, :type, :user, :host, '
       u':description, :filename, :inode, :notes, :format, :extra, :datetime, '
-      u':reportnotes, :inreport, '
-      u':tag, :color, :offset, :vss_store_number ,:URL, :record_number, '
-      u':event_identifier, :event_type, :source_name, :user_sid, '
-      u':computer_name, :evidence)')
+      u':reportnotes, :inreport, :tag, :offset, :vss_store_number, :URL, '
+      u':record_number, :event_identifier, :event_type, :source_name, '
+      u':user_sid, :computer_name, :evidence)')
 
   def __init__(self, output_mediator):
     """Initializes the output module object.

@@ -540,10 +540,10 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     event_tag = event.EventTag()
 
     for proto_attribute, attribute_value in proto.ListFields():
-      if proto_attribute.name == u'tags':
-        event_tag._tags = []
-        for proto_tag in proto.tags:
-          event_tag._tags.append(proto_tag.value)
+      if proto_attribute.name == u'labels':
+        for proto_tag in proto.labels:
+          event_tag.AddLabel(proto_tag.value)
+
       else:
         setattr(event_tag, proto_attribute.name, attribute_value)
 
@@ -559,7 +559,7 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     Returns:
       An event tag (instance of EventTag).
     """
-    proto = plaso_storage_pb2.EventTagging()
+    proto = plaso_storage_pb2.EventTag()
     proto.ParseFromString(proto_string)
 
     return cls.ReadSerializedObject(proto)
@@ -573,31 +573,18 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
 
     Returns:
       A protobuf object containing the serialized form (instance of
-      plaso_storage_pb2.EventTagging).
+      plaso_storage_pb2.EventTag).
     """
-    proto = plaso_storage_pb2.EventTagging()
+    proto = plaso_storage_pb2.EventTag()
 
-    # TODO: Once we move EventTag to slots we need to query __slots__
-    # instead of __dict__
-    for attribute_name in event_tag.__dict__:
-      attribute_value = getattr(event_tag, attribute_name, None)
+    for attribute_name, attribute_value in event_tag.GetAttributes():
+      if attribute_name == u'labels':
+        for label in attribute_value:
+          proto_label_add = proto.labels.add()
+          proto_label_add.value = label
 
-      if (attribute_name == u'_tags' and
-          isinstance(attribute_value, (tuple, list))):
-        for tag_string in attribute_value:
-          proto_tag_add = proto.tags.add()
-          proto_tag_add.value = tag_string
-
-      elif attribute_value is not None:
+      else:
         setattr(proto, attribute_name, attribute_value)
-
-    comment = getattr(event_tag, u'comment', u'')
-    if comment:
-      proto.comment = comment
-
-    color = getattr(event_tag, u'color', u'')
-    if color:
-      proto.color = color
 
     return proto
 

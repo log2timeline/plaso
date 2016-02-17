@@ -25,9 +25,10 @@ class TestChromeDownloadEvent(event.EventObject):
 
 class TaggingTest(test_lib.AnalysisPluginTestCase):
   """Test for the tagging analysis plugin."""
-  TEST_TAG_FILE_NAME = u'test_tag_file.txt'
-  INVALID_TEST_TAG_FILE_NAME = u'invalid_test_tag_file.txt'
-  TEST_EVENTS = [
+  _INVALID_TEST_TAG_FILE_NAME = u'invalid_test_tag_file.txt'
+  _TEST_TAG_FILE_NAME = u'test_tag_file.txt'
+
+  _TEST_EVENTS = [
       {u'event_type': u'prefetch',
        u'timestamp': timelib.Timestamp.CopyFromString(u'2015-05-01 15:12:00'),
        u'attributes': {}
@@ -50,6 +51,7 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
       event_object = TestChromeDownloadEvent()
     else:
       event_object = event.EventObject()
+
     event_object.timestamp = test_event_dict[u'timestamp']
     for key, value in test_event_dict[u'attributes']:
       setattr(event_object, key, value)
@@ -61,10 +63,10 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     analysis_plugin = tagging.TaggingPlugin(event_queue)
     # pylint: disable=protected-access
     tags = analysis_plugin._ParseTaggingFile(
-        self._GetTestFilePath([self.TEST_TAG_FILE_NAME]))
+        self._GetTestFilePath([self._TEST_TAG_FILE_NAME]))
     self.assertEqual(len(tags), 2)
-    self.assertIn(u'Application Execution', tags.keys())
-    self.assertIn(u'File Downloaded', tags.keys())
+    self.assertIn(u'application_execution', tags.keys())
+    self.assertIn(u'file_downloaded', tags.keys())
 
   def testInvalidTagParsing(self):
     """Test parsing of definition files that contain invalid directives."""
@@ -72,8 +74,8 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     analysis_plugin = tagging.TaggingPlugin(event_queue)
     # pylint: disable=protected-access
     tags = analysis_plugin._ParseTaggingFile(
-        self._GetTestFilePath([self.INVALID_TEST_TAG_FILE_NAME]))
-    self.assertEqual(len(tags), 2)
+        self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME]))
+    self.assertEqual(len(tags), 3)
     self.assertTrue(u'Invalid Tag' in tags)
     self.assertEqual(len(tags[u'Invalid Tag']), 0)
     self.assertTrue(u'Partially Valid Tag' in tags)
@@ -84,11 +86,10 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     event_queue = single_process.SingleProcessQueue()
     test_queue_producer = queue.ItemQueueProducer(event_queue)
     events = [self._CreateTestEventObject(test_event)
-              for test_event
-              in self.TEST_EVENTS]
+              for test_event in self._TEST_EVENTS]
     test_queue_producer.ProduceItems(events)
     analysis_plugin = tagging.TaggingPlugin(event_queue)
-    test_file = self._GetTestFilePath([self.TEST_TAG_FILE_NAME])
+    test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
     analysis_plugin.SetAndLoadTagFile(test_file)
 
     # Run the plugin.

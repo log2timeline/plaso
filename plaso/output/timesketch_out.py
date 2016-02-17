@@ -98,10 +98,10 @@ class TimesketchOutputModule(interface.OutputModule):
     event_values[u'message'] = message
 
     try:
-      tags = list(event_values[u'tag'].tags)
+      labels = list(event_values[u'tag'].labels)
     except (KeyError, AttributeError):
-      tags = []
-    event_values[u'tag'] = tags
+      labels = []
+    event_values[u'tag'] = labels
 
     source_short, source = self._output_mediator.GetFormattedSources(
         event_object)

@@ -71,8 +71,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         L2TTestEventFormatter)
 
     event_tag = event.EventTag()
-    event_tag.tags = [u'Malware', u'Document Printed']
     event_tag.uuid = self._event_object.uuid
+    event_tag.AddLabels([u'Malware', u'Printed'])
 
     self._event_object.tag = event_tag
     self._formatter.WriteEventBody(self._event_object)
@@ -82,7 +82,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         b'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         b'closed for user root),Reporter <CRON> PID: 8442 '
         b'(pam_unix(cron:session): session closed for user root),'
-        b'2,log/syslog.1,-,Malware Document Printed,'
+        b'2,log/syslog.1,-,Malware Printed,'
         b'-,my_number: 123  some_additional_foo: True \n')
 
     event_body = self._output_writer.ReadOutput()
