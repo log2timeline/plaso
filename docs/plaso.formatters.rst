@@ -236,6 +236,14 @@ plaso.formatters.java_idx module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.kik_ios module
+-------------------------------
+
+.. automodule:: plaso.formatters.kik_ios
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.ls_quarantine module
 -------------------------------------
 
