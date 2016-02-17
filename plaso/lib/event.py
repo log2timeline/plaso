@@ -111,8 +111,8 @@ class AnalysisReport(object):
     self.text = u'\n'.join(lines_of_text)
 
 
-class EventObject(ValueObject):
-  """Class to represent an event value object.
+class EventObject(AttributeContainer):
+  """Class to represent an event attribute container.
 
   The framework is designed to parse files and create events
   from individual records, log lines or keys extracted from files.
