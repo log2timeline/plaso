@@ -56,7 +56,9 @@ class JSONSerializerTestCase(unittest.TestCase):
     # We use json.loads here to compare dicts since we cannot pre-determine
     # the actual order of values in the JSON string.
     json_dict = json.loads(json_string)
-    self.assertEqual(json_dict, expected_json_dict)
+
+    self.assertEqual(
+        sorted(json_dict.items()), sorted(expected_json_dict.items()))
 
     return json_string
 
@@ -66,6 +68,10 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
+    self._comment = u'This is a test event tag.'
+    self._event_uuid = u'403818f93dce467bac497ef0f263fde8'
+    self._labels = [u'Test', u'AnotherTest']
+
     # TODO: preserve the tuples in the report dict.
     self._report_dict = {
         u'dude': [
@@ -94,9 +100,9 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'_anomalies': [],
         u'_tags': [{
             u'__type__': u'EventTag',
-            u'_tags': [u'This is a test.', u'Also a test.'],
-            u'comment': u'This is a test event tag.',
-            u'event_uuid': u'403818f93dce467bac497ef0f263fde8'
+            u'comment': self._comment,
+            u'event_uuid': self._event_uuid,
+            u'labels': self._labels,
         }],
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': self._report_dict,
@@ -112,11 +118,9 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
 
-    event_tag = event.EventTag()
-
-    event_tag.event_uuid = u'403818f93dce467bac497ef0f263fde8'
-    event_tag.comment = u'This is a test event tag.'
-    event_tag._tags = [u'This is a test.', u'Also a test.']
+    event_tag = event.EventTag(
+        comment=self._comment, event_uuid=self._event_uuid)
+    event_tag.AddLabels(self._labels)
 
     self.assertTrue(event_tag.IsValidForSerialization())
     analysis_report = event.AnalysisReport(u'chrome_extension_test')
@@ -225,28 +229,35 @@ class JSONEventTagSerializerTest(JSONSerializerTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._event_uuid = u'403818f93dce467bac497ef0f263fde8'
-    self._json_dict = {
-        u'event_uuid': self._event_uuid,
-        u'comment': u'This is a test event tag.',
-        u'_tags':  [u'This is a test.', u'Also a test.'],
+    self._event_tag = event.EventTag(comment=u'My first comment.')
+    self._event_tag.store_number = 234
+    self._event_tag.store_index = 18
+    self._event_tag.AddLabels([u'Malware', u'Common'])
+
+    self._event_tag_dict = {
+        u'comment': u'My first comment.',
+        u'labels': [u'Malware', u'Common'],
+        u'store_index': 18,
+        u'store_number': 234,
     }
 
-    self._serializer = json_serializer.JSONEventTagSerializer
+  def testReadAndWriteSerialized(self):
+    """Test the ReadSerialized and WriteSerialized functions."""
+    serialized_event_tag = (
+        json_serializer.JSONEventTagSerializer.WriteSerialized(
+            self._event_tag))
 
-  def testReadSerialized(self):
-    """Tests the ReadSerialized function."""
-    self._TestReadSerialized(self._serializer, self._json_dict)
+    self.assertIsNotNone(serialized_event_tag)
 
-  def testWriteSerializer(self):
-    """Tests the WriteSerialized function."""
-    event_tag = event.EventTag()
+    event_tag = (
+        json_serializer.JSONEventTagSerializer.ReadSerialized(
+            serialized_event_tag))
 
-    event_tag.event_uuid = self._event_uuid
-    event_tag.comment = u'This is a test event tag.'
-    event_tag._tags = [u'This is a test.', u'Also a test.']
-    self.assertTrue(event_tag.IsValidForSerialization())
-    self._TestWriteSerialized(self._serializer, event_tag, self._json_dict)
+    self.assertIsNotNone(event_tag)
+
+    event_tag_dict = event_tag.CopyToDict()
+    self.assertEqual(
+        sorted(event_tag_dict.items()), sorted(self._event_tag_dict.items()))
 
 
 class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):

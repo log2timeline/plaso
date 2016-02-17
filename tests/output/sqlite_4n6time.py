@@ -70,7 +70,6 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
             u'my_number: 123  some_additional_foo: True  text: '
             u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
             u'session closed for user root) '),
-        u'color': u'',
         u'tag': u'',
         u'timezone': u'UTC',
         u'inode': u'-',

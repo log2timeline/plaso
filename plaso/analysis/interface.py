@@ -195,18 +195,18 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       A list of string tags to apply to events.
     """
 
-  def _CreateTag(self, event_uuid, tag_strings):
+  def _CreateTag(self, event_uuid, labels):
     """Creates an event tag.
 
     Args:
       event_uuid: The UUID of the event that should be tagged.
-      tag_strings: A list of strings that the event should be tagged with.
+      labels: A list of strings that contains the labels.
     """
     event_tag = event.EventTag()
+    event_tag.comment = (
+        u'Tag applied by {0:s} analysis plugin'.format(self.NAME))
     event_tag.event_uuid = event_uuid
-    event_tag.comment = u'Tag applied by {0:s} analysis plugin'.format(
-        self.NAME)
-    event_tag.tags = tag_strings
+    event_tag.AddLabels(labels)
     return event_tag
 
   def _HandleHashAnalysis(self, hash_analysis):

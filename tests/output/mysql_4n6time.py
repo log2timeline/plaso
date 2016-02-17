@@ -69,7 +69,6 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
             u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
             u'session closed for user root) '
         ),
-        u'color': u'',
         u'tag': u'',
         u'timezone': u'UTC',
         u'inode': u'-',

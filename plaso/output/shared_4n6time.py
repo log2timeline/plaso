@@ -15,8 +15,7 @@ class Base4n6TimeOutputModule(interface.OutputModule):
   NAME = '4n6time_shared'
 
   _DEFAULT_FIELDS = [
-      u'color', u'datetime', u'host', u'source', u'sourcetype', u'user',
-      u'type']
+      u'datetime', u'host', u'source', u'sourcetype', u'user', u'type']
 
   def __init__(self, output_mediator):
     """Initializes the output module object.
@@ -123,7 +122,6 @@ class Base4n6TimeOutputModule(interface.OutputModule):
         u'reportnotes': u'',
         u'inreport': u'',
         u'tag': taglist,
-        u'color': u'',
         u'offset': getattr(event_object, u'offset', 0),
         u'vss_store_number': self._GetVSSNumber(event_object),
         u'URL': getattr(event_object, u'url', u'-'),

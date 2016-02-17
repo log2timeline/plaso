@@ -1,5 +1,6 @@
-Application Execution
+application_execution
   data_type is 'windows:prefetch'
-File Downloaded
+
+file_downloaded
   data_type is 'chrome:history:file_downloaded'
   timestamp_desc is 'File Downloaded'
