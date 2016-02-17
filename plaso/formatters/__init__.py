@@ -28,6 +28,7 @@ from plaso.formatters import hachoir
 from plaso.formatters import iis
 from plaso.formatters import ipod
 from plaso.formatters import java_idx
+from plaso.formatters import kik_ios
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mac_appfirewall
 from plaso.formatters import mac_document_versions

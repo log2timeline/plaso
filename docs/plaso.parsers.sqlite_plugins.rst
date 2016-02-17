@@ -84,6 +84,14 @@ plaso.parsers.sqlite_plugins.interface module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sqlite_plugins.kik_ios module
+-------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.kik_ios
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.sqlite_plugins.ls_quarantine module
 -------------------------------------------------
 
