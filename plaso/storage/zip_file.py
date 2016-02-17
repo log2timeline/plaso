@@ -1811,7 +1811,7 @@ class StorageFile(ZIPStorageFile):
     for tag in tags:
       self._pre_obj.counter[u'Total Tags'] += 1
       if hasattr(tag, u'tags'):
-        for tag_entry in tag.tags:
+        for tag_entry in tag.labels:
           self._pre_obj.counter[tag_entry] += 1
 
       if self._event_tag_index is not None:
@@ -1839,19 +1839,8 @@ class StorageFile(ZIPStorageFile):
         if not old_tag:
           continue
 
-        # TODO: move the append functionality into EventTag.
-        # Maybe name the function extend or update?
-        if hasattr(old_tag, u'tags'):
-          tag.tags.extend(old_tag.tags)
-
-        if hasattr(old_tag, u'comment'):
-          if hasattr(tag, u'comment'):
-            tag.comment += old_tag.comment
-          else:
-            tag.comment = old_tag.comment
-
-        if hasattr(old_tag, u'color') and not hasattr(tag, u'color'):
-          tag.color = old_tag.color
+        tag.AddComment(old_tag.comment)
+        tag.AddLabels(old_tag.labels)
 
       if self._serializers_profiler:
         self._serializers_profiler.StartTiming(u'event_tag')

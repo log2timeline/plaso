@@ -105,7 +105,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(tags), 1)
     tag = tags[0]
     self.assertEqual(tag.event_uuid, u'8')
-    self.assertEqual(tag.tags[0], u'virustotal_detections_10')
+    self.assertEqual(tag.labels[0], u'virustotal_detections_10')
 
 
 class MockResponse(dict):

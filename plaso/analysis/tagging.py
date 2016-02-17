@@ -80,24 +80,29 @@ class TaggingPlugin(interface.AnalysisPlugin):
         # tag file, so there's nothing we can do with this event (or any other).
         return
       if not self._AttemptAutoDetectTagFile(analysis_mediator):
-        logging.info(u'No tag definition file specified, and plaso was not '
-                     u'able to autoselect a tagging file. As no definitions '
-                     u'were specified, no events will be tagged.')
+        logging.info(
+            u'No tag definition file specified, and plaso was not able to '
+            u'autoselect a tagging file. As no definitions were specified, '
+            u'no events will be tagged.')
         return
 
     matched_tags = []
-    for tag, my_filters in self._tag_rules.iteritems():
+    for tag, my_filters in iter(self._tag_rules.items()):
       for my_filter in my_filters:
         if my_filter.Match(event_object):
           matched_tags.append(tag)
           break
+
     if not matched_tags:
       return
-    event_tag = event.EventTag()
-    event_tag.event_uuid = getattr(event_object, u'uuid')
-    event_tag.comment = u'Tag applied by tagging analysis plugin.'
-    event_tag.tags = matched_tags
-    logging.debug(u'Tagging event: {0!s}'.format(event_tag.event_uuid))
+
+    event_uuid = getattr(event_object, u'uuid')
+    event_tag = event.EventTag(
+        comment=u'Tag applied by tagging analysis plugin.',
+        event_uuid=event_uuid)
+    event_tag.AddLabels(matched_tags)
+
+    logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
     self._tags.append(event_tag)
 
   def _ParseTaggingFile(self, input_path):

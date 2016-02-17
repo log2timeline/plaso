@@ -129,7 +129,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
 
     tag = getattr(event_object, u'tag', None)
     if tag:
-      notes.extend(tag.tags)
+      notes.extend(tag.labels)
 
     if not notes:
       notes.append(u'-')
