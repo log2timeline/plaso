@@ -230,7 +230,7 @@ class DynamicFieldsHelper(object):
     if not tag:
       return u'-'
 
-    return u' '.join(tag.tags)
+    return u' '.join(tag.labels)
 
   def _FormatTime(self, event_object):
     """Formats the timestamp.
