@@ -40,6 +40,8 @@ class TestEventFormatter(formatters_interface.EventFormatter):
 class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the dynamic output module."""
 
+  # TODO: add coverage for _FormatTag.
+
   def testHeader(self):
     """Tests the WriteHeader function."""
     output_mediator = self._CreateOutputMediator()

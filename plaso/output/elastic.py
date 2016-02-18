@@ -52,8 +52,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
     #  del ret_dict['tag']
     #  tag = getattr(event_object, 'tag', None)
     #  if tag:
-    #    tags = tag.tags
-    #    ret_dict['tag'] = tags
+    #    ret_dict['tag'] = tag.labels
     #    if getattr(tag, 'comment', ''):
     #      ret_dict['comment'] = tag.comment
     ret_dict['tag'] = []
