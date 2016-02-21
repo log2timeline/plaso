@@ -456,6 +456,7 @@ class PreprocessObject(object):
     """Initializes the preprocess object."""
     super(PreprocessObject, self).__init__()
     self._user_ids_to_names = None
+    self.collection_information = {}
     self.zone = pytz.UTC
 
   def GetUserMappings(self):

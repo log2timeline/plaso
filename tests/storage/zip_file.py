@@ -297,6 +297,9 @@ class StorageFileTest(test_lib.StorageTestCase):
     storage_file.StoreTagging(test_event_tags[:-1])
     storage_file.StoreTagging(test_event_tags[-1:])
 
+    preprocessing_object = event.PreprocessObject()
+    storage_file.WritePreprocessObject(preprocessing_object)
+
     storage_file.Close()
 
   def _GetEventObjects(self, storage_file, stream_number):
@@ -541,6 +544,18 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       storage_file.StoreTagging(test_event_tags[:-1])
       storage_file.StoreTagging(test_event_tags[-1:])
+
+      storage_file.Close()
+
+  def testWritePreprocessObject(self):
+    """Tests the WritePreprocessObject function."""
+    preprocessing_object = event.PreprocessObject()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.db')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.WritePreprocessObject(preprocessing_object)
 
       storage_file.Close()
 

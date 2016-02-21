@@ -7,6 +7,7 @@ import unittest
 import zipfile
 
 from plaso.engine import queue
+from plaso.lib import event
 from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.storage import writer
@@ -36,20 +37,23 @@ class FileStorageWriterTest(unittest.TestCase):
 
     test_queue_producer.SignalAbort()
 
+    preprocessing_object = event.PreprocessObject()
+
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'plaso.db')
-      storage_writer = writer.FileStorageWriter(test_queue, temp_file)
+      storage_writer = writer.FileStorageWriter(
+          test_queue, temp_file, preprocessing_object)
       storage_writer.WriteEventObjects()
 
       zip_file = zipfile.ZipFile(
           temp_file, mode='r', compression=zipfile.ZIP_DEFLATED)
 
       expected_filename_list = [
-          u'plaso_index.000001', u'plaso_meta.000001', u'plaso_proto.000001',
-          u'plaso_timestamps.000001', u'serializer.txt']
+          u'information.dump', u'plaso_index.000001', u'plaso_meta.000001',
+          u'plaso_proto.000001', u'plaso_timestamps.000001', u'serializer.txt']
 
       filename_list = sorted(zip_file.namelist())
-      self.assertEqual(len(filename_list), 5)
+      self.assertEqual(len(filename_list), 6)
       self.assertEqual(filename_list, expected_filename_list)
 
 

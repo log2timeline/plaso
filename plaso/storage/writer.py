@@ -68,27 +68,29 @@ class FileStorageWriter(StorageWriter):
   """Class that implements a storage file writer object."""
 
   def __init__(
-      self, event_object_queue, output_file, buffer_size=0, pre_obj=None,
-      serializer_format=u'proto'):
+      self, event_object_queue, output_file, preprocessing_object,
+      buffer_size=0, serializer_format=u'proto'):
     """Initializes the storage file writer.
 
     Args:
-      event_object_queue: the event object queue (instance of Queue).
-      output_file: The path to the output file.
-      buffer_size: The estimated size of a protobuf file.
-      pre_obj: A preprocessing object (instance of PreprocessObject).
-      serializer_format: A string containing either "proto" or "json". Defaults
-                         to proto.
+      event_object_queue: an event object queue (instance of Queue).
+      output_file: a string containing the path to the output file.
+      preprocessing_object: a preprocessing object (instance of
+                            PreprocessObject).
+      buffer_size: an integer containing the estimated size of a protobuf file.
+      serializer_format: a string containing the serializer format either
+                         "proto" or "json".
     """
     super(FileStorageWriter, self).__init__(event_object_queue)
     self._buffer_size = buffer_size
     self._output_file = output_file
-    self._pre_obj = pre_obj
+    self._preprocessing_object = preprocessing_object
     self._serializer_format = serializer_format
     self._storage_file = None
 
   def _Close(self):
     """Closes the storage writer."""
+    self._storage_file.WritePreprocessObject(self._preprocessing_object)
     self._storage_file.Close()
 
   def _ConsumeItem(self, event_object, **unused_kwargs):
@@ -98,7 +100,7 @@ class FileStorageWriter(StorageWriter):
   def _Open(self):
     """Opens the storage writer."""
     self._storage_file = storage_zip_file.StorageFile(
-        self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj,
+        self._output_file, buffer_size=self._buffer_size,
         serializer_format=self._serializer_format)
 
     self._storage_file.SetEnableProfiling(
@@ -113,22 +115,24 @@ class BypassStorageWriter(StorageWriter):
   """
 
   def __init__(
-      self, event_object_queue, output_file, output_module_string=u'l2tcsv',
-      pre_obj=None):
+      self, event_object_queue, output_file, preprocessing_object,
+      output_module_string=u'l2tcsv'):
     """Initializes the bypass storage writer.
 
     Args:
-      event_object_queue: the event object queue (instance of Queue).
-      output_file: The path to the output file.
-      output_module_string: The output module string.
-      pre_obj: A preprocessing object (instance of PreprocessObject).
+      event_object_queue: an event object queue (instance of Queue).
+      output_file: a string containing path to the output file.
+      preprocessing_object: a preprocessing object (instance of
+                            PreprocessObject).
+      output_module_string: optional string containing the name of the output
+                            module.
     """
     super(BypassStorageWriter, self).__init__(event_object_queue)
     self._output_file = output_file
     self._output_module = None
     self._output_module_string = output_module_string
-    self._pre_obj = pre_obj
-    self._pre_obj.store_range = (1, 1)
+    self._preprocessing_object = preprocessing_object
+    self._preprocessing_object.store_range = (1, 1)
 
   def _Close(self):
     """Closes the storage writer."""
@@ -159,7 +163,7 @@ class BypassStorageWriter(StorageWriter):
       output_class = output_manager.OutputManager.GetOutputClass('l2tcsv')
     self._output_module = output_class(
         self, formatter_mediator, filehandle=self._output_file,
-        config=self._pre_obj)
+        config=self._preprocessing_object)
 
     self._output_module.Start()
     """
@@ -172,8 +176,8 @@ class BypassStorageWriter(StorageWriter):
   # interface if you want to call it that way, although the storage
   # has not been abstracted into an interface, perhaps it should be)
   # then this has to be set. And the interface behavior is to return
-  # a list of all available storage information objects (or all pre_obj
-  # stored in the storage file)
+  # a list of all available storage information objects (or all
+  # preprocessing objects stored in the storage file)
   def GetStorageInformation(self):
     """Return information about the storage object (used by output modules)."""
-    return [self._pre_obj]
+    return [self._preprocessing_object]
