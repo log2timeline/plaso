@@ -862,6 +862,8 @@ class OutputTestCase(TestCase):
           test_definition.output_format))
       return False
 
+    output_file_path = os.path.join(temp_directory, test_definition.output_file)
+
     # TODO: add support to compare output by SHA-256.
 
     result = False
@@ -877,11 +879,10 @@ class OutputTestCase(TestCase):
         return False
 
       with open(reference_output_file_path, 'r') as reference_output_file:
-        with open(test_definition.output_file, 'r') as output_file:
+        with open(output_file_path, 'r') as output_file:
           differences = list(difflib.unified_diff(
               reference_output_file.readlines(), output_file.readlines(),
-              fromfile=reference_output_file_path,
-              tofile=test_definition.output_file))
+              fromfile=reference_output_file_path, tofile=output_file_path))
 
       if not differences:
         result = True
@@ -906,7 +907,9 @@ class OutputTestCase(TestCase):
       output_options.append(u'-o {0:s}'.format(test_definition.output_format))
 
     if test_definition.output_file:
-      output_options.append(u'-w {0:s}'.format(test_definition.output_file))
+      output_file_path = os.path.join(
+          temp_directory, test_definition.output_file)
+      output_options.append(u'-w {0:s}'.format(output_file_path))
 
     output_options = u' '.join(output_options)
 
