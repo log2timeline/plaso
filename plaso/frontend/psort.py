@@ -474,7 +474,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    time_slice = None
     if time_slice:
       if time_slice.event_timestamp is not None:
         time_slice = storage_time_range.TimeRange(
