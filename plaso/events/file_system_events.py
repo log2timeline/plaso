@@ -9,17 +9,18 @@ class FileStatEvent(time_events.TimestampEvent):
   """File system stat event.
 
   Attributes:
-    file_size: the file size.
-    file_system_type: the file system type.
+    file_entry_type: an integer containing the file entry type.
+    file_size: an integer containing the file size.
+    file_system_type: a string containing the file system type.
     is_allocated: boolean value to indicate the file is allocated.
-    offset: the offset of the stat data.
+    offset: an integer containing the offset of the stat data.
   """
 
   DATA_TYPE = u'fs:stat'
 
   def __init__(
       self, timestamp, timestamp_description, is_allocated, file_size,
-      file_system_type):
+      file_entry_type, file_system_type):
     """Initializes the event object.
 
     Args:
@@ -28,10 +29,12 @@ class FileStatEvent(time_events.TimestampEvent):
       timestamp_description: a description string for the timestamp value.
       is_allocated: boolean value to indicate the file entry is allocated.
       file_size: an integer containing the file size in bytes.
+      file_entry_type: an integer containing the file entry type.
       file_system_type: a string containing the file system type.
     """
     super(FileStatEvent, self).__init__(timestamp, timestamp_description)
 
+    self.file_entry_type = file_entry_type
     self.file_size = file_size
     self.file_system_type = file_system_type
     self.is_allocated = is_allocated
