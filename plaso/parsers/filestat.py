@@ -75,7 +75,8 @@ class FileStatParser(interface.FileEntryParser):
         continue
 
       event_object = file_system_events.FileStatEvent(
-          timestamp, time_attribute, is_allocated, file_size, file_system_type)
+          timestamp, time_attribute, is_allocated, file_size, stat_object.type,
+          file_system_type)
       parser_mediator.ProduceEvent(event_object)
 
 
