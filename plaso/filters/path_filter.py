@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
-"""A scan tree-based path filter implementation."""
+"""A scan tree-based path filter implementation.
+
+The scan tree is a tree based on multiple paths that contains the path
+segments per node. The most significant path segment is at the root and
+therefore compared first. More information can be found here:
+https://github.com/libyal/libsigscan/wiki/Internals
+#scanning-tree-based-signature-scanning
+
+The scan tree is used in the filter to filter provided paths.
+"""
 
 
 class _PathFilterTable(object):
   """Class that implements a path filter table.
 
-  The path filter table is used in the the scan tree-based path filter
-  to construct a scan tree.
+  The path filter table is used to construct a scan tree.
   """
 
   def __init__(self, paths, ignore_list, path_segment_separator=u'/'):
@@ -85,7 +93,12 @@ class _PathFilterTable(object):
 
 
 class _PathSegmentWeights(object):
-  """Class that implements path segment weights."""
+  """Class that implements path segment weights.
+
+  The path segment weights are used to determine the most significant
+  path segment per index. The path segment weights are used to construct
+  a scan tree.
+  """
 
   def __init__(self):
     """Initializes the path segment weights."""
@@ -319,7 +332,7 @@ class PathFilterScanTree(object):
 
   def _GetMostSignificantPathSegmentIndex(
       self, paths, similarity_weights, occurrence_weights, value_weights):
-    """Retrieves the most significant path segment index.
+    """Retrieves the index of the most significant path segment.
 
     Args:
       paths: a list of strings containing the paths.
@@ -357,7 +370,7 @@ class PathFilterScanTree(object):
 
   def _GetPathSegmentIndexForOccurrenceWeights(
       self, occurrence_weights, value_weights):
-    """Retrieves the most significant path segment index based on the weights.
+    """Retrieves the index of the path segment based on occurrence weights.
 
     Args:
       occurrence_weights: the occurrence weights object (instance of
@@ -398,7 +411,7 @@ class PathFilterScanTree(object):
 
   def _GetPathSegmentIndexForSimilarityWeights(
       self, similarity_weights, occurrence_weights, value_weights):
-    """Retrieves the most significant path segment index based on the weights.
+    """Retrieves the index of the path segment based on similarity weights.
 
     Args:
       similarity_weights: the similarity weights object (instance of
@@ -451,7 +464,7 @@ class PathFilterScanTree(object):
     return path_segment_index
 
   def _GetPathSegmentIndexForValueWeights(self, value_weights):
-    """Retrieves the most significant path segment index based on the weights.
+    """Retrieves the index of the path segment based on value weights.
 
     Args:
       value_weights: the value weights object (instance of _PathSegmentWeights).
@@ -479,8 +492,8 @@ class PathFilterScanTree(object):
 
     return path_segment_index
 
-  def ComparePath(self, path, path_segment_separator=None):
-    """Compares a path with the scan tree-based path filter.
+  def CheckPath(self, path, path_segment_separator=None):
+    """Checks if a path matches the scan tree-based path filter.
 
     Args:
       path: a string containing the path.

@@ -171,7 +171,7 @@ class WinRegistryParser(interface.FileObjectParser):
       matching_plugin = None
 
       normalized_registry_path = self._NormalizeKeyPath(registry_key.path)
-      if self._path_filter.ComparePath(normalized_registry_path):
+      if self._path_filter.CheckPath(normalized_registry_path):
         matching_plugin = self._plugin_per_key_path[normalized_registry_path]
 
       else:
