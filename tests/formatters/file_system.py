@@ -21,7 +21,8 @@ class FileStatEventFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = file_system.FileStatEventFormatter()
 
-    expected_attribute_names = [u'display_name', u'unallocated']
+    expected_attribute_names = [
+        u'display_name', u'file_entry_type', u'unallocated']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The file system stat event formatter."""
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
@@ -13,12 +15,21 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'{display_name}',
+      u'Type: {file_entry_type}',
       u'({unallocated})']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'{filename}']
 
   SOURCE_SHORT = u'FILE'
+
+  _FILE_ENTRY_TYPES = {
+      dfvfs_definitions.FILE_ENTRY_TYPE_DEVICE: u'device',
+      dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY: u'directory',
+      dfvfs_definitions.FILE_ENTRY_TYPE_FILE: u'file',
+      dfvfs_definitions.FILE_ENTRY_TYPE_LINK: u'link',
+      dfvfs_definitions.FILE_ENTRY_TYPE_SOCKET: u'socket',
+      dfvfs_definitions.FILE_ENTRY_TYPE_PIPE: u'pipe'}
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
@@ -39,6 +50,11 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
           event_object.data_type))
 
     event_values = event_object.GetValues()
+
+    file_entry_type = event_values.get(u'file_entry_type', None)
+    if file_entry_type is not None:
+      event_values[u'file_entry_type'] = self._FILE_ENTRY_TYPES.get(
+          file_entry_type, u'UNKNOWN')
 
     # The usage of allocated is deprecated in favor of is_allocated but
     # is kept here to be backwards compatible.
