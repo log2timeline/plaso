@@ -3,7 +3,6 @@
 
 from plaso.engine import queue
 from plaso.lib import definitions
-from plaso.storage import zip_file as storage_zip_file
 
 
 class StorageWriter(queue.ItemQueueConsumer):
@@ -62,49 +61,6 @@ class StorageWriter(queue.ItemQueueConsumer):
     self._Close()
 
     self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-
-class FileStorageWriter(StorageWriter):
-  """Class that implements a storage file writer object."""
-
-  def __init__(
-      self, event_object_queue, output_file, preprocessing_object,
-      buffer_size=0, serializer_format=u'proto'):
-    """Initializes the storage file writer.
-
-    Args:
-      event_object_queue: an event object queue (instance of Queue).
-      output_file: a string containing the path to the output file.
-      preprocessing_object: a preprocessing object (instance of
-                            PreprocessObject).
-      buffer_size: an integer containing the estimated size of a protobuf file.
-      serializer_format: a string containing the serializer format either
-                         "proto" or "json".
-    """
-    super(FileStorageWriter, self).__init__(event_object_queue)
-    self._buffer_size = buffer_size
-    self._output_file = output_file
-    self._preprocessing_object = preprocessing_object
-    self._serializer_format = serializer_format
-    self._storage_file = None
-
-  def _Close(self):
-    """Closes the storage writer."""
-    self._storage_file.WritePreprocessObject(self._preprocessing_object)
-    self._storage_file.Close()
-
-  def _ConsumeItem(self, event_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems."""
-    self._storage_file.AddEventObject(event_object)
-
-  def _Open(self):
-    """Opens the storage writer."""
-    self._storage_file = storage_zip_file.StorageFile(
-        self._output_file, buffer_size=self._buffer_size,
-        serializer_format=self._serializer_format)
-
-    self._storage_file.SetEnableProfiling(
-        self._enable_profiling, profiling_type=self._profiling_type)
 
 
 class BypassStorageWriter(StorageWriter):

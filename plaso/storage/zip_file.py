@@ -98,6 +98,7 @@ from plaso.proto import plaso_storage_pb2
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
 from plaso.storage import reader
+from plaso.storage import writer
 
 
 class _EventTagIndexValue(object):
@@ -974,8 +975,6 @@ class StorageFile(ZIPStorageFile):
     self._output_file = output_file
     # Counter containing the number of events per parser.
     self._parsers_counter = collections.Counter()
-    # Counter containing the number of events per parser plugin.
-    self._plugins_counter = collections.Counter()
     self._read_only = read_only
     self._serializer_format_string = u''
 
@@ -1382,16 +1381,6 @@ class StorageFile(ZIPStorageFile):
     Args:
       event_attributes: a dictionary containing the event object attributes.
     """
-    self._parsers_counter[u'total'] += 1
-
-    parser_name = event_attributes.get(u'parser', u'N/A')
-    self._parsers_counter[parser_name] += 1
-
-    # TODO: remove plugin, add parser chain.
-    if u'plugin' in event_attributes:
-      plugin_name = event_attributes.get(u'plugin', u'N/A')
-      self._plugins_counter[plugin_name] += 1
-
     data_type = event_attributes.get(u'data_type', u'unknown')
     self._data_type_counter[data_type] += 1
 
@@ -1537,16 +1526,6 @@ class StorageFile(ZIPStorageFile):
 
     if self._buffer_size > self._max_buffer_size:
       self._WriteBuffer()
-
-  def AddEventObjects(self, event_objects):
-    """Adds event objects to the storage.
-
-    Args:
-      event_objects: a list or generator of event objects (instances of
-                     EventObject).
-    """
-    for event_object in event_objects:
-      self.AddEventObject(event_object)
 
   def Close(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
@@ -1880,10 +1859,6 @@ class StorageFile(ZIPStorageFile):
     """
     existing_stream_data = self._ReadStream(u'information.dump')
 
-    # TODO: move the counters out of preprocessing object.
-    preprocess_object.counter = self._parsers_counter
-    preprocess_object.plugin_counter = self._plugins_counter
-
     # Store information about store range for this particular
     # preprocessing object. This will determine which stores
     # this information is applicable for.
@@ -1938,3 +1913,73 @@ class ZIPStorageFileReader(reader.StorageReader):
       yield event_object
       event_object = self._zip_storage_file.GetSortedEntry(
           time_range=time_range)
+
+
+class ZIPStorageFileWriter(writer.StorageWriter):
+  """Class that implements the ZIP-based storage file writer."""
+
+  def __init__(
+      self, event_object_queue, output_file, preprocess_object,
+      buffer_size=0, serializer_format=u'proto'):
+    """Initializes a storage writer object.
+
+    Args:
+      event_object_queue: an event object queue (instance of Queue).
+      output_file: a string containing the path to the output file.
+      preprocess_object: a preprocess object (instance of PreprocessObject).
+      buffer_size: an integer containing the estimated size of a protobuf file.
+      serializer_format: a string containing the serializer format either
+                         "proto" or "json".
+    """
+    super(ZIPStorageFileWriter, self).__init__(event_object_queue)
+    self._buffer_size = buffer_size
+    self._output_file = output_file
+    self._preprocess_object = preprocess_object
+    self._serializer_format = serializer_format
+    self._storage_file = None
+
+    # Counter containing the number of events per parser.
+    self._parsers_counter = collections.Counter()
+    # Counter containing the number of events per parser plugin.
+    self._plugins_counter = collections.Counter()
+
+  def _Close(self):
+    """Closes the storage writer."""
+    # TODO: move the counters out of preprocessing object.
+    # Kept for backwards compatibility for now.
+    self._preprocess_object.counter = self._parsers_counter
+    self._preprocess_object.plugin_counter = self._plugins_counter
+
+    self._storage_file.WritePreprocessObject(self._preprocess_object)
+
+    self._storage_file.Close()
+
+  def _ConsumeItem(self, event_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems."""
+    self._storage_file.AddEventObject(event_object)
+    self._UpdateCounters(event_object)
+
+  def _Open(self):
+    """Opens the storage writer."""
+    self._storage_file = StorageFile(
+        self._output_file, buffer_size=self._buffer_size,
+        serializer_format=self._serializer_format)
+
+    self._storage_file.SetEnableProfiling(
+        self._enable_profiling, profiling_type=self._profiling_type)
+
+  def _UpdateCounters(self, event_object):
+    """Updates the counters.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+    self._parsers_counter[u'total'] += 1
+
+    parser_name = getattr(event_object, u'parser', u'N/A')
+    self._parsers_counter[parser_name] += 1
+
+    # TODO: remove plugin, add parser chain.
+    if hasattr(event_object, u'plugin'):
+      plugin_name = getattr(event_object, u'plugin', u'N/A')
+      self._plugins_counter[plugin_name] += 1

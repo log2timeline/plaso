@@ -517,7 +517,7 @@ class ExtractionFrontend(frontend.Frontend):
           self._engine.event_object_queue, self._storage_file_path,
           pre_obj, output_module_string=self._output_module)
     else:
-      storage_writer_object = storage_writer.FileStorageWriter(
+      storage_writer_object = storage_zip_file.ZIPStorageFileWriter(
           self._engine.event_object_queue, self._storage_file_path,
           pre_obj, buffer_size=self._buffer_size,
           serializer_format=storage_serializer_format)

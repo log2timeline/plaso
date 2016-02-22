@@ -197,7 +197,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       temp_file = os.path.join(temp_directory, u'plaso.db')
 
       storage_file = storage_zip_file.StorageFile(temp_file)
-      storage_file.AddEventObjects(events)
+      for event_object in events:
+        storage_file.AddEventObject(event_object)
       storage_file.Close()
 
       storage_file = storage_zip_file.StorageFile(
