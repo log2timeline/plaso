@@ -702,11 +702,11 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
           temp_file, mode='r', compression=zipfile.ZIP_DEFLATED)
 
       expected_filename_list = [
-          u'information.dump', u'plaso_index.000001', u'plaso_meta.000001',
-          u'plaso_proto.000001', u'plaso_timestamps.000001', u'serializer.txt']
+          u'information.dump', u'plaso_index.000001', u'plaso_proto.000001',
+          u'plaso_timestamps.000001', u'serializer.txt']
 
       filename_list = sorted(storage_file.namelist())
-      self.assertEqual(len(filename_list), 6)
+      self.assertEqual(len(filename_list), 5)
       self.assertEqual(filename_list, expected_filename_list)
 
 

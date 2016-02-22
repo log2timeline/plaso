@@ -21,25 +21,28 @@ The # in the filenames is referred to as the "store number".
 
 + The index file
 
-The index file contains an index to all the serialized event objects stored
-within the corresponding "proto file".
++ plaso_index
 
-An index file consists of:
-+-----+-----+-...-+
-| int | int | ... |
-+-----+-----+-...-+
+The index file contains an index to all the entries stored within
+the protobuf file, so that it can be easily seeked. The layout is:
 
-Where int is an unsigned 32-bit integer that represents the byte offset
-into the corresponding "proto file" of the start of the data of the serialized
-event object.
++-----+-----+-...+
+| int | int | ...|
++-----+-----+-...+
 
-+ The timestamps file
+Where int is an unsigned integer '<I' that represents the byte offset
+into the .proto file where the beginning of the size variable lies.
 
-The timestamps file contains all the timestamp of the serialized event objects.
-A timestamp is a signed 64-bit value that contains the number of microseconds
-since January 1, 1970 00:00:00 UTC.
+This can be used to seek the proto file directly to read a particular
+entry within the proto file.
 
-A timestamps file consists of:
+  + plaso_timestamps
+
+This is a simple file that contains all the timestamp values of the entries
+within the proto file. Each entry is a a long int ('<q') that contains the value
+of the EventObject of that timestamps index into the file.
+
+The structure is:
 +-----------+-----------+-...-+
 | timestamp | timestamp | ... |
 +-----------+-----------+-...-+
@@ -63,7 +66,6 @@ import warnings
 import zipfile
 
 import construct
-import yaml
 
 from plaso.engine import profiler
 from plaso.lib import definitions
@@ -1185,7 +1187,7 @@ class StorageFile(ZIPStorageFile):
 
       # Need to get the last number in the list.
       for stream_name in self._GetStreamNames():
-        if stream_name.startswith(u'plaso_meta.'):
+        if stream_name.startswith(u'plaso_proto.'):
           _, _, file_number = stream_name.partition(u'.')
 
           try:
@@ -1193,7 +1195,7 @@ class StorageFile(ZIPStorageFile):
             if file_number >= self._file_number:
               self._file_number = file_number + 1
           except ValueError:
-            # Ignore invalid metadata stream names.
+            # Ignore invalid stream names.
             pass
 
       self._first_file_number = self._file_number
@@ -1252,24 +1254,6 @@ class StorageFile(ZIPStorageFile):
     data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_offset)
     return self._ReadEventTag(data_stream)
-
-  def _ReadMeta(self, stream_number):
-    """Return a dict with the metadata entries.
-
-    Args:
-      stream_number: an integer containing the number of the stream.
-
-    Returns:
-      A dict object containing all the variables inside the metadata file.
-
-    Raises:
-      IOError: if the stream cannot be opened.
-    """
-    stream_name = u'plaso_meta.{0:06d}'.format(stream_number)
-    file_object = self._OpenStream(stream_name)
-    if file_object is None:
-      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
-    return yaml.safe_load(file_object)
 
   def _ReadPreprocessObject(self, data_stream):
     """Reads a preprocessing object.
@@ -1389,10 +1373,6 @@ class StorageFile(ZIPStorageFile):
 
       raise
 
-    self._WriteMetadata(
-        self._file_number, self._buffer_first_timestamp,
-        self._buffer_last_timestamp)
-
     offset_table.Write()
     data_stream.WriteFinalize()
     timestamp_table.Write()
@@ -1407,37 +1387,6 @@ class StorageFile(ZIPStorageFile):
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = -sys.maxint - 1
-
-  def _WriteMetadata(self, stream_number, first_timestamp, last_timestamp):
-    """Writes the metadata to the storage file.
-
-    Args:
-      stream_number: an integer containing the number of the stream.
-      first_timestamp: the first timestamp time value in the corresponding
-                       serialized event object stream. The timestamp contains
-                       the number of microseconds since Jan 1, 1970
-                       00:00:00 UTC.
-      last_timestamp: the last timestamp time value in the corresponding
-                      serialized event object stream. The timestamp contains
-                      the number of microseconds since Jan 1, 1970
-                      00:00:00 UTC.
-
-    Raises:
-      IOError: if the stream cannot be opened.
-    """
-    yaml_dict = {
-        u'range': (first_timestamp, last_timestamp),
-        u'version': self.STORAGE_VERSION,
-        u'data_type': list(self._data_type_counter.viewkeys()),
-        u'parsers': list(self._count_parser.viewkeys()),
-        u'count': len(self._buffer),
-        u'type_count': self._data_type_counter.most_common()}
-
-    # TODO: why have YAML serialization here?
-    yaml_data = yaml.safe_dump(yaml_dict)
-
-    stream_name = u'plaso_meta.{0:06d}'.format(stream_number)
-    self._WriteStream(stream_name, yaml_data)
 
   def AddEventObject(self, event_object):
     """Adds an event object to the storage.
@@ -1583,13 +1532,6 @@ class StorageFile(ZIPStorageFile):
     while preprocess_object:
       information.append(preprocess_object)
       preprocess_object = self._ReadPreprocessObject(data_stream)
-
-    stores = self._GetSerializedEventObjectStreamNumbers()
-    information[-1].stores = {}
-    information[-1].stores[u'Number'] = len(stores)
-    for store_number in stores:
-      store_identifier = u'Store {0:d}'.format(store_number)
-      information[-1].stores[store_identifier] = self._ReadMeta(store_number)
 
     return information
 
