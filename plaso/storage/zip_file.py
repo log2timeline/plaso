@@ -931,10 +931,6 @@ class StorageFile(ZIPStorageFile):
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = -sys.maxint - 1
     self._buffer_size = 0
-    # Counter containing ???
-    self._count_parser = collections.Counter()
-    # Counter containing the number of events per data type.
-    self._data_type_counter = collections.Counter()
     self._event_object_serializer = None
     self._event_tag_index = None
     self._file_number = 1
@@ -1284,11 +1280,6 @@ class StorageFile(ZIPStorageFile):
 
     return preprocess_object
 
-  def _ResetCounters(self):
-    """Resets the counters."""
-    self._count_parser = collections.Counter()
-    self._data_type_counter = collections.Counter()
-
   def _SetSerializerFormat(self, serializer_format):
     """Set the serializer format.
 
@@ -1325,19 +1316,6 @@ class StorageFile(ZIPStorageFile):
     else:
       raise ValueError(
           u'Unsupported serializer format: {0:s}'.format(serializer_format))
-
-  def _UpdateCounters(self, event_attributes):
-    """Updates the counters.
-
-    Args:
-      event_attributes: a dictionary containing the event object attributes.
-    """
-    data_type = event_attributes.get(u'data_type', u'unknown')
-    self._data_type_counter[data_type] += 1
-
-    # TODO: determine if this is a duplicate of self._parsers_counter.
-    parser_name = event_attributes.get(u'parser', u'unknown_parser')
-    self._count_parser[parser_name] += 1
 
   def _WriteBuffer(self):
     """Writes the buffered event objects to the storage file."""
@@ -1379,8 +1357,6 @@ class StorageFile(ZIPStorageFile):
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'write')
-
-    self._ResetCounters()
 
     self._file_number += 1
     self._buffer_size = 0
@@ -1430,10 +1406,6 @@ class StorageFile(ZIPStorageFile):
     if (event_object.timestamp < self._buffer_first_timestamp and
         event_object.timestamp > 0):
       self._buffer_first_timestamp = event_object.timestamp
-
-    attributes = event_object.CopyToDict()
-
-    self._UpdateCounters(attributes)
 
     heapq.heappush(
         self._buffer, (event_object.timestamp, event_object_data))
