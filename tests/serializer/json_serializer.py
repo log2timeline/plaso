@@ -93,11 +93,8 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
-    # TODO: add report_array and _anomalies tests.
-
     self._json_dict = {
         u'__type__': u'AnalysisReport',
-        u'_anomalies': [],
         u'_tags': [{
             u'__type__': u'EventTag',
             u'comment': self._comment,

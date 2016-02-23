@@ -939,8 +939,6 @@ class StorageFile(ZIPStorageFile):
     self._merge_buffer = None
     self._number_of_events_in_buffer = 0
     self._output_file = output_file
-    # Counter containing the number of events per parser.
-    self._parsers_counter = collections.Counter()
     self._read_only = read_only
     self._serializer_format_string = u''
 
@@ -1633,13 +1631,6 @@ class StorageFile(ZIPStorageFile):
 
     serialized_event_tags = []
     for tag in tags:
-      # TODO: determine why the parsers counter is used here.
-      # TODO: switch to a tags counter to prevent a label overwriting
-      # parser numbers.
-      self._parsers_counter[u'Total Tags'] += 1
-      for tag_entry in tag.labels:
-        self._parsers_counter[tag_entry] += 1
-
       if self._event_tag_index is not None:
         tag_index_value = self._event_tag_index.get(tag.string_key, None)
       else:
@@ -1815,14 +1806,13 @@ class ZIPStorageFileWriter(writer.StorageWriter):
     super(ZIPStorageFileWriter, self).__init__(event_object_queue)
     self._buffer_size = buffer_size
     self._output_file = output_file
-    self._preprocess_object = preprocess_object
-    self._serializer_format = serializer_format
-    self._storage_file = None
-
     # Counter containing the number of events per parser.
     self._parsers_counter = collections.Counter()
     # Counter containing the number of events per parser plugin.
     self._plugins_counter = collections.Counter()
+    self._preprocess_object = preprocess_object
+    self._serializer_format = serializer_format
+    self._storage_file = None
 
   def _Close(self):
     """Closes the storage writer."""
@@ -1836,7 +1826,11 @@ class ZIPStorageFileWriter(writer.StorageWriter):
     self._storage_file.Close()
 
   def _ConsumeItem(self, event_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems."""
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
     self._storage_file.AddEventObject(event_object)
     self._UpdateCounters(event_object)
 

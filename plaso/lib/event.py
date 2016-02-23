@@ -54,13 +54,8 @@ class AnalysisReport(object):
       plugin_name: The name of the plugin that's generating this report.
     """
     super(AnalysisReport, self).__init__()
-    self._anomalies = []
     self._tags = []
     self.plugin_name = plugin_name
-
-  def GetAnomalies(self):
-    """Retrieves the list of anomalies that are attached to the report."""
-    return self._anomalies
 
   def GetString(self):
     """Returns a Unicode representation of the report."""

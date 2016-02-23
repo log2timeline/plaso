@@ -26,6 +26,7 @@ from plaso.output import mediator as output_mediator
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 from plaso.storage import time_range as storage_time_range
+from plaso.storage import writer as storage_writer
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz
@@ -79,44 +80,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     for event_queue in event_queues:
       event_queue.ProduceItem(event_object)
 
-  def HasOutputClass(self, name):
-    """Determines if a specific output class is registered with the manager.
-
-    Args:
-      name: The name of the output module.
-
-    Returns:
-      A boolean indicating if the output class is registered.
-    """
-    return output_manager.OutputManager.HasOutputClass(name)
-
-  def GetAnalysisPluginInfo(self):
-    """Retrieves information about the registered analysis plugins.
-
-    Returns:
-      A sorted list of tuples containing the name, docstring and type of each
-      analysis plugin.
-    """
-    return analysis_manager.AnalysisPluginManager.GetAllPluginInformation()
-
-  def GetDisabledOutputClasses(self):
-    """Retrieves the disabled output classes.
-
-    Returns:
-      An output module generator which yields tuples of output class names
-      and type object.
-    """
-    return output_manager.OutputManager.GetDisabledOutputClasses()
-
-  def GetOutputClasses(self):
-    """Retrieves the available output classes.
-
-    Returns:
-      An output module generator which yields tuples of output class names
-      and type object.
-    """
-    return output_manager.OutputManager.GetOutputClasses()
-
   def _ProcessAnalysisPlugins(
       self, analysis_plugins, analysis_report_incoming_queue, storage_file,
       counter, pre_obj, preferred_encoding=u'utf-8'):
@@ -149,9 +112,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         report_wait = None
       else:
         report_wait = self.MAX_ANALYSIS_PLUGIN_REPORT_WAIT
-      completion_event = analysis_process_info.completion_event
+
       logging.info(
           u'Waiting for analysis plugin: {0:s} to complete.'.format(name))
+
+      completion_event = analysis_process_info.completion_event
       if completion_event.wait(report_wait):
         logging.info(u'Plugin {0:s} has completed.'.format(name))
       else:
@@ -162,21 +127,13 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     logging.info(u'All analysis plugins are now completed.')
 
-    # Go over each output.
-    analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
+    storage_file_writer = PsortAnalysisReportZIPStorageFileWriter(
         analysis_report_incoming_queue, storage_file, self._filter_expression,
-        preferred_encoding=preferred_encoding)
+        pre_obj, preferred_encoding=preferred_encoding)
 
-    analysis_queue_consumer.ConsumeItems()
+    storage_file_writer.ConsumeItems()
 
-    if analysis_queue_consumer.tags:
-      storage_file.StoreTagging(analysis_queue_consumer.tags)
-
-    # TODO: analysis_queue_consumer.anomalies:
-
-    storage_file.WritePreprocessObject(pre_obj)
-
-    for item, value in analysis_queue_consumer.counter.iteritems():
+    for item, value in storage_file_writer.counter.iteritems():
       counter[item] = value
 
   def _StartAnalysisPlugins(
@@ -283,6 +240,76 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return pre_obj
 
+  def GetAnalysisPluginsAndEventQueues(self, analysis_plugins_string):
+    """Return a list of analysis plugins and event queues.
+
+    Args:
+      analysis_plugins_string: comma separated string with names of analysis
+                               plugins to load.
+
+    Returns:
+      A tuple of two lists, one containing list of analysis plugins
+      and the other a list of event queues.
+    """
+    if not analysis_plugins_string:
+      return [], []
+
+    event_producers = []
+    # These are the queues analysis plugins will read from.
+    analysis_plugin_input_queues = []
+    analysis_plugins_list = [
+        name.strip() for name in analysis_plugins_string.split(u',')]
+
+    for _ in range(0, len(analysis_plugins_list)):
+      if self._use_zeromq:
+        output_queue = zeromq_queue.ZeroMQPushBindQueue()
+        # Open the queue so it can bind to a random port, and we can get the
+        # port number to use in the input queue.
+        output_queue.Open()
+        queue_port = output_queue.port
+        input_queue = zeromq_queue.ZeroMQPullConnectQueue(
+            port=queue_port, delay_open=True)
+        analysis_plugin_input_queues.append(input_queue)
+      else:
+        input_queue = multi_process.MultiProcessingQueue(timeout=5)
+        analysis_plugin_input_queues.append(input_queue)
+        output_queue = input_queue
+      event_producers.append(queue.ItemQueueProducer(output_queue))
+
+    analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
+        analysis_plugins_list, analysis_plugin_input_queues)
+
+    analysis_plugins = list(analysis_plugins)
+
+    return analysis_plugins, event_producers
+
+  def GetAnalysisPluginInfo(self):
+    """Retrieves information about the registered analysis plugins.
+
+    Returns:
+      A sorted list of tuples containing the name, docstring and type of each
+      analysis plugin.
+    """
+    return analysis_manager.AnalysisPluginManager.GetAllPluginInformation()
+
+  def GetDisabledOutputClasses(self):
+    """Retrieves the disabled output classes.
+
+    Returns:
+      An output module generator which yields tuples of output class names
+      and type object.
+    """
+    return output_manager.OutputManager.GetDisabledOutputClasses()
+
+  def GetOutputClasses(self):
+    """Retrieves the available output classes.
+
+    Returns:
+      An output module generator which yields tuples of output class names
+      and type object.
+    """
+    return output_manager.OutputManager.GetOutputClasses()
+
   def GetOutputModule(
       self, storage_file, preferred_encoding=u'utf-8', timezone=pytz.UTC):
     """Return an output module.
@@ -326,48 +353,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return output_module
 
-  def GetAnalysisPluginsAndEventQueues(self, analysis_plugins_string):
-    """Return a list of analysis plugins and event queues.
+  def HasOutputClass(self, name):
+    """Determines if a specific output class is registered with the manager.
 
     Args:
-      analysis_plugins_string: comma separated string with names of analysis
-                               plugins to load.
+      name: The name of the output module.
 
     Returns:
-      A tuple of two lists, one containing list of analysis plugins
-      and the other a list of event queues.
+      A boolean indicating if the output class is registered.
     """
-    if not analysis_plugins_string:
-      return [], []
-
-    event_producers = []
-    # These are the queues analysis plugins will read from.
-    analysis_plugin_input_queues = []
-    analysis_plugins_list = [
-        name.strip() for name in analysis_plugins_string.split(u',')]
-
-    for _ in range(0, len(analysis_plugins_list)):
-      if self._use_zeromq:
-        output_queue = zeromq_queue.ZeroMQPushBindQueue()
-        # Open the queue so it can bind to a random port, and we can get the
-        # port number to use in the input queue.
-        output_queue.Open()
-        queue_port = output_queue.port
-        input_queue = zeromq_queue.ZeroMQPullConnectQueue(
-            port=queue_port, delay_open=True)
-        analysis_plugin_input_queues.append(input_queue)
-      else:
-        input_queue = multi_process.MultiProcessingQueue(timeout=5)
-        analysis_plugin_input_queues.append(input_queue)
-        output_queue = input_queue
-      event_producers.append(queue.ItemQueueProducer(output_queue))
-
-    analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
-        analysis_plugins_list, analysis_plugin_input_queues)
-
-    analysis_plugins = list(analysis_plugins)
-
-    return analysis_plugins, event_producers
+    return output_manager.OutputManager.HasOutputClass(name)
 
   def ProcessEventsFromStorage(
       self, storage_reader, output_buffer, analysis_queues=None,
@@ -590,39 +585,68 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._use_zeromq = use_zeromq
 
 
-class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
-  """Class that implements an analysis report queue consumer for psort."""
+class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
+  """Class that implements the analysis report ZIP-based storage file writer.
+
+  Attributes:
+    reports_counter: a counter containing the number of reports (instance of
+                     collections.Counter).
+  """
 
   def __init__(
-      self, queue_object, storage_file, filter_string,
+      self, queue_object, storage_file, filter_string, preprocess_object,
       preferred_encoding=u'utf-8'):
-    """Initializes the queue consumer.
+    """Initializes an analysis report queue consumer.
 
     Args:
       queue_object: the queue object (instance of Queue).
       storage_file: the storage file (instance of StorageFile).
-      filter_string: the filter string.
-      preferred_encoding: optional preferred encoding.
+      filter_string: a string containing the filter expression.
+      preprocess_object: a preprocess object (instance of PreprocessObject).
+      preferred_encoding: optional string containing the preferred encoding.
     """
-    super(PsortAnalysisReportQueueConsumer, self).__init__(queue_object)
+    super(PsortAnalysisReportZIPStorageFileWriter, self).__init__(queue_object)
     self._filter_string = filter_string
     self._preferred_encoding = preferred_encoding
+    self._preprocess_object = preprocess_object
     self._storage_file = storage_file
-    self.anomalies = []
-    self.counter = collections.Counter()
-    self.tags = []
+    self._tags = []
+    # Counter containing the number of tags per label.
+    self._tags_counter = collections.Counter()
+
+    # Counter containing the number of reports.
+    self.reports_counter = collections.Counter()
+
+  def _Close(self):
+    """Closes the storage writer."""
+    # TODO: write the tags incrementally instead of buffering them
+    # into a list.
+    self._storage_file.StoreTagging(self._tags)
+
+    # TODO: move the counters out of preprocessing object.
+    # Kept for backwards compatibility for now.
+    self._preprocess_object.counter = self._tags_counter
+
+    self._storage_file.WritePreprocessObject(self._preprocess_object)
 
   def _ConsumeItem(self, analysis_report, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:
-      analysis_report: the analysis report (instance of AnalysisReport).
+      analysis_report: an analysis report (instance of AnalysisReport).
     """
-    self.counter[u'Total Reports'] += 1
-    self.counter[u'Report: {0:s}'.format(analysis_report.plugin_name)] += 1
+    tags = analysis_report.GetTags()
+    if tags:
+      self._tags.extend(tags)
 
-    self.anomalies.extend(analysis_report.GetAnomalies())
-    self.tags.extend(analysis_report.GetTags())
+      for tag in tags:
+        self._tags_counter[u'Total Tags'] += 1
+        for tag_entry in tag.labels:
+          self._tags_counter[tag_entry] += 1
+
+    plugin_name = analysis_report.plugin_name
+    self.reports_counter[u'Total Reports'] += 1
+    self.reports_counter[u'Report: {0:s}'.format(plugin_name)] += 1
 
     if self._filter_string:
       analysis_report.filter_string = self._filter_string
@@ -644,6 +668,11 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')
 
+  def _Open(self):
+    """Opens the storage writer."""
+    self._storage_file.SetEnableProfiling(
+        self._enable_profiling, profiling_type=self._profiling_type)
+
 
 class PsortAnalysisProcess(object):
   """A class to contain information about a running analysis process.
@@ -656,7 +685,18 @@ class PsortAnalysisProcess(object):
     process: the process (instance of Multiprocessing.Process) that
              encapsulates the analysis process.
   """
+
   def __init__(self, completion_event, plugin, process):
+    """Initializes an analysis process.
+
+    Args:
+      completion_event: a completion event (instance of Multiprocessing.Event,
+                        Queue.Event or similar) that will be set when the
+                        analysis plugin is complete.
+      plugin: the plugin running in the process (instance of AnalysisProcess).
+      process: the process (instance of Multiprocessing.Process) that
+               encapsulates the analysis process.
+    """
     super(PsortAnalysisProcess, self).__init__()
     self.completion_event = completion_event
     self.plugin = plugin
