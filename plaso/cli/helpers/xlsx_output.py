@@ -33,8 +33,8 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
-        nargs=u'*', default=cls._DEFAULT_FIELDS,
-        help=u'Defines which fields should be included in the output.')
+        default=cls._DEFAULT_FIELDS, help=(
+            u'Defines which fields should be included in the output.'))
     argument_group.add_argument(
         u'--timestamp_format', dest=u'timestamp_format', type=str,
         action=u'store', default=cls._DEFAULT_TIMESTAMP_FORMAT, help=(
