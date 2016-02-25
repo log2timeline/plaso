@@ -31,8 +31,8 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
-        nargs=u'*', default=cls._DEFAULT_FIELDS,
-        help=u'Defines which fields should be included in the output.')
+        default=cls._DEFAULT_FIELDS, help=(
+            u'Defines which fields should be included in the output.'))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
