@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse .automaticDestinations-ms OLECF files."""
 
-import logging
 import re
+import uuid
 
 import construct
 
 from plaso.events import time_events
+from plaso.events import windows_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -21,7 +22,9 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
   DATA_TYPE = u'olecf:dest_list:entry'
 
   def __init__(
-      self, timestamp, timestamp_description, entry_offset, dest_list_entry):
+      self, timestamp, timestamp_description, entry_offset, dest_list_entry,
+      droid_volume_identifier, droid_file_identifier,
+      birth_droid_volume_identifier, birth_droid_file_identifier):
     """Initializes the event object.
 
     Args:
@@ -29,6 +32,12 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
       timestamp_description: The usage string for the timestamp value.
       entry_offset: The offset of the DestList entry relative to the start of
                     the DestList stream.
+      droid_volume_identifier: a string containing the droid volume identifier.
+      droid_file_identifier: a string containing the droid file identifier.
+      birth_droid_volume_identifier: a string containing the birth droid volume
+                                     identifier.
+      birth_droid_file_identifier: a string containing the birth droid file
+                                   identifier.
       dest_list_entry: The DestList entry (instance of construct.Struct).
     """
     super(AutomaticDestinationsDestListEntryEvent, self).__init__(
@@ -42,14 +51,10 @@ class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
     self.path = binary.UTF16StreamCopyToString(dest_list_entry.path)
     self.pin_status = dest_list_entry.pin_status
 
-    self.droid_volume_identifier = binary.ByteStreamCopyToGuid(
-        dest_list_entry.droid_volume_identifier)
-    self.droid_file_identifier = binary.ByteStreamCopyToGuid(
-        dest_list_entry.droid_file_identifier)
-    self.birth_droid_volume_identifier = binary.ByteStreamCopyToGuid(
-        dest_list_entry.birth_droid_volume_identifier)
-    self.birth_droid_file_identifier = binary.ByteStreamCopyToGuid(
-        dest_list_entry.birth_droid_file_identifier)
+    self.droid_volume_identifier = droid_volume_identifier
+    self.droid_file_identifier = droid_file_identifier
+    self.birth_droid_volume_identifier = birth_droid_volume_identifier
+    self.birth_droid_file_identifier = birth_droid_file_identifier
 
 
 class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
@@ -68,10 +73,10 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
   _DEST_LIST_STREAM_HEADER = construct.Struct(
       u'dest_list_stream_header',
-      construct.ULInt32(u'unknown1'),
+      construct.ULInt32(u'format_version'),
       construct.ULInt32(u'number_of_entries'),
       construct.ULInt32(u'number_of_pinned_entries'),
-      construct.LFloat32(u'unknown2'),
+      construct.Padding(4),
       construct.ULInt32(u'last_entry_number'),
       construct.Padding(4),
       construct.ULInt32(u'last_revision_number'),
@@ -82,21 +87,37 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   # Using Construct's utf-16 encoding here will create strings with their
   # end-of-string characters exposed. Instead the strings are read as
   # binary strings and converted using ReadUTF16().
-  _DEST_LIST_STREAM_ENTRY = construct.Struct(
-      u'dest_list_stream_entry',
-      construct.ULInt64(u'unknown1'),
-      construct.Array(16, construct.Byte(u'droid_volume_identifier')),
-      construct.Array(16, construct.Byte(u'droid_file_identifier')),
-      construct.Array(16, construct.Byte(u'birth_droid_volume_identifier')),
-      construct.Array(16, construct.Byte(u'birth_droid_file_identifier')),
+  _DEST_LIST_STREAM_ENTRY_V1 = construct.Struct(
+      u'dest_list_stream_entry_v1',
+      construct.Padding(8),
+      construct.Bytes(u'droid_volume_identifier', 16),
+      construct.Bytes(u'droid_file_identifier', 16),
+      construct.Bytes(u'birth_droid_volume_identifier', 16),
+      construct.Bytes(u'birth_droid_file_identifier', 16),
       construct.String(u'hostname', 16),
       construct.ULInt32(u'entry_number'),
-      construct.ULInt32(u'unknown2'),
-      construct.LFloat32(u'unknown3'),
+      construct.Padding(8),
       construct.ULInt64(u'last_modification_time'),
       construct.ULInt32(u'pin_status'),
       construct.ULInt16(u'path_size'),
       construct.String(u'path', lambda ctx: ctx.path_size * 2))
+
+  _DEST_LIST_STREAM_ENTRY_V3 = construct.Struct(
+      u'dest_list_stream_entry_v3',
+      construct.Padding(8),
+      construct.Bytes(u'droid_volume_identifier', 16),
+      construct.Bytes(u'droid_file_identifier', 16),
+      construct.Bytes(u'birth_droid_volume_identifier', 16),
+      construct.Bytes(u'birth_droid_file_identifier', 16),
+      construct.String(u'hostname', 16),
+      construct.ULInt32(u'entry_number'),
+      construct.Padding(8),
+      construct.ULInt64(u'last_modification_time'),
+      construct.ULInt32(u'pin_status'),
+      construct.Padding(16),
+      construct.ULInt16(u'path_size'),
+      construct.String(u'path', lambda ctx: ctx.path_size * 2),
+      construct.Padding(4))
 
   def ParseDestList(self, parser_mediator, olecf_item):
     """Parses the DestList OLECF item.
@@ -112,15 +133,21 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
           u'Unable to parse DestList header with error: {0:s}'.format(
               exception))
 
-    if header.unknown1 != 1:
+    if header.format_version not in (1, 3):
       # TODO: add format debugging notes to parser mediator.
-      logging.debug(u'[{0:s}] unknown1 value: {1:d}.'.format(
-          self.NAME, header.unknown1))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unsupported format version: {1:d}.'.format(
+              self.NAME, header.format_version))
+
+    if header.format_version == 1:
+      dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V1
+    elif header.format_version == 3:
+      dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V3
 
     entry_offset = olecf_item.get_offset()
     while entry_offset < olecf_item.size:
       try:
-        entry = self._DEST_LIST_STREAM_ENTRY.parse_stream(olecf_item)
+        entry = dest_list_stream_entry.parse_stream(olecf_item)
       except (IOError, construct.FieldError) as exception:
         raise errors.UnableToParseFile(
             u'Unable to parse DestList entry with error: {0:s}'.format(
@@ -129,9 +156,80 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       if not entry:
         break
 
+      display_name = u'Dest list entry at offset: 0x{0:08x}'.format(
+          entry_offset)
+
+      try:
+        uuid_object = uuid.UUID(bytes_le=entry.droid_volume_identifier)
+        droid_volume_identifier = u'{{{0!s}}}'.format(uuid_object)
+
+        if uuid_object.version == 1:
+          event_object = (
+              windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                  uuid_object, display_name))
+          parser_mediator.ProduceEvent(event_object)
+
+      except (TypeError, ValueError) as exception:
+        droid_volume_identifier = u''
+        parser_mediator.ProduceParseError(
+            u'unable to read droid volume identifier with error: {0:s}'.format(
+                exception))
+
+      try:
+        uuid_object = uuid.UUID(bytes_le=entry.droid_file_identifier)
+        droid_file_identifier = u'{{{0!s}}}'.format(uuid_object)
+
+        if uuid_object.version == 1:
+          event_object = (
+              windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                  uuid_object, display_name))
+          parser_mediator.ProduceEvent(event_object)
+
+      except (TypeError, ValueError) as exception:
+        droid_file_identifier = u''
+        parser_mediator.ProduceParseError(
+            u'unable to read droid file identifier with error: {0:s}'.format(
+                exception))
+
+      try:
+        uuid_object = uuid.UUID(bytes_le=entry.birth_droid_volume_identifier)
+        birth_droid_volume_identifier = u'{{{0!s}}}'.format(uuid_object)
+
+        if uuid_object.version == 1:
+          event_object = (
+              windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                  uuid_object, display_name))
+          parser_mediator.ProduceEvent(event_object)
+
+      except (TypeError, ValueError) as exception:
+        birth_droid_volume_identifier = u''
+        parser_mediator.ProduceParseError((
+            u'unable to read birth droid volume identifier with error: '
+            u'{0:s}').format(
+                exception))
+
+      try:
+        uuid_object = uuid.UUID(bytes_le=entry.birth_droid_file_identifier)
+        birth_droid_file_identifier = u'{{{0!s}}}'.format(uuid_object)
+
+        if uuid_object.version == 1:
+          event_object = (
+              windows_events.WindowsDistributedLinkTrackingCreationEvent(
+                  uuid_object, display_name))
+          parser_mediator.ProduceEvent(event_object)
+
+      except (TypeError, ValueError) as exception:
+        birth_droid_file_identifier = u''
+        parser_mediator.ProduceParseError((
+            u'unable to read birth droid file identifier with error: '
+            u'{0:s}').format(
+                exception))
+
       event_object = AutomaticDestinationsDestListEntryEvent(
           entry.last_modification_time,
-          eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset, entry)
+          eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset, entry,
+          droid_volume_identifier, droid_file_identifier,
+          birth_droid_volume_identifier, birth_droid_file_identifier)
       parser_mediator.ProduceEvent(event_object)
 
       entry_offset = olecf_item.get_offset()

@@ -43,32 +43,6 @@ def ByteStreamCopyToString(byte_stream, codepage=u'utf-8'):
   return string
 
 
-def ByteStreamCopyToGuid(byte_stream, byte_order=u'little-endian'):
-  """Reads a GUID from the byte stream.
-
-  Args:
-    byte_stream: The byte stream that contains the UTF-16 formatted stream.
-    byte_order: The byte order, either big- or little-endian.
-
-  Returns:
-    String containing the GUID.
-  """
-  if len(byte_stream) >= 16:
-    if byte_order == u'big-endian':
-      return (
-          u'{{{0:02x}{1:02x}{2:02x}{3:02x}-{4:02x}{5:02x}-'
-          u'{6:02x}{7:02x}-{8:02x}{9:02x}-'
-          u'{10:02x}{11:02x}{12:02x}{13:02x}{14:02x}{15:02x}}}').format(
-              *byte_stream[:16])
-    elif byte_order == u'little-endian':
-      return (
-          u'{{{3:02x}{2:02x}{1:02x}{0:02x}-{5:02x}{4:02x}-'
-          u'{7:02x}{6:02x}-{8:02x}{9:02x}-'
-          u'{10:02x}{11:02x}{12:02x}{13:02x}{14:02x}{15:02x}}}').format(
-              *byte_stream[:16])
-  return u''
-
-
 def ByteStreamCopyToUTF16Stream(byte_stream, byte_stream_size=None):
   """Reads an UTF-16 formatted stream from a byte stream.
 
