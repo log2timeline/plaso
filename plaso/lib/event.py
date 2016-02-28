@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The core value object definition, e.g. event object, event tag."""
+"""The core value object definitions, e.g. event object, event tag."""
 
 import abc
 import collections
@@ -123,9 +123,6 @@ class EventObject(AttributeContainer):
     data_type: a string containing the event data type indicator.
     uuid: a string containing a unique identifier (UUID).
   """
-  # This is a convenience variable to define event object as
-  # simple value objects. Its runtime equivalent data_type
-  # should be used in code logic.
   DATA_TYPE = None
 
   # This is a reserved variable just used for comparison operation and defines
@@ -279,7 +276,7 @@ class EventObject(AttributeContainer):
 
     Attributes that are set to None are ignored.
 
-    Yields:
+    Returns:
       A list of strings containing the attribute names.
     """
     attribute_names = []
