@@ -450,7 +450,12 @@ class EventTag(AttributeContainer):
 
 
 class PreprocessObject(object):
-  """Object used to store all information gained from preprocessing."""
+  """Object used to store all information gained from preprocessing.
+
+  Attributes:
+    collection_information: a dictionary containing the collection information
+                            attributes.
+  """
 
   def __init__(self):
     """Initializes the preprocess object."""
