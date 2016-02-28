@@ -136,17 +136,32 @@ class WinLnkParser(interface.FileObjectParser):
 
       link_target = shell_items_parser.CopyToPath()
 
-    parser_mediator.ProduceEvents(
-        [WinLnkLinkEvent(
-            lnk_file.get_file_access_time_as_integer(),
-            eventdata.EventTimestamp.ACCESS_TIME, lnk_file, link_target),
+    access_time = lnk_file.get_file_access_time_as_integer()
+    if access_time > 0:
+      parser_mediator.ProduceEvent(
+          WinLnkLinkEvent(
+              access_time, eventdata.EventTimestamp.ACCESS_TIME, lnk_file,
+              link_target))
+
+    creation_time = lnk_file.get_file_creation_time_as_integer()
+    if creation_time > 0:
+      parser_mediator.ProduceEvent(
          WinLnkLinkEvent(
-             lnk_file.get_file_creation_time_as_integer(),
-             eventdata.EventTimestamp.CREATION_TIME, lnk_file, link_target),
+             creation_time, eventdata.EventTimestamp.CREATION_TIME, lnk_file,
+             link_target))
+
+    modification_time = lnk_file.get_file_modification_time_as_integer()
+    if modification_time > 0:
+      parser_mediator.ProduceEvent(
          WinLnkLinkEvent(
-             lnk_file.get_file_modification_time_as_integer(),
-             eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file,
-             link_target)])
+             modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+             lnk_file, link_target))
+
+    if access_time == 0 and creation_time == 0 and modification_time == 0:
+      parser_mediator.ProduceEvent(
+         WinLnkLinkEvent(
+             modification_time, eventdata.EventTimestamp.NOT_A_TIME,
+             lnk_file, link_target))
 
     try:
       uuid_object = uuid.UUID(lnk_file.droid_file_identifier)
