@@ -1,0 +1,16 @@
+Time|Source|Host|User|Description
+1343166324|FILE|-|-|2012-07-24T21:45:24+00:00; mtime; OS:syslog
+1344270407|FILE|-|-|2012-08-06T16:26:47+00:00; atime; OS:syslog
+1390377153|LOG|myhostname.myhost.com|-|2014-01-22T07:52:33+00:00; Entry Written; [client, pid: 30840] : INFO No change in [/etc/netgroup]. Done
+1390377153|LOG|myhostname.myhost.com|-|2014-01-22T07:52:33+00:00; Entry Written; [client, pid: 30840] : INFO No new content.
+1390377181|LOG|myhostname.myhost.com|-|2014-01-22T07:53:01+00:00; Entry Written; [CRON, pid: 31051] : (root) CMD (touch /var/run/crond.somecheck)
+1390377241|LOG|myhostname.myhost.com|-|2014-01-22T07:54:01+00:00; Entry Written; [CRON, pid: 31067] : (root) CMD (/sbin/status.mycheck))
+1390377241|LOG|myhostname.myhost.com|-|2014-01-22T07:54:01+00:00; Entry Written; [CRON, pid: 31068] : (root) CMD (touch /var/run/crond.somecheck)
+1390377272|LOG|myhostname.myhost.com|-|2014-01-22T07:54:32+00:00; Entry Written; [Job `cron.daily' terminated
+1392438730|FILE|-|-|2014-02-15T04:32:10+00:00; ctime; OS:syslog
+1418925272|LOG|myhostname.myhost.com|-|2014-12-18T17:54:32+00:00; Entry Written; [anacron, pid: 1234] : No true exit can exist (124 job run)
+1427151678|LOG|myhostname.myhost.com|-|2015-03-23T23:01:18+00:00; Entry Written; [somrandomexe, pid: 1915] : This syslog message is brought to you by me (and not the other guy)
+1427151678|LOG|myhostname.myhost.com|-|2015-03-23T23:01:18.000123+00:00; Entry Written; [somrandomexe, pid: 19] : This syslog message has a fractional value for seconds.
+1451584472|LOG|myhostname.myhost.com|-|2015-12-31T17:54:32+00:00; Entry Written; [anacron, pid: 1234] : Another one just like this (124 job run)
+1479431720|LOG|myhostname.myhost.com|-|2016-11-18T01:15:20+00:00; Entry Written; [aprocess, pid: 101001] : This is a multi-line message that screws upmany syslog parsers.
+1479431743|LOG|-|-|2016-11-18T01:15:43+00:00; Entry Written; []  last message repeated 5 times ---
