@@ -5,6 +5,7 @@
 from __future__ import print_function
 import abc
 import argparse
+import difflib
 import logging
 import os
 import shutil
@@ -60,19 +61,60 @@ class TestCase(object):
 
   NAME = None
 
-  def __init__(self, tools_path, test_results_path, debug_output=False):
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
     """Initializes a test case object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
+      test_sources_path: a string containing the path to the test sources.
+      test_references_path: a string containing the path to the test references.
       test_results_path: a string containing the path to store test results.
       debug_output: optional boolean value to indicate that debug output
                     should be generated.
     """
     super(TestCase, self).__init__()
     self._debug_output = debug_output
+    self._log2timeline_path = None
+    self._pinfo_path = None
+    self._psort_path = None
+    self._test_references_path = test_references_path
     self._test_results_path = test_results_path
+    self._test_sources_path = test_sources_path
     self._tools_path = tools_path
+
+  def _InitializeLog2TimelinePath(self):
+    """Initializes the location of log2timeline."""
+    for filename in (
+        u'log2timeline.exe', u'log2timeline.sh', u'log2timeline.py'):
+      self._log2timeline_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._log2timeline_path):
+        break
+
+    if self._log2timeline_path.endswith(u'.py'):
+      self._log2timeline_path = u' '.join([
+          sys.executable, self._log2timeline_path])
+
+  def _InitializePinfoPath(self):
+    """Initializes the location of pinfo."""
+    for filename in (u'pinfo.exe', u'pinfo.sh', u'pinfo.py'):
+      self._pinfo_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._pinfo_path):
+        break
+
+    if self._pinfo_path.endswith(u'.py'):
+      self._pinfo_path = u' '.join([sys.executable, self._pinfo_path])
+
+  def _InitializePsortPath(self):
+    """Initializes the location of psort."""
+    for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
+      self._psort_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._psort_path):
+        break
+
+    if self._psort_path.endswith(u'.py'):
+      self._psort_path = u' '.join([sys.executable, self._psort_path])
 
   def _RunCommand(self, command):
     """Runs a command.
@@ -143,12 +185,15 @@ class TestCasesManager(object):
 
   @classmethod
   def GetTestCaseObject(
-      cls, name, tools_path, test_results_path, debug_output=False):
+      cls, name, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
     """Retrieves the test case object for a specific name.
 
     Args:
       name: a string containing the name of the test case.
       tools_path: a string containing the path to the plaso tools.
+      test_sources_path: a string containing the path to the test sources.
+      test_references_path: a string containing the path to the test references.
       test_results_path: a string containing the path to store test results.
       debug_output: optional boolean value to indicate that debug output
                     should be generated.
@@ -164,7 +209,8 @@ class TestCasesManager(object):
       if name in cls._test_case_classes:
         test_case_class = cls._test_case_classes[name]
         test_case_object = test_case_class(
-            tools_path, test_results_path, debug_output=debug_output)
+            tools_path, test_sources_path, test_references_path,
+            test_results_path, debug_output=debug_output)
 
       if not test_case_object:
         return
@@ -237,11 +283,15 @@ class TestDefinitionReader(object):
   file.
   """
 
-  def __init__(self, tools_path, test_results_path, debug_output=False):
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
     """Initializes a test definition reader object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
+      test_sources_path: a string containing the path to the test sources.
+      test_references_path: a string containing the path to the test references.
       test_results_path: a string containing the path to store test results.
       debug_output: optional boolean value to indicate that debug output
                     should be generated.
@@ -249,7 +299,9 @@ class TestDefinitionReader(object):
     super(TestDefinitionReader, self).__init__()
     self._config_parser = None
     self._debug_output = debug_output
+    self._test_references_path = test_references_path
     self._test_results_path = test_results_path
+    self._test_sources_path = test_sources_path
     self._tools_path = tools_path
 
   def GetConfigValue(self, section_name, value_name):
@@ -301,7 +353,8 @@ class TestDefinitionReader(object):
           continue
 
         test_case = TestCasesManager.GetTestCaseObject(
-            test_definition.case, self._tools_path, self._test_results_path,
+            test_definition.case, self._tools_path, self._test_sources_path,
+            self._test_references_path, self._test_results_path,
             debug_output=self._debug_output)
         if not test_case:
           logging.warning(u'Undefined test case: {0:s}'.format(
@@ -328,11 +381,15 @@ class TestLauncher(object):
   the test case with the parameters specified in the test definition.
   """
 
-  def __init__(self, tools_path, test_results_path, debug_output=False):
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
     """Initializes a test launcher object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
+      test_sources_path: a string containing the path to the test sources.
+      test_references_path: a string containing the path to the test references.
       test_results_path: a string containing the path to store test results.
       debug_output: optional boolean value to indicate that debug output
                     should be generated.
@@ -340,7 +397,9 @@ class TestLauncher(object):
     super(TestLauncher, self).__init__()
     self._debug_output = debug_output
     self._test_definitions = []
+    self._test_references_path = test_references_path
     self._test_results_path = test_results_path
+    self._test_sources_path = test_sources_path
     self._tools_path = tools_path
 
   def _RunTest(self, test_definition):
@@ -353,7 +412,8 @@ class TestLauncher(object):
       A boolean value indicating the test ran successfully.
     """
     test_case = TestCasesManager.GetTestCaseObject(
-        test_definition.case, self._tools_path, self._test_results_path)
+        test_definition.case, self._tools_path, self._test_sources_path,
+        self._test_references_path, self._test_results_path)
     if not test_case:
       logging.error(u'Unsupported test case: {0:s}'.format(
           test_definition.case))
@@ -371,7 +431,8 @@ class TestLauncher(object):
     self._test_definitions = []
     with open(configuration_file) as file_object:
       test_definition_reader = TestDefinitionReader(
-          self._tools_path, self._test_results_path)
+          self._tools_path, self._test_sources_path,
+          self._test_references_path, self._test_results_path)
       for test_definition in test_definition_reader.Read(file_object):
         self._test_definitions.append(test_definition)
 
@@ -402,67 +463,49 @@ class ExtractAndOutputTestCase(TestCase):
 
   NAME = u'extract_and_output'
 
-  def __init__(self, tools_path, test_results_path, debug_output=False):
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
     """Initializes a test case object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
+      test_sources_path: a string containing the path to the test sources.
+      test_references_path: a string containing the path to the test references.
       test_results_path: a string containing the path to store test results.
       debug_output: optional boolean value to indicate that debug output
                     should be generated.
     """
     super(ExtractAndOutputTestCase, self).__init__(
-        tools_path, test_results_path, debug_output=debug_output)
-    self._log2timeline_path = None
-    self._pinfo_path = None
-    self._psort_path = None
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=debug_output)
+    self._InitializeLog2TimelinePath()
+    self._InitializePinfoPath()
+    self._InitializePsortPath()
 
-    for filename in (
-        u'log2timeline.exe', u'log2timeline.sh', u'log2timeline.py'):
-      self._log2timeline_path = os.path.join(tools_path, filename)
-      if os.path.exists(self._log2timeline_path):
-        break
-
-    if self._log2timeline_path.endswith(u'.py'):
-      self._log2timeline_path = u' '.join([
-          sys.executable, self._log2timeline_path])
-
-    for filename in (u'pinfo.exe', u'pinfo.sh', u'pinfo.py'):
-      self._pinfo_path = os.path.join(tools_path, filename)
-      if os.path.exists(self._pinfo_path):
-        break
-
-    if self._pinfo_path.endswith(u'.py'):
-      self._pinfo_path = u' '.join([sys.executable, self._pinfo_path])
-
-    for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
-      self._psort_path = os.path.join(tools_path, filename)
-      if os.path.exists(self._psort_path):
-        break
-
-    if self._psort_path.endswith(u'.py'):
-      self._psort_path = u' '.join([sys.executable, self._psort_path])
-
-  def _RunLog2Timeline(self, test_definition, temp_directory, storage_file):
+  def _RunLog2Timeline(
+      self, test_definition, temp_directory, storage_file, source_path):
     """Runs log2timeline with the parameters specified by the test definition.
 
     Args:
       test_definition: a test definition object (instance of TestDefinition).
       temp_directory: a string containing the name of a temporary directory.
       storage_file: a string containing the path of the storage file.
+      source_path: a string containing the path of the source.
 
     Returns:
       A boolean value indicating log2timeline ran successfully.
     """
     extract_options = u'--status-view=none {0:s}'.format(
         u' '.join(test_definition.extract_options))
+
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-log2timeline.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-log2timeline.err'.format(test_definition.name))
     command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
-        self._log2timeline_path, extract_options, storage_file,
-        test_definition.source, stdout_file, stderr_file)
+        self._log2timeline_path, extract_options, storage_file, source_path,
+        stdout_file, stderr_file)
 
     logging.info(u'Running: {0:s}'.format(command))
     result = self._RunCommand(command)
@@ -499,6 +542,50 @@ class ExtractAndOutputTestCase(TestCase):
         temp_directory, u'{0:s}-pinfo.err'.format(test_definition.name))
     command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
         self._pinfo_path, storage_file, stdout_file, stderr_file)
+
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
+  def _RunPinfoCompare(self, test_definition, temp_directory, storage_file):
+    """Runs pinfo --compare on the storage file and a reference storage file.
+
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+      storage_file: a string containing the path of the storage file.
+
+    Returns:
+      A boolean value indicating pinfo ran successfully.
+    """
+    reference_storage_file = test_definition.reference_storage_file
+    if self._test_references_path:
+      reference_storage_file = os.path.join(
+          self._test_references_path, reference_storage_file)
+
+    if not os.path.exists(reference_storage_file):
+      logging.error(u'No such reference storage file: {0:s}'.format(
+          reference_storage_file))
+      return False
+
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-compare-pinfo.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-compare-pinfo.err'.format(test_definition.name))
+    command = u'{0:s} --compare {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+        self._pinfo_path, reference_storage_file, storage_file, stdout_file,
+        stderr_file)
 
     logging.info(u'Running: {0:s}'.format(command))
     result = self._RunCommand(command)
@@ -568,6 +655,10 @@ class ExtractAndOutputTestCase(TestCase):
       test_definition.extract_options = test_definition.extract_options.split(
           u',')
 
+    test_definition.reference_storage_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, u'reference_storage_file'))
+
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, u'source')
 
@@ -582,8 +673,12 @@ class ExtractAndOutputTestCase(TestCase):
     Returns:
       A boolean value indicating the test ran successfully.
     """
-    if not os.path.exists(test_definition.source):
-      logging.error(u'No such source: {0:s}'.format(test_definition.source))
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error(u'No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
@@ -592,7 +687,7 @@ class ExtractAndOutputTestCase(TestCase):
 
       # Extract events with log2timeline.
       if not self._RunLog2Timeline(
-          test_definition, temp_directory, storage_file):
+          test_definition, temp_directory, storage_file, source_path):
         return False
 
       # Check if the resulting storage file can be read with pinfo.
@@ -600,7 +695,11 @@ class ExtractAndOutputTestCase(TestCase):
           test_definition, temp_directory, storage_file):
         return False
 
-      # TODO: add support to compare storage file with a reference file.
+      # Compare storage file with a reference storage file.
+      if test_definition.reference_storage_file:
+        if not self._RunPinfoCompare(
+            test_definition, temp_directory, storage_file):
+          return False
 
       # Check if the resulting storage file can be read with psort.
       if not self._RunPsort(
@@ -620,9 +719,9 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
 
   NAME = u'extract_and_tag'
 
-  def _RunPsortWithTagging(
+  def _RunPsortWithTaggingOptions(
       self, test_definition, temp_directory, storage_file):
-    """Runs psort with the parameters specified by the test definition.
+    """Runs psort with the tagging options specified by the test definition.
 
     Args:
       test_definition: a test definition object (instance of TestDefinition).
@@ -689,8 +788,12 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     Returns:
       A boolean value indicating the test ran successfully.
     """
-    if not os.path.exists(test_definition.source):
-      logging.error(u'No such source: {0:s}'.format(test_definition.source))
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error(u'No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
@@ -699,11 +802,11 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
 
       # Extract events with log2timeline.
       if not self._RunLog2Timeline(
-          test_definition, temp_directory, storage_file):
+          test_definition, temp_directory, storage_file, source_path):
         return False
 
       # Add tags to the resulting storage file with psort.
-      if not self._RunPsortWithTagging(
+      if not self._RunPsortWithTaggingOptions(
           test_definition, temp_directory, storage_file):
         return False
 
@@ -724,26 +827,118 @@ class OutputTestCase(TestCase):
 
   NAME = u'output'
 
-  def __init__(self, tools_path, test_results_path, debug_output=False):
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
     """Initializes a test case object.
 
     Args:
       tools_path: a string containing the path to the plaso tools.
+      test_sources_path: a string containing the path to the test sources.
+      test_references_path: a string containing the path to the test references.
       test_results_path: a string containing the path to store test results.
       debug_output: optional boolean value to indicate that debug output
                     should be generated.
     """
     super(OutputTestCase, self).__init__(
-        tools_path, test_results_path, debug_output=debug_output)
-    self._psort_path = None
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=debug_output)
+    self._InitializePsortPath()
 
-    for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
-      self._psort_path = os.path.join(tools_path, filename)
-      if os.path.exists(self._psort_path):
-        break
+  def _CompareOutputFile(self, test_definition, temp_directory):
+    """Compares the output file with a reference output file.
 
-    if self._psort_path.endswith(u'.py'):
-      self._psort_path = u' '.join([sys.executable, self._psort_path])
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+
+    Returns:
+      A boolean value indicating the output files are identical or not.
+    """
+    if test_definition.output_format not in (
+        u'dynamic', u'json', u'json_line', u'l2tcsv', u'l2ttln', u'rawpy',
+        u'tln'):
+      logging.error(u'Unsuppored output format: {0:s}'.format(
+          test_definition.output_format))
+      return False
+
+    output_file_path = os.path.join(temp_directory, test_definition.output_file)
+
+    # TODO: add support to compare output by SHA-256.
+
+    result = False
+    if test_definition.reference_output_file:
+      reference_output_file_path = test_definition.reference_output_file
+      if self._test_references_path:
+        reference_output_file_path = os.path.join(
+            self._test_references_path, reference_output_file_path)
+
+      if not os.path.exists(reference_output_file_path):
+        logging.error(u'No such reference output file: {0:s}'.format(
+            reference_output_file_path))
+        return False
+
+      with open(reference_output_file_path, 'r') as reference_output_file:
+        with open(output_file_path, 'r') as output_file:
+          differences = list(difflib.unified_diff(
+              reference_output_file.readlines(), output_file.readlines(),
+              fromfile=reference_output_file_path, tofile=output_file_path))
+
+      if not differences:
+        result = True
+
+    return result
+
+  def _RunPsortWithOutputOptions(
+      self, test_definition, temp_directory, storage_file):
+    """Runs psort with the output options specified by the test definition.
+
+    Args:
+      test_definition: a test definition object (instance of TestDefinition).
+      temp_directory: a string containing the name of a temporary directory.
+      storage_file: a string containing the path of the storage file.
+
+    Returns:
+      A boolean value indicating psort ran successfully.
+    """
+    output_options = test_definition.output_options
+
+    if test_definition.output_format:
+      output_options.append(u'-o {0:s}'.format(test_definition.output_format))
+
+    if test_definition.output_file:
+      output_file_path = os.path.join(
+          temp_directory, test_definition.output_file)
+      output_options.append(u'-w {0:s}'.format(output_file_path))
+
+    output_options = u' '.join(output_options)
+
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
+    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+        self._psort_path, output_options, storage_file, stdout_file,
+        stderr_file)
+
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if (test_definition.output_file and
+        os.path.exists(test_definition.output_file)):
+      shutil.copy(test_definition.output_file, self._test_results_path)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
 
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
@@ -756,6 +951,12 @@ class OutputTestCase(TestCase):
     Returns:
       A boolean indicating the read was successful.
     """
+    test_definition.output_file = test_definition_reader.GetConfigValue(
+        test_definition.name, u'output_file')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, u'output_format')
+
     test_definition.output_options = test_definition_reader.GetConfigValue(
         test_definition.name, u'output_options')
 
@@ -764,6 +965,10 @@ class OutputTestCase(TestCase):
     elif isinstance(test_definition.output_options, STRING_TYPES):
       test_definition.output_options = test_definition.output_options.split(
           u',')
+
+    test_definition.reference_output_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, u'reference_output_file'))
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, u'source')
@@ -779,38 +984,23 @@ class OutputTestCase(TestCase):
     Returns:
       A boolean value indicating the test ran successfully.
     """
-    if not os.path.exists(test_definition.source):
-      logging.error(u'No such source: {0:s}'.format(test_definition.source))
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error(u'No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
-      # Output events with psort.
-      output_options = u' '.join(test_definition.output_options)
-      stdout_file = os.path.join(
-          temp_directory, u'{0:s}-psort.out'.format(
-              test_definition.name))
-      stderr_file = os.path.join(
-          temp_directory, u'{0:s}-psort.err'.format(
-              test_definition.name))
-      command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-          self._psort_path, output_options, test_definition.source,
-          stdout_file, stderr_file)
-
-      logging.info(u'Running: {0:s}'.format(command))
-      result = self._RunCommand(command)
-
-      if self._debug_output:
-        with open(stderr_file, 'rb') as file_object:
-          output_data = file_object.read()
-          print(output_data)
-
-      if os.path.exists(stdout_file):
-        shutil.copy(stdout_file, self._test_results_path)
-      if os.path.exists(stderr_file):
-        shutil.copy(stderr_file, self._test_results_path)
-
-      if not result:
+      if not self._RunPsortWithOutputOptions(
+          test_definition, temp_directory, source_path):
         return False
+
+      # Compare output file with a reference output file.
+      if test_definition.output_file and test_definition.reference_output_file:
+        if not self._CompareOutputFile(test_definition, temp_directory):
+          return False
 
     return True
 
@@ -835,15 +1025,32 @@ def Main():
       help=u'enable debug output.')
 
   argument_parser.add_argument(
-      u'--tools-directory', u'--tools_directory', action=u'store',
-      metavar=u'DIRECTORY', dest=u'tools_directory', type=unicode,
-      default=None, help=u'The location of the plaso tools directory.')
+      u'-h', u'--help', action=u'help',
+      help=u'show this help message and exit.')
+
+  argument_parser.add_argument(
+      u'--references-directory', u'--references_directory', action=u'store',
+      metavar=u'DIRECTORY', dest=u'references_directory', type=str,
+      default=None, help=(
+          u'The location of the directory where the test references are '
+          u'stored.'))
 
   argument_parser.add_argument(
       u'--results-directory', u'--results_directory', action=u'store',
-      metavar=u'DIRECTORY', dest=u'results_directory', type=unicode,
+      metavar=u'DIRECTORY', dest=u'results_directory', type=str,
       default=None, help=(
-          u'The location o the directory where to store the test results.'))
+          u'The location of the directory where to store the test results.'))
+
+  argument_parser.add_argument(
+      u'--sources-directory', u'--sources_directory', action=u'store',
+      metavar=u'DIRECTORY', dest=u'sources_directory', type=str,
+      default=None, help=(
+          u'The location of the directory where the test sources are stored.'))
+
+  argument_parser.add_argument(
+      u'--tools-directory', u'--tools_directory', action=u'store',
+      metavar=u'DIRECTORY', dest=u'tools_directory', type=str,
+      default=None, help=u'The location of the plaso tools directory.')
 
   options = argument_parser.parse_args()
 
@@ -866,6 +1073,18 @@ def Main():
     tools_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), u'tools')
 
+  test_sources_path = options.sources_directory
+  if test_sources_path and not os.path.isdir(test_sources_path):
+    print(u'No such sources directory: {0:s}.'.format(test_sources_path))
+    print(u'')
+    return False
+
+  test_references_path = options.references_directory
+  if test_references_path and not os.path.isdir(test_references_path):
+    print(u'No such references directory: {0:s}.'.format(test_references_path))
+    print(u'')
+    return False
+
   test_results_path = options.results_directory
   if not test_results_path:
     test_results_path = os.getcwd()
@@ -878,12 +1097,14 @@ def Main():
   tests = []
   with open(options.config_file) as file_object:
     test_definition_reader = TestDefinitionReader(
-        tools_path, test_results_path, debug_output=options.debug_output)
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=options.debug_output)
     for test_definition in test_definition_reader.Read(file_object):
       tests.append(test_definition)
 
   test_launcher = TestLauncher(
-      tools_path, test_results_path, debug_output=options.debug_output)
+      tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=options.debug_output)
   test_launcher.ReadDefinitions(options.config_file)
 
   failed_tests = test_launcher.RunTests()
