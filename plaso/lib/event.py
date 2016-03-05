@@ -450,12 +450,18 @@ class EventTag(AttributeContainer):
 
 
 class PreprocessObject(object):
-  """Object used to store all information gained from preprocessing."""
+  """Object used to store all information gained from preprocessing.
+
+  Attributes:
+    collection_information: a dictionary containing the collection information
+                            attributes.
+  """
 
   def __init__(self):
     """Initializes the preprocess object."""
     super(PreprocessObject, self).__init__()
     self._user_ids_to_names = None
+    self.collection_information = {}
     self.zone = pytz.UTC
 
   def GetUserMappings(self):
