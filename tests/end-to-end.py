@@ -906,6 +906,7 @@ class OutputTestCase(TestCase):
     if test_definition.output_format:
       output_options.append(u'-o {0:s}'.format(test_definition.output_format))
 
+    output_file_path = None
     if test_definition.output_file:
       output_file_path = os.path.join(
           temp_directory, test_definition.output_file)
@@ -929,9 +930,8 @@ class OutputTestCase(TestCase):
         output_data = file_object.read()
         print(output_data)
 
-    if (test_definition.output_file and
-        os.path.exists(test_definition.output_file)):
-      shutil.copy(test_definition.output_file, self._test_results_path)
+    if output_file_path and os.path.exists(output_file_path):
+      shutil.copy(output_file_path, self._test_results_path)
 
     if os.path.exists(stdout_file):
       shutil.copy(stdout_file, self._test_results_path)

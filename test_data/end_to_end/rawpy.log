@@ -10,7 +10,6 @@
   {parser} filestat
   {store_index} 0
   {store_number} 1
-  {tag} None
   {timestamp} 1343166324000000
   {timestamp_desc} mtime
   {uuid} f5a44b73b2d343e389905655d6f5dc48
@@ -30,7 +29,6 @@
   {parser} filestat
   {store_index} 1
   {store_number} 1
-  {tag} None
   {timestamp} 1344270407000000
   {timestamp_desc} atime
   {uuid} af7d7dbf14604fc9b6fceb8ccfac59ac
@@ -52,7 +50,6 @@
   {parser} syslog
   {store_index} 1
   {store_number} 2
-  {tag} None
   {timestamp} 1390377153000000
   {timestamp_desc} Entry Written
   {uuid} a0579babe7204a5eb65b40750c778198
@@ -78,7 +75,6 @@
   {parser} syslog
   {store_index} 0
   {store_number} 2
-  {tag} None
   {timestamp} 1390377153000000
   {timestamp_desc} Entry Written
   {uuid} 6c0f7d38cd5543cba9dec4b1487747c4
@@ -104,7 +100,6 @@
   {parser} syslog
   {store_index} 0
   {store_number} 3
-  {tag} None
   {timestamp} 1390377181000000
   {timestamp_desc} Entry Written
   {uuid} 0f373af6e2a44a5c8ba45fa8dddf03b0
@@ -130,7 +125,6 @@
   {parser} syslog
   {store_index} 0
   {store_number} 4
-  {tag} None
   {timestamp} 1390377241000000
   {timestamp_desc} Entry Written
   {uuid} dc4b3d673a0d47399b9f38f72fd03cd5
@@ -156,7 +150,6 @@
   {parser} syslog
   {store_index} 1
   {store_number} 3
-  {tag} None
   {timestamp} 1390377241000000
   {timestamp_desc} Entry Written
   {uuid} a4c25fc556d0426997bee4d35ae29d4e
@@ -181,7 +174,6 @@
   {parser} syslog
   {store_index} 1
   {store_number} 4
-  {tag} None
   {timestamp} 1390377272000000
   {timestamp_desc} Entry Written
   {uuid} 163a09ea89f14916aa7b70f9386a0f7b
@@ -204,7 +196,6 @@
   {parser} filestat
   {store_index} 2
   {store_number} 1
-  {tag} None
   {timestamp} 1392438730000000
   {timestamp_desc} ctime
   {uuid} a6ee10966f9c4751ae24e9e4663320fd
@@ -226,7 +217,6 @@
   {parser} syslog
   {store_index} 0
   {store_number} 5
-  {tag} None
   {timestamp} 1418925272000000
   {timestamp_desc} Entry Written
   {uuid} 5f142ad70b10418583d551736768a92c
@@ -252,7 +242,6 @@
   {parser} syslog
   {store_index} 1
   {store_number} 5
-  {tag} None
   {timestamp} 1427151678000000
   {timestamp_desc} Entry Written
   {uuid} 6ef22abe0fbb41cb87d2b8370bab5cfe
@@ -278,7 +267,6 @@
   {parser} syslog
   {store_index} 0
   {store_number} 6
-  {tag} None
   {timestamp} 1427151678000123
   {timestamp_desc} Entry Written
   {uuid} fdc8a047611a498a92f1442d5c4e1669
@@ -304,7 +292,6 @@
   {parser} syslog
   {store_index} 1
   {store_number} 6
-  {tag} None
   {timestamp} 1451584472000000
   {timestamp_desc} Entry Written
   {uuid} 0531aa5111fb444b9e6f8e9d082e6231
@@ -330,7 +317,6 @@
   {parser} syslog
   {store_index} 0
   {store_number} 7
-  {tag} None
   {timestamp} 1479431720000000
   {timestamp_desc} Entry Written
   {uuid} a7a17581e6de414ea58f802e8dc4d863
@@ -356,7 +342,6 @@
   {parser} syslog
   {store_index} 1
   {store_number} 7
-  {tag} None
   {timestamp} 1479431743000000
   {timestamp_desc} Entry Written
   {uuid} c7787454bd6840f3a722d878f071c256
