@@ -94,12 +94,11 @@ import yaml
 
 from plaso.engine import profiler
 from plaso.lib import definitions
-from plaso.lib import event
-from plaso.lib import timelib
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
 from plaso.storage import reader
+from plaso.storage import writer
 
 
 class _EventTagIndexValue(object):
@@ -941,7 +940,7 @@ class StorageFile(ZIPStorageFile):
     source_short_map[value.name] = value.number
 
   def __init__(
-      self, output_file, buffer_size=0, read_only=False, pre_obj=None,
+      self, output_file, buffer_size=0, read_only=False,
       serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
     """Initializes the storage file.
 
@@ -951,8 +950,6 @@ class StorageFile(ZIPStorageFile):
                    The default is 0, which indicates no limit.
       read_only: optional boolean to indicate we are opening the storage file
                  for reading only.
-      pre_obj: optional preprocessing object that gets stored inside
-               the storage file.
       serializer_format: optional storage serializer format.
 
     Raises:
@@ -964,19 +961,22 @@ class StorageFile(ZIPStorageFile):
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = -sys.maxint - 1
     self._buffer_size = 0
-    self._count_data_type = collections.Counter()
+    # Counter containing ???
     self._count_parser = collections.Counter()
+    # Counter containing the number of events per data type.
+    self._data_type_counter = collections.Counter()
     self._event_object_serializer = None
     self._event_tag_index = None
     self._file_number = 1
     self._first_file_number = None
     self._max_buffer_size = buffer_size or self.MAXIMUM_BUFFER_SIZE
     self._merge_buffer = None
+    self._number_of_events_in_buffer = 0
     self._output_file = output_file
-    self._pre_obj = pre_obj
+    # Counter containing the number of events per parser.
+    self._parsers_counter = collections.Counter()
     self._read_only = read_only
     self._serializer_format_string = u''
-    self._write_counter = 0
 
     if self._read_only:
       access_mode = 'r'
@@ -1215,14 +1215,6 @@ class StorageFile(ZIPStorageFile):
       logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
           self._max_buffer_size))
 
-      if self._pre_obj:
-        self._pre_obj.counter = collections.Counter()
-        self._pre_obj.plugin_counter = collections.Counter()
-
-      # Start up a counter for modules in buffer.
-      self._count_data_type = collections.Counter()
-      self._count_parser = collections.Counter()
-
       # Need to get the last number in the list.
       for stream_name in self._GetStreamNames():
         if stream_name.startswith(u'plaso_meta.'):
@@ -1325,10 +1317,10 @@ class StorageFile(ZIPStorageFile):
       return
 
     if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'pre_obj')
+      self._serializers_profiler.StartTiming(u'preprocess_object')
 
     try:
-      preprocess_object = self._pre_obj_serializer.ReadSerialized(
+      preprocess_object = self._preprocess_object_serializer.ReadSerialized(
           preprocess_data)
     except message.DecodeError as exception:
       logging.error((
@@ -1337,9 +1329,14 @@ class StorageFile(ZIPStorageFile):
       return
 
     if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'pre_obj')
+      self._serializers_profiler.StopTiming(u'preprocess_object')
 
     return preprocess_object
+
+  def _ResetCounters(self):
+    """Resets the counters."""
+    self._count_parser = collections.Counter()
+    self._data_type_counter = collections.Counter()
 
   def _SetSerializerFormat(self, serializer_format):
     """Set the serializer format.
@@ -1359,7 +1356,7 @@ class StorageFile(ZIPStorageFile):
           json_serializer.JSONEventObjectSerializer)
       self._event_tag_serializer = (
           json_serializer.JSONEventTagSerializer)
-      self._pre_obj_serializer = (
+      self._preprocess_object_serializer = (
           json_serializer.JSONPreprocessObjectSerializer)
 
     elif serializer_format == definitions.SERIALIZER_FORMAT_PROTOBUF:
@@ -1371,12 +1368,25 @@ class StorageFile(ZIPStorageFile):
           protobuf_serializer.ProtobufEventObjectSerializer)
       self._event_tag_serializer = (
           protobuf_serializer.ProtobufEventTagSerializer)
-      self._pre_obj_serializer = (
+      self._preprocess_object_serializer = (
           protobuf_serializer.ProtobufPreprocessObjectSerializer)
 
     else:
       raise ValueError(
           u'Unsupported serializer format: {0:s}'.format(serializer_format))
+
+  def _UpdateCounters(self, event_attributes):
+    """Updates the counters.
+
+    Args:
+      event_attributes: a dictionary containing the event object attributes.
+    """
+    data_type = event_attributes.get(u'data_type', u'unknown')
+    self._data_type_counter[data_type] += 1
+
+    # TODO: determine if this is a duplicate of self._parsers_counter.
+    parser_name = event_attributes.get(u'parser', u'unknown_parser')
+    self._count_parser[parser_name] += 1
 
   def _WriteBuffer(self):
     """Writes the buffered event objects to the storage file."""
@@ -1423,9 +1433,7 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'write')
 
-    # Reset the counters.
-    self._count_data_type = collections.Counter()
-    self._count_parser = collections.Counter()
+    self._ResetCounters()
 
     self._file_number += 1
     self._buffer_size = 0
@@ -1453,45 +1461,16 @@ class StorageFile(ZIPStorageFile):
     yaml_dict = {
         u'range': (first_timestamp, last_timestamp),
         u'version': self.STORAGE_VERSION,
-        u'data_type': list(self._count_data_type.viewkeys()),
+        u'data_type': list(self._data_type_counter.viewkeys()),
         u'parsers': list(self._count_parser.viewkeys()),
         u'count': len(self._buffer),
-        u'type_count': self._count_data_type.most_common()}
+        u'type_count': self._data_type_counter.most_common()}
 
     # TODO: why have YAML serialization here?
     yaml_data = yaml.safe_dump(yaml_dict)
 
     stream_name = u'plaso_meta.{0:06d}'.format(stream_number)
     self._WriteStream(stream_name, yaml_data)
-
-  def _WritePreprocessObject(self, pre_obj):
-    """Writes a preprocess object to the storage file.
-
-    Args:
-      pre_obj: the preprocess object (instance of PreprocessObject).
-
-    Raises:
-      IOError: if the stream cannot be opened.
-    """
-    existing_stream_data = self._ReadStream(u'information.dump')
-
-    # Store information about store range for this particular
-    # preprocessing object. This will determine which stores
-    # this information is applicable for.
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'pre_obj')
-
-    pre_obj_data = self._pre_obj_serializer.WriteSerialized(pre_obj)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'pre_obj')
-
-    # TODO: use _SerializedDataStream.
-    pre_obj_data_size = construct.ULInt32(u'size').build(len(pre_obj_data))
-    stream_data = b''.join([
-        existing_stream_data, pre_obj_data_size, pre_obj_data])
-
-    self._WriteStream(u'information.dump', stream_data)
 
   def AddEventObject(self, event_object):
     """Adds an event object to the storage.
@@ -1536,55 +1515,31 @@ class StorageFile(ZIPStorageFile):
         event_object.timestamp > 0):
       self._buffer_first_timestamp = event_object.timestamp
 
-    # Add values to counters.
-    if self._pre_obj:
-      self._pre_obj.counter[u'total'] += 1
-      parser = getattr(event_object, u'parser', u'N/A')
-      self._pre_obj.counter[parser] += 1
-      # TODO remove plugin, add parser chain. Refactor to separate method e.g.
-      # UpdateEventCounters.
-      plugin = getattr(event_object, u'plugin', None)
-      if plugin:
-        self._pre_obj.plugin_counter[plugin] += 1
+    attributes = event_object.CopyToDict()
 
-    # Add to temporary counter.
-    self._count_data_type[event_object.data_type] += 1
-    parser = getattr(event_object, u'parser', u'unknown_parser')
-    self._count_parser[parser] += 1
+    self._UpdateCounters(attributes)
 
     heapq.heappush(
         self._buffer, (event_object.timestamp, event_object_data))
     self._buffer_size += len(event_object_data)
-    self._write_counter += 1
+    self._number_of_events_in_buffer += 1
 
     if self._buffer_size > self._max_buffer_size:
       self._WriteBuffer()
-
-  def AddEventObjects(self, event_objects):
-    """Adds event objects to the storage.
-
-    Args:
-      event_objects: a list or generator of event objects (instances of
-                     EventObject).
-    """
-    for event_object in event_objects:
-      self.AddEventObject(event_object)
 
   def Close(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
     if not self._zipfile:
       return
 
-    if not self._read_only and self._pre_obj:
-      self._WritePreprocessObject(self._pre_obj)
-
-    self._WriteBuffer()
-    self._Close()
-
     if not self._read_only:
+      self._WriteBuffer()
+
       logging.debug((
           u'[Storage] Closing the storage, number of events added: '
-          u'{0:d}').format(self._write_counter))
+          u'{0:d}').format(self._number_of_events_in_buffer))
+
+    self._Close()
 
     self._ProfilingStop()
 
@@ -1774,24 +1729,11 @@ class StorageFile(ZIPStorageFile):
     that contains EventTag objects (event.EventTag).
 
     Args:
-      A list or an object providing an iterator that contains
-      EventTag objects.
+      tags: a list of event tags (instances of EventTag).
 
     Raises:
       IOError: if the stream cannot be opened.
     """
-    if not self._pre_obj:
-      self._pre_obj = event.PreprocessObject()
-
-    if not hasattr(self._pre_obj, u'collection_information'):
-      self._pre_obj.collection_information = {}
-
-    self._pre_obj.collection_information[u'Action'] = u'Adding tags to storage.'
-    self._pre_obj.collection_information[u'time_of_run'] = (
-        timelib.Timestamp.GetNow())
-    if not hasattr(self._pre_obj, u'counter'):
-      self._pre_obj.counter = collections.Counter()
-
     tag_number = 1
     for name in self._GetStreamNames():
       if not name.startswith(u'plaso_tagging.'):
@@ -1810,10 +1752,12 @@ class StorageFile(ZIPStorageFile):
 
     serialized_event_tags = []
     for tag in tags:
-      self._pre_obj.counter[u'Total Tags'] += 1
-      if hasattr(tag, u'tags'):
-        for tag_entry in tag.labels:
-          self._pre_obj.counter[tag_entry] += 1
+      # TODO: determine why the parsers counter is used here.
+      # TODO: switch to a tags counter to prevent a label overwriting
+      # parser numbers.
+      self._parsers_counter[u'Total Tags'] += 1
+      for tag_entry in tag.labels:
+        self._parsers_counter[tag_entry] += 1
 
       if self._event_tag_index is not None:
         tag_index_value = self._event_tag_index.get(tag.string_key, None)
@@ -1904,6 +1848,38 @@ class StorageFile(ZIPStorageFile):
     if self._event_tag_index is not None:
       del self._event_tag_index
 
+  def WritePreprocessObject(self, preprocess_object):
+    """Writes a preprocess object to the storage file.
+
+    Args:
+      preprocess_object: the preprocess object (instance of PreprocessObject).
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    existing_stream_data = self._ReadStream(u'information.dump')
+
+    # Store information about store range for this particular
+    # preprocessing object. This will determine which stores
+    # this information is applicable for.
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'preprocess_object')
+
+    preprocess_object_data = (
+        self._preprocess_object_serializer.WriteSerialized(preprocess_object))
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'preprocess_object')
+
+    # TODO: use _SerializedDataStream.
+    preprocess_object_data_size = construct.ULInt32(u'size').build(
+        len(preprocess_object_data))
+    stream_data = b''.join([
+        existing_stream_data, preprocess_object_data_size,
+        preprocess_object_data])
+
+    self._WriteStream(u'information.dump', stream_data)
+
 
 class ZIPStorageFileReader(reader.StorageReader):
   """Class that implements the ZIP-based storage file reader."""
@@ -1937,3 +1913,73 @@ class ZIPStorageFileReader(reader.StorageReader):
       yield event_object
       event_object = self._zip_storage_file.GetSortedEntry(
           time_range=time_range)
+
+
+class ZIPStorageFileWriter(writer.StorageWriter):
+  """Class that implements the ZIP-based storage file writer."""
+
+  def __init__(
+      self, event_object_queue, output_file, preprocess_object,
+      buffer_size=0, serializer_format=u'proto'):
+    """Initializes a storage writer object.
+
+    Args:
+      event_object_queue: an event object queue (instance of Queue).
+      output_file: a string containing the path to the output file.
+      preprocess_object: a preprocess object (instance of PreprocessObject).
+      buffer_size: an integer containing the estimated size of a protobuf file.
+      serializer_format: a string containing the serializer format either
+                         "proto" or "json".
+    """
+    super(ZIPStorageFileWriter, self).__init__(event_object_queue)
+    self._buffer_size = buffer_size
+    self._output_file = output_file
+    self._preprocess_object = preprocess_object
+    self._serializer_format = serializer_format
+    self._storage_file = None
+
+    # Counter containing the number of events per parser.
+    self._parsers_counter = collections.Counter()
+    # Counter containing the number of events per parser plugin.
+    self._plugins_counter = collections.Counter()
+
+  def _Close(self):
+    """Closes the storage writer."""
+    # TODO: move the counters out of preprocessing object.
+    # Kept for backwards compatibility for now.
+    self._preprocess_object.counter = self._parsers_counter
+    self._preprocess_object.plugin_counter = self._plugins_counter
+
+    self._storage_file.WritePreprocessObject(self._preprocess_object)
+
+    self._storage_file.Close()
+
+  def _ConsumeItem(self, event_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems."""
+    self._storage_file.AddEventObject(event_object)
+    self._UpdateCounters(event_object)
+
+  def _Open(self):
+    """Opens the storage writer."""
+    self._storage_file = StorageFile(
+        self._output_file, buffer_size=self._buffer_size,
+        serializer_format=self._serializer_format)
+
+    self._storage_file.SetEnableProfiling(
+        self._enable_profiling, profiling_type=self._profiling_type)
+
+  def _UpdateCounters(self, event_object):
+    """Updates the counters.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+    self._parsers_counter[u'total'] += 1
+
+    parser_name = getattr(event_object, u'parser', u'N/A')
+    self._parsers_counter[parser_name] += 1
+
+    # TODO: remove plugin, add parser chain.
+    if hasattr(event_object, u'plugin'):
+      plugin_name = getattr(event_object, u'plugin', u'N/A')
+      self._plugins_counter[plugin_name] += 1
