@@ -119,7 +119,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
   def _ProcessAnalysisPlugins(
       self, analysis_plugins, analysis_report_incoming_queue, storage_file,
-      counter, preferred_encoding=u'utf-8'):
+      counter, pre_obj, preferred_encoding=u'utf-8'):
     """Runs the analysis plugins.
 
     Args:
@@ -128,12 +128,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
                                       Queue).
       storage_file: a storage file object (instance of StorageFile).
       counter: a counter object (instance of collections.Counter).
+      pre_obj: The preprocessor object (instance of PreprocessObject).
       preferred_encoding: optional preferred encoding.
     """
     if not analysis_plugins:
       return
 
     logging.info(u'Processing data from analysis plugins.')
+
+    pre_obj.collection_information[u'Action'] = u'Adding tags to storage.'
+    pre_obj.collection_information[u'time_of_run'] = timelib.Timestamp.GetNow()
 
     # Wait for all analysis plugins to complete.
     for analysis_process_info in self._analysis_process_info:
@@ -169,6 +173,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       storage_file.StoreTagging(analysis_queue_consumer.tags)
 
     # TODO: analysis_queue_consumer.anomalies:
+
+    storage_file.WritePreprocessObject(pre_obj)
 
     for item, value in analysis_queue_consumer.counter.iteritems():
       counter[item] = value
@@ -531,7 +537,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     # Get all reports and tags from analysis plugins.
     self._ProcessAnalysisPlugins(
         analysis_plugins, analysis_report_incoming_queue, storage_file,
-        counter, preferred_encoding=preferred_encoding)
+        counter, pre_obj, preferred_encoding=preferred_encoding)
 
     if self._filter_object and not counter[u'Limited By']:
       counter[u'Filter By Date'] = (
