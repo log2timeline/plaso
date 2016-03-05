@@ -39,9 +39,9 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       # hashes from it.
       return
     hash_attributes = {}
-    for attr_name in event_object.GetAttributes():
-      if attr_name.endswith(u'_hash'):
-        hash_attributes[attr_name] = getattr(event_object, attr_name)
+    for attribute_name, attribute_value in event_object.GetAttributes():
+      if attribute_name.endswith(u'_hash'):
+        hash_attributes[attribute_name] = attribute_value
     self._paths_with_hashes[pathspec] = hash_attributes
 
   def _GeneratePathString(self, analysis_mediator, pathspec, hashes):

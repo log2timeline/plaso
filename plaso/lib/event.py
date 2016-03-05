@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The core object definitions, e.g. the event object."""
+"""The core value object definitions, e.g. event object, event tag."""
 
 import abc
 import collections
@@ -7,7 +7,6 @@ import logging
 import re
 import uuid
 
-from plaso.lib import definitions
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -112,45 +111,19 @@ class AnalysisReport(object):
     self.text = u'\n'.join(lines_of_text)
 
 
-# TODO: Re-design the event object to make it lighter, perhaps template
-# based. The current design is too slow and needs to be improved.
-class EventObject(object):
-  """An event object is the main datastore for an event in plaso.
+class EventObject(AttributeContainer):
+  """Class to represent an event attribute container.
 
-  The framework is designed to parse files and create an event
-  from every single record, line or key extracted from the file.
-
-  An event object is the main data storage for an event in plaso.
-
-  This class defines the high level interface of event object.
-  Before creating an event object a class needs to be implemented
-  that inherits from event object and implements the functions in it.
-
-  The event object is then used by output processing for saving
-  in other forms, such as a protobuf, AFF4 container, CSV files,
-  databases, etc.
-
-  The goal of the event object is to provide a easily extensible
-  data storage of each events internally in the tool.
-
-  The main event object only exposes those functions that the
-  implementations need to implement. The functions that are needed
-  simply provide information about the event, or describe the
-  attributes that are necessary. How they are assembled is totally
-  up to the implementation.
-
-  All required attributes of the event object are passed to the
-  constructor of the object while the optional ones are set
-  using the method SetValue(attribute, value).
+  The framework is designed to parse files and create events
+  from individual records, log lines or keys extracted from files.
+  The event object provides an extensible data storage for event
+  attributes.
 
   Attributes:
-    data_type: the data type indicator string.
-    uuid: unique identifier (UUID) for the event object.
+    data_type: a string containing the event data type indicator.
+    uuid: a string containing a unique identifier (UUID).
   """
-  # This is a convenience variable to define event object as
-  # simple value objects. Its runtime equivalent data_type
-  # should be used in code logic.
-  DATA_TYPE = u''
+  DATA_TYPE = None
 
   # This is a reserved variable just used for comparison operation and defines
   # attributes that should not be used during evaluation of whether two
@@ -162,9 +135,8 @@ class EventObject(object):
   def __init__(self):
     """Initializes the event object."""
     super(EventObject, self).__init__()
+    self.data_type = self.DATA_TYPE
     self.uuid = u'{0:s}'.format(uuid.uuid4().get_hex())
-    if self.DATA_TYPE:
-      self.data_type = self.DATA_TYPE
 
   def __eq__(self, event_object):
     """Return a boolean indicating if two event objects are considered equal.
@@ -203,13 +175,13 @@ class EventObject(object):
         self.data_type != event_object.data_type):
       return False
 
-    attributes = self.GetAttributes()
-    if attributes != event_object.GetAttributes():
+    attribute_names = set(self.__dict__.keys())
+    if attribute_names != set(event_object.__dict__.keys()):
       return False
 
     # Here we have to deal with "near" duplicates, so not all attributes
     # should be compared.
-    for attribute in attributes.difference(self.COMPARE_EXCLUDE):
+    for attribute in attribute_names.difference(self.COMPARE_EXCLUDE):
       if getattr(self, attribute) != getattr(event_object, attribute):
         return False
 
@@ -228,15 +200,19 @@ class EventObject(object):
 
     return True
 
-  def __str__(self):
-    """Returns a string representation."""
-    string = self.GetString()
-    return string.encode(u'utf-8')
+  def CopyToDict(self):
+    """Copies the event object to a dictionary.
 
-  # TODO: replace with a Python 3 compatible solution.
-  def __unicode__(self):
-    """Returns a string representation."""
-    return self.GetString()
+    Returns:
+      A dictionary containing the event object attributes.
+    """
+    result_dict = {}
+    for attribute_name in iter(self.__dict__.keys()):
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is not None:
+        result_dict[attribute_name] = attribute_value
+
+    return result_dict
 
   def EqualityString(self):
     """Return a string describing the event object in terms of object equality.
@@ -249,7 +225,8 @@ class EventObject(object):
       String: will match another EventObject's Equality String if and only if
               the EventObjects are equal
     """
-    fields = sorted(list(self.GetAttributes().difference(self.COMPARE_EXCLUDE)))
+    attribute_names = set(self.__dict__.keys())
+    fields = sorted(list(attribute_names.difference(self.COMPARE_EXCLUDE)))
 
     # TODO: Review this (after 1.1.0 release). Is there a better/more clean
     # method of removing the timestamp description field out of the fields list?
@@ -294,54 +271,34 @@ class EventObject(object):
       # with another event.
       return self.uuid
 
-  def GetAttributes(self):
-    """Return a list of all defined attributes."""
-    return set(self.__dict__.keys())
+  def GetAttributeNames(self):
+    """Retrieves the attribute names from the event object.
 
-  def GetString(self):
-    """Retrieves a string representation of the event object.
+    Attributes that are set to None are ignored.
 
     Returns:
-      A Unicode string containing the string representation of the event object.
+      A list of strings containing the attribute names.
     """
-    time_string = timelib.Timestamp.CopyToIsoFormat(self.timestamp)
+    attribute_names = []
+    for attribute_name in iter(self.__dict__.keys()):
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is not None:
+        attribute_names.append(attribute_name)
 
-    out_write = [
-        u'+-' * 40,
-        u'[Timestamp]:',
-        u'  {0:s}'.format(time_string)]
+    return attribute_names
 
-    pathspec = getattr(self, u'pathspec', None)
-    if pathspec:
-      out_write.append(u'[Pathspec]:')
-      attribute_string = pathspec.comparable.replace(u'\n', u'\n  ')
-      attribute_string = u'  {0:s}\n'.format(attribute_string)
-      out_write.append(attribute_string)
+  def GetAttributes(self):
+    """Retrieves the attributes from the event object.
 
-    out_write.append(u'[Reserved attributes]:')
-    out_additional = [u'[Additional attributes]:']
+    Attributes that are set to None are ignored.
 
-    for name, value in sorted(self.GetValues().items()):
-      if name not in definitions.RESERVED_VARIABLE_NAMES:
-        attribute_string = u'  {{{0!s}}} {1!s}'.format(name, value)
-        out_additional.append(attribute_string)
-
-      elif name != u'pathspec':
-        attribute_string = u'  {{{0!s}}} {1!s}'.format(name, value)
-        out_write.append(attribute_string)
-
-    out_write.append(u'')
-    out_additional.append(u'')
-
-    out_write.extend(out_additional)
-    return u'\n'.join(out_write)
-
-  def GetValues(self):
-    """Returns a dictionary of all defined attributes and their values."""
-    values = {}
-    for attribute_name in set(self.__dict__.keys()):
-      values[attribute_name] = getattr(self, attribute_name)
-    return values
+    Yields:
+      A tuple containing the event attribute name and value.
+    """
+    for attribute_name in iter(self.__dict__.keys()):
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is not None:
+        yield attribute_name, attribute_value
 
 
 # TODO: deprecate store number and index.

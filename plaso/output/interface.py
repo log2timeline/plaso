@@ -85,9 +85,7 @@ class OutputModule(object):
     try:
       self.WriteEventBody(event_object)
     except errors.NoFormatterFound:
-      logging.error(
-          u'Unable to retrieve formatter for event object: {0:s}:'.format(
-              event_object.GetString()))
+      self._ReportEventError(event_object, u'unable to retrieve formatter')
 
     self.WriteEventEnd()
 

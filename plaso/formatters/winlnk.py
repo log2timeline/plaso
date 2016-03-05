@@ -79,7 +79,7 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
     if u'description' not in event_values:
       event_values[u'description'] = u'Empty description'
 

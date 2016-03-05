@@ -27,7 +27,7 @@ class MsiecfItemFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     http_headers = event_values.get(u'http_headers', None)
     if http_headers:

@@ -49,7 +49,7 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     file_entry_type = event_values.get(u'file_entry_type', None)
     if file_entry_type is not None:
@@ -130,7 +130,7 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     attribute_type = event_values.get(u'attribute_type', 0)
     event_values[u'attribute_name'] = self._ATTRIBUTE_NAMES.get(
@@ -218,7 +218,7 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     file_reference = event_values.get(u'file_reference', None)
     if file_reference:

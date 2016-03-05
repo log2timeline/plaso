@@ -202,10 +202,9 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       event_uuid: The UUID of the event that should be tagged.
       labels: A list of strings that contains the labels.
     """
-    event_tag = event.EventTag()
-    event_tag.comment = (
-        u'Tag applied by {0:s} analysis plugin'.format(self.NAME))
-    event_tag.event_uuid = event_uuid
+    event_tag = event.EventTag(
+        comment=u'Tag applied by {0:s} analysis plugin'.format(self.NAME),
+        event_uuid=event_uuid)
     event_tag.AddLabels(labels)
     return event_tag
 
@@ -221,11 +220,12 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     Returns:
       A tuple of:
-        pathspecs: A list of pathspecs that had the hash value looked up.
+        pathspecs: A list of pathspecs (instances of dfvfs.PathSpec) that had
+                   the hash value looked up.
         tag_strings: A list of strings that corresponds to the hash value that
                      was looked up.
-        tags: A list of EventTags for all events that were extracted from the
-              pathspecs.
+        tags: A list of event tags (instances of EventTag) for all events that
+              were extracted from the path specifictions.
     """
     tags = []
     event_uuids = []

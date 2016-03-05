@@ -203,14 +203,7 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
 
     Args:
       event_object: the event object (instance of EventObject).
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
     """
-    if u'timestamp' not in event_object.GetAttributes():
-      return
-
     # sqlite seems to support milli seconds precision but that seems
     # not to be used by 4n6time
     row = self._GetSanitizedEventValues(event_object)

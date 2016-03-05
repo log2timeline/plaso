@@ -437,31 +437,21 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
 
     proto.data_type = getattr(event_object, u'data_type', u'event')
 
-    for attribute_name in event_object.GetAttributes():
+    for attribute_name, attribute_value in event_object.GetAttributes():
       if attribute_name == u'source_short':
-        proto.source_short = cls._SOURCE_SHORT_TO_PROTO_MAP[
-            event_object.source_short]
+        proto.source_short = cls._SOURCE_SHORT_TO_PROTO_MAP[attribute_value]
 
       elif attribute_name == u'pathspec':
-        attribute_value = getattr(event_object, attribute_name, None)
-        if attribute_value:
-          attribute_value = cls._path_spec_serializer.WriteSerialized(
-              attribute_value)
-          setattr(proto, attribute_name, attribute_value)
+        attribute_value = cls._path_spec_serializer.WriteSerialized(
+            attribute_value)
+        setattr(proto, attribute_name, attribute_value)
 
       elif attribute_name == u'tag':
-        attribute_value = getattr(event_object, attribute_name, None)
-        if attribute_value:
-          event_tag_proto = ProtobufEventTagSerializer.WriteSerializedObject(
-              attribute_value)
-          proto.tag.MergeFrom(event_tag_proto)
+        event_tag_proto = ProtobufEventTagSerializer.WriteSerializedObject(
+            attribute_value)
+        proto.tag.MergeFrom(event_tag_proto)
 
       elif hasattr(proto, attribute_name):
-        attribute_value = getattr(event_object, attribute_name)
-
-        if attribute_value is None:
-          continue
-
         if isinstance(attribute_value, py2to3.STRING_TYPES):
           if not attribute_value:
             continue
@@ -489,8 +479,6 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
               setattr(proto, attribute_name, -1)
 
       else:
-        attribute_value = getattr(event_object, attribute_name)
-
         # TODO: check if the next TODO still applies.
         # Serialize the attribute value only if it is an integer type
         # or if it has a value.
