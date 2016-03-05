@@ -90,7 +90,7 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     event_type = event_values.get(u'event_type', None)
     if event_type is not None:

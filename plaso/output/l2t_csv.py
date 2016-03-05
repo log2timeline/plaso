@@ -98,17 +98,16 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
     extra_attributes = []
-    for key in sorted(event_object.GetAttributes()):
-      if (key in definitions.RESERVED_VARIABLE_NAMES or
-          key in format_variables):
+    for attribute_name, attribute_value in sorted(event_object.GetAttributes()):
+      if (attribute_name in definitions.RESERVED_VARIABLE_NAMES or
+          attribute_name in format_variables):
         continue
-
-      value = getattr(event_object, key)
 
       # With ! in {1!s} we force a string conversion since some of
       # the extra attributes values can be integer, float point or
       # boolean values.
-      extra_attributes.append(u'{0:s}: {1!s} '.format(key, value))
+      extra_attributes.append(
+          u'{0:s}: {1!s} '.format(attribute_name, attribute_value))
 
     extra_attributes = u' '.join(extra_attributes)
     extra_attributes = extra_attributes.replace(u'\n', u'-').replace(u'\r', u'')

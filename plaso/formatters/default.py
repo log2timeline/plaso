@@ -23,7 +23,7 @@ class DefaultFormatter(interface.EventFormatter):
     Returns:
       A tuple containing the formatted message string and short message string.
     """
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     # TODO: clean up the default formatter and add a test to make sure
     # it is clear how it is intended to work.

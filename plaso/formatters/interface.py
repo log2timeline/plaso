@@ -164,7 +164,7 @@ class EventFormatter(object):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
     return self._FormatMessages(
         self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
 
@@ -328,5 +328,5 @@ class ConditionalEventFormatter(EventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
     return self._ConditionalFormatMessages(event_values)

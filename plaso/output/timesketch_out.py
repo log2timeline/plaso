@@ -71,23 +71,22 @@ class TimesketchOutputModule(interface.OutputModule):
     Returns:
       Dictionary with sanitized event object values.
     """
-    event_values = event_object.GetValues()
+    event_values = {}
+    for attribute_name, attribute_value in event_object.GetAttributes():
+      # Ignore attributes that cause issues (and need correcting).
+      if attribute_name in (u'pathspec', u'regvalue'):
+        continue
 
-    # Get rid of few attributes that cause issues (and need correcting).
-    if u'pathspec' in event_values:
-      del event_values[u'pathspec']
-
-    # To not overload the index, remove the regvalue index.
-    # TODO: Investigate if this is really necessary?
-    if u'regvalue' in event_values:
-      del event_values[u'regvalue']
+      event_values[attribute_name] = attribute_value
 
     # Adding attributes in that are calculated/derived.
+
     # We want to remove millisecond precision (causes some issues in
     # conversion).
-    event_values[u'datetime'] = timelib.Timestamp.CopyToIsoFormat(
-        timelib.Timestamp.RoundToSeconds(event_object.timestamp),
-        timezone=self._output_mediator.timezone)
+    attribute_value = timelib.Timestamp.RoundToSeconds(event_object.timestamp)
+    attribute_value = timelib.Timestamp.CopyToIsoFormat(
+        attribute_value, timezone=self._output_mediator.timezone)
+    event_values[u'datetime'] = attribute_value
 
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
     if message is None:

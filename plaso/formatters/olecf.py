@@ -56,7 +56,7 @@ class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     pin_status = event_values.get(u'pin_status', 0)
     if pin_status == 0xffffffff:
@@ -154,7 +154,7 @@ class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     security = event_values.get(u'security', None)
     if security:

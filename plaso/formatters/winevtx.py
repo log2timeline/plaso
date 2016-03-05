@@ -47,7 +47,7 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     source_name = event_values.get(u'source_name', None)
     message_identifier = event_values.get(u'message_identifier', None)

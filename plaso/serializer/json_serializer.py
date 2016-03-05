@@ -453,11 +453,7 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
       raise TypeError
 
     json_dict = {u'__type__': u'EventObject'}
-    for attribute_name in event_object.GetAttributes():
-      attribute_value = getattr(event_object, attribute_name, None)
-      if attribute_value is None:
-        continue
-
+    for attribute_name, attribute_value in event_object.GetAttributes():
       if attribute_name == u'pathspec':
         attribute_value = self._ConvertPathSpecToDict(attribute_value)
 
