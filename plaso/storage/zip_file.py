@@ -1515,7 +1515,7 @@ class StorageFile(ZIPStorageFile):
         event_object.timestamp > 0):
       self._buffer_first_timestamp = event_object.timestamp
 
-    attributes = event_object.GetValues()
+    attributes = event_object.CopyToDict()
 
     self._UpdateCounters(attributes)
 
