@@ -42,31 +42,22 @@ class ElasticSearchOutputModule(interface.OutputModule):
     Args:
       event_object: the event object (instance of EventObject).
     """
-    ret_dict = event_object.GetValues()
+    event_values = {}
+    for attribute_name, attribute_value in event_object.GetAttributes():
+      # Ignore attributes that cause issues (and need correcting).
+      if attribute_name in (u'pathspec', u'regvalue', u'tag'):
+        continue
 
-    # Get rid of few attributes that cause issues (and need correcting).
-    if 'pathspec' in ret_dict:
-      del ret_dict['pathspec']
+      event_values[attribute_name] = attribute_value
 
-    #if 'tag' in ret_dict:
-    #  del ret_dict['tag']
-    #  tag = getattr(event_object, 'tag', None)
-    #  if tag:
-    #    ret_dict['tag'] = tag.labels
-    #    if getattr(tag, 'comment', ''):
-    #      ret_dict['comment'] = tag.comment
-    ret_dict['tag'] = []
+    # Adding attributes in that are derived.
 
-    # To not overload the index, remove the regvalue index.
-    if 'regvalue' in ret_dict:
-      del ret_dict['regvalue']
-
-    # Adding attributes in that are calculated/derived.
     # We want to remove millisecond precision (causes some issues in
     # conversion).
-    ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
-        timelib.Timestamp.RoundToSeconds(event_object.timestamp),
-        timezone=self._output_mediator.timezone)
+    attribute_value = timelib.Timestamp.RoundToSeconds(event_object.timestamp)
+    attribute_value = timelib.Timestamp.CopyToIsoFormat(
+        attribute_value, timezone=self._output_mediator.timezone)
+    event_values[u'datetime'] = attribute_value
 
     message, _ = self._output_mediator.GetFormattedMessages(event_object)
     if message is None:
@@ -74,7 +65,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    ret_dict['message'] = message
+    event_values[u'message'] = message
 
     source_short, source = self._output_mediator.GetFormattedSources(
         event_object)
@@ -83,23 +74,23 @@ class ElasticSearchOutputModule(interface.OutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(
               getattr(event_object, u'data_type', u'UNKNOWN')))
 
-    ret_dict['source_short'] = source_short
-    ret_dict['source_long'] = source
+    event_values[u'source_short'] = source_short
+    event_values[u'source_long'] = source
 
     hostname = self._output_mediator.GetHostname(event_object)
-    ret_dict['hostname'] = hostname
+    event_values[u'hostname'] = hostname
 
     username = self._output_mediator.GetUsername(event_object)
-    ret_dict['username'] = username
+    event_values[u'username'] = username
 
-    return ret_dict
+    return event_values
 
   def Close(self):
     """Disconnects from the elastic search server."""
     self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
     self._data = []
-    sys.stdout.write('. [DONE]\n')
-    sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
+    sys.stdout.write(u'. [DONE]\n')
+    sys.stdout.write(u'ElasticSearch index name: {0:s}\n'.format(
         self._index_name))
     sys.stdout.flush()
 
@@ -157,8 +148,8 @@ class ElasticSearchOutputModule(interface.OutputModule):
         self._doc_type: {
             u'_timestamp': {
                 u'enabled': True,
-                u'path': 'datetime',
-                u'format': 'date_time_no_millis'},
+                u'path': u'datetime',
+                u'format': u'date_time_no_millis'},
         }
     }
     # Check if the mappings exist (only create if not there).
@@ -172,7 +163,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
             pyelasticsearch.exceptions.ElasticHttpError):
       try:
         self._elastic_db.create_index(self._index_name, settings={
-            'mappings': mapping})
+            u'mappings': mapping})
       except pyelasticsearch.IndexAlreadyExistsError:
         raise RuntimeError(u'Unable to created the index')
     except requests.exceptions.ConnectionError as exception:
@@ -182,9 +173,9 @@ class ElasticSearchOutputModule(interface.OutputModule):
       raise RuntimeError(u'Unable to connect to ElasticSearch backend.')
 
     # pylint: disable=unexpected-keyword-arg
-    self._elastic_db.health(wait_for_status='yellow')
+    self._elastic_db.health(wait_for_status=u'yellow')
 
-    sys.stdout.write('Inserting data')
+    sys.stdout.write(u'Inserting data')
     sys.stdout.flush()
 
 

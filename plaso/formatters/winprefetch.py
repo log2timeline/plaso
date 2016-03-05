@@ -45,7 +45,7 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
           u'Invalid event object - unsupported data type: {0:s}'.format(
               event_object.data_type))
 
-    event_values = event_object.GetValues()
+    event_values = event_object.CopyToDict()
 
     number_of_volumes = event_values.get(u'number_of_volumes', 0)
     volume_serial_numbers = event_values.get(u'volume_serial_numbers', None)

@@ -1536,19 +1536,20 @@ class StorageFile(ZIPStorageFile):
         event_object.timestamp > 0):
       self._buffer_first_timestamp = event_object.timestamp
 
-    attributes = event_object.GetValues()
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter[u'total'] += 1
-      self._pre_obj.counter[attributes.get(u'parser', u'N/A')] += 1
+      parser = getattr(event_object, u'parser', u'N/A')
+      self._pre_obj.counter[parser] += 1
       # TODO remove plugin, add parser chain. Refactor to separate method e.g.
       # UpdateEventCounters.
-      if u'plugin' in attributes:
-        self._pre_obj.plugin_counter[attributes.get(u'plugin', u'N/A')] += 1
+      plugin = getattr(event_object, u'plugin', None)
+      if plugin:
+        self._pre_obj.plugin_counter[plugin] += 1
 
     # Add to temporary counter.
     self._count_data_type[event_object.data_type] += 1
-    parser = attributes.get(u'parser', u'unknown_parser')
+    parser = getattr(event_object, u'parser', u'unknown_parser')
     self._count_parser[parser] += 1
 
     heapq.heappush(

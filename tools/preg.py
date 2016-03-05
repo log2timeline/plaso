@@ -199,9 +199,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     if hasattr(event_object, u'regvalue'):
       attributes = event_object.regvalue.keys()
     else:
-      all_attributes = event_object.GetAttributes()
-      attributes = all_attributes.difference(
-          event_object.COMPARE_EXCLUDE)
+      attribute_names = set(event_object.GetAttributeNames())
+      attributes = attribute_names.difference(event_object.COMPARE_EXCLUDE)
 
     align_length = self._DEFAULT_FORMAT_ALIGN_LENGTH
     for attribute in attributes:
@@ -354,8 +353,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
       attributes = event_object.regvalue
     else:
       # TODO: Add a function for this to avoid repeating code.
-      keys = event_object.GetAttributes().difference(
-          event_object.COMPARE_EXCLUDE)
+      attribute_names = set(event_object.GetAttributeNames())
+      keys = attribute_names.difference(event_object.COMPARE_EXCLUDE)
       keys.discard(u'offset')
       keys.discard(u'timestamp_desc')
       attributes = {}
@@ -1153,7 +1152,8 @@ class PregMagics(magic.Magics):
     # Print a hexadecimal representation of all binary values.
     if verbose:
       header_shown = False
-      for value in current_helper.GetCurrentRegistryKey().GetValues():
+      current_key = current_helper.GetCurrentRegistryKey()
+      for value in current_key.GetValues():
         if not value.DataIsBinaryData():
           continue
 

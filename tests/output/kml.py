@@ -95,7 +95,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         b'<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
         b'</Point></Placemark>').format(expected_os_location)
 
-    self.assertEqual(event_body, expected_event_body)
+    self.assertEqual(event_body.split(b'\n'), expected_event_body.split(b'\n'))
 
 
 if __name__ == '__main__':
