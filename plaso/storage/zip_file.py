@@ -8,7 +8,7 @@ There are multiple types of storage files:
 * plaso_proto.#
   These files contain the serialized event objects. These files are referred
   to as "proto files" because of historical reasons. The event objects stored
-  inside a "proto file" should be ordered based on their timestamp.
+  inside a "proto file" are ordered ascending based on their timestamp.
 * plaso_index.#
   These files contain an index of the data offsets of the serialized event
   objects stored in the "proto files". These files are referred to as
