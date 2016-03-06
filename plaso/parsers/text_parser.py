@@ -461,19 +461,6 @@ class TextCSVParser(interface.FileObjectParser):
         row[key] = replaced_value
     return row
 
-  def VerifyRow(self, unused_parser_mediator, unused_row):
-    """Return a bool indicating whether or not this is the correct parser.
-
-    Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row: a single row from the CSV file. Strings in this dict are binary
-           strings, to aid in file verification.
-
-    Returns:
-      True if this is the correct parser, False otherwise.
-    """
-    pass
-
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parse a line of the log file and extract event objects.
 
@@ -547,6 +534,19 @@ class TextCSVParser(interface.FileObjectParser):
     for row in reader:
       row = self._ConvertRowToUnicode(parser_mediator, row)
       self.ParseRow(parser_mediator, text_file_object.tell(), row)
+
+  def VerifyRow(self, unused_parser_mediator, unused_row):
+    """Return a bool indicating whether or not this is the correct parser.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      row: a single row from the CSV file. Strings in this dict are binary
+           strings, to aid in file verification.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
+    pass
 
 
 def PyParseRangeCheck(lower_bound, upper_bound):

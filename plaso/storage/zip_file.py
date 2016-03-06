@@ -1,84 +1,58 @@
 # -*- coding: utf-8 -*-
 """The ZIP-based storage.
 
-The storage mechanism can be described as a collection of storage files
-that are stored together in a single ZIP compressed container.
+The ZIP-based storage can be described as a collection of storage files
+bundled in a single ZIP archive file.
 
-The storage file is essentially split up in two categories:
-   +  A store file (further described below).
-   +  Other files, these contain tag, collection information or
-      other metadata describing the content of the store files.
+There are multiple types of storage files:
+* plaso_proto.#
+  These files contain the serialized event objects. These files are referred
+  to as "proto files" because of historical reasons. The event objects stored
+  inside a "proto file" should be ordered based on their timestamp.
+* plaso_index.#
+  These files contain an index of the data offsets of the serialized event
+  objects stored in the "proto files". These files are referred to as
+  "index files".
+* plaso_timestamps.#
+  These files contain an index of the timestamps of the serialized event
+  objects stored in the "proto files".
 
-The store itself is a collection of four files:
-  plaso_meta.<store_number>
-  plaso_proto.<store_number>
-  plaso_index.<store_number>
-  plaso_timestamps.<store_number>
+The # in the filenames is referred to as the "store number".
 
-The plaso_proto file within each store contains several serialized EventObjects
-or events that are serialized (as a protobuf). All of the EventObjects within
-the plaso_proto file are fully sorted based on time however since the storage
-container can contain more than one store the overall storage is not fully
-sorted.
++ The index file
 
-The other files that make up the store are:
+The index file contains an index to all the serialized event objects stored
+within the corresponding "proto file".
 
-  + plaso_meta
+An index file consists of:
++-----+-----+-...-+
+| int | int | ... |
++-----+-----+-...-+
 
-Simple text file using YAML for storing metadata information about the store.::
+Where int is an unsigned 32-bit integer that represents the byte offset
+into the corresponding "proto file" of the start of the data of the serialized
+event object.
 
-  definition, example:
-    variable: value
-    a_list: [value, value, value]
++ The timestamps file
 
-This can be used to filter out which proto files should be included
-in processing.
+The timestamps file contains all the timestamp of the serialized event objects.
+A timestamp is a signed 64-bit value that contains the number of microseconds
+since January 1, 1970 00:00:00 UTC.
 
-+ plaso_index
-
-The index file contains an index to all the entries stored within
-the protobuf file, so that it can be easily seeked. The layout is:
-
-+-----+-----+-...+
-| int | int | ...|
-+-----+-----+-...+
-
-Where int is an unsigned integer '<I' that represents the byte offset
-into the .proto file where the beginning of the size variable lies.
-
-This can be used to seek the proto file directly to read a particular
-entry within the proto file.
-
-  + plaso_timestamps
-
-This is a simple file that contains all the timestamp values of the entries
-within the proto file. Each entry is a a long int ('<q') that contains the value
-of the EventObject of that timestamps index into the file.
-
-The structure is:
+A timestamps file consists of:
 +-----------+-----------+-...-+
 | timestamp | timestamp | ... |
 +-----------+-----------+-...-+
 
-This is used for time based filtering, where if the 15th entry in this file is
-the first entry that is larger than the lower bound, then the index file is used
-to seek to the 15th entry inside the proto file.
++ The proto file
 
-  + plaso_proto
+A proto file consists of:
++------+-----------------+------+-...-+
+| size | serialized data | size | ... |
++------+-----------------+------+-...-+
 
-The structure of a proto file is:
-+------+---------------------------------+------+------...+
-| size |  protobuf (plaso_storage_proto) | size | proto...|
-+------+---------------------------------+------+------...+
-
-For further details about the storage design see:
-  http://plaso.kiddaland.net/developer/libraries/storage
+Historically the data was serialized using protobuf.
 """
-# TODO: Go through the storage library to see if it can be split in two, one
-# part which will define the storage itself, and can be relatively independent.
-# Independent enough to be split into separate project to ease integration by
-# other tools. This file will then contain the queueing mechanism and other
-# plaso specific mechanism, making it easier to import the storage library.
 
 import collections
 import heapq
@@ -89,12 +63,11 @@ import warnings
 import zipfile
 
 import construct
-from google.protobuf import message
 import yaml
 
 from plaso.engine import profiler
 from plaso.lib import definitions
-from plaso.proto import plaso_storage_pb2
+from plaso.lib import errors
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
 from plaso.storage import reader
@@ -934,11 +907,6 @@ class StorageFile(ZIPStorageFile):
   # Set the version of this storage mechanism.
   STORAGE_VERSION = 1
 
-  source_short_map = {}
-  for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
-      u'SourceShort'].values:
-    source_short_map[value.name] = value.number
-
   def __init__(
       self, output_file, buffer_size=0, read_only=False,
       serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
@@ -1310,7 +1278,8 @@ class StorageFile(ZIPStorageFile):
       data_stream: the data stream object (instance of _SerializedDataStream).
 
     Returns:
-      An preprocessing object (instance of PreprocessObject) or None.
+      An preprocessing object (instance of PreprocessObject) or None if the
+      preprocessing object cannot be read.
     """
     preprocess_data = data_stream.ReadEntry()
     if not preprocess_data:
@@ -1322,11 +1291,9 @@ class StorageFile(ZIPStorageFile):
     try:
       preprocess_object = self._preprocess_object_serializer.ReadSerialized(
           preprocess_data)
-    except message.DecodeError as exception:
-      logging.error((
-          u'Unable to read serialized preprocessing object '
-          u'with error: {0:s}').format(exception))
-      return
+    except errors.SerializationError as exception:
+      logging.error(exception)
+      preprocess_object = None
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'preprocess_object')
