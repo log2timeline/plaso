@@ -149,15 +149,18 @@ class WinRegistryParser(interface.FileObjectParser):
     Returns:
       The normalized Windows Registry key path.
     """
-    normalized_registry_path = key_path.lower()
-    if (len(normalized_registry_path) < 39 or
-        not normalized_registry_path.startswith(self._CONTROL_SET_PREFIX)):
-      return normalized_registry_path
+    normalized_key_path = key_path.lower()
+    # The Registry key path should start with:
+    # HKEY_LOCAL_MACHINE\System\ControlSet followed by 3 digits
+    # which makes 39 characters.
+    if (len(normalized_key_path) < 39 or
+        not normalized_key_path.startswith(self._CONTROL_SET_PREFIX)):
+      return normalized_key_path
 
     # Key paths that contain ControlSet### must be normalized to
     # CurrentControlSet.
     return u''.join([
-        self._NORMALIZED_CONTROL_SET_PREFIX, normalized_registry_path[39:]])
+        self._NORMALIZED_CONTROL_SET_PREFIX, normalized_key_path[39:]])
 
   def _ParseRecurseKeys(self, parser_mediator, root_key):
     """Parses the Registry keys recursively.
@@ -170,9 +173,9 @@ class WinRegistryParser(interface.FileObjectParser):
     for registry_key in root_key.RecurseKeys():
       matching_plugin = None
 
-      normalized_registry_path = self._NormalizeKeyPath(registry_key.path)
-      if self._path_filter.CheckPath(normalized_registry_path):
-        matching_plugin = self._plugin_per_key_path[normalized_registry_path]
+      normalized_key_path = self._NormalizeKeyPath(registry_key.path)
+      if self._path_filter.CheckPath(normalized_key_path):
+        matching_plugin = self._plugin_per_key_path[normalized_key_path]
 
       else:
         for plugin_object in self._plugins_without_key_paths:

@@ -534,7 +534,19 @@ class PathFilterScanTree(object):
 
 
 class PathFilterScanTreeNode(object):
-  """Class that implements a path filter scan tree node."""
+  """Class that implements a path filter scan tree node.
+
+  The path filter scan tree node is used to define nodes within
+  the path filter scan tree. The node contains the 
+
+  Attributes:
+    default_value: the default scan object, either a scan tree sub node
+                   (instance of PathFilterScanTreeNode) or a string
+                   containing a path.
+    parent: the parent path filter scan tree node or None.
+    path_segment_index: an integer containing the path segment index
+                        represented by the node.
+  """
 
   def __init__(self, path_segment_index):
     """Initializes a path filter scan tree node.
@@ -559,7 +571,7 @@ class PathFilterScanTreeNode(object):
     Args:
       path_segment: a string containing the path segment.
       scan_object: a scan object, either a scan tree sub node (instance of
-                   PathFilterScanTreeNode) or a path.
+                   PathFilterScanTreeNode) or a string containing a path.
 
     Raises:
       ValueError: if the node already contains a scan object for
@@ -581,8 +593,8 @@ class PathFilterScanTreeNode(object):
 
     Returns:
       A scan object, which is either a scan tree sub node (instance of
-      PathFilterScanTreeNode) or a path, or None. If the path segment
-      is not available the default value is returned.
+      PathFilterScanTreeNode) or a string containing a path, or None.
+      If the path segment is not available the default value is returned.
     """
     return self._path_segments.get(path_segment, self.default_value)
 
@@ -591,7 +603,7 @@ class PathFilterScanTreeNode(object):
 
     Args:
       scan_object: a scan object, either a scan tree sub node (instance of
-                   PathFilterScanTreeNode) or a path.
+                   PathFilterScanTreeNode) or a string containing a path.
 
     Raises:
       ValueError: if the default value is already set.
