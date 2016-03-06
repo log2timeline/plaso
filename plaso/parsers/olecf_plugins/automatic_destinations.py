@@ -133,15 +133,13 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
           u'Unable to parse DestList header with error: {0:s}'.format(
               exception))
 
-    if header.format_version not in (1, 3):
-      # TODO: add format debugging notes to parser mediator.
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unsupported format version: {1:d}.'.format(
-              self.NAME, header.format_version))
+    if header.format_version not in (1, 3, 4):
+      parser_mediator.ProduceParseError(
+          u'unsupported format version: {0:d}.'.format(header.format_version))
 
     if header.format_version == 1:
       dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V1
-    elif header.format_version == 3:
+    elif header.format_version in (3, 4):
       dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V3
 
     entry_offset = olecf_item.get_offset()
