@@ -6,6 +6,7 @@ import logging
 from dfvfs.serializer import protobuf_serializer as dfvfs_protobuf_serializer
 from google.protobuf import message
 
+from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import py2to3
 from plaso.proto import plaso_storage_pb2
@@ -610,39 +611,39 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     Returns:
       A preprocessing object (instance of PreprocessObject).
     """
-    pre_obj = event.PreprocessObject()
+    preprocess_object = event.PreprocessObject()
 
     for attribute in proto.attributes:
       key, value = ProtobufEventAttributeSerializer.ReadSerializedObject(
           attribute)
       if key == u'zone':
-        pre_obj.SetTimezone(value)
+        preprocess_object.SetTimezone(value)
       else:
-        setattr(pre_obj, key, value)
+        setattr(preprocess_object, key, value)
 
     if proto.HasField(u'counter'):
       dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
           proto.counter)
-      pre_obj.SetCounterValues(dict_object)
+      preprocess_object.SetCounterValues(dict_object)
 
     if proto.HasField(u'plugin_counter'):
       dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
           proto.plugin_counter)
-      pre_obj.SetPluginCounterValues(dict_object)
+      preprocess_object.SetPluginCounterValues(dict_object)
 
     if proto.HasField(u'store_range'):
       range_list = []
       for value in proto.store_range.values:
         if value.HasField(u'integer'):
           range_list.append(value.integer)
-      pre_obj.store_range = (range_list[0], range_list[-1])
+      preprocess_object.store_range = (range_list[0], range_list[-1])
 
     if proto.HasField(u'collection_information'):
       dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
           proto.collection_information)
-      pre_obj.SetCollectionInformationValues(dict_object)
+      preprocess_object.SetCollectionInformationValues(dict_object)
 
-    return pre_obj
+    return preprocess_object
 
   @classmethod
   def ReadSerialized(cls, proto_string):
@@ -653,18 +654,28 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
 
     Returns:
       A preprocessing object (instance of PreprocessObject).
+
+    Raises:
+      SerializationError: if the preprocessing object cannot be read.
     """
     proto = plaso_storage_pb2.PreProcess()
     proto.ParseFromString(proto_string)
 
-    return cls.ReadSerializedObject(proto)
+    try:
+      preprocess_object = cls.ReadSerializedObject(proto)
+    except message.DecodeError as exception:
+      raise errors.SerializationError((
+          u'Unable to read serialized preprocessing object '
+          u'with error: {0:s}').format(exception))
+
+    return preprocess_object
 
   @classmethod
-  def WriteSerializedObject(cls, pre_obj):
+  def WriteSerializedObject(cls, preprocess_object):
     """Writes a preprocessing object to serialized form.
 
     Args:
-      pre_obj: a preprocessing object (instance of PreprocessObject).
+      preprocess_object: a preprocessing object (instance of PreprocessObject).
 
     Returns:
       A protobuf object containing the serialized form (instance of
@@ -672,7 +683,7 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     """
     proto = plaso_storage_pb2.PreProcess()
 
-    for attribute, value in iter(pre_obj.__dict__.items()):
+    for attribute, value in iter(preprocess_object.__dict__.items()):
       if attribute == u'collection_information':
         zone = value.get(u'configured_zone', u'')
         if zone and hasattr(zone, u'zone'):
@@ -709,16 +720,16 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     return proto
 
   @classmethod
-  def WriteSerialized(cls, pre_obj):
+  def WriteSerialized(cls, preprocess_object):
     """Writes a preprocessing object to serialized form.
 
     Args:
-      pre_obj: a preprocessing object (instance of PreprocessObject).
+      preprocess_object: a preprocessing object (instance of PreprocessObject).
 
     Returns:
       A protobuf string containing the serialized form.
     """
-    proto = cls.WriteSerializedObject(pre_obj)
+    proto = cls.WriteSerializedObject(preprocess_object)
     return proto.SerializeToString()
 
 

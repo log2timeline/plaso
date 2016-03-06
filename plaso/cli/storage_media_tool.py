@@ -488,7 +488,7 @@ class StorageMediaTool(tools.CLITool):
       A string containing the partition identifier or "all".
 
     Raises:
-      FileSystemScannerError: if the source cannot be processed.
+      SourceScannerError: if the source cannot be processed.
     """
     self._output_writer.Write(
         u'The following partitions were found:\n'
@@ -497,7 +497,7 @@ class StorageMediaTool(tools.CLITool):
     for volume_identifier in sorted(volume_identifiers):
       volume = volume_system.GetVolumeByIdentifier(volume_identifier)
       if not volume:
-        raise errors.FileSystemScannerError(
+        raise errors.SourceScannerError(
             u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
 
       volume_extent = volume.extents[0]
