@@ -536,8 +536,10 @@ class PathFilterScanTree(object):
 class PathFilterScanTreeNode(object):
   """Class that implements a path filter scan tree node.
 
-  The path filter scan tree node is used to define nodes within
-  the path filter scan tree. The node contains the 
+  The path filter scan tree node defines the path segments for a specific
+  path segment index to filter. Each path segment will point to a scan object
+  that indicates the next part of the path filter. A default value indicates
+  the scan object to use next when there was no match.
 
   Attributes:
     default_value: the default scan object, either a scan tree sub node
