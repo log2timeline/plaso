@@ -93,11 +93,8 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
-    # TODO: add report_array and _anomalies tests.
-
     self._json_dict = {
         u'__type__': u'AnalysisReport',
-        u'_anomalies': [],
         u'_tags': [{
             u'__type__': u'EventTag',
             u'comment': self._comment,
@@ -278,18 +275,6 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
         u'winjob', u'olecf', u'xchatlog', u'macwifi', u'mactime', u'java_idx',
         u'firefox_cache', u'mcafee_protection', u'skydrive_log_error']
 
-    self._stores = {
-        u'Number': 1,
-        u'Store 1': {
-            u'count': 3,
-            u'data_type': [u'fs:stat'],
-            u'parsers': [u'filestat'],
-            u'range': [1387891912000000, 1387891912000000],
-            u'type_count': [[u'fs:stat', 3]],
-            u'version': 1
-        }
-    }
-
     self._json_dict = {
         u'__type__': u'PreprocessObject',
         u'collection_information': {
@@ -332,7 +317,6 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
             u'end': 1,
             u'start': 1
         },
-        u'stores': self._stores,
         u'zone': {
             u'__type__': u'timezone',
             u'zone': u'UTC'
@@ -385,7 +369,6 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
     preprocess_object.guessed_os = u'None'
     preprocess_object.plugin_counter = self._plugin_counter
     preprocess_object.store_range = (1, 1)
-    preprocess_object.stores = self._stores
     preprocess_object.zone = pytz.UTC
 
     self._TestWriteSerialized(
