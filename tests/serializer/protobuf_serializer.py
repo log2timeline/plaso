@@ -297,18 +297,6 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
         u'workers': 0
     }
 
-    self._stores = {
-        u'Number': 1,
-        u'Store 1': {
-            u'count': 3,
-            u'data_type': [u'fs:stat'],
-            u'parsers': [u'filestat'],
-            u'range': [1387891912000000, 1387891912000000],
-            u'type_count': [[u'fs:stat', 3]],
-            u'version': 1
-        }
-    }
-
     self._counter = collections.Counter()
     self._counter[u'filestat'] = 3
     self._counter[u'total'] = 3
@@ -346,10 +334,6 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
     attribute_serializer.WriteSerializedObject(
         proto_attribute, u'zone', u'{0!s}'.format(pytz.UTC))
 
-    proto_attribute = proto.attributes.add()
-    attribute_serializer.WriteSerializedObject(
-        proto_attribute, u'stores', self._stores)
-
     self._proto_object = proto
     self._proto_string = proto.SerializeToString()
 
@@ -365,7 +349,6 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
     self.assertEqual(preprocess_object.guessed_os, u'None')
     self.assertEqual(preprocess_object.plugin_counter, self._plugin_counter)
     self.assertEqual(preprocess_object.store_range, (1, 1))
-    self.assertEqual(preprocess_object.stores, self._stores)
     self.assertEqual(preprocess_object.zone, pytz.UTC)
 
   def testWriteSerialized(self):
@@ -376,7 +359,6 @@ class ProtobufPreprocessObjectSerializerTest(ProtobufSerializerTestCase):
     preprocess_object.guessed_os = u'None'
     preprocess_object.plugin_counter = self._plugin_counter
     preprocess_object.store_range = (1, 1)
-    preprocess_object.stores = self._stores
     preprocess_object.zone = pytz.UTC
 
     self._TestWriteSerialized(
