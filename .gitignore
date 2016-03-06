@@ -22,6 +22,9 @@
 /.review
 ._code_review_number
 
+# Pycharm files
+/.idea
+
 # Test files
 .coverage
 tests-coverage.txt
