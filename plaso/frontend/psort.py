@@ -133,7 +133,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     storage_file_writer.ConsumeItems()
 
-    for item, value in storage_file_writer.counter.iteritems():
+    for item, value in storage_file_writer.reports_counter.iteritems():
       counter[item] = value
 
   def _StartAnalysisPlugins(
@@ -596,7 +596,7 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
   def __init__(
       self, queue_object, storage_file, filter_string, preprocess_object,
       preferred_encoding=u'utf-8'):
-    """Initializes an analysis report queue consumer.
+    """Initializes an analysis report ZIP-based storage file writer.
 
     Args:
       queue_object: the queue object (instance of Queue).
