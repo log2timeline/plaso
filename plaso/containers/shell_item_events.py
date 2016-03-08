@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the shell item specific event object classes."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 
 
 class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):

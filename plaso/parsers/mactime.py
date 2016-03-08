@@ -7,7 +7,7 @@ The format specifications can be read here:
 
 import re
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import manager
 from plaso.parsers import text_parser

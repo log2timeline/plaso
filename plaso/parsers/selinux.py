@@ -27,7 +27,7 @@
 import logging
 import re
 
-from plaso.events import text_events
+from plaso.containers import text_events
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import timelib

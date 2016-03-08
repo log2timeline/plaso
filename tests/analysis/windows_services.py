@@ -7,9 +7,9 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
+from plaso.containers import windows_events
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.events import windows_events
 from plaso.parsers import winreg
 
 from tests.analysis import test_lib

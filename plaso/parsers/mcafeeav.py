@@ -4,7 +4,7 @@
 McAfee AV uses 4 logs to track when scans were run, when virus databases were
 updated, and when files match the virus database."""
 
-from plaso.events import text_events
+from plaso.containers import text_events
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import manager

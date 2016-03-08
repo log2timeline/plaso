@@ -5,7 +5,7 @@ Kik messages on iOS devices are stored in an
 SQLite database file named kik.sqlite.
 """
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface

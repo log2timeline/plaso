@@ -3,7 +3,7 @@
 
 import re
 
-from plaso.events import windows_events
+from plaso.containers import windows_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 

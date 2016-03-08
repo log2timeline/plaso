@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the MSIE zone settings plugin."""
 
-from plaso.events import windows_events
+from plaso.containers import windows_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 

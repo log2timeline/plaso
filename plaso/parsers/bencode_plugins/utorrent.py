@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Bencode parser plugin for uTorrent files."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import bencode_parser

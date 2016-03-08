@@ -3,8 +3,8 @@
 
 import construct
 
-from plaso.events import windows_events
-from plaso.events import time_events
+from plaso.containers import windows_events
+from plaso.containers import time_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
