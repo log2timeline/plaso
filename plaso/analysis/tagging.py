@@ -6,6 +6,7 @@ import os
 
 from plaso.analysis import interface
 from plaso.analysis import manager
+from plaso.containers import events
 from plaso.filters import manager as filters_manager
 from plaso.lib import event
 
@@ -97,7 +98,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
       return
 
     event_uuid = getattr(event_object, u'uuid')
-    event_tag = event.EventTag(
+    event_tag = events.EventTag(
         comment=u'Tag applied by tagging analysis plugin.',
         event_uuid=event_uuid)
     event_tag.AddLabels(matched_tags)

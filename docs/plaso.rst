@@ -8,6 +8,7 @@ Subpackages
 
     plaso.analysis
     plaso.cli
+    plaso.containers
     plaso.engine
     plaso.events
     plaso.filters

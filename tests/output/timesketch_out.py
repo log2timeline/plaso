@@ -7,7 +7,7 @@ import unittest
 from mock import Mock
 from mock import MagicMock
 
-from plaso.lib import event
+from plaso.containers import events
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import timesketch_out
@@ -41,7 +41,7 @@ class TimesketchTestConfig(object):
   flush_interval = 1000
 
 
-class TimesketchTestEvent(event.EventObject):
+class TimesketchTestEvent(events.EventObject):
   """Simplified EventObject for testing."""
   DATA_TYPE = u'syslog:line'
 
@@ -71,7 +71,7 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     self._event_timestamp = plaso_timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')
     self._event_object = TimesketchTestEvent(self._event_timestamp)
-    self._event_tag = event.EventTag()
+    self._event_tag = events.EventTag()
     self._event_tag.uuid = self._event_object.uuid
     self._event_tag.AddLabel(self._label)
     self._event_object.tag = self._event_tag

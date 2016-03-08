@@ -4,15 +4,15 @@
 
 import unittest
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import mediator
 
 
-class TestEvent(event.EventObject):
+class TestEvent(events.EventObject):
   DATA_TYPE = 'test:mediator'
 
   def __init__(self):

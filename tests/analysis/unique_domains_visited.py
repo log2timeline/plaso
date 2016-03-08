@@ -5,17 +5,17 @@
 import unittest
 
 from plaso.analysis import unique_domains_visited
+from plaso.containers import events
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.lib import timelib
-from plaso.lib import event
 
 from tests.analysis import test_lib
 
 
 class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
   """Tests for the unique domains analysis plugin."""
-  TEST_EVENTS = [
+  _EVENT_DICTS = [
       {u'data_type': u'chrome:history:file_downloaded',
        u'domain':u'firstevent.com',
        u'path': u'/1/index.html',
@@ -45,7 +45,7 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
       An event object (instance of EventObject) that contains the necessary
       attributes for testing.
     """
-    event_object = event.EventObject()
+    event_object = events.EventObject()
     event_object.data_type = test_event[u'data_type']
     event_object.url = u'https://{0:s}/{1:s}'.format(
         test_event.get(u'domain', u''), test_event.get(u'path', u''))
@@ -59,10 +59,10 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
 
     # Fill the incoming queue with events.
     test_queue_producer = queue.ItemQueueProducer(event_queue)
-    events = [self._CreateTestEventObject(test_event)
-              for test_event
-              in self.TEST_EVENTS]
-    test_queue_producer.ProduceItems(events)
+    event_objects = [
+        self._CreateTestEventObject(test_event)
+        for test_event in self._EVENT_DICTS]
+    test_queue_producer.ProduceItems(event_objects)
 
     # Set up the plugin.
     analysis_plugin = unique_domains_visited.UniqueDomainsVisitedPlugin(
@@ -75,7 +75,7 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(len(analysis_reports), 1)
     report_text = analysis_reports[0].GetString()
-    for event_object in self.TEST_EVENTS:
+    for event_object in self._EVENT_DICTS:
       self.assertIn(event_object.get(u'domain', u''), report_text)
 
 

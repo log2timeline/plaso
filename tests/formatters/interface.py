@@ -7,8 +7,7 @@ import unittest
 from plaso.formatters import interface
 from plaso.formatters import mediator
 
-# TODO: refactor to event_test_lib.
-from tests.lib import event as event_test
+from tests.containers import test_lib as containers_test_lib
 from tests.formatters import test_lib
 
 
@@ -21,7 +20,7 @@ class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = u'Some Text File.'
 
 
-class ConditionalTestEvent(event_test.TestEvent):
+class ConditionalTestEvent(containers_test_lib.TestEvent):
   DATA_TYPE = u'test:event:conditional'
 
 
@@ -53,7 +52,7 @@ class EventFormatterTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._event_objects = event_test.GetEventObjects()
+    self._event_objects = containers_test_lib.GetEventObjects()
 
   def testInitialization(self):
     """Tests the initialization."""

@@ -14,9 +14,9 @@ import os
 from dfvfs.helpers import text_file
 import pyparsing
 
+from plaso.containers import events
 from plaso.events import text_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import lexer
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -470,7 +470,8 @@ class TextCSVParser(interface.FileObjectParser):
       row: a dictionary containing all the fields as denoted in the
            COLUMNS class list. Strings in this dict are Unicode strings.
     """
-    event_object = event.EventObject()
+    # TODO: replace EventObject with a CSV specific event object.
+    event_object = events.EventObject()
     if row_offset is not None:
       event_object.offset = row_offset
     event_object.row_dict = row

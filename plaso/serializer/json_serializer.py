@@ -8,6 +8,7 @@ import json
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
+from plaso.containers import events
 from plaso.lib import event
 from plaso.lib import py2to3
 from plaso.serializer import interface
@@ -123,7 +124,7 @@ class _EventObjectJSONDecoder(json.JSONDecoder):
     Returns:
       An event object (instance of EventObject).
     """
-    event_object = event.EventObject()
+    event_object = events.EventObject()
 
     for key, value in iter(json_dict.items()):
       setattr(event_object, key, value)
@@ -449,7 +450,7 @@ class _EventObjectJSONEncoder(json.JSONEncoder):
     Raises:
       TypeError: if not an instance of EventObject.
     """
-    if not isinstance(event_object, event.EventObject):
+    if not isinstance(event_object, events.EventObject):
       raise TypeError
 
     json_dict = {u'__type__': u'EventObject'}
@@ -710,7 +711,7 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
     if not json_dict:
       return
 
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
 
     for key, value in iter(json_dict.items()):
       if value is None:
@@ -770,7 +771,7 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
     Raises:
       TypeError: if not an instance of EventTag.
     """
-    if not isinstance(event_tag, event.EventTag):
+    if not isinstance(event_tag, events.EventTag):
       raise TypeError
 
     json_dict = {u'__type__': u'EventTag'}
