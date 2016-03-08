@@ -8,12 +8,12 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import events
 from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
-from plaso.lib import event
 from plaso.parsers import interface
 from plaso.parsers import mediator
 
@@ -28,11 +28,11 @@ class TestItemQueueConsumer(queue.ItemQueueConsumer):
       event_queue: the event object queue (instance of Queue).
     """
     super(TestItemQueueConsumer, self).__init__(event_queue)
-    self.event_objects = []
+    self.events = []
 
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems."""
-    self.event_objects.append(event_object)
+    self.events.append(event_object)
 
 
 class ParserTestCase(unittest.TestCase):
@@ -56,17 +56,17 @@ class ParserTestCase(unittest.TestCase):
     Returns:
       A list of event objects (instances of EventObject).
     """
-    event_objects = []
+    test_events = []
 
     for event_object in event_generator:
-      self.assertIsInstance(event_object, event.EventObject)
+      self.assertIsInstance(event_object, events.EventObject)
       # Every event needs to have its parser and pathspec fields set, so that
       # it's possible to trace its provenance.
       self.assertIsNotNone(event_object.pathspec)
       self.assertIsNotNone(event_object.parser)
-      event_objects.append(event_object)
+      test_events.append(event_object)
 
-    return event_objects
+    return test_events
 
   def _GetEventObjectsFromQueue(self, event_queue_consumer):
     """Retrieves the event objects from the queue consumer.
@@ -80,12 +80,12 @@ class ParserTestCase(unittest.TestCase):
     """
     event_queue_consumer.ConsumeItems()
 
-    event_objects = []
-    for event_object in event_queue_consumer.event_objects:
-      self.assertIsInstance(event_object, event.EventObject)
-      event_objects.append(event_object)
+    test_events = []
+    for event_object in event_queue_consumer.events:
+      self.assertIsInstance(event_object, events.EventObject)
+      test_events.append(event_object)
 
-    return event_objects
+    return test_events
 
   def _GetParserMediator(
       self, event_queue, parse_error_queue, knowledge_base_values=None,

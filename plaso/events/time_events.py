@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """This file contains the time-based event object classes."""
 
-from plaso.lib import event
+from plaso.containers import events
 from plaso.lib import timelib
 
 
-class TimestampEvent(event.EventObject):
+class TimestampEvent(events.EventObject):
   """Convenience class for a timestamp-based event.
 
   Attributes:

@@ -1605,7 +1605,7 @@ class StorageFile(ZIPStorageFile):
     events or to highlight events for later viewing.
 
     The object passed in needs to be a list (or otherwise an iterator)
-    that contains EventTag objects (event.EventTag).
+    that contains event tag objects.
 
     Args:
       tags: a list of event tags (instances of EventTag).

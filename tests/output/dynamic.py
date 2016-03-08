@@ -4,9 +4,9 @@
 
 import unittest
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import dynamic
@@ -15,7 +15,7 @@ from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
-class TestEvent(event.EventObject):
+class TestEvent(events.EventObject):
   DATA_TYPE = 'test:dynamic'
 
   def __init__(self):

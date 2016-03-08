@@ -5,8 +5,8 @@ import logging
 
 from plaso.analysis import interface
 from plaso.analysis import manager
+from plaso.containers import events
 from plaso.lib import errors
-from plaso.lib import event
 
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
@@ -166,14 +166,14 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       return [u'viper_not_present']
     strings = [u'viper_present']
 
-    for project in projects:
-      project_name = event.EventTag.INVALID_TAG_CHARACTER_REGEX.sub(
-          u'_', project)
-      strings.append(u'viper_project_{0:s}'.format(project_name))
+    for project_name in projects:
+      label = events.EventTag.CopyTextToLabel(
+          project_name, prefix=u'viper_project_')
+      strings.append(label)
 
-    for tag in tags:
-      tag_name = event.EventTag.INVALID_TAG_CHARACTER_REGEX.sub(u'_', tag)
-      strings.append(u'viper_tag_{0:s}'.format(tag_name))
+    for tag_name in tags:
+      label = events.EventTag.CopyTextToLabel(tag_name, prefix=u'viper_tag_')
+      strings.append(label)
 
     return strings
 

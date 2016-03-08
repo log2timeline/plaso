@@ -335,7 +335,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     """Writes a list of strings extracted from an event to an output writer.
 
     Args:
-      event_object: event object (instance of event.EventObject).
+      event_object: event object (instance of EventObject).
       file_entry: optional file entry object (instance of dfvfs.FileEntry)
                   that the event originated from. Default is None.
       show_hex: optional boolean to indicate that the hexadecimal representation
@@ -378,7 +378,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     """Writes a list of strings that contains a header for the event.
 
     Args:
-      event_object: event object (instance of event.EventObject).
+      event_object: event object (instance of EventObject).
       descriptions: list of strings describing the value of the header
                     timestamp.
       exclude_timestamp: boolean. If it is set to True the method

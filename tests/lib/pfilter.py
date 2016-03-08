@@ -4,9 +4,9 @@
 
 import unittest
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import event
 from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
@@ -57,7 +57,7 @@ class PFilterTest(unittest.TestCase):
     EventObject protobuf and all tests run against both the native
     Python object as well as the protobuf.
     """
-    event_object = event.EventObject()
+    event_object = events.EventObject()
     event_object.data_type = 'Weirdo:Made up Source:Last Written'
     event_object.timestamp = timelib.Timestamp.CopyFromString(
         u'2015-11-18 01:15:43')
