@@ -10,7 +10,7 @@ from plaso.lib import py2to3
 from plaso.lib import utils
 
 
-# TODO: split event object in source and event.
+# TODO: split event into source and event components.
 # https://github.com/log2timeline/plaso/wiki/Scribbles-about-events
 
 class EventObject(interface.AttributeContainer):
@@ -331,7 +331,7 @@ class EventTag(interface.AttributeContainer):
     """Copies a string to a label.
 
     A label only supports a limited set of characters therefore
-    unsupported characters are replaces with an underscore.
+    unsupported characters are replaced with an underscore.
 
     Args:
       text: a string containing the text to convert to a label.
