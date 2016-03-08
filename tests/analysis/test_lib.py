@@ -9,10 +9,10 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analysis import mediator
+from plaso.containers import reports
 from plaso.engine import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.lib import event
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -66,7 +66,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
     analysis_reports = []
     for analysis_report in analysis_report_queue_consumer.analysis_reports:
-      self.assertIsInstance(analysis_report, event.AnalysisReport)
+      self.assertIsInstance(analysis_report, reports.AnalysisReport)
       analysis_reports.append(analysis_report)
 
     return analysis_reports

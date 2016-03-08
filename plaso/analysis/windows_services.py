@@ -5,7 +5,7 @@ import yaml
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.lib import event
+from plaso.containers import reports
 from plaso.lib import py2to3
 from plaso.winnt import human_readable_service_enums
 
@@ -75,6 +75,7 @@ class WindowsService(yaml.YAMLObject):
     start_type = service_event.regvalue.get(u'Start')
     service_dll = service_event.regvalue.get(u'ServiceDll', u'')
     object_name = service_event.regvalue.get(u'ObjectName', u'')
+
     if service_event.pathspec:
       source = (service_event.pathspec.location, service_event.keyname)
     else:
@@ -230,7 +231,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     return u'\n'.join(string_segments)
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
@@ -239,22 +240,20 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport(self.NAME)
-
+    # TODO: move YAML representation out of plugin and into serialization.
+    lines_of_text = []
     if self._output_format == u'yaml':
-      lines_of_text = []
       lines_of_text.append(
           yaml.safe_dump_all(self._service_collection.services))
     else:
-      lines_of_text = [u'Listing Windows Services']
+      lines_of_text.append(u'Listing Windows Services')
       for service in self._service_collection.services:
         lines_of_text.append(self._FormatServiceText(service))
-        # Separate services with a blank line.
         lines_of_text.append(u'')
 
-    report.SetText(lines_of_text)
-
-    return report
+    lines_of_text.append(u'')
+    report_text = u'\n'.join(lines_of_text)
+    return reports.AnalysisReport(self.NAME, text=report_text)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesPlugin)

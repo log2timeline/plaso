@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The attribute container interface."""
 
-import abc
-
 
 class AttributeContainer(object):
   """Class that defines the attribute container interface.
@@ -11,15 +9,20 @@ class AttributeContainer(object):
   a container of attributes with basic accessors and mutators.
   """
 
-  @abc.abstractmethod
   def CopyToDict(self):
     """Copies the attribute container to a dictionary.
 
     Returns:
       A dictionary containing the attribute container attributes.
     """
+    result_dict = {}
+    for attribute_name in iter(self.__dict__.keys()):
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is not None:
+        result_dict[attribute_name] = attribute_value
 
-  @abc.abstractmethod
+    return result_dict
+
   def GetAttributes(self):
     """Retrieves the attributes from the attribute container.
 
@@ -28,3 +31,7 @@ class AttributeContainer(object):
     Yields:
       A tuple containing the attribute container attribute name and value.
     """
+    for attribute_name in iter(self.__dict__.keys()):
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is not None:
+        yield attribute_name, attribute_value

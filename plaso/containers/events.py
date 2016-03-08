@@ -102,20 +102,6 @@ class EventObject(interface.AttributeContainer):
 
     return True
 
-  def CopyToDict(self):
-    """Copies the event object to a dictionary.
-
-    Returns:
-      A dictionary containing the event object attributes.
-    """
-    result_dict = {}
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        result_dict[attribute_name] = attribute_value
-
-    return result_dict
-
   def EqualityString(self):
     """Return a string describing the event object in terms of object equality.
 
@@ -188,19 +174,6 @@ class EventObject(interface.AttributeContainer):
         attribute_names.append(attribute_name)
 
     return attribute_names
-
-  def GetAttributes(self):
-    """Retrieves the attributes from the event object.
-
-    Attributes that are set to None are ignored.
-
-    Yields:
-      A tuple containing the event attribute name and value.
-    """
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        yield attribute_name, attribute_value
 
 
 # TODO: deprecate store number and index.

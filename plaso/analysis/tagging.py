@@ -7,8 +7,8 @@ import os
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.filters import manager as filters_manager
-from plaso.lib import event
 
 
 class TaggingPlugin(interface.AnalysisPlugin):
@@ -34,7 +34,6 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tag_rules = None
     self._tagging_file_name = None
     self._tags = []
-
 
   def SetAndLoadTagFile(self, tagging_file_path):
     """Set the tag file to be used by the plugin.
@@ -147,7 +146,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     return tags
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
@@ -156,11 +155,11 @@ class TaggingPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport(self.NAME)
-    report.SetTags(self._tags)
-    report.SetText([u'Tagging plugin produced {0:d} tags.'.format(
-        len(self._tags))])
-    return report
+    report_text = u'Tagging plugin produced {0:d} tags.\n'.format(
+        len(self._tags))
+    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report.SetTags(self._tags)
+    return analysis_report
 
 
 manager.AnalysisPluginManager.RegisterPlugin(TaggingPlugin)

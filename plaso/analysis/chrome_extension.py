@@ -8,7 +8,7 @@ import requests
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.lib import event
+from plaso.containers import reports
 
 
 class ChromeExtensionPlugin(interface.AnalysisPlugin):
@@ -99,7 +99,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     return name
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
@@ -108,22 +108,18 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport(self.NAME)
-
-    report.report_dict = self._results
-
     lines_of_text = []
-    for user, extensions in sorted(self._results.iteritems()):
+    for user, extensions in sorted(self._results.items()):
       lines_of_text.append(u' == USER: {0:s} =='.format(user))
       for extension, extension_id in sorted(extensions):
         lines_of_text.append(u'  {0:s} [{1:s}]'.format(extension, extension_id))
-
-      # An empty string is added to have SetText create an empty line.
       lines_of_text.append(u'')
 
-    report.SetText(lines_of_text)
-
-    return report
+    lines_of_text.append(u'')
+    report_text = u'\n'.join(lines_of_text)
+    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report.report_dict = self._results
+    return analysis_report
 
   def ExamineEvent(self, analysis_mediator, event_object, **unused_kwargs):
     """Analyzes an event object.

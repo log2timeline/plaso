@@ -2,25 +2,14 @@
 # -*- coding: utf-8 -*-
 """This file contains the tests for the event attribute container objects."""
 
+import unittest
+
 from dfwinreg import filetime as dfwinreg_filetime
 
 from plaso.containers import events
 from plaso.events import text_events
 from plaso.events import windows_events
 from plaso.lib import timelib
-
-
-class TestEvent(events.EventObject):
-  """A test event object."""
-  DATA_TYPE = 'test:event'
-
-  def __init__(self, timestamp, attributes):
-    """Initializes the test event object."""
-    super(TestEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = u'Some time in the future'
-    for attribute, value in attributes.iteritems():
-      setattr(self, attribute, value)
 
 
 def GetEventObjects():
@@ -110,3 +99,24 @@ def GetEventObjects():
   test_events.append(event_object)
 
   return test_events
+
+
+class TestEvent(events.EventObject):
+  """A test event object."""
+  DATA_TYPE = 'test:event'
+
+  def __init__(self, timestamp, attributes):
+    """Initializes the test event object."""
+    super(TestEvent, self).__init__()
+    self.timestamp = timestamp
+    self.timestamp_desc = u'Some time in the future'
+    for attribute, value in attributes.iteritems():
+      setattr(self, attribute, value)
+
+
+class AttributeContainerTestCase(unittest.TestCase):
+  """The unit test case for an attribute container object."""
+
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
