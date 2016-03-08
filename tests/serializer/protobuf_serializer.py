@@ -6,6 +6,7 @@ import collections
 import unittest
 
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import event
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
@@ -86,7 +87,7 @@ class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):
       attribute_serializer.WriteSerializedObject(sub_proto, key, value)
     proto.report_dict.MergeFrom(dict_proto)
 
-    # TODO: add report_array, _anomalies and _tags tests.
+    # TODO: add report_array and _tags tests.
 
     proto.plugin_name = u'chrome_extension_test'
     proto.text = self._report_text
@@ -106,11 +107,11 @@ class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
-    analysis_report = event.AnalysisReport(u'chrome_extension_test')
-
+    analysis_report = reports.AnalysisReport(
+        u'chrome_extension_test', text=self._report_text)
     analysis_report.report_dict = self._report_dict
-    analysis_report.text = self._report_text
     analysis_report.time_compiled = 1431978243000000
+
     self._TestWriteSerialized(
         self._serializer, analysis_report, self._proto_string)
 

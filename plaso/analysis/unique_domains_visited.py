@@ -5,7 +5,7 @@ import urlparse
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.lib import event
+from plaso.containers import reports
 
 
 class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
@@ -61,7 +61,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     self._domains.append(domain)
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
@@ -70,13 +70,13 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport(self.NAME)
     lines_of_text = [u'Listing domains visited by all users']
     for domain in sorted(self._domains):
       lines_of_text.append(domain)
-    report.SetText(lines_of_text)
 
-    return report
+    lines_of_text.append(u'')
+    report_text = u'\n'.join(lines_of_text)
+    return reports.AnalysisReport(self.NAME, text=report_text)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(UniqueDomainsVisitedPlugin)
