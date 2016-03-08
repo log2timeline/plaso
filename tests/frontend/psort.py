@@ -5,6 +5,7 @@
 import os
 import unittest
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -22,7 +23,7 @@ from tests.cli import test_lib as cli_test_lib
 from tests.frontend import test_lib
 
 
-class PsortTestEvent(event.EventObject):
+class PsortTestEvent(events.EventObject):
   DATA_TYPE = u'test:event:psort'
 
   def __init__(self, timestamp):
@@ -183,7 +184,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         PsortTestEventFormatter)
 
-    events = [
+    event_objects = [
         PsortTestEvent(5134324321),
         PsortTestEvent(2134324321),
         PsortTestEvent(9134324321),
@@ -197,7 +198,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       temp_file = os.path.join(temp_directory, u'plaso.db')
 
       storage_file = storage_zip_file.StorageFile(temp_file)
-      for event_object in events:
+      for event_object in event_objects:
         storage_file.AddEventObject(event_object)
       storage_file.Close()
 

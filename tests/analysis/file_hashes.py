@@ -7,25 +7,26 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import file_hashes
+from plaso.containers import events
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.lib import event
 
 from tests.analysis import test_lib
 
 
 class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
   """Test for the unique hashes analysis plugin."""
-  EVENTS = [
+  _EVENT_DICTS = [
       {u'path_spec': fake_path_spec.FakePathSpec(
           u'/var/testing directory with space/file.txt'),
        u'test_hash': u'4'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'C:\\Windows\\a.file.txt'),
        u'test_hash': u'4'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/dfvfs'),
-       u'test_hash':u'4'},
+       u'test_hash': u'4'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/2hash_file'),
-       u'test_hash':u'4', u'alternate_test_hash': u'5'},
+       u'test_hash': u'4',
+       u'alternate_test_hash': u'5'},
       {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/no_hash_file')}
   ]
 
@@ -39,7 +40,7 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
     Returns:
       An EventObject to test with.
     """
-    event_object = event.EventObject()
+    event_object = events.EventObject()
     event_object.pathspec = event_dict[u'path_spec']
     for attrib in event_dict.keys():
       if attrib.endswith(u'_hash'):
@@ -52,10 +53,10 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
 
     # Fill the incoming queue with events.
     test_queue_producer = queue.ItemQueueProducer(event_queue)
-    events = [self._CreateTestEventObject(event_dict)
-              for event_dict
-              in self.EVENTS]
-    test_queue_producer.ProduceItems(events)
+    event_objects = [
+        self._CreateTestEventObject(event_dict)
+        for event_dict in self._EVENT_DICTS]
+    test_queue_producer.ProduceItems(event_objects)
 
     # Initialize plugin.
     analysis_plugin = file_hashes.FileHashesPlugin(event_queue)

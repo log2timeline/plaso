@@ -4,9 +4,9 @@
 
 import unittest
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import l2t_csv
@@ -15,7 +15,7 @@ from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
-class L2TTestEvent(event.EventObject):
+class L2TTestEvent(events.EventObject):
   """Simplified EventObject for testing."""
   DATA_TYPE = 'test:l2t_csv'
 
@@ -70,7 +70,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         L2TTestEventFormatter)
 
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
     event_tag.uuid = self._event_object.uuid
     event_tag.AddLabels([u'Malware', u'Printed'])
 

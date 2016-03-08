@@ -6,6 +6,7 @@ import collections
 import json
 import unittest
 
+from plaso.containers import events
 from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
@@ -115,7 +116,7 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
 
-    event_tag = event.EventTag(
+    event_tag = events.EventTag(
         comment=self._comment, event_uuid=self._event_uuid)
     event_tag.AddLabels(self._labels)
 
@@ -187,7 +188,7 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
-    event_object = event.EventObject()
+    event_object = events.EventObject()
 
     event_object.data_type = u'test:event2'
     event_object.timestamp = 1234124
@@ -226,7 +227,7 @@ class JSONEventTagSerializerTest(JSONSerializerTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._event_tag = event.EventTag(comment=u'My first comment.')
+    self._event_tag = events.EventTag(comment=u'My first comment.')
     self._event_tag.store_number = 234
     self._event_tag.store_index = 18
     self._event_tag.AddLabels([u'Malware', u'Common'])

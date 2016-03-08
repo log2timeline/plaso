@@ -6,6 +6,7 @@ import os
 import unittest
 import zipfile
 
+from plaso.containers import events
 from plaso.engine import queue
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -254,26 +255,26 @@ class StorageFileTest(test_lib.StorageTestCase):
     """
     event_tags = []
 
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
     event_tag.store_index = 0
     event_tag.store_number = 1
     event_tag.comment = u'My comment'
     event_tags.append(event_tag)
 
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
     event_tag.store_index = 1
     event_tag.store_number = 1
     event_tag.AddLabel(u'Malware')
     event_tags.append(event_tag)
 
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
     event_tag.store_number = 1
     event_tag.store_index = 2
     event_tag.comment = u'This is interesting'
     event_tag.AddLabels([u'Malware', u'Benign'])
     event_tags.append(event_tag)
 
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
     event_tag.store_index = 1
     event_tag.store_number = 1
     event_tag.AddLabel(u'Interesting')
@@ -290,15 +291,15 @@ class StorageFileTest(test_lib.StorageTestCase):
     Returns:
       A storage file object (instance of StorageFile).
     """
-    test_event_objects = test_lib.CreateTestEventObjects()
-    test_event_tags = self._CreateTestEventTags()
+    event_objects = test_lib.CreateTestEventObjects()
+    event_tags = self._CreateTestEventTags()
 
     storage_file = zip_file.StorageFile(path)
-    for test_event_object in test_event_objects:
-      storage_file.AddEventObject(test_event_object)
+    for event_object in event_objects:
+      storage_file.AddEventObject(event_object)
 
-    storage_file.StoreTagging(test_event_tags[:-1])
-    storage_file.StoreTagging(test_event_tags[-1:])
+    storage_file.StoreTagging(event_tags[:-1])
+    storage_file.StoreTagging(event_tags[-1:])
 
     preprocessing_object = event.PreprocessObject()
     storage_file.WritePreprocessObject(preprocessing_object)
@@ -363,14 +364,14 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testAddEventObject(self):
     """Tests the AddEventObject function."""
-    test_event_objects = test_lib.CreateTestEventObjects()
+    event_objects = test_lib.CreateTestEventObjects()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'plaso.db')
       storage_file = zip_file.StorageFile(temp_file)
 
-      for test_event_object in test_event_objects:
-        storage_file.AddEventObject(test_event_object)
+      for event_object in event_objects:
+        storage_file.AddEventObject(event_object)
 
       storage_file.Close()
 
@@ -431,7 +432,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     """Tests the GetTagging function."""
     formatter_mediator = formatters_mediator.FormatterMediator()
 
-    tagged_event_objects = []
+    tagged_events = []
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'plaso.db')
@@ -441,13 +442,13 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       for tag in storage_file.GetTagging():
         event_object = self._GetTaggedEvent(storage_file, tag)
-        tagged_event_objects.append(event_object)
+        tagged_events.append(event_object)
 
       storage_file.Close()
 
-    self.assertEqual(len(tagged_event_objects), 4)
+    self.assertEqual(len(tagged_events), 4)
 
-    event_object = tagged_event_objects[0]
+    event_object = tagged_events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-04-05 12:27:39')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -459,13 +460,13 @@ class StorageFileTest(test_lib.StorageTestCase):
         formatter_mediator, event_object)
     self.assertEqual(message[0:10], u'This is a ')
 
-    event_object = tagged_event_objects[1]
+    event_object = tagged_events[1]
     self.assertEqual(event_object.tag.labels[0], u'Malware')
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
     self.assertEqual(message[0:15], u'[\\HKCU\\Windows\\')
 
-    event_object = tagged_event_objects[2]
+    event_object = tagged_events[2]
     self.assertEqual(event_object.tag.comment, u'This is interesting')
     self.assertEqual(event_object.tag.labels[0], u'Malware')
     self.assertEqual(event_object.tag.labels[1], u'Benign')
@@ -474,7 +475,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
-    event_object = tagged_event_objects[3]
+    event_object = tagged_events[3]
     self.assertEqual(event_object.tag.labels[0], u'Interesting')
     self.assertEqual(event_object.tag.labels[1], u'Malware')
 
@@ -524,18 +525,18 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testStoreTagging(self):
     """Tests the StoreTagging function."""
-    test_event_objects = test_lib.CreateTestEventObjects()
-    test_event_tags = self._CreateTestEventTags()
+    event_objects = test_lib.CreateTestEventObjects()
+    event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'plaso.db')
       storage_file = zip_file.StorageFile(temp_file)
 
-      for test_event_object in test_event_objects:
-        storage_file.AddEventObject(test_event_object)
+      for event_object in event_objects:
+        storage_file.AddEventObject(event_object)
 
-      storage_file.StoreTagging(test_event_tags[:-1])
-      storage_file.StoreTagging(test_event_tags[-1:])
+      storage_file.StoreTagging(event_tags[:-1])
+      storage_file.StoreTagging(event_tags[-1:])
 
       storage_file.Close()
 
@@ -674,7 +675,7 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
 
   def testStorageWriter(self):
     """Test the storage writer."""
-    test_event_objects = test_lib.CreateTestEventObjects()
+    event_objects = test_lib.CreateTestEventObjects()
 
     # The storage writer is normally run in a separate thread.
     # For the purpose of this test it has to be run in sequence,
@@ -686,7 +687,7 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
     # stop blocking the current process.
     test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
     test_queue_producer = queue.ItemQueueProducer(test_queue)
-    test_queue_producer.ProduceItems(test_event_objects)
+    test_queue_producer.ProduceItems(event_objects)
 
     test_queue_producer.SignalAbort()
 

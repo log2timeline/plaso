@@ -8,16 +8,12 @@ from plaso.formatters import manager
 from plaso.formatters import mediator
 from plaso.formatters import winreg  # pylint: disable=unused-import
 
-from tests.lib import event as event_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.formatters import test_lib
 
 
 class FormattersManagerTest(unittest.TestCase):
   """Tests for the event formatters manager."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._event_objects = event_test_lib.GetEventObjects()
 
   def testFormatterRegistration(self):
     """Tests the RegisterFormatter and DeregisterFormatter functions."""
@@ -46,7 +42,9 @@ class FormattersManagerTest(unittest.TestCase):
     message_strings = []
     text_message = None
     text_message_short = None
-    for event_object in self._event_objects:
+
+    test_events = containers_test_lib.GetEventObjects()
+    for event_object in test_events:
       message, message_short = manager.FormattersManager.GetMessageStrings(
           formatter_mediator, event_object)
       source_short, source_long = manager.FormattersManager.GetSourceStrings(

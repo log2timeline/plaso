@@ -6,6 +6,7 @@ import logging
 from dfvfs.serializer import protobuf_serializer as dfvfs_protobuf_serializer
 from google.protobuf import message
 
+from plaso.containers import events
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import py2to3
@@ -364,7 +365,7 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
     Returns:
       An event object (instance of EventObject).
     """
-    event_object = event.EventObject()
+    event_object = events.EventObject()
     event_object.data_type = proto.data_type
 
     for proto_attribute, value in proto.ListFields():
@@ -526,7 +527,7 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     Returns:
       An event tag (instance of EventTag).
     """
-    event_tag = event.EventTag()
+    event_tag = events.EventTag()
 
     for proto_attribute, attribute_value in proto.ListFields():
       if proto_attribute.name == u'labels':
