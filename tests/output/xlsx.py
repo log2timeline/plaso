@@ -8,9 +8,9 @@ import zipfile
 
 from xml.etree import ElementTree
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import xlsx
@@ -19,7 +19,7 @@ from tests import test_lib as shared_test_lib
 from tests.output import test_lib
 
 
-class TestEvent(event.EventObject):
+class TestEvent(events.EventObject):
   DATA_TYPE = u'test:xlsx'
 
   def __init__(self):
@@ -31,6 +31,7 @@ class TestEvent(event.EventObject):
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
         u'closed for user root) Invalid character -> \ud801')
+
 
 class TestEventFormatter(formatters_interface.EventFormatter):
   DATA_TYPE = u'test:xlsx'

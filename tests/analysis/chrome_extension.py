@@ -6,9 +6,9 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
+from plaso.containers import events
 from plaso.engine import queue
 from plaso.engine import single_process
-from plaso.lib import event
 
 from tests.analysis import test_lib
 
@@ -81,7 +81,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def _CreateTestEventObject(self, path):
     """Create a test event object with a particular path."""
-    event_object = event.EventObject()
+    event_object = events.EventObject()
     event_object.data_type = 'fs:stat'
     event_object.timestamp = 12345
     event_object.timestamp_desc = u'Some stuff'

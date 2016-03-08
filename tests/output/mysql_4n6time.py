@@ -6,7 +6,7 @@ import unittest
 
 from mock import Mock
 
-from plaso.lib import event
+from plaso.containers import events
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import mysql_4n6time
@@ -20,7 +20,7 @@ if mysql_4n6time.MySQLdb is None:
   mysql_4n6time.MySQLdb = Mock()
 
 
-class MySQL4n6TimeTestEvent(event.EventObject):
+class MySQL4n6TimeTestEvent(events.EventObject):
   """Simplified EventObject for testing."""
   DATA_TYPE = u'syslog:line'
 

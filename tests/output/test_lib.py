@@ -7,9 +7,9 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import mediator as formatters_mediator
-from plaso.lib import event
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import mediator
@@ -19,7 +19,7 @@ class TestConfig(object):
   """Test config value object."""
 
 
-class TestEventObject(event.EventObject):
+class TestEventObject(events.EventObject):
   """Test event object."""
   DATA_TYPE = u'test:output'
 

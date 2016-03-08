@@ -10,7 +10,7 @@ try:
 except ImportError:
   import sqlite3
 
-from plaso.lib import event
+from plaso.containers import events
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import sqlite_4n6time
@@ -19,7 +19,7 @@ from tests import test_lib as shared_test_lib
 from tests.output import test_lib
 
 
-class sqliteTestEvent(event.EventObject):
+class sqliteTestEvent(events.EventObject):
   """Simplified EventObject for testing."""
 
   DATA_TYPE = u'syslog:line'

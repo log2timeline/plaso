@@ -20,6 +20,7 @@ except ImportError:
 from collections import defaultdict
 
 from plaso.analysis import definitions
+from plaso.containers import events
 from plaso.engine import queue
 from plaso.lib import timelib
 from plaso.lib import errors
@@ -202,7 +203,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       event_uuid: The UUID of the event that should be tagged.
       labels: A list of strings that contains the labels.
     """
-    event_tag = event.EventTag(
+    event_tag = events.EventTag(
         comment=u'Tag applied by {0:s} analysis plugin'.format(self.NAME),
         event_uuid=event_uuid)
     event_tag.AddLabels(labels)
