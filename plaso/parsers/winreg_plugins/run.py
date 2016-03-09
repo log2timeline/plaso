@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the Run/RunOnce Key plugins for Plaso."""
 
-from plaso.events import windows_events
+from plaso.containers import windows_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 

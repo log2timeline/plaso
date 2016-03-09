@@ -7,7 +7,7 @@ import logging
 import os
 import socket
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib

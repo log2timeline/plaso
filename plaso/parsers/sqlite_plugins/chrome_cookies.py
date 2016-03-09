@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for the Google Chrome Cookie database."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 # Register the cookie plugins.

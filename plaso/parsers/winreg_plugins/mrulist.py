@@ -6,7 +6,7 @@ import logging
 
 import construct
 
-from plaso.events import windows_events
+from plaso.containers import windows_events
 from plaso.lib import binary
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items

@@ -10,7 +10,6 @@ Subpackages
     plaso.cli
     plaso.containers
     plaso.engine
-    plaso.events
     plaso.filters
     plaso.formatters
     plaso.frontend

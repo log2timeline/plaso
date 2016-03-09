@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.events import plist_event
+from plaso.containers import plist_event
 from plaso.lib import errors
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface

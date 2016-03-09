@@ -4,7 +4,7 @@ import re
 
 import pyparsing
 
-from plaso.events import text_events
+from plaso.containers import text_events
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import manager

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse the OLECF summary/document summary information items."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface

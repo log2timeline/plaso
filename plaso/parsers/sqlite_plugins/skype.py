@@ -3,7 +3,7 @@
 
 import logging
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
