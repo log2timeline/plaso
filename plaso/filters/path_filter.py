@@ -10,6 +10,8 @@ https://github.com/libyal/libsigscan/wiki/Internals
 The scan tree is used in the filter to filter provided paths.
 """
 
+from plaso.lib import py2to3
+
 
 class _PathFilterTable(object):
   """Class that implements a path filter table.
@@ -594,9 +596,8 @@ class PathFilterScanTreeNode(object):
       path_segment: a string containing the path segment.
 
     Returns:
-      A scan object, which is either a scan tree sub node (instance of
-      PathFilterScanTreeNode) or a string containing a path, or None.
-      If the path segment is not available the default value is returned.
+      A scan object, which can be a scan tree sub node (instance of
+      PathFilterScanTreeNode), a path or the default value.
     """
     return self._path_segments.get(path_segment, self.default_value)
 
@@ -608,8 +609,13 @@ class PathFilterScanTreeNode(object):
                    PathFilterScanTreeNode) or a string containing a path.
 
     Raises:
+      TypeError: if the scan object is of an unsupported type.
       ValueError: if the default value is already set.
     """
+    if (not isinstance(scan_object, PathFilterScanTreeNode) and
+        not isinstance(scan_object, py2to3.STRING_TYPES)):
+      raise TypeError(u'Unsupported scan object type.')
+
     if self.default_value:
       raise ValueError(u'Default value already set.')
 
