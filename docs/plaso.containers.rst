@@ -36,6 +36,14 @@ plaso.containers.plist_event module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.reports module
+-------------------------------
+
+.. automodule:: plaso.containers.reports
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.shell_item_events module
 -----------------------------------------
 

@@ -4,75 +4,7 @@
 import collections
 import logging
 
-from plaso.lib import timelib
-
 import pytz
-
-
-class AnalysisReport(object):
-  """Class that defines an analysis report.
-
-  Attributes:
-    plugin_name: The name of the plugin that generated the report.
-  """
-
-  def __init__(self, plugin_name):
-    """Initializes the analysis report.
-
-    Args:
-      plugin_name: The name of the plugin that's generating this report.
-    """
-    super(AnalysisReport, self).__init__()
-    self._tags = []
-    self.plugin_name = plugin_name
-
-  def GetString(self):
-    """Returns a Unicode representation of the report."""
-    # TODO: Make this a more complete function that includes images
-    # and the option of saving as a full fledged HTML document.
-    string_list = []
-    string_list.append(u'Report generated from: {0:s}'.format(self.plugin_name))
-
-    time_compiled = getattr(self, u'time_compiled', 0)
-    if time_compiled:
-      time_compiled = timelib.Timestamp.CopyToIsoFormat(time_compiled)
-      string_list.append(u'Generated on: {0:s}'.format(time_compiled))
-
-    filter_string = getattr(self, u'filter_string', u'')
-    if filter_string:
-      string_list.append(u'Filter String: {0:s}'.format(filter_string))
-
-    string_list.append(u'')
-    string_list.append(u'Report text:')
-    string_list.append(self.text)
-
-    return u'\n'.join(string_list)
-
-  def GetTags(self):
-    """Retrieves the list of event tags that are attached to the report."""
-    return self._tags
-
-  def SetTags(self, tags):
-    """Sets the list of event tags that relate to the report.
-
-    Args:
-      tags: A list of event tags (instances of EventTag) that belong to the
-            report.
-    """
-    self._tags = tags
-
-  # TODO: rename text to body?
-  def SetText(self, lines_of_text):
-    """Sets the text based on a list of lines of text.
-
-    Args:
-      lines_of_text: a list containing lines of text.
-    """
-    # Append one empty string to make sure a new line is added to the last
-    # line of text as well.
-    lines_of_text.append(u'')
-
-    self.text = u'\n'.join(lines_of_text)
 
 
 class PreprocessObject(object):

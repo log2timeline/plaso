@@ -9,6 +9,7 @@ from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import event
 from plaso.lib import py2to3
 from plaso.serializer import interface
@@ -33,8 +34,7 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
     The dictionary of the JSON serialized objects consists of:
     {
         '__type__': 'AnalysisReport'
-        '_anomalies': { ... }
-        '_tags': { ... }
+        '_event_tags': { ... }
         'report_array': { ... }
         'report_dict': { ... }
         ...
@@ -51,7 +51,7 @@ class _AnalysisReportJSONDecoder(json.JSONDecoder):
       An analysis report (instance of AnalysisReport).
     """
     # Plugin name is set as one of the attributes.
-    analysis_report = event.AnalysisReport(u'')
+    analysis_report = reports.AnalysisReport(u'')
 
     for key, value in iter(json_dict.items()):
       setattr(analysis_report, key, value)
@@ -325,8 +325,7 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
     The resulting dictionary of the JSON serialized objects consists of:
     {
         '__type__': 'AnalysisReport'
-        '_anomalies': { ... }
-        '_tags': { ... }
+        '_event_tags': { ... }
         'report_array': { ... }
         'report_dict': { ... }
         ...
@@ -345,16 +344,15 @@ class _AnalysisReportJSONEncoder(json.JSONEncoder):
     Raises:
       TypeError: if not an instance of AnalysisReport.
     """
-    if not isinstance(analysis_report, event.AnalysisReport):
+    if not isinstance(analysis_report, reports.AnalysisReport):
       raise TypeError
 
     json_dict = {u'__type__': u'AnalysisReport'}
-    for attribute_name in iter(analysis_report.__dict__.keys()):
-      attribute_value = getattr(analysis_report, attribute_name, None)
+    for attribute_name, attribute_value in analysis_report.GetAttributes():
       if attribute_value is None:
         continue
 
-      if attribute_name == u'_tags':
+      if attribute_name == u'_event_tags':
         event_tags = []
         for event_tag in attribute_value:
           event_tag = JSONEventTagSerializer.WriteSerializedDict(event_tag)
@@ -719,7 +717,7 @@ class JSONEventTagSerializer(interface.EventTagSerializer):
 
       # Note that "_tags" is the name for "labels" prior to version
       # 1.4.1-20160131
-      if key == u'_tags':
+      if key == u'_event_tags':
         key = u'labels'
 
       if key == u'labels':

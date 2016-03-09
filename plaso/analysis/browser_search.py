@@ -7,9 +7,9 @@ import urllib
 
 from plaso.analysis import interface
 from plaso.analysis import manager
+from plaso.containers import reports
 from plaso.filters import manager as filters_manager
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import event
 from plaso.lib import py2to3
 
 
@@ -225,7 +225,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     return decoded_url
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
@@ -234,15 +234,11 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport(self.NAME)
-
     results = {}
     for key, count in self._counter.iteritems():
       search_engine, _, search_term = key.partition(u':')
       results.setdefault(search_engine, {})
       results[search_engine][search_term] = count
-    report.report_dict = results
-    report.report_array = self._search_term_timeline
 
     lines_of_text = []
     for search_engine, terms in sorted(results.items()):
@@ -255,9 +251,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       # An empty string is added to have SetText create an empty line.
       lines_of_text.append(u'')
 
-    report.SetText(lines_of_text)
-
-    return report
+    lines_of_text.append(u'')
+    report_text = u'\n'.join(lines_of_text)
+    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report.report_array = self._search_term_timeline
+    analysis_report.report_dict = results
+    return analysis_report
 
   def ExamineEvent(
       self, unused_analysis_mediator, event_object, **unused_kwargs):
