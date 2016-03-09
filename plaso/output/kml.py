@@ -28,35 +28,43 @@ class KMLOutputModule(interface.LinearOutputModule):
     latitude = getattr(event_object, u'latitude', None)
     longitude = getattr(event_object, u'longitude', None)
     if latitude is not None and longitude is not None:
-      placemark = ElementTree.Element(u'Placemark')
+      placemark_xml_element = ElementTree.Element(u'Placemark')
 
-      name = ElementTree.SubElement(placemark, u'name')
-      name.text = event_object.uuid
+      name_xml_element = ElementTree.SubElement(placemark_xml_element, u'name')
+      name_xml_element.text = event_object.uuid
 
-      description = ElementTree.SubElement(placemark, u'description')
+      description_xml_element = ElementTree.SubElement(
+          placemark_xml_element, u'description')
       # TODO: move the description formatting into this output module.
-      # Also make output is XML safe.
-      description.text = (
+      description_xml_element.text = (
           rawpy.NativePythonFormatterHelper.GetFormattedEventObject(
               event_object))
 
-      point = ElementTree.SubElement(placemark, u'Point')
+      point_xml_element = ElementTree.SubElement(
+          placemark_xml_element, u'Point')
 
-      coordinates = ElementTree.SubElement(point, u'coordinates')
-      coordinates.text = u'{0!s},{1!s}'.format(longitude, latitude)
+      coordinates_xml_element = ElementTree.SubElement(
+          point_xml_element, u'coordinates')
+      coordinates_xml_element.text = u'{0!s},{1!s}'.format(longitude, latitude)
 
-      self._WriteLine(ElementTree.tostring(placemark))
+      # Note that ElementTree.tostring() will appopriately escape
+      # the input data.
+      xml_string = ElementTree.tostring(placemark_xml_element)
+
+      self._WriteLine(xml_string.encode(self._output_mediator.encoding))
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(
+    xml_string = (
         u'<?xml version="1.0" encoding="{0:s}"?>'
         u'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'.format(
             self._output_mediator.encoding))
+    self._WriteLine(xml_string.encode(self._output_mediator.encoding))
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._WriteLine(u'</Document></kml>')
+    xml_string = u'</Document></kml>'
+    self._WriteLine(xml_string.encode(self._output_mediator.encoding))
 
 
 manager.OutputManager.RegisterOutput(KMLOutputModule)
