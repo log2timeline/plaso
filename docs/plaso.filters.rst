@@ -44,6 +44,14 @@ plaso.filters.manager module
     :undoc-members:
     :show-inheritance:
 
+plaso.filters.path_filter module
+--------------------------------
+
+.. automodule:: plaso.filters.path_filter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
