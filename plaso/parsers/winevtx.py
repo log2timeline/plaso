@@ -4,7 +4,7 @@
 import pyevtx
 
 from plaso import dependencies
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface

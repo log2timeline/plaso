@@ -3,7 +3,7 @@
 
 import logging
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface

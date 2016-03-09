@@ -5,7 +5,7 @@ import logging
 
 import construct
 
-from plaso.events import windows_events
+from plaso.containers import windows_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand

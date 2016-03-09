@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the text format specific event object classes."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import py2to3
 

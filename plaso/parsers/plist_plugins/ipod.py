@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a plist plugin for the iPod/iPhone storage plist."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface

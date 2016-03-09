@@ -8,7 +8,7 @@ import construct
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface

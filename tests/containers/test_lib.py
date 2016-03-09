@@ -5,8 +5,8 @@
 from dfwinreg import filetime as dfwinreg_filetime
 
 from plaso.containers import events
-from plaso.events import text_events
-from plaso.events import windows_events
+from plaso.containers import text_events
+from plaso.containers import windows_events
 from plaso.lib import timelib
 
 

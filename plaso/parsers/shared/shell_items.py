@@ -4,7 +4,7 @@
 import pyfwsi
 
 from plaso import dependencies
-from plaso.events import shell_item_events
+from plaso.containers import shell_item_events
 from plaso.lib import eventdata
 from plaso.winnt import shell_folder_ids
 
