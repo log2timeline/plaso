@@ -430,7 +430,7 @@ class ParserMediator(object):
     # if self._parse_error_queue_producer:
     #   path_spec = self._file_entry.path_spec
     #   parser_chain = self.GetParserChain()
-    #   parse_error = event.ParseError(
+    #   parse_error = event.ExtractionError(
     #       parser_chain, message, path_spec=path_spec)
     #   self._parse_error_queue_producer.ProduceItem(parse_error)
     #   self.number_of_parse_errors += 1
