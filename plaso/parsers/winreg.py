@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
+import logging
+
 from dfwinreg import errors as dfwinreg_errors
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.lib import specification
+from plaso.filters import path_filter
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -43,17 +46,53 @@ class WinRegistryParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
+  _CONTROL_SET_PREFIX = (
+      u'HKEY_LOCAL_MACHINE\\System\\ControlSet').lower()
+
+  _NORMALIZED_CONTROL_SET_PREFIX = (
+      u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet').lower()
+
   def __init__(self):
     """Initializes a parser object."""
     super(WinRegistryParser, self).__init__()
     self._plugins = WinRegistryParser.GetPluginObjects()
+    self._plugin_per_key_path = {}
+    self._plugins_without_key_paths = []
+
+    default_plugin_list_index = None
+    key_paths = []
 
     for list_index, plugin_object in enumerate(self._plugins):
       if plugin_object.NAME == u'winreg_default':
-        self._default_plugin = self._plugins.pop(list_index)
-        break
+        default_plugin_list_index = list_index
+        continue
 
-    # TODO: build a filter tree to optimize lookups.
+      for registry_key_filter in plugin_object.FILTERS:
+        plugin_key_paths = getattr(registry_key_filter, u'key_paths', [])
+        if (not plugin_key_paths and
+            plugin_object not in self._plugins_without_key_paths):
+          self._plugins_without_key_paths.append(plugin_object)
+          continue
+
+        for plugin_key_path in plugin_key_paths:
+          plugin_key_path = plugin_key_path.lower()
+          if plugin_key_path in self._plugin_per_key_path:
+            logging.warning((
+                u'Windows Registry key path: {0:s} defined by plugin: {1:s} '
+                u'already set by plugin: {2:s}').format(
+                    plugin_key_path, plugin_object.NAME,
+                    self._plugin_per_key_path[plugin_key_path].NAME))
+            continue
+
+          self._plugin_per_key_path[plugin_key_path] = plugin_object
+
+          key_paths.append(plugin_key_path)
+
+    if default_plugin_list_index is not None:
+      self._default_plugin = self._plugins.pop(default_plugin_list_index)
+
+    self._path_filter = path_filter.PathFilterScanTree(
+        key_paths, case_sensitive=False, path_segment_separator=u'\\')
 
   def _CanProcessKeyWithPlugin(self, registry_key, plugin_object):
     """Determines if a plugin can process a Windows Registry key or its values.
@@ -67,8 +106,13 @@ class WinRegistryParser(interface.FileObjectParser):
     Returns:
       A boolean value that indicates a match.
     """
-    for filter_object in plugin_object.FILTERS:
-      if filter_object.Match(registry_key):
+    for registry_key_filter in plugin_object.FILTERS:
+      # Skip filters that define key paths since they are already
+      # checked by the path filter.
+      if getattr(registry_key_filter, u'key_paths', []):
+        continue
+
+      if registry_key_filter.Match(registry_key):
         return True
 
     return False
@@ -96,6 +140,28 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator.ProduceParseError(
           u'in key: {0:s} {1:s}'.format(registry_key.path, exception))
 
+  def _NormalizeKeyPath(self, key_path):
+    """Normalizes a Windows Registry key path.
+
+    Args:
+      key_path: a string containing a Windows Registry key path.
+
+    Returns:
+      The normalized Windows Registry key path.
+    """
+    normalized_key_path = key_path.lower()
+    # The Registry key path should start with:
+    # HKEY_LOCAL_MACHINE\System\ControlSet followed by 3 digits
+    # which makes 39 characters.
+    if (len(normalized_key_path) < 39 or
+        not normalized_key_path.startswith(self._CONTROL_SET_PREFIX)):
+      return normalized_key_path
+
+    # Key paths that contain ControlSet### must be normalized to
+    # CurrentControlSet.
+    return u''.join([
+        self._NORMALIZED_CONTROL_SET_PREFIX, normalized_key_path[39:]])
+
   def _ParseRecurseKeys(self, parser_mediator, root_key):
     """Parses the Registry keys recursively.
 
@@ -105,20 +171,26 @@ class WinRegistryParser(interface.FileObjectParser):
                 dfwinreg.WinRegistryKey).
     """
     for registry_key in root_key.RecurseKeys():
-      # TODO: use a filter tree to optimize lookups.
-      found_matching_plugin = False
-      for plugin_object in self._plugins:
-        if parser_mediator.abort:
-          break
+      matching_plugin = None
 
-        if self._CanProcessKeyWithPlugin(registry_key, plugin_object):
-          found_matching_plugin = True
-          self._ParseKeyWithPlugin(
-              parser_mediator, registry_key, plugin_object)
+      normalized_key_path = self._NormalizeKeyPath(registry_key.path)
+      if self._path_filter.CheckPath(normalized_key_path):
+        matching_plugin = self._plugin_per_key_path[normalized_key_path]
 
-      if not found_matching_plugin:
-        self._ParseKeyWithPlugin(
-            parser_mediator, registry_key, self._default_plugin)
+      else:
+        for plugin_object in self._plugins_without_key_paths:
+          if parser_mediator.abort:
+            break
+
+          if self._CanProcessKeyWithPlugin(registry_key, plugin_object):
+            matching_plugin = plugin_object
+            break
+
+      if not matching_plugin:
+        matching_plugin = self._default_plugin
+
+      if matching_plugin:
+        self._ParseKeyWithPlugin(parser_mediator, registry_key, matching_plugin)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Registry file-like object.
