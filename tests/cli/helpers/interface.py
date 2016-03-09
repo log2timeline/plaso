@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI argument helper interface."""
 
+import locale
 import sys
 import unittest
 
@@ -46,7 +47,7 @@ class HelperManagerTest(unittest.TestCase):
 
     # Note that sys.stdin.encoding can be None.
     if not encoding:
-      encoding = self.preferred_encoding
+      encoding = locale.getpreferredencoding()
 
     test_helper = test_lib.TestHelper()
 
@@ -72,7 +73,7 @@ class HelperManagerTest(unittest.TestCase):
     string = test_helper._ParseStringOption(options, u'test')
     self.assertEqual(string, expected_string)
 
-    if not sys.stdin.encoding and sys.stdin.encoding.upper() == u'UTF-8':
+    if encoding and encoding == u'UTF-8':
       options = cli_test_lib.TestOptions()
       options.test = (
           b'\xad\xfd\xab\x73\x99\xc7\xb4\x78\xd0\x8c\x8a\xee\x6d\x6a\xcb\x90')

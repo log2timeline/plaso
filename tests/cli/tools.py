@@ -4,6 +4,7 @@
 
 import argparse
 import io
+import locale
 import sys
 import unittest
 
@@ -138,7 +139,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
     # Note that sys.stdin.encoding can be None.
     if not encoding:
-      encoding = self.preferred_encoding
+      encoding = locale.getpreferredencoding()
 
     cli_tool = tools.CLITool()
     cli_tool.preferred_encoding = u'UTF-8'
@@ -165,7 +166,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     string = cli_tool.ParseStringOption(options, u'test')
     self.assertEqual(string, expected_string)
 
-    if not sys.stdin.encoding and sys.stdin.encoding.upper() == u'UTF-8':
+    if encoding and encoding.upper() == u'UTF-8':
       options = test_lib.TestOptions()
       options.test = (
           b'\xad\xfd\xab\x73\x99\xc7\xb4\x78\xd0\x8c\x8a\xee\x6d\x6a\xcb\x90')
