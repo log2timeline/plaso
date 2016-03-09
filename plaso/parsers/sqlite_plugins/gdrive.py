@@ -5,7 +5,7 @@ The Google Drive snapshots are stored in SQLite database files named
 snapshot.db.
 """
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface

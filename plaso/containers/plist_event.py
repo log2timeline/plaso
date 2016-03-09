@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file is the template for Plist events."""
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 
 

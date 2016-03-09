@@ -3,7 +3,7 @@
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.events import file_system_events
+from plaso.containers import file_system_events
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager

@@ -7,7 +7,7 @@ as of version 10.
 
 import logging
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import py2to3
 from plaso.parsers import esedb

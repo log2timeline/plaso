@@ -8,7 +8,7 @@ import urllib2
 from dfvfs.helpers import text_file
 from xml.etree import ElementTree
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib

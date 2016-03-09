@@ -13,7 +13,7 @@ from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context
 from xml.etree import ElementTree
 
-from plaso.events import plist_event
+from plaso.containers import plist_event
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import plist

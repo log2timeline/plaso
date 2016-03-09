@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a syslog parser in plaso."""
 
-from plaso.events import text_events
+from plaso.containers import text_events
 from plaso.lib import lexer
 from plaso.parsers import manager
 from plaso.parsers import text_parser

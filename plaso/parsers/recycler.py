@@ -3,7 +3,7 @@
 
 import construct
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata

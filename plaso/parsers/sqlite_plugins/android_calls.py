@@ -4,7 +4,7 @@
 Android Call History is stored in SQLite database files named contacts2.db.
 """
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface

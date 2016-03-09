@@ -6,7 +6,7 @@ import unittest
 
 import pyparsing
 
-from plaso.events import text_events
+from plaso.containers import text_events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator

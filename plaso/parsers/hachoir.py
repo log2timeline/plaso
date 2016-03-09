@@ -16,7 +16,7 @@ import hachoir_core
 import hachoir_parser
 import hachoir_metadata
 
-from plaso.events import time_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import interface
