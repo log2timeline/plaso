@@ -94,12 +94,10 @@ message EventObject {
   optional int64 store_index = 11;
 
   // EventTag is a message that can be added that include information
-  // about coloring, tagging or comments that this object contains.
+  // about tagging or comments that this object contains.
   optional EventTag tag = 12;
 
-  // Description of the origin of the event in generic terms that
-  // mostly adhere to the definition of the TLN format.
-  // NOTE: This field is deprecated and should no longer be used.
+  // This field is deprecated and should no longer be used.
   enum SourceShort {
     AV = 1; // All Anti-Virus engine log files.
     BACK = 2; // Information from backup points, eg. restore points, VSS.
@@ -119,24 +117,10 @@ message EventObject {
     JOB = 16; // Scheduled tasks or jobs.
   }
 
-  // The category or short description of the source.
-  // NOTE: This field is deprecated and should no longer be used.
+  // This field is deprecated and should no longer be used.
   optional SourceShort source_short = 13;
 
-  // The short description is not sufficient to describe the source
-  // of the event. A longer source field is therefore provided to add
-  // more context to the source. The source_long field should not be
-  // long, two or three words should be sufficient for most parts.
-  // The field is not strictly defined, it should just be short and
-  // fully descriptive.
-  //
-  // Example field names are:
-  //    Chrome Browser History
-  //    Chrome Download History
-  //    Recycle Bin
-  //    NTUSER.DAT Registry
-  //    Sophos AV Log
-  // NOTE: This field is deprecated and should no longer be used.
+  // This field is deprecated and should no longer be used.
   optional string source_long = 14;
 
   /////////////////////////////////////////////////////////////////////
@@ -151,9 +135,10 @@ message EventObject {
   optional string hostname = 17;
   // The name of the plugin that was used, if applicable.
   optional string plugin = 18;
-  // The Windows Registry file type, e.g.: NTUSER, SAM.
-  // NOTE: This field is deprecated and should no longer be used.
+
+  // This field is deprecated and should no longer be used.
   optional string registry_file_type = 19;
+
   // Boolean value that indicates whether the file was allocated or not.
   optional bool allocated = 20;
   // For filesystem records, defines the type of filesystem, eg: NTFS, FAT.
@@ -226,11 +211,7 @@ message EventTag {
   // observations the investigator has about this EventObject.
   optional string comment = 3;
 
-  // Color information, used in some front-ends to make this
-  // event stand out. This should be either a simple description
-  // of the color, eg "red", "yellow", etc or a HTML color code,
-  // eg: "#E11414".
-  // NOTE: This field is deprecated and should no longer be used.
+  // This field is deprecated and should no longer be used.
   optional string color = 4;
 
   // A short string or a tag that describes that can be used to
@@ -302,4 +283,6 @@ message AnalysisReport {
 
   // If a filter string was used on the output, it's saved here.
   optional string filter_string = 7;
+
+  repeated EventTag _event_tags = 8;
 };

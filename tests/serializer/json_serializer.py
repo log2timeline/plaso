@@ -7,6 +7,7 @@ import json
 import unittest
 
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
@@ -94,9 +95,11 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
+    # TODO: add report_array tests.
+
     self._json_dict = {
         u'__type__': u'AnalysisReport',
-        u'_tags': [{
+        u'_event_tags': [{
             u'__type__': u'EventTag',
             u'comment': self._comment,
             u'event_uuid': self._event_uuid,
@@ -115,16 +118,15 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
 
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
-
     event_tag = events.EventTag(
         comment=self._comment, event_uuid=self._event_uuid)
     event_tag.AddLabels(self._labels)
 
     self.assertTrue(event_tag.IsValidForSerialization())
-    analysis_report = event.AnalysisReport(u'chrome_extension_test')
 
+    analysis_report = reports.AnalysisReport(
+        u'chrome_extension_test', text=self._report_text)
     analysis_report.report_dict = self._report_dict
-    analysis_report.text = self._report_text
     analysis_report.time_compiled = 1431978243000000
     analysis_report.SetTags([event_tag])
 
