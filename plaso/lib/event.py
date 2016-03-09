@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The attribute container object definitions, e.g. event object, event tag."""
+"""The attribute container object definitions."""
 
 import collections
 import logging
@@ -103,14 +103,3 @@ class PreprocessObject(object):
     self.plugin_counter = collections.Counter()
     for key, value in dict_object.iteritems():
       self.plugin_counter[key] = value
-
-
-# Named tuple that defines a parse error.
-#
-# Attributes:
-#   name: The parser or plugin name.
-#   description: The description of the error.
-#   path_spec: Optional path specification of the file entry (instance of
-#              dfvfs.PathSpec).
-ParseError = collections.namedtuple(
-    u'ParseError', u'name description path_spec')
