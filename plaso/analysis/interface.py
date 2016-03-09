@@ -21,10 +21,10 @@ from collections import defaultdict
 
 from plaso.analysis import definitions
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.engine import queue
 from plaso.lib import timelib
 from plaso.lib import errors
-from plaso.lib import event
 
 
 class AnalysisPlugin(queue.ItemQueueConsumer):
@@ -321,7 +321,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     self._time_of_last_status_log = current_time
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
@@ -348,12 +348,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         text_line = self._GenerateTextLine(
             analysis_mediator, pathspec, tag_strings)
         lines_of_text.append(text_line)
+
     self._analyzer.SignalAbort()
 
-    report = event.AnalysisReport(self.NAME)
-    report.SetText(lines_of_text)
-    report.SetTags(tags)
-    return report
+    lines_of_text.append(u'')
+    report_text = u'\n'.join(lines_of_text)
+    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report.SetTags(tags)
+    return analysis_report
 
 
 class HashAnalyzer(threading.Thread):

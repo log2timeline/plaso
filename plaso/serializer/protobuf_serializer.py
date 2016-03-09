@@ -7,6 +7,7 @@ from dfvfs.serializer import protobuf_serializer as dfvfs_protobuf_serializer
 from google.protobuf import message
 
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import py2to3
@@ -233,31 +234,42 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
       An analysis report (instance of AnalysisReport).
     """
     # Plugin name is set as one of the attributes.
-    analysis_report = event.AnalysisReport(u'')
+    analysis_report = reports.AnalysisReport(u'')
 
     for proto_attribute, value in proto.ListFields():
-      # TODO: replace by ReadSerializedDictObject, need tests first.
-      # dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
-      #     proto.report_dict)
-      if proto_attribute.name == u'report_dict':
-        new_value = {}
-        for proto_dict in proto.report_dict.attributes:
-          dict_key, dict_value = (
-              ProtobufEventAttributeSerializer.ReadSerializedObject(proto_dict))
-          new_value[dict_key] = dict_value
-        setattr(analysis_report, proto_attribute.name, new_value)
+
+      if proto_attribute.name == u'_event_tags':
+        event_tags = []
+        for proto_event_tag in proto._event_tags:
+          event_tag = ProtobufEventTagSerializer.ReadSerializedObject(
+              proto_event_tag)
+          event_tags.append(event_tag)
+
+        analysis_report.SetTags(event_tags)
 
       # TODO: replace by ReadSerializedListObject, need tests first.
       # list_object = ProtobufEventAttributeSerializer.ReadSerializedListObject(
       #     proto.report_array)
       elif proto_attribute.name == u'report_array':
-        new_value = []
-
+        report_array = []
         for proto_array in proto.report_array.values:
           _, list_value = ProtobufEventAttributeSerializer.ReadSerializedObject(
               proto_array)
-          new_value.append(list_value)
-        setattr(analysis_report, proto_attribute.name, new_value)
+          report_array.append(list_value)
+
+        analysis_report.report_array = report_array
+
+      # TODO: replace by ReadSerializedDictObject, need tests first.
+      # dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
+      #     proto.report_dict)
+      elif proto_attribute.name == u'report_dict':
+        report_dict = {}
+        for proto_dict in proto.report_dict.attributes:
+          dict_key, dict_value = (
+              ProtobufEventAttributeSerializer.ReadSerializedObject(proto_dict))
+          report_dict[dict_key] = dict_value
+
+        analysis_report.report_dict = report_dict
 
       else:
         setattr(analysis_report, proto_attribute.name, value)
@@ -291,34 +303,40 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
       plaso_storage_pb2.AnalysisReport).
     """
     proto = plaso_storage_pb2.AnalysisReport()
-    proto.time_compiled = getattr(analysis_report, u'time_compiled', 0)
-    plugin_name = getattr(analysis_report, u'plugin_name', None)
 
-    if plugin_name:
-      proto.plugin_name = plugin_name
+    for attribute_name, attribute_value in analysis_report.GetAttributes():
+      if attribute_value is None:
+        continue
 
-    proto.text = getattr(analysis_report, u'text', u'N/A')
+      if attribute_name == u'_event_tags':
+        for event_tag in attribute_value:
+          event_tag_proto = ProtobufEventTagSerializer.WriteSerializedObject(
+              event_tag)
+          proto._event_tags.MergeFrom(event_tag_proto)
 
-    for image in getattr(analysis_report, u'images', []):
-      proto.images.append(image)
+      elif attribute_name == u'images':
+        for image in attribute_value:
+          proto.images.append(image)
 
-    if hasattr(analysis_report, u'report_dict'):
-      dict_proto = plaso_storage_pb2.Dict()
-      dict_object = getattr(analysis_report, u'report_dict', {})
-      for key, value in iter(dict_object.items()):
-        sub_proto = dict_proto.attributes.add()
-        ProtobufEventAttributeSerializer.WriteSerializedObject(
-            sub_proto, key, value)
-      proto.report_dict.MergeFrom(dict_proto)
+      elif attribute_name == u'report_array':
+        list_proto = plaso_storage_pb2.Array()
+        for value in getattr(analysis_report, u'report_array', []):
+          sub_proto = list_proto.values.add()
+          ProtobufEventAttributeSerializer.WriteSerializedObject(
+              sub_proto, u'', value)
+        proto.report_array.MergeFrom(list_proto)
 
-    if hasattr(analysis_report, u'report_array'):
-      list_proto = plaso_storage_pb2.Array()
-      for value in getattr(analysis_report, u'report_array', []):
-        sub_proto = list_proto.values.add()
-        ProtobufEventAttributeSerializer.WriteSerializedObject(
-            sub_proto, u'', value)
+      elif attribute_name == u'report_dict':
+        dict_proto = plaso_storage_pb2.Dict()
+        dict_object = getattr(analysis_report, u'report_dict', {})
+        for key, value in iter(dict_object.items()):
+          sub_proto = dict_proto.attributes.add()
+          ProtobufEventAttributeSerializer.WriteSerializedObject(
+              sub_proto, key, value)
+        proto.report_dict.MergeFrom(dict_proto)
 
-      proto.report_array.MergeFrom(list_proto)
+      else:
+        setattr(proto, attribute_name, attribute_value)
 
     return proto
 

@@ -13,8 +13,42 @@ class InvalidEventObject(events.EventObject):
   """An event object without the required initialization."""
 
 
-class EventObjectTest(unittest.TestCase):
-  """Tests for the event object."""
+class EventObjectTest(test_lib.AttributeContainerTestCase):
+  """Tests for the event attributes container object."""
+
+  def testCopyToDict(self):
+    """Tests the CopyToDict function."""
+    event = events.EventObject()
+    event.timestamp = 123
+    event.timestamp_desc = u'LAST WRITTEN'
+    event.data_type = 'mock:nothing'
+    event.inode = 124
+    event.filename = u'c:/bull/skrytinmappa/skra.txt'
+    event.another_attribute = False
+    event.metadata = {
+        u'author': u'Some Random Dude',
+        u'version': 1245L,
+        u'last_changed': u'Long time ago'}
+    event.strings = [u'This ', u'is a ', u'long string']
+    event.uuid = u'11fca043ea224a688137deaa8d162807'
+
+    expected_dict = {
+        u'another_attribute': False,
+        u'data_type': 'mock:nothing',
+        u'filename': u'c:/bull/skrytinmappa/skra.txt',
+        u'inode': 124,
+        u'metadata': {
+            u'author': u'Some Random Dude',
+            u'last_changed': u'Long time ago',
+            u'version': 1245L},
+        u'strings': [u'This ', u'is a ', u'long string'],
+        u'timestamp': 123,
+        u'timestamp_desc': u'LAST WRITTEN',
+        u'uuid': u'11fca043ea224a688137deaa8d162807'}
+
+    test_dict = event.CopyToDict()
+
+    self.assertEqual(test_dict, expected_dict)
 
   def testSameEvent(self):
     """Test the EventObject comparison."""
@@ -197,10 +231,25 @@ class EventObjectTest(unittest.TestCase):
       getattr(event_object, u'format_string_short')
 
 
-class EventTagTest(unittest.TestCase):
-  """Tests for the event tag object."""
+class EventTagTest(test_lib.AttributeContainerTestCase):
+  """Tests for the event tag attributes container object."""
 
-  # TODO: add tests.
+  def testCopyToDict(self):
+    """Tests the CopyToDict function."""
+    event_tag = events.EventTag(
+        comment=u'This is a test event tag.',
+        event_uuid=u'11fca043ea224a688137deaa8d162807')
+
+    expected_dict = {
+        u'comment': u'This is a test event tag.',
+        u'event_uuid': u'11fca043ea224a688137deaa8d162807',
+        u'labels': []}
+
+    test_dict = event_tag.CopyToDict()
+
+    self.assertEqual(test_dict, expected_dict)
+
+  # TODO: add more tests.
 
 
 if __name__ == '__main__':

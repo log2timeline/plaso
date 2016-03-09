@@ -3,7 +3,7 @@
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.lib import event
+from plaso.containers import reports
 
 
 class FileHashesPlugin(interface.AnalysisPlugin):
@@ -18,7 +18,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     """Initializes the unique hashes plugin.
 
     Args:
-      incoming_queue: A queue to read events from.
+      incoming_queue: a queue to read events from.
     """
     super(FileHashesPlugin, self).__init__(incoming_queue)
     self._paths_with_hashes = {}
@@ -27,9 +27,9 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     """Analyzes an event_object and creates extracts hashes as required.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
+      analysis_mediator: the analysis mediator object (instance of
                          AnalysisMediator).
-      event_object: The event object (instance of EventObject) to examine.
+      event_object: the event object (instance of EventObject) to examine.
     """
     pathspec = getattr(event_object, u'pathspec', None)
     if pathspec is None:
@@ -48,12 +48,12 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     """Generates a string containing a pathspec and its hashes.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
+      analysis_mediator: the analysis mediator object (instance of
                          AnalysisMediator).
-      pathspec: The PathSpec (instance of dfVFS.PathSpec) to generate a
-                string for.
-      hashes: A dict mapping hash attribute names to the value of that hash for
-              the pathspec being processed.
+      pathspec: the path specification (instance of dfVFS.PathSpec) to
+                generate a string for.
+      hashes: a dictionary mapping hash attribute names to the value of
+              that hash for the path specification being processed.
 
     Returns:
       A string of the form "OS:/path/spec: test_hash=4".
@@ -66,25 +66,27 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     return path_string
 
   def CompileReport(self, analysis_mediator):
-    """Compiles a report of the analysis.
+    """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
+      analysis_mediator: the analysis mediator object (instance of
                          AnalysisMediator).
 
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport(self.NAME)
     lines_of_text = [u'Listing file paths and hashes']
-    for pathspec, hashes in sorted(self._paths_with_hashes.items(), key=lambda
-        tuple: tuple[0].comparable):
+    for pathspec, hashes in sorted(
+        self._paths_with_hashes.items(),
+        key=lambda tuple: tuple[0].comparable):
+
       path_string = self._GeneratePathString(
           analysis_mediator, pathspec, hashes)
       lines_of_text.append(path_string)
-    report.SetText(lines_of_text)
 
-    return report
+    lines_of_text.append(u'')
+    report_text = u'\n'.join(lines_of_text)
+    return reports.AnalysisReport(self.NAME, text=report_text)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(FileHashesPlugin)
