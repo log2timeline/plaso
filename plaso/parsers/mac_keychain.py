@@ -14,9 +14,10 @@
 
 
 import binascii
-import construct
 import logging
 import os
+
+import construct
 
 from plaso.containers import time_events
 from plaso.lib import errors

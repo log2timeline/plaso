@@ -58,6 +58,7 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     """
     super(SQLite4n6TimeOutputModule, self).__init__(output_mediator)
     self._connection = None
+    self._count = 0
     self._cursor = None
     self._filename = None
 
@@ -188,7 +189,7 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       if self._set_status:
         self._set_status(u'Created table: l2t_disk')
 
-    self.count = 0
+    self._count = 0
 
   def SetFilename(self, filename):
     """Sets the filename.
@@ -209,12 +210,12 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     row = self._GetSanitizedEventValues(event_object)
 
     self._cursor.execute(self._INSERT_QUERY, row)
-    self.count += 1
+    self._count += 1
     # Commit the current transaction every 10000 inserts.
-    if self.count % 10000 == 0:
+    if self._count % 10000 == 0:
       self._connection.commit()
       if self._set_status:
-        self._set_status(u'Inserting event: {0:d}'.format(self.count))
+        self._set_status(u'Inserting event: {0:d}'.format(self._count))
 
 
 manager.OutputManager.RegisterOutput(SQLite4n6TimeOutputModule)

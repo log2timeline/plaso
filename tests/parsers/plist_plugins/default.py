@@ -11,7 +11,7 @@ from plaso.parsers.plist_plugins import default
 
 from tests.parsers.plist_plugins import test_lib
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class TestDefaultPlist(test_lib.PlistPluginTestCase):

@@ -2,10 +2,11 @@
 """Basic Security Module Parser."""
 
 import binascii
-import construct
 import logging
 import os
 import socket
+
+import construct
 
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -15,7 +16,7 @@ from plaso.unix import bsmtoken
 from plaso.parsers import interface
 from plaso.parsers import manager
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'

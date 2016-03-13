@@ -309,7 +309,7 @@ class MsiecfParser(interface.FileObjectParser):
 
     format_version = msiecf_file.format_version
     cache_directories = []
-    for cache_directory_name in msiecf_file.cache_directories:
+    for cache_directory_name in iter(msiecf_file.cache_directories):
       cache_directories.append(cache_directory_name)
 
     for item_index in range(0, msiecf_file.number_of_items):

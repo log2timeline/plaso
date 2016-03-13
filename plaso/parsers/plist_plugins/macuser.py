@@ -6,12 +6,12 @@
 
 import binascii
 import logging
+from xml.etree import ElementTree
 
 from binplist import binplist
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context
-from xml.etree import ElementTree
 
 from plaso.containers import plist_event
 from plaso.lib import errors

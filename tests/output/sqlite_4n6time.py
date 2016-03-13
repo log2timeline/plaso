@@ -10,7 +10,7 @@ try:
 except ImportError:
   import sqlite3
 
-from plaso.containers import events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import sqlite_4n6time
@@ -19,18 +19,20 @@ from tests import test_lib as shared_test_lib
 from tests.output import test_lib
 
 
-class sqliteTestEvent(events.EventObject):
-  """Simplified EventObject for testing."""
+class SQLiteTestEvent(time_events.TimestampEvent):
+  """Event object used for testing."""
 
   DATA_TYPE = u'syslog:line'
 
-  def __init__(self, event_timestamp):
-    """Initialize event with data."""
+  def __init__(self, timestamp):
+    """Initializes an event object.
 
-    super(sqliteTestEvent, self).__init__()
-
-    self.timestamp = event_timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
+    Args:
+      timestamp: the timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+    """
+    super(SQLiteTestEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
     self.display_name = u'log/syslog.1'
@@ -44,16 +46,13 @@ class sqliteTestEvent(events.EventObject):
 class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the sqlite output class."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    plaso_timestamp = timelib.Timestamp()
-    self._event_timestamp = plaso_timestamp.CopyFromString(
-        u'2012-06-27 18:17:01+00:00')
-    self._event_object = sqliteTestEvent(self._event_timestamp)
-
   def testOutput(self):
     """Tests for the sqlite output."""
+    timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-06-27 18:17:01+00:00')
+    event_object = SQLiteTestEvent(timestamp)
 
+    # pylint: disable=missing-docstring
     def dict_from_row(row):
       return dict(zip(row.keys(), row))
 
@@ -90,19 +89,20 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
     }
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
-      self._sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
+      sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
           output_mediator)
 
       sqlite_file = os.path.join(temp_directory, u'4n6time.db')
-      self._sqlite_output.SetFilename(sqlite_file)
+      sqlite_output.SetFilename(sqlite_file)
 
-      self._sqlite_output.Open()
-      self._sqlite_output.WriteEventBody(self._event_object)
-      self._sqlite_output.Close()
-      self.conn = sqlite3.connect(sqlite_file)
-      self.conn.row_factory = sqlite3.Row
+      sqlite_output.Open()
+      sqlite_output.WriteEventBody(event_object)
+      sqlite_output.Close()
 
-      res = self.conn.execute(u'SELECT * from log2timeline')
+      sqlite_connection = sqlite3.connect(sqlite_file)
+      sqlite_connection.row_factory = sqlite3.Row
+
+      res = sqlite_connection.execute(u'SELECT * from log2timeline')
       row_dict = dict_from_row(res.fetchone())
       self.assertDictContainsSubset(expected_dict, row_dict)
 

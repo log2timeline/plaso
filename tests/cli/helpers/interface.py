@@ -15,6 +15,8 @@ from tests.cli.helpers import test_lib
 class HelperManagerTest(unittest.TestCase):
   """Tests for the parsers manager."""
 
+  # pylint: disable=protected-access
+
   def testParseIntegerOption(self):
     """Tests the _ParseIntegerOption function."""
     test_helper = test_lib.TestHelper()

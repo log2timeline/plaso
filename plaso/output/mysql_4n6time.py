@@ -59,11 +59,12 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     super(MySQL4n6TimeOutputModule, self).__init__(output_mediator)
 
     self._connection = None
+    self._count = None
     self._cursor = None
-
     self._dbname = u'log2timeline'
     self._host = u'localhost'
     self._password = u'forensic'
+    self._port = None
     self._user = u'root'
 
   def _GetDistinctValues(self, field_name):
@@ -218,7 +219,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       raise IOError(u'Unable to insert into database with error: {0:s}'.format(
           exception))
 
-    self.count = 0
+    self._count = 0
 
   def SetCredentials(self, username=None, password=None):
     """Set the database credentials.
@@ -267,14 +268,14 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
           u'Unable to insert into database with error: {0:s}.'.format(
               exception))
 
-    self.count += 1
+    self._count += 1
 
     # TODO: Experiment if committing the current transaction
     # every 10000 inserts is the optimal approach.
-    if self.count % 10000 == 0:
+    if self._count % 10000 == 0:
       self._connection.commit()
       if self._set_status:
-        self._set_status(u'Inserting event: {0:d}'.format(self.count))
+        self._set_status(u'Inserting event: {0:d}'.format(self._count))
 
 
 manager.OutputManager.RegisterOutput(

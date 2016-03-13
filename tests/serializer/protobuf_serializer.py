@@ -12,7 +12,7 @@ from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 from plaso.storage import collection
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class ProtobufSerializerTestCase(unittest.TestCase):

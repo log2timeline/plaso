@@ -10,7 +10,7 @@ from plaso.parsers import symantec
 
 from tests.parsers import test_lib
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):

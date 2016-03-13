@@ -112,11 +112,13 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     extra_attributes = u' '.join(extra_attributes)
     extra_attributes = extra_attributes.replace(u'\n', u'-').replace(u'\r', u'')
 
-    inode = getattr(event_object, u'inode', u'-')
-    if inode == u'-':
+    inode = event_object.inode
+    if inode is None:
       if hasattr(event_object, u'pathspec') and hasattr(
           event_object.pathspec, u'image_inode'):
         inode = event_object.pathspec.image_inode
+    if inode is None:
+      inode = u'-'
 
     hostname = self._FormatHostname(event_object)
     username = self._FormatUsername(event_object)

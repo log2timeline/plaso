@@ -66,6 +66,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._filter_object = None
     self._front_end = psort.PsortFrontend()
     self._options = None
+    self._output_filename = None
     self._output_format = None
     self._time_slice = None
     self._use_time_slicer = False
@@ -647,7 +648,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       logging.error(u'{0:s}'.format(exception))
 
     # Catching every remaining exception in case we are debugging.
-    except Exception as exception:
+    except Exception as exception:  # pylint: disable=broad-except
       if not self._debug_mode:
         raise
       logging.error(u'{0:s}'.format(exception))

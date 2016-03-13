@@ -377,9 +377,10 @@ class SearchParser(Lexer):
     # Holds expression
     self.current_expression = self.expression_cls()
     self.filter_string = data
-
     # The token stack
     self.stack = []
+    self.string = None
+
     Lexer.__init__(self, data)
 
   def BinaryOperator(self, string=None, **unused_kwargs):

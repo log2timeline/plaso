@@ -191,7 +191,7 @@ class ShellItemsParser(object):
       shell_item_list.copy_from_byte_stream(
           byte_stream, ascii_codepage=codepage)
 
-      for shell_item in shell_item_list.items:
+      for shell_item in iter(shell_item_list.items):
         self._ParseShellItem(parser_mediator, shell_item)
     finally:
       parser_mediator.PopFromParserChain()

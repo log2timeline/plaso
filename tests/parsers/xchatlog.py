@@ -10,7 +10,7 @@ from plaso.parsers import xchatlog
 
 from tests.parsers import test_lib
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'

@@ -14,6 +14,11 @@ from plaso.lib import errors
 class ObjectFilterList(interface.FilterObject):
   """A list of filters with addtional metadata."""
 
+  def __init__(self):
+    """Initializes a filter object."""
+    super(ObjectFilterList, self).__init__()
+    self.filters = None
+
   def _IncludeKeyword(self, loader, node):
     """Callback for YAML add_constructor.
 

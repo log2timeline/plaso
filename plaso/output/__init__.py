@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Imports for the output (module) manager."""
+
 from plaso.output import dynamic
 # TODO: renable after refactor as indicated in:
 # https://github.com/log2timeline/plaso/issues/197

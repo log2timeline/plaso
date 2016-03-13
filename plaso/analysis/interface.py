@@ -2,6 +2,7 @@
 """This file contains the interface for analysis plugins."""
 
 import abc
+from collections import defaultdict
 import logging
 import Queue
 import sys
@@ -16,8 +17,6 @@ try:
   import urllib3
 except ImportError:
   urllib3 = None
-
-from collections import defaultdict
 
 from plaso.analysis import definitions
 from plaso.containers import events

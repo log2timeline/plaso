@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Imports for the plist parser."""
 
 from plaso.parsers.plist_plugins import airport
 from plaso.parsers.plist_plugins import appleaccount

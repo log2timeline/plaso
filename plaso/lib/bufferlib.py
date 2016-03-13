@@ -1,39 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Circular buffer for storing event object."""
 
 
 class CircularBuffer(object):
-  """Simple circular buffer for storing EventObjects."""
+  """Class that defines a circular buffer for storing event objects."""
 
   def __init__(self, size):
-    """Initialize a fixed size circular buffer.
+    """Initializes a circular buffer object.
 
     Args:
-      size: An integer indicating the number of elements in the buffer.
+      size: an integer containing the number of elements in the buffer.
     """
+    super(CircularBuffer, self).__init__()
+    self._index = 0
+    self._list = []
     self._size = size
-    self._index = 0
-    self._list = []
-
-  def __len__(self):
-    """Return the length (the fixed size)."""
-    return self._size
-
-  @property
-  def size(self):
-    return self._size
-
-  def GetCurrent(self):
-    """Return the current item that index points to."""
-    index = self._index - 1
-    if index < 0:
-      return
-
-    return self._list[index]
-
-  def Clear(self):
-    """Clear all elements in the list."""
-    self._list = []
-    self._index = 0
 
   def __iter__(self):
     """Return all elements from the list."""
@@ -43,11 +24,14 @@ class CircularBuffer(object):
       except IndexError:
         pass
 
-  def Flush(self):
-    """Return a generator for all items and clear the buffer."""
-    for item in self:
-      yield item
-    self.Clear()
+  def __len__(self):
+    """Return the length (the fixed size)."""
+    return self._size
+
+  @property
+  def size(self):
+    """The number of elements in the buffer."""
+    return self._size
 
   def Append(self, item):
     """Add an item to the list."""
@@ -59,3 +43,22 @@ class CircularBuffer(object):
     except IndexError:
       self._list.append(item)
     self._index += 1
+
+  def Clear(self):
+    """Clear all elements in the list."""
+    self._list = []
+    self._index = 0
+
+  def Flush(self):
+    """Return a generator for all items and clear the buffer."""
+    for item in self:
+      yield item
+    self.Clear()
+
+  def GetCurrent(self):
+    """Return the current item that index points to."""
+    index = self._index - 1
+    if index < 0:
+      return
+
+    return self._list[index]

@@ -106,6 +106,9 @@ from plaso.lib import py2to3
 from plaso.lib import utils
 
 
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=missing-docstring
+
 class InvalidNumberOfOperands(errors.Error):
   """The number of operands provided to this operator is wrong."""
 

@@ -113,11 +113,13 @@ class DynamicFieldsHelper(object):
     Returns:
       A string containing the value for the inode field.
     """
-    inode = getattr(event_object, u'inode', u'-')
-    if inode == u'-':
-      if hasattr(event_object, u'pathspec') and hasattr(
-          event_object.pathspec, u'image_inode'):
+    inode = event_object.inode
+    if inode is None:
+      if (hasattr(event_object, u'pathspec') and
+          hasattr(event_object.pathspec, u'image_inode')):
         inode = event_object.pathspec.image_inode
+    if inode is None:
+      inode = u'-'
 
     return inode
 
@@ -341,7 +343,10 @@ class DynamicFieldsHelper(object):
     else:
       output_value = getattr(event_object, field_name, u'-')
 
-    if not isinstance(output_value, py2to3.STRING_TYPES):
+    if output_value is None:
+      output_value = u'-'
+
+    elif not isinstance(output_value, py2to3.STRING_TYPES):
       output_value = u'{0!s}'.format(output_value)
 
     return output_value

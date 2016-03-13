@@ -29,7 +29,7 @@ from plaso.storage import time_range as storage_time_range
 from plaso.storage import writer as storage_writer
 from plaso.storage import zip_file as storage_zip_file
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortFrontend(analysis_frontend.AnalysisFrontend):
@@ -67,7 +67,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # Needed due to duplicate removals, if two events
     # are merged then we'll just pick the first inode value.
-    inode = getattr(event_object, u'inode', None)
+    inode = event_object.inode
     if isinstance(inode, py2to3.STRING_TYPES):
       inode_list = inode.split(u';')
       try:

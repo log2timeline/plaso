@@ -11,10 +11,12 @@ class FilterObject(object):
   """The filter interface class."""
 
   def __init__(self):
-    """Initialize the filter object."""
+    """Initializes a filter object."""
     super(FilterObject, self).__init__()
+    self._decision = None
     self._filter_expression = None
     self._matcher = None
+    self._reason = u''
 
   @property
   def fields(self):
@@ -34,14 +36,14 @@ class FilterObject(object):
 
   @property
   def last_decision(self):
-    """The last matching decision or None."""
-    return getattr(self, u'_decision', None)
+    """The last matching decision or None if not set."""
+    return self._decision
 
   @property
   def last_reason(self):
-    """The last reason for the match or None."""
-    if getattr(self, u'_decision', False):
-      return getattr(self, u'_reason', u'')
+    """The last reason for the match or None if not set."""
+    if self._decision:
+      return self._reason
 
   @property
   def limit(self):

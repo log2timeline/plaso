@@ -30,6 +30,8 @@ class DummyObject(object):
 class SerializedDataStream(test_lib.StorageTestCase):
   """Tests for the serialized data stream object."""
 
+  # pylint: disable=protected-access
+
   def testReadAndSeek(self):
     """Tests the ReadEntry and SeekEntryAtOffset functions."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -89,6 +91,8 @@ class SerializedDataStream(test_lib.StorageTestCase):
 class SerializedDataOffsetTable(test_lib.StorageTestCase):
   """Tests for the serialized data offset table object."""
 
+  # pylint: disable=protected-access
+
   def testGetOffset(self):
     """Tests the GetOffset function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -134,6 +138,8 @@ class SerializedDataOffsetTable(test_lib.StorageTestCase):
 class SerializedDataTimestampTable(test_lib.StorageTestCase):
   """Tests for the serialized data offset table object."""
 
+  # pylint: disable=protected-access
+
   def testGetTimestamp(self):
     """Tests the GetTimestamp function."""
     test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
@@ -178,6 +184,8 @@ class SerializedDataTimestampTable(test_lib.StorageTestCase):
 
 class ZIPStorageFile(test_lib.StorageTestCase):
   """Tests for the ZIP-based storage file object."""
+
+  # pylint: disable=protected-access
 
   def testGetSerializedEventObjectOffsetTable(self):
     """Tests the _GetSerializedEventObjectOffsetTable function."""
@@ -246,6 +254,8 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
 class StorageFileTest(test_lib.StorageTestCase):
   """Tests for the ZIP storage file object."""
+
+  # pylint: disable=protected-access
 
   def _CreateTestEventTags(self):
     """Creates the event tags for testing.

@@ -1,6 +1,6 @@
-# File copied from:
+# Original file copied from:
 # http://src.chromium.org/chrome/trunk/tools/depot_tools/pylintrc
-# Date: 2013-06-29.
+
 [MASTER]
 
 # Specify a configuration file.
@@ -9,9 +9,6 @@
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
 #init-hook=
-
-# Profiled execution.
-profile=no
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
@@ -37,19 +34,16 @@ load-plugins=
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
 # CHANGED:
-# C0103: Invalid name ""
-# C0111: Missing docstring
-# C0302: Too many lines in module (N)
 #
-# F0401: Unable to import 'module'
-# pylint acting strangely: plaso/lib/event.py: F0401: 26,0: Unable to import 'google.protobuf'
+# C0103: Invalid name ""
+# C0302: Too many lines in module (N)
 #
 # I0010: Unable to consider inline option ''
 # I0011: Locally disabling WNNNN
 #
 # R0201: Method could be a function
 # R0801: Similar lines in N files
-# R0901: Too many ancestors (8/7)
+# R0901: Too many ancestors (N/7)
 # R0902: Too many instance attributes (N/7)
 # R0903: Too few public methods (N/2)
 # R0904: Too many public methods (N/20)
@@ -60,19 +54,24 @@ load-plugins=
 # R0915: Too many statements (N/50)
 # R0921: Abstract class not referenced
 # R0922: Abstract class is only referenced 1 times
-# W0122: Use of the exec statement
+#
 # W0141: Used builtin function ''
 # W0142: Used * or ** magic
-# W0201: Variables defined initially outside the scope of __init__ (reconsider this, added by Kristinn).
-# W0212: Locally enabling protected-access
 # W0402: Uses of a deprecated module 'string'
 # W0404: 41: Reimport 'XX' (imported line NN)
 # W0511: TODO
-# W0603: Using the global statement
-# W0703: Catch "Exception"
 # W1201: Specify string format arguments as logging function parameters
-# W1202: Use % formatting in logging functions but pass the % parameters as arguments
-disable=C0103,C0111,C0302,F0401,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0122,W0141,W0142,W0201,W0212,W0402,W0404,W0511,W0603,W0703,W1201,W1202
+#
+# Disabled:
+# locally-enabled
+# logging-format-interpolation
+# redefined-variable-type
+# simplifiable-if-statement
+# too-many-boolean-expressions (N/5)
+# too-many-nested-blocks (N/5)
+# ungrouped-imports
+
+disable=C0103,C0302,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0141,W0142,W0402,W0404,W0511,W1201,locally-enabled,logging-format-interpolation,redefined-variable-type,simplifiable-if-statement,too-many-boolean-expressions,too-many-nested-blocks,ungrouped-imports
 
 
 [REPORTS]
@@ -96,10 +95,6 @@ reports=no
 # number of statements analyzed. This is used by the global evaluation report
 # (RP0004).
 evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
-
-# Add a comment according to your evaluation note. This is used by the global
-# evaluation report (RP0004).
-comment=no
 
 
 [VARIABLES]
@@ -125,10 +120,6 @@ ignore-mixin-members=yes
 # List of classes names for which member attributes should not be checked
 # (useful for classes with attributes dynamically set).
 ignored-classes=SQLObject,twisted.internet.reactor,hashlib,google.appengine.api.memcache
-
-# When zope mode is activated, add a predefined set of Zope acquired attributes
-# to generated-members.
-zope=no
 
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E0201 when accessed. Python regular
@@ -169,9 +160,6 @@ indent-string='  '
 
 
 [BASIC]
-
-# Required attributes for module, separated by a comma
-required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
 bad-functions=map,filter,apply,input
@@ -250,10 +238,6 @@ max-public-methods=20
 
 
 [CLASSES]
-
-# List of interface methods to ignore, separated by a comma. This is used for
-# instance to not check methods defines in Zope's Interface base class.
-ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions,queryDescriptionFor,getBases,getDescriptionFor,getDoc,getName,getTaggedValue,getTaggedValueTags,isEqualOrExtendedBy,setTaggedValue,isImplementedByInstancesOf,adaptWith,is_implemented_by
 
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp

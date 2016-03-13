@@ -31,13 +31,30 @@ class EventObject(interface.AttributeContainer):
   # attributes that should not be used during evaluation of whether two
   # event objects are the same.
   COMPARE_EXCLUDE = frozenset([
-      u'timestamp', u'inode', u'pathspec', u'filename', u'uuid',
-      u'data_type', u'display_name', u'store_number', u'store_index', u'tag'])
+      u'data_type',
+      u'display_name',
+      u'filename',
+      u'inode',
+      u'pathspec',
+      u'store_index',
+      u'store_number',
+      u'tag',
+      u'timestamp',
+      u'uuid'])
 
   def __init__(self):
-    """Initializes the event object."""
+    """Initializes an event object."""
     super(EventObject, self).__init__()
     self.data_type = self.DATA_TYPE
+    self.display_name = None
+    self.filename = None
+    self.inode = None
+    self.offset = None
+    self.pathspec = None
+    self.store_index = None
+    self.store_number = None
+    self.tag = None
+    self.timestamp = None
     self.uuid = u'{0:s}'.format(uuid.uuid4().get_hex())
 
   def __eq__(self, event_object):
@@ -90,11 +107,11 @@ class EventObject(interface.AttributeContainer):
     # If we are dealing with a filesystem event the inode number is
     # the attribute that really matters.
     if self.data_type.startswith(u'fs:'):
-      inode = getattr(self, u'inode', None)
+      inode = self.inode
       if inode is not None:
         inode = utils.GetUnicodeString(inode)
 
-      event_object_inode = getattr(event_object, u'inode', None)
+      event_object_inode = event_object.inode
       if event_object_inode is not None:
         event_object_inode = utils.GetUnicodeString(event_object_inode)
 
@@ -144,8 +161,8 @@ class EventObject(interface.AttributeContainer):
     identity = basic + [x for pair in zip(fields, attributes) for x in pair]
 
     if parser == u'filestat':
-      inode = getattr(self, u'inode', u'a')
-      if inode == u'a':
+      inode = self.inode
+      if not self.inode:
         inode = u'_{0:s}'.format(uuid.uuid4())
       identity.append(u'inode')
       identity.append(inode)

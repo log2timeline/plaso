@@ -4,11 +4,16 @@
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import eventdata
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class OutputMediator(object):
-  """Class that implements the output mediator."""
+  """Class that implements the output mediator.
+
+  Attributes:
+    fields_filter: a filter object (instance of FilterObject) to
+                   indicate which fields should be outputed.
+  """
 
   def __init__(
       self, formatter_mediator, fields_filter=None,
@@ -19,8 +24,7 @@ class OutputMediator(object):
       formatter_mediator: the formatter mediator object (instance of
                           FormatterMediator).
       fields_filter: optional filter object (instance of FilterObject) to
-                     indicate which fields should be outputed. The default
-                     is None.
+                     indicate which fields should be outputed.
       preferred_encoding: optional preferred encoding.
       timezone: optional timezone.
     """
