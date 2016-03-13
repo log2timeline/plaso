@@ -113,7 +113,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     volume_device_paths = []
     path = u''
 
-    for volume_information in scca_file.volumes:
+    for volume_information in iter(scca_file.volumes):
       volume_serial_number = volume_information.serial_number
       volume_device_path = volume_information.device_path
 
@@ -127,7 +127,7 @@ class WinPrefetchParser(interface.FileObjectParser):
             parser_mediator.GetFilename())
         parser_mediator.ProduceEvent(event_object)
 
-      for filename in scca_file.filenames:
+      for filename in iter(scca_file.filenames):
         if not filename:
           continue
 

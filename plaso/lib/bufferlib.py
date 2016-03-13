@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Circular buffer for storing event object."""
+"""Circular buffer for storing event objects."""
 
 
 class CircularBuffer(object):

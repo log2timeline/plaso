@@ -22,7 +22,7 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import interface
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 # Pylint complains about some functions not being implemented that shouldn't
 # be since they need to be implemented by children.
@@ -67,7 +67,7 @@ class SlowLexicalTextParser(
     lexer.SelfFeederMixIn.__init__(self)
     interface.FileObjectParser.__init__(self)
     self._file_verified = False
-    self.line_ready = False
+
     self.attributes = {
         u'body': u'',
         u'iyear': 0,
@@ -77,7 +77,10 @@ class SlowLexicalTextParser(
         u'hostname': u'',
         u'username': u'',
     }
+    self.entry_offset = None
+    self.line_ready = False
     self.local_zone = local_zone
+    self.next_entry_offset = 0
 
   def ClearValues(self):
     """Clears all the values inside the attributes dict.
@@ -169,7 +172,7 @@ class SlowLexicalTextParser(
       _ = self.NextToken()
 
       if self.state == u'INITIAL':
-        self.entry_offset = getattr(self, u'next_entry_offset', 0)
+        self.entry_offset = self.next_entry_offset
         self.next_entry_offset = file_object.tell() - len(self.buffer)
 
       if not self._file_verified and self.error >= self.MAX_LINES * 2:

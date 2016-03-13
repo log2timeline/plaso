@@ -16,7 +16,7 @@ import tempfile
 try:
   import ConfigParser as configparser
 except ImportError:
-  import configparser
+  import configparser  # pylint: disable=import-error
 
 
 if sys.version_info[0] < 3:

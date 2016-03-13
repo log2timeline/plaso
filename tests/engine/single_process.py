@@ -18,6 +18,8 @@ from tests.engine import test_lib
 class SingleProcessEngineTest(test_lib.EngineTestCase):
   """Tests for the single process engine object."""
 
+  # pylint: disable=protected-access
+
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._test_engine = single_process.SingleProcessEngine(

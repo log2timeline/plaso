@@ -48,6 +48,7 @@ class EventObject(interface.AttributeContainer):
     self.data_type = self.DATA_TYPE
     self.display_name = None
     self.filename = None
+    self.hostname = None
     self.inode = None
     self.offset = None
     self.pathspec = None
@@ -120,15 +121,15 @@ class EventObject(interface.AttributeContainer):
     return True
 
   def EqualityString(self):
-    """Return a string describing the event object in terms of object equality.
+    """Returns a string describing the event object in terms of object equality.
 
     The details of this function must match the logic of __eq__. EqualityStrings
     of two event objects should be the same if and only if the event objects are
     equal as described in __eq__.
 
     Returns:
-      String: will match another EventObject's Equality String if and only if
-              the EventObjects are equal
+      A string representation of the event object that can be used for equality
+      comparison.
     """
     attribute_names = set(self.__dict__.keys())
     fields = sorted(list(attribute_names.difference(self.COMPARE_EXCLUDE)))

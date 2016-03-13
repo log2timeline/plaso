@@ -24,9 +24,11 @@ from tests.frontend import test_lib
 
 
 class PsortTestEvent(events.EventObject):
+  """Test event object."""
   DATA_TYPE = u'test:event:psort'
 
   def __init__(self, timestamp):
+    """Initializes an event object."""
     super(PsortTestEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = u'Last Written'
@@ -40,6 +42,7 @@ class PsortTestEvent(events.EventObject):
 
 
 class PsortTestEventFormatter(formatters_interface.EventFormatter):
+  """Test event formatter."""
   DATA_TYPE = u'test:event:psort'
 
   FORMAT_STRING = u'My text goes along: {some} lines'
@@ -97,20 +100,36 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
     self.store = store
 
   def Append(self, event_object):
+    """Appends an event object.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
     self._buffer_dict[event_object.EqualityString()] = event_object
     self.record_count += 1
 
+  def End(self):
+    """Closes the buffer.
+
+    Buffered event objects written using the output module, an optional
+    footer is written and the output is closed.
+    """
+    pass
+
   def Flush(self):
+    """Flushes the buffer.
+
+    Buffered event objects written using the output module.
+    """
     for event_object_key in self._buffer_dict:
       self._output_module.WriteEventBody(self._buffer_dict[event_object_key])
     self._buffer_dict = {}
 
-  def End(self):
-    pass
-
 
 class PsortFrontendTest(test_lib.FrontendTestCase):
   """Tests for the psort front-end."""
+
+  # pylint: disable=protected-access
 
   def setUp(self):
     """Makes preparations before running an individual test."""
