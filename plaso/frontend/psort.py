@@ -12,7 +12,7 @@ from plaso import output   # pylint: disable=unused-import
 from plaso.analysis import manager as analysis_manager
 from plaso.analysis import mediator as analysis_mediator
 from plaso.engine import knowledge_base
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
 from plaso.frontend import analysis_frontend
 from plaso.lib import bufferlib
@@ -168,7 +168,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       else:
         analysis_plugin_output_queue = analysis_report_incoming_queue
 
-      analysis_report_queue_producer = queue.ItemQueueProducer(
+      analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
           analysis_plugin_output_queue)
 
       completion_event = multiprocessing.Event()
@@ -274,7 +274,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         input_queue = multi_process.MultiProcessingQueue(timeout=5)
         analysis_plugin_input_queues.append(input_queue)
         output_queue = input_queue
-      event_producers.append(queue.ItemQueueProducer(output_queue))
+      event_producers.append(plaso_queue.ItemQueueProducer(output_queue))
 
     analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
         analysis_plugins_list, analysis_plugin_input_queues)

@@ -10,7 +10,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
 from plaso.engine import knowledge_base
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -18,7 +18,7 @@ from plaso.parsers import interface
 from plaso.parsers import mediator
 
 
-class TestItemQueueConsumer(queue.ItemQueueConsumer):
+class TestItemQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements a list event object queue consumer."""
 
   def __init__(self, event_queue):
@@ -105,12 +105,12 @@ class ParserTestCase(unittest.TestCase):
     Returns:
       A parser mediator object (instance of ParserMediator).
     """
-    event_queue_producer = queue.ItemQueueProducer(event_queue)
-    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
+    event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
+    parse_error_queue_producer = plaso_queue.ItemQueueProducer(parse_error_queue)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
+      for identifier, value in iter(knowledge_base_values):
         knowledge_base_object.SetValue(identifier, value)
 
     new_mediator = mediator.ParserMediator(

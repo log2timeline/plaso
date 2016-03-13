@@ -16,7 +16,7 @@ import pysigscan
 from plaso.engine import collector
 from plaso.engine import knowledge_base
 from plaso.engine import utils as engine_utils
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.frontend import frontend
 from plaso.hashers import manager as hashers_manager
@@ -520,6 +520,7 @@ class FileSaver(object):
         logging.error((
             u'[skipping] unable to calculate MD5 of file: {0:s} '
             u'with error: {1:s}').format(path, exception))
+        return
       finally:
         file_object.close()
 
@@ -548,7 +549,7 @@ class FileSaver(object):
       file_object.close()
 
 
-class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
+class ImageExtractorQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements an image extractor queue consumer."""
 
   def __init__(

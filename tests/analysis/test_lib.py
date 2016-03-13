@@ -11,12 +11,12 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.analysis import mediator
 from plaso.containers import reports
 from plaso.engine import knowledge_base
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.parsers import mediator as parsers_mediator
 
 
-class TestAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
+class TestAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements a test analysis report queue consumer."""
 
   def __init__(self, queue_object):
@@ -97,7 +97,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
       An event object queue object (instance of Queue).
     """
     event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = queue.ItemQueueProducer(event_queue)
+    event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
 
@@ -130,7 +130,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
     analysis_report_queue = single_process.SingleProcessQueue()
     analysis_report_queue_consumer = TestAnalysisReportQueueConsumer(
         analysis_report_queue)
-    analysis_report_queue_producer = queue.ItemQueueProducer(
+    analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
         analysis_report_queue)
 
     analysis_mediator = mediator.AnalysisMediator(
@@ -152,7 +152,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
+      for identifier, value in iter(knowledge_base_values):
         knowledge_base_object.SetValue(identifier, value)
 
     return knowledge_base_object
