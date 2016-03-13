@@ -106,7 +106,8 @@ class ParserTestCase(unittest.TestCase):
       A parser mediator object (instance of ParserMediator).
     """
     event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    parse_error_queue_producer = plaso_queue.ItemQueueProducer(parse_error_queue)
+    parse_error_queue_producer = plaso_queue.ItemQueueProducer(
+        parse_error_queue)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:

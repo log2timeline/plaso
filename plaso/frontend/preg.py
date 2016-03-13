@@ -478,7 +478,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
-    parse_error_queue_producer = plaso_queue.ItemQueueProducer(parse_error_queue)
+    parse_error_queue_producer = plaso_queue.ItemQueueProducer(
+        parse_error_queue)
 
     return parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue_producer,
