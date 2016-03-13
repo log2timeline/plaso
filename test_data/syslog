@@ -9,7 +9,6 @@ MMM 22 07:54:32 myhostname.myhost.com anacron[29782]: Normal exit (1 job run)
 Dec 18 17:54:32 myhostname.myhost.com anacron[1234]: No true exit can exist (124 job run)
 Mar 23 23:01:18 myhostname.myhost.com somrandomexe[1915]: This syslog message is brought to you by me (and not the other guy)
 Mar 23 23:01:18.123 myhostname.myhost.com somrandomexe[19]: This syslog message has a fractional value for seconds.
-Mar 23 Wrong line that should not be able to get through
 Dec 31 17:54:32 myhostname.myhost.com anacron[1234]: Another one just like this (124 job run)
 Nov 18 01:15:20 myhostname.myhost.com aprocess[101001]: This is a multi-line message that screws up
 	many syslog parsers.
