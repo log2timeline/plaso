@@ -177,6 +177,41 @@ class ParserMediator(object):
 
     return datetime_object.year
 
+
+  def _GetMaximumYearFromFileEntry(self):
+    """Retrieves the maximum (most recent) year from the file entry.
+
+    This function uses the modification time if available otherwise the change
+    time (metadata last modification time) is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    file_entry = self.GetFileEntry()
+    stat_object = file_entry.GetStat()
+
+    posix_time = getattr(stat_object, u'mtime', None)
+    if posix_time is None:
+      posix_time = getattr(stat_object, u'ctime', None)
+
+    if posix_time is None:
+      logging.warning(
+        u'Unable to determine modification year from file stat information.')
+      return
+
+    try:
+      datetime_object = datetime.datetime.fromtimestamp(
+        posix_time, self._knowledge_base.timezone)
+
+    except ValueError as exception:
+      logging.error((
+          u'Unable to determine creation year from file stat '
+          u'information '
+          u'with error: {0:s}').format(exception))
+      return
+
+    return datetime_object.year
+
   def AddEventAttribute(self, attribute_name, attribute_value):
     """Add an attribute that will be set on all events produced.
 
@@ -275,6 +310,22 @@ class ParserMediator(object):
       # TODO: Find a decent way to actually calculate the correct year
       # instead of relying on stats object.
       year = self._GetYearFromFileEntry()
+
+    if not year:
+      year = timelib.GetCurrentYear()
+
+    return year
+
+  def GetMaximumYear(self):
+    """Retrieves the maximum (newest) year for an event from a file.
+
+    This function tries to determine the year based on the file entry metadata,
+    if that fails the current year is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    year = self._GetMaximumYearFromFileEntry()
 
     if not year:
       year = timelib.GetCurrentYear()

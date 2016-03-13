@@ -26,7 +26,7 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
       self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 7)
+    self.assertEqual(len(event_objects), 8)
 
   def testParseOSX(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
@@ -47,10 +47,7 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
        self._parser, test_file, knowledge_base_values=knowledge_base_values)
    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-   for event_object in event_objects:
-     print event_object.body
-
-   self.assertEqual(len(event_objects), 11)
+   self.assertEqual(len(event_objects), 13)
 
    event_timestamp = timelib.Timestamp.CopyToIsoFormat(
       event_objects[0].timestamp)
@@ -72,11 +69,11 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
    self.assertEqual(event_timestamp, u'2013-03-23T23:01:18+00:00')
 
    expected_msg = (
-       u'[aprocess, pid: 101001] This is a multi-line message that screws up'
-       u'many syslog parsers.')
+       u'[aprocess, pid: 10100] This is a multi-line message that screws up'
+       u'\tmany syslog parsers.')
    expected_msg_short = (
-       u'[aprocess, pid: 101001] This is a multi-line message that screws up'
-       u'many sys...')
+       u'[aprocess, pid: 10100] This is a multi-line message that screws up'
+       u'\tmany syslo...')
    self._TestGetMessageStrings(
        event_objects[11], expected_msg, expected_msg_short)
 

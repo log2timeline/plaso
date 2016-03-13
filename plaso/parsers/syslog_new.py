@@ -29,12 +29,13 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
     u'process_name': pyparsing.Word(pyparsing.alphanums + u'.').setResultsName(
         u'process_name'),
     u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
+    u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
+        u'facility'),
     u'message': pyparsing.Regex(
         '.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
         setResultsName(u'message'),
-    u'comment_message': (
-        pyparsing.Literal(u'---') +
-        pyparsing.SkipTo(u'---\n', include=True)).setResultsName(u'message')
+    u'comment_message': pyparsing.SkipTo(u' ---').setResultsName(
+        u'message')
   }
   _pyparsing_components[u'date'] = (
       _pyparsing_components[u'month'] +
@@ -46,29 +47,33 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
           _pyparsing_components[u'fractional_seconds']))
 
 
-  DEFAULT_GRAMMAR = (
+  LINE_GRAMMAR = (
       _pyparsing_components[u'date'] +
       _pyparsing_components[u'hostname'] +
       _pyparsing_components[u'process_name'] +
       pyparsing.Optional(
-          pyparsing.Suppress(u'[') +
-          _pyparsing_components[u'pid'] + pyparsing.Suppress(u']')) +
+          pyparsing.Suppress(u'[') + _pyparsing_components[u'pid'] +
+          pyparsing.Suppress(u']')) +
       pyparsing.Optional(
-        pyparsing.Suppress(u'<') +
-        pyparsing.Word(pyparsing.alphanums) + pyparsing.Suppress(u'>')) +
+          pyparsing.Suppress(u'<') + _pyparsing_components[u'facility'] +
+          pyparsing.Suppress(u'>')) +
       pyparsing.Optional(pyparsing.Suppress(u':')) +
       _pyparsing_components[u'message'] + pyparsing.lineEnd())
 
-  SYSLOG_COMMENT = (_pyparsing_components[u'date'] + pyparsing.Suppress(u':') +
-                    _pyparsing_components[u'comment_message'])
+  SYSLOG_COMMENT = (
+      _pyparsing_components[u'date'] + pyparsing.Suppress(u':') +
+      pyparsing.Suppress(u'---') + _pyparsing_components[u'comment_message'] +
+      pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
-  LINE_STRUCTURES = [(u'syslog_line', DEFAULT_GRAMMAR),
-                     (u'syslog_comment', SYSLOG_COMMENT)]
+  LINE_STRUCTURES = [
+      (u'syslog_line', LINE_GRAMMAR),
+      (u'syslog_comment', SYSLOG_COMMENT)]
 
   def __init__(self):
     """Initialize the parser."""
     super(NewSyslogParser, self).__init__()
     self._year_use = 0
+    self._maximum_year = 0
     self._last_month = 0
 
   def _UpdateYear(self, parser_mediator, month):
@@ -77,11 +82,20 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
       month: The month observed by the parser, as a number.
     """
     if not self._year_use:
-      self.year_use = parser_mediator.GetEstimatedYear()
+      self._year_use = parser_mediator.GetEstimatedYear()
+    if not self._maximum_year:
+      self._maximum_year = parser_mediator.GetMaximumYear()
 
     if not self._last_month:
       self._last_month = month
       return
+
+    # Some syslog daemons allow out-of-order sequences, so allow some leeway
+    # to not cause Apr->May->Apr to cause the year to increment.
+    if self._last_month > (month + 1):
+      if not self._year_use == self._maximum_year:
+        self._year_use += 1
+    self._last_month = month
 
 
   def VerifyStructure(self, parser_mediator, lines):
@@ -106,10 +120,6 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
     """
-    # No events for syslog comments.
-    if key == u'syslog_comment':
-      return
-
     month = timelib.MONTH_DICT.get(structure.month.lower(), None)
     if not month:
       parser_mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(
@@ -121,10 +131,16 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
         hour=structure.hour, minutes=structure.minute,
         seconds=structure.second)
 
-    attributes = {u'hostname': structure.hostname,
-                  u'reporter': structure.process_name,
-                  u'pid': structure.pid,
-                  u'body': structure.message}
+    if key == u'syslog_comment':
+      attributes = {u'hostname': u'',
+                    u'reporter': u'',
+                    u'pid': u'',
+                    u'body': structure.message}
+    else:
+      attributes = {u'hostname': structure.hostname,
+                    u'reporter': structure.process_name,
+                    u'pid': structure.pid,
+                    u'body': structure.message}
 
     event = syslog.SyslogLineEvent(timestamp, 0, attributes)
     parser_mediator.ProduceEvent(event)
