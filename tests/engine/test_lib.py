@@ -4,7 +4,7 @@
 import os
 import unittest
 
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.storage import writer as storage_writer
 
 
@@ -31,7 +31,7 @@ class EngineTestCase(unittest.TestCase):
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
 
-class TestQueueConsumer(queue.ItemQueueConsumer):
+class TestQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements the test queue consumer.
 
      The queue consumer subscribes to updates on the queue.

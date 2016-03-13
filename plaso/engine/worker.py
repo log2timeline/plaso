@@ -15,7 +15,7 @@ import pysigscan
 
 from plaso.engine import collector
 from plaso.engine import profiler
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.hashers import manager as hashers_manager
@@ -23,7 +23,7 @@ from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
 
 
-class BaseEventExtractionWorker(queue.ItemQueueConsumer):
+class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
   """Class that defines the event extraction worker base.
 
   This class is designed to watch a queue for path specifications of files

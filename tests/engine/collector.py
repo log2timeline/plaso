@@ -15,14 +15,14 @@ from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import collector
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 
 from tests import test_lib as shared_test_lib
 
 
-class TestCollectorQueueConsumer(queue.ItemQueueConsumer):
+class TestCollectorQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements a test collector queue consumer."""
 
   def __init__(self, queue_object):

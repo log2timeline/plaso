@@ -10,11 +10,11 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.lib import definitions
 
 
-class Collector(queue.ItemQueueProducer):
+class Collector(plaso_queue.ItemQueueProducer):
   """Class that implements a collector object."""
 
   def __init__(self, path_spec_queue, resolver_context=None):
@@ -164,7 +164,7 @@ class Collector(queue.ItemQueueProducer):
     super(Collector, self).SignalAbort()
 
 
-class FileSystemCollector(queue.ItemQueueProducer):
+class FileSystemCollector(plaso_queue.ItemQueueProducer):
   """Class that implements a file system collector object."""
 
   def __init__(self, path_spec_queue, resolver_context=None):

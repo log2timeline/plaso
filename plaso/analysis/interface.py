@@ -22,12 +22,12 @@ from collections import defaultdict
 from plaso.analysis import definitions
 from plaso.containers import events
 from plaso.containers import reports
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.lib import timelib
 from plaso.lib import errors
 
 
-class AnalysisPlugin(queue.ItemQueueConsumer):
+class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
   """Class that implements the analysis plugin object interface."""
 
   # The URLS should contain a list of URLs with additional information about
