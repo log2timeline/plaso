@@ -110,7 +110,7 @@ class ParserTestCase(unittest.TestCase):
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in iter(knowledge_base_values):
+      for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
     new_mediator = mediator.ParserMediator(
