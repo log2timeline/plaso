@@ -7,7 +7,7 @@ import unittest
 import zipfile
 
 from plaso.containers import events
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
@@ -686,7 +686,7 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
     # A timeout is used to prevent the multi processing queue to close and
     # stop blocking the current process.
     test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
-    test_queue_producer = queue.ItemQueueProducer(test_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(test_queue)
     test_queue_producer.ProduceItems(event_objects)
 
     test_queue_producer.SignalAbort()
