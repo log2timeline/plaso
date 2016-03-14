@@ -34,8 +34,7 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
     """Create a test event object.
 
     Args:
-      event_dict: A hash containing attributes of an event to add to the
-                     queue.
+      event_dict: A dictionary containing attributes of an event to create.
 
     Returns:
       An EventObject to test with.
