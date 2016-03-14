@@ -8,7 +8,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import file_hashes
 from plaso.containers import events
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 
 from tests.analysis import test_lib
@@ -34,8 +34,7 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
     """Create a test event object.
 
     Args:
-      service_event: A hash containing attributes of an event to add to the
-                     queue.
+      event_dict: A dictionary containing attributes of an event to create.
 
     Returns:
       An EventObject to test with.
@@ -52,7 +51,7 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
     event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     event_objects = [
         self._CreateTestEventObject(event_dict)
         for event_dict in self._EVENT_DICTS]

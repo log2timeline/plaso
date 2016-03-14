@@ -7,7 +7,7 @@ import unittest
 
 from plaso.analysis import chrome_extension
 from plaso.containers import events
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 
 from tests.analysis import test_lib
@@ -97,7 +97,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     test_queue_producer.ProduceItems([
         self._CreateTestEventObject(path) for path in self.MAC_PATHS])
 
@@ -141,7 +141,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     test_queue_producer.ProduceItems([
         self._CreateTestEventObject(path) for path in self.WIN_PATHS])
 

@@ -8,7 +8,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
 from plaso.containers import windows_events
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.parsers import winreg
 
@@ -54,7 +54,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     events = [self._CreateTestEventObject(service_event)
               for service_event
               in self.SERVICE_EVENTS]
