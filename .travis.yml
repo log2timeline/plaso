@@ -1,17 +1,18 @@
+sudo: required
+dist: trusty
 language: python
 python:
   - "2.7"
 before_install:
   - sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list
-  - if test `uname -s` = 'Linux'; then sudo add-apt-repository ppa:gift/dev -y && sudo apt-get update -q && sudo apt-get install ipython libbde-python libesedb-python libevt-python libevtx-python libewf-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libscca-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python python-artifacts python-bencode python-binplist python-construct python-coverage python-coveralls python-dateutil python-dfvfs python-dfwinreg python-docopt python-dpkt python-hachoir-core python-hachoir-metadata python-hachoir-parser python-mock python-pefile python-protobuf python-psutil python-pyparsing python-pytsk3 python-requests python-six python-xlsxwriter python-yaml python-tz python-zmq; fi
+  - if test `uname -s` = 'Linux'; then sudo add-apt-repository ppa:gift/dev -y && sudo apt-get update -q && sudo apt-get install -y ipython libbde-python libesedb-python libevt-python libevtx-python libewf-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libscca-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python python-artifacts python-bencode python-binplist python-construct python-coverage python-coveralls python-dateutil python-dfvfs python-dfwinreg python-docopt python-dpkt python-hachoir-core python-hachoir-metadata python-hachoir-parser python-mock python-pefile python-protobuf python-psutil python-pyparsing python-pytsk3 python-requests python-six python-xlsxwriter python-yaml python-tz python-zmq; fi
   - sudo pip install ipython --upgrade
 script:
-  - ./run_tests.py
+  - if test `uname -s` = 'Linux' && test `python -V 2>&1 | sed 's/Python \([0-9][0-9]*\)[.][0-9][0-9]*[.][0-9][0-9]*.*/\1/'` = '2'; then coverage run --source=dfwinreg --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py; else ./run_tests.py; fi
   - ./setup.py build
   - ./setup.py sdist
   - ./setup.py bdist
   - mkdir -p ${PWD}/tmp/lib/python2.7/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python2.7/site-packages/ ./setup.py install --prefix=${PWD}/tmp/
-  - coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
   - PYTHONPATH=. ./tests/end-to-end.py --debug -c config/end-to-end.ini
 after_success:
-  - coveralls --verbose
+  - if test `uname -s` = 'Linux' && test `python -V 2>&1 | sed 's/Python \([0-9][0-9]*\)[.][0-9][0-9]*[.][0-9][0-9]*.*/\1/'` = '2'; then coveralls --verbose; fi
