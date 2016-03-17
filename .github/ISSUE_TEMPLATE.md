@@ -1,4 +1,4 @@
-**Plaso version :**
+**Plaso version:**
 
 For example, 1.4.0 Release
 
