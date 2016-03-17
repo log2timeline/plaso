@@ -11,6 +11,7 @@ Not the OS of the image/files you're trying to analyze.
 eg. Install from [GiFT][https://launchpad.net/~gift], built using [l2devtools][https://github.com/log2timeline/l2tdevtools], or some other method.
 
 **Description of problem:**
+
 Please make sure you've checked the [troubleshooting guide][https://github.com/log2timeline/plaso/wiki/Troubleshooting].
 
 **Debug output/tracebacks:**
