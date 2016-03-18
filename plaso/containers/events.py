@@ -23,6 +23,24 @@ class EventObject(interface.AttributeContainer):
 
   Attributes:
     data_type: a string containing the event data type indicator.
+    display_name: a string containing a display friendly version
+                  of the path specification.
+    filename: a string containing the name of the file related to
+              the event or None.
+    hostname: a string containing the name of the host related to
+              the event or None.
+    inode: an integer containing the inode of the file related to
+              the event or None.
+    offset: an integer containing the offset of the event data or None.
+    pathspec: a path specification (instance of dfvfs.PathSpect) of the file
+              related to the event or None.
+    store_index: an integer containing the store index of the event
+                 within the storage file.
+    store_number: an integer containing the store number of the event
+                  within the storage file.
+    tag: an event tag (instance of EventTag) or None.
+    timestamp: an integer containing a timestamp of the number
+               of micro seconds since January 1, 1970, 00:00:00 UTC.
     uuid: a string containing a unique identifier (UUID).
   """
   DATA_TYPE = None

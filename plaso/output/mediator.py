@@ -12,7 +12,7 @@ class OutputMediator(object):
 
   Attributes:
     fields_filter: a filter object (instance of FilterObject) to
-                   indicate which fields should be outputed.
+                   indicate which fields should be output.
   """
 
   def __init__(
@@ -24,7 +24,7 @@ class OutputMediator(object):
       formatter_mediator: the formatter mediator object (instance of
                           FormatterMediator).
       fields_filter: optional filter object (instance of FilterObject) to
-                     indicate which fields should be outputed.
+                     indicate which fields should be output.
       preferred_encoding: optional preferred encoding.
       timezone: optional timezone.
     """

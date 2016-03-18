@@ -70,7 +70,7 @@ class EventBuffer(object):
   def End(self):
     """Closes the buffer.
 
-    Buffered event objects written using the output module, an optional
+    Buffered event objects aree written using the output module, an optional
     footer is written and the output is closed.
     """
     self.Flush()
@@ -82,7 +82,7 @@ class EventBuffer(object):
   def Flush(self):
     """Flushes the buffer.
 
-    Buffered event objects written using the output module.
+    Buffered event objects are written using the output module.
     """
     if not self._buffer_dict:
       return

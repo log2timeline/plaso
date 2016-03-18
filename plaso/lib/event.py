@@ -13,6 +13,10 @@ class PreprocessObject(object):
   Attributes:
     collection_information: a dictionary containing the collection information
                             attributes.
+    counter: the parsers counter (instance of collections.Counter) or None.
+    plugin_counter: the parser plugins counter (instance of
+                    collections.Counter) or None.
+    zone: the timezone (instance of pytz.ZoneInfo).
   """
 
   def __init__(self):

@@ -745,7 +745,7 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
           u'path spec: {0:s}').format(path_spec.comparable))
 
     # All exceptions need to be caught here to prevent the worker
-    # form being killed by an uncaught exception.
+    # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception while processing path spec: {0:s}.'.format(

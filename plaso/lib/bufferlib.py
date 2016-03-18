@@ -45,18 +45,18 @@ class CircularBuffer(object):
     self._index += 1
 
   def Clear(self):
-    """Clear all elements in the list."""
-    self._list = []
+    """Removes all elements from the list."""
     self._index = 0
+    self._list = []
 
   def Flush(self):
-    """Return a generator for all items and clear the buffer."""
+    """Returns a generator for all items and clear the buffer."""
     for item in self:
       yield item
     self.Clear()
 
   def GetCurrent(self):
-    """Return the current item that index points to."""
+    """Returns the current item that index points to."""
     index = self._index - 1
     if index < 0:
       return

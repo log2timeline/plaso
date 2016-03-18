@@ -111,7 +111,7 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
   def End(self):
     """Closes the buffer.
 
-    Buffered event objects written using the output module, an optional
+    Buffered event objects are written using the output module, an optional
     footer is written and the output is closed.
     """
     pass
@@ -119,7 +119,7 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
   def Flush(self):
     """Flushes the buffer.
 
-    Buffered event objects written using the output module.
+    Buffered event objects are written using the output module.
     """
     for event_object_key in self._buffer_dict:
       self._output_module.WriteEventBody(self._buffer_dict[event_object_key])
