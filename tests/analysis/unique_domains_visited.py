@@ -6,7 +6,7 @@ import unittest
 
 from plaso.analysis import unique_domains_visited
 from plaso.containers import events
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.lib import timelib
 
@@ -58,7 +58,7 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     event_objects = [
         self._CreateTestEventObject(test_event)
         for test_event in self._EVENT_DICTS]

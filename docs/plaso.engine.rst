@@ -28,6 +28,14 @@ plaso.engine.knowledge_base module
     :undoc-members:
     :show-inheritance:
 
+plaso.engine.plaso_queue module
+-------------------------------
+
+.. automodule:: plaso.engine.plaso_queue
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.processing_status module
 -------------------------------------
 
@@ -40,14 +48,6 @@ plaso.engine.profiler module
 ----------------------------
 
 .. automodule:: plaso.engine.profiler
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.engine.queue module
--------------------------
-
-.. automodule:: plaso.engine.queue
     :members:
     :undoc-members:
     :show-inheritance:

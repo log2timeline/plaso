@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.analysis import mediator
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 
 from tests.analysis import test_lib
@@ -52,7 +52,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_report_queue = single_process.SingleProcessQueue()
-    analysis_report_queue_producer = queue.ItemQueueProducer(
+    analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
         analysis_report_queue)
 
     self._analysis_mediator = mediator.AnalysisMediator(

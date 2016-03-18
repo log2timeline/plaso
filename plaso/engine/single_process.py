@@ -11,7 +11,7 @@ from dfvfs.resolver import context
 
 from plaso.engine import collector
 from plaso.engine import engine
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -466,7 +466,7 @@ class SingleProcessFileSystemCollector(collector.FileSystemCollector):
     self._extraction_worker = extraction_worker
 
 
-class SingleProcessItemQueueProducer(queue.ItemQueueProducer):
+class SingleProcessItemQueueProducer(plaso_queue.ItemQueueProducer):
   """Class that implements a single process item queue producer."""
 
   def __init__(self, queue_object):
@@ -493,7 +493,7 @@ class SingleProcessItemQueueProducer(queue.ItemQueueProducer):
     self._storage_writer = storage_writer
 
 
-class SingleProcessQueue(queue.Queue):
+class SingleProcessQueue(plaso_queue.Queue):
   """Single process queue."""
 
   def __init__(self, maximum_number_of_queued_items=0):

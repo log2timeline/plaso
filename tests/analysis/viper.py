@@ -8,7 +8,7 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import viper
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.lib import timelib
 from plaso.parsers import pe
@@ -98,7 +98,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     events = [self._CreateTestEventObject(test_event)
               for test_event
               in self.TEST_EVENTS]

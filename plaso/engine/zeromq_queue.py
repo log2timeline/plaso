@@ -10,11 +10,11 @@ import time
 
 import zmq
 
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.lib import errors
 
 
-class ZeroMQQueue(queue.Queue):
+class ZeroMQQueue(plaso_queue.Queue):
   """Class that defines an interfaces for ZeroMQ backed Plaso queues.
 
   Attributes:
@@ -275,7 +275,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
         logging.error(
             u'ZMQ syscall interrupted in {0:s}. Queue aborting'.format(
                 self.name))
-        return queue.QueueAbort()
+        return plaso_queue.QueueAbort()
       else:
         raise
     except KeyboardInterrupt:
@@ -369,7 +369,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
         logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
-        return queue.QueueAbort()
+        return plaso_queue.QueueAbort()
       else:
         raise
     except KeyboardInterrupt:
@@ -467,7 +467,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         logging.error(
             u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
                 self.name))
-        return queue.QueueAbort()
+        return plaso_queue.QueueAbort()
       else:
         raise
     except KeyboardInterrupt:
@@ -649,7 +649,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         else:
           item = source_queue.get(True, self._buffer_timeout_seconds)
       except Queue.Empty:
-        item = queue.QueueAbort()
+        item = plaso_queue.QueueAbort()
 
       try:
         self._zmq_socket.send_pyobj(item)
@@ -848,7 +848,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
         item = socket.recv_pyobj()
       except zmq.error.Again:
         # No item received within timeout.
-        item = queue.QueueAbort()
+        item = plaso_queue.QueueAbort()
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
           logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
@@ -891,11 +891,11 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     try:
       return self._queue.get(timeout=self._buffer_timeout_seconds)
     except Queue.Empty:
-      return queue.QueueAbort()
+      return plaso_queue.QueueAbort()
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
         logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
-        return queue.QueueAbort()
+        return plaso_queue.QueueAbort()
       else:
         raise
     except KeyboardInterrupt:

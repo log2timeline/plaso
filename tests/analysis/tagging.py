@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.analysis import tagging
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.lib import timelib
 from plaso.containers import events
@@ -84,7 +84,7 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
   def testTag(self):
     """Test that the tagging plugin successfully tags events."""
     event_queue = single_process.SingleProcessQueue()
-    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     event_objects = [
         self._CreateTestEventObject(test_event)
         for test_event in self._EVENT_DICTS]

@@ -16,7 +16,7 @@ from dfvfs.resolver import context
 
 from plaso.engine import collector
 from plaso.engine import engine
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
@@ -583,7 +583,7 @@ class MultiProcessEngine(engine.BaseEngine):
     for port in (self._event_object_queue_port, self._parse_error_queue_port):
       terminate_queue = zeromq_queue.ZeroMQPushConnectQueue(
           linger_seconds=0, port=port, timeout_seconds=0, name=u'Termination')
-      terminate_queue.PushItem(queue.QueueAbort(), block=False)
+      terminate_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       terminate_queue.Close()
 
   def _CollectorQueueHasBound(self):
@@ -735,8 +735,8 @@ class MultiProcessEngine(engine.BaseEngine):
       # Wake the processes to make sure that they are not blocking
       # waiting for new items.
       for _ in range(self._number_of_extraction_workers):
-        self._path_spec_queue.PushItem(queue.QueueAbort(), block=False)
-      self.event_object_queue.PushItem(queue.QueueAbort(), block=False)
+        self._path_spec_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+      self.event_object_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
       # TODO: The following line is commented out as a work around for
       # infinite blocking wait in storage writer process. Fix this by
@@ -1281,9 +1281,9 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    self._event_queue_producer = queue.ItemQueueProducer(
+    self._event_queue_producer = plaso_queue.ItemQueueProducer(
         self._event_object_queue)
-    self._parse_error_queue_producer = queue.ItemQueueProducer(
+    self._parse_error_queue_producer = plaso_queue.ItemQueueProducer(
         self._parse_error_queue)
 
     parser_mediator = parsers_mediator.ParserMediator(
@@ -1457,7 +1457,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
     self._storage_writer.SignalAbort()
 
 
-class MultiProcessingQueue(queue.Queue):
+class MultiProcessingQueue(plaso_queue.Queue):
   """Class that defines the multi-processing queue."""
 
   def __init__(self, maximum_number_of_queued_items=0, timeout=None):

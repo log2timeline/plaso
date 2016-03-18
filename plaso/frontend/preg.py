@@ -10,7 +10,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfwinreg import registry as dfwinreg_registry
 
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.frontend import extraction_frontend
 from plaso.lib import py2to3
@@ -268,7 +268,7 @@ class PluginList(object):
     return plugins_to_run
 
 
-class PregItemQueueConsumer(queue.ItemQueueConsumer):
+class PregItemQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements a list event object queue consumer."""
 
   def __init__(self, event_queue):
@@ -475,10 +475,11 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     """
     if event_queue is None:
       event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = queue.ItemQueueProducer(event_queue)
+    event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
 
     parse_error_queue = single_process.SingleProcessQueue()
-    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
+    parse_error_queue_producer = plaso_queue.ItemQueueProducer(
+        parse_error_queue)
 
     return parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue_producer,

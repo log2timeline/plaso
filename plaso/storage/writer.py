@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """The storage writer objects."""
 
-from plaso.engine import queue
+from plaso.engine import plaso_queue
 from plaso.lib import definitions
 
 
-class StorageWriter(queue.ItemQueueConsumer):
+class StorageWriter(plaso_queue.ItemQueueConsumer):
   """Class that defines the storage writer interface."""
 
   # pylint: disable=abstract-method
