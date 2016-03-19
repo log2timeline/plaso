@@ -168,11 +168,14 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
      Returns:
        A string containing the value for the notes field.
     """
+    inode = event_object.inode
+    if inode is None:
+      inode = u'-'
+
     notes = getattr(event_object, u'notes', u'')
     if not notes:
       notes = u'File: {0:s} inode: {1!s}'.format(
-          getattr(event_object, u'display_name', u''),
-          getattr(event_object, u'inode', u''))
+          getattr(event_object, u'display_name', u''), inode)
     return self._SanitizeField(notes)
 
   def WriteEventBody(self, event_object):

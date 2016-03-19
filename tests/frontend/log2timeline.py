@@ -12,6 +12,8 @@ from tests.frontend import test_lib
 class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
   """Tests for the log2timeline front-end."""
 
+  # pylint: disable=protected-access
+
   def testGetFiltersInformation(self):
     """Tests the _GetFiltersInformation function."""
     test_front_end = log2timeline.Log2TimelineFrontend()

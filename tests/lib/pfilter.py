@@ -11,7 +11,7 @@ from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class Empty(object):

@@ -8,6 +8,8 @@ from plaso.lib import errors
 from plaso.lib import objectfilter
 
 
+# pylint: disable=missing-docstring
+
 class DummyObject(object):
   def __init__(self, key, value):
     setattr(self, key, value)

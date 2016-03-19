@@ -11,7 +11,7 @@ class FilterObject(object):
   """The filter interface class."""
 
   def __init__(self):
-    """Initialize the filter object."""
+    """Initializes a filter object."""
     super(FilterObject, self).__init__()
     self._filter_expression = None
     self._matcher = None
@@ -31,17 +31,6 @@ class FilterObject(object):
   def filter_name(self):
     """Return the name of the filter."""
     return self.__class__.__name__
-
-  @property
-  def last_decision(self):
-    """The last matching decision or None."""
-    return getattr(self, u'_decision', None)
-
-  @property
-  def last_reason(self):
-    """The last reason for the match or None."""
-    if getattr(self, u'_decision', False):
-      return getattr(self, u'_reason', u'')
 
   @property
   def limit(self):

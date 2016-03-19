@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The parsers and plugins manager objects."""
+"""The parsers and plugins manager."""
 
 import pysigscan
 
@@ -8,7 +8,7 @@ from plaso.lib import specification
 
 
 class ParsersManager(object):
-  """Class that implements the parsers manager."""
+  """Class that implements the parsers and plugins manager."""
 
   _parser_classes = {}
 

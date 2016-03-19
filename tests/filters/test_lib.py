@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""The filters shared test library."""
+
 import unittest
 
 from plaso.filters import interface

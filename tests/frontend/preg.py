@@ -23,30 +23,38 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     Args:
       knowledge_base_values: optional dict containing the knowledge base
                              values.
+
+    Returns:
+      A front-end object (instance of PregFrontend).
     """
-    self._front_end = preg.PregFrontend()
-    self._front_end.SetSingleFile(True)
+    front_end = preg.PregFrontend()
+    front_end.SetSingleFile(True)
     registry_file_path = self._GetTestFilePath([u'SYSTEM'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=registry_file_path)
 
-    self._front_end.SetSourcePath(registry_file_path)
-    self._front_end.SetSourcePathSpecs([path_spec])
+    front_end.SetSourcePath(registry_file_path)
+    front_end.SetSourcePathSpecs([path_spec])
 
-    self._knowledge_base_object = knowledge_base.KnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in knowledge_base_values.iteritems():
-        self._knowledge_base_object.SetValue(identifier, value)
+        knowledge_base_object.SetValue(identifier, value)
 
-    self._front_end.SetKnowledgeBase(self._knowledge_base_object)
+    front_end.SetKnowledgeBase(knowledge_base_object)
+    return front_end
 
   def _ConfigureStorageMediaFileTest(self):
-    """Configure a test against a storage media file."""
-    self._front_end = preg.PregFrontend()
-    self._front_end.SetSingleFile(False)
+    """Configure a test against a storage media file.
 
-    self._knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._front_end.SetKnowledgeBase(self._knowledge_base_object)
+    Returns:
+      A front-end object (instance of PregFrontend).
+    """
+    front_end = preg.PregFrontend()
+    front_end.SetSingleFile(False)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    front_end.SetKnowledgeBase(knowledge_base_object)
 
     storage_media_path = self._GetTestFilePath([u'registry_test.dd'])
 
@@ -60,18 +68,19 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     while scan_node.sub_nodes:
       scan_node = scan_node.sub_nodes[0]
 
-    self._front_end.SetSourcePath(storage_media_path)
-    self._front_end.SetSourcePathSpecs([scan_node.path_spec])
+    front_end.SetSourcePath(storage_media_path)
+    front_end.SetSourcePathSpecs([scan_node.path_spec])
+    return front_end
 
   def testExpandKeysRedirect(self):
     """Tests the ExpandKeysRedirect function."""
-    self._ConfigureSingleFileTest()
+    front_end = self._ConfigureSingleFileTest()
     registry_key_paths = [
         u'\\Software\\Foobar',
         u'\\Software\\Key\\SubKey\\MagicalKey',
         u'\\Canons\\Blast\\Night',
         u'\\EvilCorp\\World Plans\\Takeover']
-    self._front_end.ExpandKeysRedirect(registry_key_paths)
+    front_end.ExpandKeysRedirect(registry_key_paths)
 
     added_key_paths = [
         u'\\Software\\Wow6432Node\\Foobar',
@@ -82,25 +91,25 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
   def testGetRegistryFilePaths(self):
     """Tests the GetRegistryFilePaths function."""
-    self._ConfigureSingleFileTest()
+    front_end = self._ConfigureSingleFileTest()
 
     expected_paths = [u'%UserProfile%\\NTUSER.DAT']
     registry_file_types = [u'NTUSER']
-    paths = self._front_end.GetRegistryFilePaths(registry_file_types)
+    paths = front_end.GetRegistryFilePaths(registry_file_types)
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
     expected_paths = [u'%SystemRoot%\\System32\\config\\SOFTWARE']
     registry_file_types = [u'SOFTWARE']
-    paths = self._front_end.GetRegistryFilePaths(registry_file_types)
+    paths = front_end.GetRegistryFilePaths(registry_file_types)
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
   def testGetRegistryHelpers(self):
-    """Test the GetRegistryHelpers function."""
-    self._ConfigureSingleFileTest()
+    """Tests the GetRegistryHelpers function."""
+    front_end = self._ConfigureSingleFileTest()
     with self.assertRaises(ValueError):
-      _ = self._front_end.GetRegistryHelpers()
+      front_end.GetRegistryHelpers()
 
-    registry_helpers = self._front_end.GetRegistryHelpers(
+    registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'SYSTEM'])
 
     self.assertEquals(len(registry_helpers), 1)
@@ -110,8 +119,8 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     file_path = self._GetTestFilePath([u'SYSTEM'])
     self.assertEquals(registry_helper.path, file_path)
 
-    self._ConfigureStorageMediaFileTest()
-    registry_helpers = self._front_end.GetRegistryHelpers(
+    front_end = self._ConfigureStorageMediaFileTest()
+    registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'NTUSER'])
 
     self.assertEquals(len(registry_helpers), 3)
@@ -124,11 +133,11 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertEquals(registry_helper.collector_name, u'TSK')
     registry_helper.Close()
 
-    registry_helpers = self._front_end.GetRegistryHelpers(
+    registry_helpers = front_end.GetRegistryHelpers(
         plugin_names=[u'userassist'])
     self.assertEquals(len(registry_helpers), 3)
 
-    registry_helpers = self._front_end.GetRegistryHelpers(
+    registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'SAM'])
     self.assertEquals(len(registry_helpers), 1)
 
@@ -136,39 +145,39 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     # that contains VSS stores.
 
   def testGetRegistryPlugins(self):
-    """Test the GetRegistryPlugin function."""
-    self._ConfigureSingleFileTest()
-    usb_plugins = self._front_end.GetRegistryPlugins(u'usb')
+    """Tests the GetRegistryPlugin function."""
+    front_end = self._ConfigureSingleFileTest()
+    usb_plugins = front_end.GetRegistryPlugins(u'usb')
     self.assertIsNotNone(usb_plugins)
 
     usb_plugin_names = [plugin.NAME for plugin in usb_plugins]
     self.assertIn(u'windows_usb_devices', usb_plugin_names)
     self.assertIn(u'windows_usbstor_devices', usb_plugin_names)
 
-    other_plugins = self._front_end.GetRegistryPlugins(u'user')
+    other_plugins = front_end.GetRegistryPlugins(u'user')
     self.assertIsNotNone(other_plugins)
     other_plugin_names = [plugin.NAME for plugin in other_plugins]
 
     self.assertIn(u'userassist', other_plugin_names)
 
   def testParseRegistry(self):
-    """Test the ParseRegistryFile and ParseRegistryKey functions."""
-    self._ConfigureSingleFileTest()
+    """Tests the ParseRegistryFile and ParseRegistryKey functions."""
+    front_end = self._ConfigureSingleFileTest()
 
-    registry_helpers = self._front_end.GetRegistryHelpers(
+    registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'SYSTEM'])
     registry_helper = registry_helpers[0]
 
-    plugins = self._front_end.GetRegistryPluginsFromRegistryType(u'SYSTEM')
+    plugins = front_end.GetRegistryPluginsFromRegistryType(u'SYSTEM')
     key_list = []
     plugin_list = []
     for plugin in plugins:
       plugin_list.append(plugin.NAME)
       key_list.extend(plugin.GetKeyPaths())
 
-    self._front_end.ExpandKeysRedirect(key_list)
+    front_end.ExpandKeysRedirect(key_list)
 
-    parsed_data = self._front_end.ParseRegistryFile(
+    parsed_data = front_end.ParseRegistryFile(
         registry_helper, key_paths=key_list, use_plugins=plugin_list)
     for key_parsed in parsed_data:
       self.assertIn(key_parsed, key_list)
@@ -202,7 +211,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEquals(event_object.data_type, u'windows:registry:key_value')
 
-    parse_key_data = self._front_end.ParseRegistryKey(
+    parse_key_data = front_end.ParseRegistryKey(
         usb_key, registry_helper, use_plugins=u'windows_usbstor_devices')
 
     self.assertEquals(len(parse_key_data.keys()), 1)

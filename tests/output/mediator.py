@@ -13,9 +13,11 @@ from plaso.output import mediator
 
 
 class TestEvent(events.EventObject):
+  """Test event object."""
   DATA_TYPE = 'test:mediator'
 
   def __init__(self):
+    """Initializes an event object."""
     super(TestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.CHANGE_TIME
@@ -28,6 +30,7 @@ class TestEvent(events.EventObject):
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
+  """Test event formatter."""
   DATA_TYPE = 'test:mediator'
   FORMAT_STRING = u'{text}'
 

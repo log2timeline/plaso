@@ -81,7 +81,8 @@ class DynamicFilterTest(test_lib.FilterTestCase):
     with self.assertRaises(errors.WrongPlugin):
       test_filter.CompileFilter(u'SELECT field_a, field_b LIMIT WHERE')
 
-  def testFilterFields(self):
+  def testFields(self):
+    """Tests the fields property."""
     test_filter = dynamic_filter.DynamicFilter()
 
     test_filter.CompileFilter(

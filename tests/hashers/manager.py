@@ -8,30 +8,51 @@ from plaso.hashers import manager
 
 
 class TestHasher(interface.BaseHasher):
-  """A dummy test hasher."""
+  """Test hasher."""
 
   NAME = u'testhash'
 
-  def Update(self, data):
-    return
-
   def GetBinaryDigest(self):
+    """Retrieves the digest of the hash function as a binary string.
+
+    Returns:
+      A binary string hash digest calculated over the data blocks passed to
+      Update().
+    """
     # Chosen by fair dice roll. Guaranteed to be random.
     # Compliant with RFC 1149.4. See http://xkcd.com/221/.
-    return '4'
+    return b'4'
 
   def GetStringDigest(self):
+    """Retrieves the digest of the hash function expressed as a Unicode string.
+
+    Returns:
+      A string hash digest calculated over the data blocks passed to
+      Update(). The string will consist of printable Unicode characters.
+    """
     # Chosen by fair dice roll. Guaranteed to be random.
     # Compliant with RFC 1149.4. See http://xkcd.com/221/.
     return u'4'
+
+  def Update(self, unused_data):
+    """Updates the current state of the hasher with a new block of data.
+
+    Repeated calls to update are equivalent to one single call with the
+    concatenation of the arguments.
+
+    Args:
+      data: a string of data with which to update the context of the hasher.
+    """
+    return
 
 
 class HashersManagerTest(unittest.TestCase):
   """Tests for the hashers manager."""
 
+  # pylint: disable=protected-access
+
   def testHasherRegistration(self):
     """Tests the registration and deregistration of hashers."""
-    # pylint: disable=protected-access
     number_of_parsers = len(manager.HashersManager._hasher_classes)
     manager.HashersManager.RegisterHasher(TestHasher)
     self.assertEqual(
@@ -68,7 +89,7 @@ class HashersManagerTest(unittest.TestCase):
     self.assertEqual(hasher_object.NAME, u'sha1')
 
     with self.assertRaises(KeyError):
-      _ = manager.HashersManager.GetHasherObject(u'bogus')
+      manager.HashersManager.GetHasherObject(u'bogus')
 
   def testGetHasherObjects(self):
     """Tests getting hasher objects by name."""

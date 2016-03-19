@@ -240,6 +240,7 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
 
       if proto_attribute.name == u'_event_tags':
         event_tags = []
+        # pylint: disable=protected-access
         for proto_event_tag in proto._event_tags:
           event_tag = ProtobufEventTagSerializer.ReadSerializedObject(
               proto_event_tag)
@@ -312,6 +313,7 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
         for event_tag in attribute_value:
           event_tag_proto = ProtobufEventTagSerializer.WriteSerializedObject(
               event_tag)
+          # pylint: disable=protected-access
           proto._event_tags.MergeFrom(event_tag_proto)
 
       elif attribute_name == u'images':
@@ -703,6 +705,9 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     proto = plaso_storage_pb2.PreProcess()
 
     for attribute, value in iter(preprocess_object.__dict__.items()):
+      if value is None:
+        continue
+
       if attribute == u'collection_information':
         zone = value.get(u'configured_zone', u'')
         if zone and hasattr(zone, u'zone'):

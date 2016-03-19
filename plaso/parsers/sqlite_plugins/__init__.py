@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Imports for the SQLite database parser."""
 
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_sms

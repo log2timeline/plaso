@@ -4,7 +4,7 @@
 import uuid
 
 import construct
-import pyfsntfs
+import pyfsntfs  # pylint: disable=wrong-import-order
 
 from plaso import dependencies
 from plaso.containers import file_system_events

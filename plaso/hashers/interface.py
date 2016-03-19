@@ -14,18 +14,6 @@ class BaseHasher(object):
   DESCRIPTION = u''
 
   @abc.abstractmethod
-  def Update(self, data):
-    """Updates the current state of the hasher with a new block of data.
-
-    Repeated calls to update are equivalent to one single call with the
-    concatenation of the arguments.
-
-    Args:
-      data: a string of data with which to update the context of the hasher.
-    """
-    raise NotImplementedError
-
-  @abc.abstractmethod
   def GetBinaryDigest(self):
     """Retrieves the digest of the hash function as a binary string.
 
@@ -42,5 +30,17 @@ class BaseHasher(object):
     Returns:
       A string hash digest calculated over the data blocks passed to
       Update(). The string will consist of printable Unicode characters.
+    """
+    raise NotImplementedError
+
+  @abc.abstractmethod
+  def Update(self, data):
+    """Updates the current state of the hasher with a new block of data.
+
+    Repeated calls to update are equivalent to one single call with the
+    concatenation of the arguments.
+
+    Args:
+      data: a string of data with which to update the context of the hasher.
     """
     raise NotImplementedError

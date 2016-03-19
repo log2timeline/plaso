@@ -26,7 +26,7 @@ from plaso.parsers import manager as parsers_manager
 from plaso.storage import writer as storage_writer
 from plaso.storage import zip_file as storage_zip_file
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class ExtractionFrontend(frontend.Frontend):
@@ -48,6 +48,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._engine = None
     self._filter_expression = None
     self._filter_object = None
+    self._hasher_names = []
     self._mount_path = None
     self._operating_system = None
     self._output_module = None
@@ -165,18 +166,24 @@ class ExtractionFrontend(frontend.Frontend):
 
     if self._use_old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
+      storage_file = None
       try:
-        with storage_zip_file.StorageFile(
-            self._storage_file_path, read_only=True) as storage_file:
-
-          storage_information = storage_file.GetStorageInformation()
-          if storage_information:
-            logging.info(u'Using preprocessing information from a prior run.')
-            pre_obj = storage_information[-1]
-            self._enable_preprocessing = False
+        # TODO: refactor to use storage reader interface.
+        storage_file = storage_zip_file.StorageFile(
+            self._storage_file_path, read_only=True)
+        storage_information = storage_file.GetStorageInformation()
+        if storage_information:
+          logging.info(u'Using preprocessing information from a prior run.')
+          pre_obj = storage_information[-1]
+          self._enable_preprocessing = False
 
       except IOError:
-        logging.warning(u'Storage file does not exist, running preprocess.')
+        logging.warning(
+            u'Unable to retrieve preprocessing information from storage file.')
+
+      finally:
+        if storage_file:
+          storage_file.Close()
 
     logging.debug(u'Starting preprocessing.')
 
@@ -568,7 +575,7 @@ class ExtractionFrontend(frontend.Frontend):
       raise errors.UserAbort
 
     # TODO: check if this still works and if still needed.
-    except Exception as exception:
+    except Exception as exception:  # pylint: disable=broad-except
       if not self._single_process_mode:
         raise
 
