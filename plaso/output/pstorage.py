@@ -64,7 +64,7 @@ class PlasoStorageOutputModule(interface.OutputModule):
     """
     # Needed due to duplicate removals, if two events
     # are merged then we'll just pick the first inode value.
-    inode = getattr(event_object, u'inode', None)
+    inode = event_object.inode
     if isinstance(inode, py2to3.STRING_TYPES):
       inode_list = inode.split(u';')
       try:

@@ -12,7 +12,7 @@ from tests.formatters import test_lib
 
 
 class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
-  """A broken conditional event formatter."""
+  """An event object for testing the conditional event formatter."""
   DATA_TYPE = u'test:broken_conditional'
   FORMAT_STRING_PIECES = [u'{too} {many} formatting placeholders']
 
@@ -21,11 +21,12 @@ class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
 
 
 class ConditionalTestEvent(containers_test_lib.TestEvent):
+  """An event object for testing the conditional event formatter."""
   DATA_TYPE = u'test:event:conditional'
 
 
 class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
-  """Class to define a formatter for a conditional test event."""
+  """An event formatter for testing the conditional event formatter."""
   DATA_TYPE = u'test:event:conditional'
   FORMAT_STRING_PIECES = [
       u'Description: {description}',
@@ -39,7 +40,7 @@ class ConditionalTestEventFormatter(interface.ConditionalEventFormatter):
 
 
 class WrongEventFormatter(interface.EventFormatter):
-  """A simple event formatter."""
+  """An event formatter for testing."""
   DATA_TYPE = u'test:wrong'
   FORMAT_STRING = u'This format string does not match {body}.'
 

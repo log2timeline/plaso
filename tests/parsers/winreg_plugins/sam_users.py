@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Users key plugin."""
+"""Tests for the SAM Users Account information plugin."""
 
 import unittest
 
@@ -14,12 +14,12 @@ from tests.parsers.winreg_plugins import test_lib
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 
 
-class UsersPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the SAM Users key plugin."""
+class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests the SAM Users Account information plugin."""
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._plugin = sam_users.UsersPlugin()
+    self._plugin = sam_users.SAMUsersWindowsRegistryPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

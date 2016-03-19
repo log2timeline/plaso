@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the import statements for the Registry plugins."""
+"""Imports for the Windows Registry parser."""
 
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru

@@ -15,8 +15,8 @@ from tests.filters import test_lib
 class ObjectFilterTest(test_lib.FilterTestCase):
   """Tests for the list of object filters."""
 
-  def _CreateFileAndTest(self, test_filter, content):
-    """Creates a filter file and then runs the test.
+  def _CreateFilterFileAndCompileFilter(self, test_filter, content):
+    """Creates a filter file and compiles the filter based on the file.
 
     Args:
       test_filter: the test filter object (instance of FilterObject).
@@ -58,7 +58,8 @@ class ObjectFilterTest(test_lib.FilterTestCase):
       test_filter.CompileFilter(
           u'some_stuff is "random" and other_stuff is not "random"')
 
-  def testFilterApprove(self):
+  def testCompilerFilterWithFilterFile(self):
+    """Tests the CompileFilter function with a filter file."""
     test_filter = filter_list.ObjectFilterList()
 
     one_rule = u'\n'.join([
@@ -69,7 +70,7 @@ class ObjectFilterTest(test_lib.FilterTestCase):
         u'  urls: [cnn.com,microsoft.com]',
         u'  filter: message contains "dude where is my car"'])
 
-    self._CreateFileAndTest(test_filter, one_rule)
+    self._CreateFilterFileAndCompileFilter(test_filter, one_rule)
 
     collection = u'\n'.join([
         u'Rule_Dude:',
@@ -94,7 +95,7 @@ class ObjectFilterTest(test_lib.FilterTestCase):
         u'    urls: [mbl.is,symantec.com/whereevillies,virustotal.com/myhash]',
         u'    filter: evil_bit is 1'])
 
-    self._CreateFileAndTest(test_filter, collection)
+    self._CreateFilterFileAndCompileFilter(test_filter, collection)
 
 
 if __name__ == '__main__':

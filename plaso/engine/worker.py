@@ -5,13 +5,13 @@ import logging
 import os
 import re
 
+import pysigscan
+
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
-
-import pysigscan
 
 from plaso.engine import collector
 from plaso.engine import plaso_queue
@@ -745,8 +745,8 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
           u'path spec: {0:s}').format(path_spec.comparable))
 
     # All exceptions need to be caught here to prevent the worker
-    # form being killed by an uncaught exception.
-    except Exception as exception:
+    # from being killed by an uncaught exception.
+    except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception while processing path spec: {0:s}.'.format(
               path_spec.comparable))

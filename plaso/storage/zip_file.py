@@ -927,18 +927,21 @@ class StorageFile(ZIPStorageFile):
       not exist.
     """
     super(StorageFile, self).__init__()
+    self._analysis_report_serializer = None
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = -sys.maxint - 1
     self._buffer_size = 0
     self._event_object_serializer = None
     self._event_tag_index = None
+    self._event_tag_serializer = None
     self._file_number = 1
     self._first_file_number = None
     self._max_buffer_size = buffer_size or self.MAXIMUM_BUFFER_SIZE
     self._merge_buffer = None
     self._number_of_events_in_buffer = 0
     self._output_file = output_file
+    self._preprocess_object_serializer = None
     self._read_only = read_only
     self._serializer_format_string = u''
 

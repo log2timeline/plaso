@@ -12,7 +12,7 @@ from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class JSONSerializerTestCase(unittest.TestCase):

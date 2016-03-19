@@ -4,6 +4,7 @@
 
 import datetime
 
+# pylint: disable=wrong-import-position
 import hachoir_core.config
 
 # This is necessary to do PRIOR to loading up other parts of hachoir
@@ -27,15 +28,15 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class HachoirEvent(time_events.TimestampEvent):
-  """Process timestamps from Hachoir Events."""
+  """Class to represent Hachoir events."""
 
   DATA_TYPE = u'metadata:hachoir'
 
   def __init__(self, dt_timestamp, usage, attributes):
-    """An EventObject created from a Hachoir entry.
+    """Initializes an event object.
 
     Args:
-      dt_timestamp: A python datetime.datetime object.
+      dt_timestamp: A Python datetime.datetime object.
       usage: The description of the usage of the time value.
       attributes: A dict containing metadata for the event.
     """

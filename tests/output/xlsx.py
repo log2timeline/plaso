@@ -20,9 +20,11 @@ from tests.output import test_lib
 
 
 class TestEvent(events.EventObject):
+  """Event object used for testing."""
   DATA_TYPE = u'test:xlsx'
 
   def __init__(self):
+    """Initializes an event object used for testing."""
     super(TestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.CHANGE_TIME
@@ -34,6 +36,8 @@ class TestEvent(events.EventObject):
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
+  """Event object formatter used for testing."""
+
   DATA_TYPE = u'test:xlsx'
   FORMAT_STRING = u'{text}'
 
@@ -64,7 +68,6 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       A list of dictionaries representing the rows and columns of the first
       sheet.
     """
-
     zip_file = zipfile.ZipFile(filename)
 
     # Fail if we can't find the expected first sheet.
@@ -108,32 +111,6 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
     return rows
 
-  def testHeader(self):
-    """Tests the WriteHeader function."""
-
-    expected_header = [
-        u'datetime', u'timestamp_desc', u'source', u'source_long',
-        u'message', u'parser', u'display_name', u'tag']
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XLSXOutputModule(output_mediator)
-
-      xlsx_file = os.path.join(temp_directory, u'xlsx.out')
-      output_module.SetFilename(xlsx_file)
-
-      output_module.Open()
-      output_module.WriteHeader()
-      output_module.WriteFooter()
-      output_module.Close()
-
-      try:
-        rows = self._GetSheetRows(xlsx_file)
-      except ValueError as exception:
-        self.fail(exception)
-
-      self.assertEqual(expected_header, rows[0])
-
   def testWriteEventBody(self):
     """Tests the WriteHeader function."""
     formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
@@ -169,7 +146,31 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       self.assertEqual(len(expected_event_body), len(rows[1]))
       self.assertEqual(expected_event_body, rows[1])
 
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    expected_header = [
+        u'datetime', u'timestamp_desc', u'source', u'source_long',
+        u'message', u'parser', u'display_name', u'tag']
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      output_mediator = self._CreateOutputMediator()
+      output_module = xlsx.XLSXOutputModule(output_mediator)
+
+      xlsx_file = os.path.join(temp_directory, u'xlsx.out')
+      output_module.SetFilename(xlsx_file)
+
+      output_module.Open()
+      output_module.WriteHeader()
+      output_module.WriteFooter()
+      output_module.Close()
+
+      try:
+        rows = self._GetSheetRows(xlsx_file)
+      except ValueError as exception:
+        self.fail(exception)
+
+      self.assertEqual(expected_header, rows[0])
+
 
 if __name__ == u'__main__':
   unittest.main()
-

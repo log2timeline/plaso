@@ -31,6 +31,8 @@ class MockPlugin(interface.PlistPlugin):
 class TestPlistPlugin(test_lib.PlistPluginTestCase):
   """Tests for the plist plugin interface."""
 
+  # pylint: disable=protected-access
+
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._top_level_dict = {
@@ -67,7 +69,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     self.assertEqual(len(result), 1)
 
     # Check the value of the result was extracted as expected.
-    self.assertTrue(u'test-macpro' == result[key[0]][u'Name'])
+    self.assertEqual(result[key[0]][u'Name'], u'test-macpro')
 
   def testProcess(self):
     """Tests the Process function."""

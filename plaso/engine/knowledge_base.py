@@ -10,7 +10,7 @@ codepage of the source data.
 from plaso.lib import event
 from plaso.lib import py2to3
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class KnowledgeBase(object):

@@ -11,7 +11,6 @@ from plaso.formatters import mediator as formatters_mediator
 # load a front-end library.
 from plaso.frontend import presets
 from plaso.lib import errors
-from plaso.lib import limit
 from plaso.lib import objectfilter
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -421,6 +420,8 @@ class MockTestFilter(object):
 class TimeRangeCache(object):
   """A class that stores timeranges from filters."""
 
+  MAX_INT64 = 2**64-1
+
   @classmethod
   def SetLowerTimestamp(cls, timestamp):
     """Sets the lower bound timestamp."""
@@ -445,7 +446,7 @@ class TimeRangeCache(object):
   def GetTimeRange(cls):
     """Return the first and last timestamp of filter range."""
     first = getattr(cls, '_lower', 0)
-    last = getattr(cls, '_upper', limit.MAX_INT64)
+    last = getattr(cls, '_upper', cls.MAX_INT64)
 
     if first < last:
       return first, last

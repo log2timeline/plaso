@@ -12,6 +12,8 @@ from tests.filters import test_lib
 class PathFilterScanTreeTest(test_lib.FilterTestCase):
   """Tests for the path filter scan tree."""
 
+  # pylint: disable=protected-access
+
   def testInitialize(self):
     """Tests the initialize function."""
     scan_tree = path_filter.PathFilterScanTree([])

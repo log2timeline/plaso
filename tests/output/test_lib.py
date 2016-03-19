@@ -24,7 +24,7 @@ class TestEventObject(events.EventObject):
   DATA_TYPE = u'test:output'
 
   def __init__(self):
-    """Initialize the event object."""
+    """Initialize an event object."""
     super(TestEventObject, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'

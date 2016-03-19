@@ -32,6 +32,7 @@ class PlistFile(object):
     """
     key = self.root_key
     for path_segment in path_segments:
+      # pylint: disable=protected-access
       if isinstance(key, (dict, plistlib._InternalDict)):
         key = key.get(path_segment)
 

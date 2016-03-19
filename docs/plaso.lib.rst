@@ -60,14 +60,6 @@ plaso.lib.lexer module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.limit module
-----------------------
-
-.. automodule:: plaso.lib.limit
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.objectfilter module
 -----------------------------
 

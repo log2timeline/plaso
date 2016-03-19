@@ -43,6 +43,8 @@ class MySQL4n6TimeTestEvent(events.EventObject):
 class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the 4n6time MySQL output class."""
 
+  # pylint: disable=protected-access
+
   def setUp(self):
     """Makes preparations before running an individual test."""
     plaso_timestamp = timelib.Timestamp()
@@ -54,7 +56,7 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
         output_mediator)
 
   def testGetSanitizedEventValues(self):
-    """Tests the _GetSanitizedEventValues function."""
+    """Tests the GetSanitizedEventValues function."""
     expected_dict = {
         u'type': u'Content Modification Time',
         u'host': u'ubuntu',
