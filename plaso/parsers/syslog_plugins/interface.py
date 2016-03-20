@@ -3,14 +3,16 @@
 
 import abc
 
-from plaso.lib import errors
 from plaso.parsers import plugins
 
-class BaseSyslogPlugin(plugins.BasePlugin):
+class SyslogPlugin(plugins.BasePlugin):
   """The interface for syslog plugins."""
   NAME = u'syslog'
   DESCRIPTION = u''
 
+  # A dictionary containing syslog reporters to match on.
+  REPORTERS = []
+
   @abc.abstractmethod
-  def GetEntries(self, parser_mediator, pyparsing_structure, **kwargs):
-    """Creates events from a parsed syslog line."""
+  def Process(self, parser_mediator, attributes=None, **kwargs):
+    """Processes the data structure produced by the parser"""

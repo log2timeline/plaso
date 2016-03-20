@@ -13,7 +13,6 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   VERIFICATION_REGEX = re.compile('^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
 
-
   _pyparsing_components = {
     u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
     u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
