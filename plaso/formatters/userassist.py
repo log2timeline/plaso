@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-"""The Windows Registry key or value event formatter."""
+"""The UserAssist Windows Registry event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class WinRegistryGenericFormatter(interface.EventFormatter):
-  """Formatter for a Windows Registry key or value event."""
+class UserAssistWindowsRegistryEventFormatter(interface.EventFormatter):
+  """Formatter for an UserAssist Windows Registry event."""
 
-  DATA_TYPE = u'windows:registry:key_value'
+  DATA_TYPE = u'windows:registry:userassist'
 
+  # TODO: improve format string.
   FORMAT_STRING = u'[{keyname}] {text}'
   FORMAT_STRING_ALTERNATIVE = u'{text}'
 
@@ -52,28 +53,6 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
     return self._FormatMessages(
         format_string, self.FORMAT_STRING_SHORT, event_values)
 
-  def GetSources(self, event_object):
-    """Determines the the short and long source for an event object.
 
-    Args:
-      event_object: the event object (instance of EventObject).
-
-    Returns:
-      A tuple of the short and long source string.
-
-    Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
-    """
-    if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
-
-    source_long = getattr(event_object, u'source_long', u'UNKNOWN')
-    source_append = getattr(event_object, u'source_append', None)
-    if source_append:
-      source_long = u'{0:s} {1:s}'.format(source_long, source_append)
-
-    return self.SOURCE_SHORT, source_long
-
-
-manager.FormattersManager.RegisterFormatter(WinRegistryGenericFormatter)
+manager.FormattersManager.RegisterFormatter(
+    UserAssistWindowsRegistryEventFormatter)

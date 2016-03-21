@@ -120,6 +120,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         u'Sources:',
         u'ControlSet001',
         u'ControlSet002']
+
     for string in test_strings:
       self.assertTrue(string in text)
 

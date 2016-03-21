@@ -1,25 +1,26 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Registry key or value event formatter."""
+"""Tests for the UserAssist Windows Registry event formatter."""
 
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import userassist
 
 from tests.formatters import test_lib
 
 
-class WinRegistryGenericFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Windows Registry key or value event formatter."""
+class UserAssistWindowsRegistryEventFormatterTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the UserAssist Windows Registry event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = winreg.WinRegistryGenericFormatter()
+    event_formatter = userassist.UserAssistWindowsRegistryEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = winreg.WinRegistryGenericFormatter()
+    event_formatter = userassist.UserAssistWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
         u'keyname',

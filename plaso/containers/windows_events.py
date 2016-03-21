@@ -33,33 +33,43 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
 
 
 class WindowsRegistryEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows Registry-based event."""
+  """Convenience class for a Windows Registry-based event.
+
+  Attributes:
+    keyname: a string containing the Windows Registry key path.
+    offset: an integer containing the data offset of the Windows Registry
+            key or value.
+  """
 
   DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(
       self, filetime, key_path, values_dict, usage=None, offset=None,
       source_append=None, urls=None):
-    """Initializes a Windows registry event.
+    """Initializes a Windows Registry event.
 
     Args:
-      filetime: the FILETIME timestamp value.
-      key_path: the Windows Registry key path.
+      filetime: a FILETIME timestamp time object (instance of
+                dfdatetime.Filetime).
+      key_path: a string containing the Windows Registry key path.
       values_dict: dictionary object containing values of the key.
-      usage: optional description of the usage of the time value.
-      offset: optional (data) offset of the Registry key or value.
+      usage: optional string containing the description of the usage of
+             the filetime timestamp.
+      offset: optional integer containing the data offset of the Windows
+              Registry key or value.
       source_append: optional string to append to the source_long of the event.
       urls: optional list of URLs.
     """
     if usage is None:
       usage = eventdata.EventTimestamp.WRITTEN_TIME
 
-    super(WindowsRegistryEvent, self).__init__(filetime, usage)
+    super(WindowsRegistryEvent, self).__init__(filetime.timestamp, usage)
 
     if key_path:
-      # TODO: rename keyname to key_path
+      # TODO: rename keyname to key_path.
       self.keyname = key_path
 
+    # TODO: rename regvalue to ???.
     self.regvalue = values_dict
 
     # TODO: determine how should offset 0 be handled.
@@ -121,7 +131,7 @@ class WindowsRegistryListEvent(time_events.FiletimeEvent):
   def __init__(
       self, filetime, key_path, list_name, list_values,
       timestamp_description=None, value_name=None):
-    """Initializes a Windows registry event.
+    """Initializes a Windows Registry event.
 
     Args:
       filetime: the FILETIME timestamp value.

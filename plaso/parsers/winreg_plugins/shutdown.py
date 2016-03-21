@@ -3,13 +3,46 @@
 
 import construct
 
-from plaso.containers import windows_events
+from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
+
+
+class ShutdownWindowsRegistryEvent(time_events.FiletimeEvent):
+  """Convenience class for a shutdown Windows Registry event.
+
+  Attributes:
+    key_path: a string containing the Windows Registry key path.
+    offset: an integer containing the data offset of the shutdown
+            Windows Registry value.
+    regvalue: a dictionary containing the shutdown values.
+  """
+
+  DATA_TYPE = 'windows:registry:shutdown'
+
+  def __init__(self, filetime, key_path, offset, values_dict):
+    """Initializes a shutdown Windows Registry event.
+
+    Args:
+      filetime: an integer containing a FILETIME timestamp.
+      key_path: a string containing the Windows Registry key path.
+      offset: an integer containing the data offset of the shutdown
+              Windows Registry value.
+      values_dict: dictionary object containing the shutdown values.
+    """
+    super(ShutdownWindowsRegistryEvent, self).__init__(
+        filetime, eventdata.EventTimestamp.LAST_SHUTDOWN)
+
+    self.key_path = key_path
+    self.offset = offset
+    # TODO: rename regvalue to ???.
+    self.regvalue = values_dict
+    # TODO: move to formatter
+    self.source_append = u'Shutdown Entry'
 
 
 class ShutdownPlugin(interface.WindowsRegistryPlugin):
@@ -23,8 +56,6 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
           u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
   _UINT64_STRUCT = construct.ULInt64(u'value')
-
-  _SOURCE_APPEND = u'Shutdown Entry'
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect ShutdownTime value under Windows and produce an event object.
@@ -49,10 +80,8 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
 
     values_dict = {u'Description': shutdown_value.name}
 
-    event_object = windows_events.WindowsRegistryEvent(
-        filetime, registry_key.path, values_dict,
-        offset=registry_key.offset, source_append=self._SOURCE_APPEND,
-        usage=eventdata.EventTimestamp.LAST_SHUTDOWN)
+    event_object = ShutdownWindowsRegistryEvent(
+        filetime, registry_key.path, shutdown_value.offset, values_dict)
     parser_mediator.ProduceEvent(event_object)
 
 
