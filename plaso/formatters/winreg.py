@@ -11,7 +11,7 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
   DATA_TYPE = u'windows:registry:key_value'
 
-  FORMAT_STRING = u'[{keyname}] {text}'
+  FORMAT_STRING = u'[{key_path}] {text}'
   FORMAT_STRING_ALTERNATIVE = u'{text}'
 
   SOURCE_LONG = u'Registry Key'
@@ -41,10 +41,13 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
     string_parts = []
     for key, value in sorted(regvalue.items()):
       string_parts.append(u'{0:s}: {1!s}'.format(key, value))
-    text = u' '.join(string_parts)
+    event_values[u'text'] = u' '.join(string_parts)
 
-    event_values[u'text'] = text
-    if u'keyname' in event_values:
+    urls = event_values.get(u'urls', [])
+    if urls:
+      event_values[u'urls'] = u' - '.join(urls)
+
+    if u'key_path' in event_values:
       format_string = self.FORMAT_STRING
     else:
       format_string = self.FORMAT_STRING_ALTERNATIVE

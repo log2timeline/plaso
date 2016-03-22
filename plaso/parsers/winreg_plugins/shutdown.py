@@ -19,12 +19,12 @@ class ShutdownWindowsRegistryEvent(time_events.FiletimeEvent):
     key_path: a string containing the Windows Registry key path.
     offset: an integer containing the data offset of the shutdown
             Windows Registry value.
-    regvalue: a dictionary containing the shutdown values.
+    value_name: a string containing the name of the Registry value.
   """
 
   DATA_TYPE = 'windows:registry:shutdown'
 
-  def __init__(self, filetime, key_path, offset, values_dict):
+  def __init__(self, filetime, key_path, offset, value_name):
     """Initializes a shutdown Windows Registry event.
 
     Args:
@@ -32,17 +32,13 @@ class ShutdownWindowsRegistryEvent(time_events.FiletimeEvent):
       key_path: a string containing the Windows Registry key path.
       offset: an integer containing the data offset of the shutdown
               Windows Registry value.
-      values_dict: dictionary object containing the shutdown values.
+      value_name: a string containing the name of the Registry value.
     """
     super(ShutdownWindowsRegistryEvent, self).__init__(
         filetime, eventdata.EventTimestamp.LAST_SHUTDOWN)
-
     self.key_path = key_path
     self.offset = offset
-    # TODO: rename regvalue to ???.
-    self.regvalue = values_dict
-    # TODO: move to formatter
-    self.source_append = u'Shutdown Entry'
+    self.value_name = value_name
 
 
 class ShutdownPlugin(interface.WindowsRegistryPlugin):
@@ -78,10 +74,9 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
           u'{1:s}').format(value_integer, exception))
       return
 
-    values_dict = {u'Description': shutdown_value.name}
-
     event_object = ShutdownWindowsRegistryEvent(
-        filetime, registry_key.path, shutdown_value.offset, values_dict)
+        filetime, registry_key.path, shutdown_value.offset,
+        shutdown_value.name)
     parser_mediator.ProduceEvent(event_object)
 
 

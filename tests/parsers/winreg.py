@@ -77,7 +77,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
     # Check that the number of events produced by each plugin are correct.
     parser_chain = self._PluginNameToParserChain(u'windows_usbstor_devices')
-    self.assertEqual(parser_chains.get(parser_chain, 0), 7)
+    self.assertEqual(parser_chains.get(parser_chain, 0), 10)
 
     parser_chain = self._PluginNameToParserChain(u'windows_boot_execute')
     self.assertEqual(parser_chains.get(parser_chain, 0), 4)

@@ -22,7 +22,7 @@ class WinRegistryServiceFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winregservice.WinRegistryServiceFormatter()
 
     expected_attribute_names = [
-        u'keyname',
+        u'key_path',
         u'text']
 
     self._TestGetFormatStringAttributeNames(

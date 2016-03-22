@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-"""The UserAssist Windows Registry event formatter."""
+"""The SAM users Windows Registry event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class UserAssistWindowsRegistryEventFormatter(
+class SAMUsersWindowsRegistryEventFormatter(
     interface.ConditionalEventFormatter):
-  """Formatter for an UserAssist Windows Registry event."""
+  """Formatter for a SAM users Windows Registry event."""
 
-  DATA_TYPE = u'windows:registry:userassist'
+  DATA_TYPE = u'windows:registry:sam_users'
 
   FORMAT_STRING_PIECES = [
       u'[{key_path}]',
-      u'{text}']
+      u'Description: {value_name}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{text}']
+      u'{value_name}']
 
-  SOURCE_LONG = u'Registry Key UserAssist'
+  SOURCE_LONG = u'Registry Key User Account Information'
   SOURCE_SHORT = u'REG'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
@@ -52,4 +52,4 @@ class UserAssistWindowsRegistryEventFormatter(
 
 
 manager.FormattersManager.RegisterFormatter(
-    UserAssistWindowsRegistryEventFormatter)
+    SAMUsersWindowsRegistryEventFormatter)
