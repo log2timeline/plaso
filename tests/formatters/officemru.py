@@ -15,12 +15,12 @@ class OfficeMRUWindowsRegistryEventFormatter(
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = office_mru.OfficeMRUWindowsRegistryEventFormatter()
+    event_formatter = officemru.OfficeMRUWindowsRegistryEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = office_mru.OfficeMRUWindowsRegistryEventFormatter()
+    event_formatter = officemru.OfficeMRUWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
         u'key_path',
