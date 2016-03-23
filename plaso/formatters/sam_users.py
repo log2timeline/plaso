@@ -24,7 +24,7 @@ class SAMUsersWindowsRegistryEventFormatter(
       u'RID: {account_rid}',
       u'Login count: {login_count}']
 
-  SOURCE_LONG = u'Registry Key User Account Information'
+  SOURCE_LONG = u'Registry Key: User Account Information'
   SOURCE_SHORT = u'REG'
 
 

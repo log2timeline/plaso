@@ -84,7 +84,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
 
   _V_VALUE_STRINGS_OFFSET = 204
 
-  _SOURCE_APPEND = u'User Account Information'
+  _SOURCE_APPEND = u': User Account Information'
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect data from Users and Names and produce event objects.

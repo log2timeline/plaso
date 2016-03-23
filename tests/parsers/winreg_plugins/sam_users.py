@@ -58,7 +58,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-    # Test SAMUsersWindowsRegistryEvent
+    # Test SAMUsersWindowsRegistryEvent.
     event_object = event_objects[1]
 
     self.assertEqual(event_object.account_rid, 500)

@@ -40,6 +40,7 @@ from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
 from plaso.formatters import msie_webcache
 from plaso.formatters import msiecf
+from plaso.formatters import officemru
 from plaso.formatters import olecf
 from plaso.formatters import opera
 from plaso.formatters import oxml
