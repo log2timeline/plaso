@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for SAM Users Account information."""
 
-import logging
-
 import construct
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import binary
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
@@ -19,16 +17,20 @@ class SAMUsersWindowsRegistryEvent(time_events.FiletimeEvent):
   """Convenience class for a SAM users Windows Registry event.
 
   Attributes:
+    account_rid: an integer containing the account relative identifier (RID).
+    comments: a string containing the comments.
+    fullname: a string containing the full name.
     key_path: a string containing the Windows Registry key path.
+    login_count: an integer containing the login count.
     offset: an integer containing the data offset of the SAM users
             Windows Registry value.
-    regvalue: a dictionary containing the UserAssist values.
+    username: a string containing the username.
   """
-
   DATA_TYPE = 'windows:registry:sam_users'
 
   def __init__(
-      self, filetime, timestamp_description, key_path, offset, values_dict):
+      self, filetime, timestamp_description, key_path, offset, account_rid,
+      login_count, username, fullname, comments):
     """Initializes a SAM users Windows Registry event.
 
     Args:
@@ -38,14 +40,21 @@ class SAMUsersWindowsRegistryEvent(time_events.FiletimeEvent):
       key_path: a string containing the Windows Registry key path.
       offset: an integer containing the data offset of the SAM users
               Windows Registry value.
-      values_dict: dictionary object containing the UserAssist values.
+      account_rid: an integer containing the account relative identifier (RID).
+      login_count: an integer containing the login count.
+      username: a string containing the username.
+      fullname: a string containing the full name.
+      comments: a string containing the comments.
     """
     super(SAMUsersWindowsRegistryEvent, self).__init__(
         filetime, timestamp_description)
+    self.account_rid = account_rid
+    self.comments = comments
+    self.fullname = fullname
     self.key_path = key_path
+    self.login_count = login_count
     self.offset = offset
-    # TODO: rename regvalue to ???.
-    self.regvalue = values_dict
+    self.username = username
 
 
 class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
@@ -73,33 +82,9 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       u'v_header',
       construct.Array(11, construct.ULInt32(u'values')))
 
-  _V_VALUE_HEADER_SIZE = _V_VALUE_HEADER.sizeof()
+  _V_VALUE_STRINGS_OFFSET = 204
 
-  # TODO: refactor.
-  def _ParseVValue(self, key):
-    """Parses V value and returns name, fullname, and comments data.
-
-    Args:
-      key: Registry key (instance of dfwinreg.WinRegistryKey).
-
-    Returns:
-      name: Name data parsed with name start and length values.
-      fullname: Fullname data parsed with fullname start and length values.
-      comments: Comments data parsed with comments start and length values.
-    """
-    name_offset = structure.values()[0][3] + self._V_VALUE_HEADER_SIZE
-    full_name_offset = structure.values()[0][6] + self._V_VALUE_HEADER_SIZE
-    comments_offset = structure.values()[0][9] + self._V_VALUE_HEADER_SIZE
-    name_raw = v_value.data[
-        name_offset:name_offset + structure.values()[0][4]]
-    full_name_raw = v_value.data[
-        full_name_offset:full_name_offset + structure.values()[0][7]]
-    comments_raw = v_value.data[
-        comments_offset:comments_offset + structure.values()[0][10]]
-    name = binary.ReadUTF16(name_raw)
-    full_name = binary.ReadUTF16(full_name_raw)
-    comments = binary.ReadUTF16(comments_raw)
-    return name, full_name, comments
+  _SOURCE_APPEND = u'User Account Information'
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect data from Users and Names and produce event objects.
@@ -116,7 +101,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
 
     values = [(v.name, v.last_written_time) for v in names_key.GetSubkeys()]
 
-    name_dict = dict(values)
+    usernames_dict = dict(values)
 
     for subkey in registry_key.GetSubkeys():
       if subkey.name == u'Names':
@@ -129,7 +114,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
                 subkey.name))
         continue
 
-      v_value = key.GetValueByName(u'V')
+      v_value = subkey.GetValueByName(u'V')
       if not v_value:
         parser_mediator.ProduceParseError(
             u'missing Registry value: "V" in subkey: {0:s}.'.format(
@@ -145,61 +130,90 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         continue
 
       try:
-        v_data_struct = self._V_VALUE_STRUCT.parse(v_value.data)
+        v_data_struct = self._V_VALUE_HEADER.parse(v_value.data)
       except construct.FieldError as exception:
         parser_mediator.ProduceParseError((
             u'unable to parse Registry value: "V" in subkey: {0:s} '
             u'with error: {1:s}.').format(subkey.name, exception))
         continue
 
-      username_offset = v_data_struct.values()[0][3] + self._V_VALUE_HEADER_SIZE
-      fullname_offset = v_data_struct.values()[0][6] + self._V_VALUE_HEADER_SIZE
-      comments_offset = v_data_struct.values()[0][9] + self._V_VALUE_HEADER_SIZE
-      username_raw = v_value.data[
-          username_offset:username_offset + v_data_struct.values()[0][4]]
-      fullname_raw = v_value.data[
-          fullname_offset:fullname_offset + v_data_struct.values()[0][7]]
-      comments_raw = v_value.data[
-          comments_offset:comments_offset + v_data_struct.values()[0][10]]
+      v_header_values = v_data_struct.values()[0]
 
-      username = binary.ReadUTF16(username_raw)
-      fullname = binary.ReadUTF16(fullname_raw)
-      comments = binary.ReadUTF16(comments_raw)
+      data_start_offset = v_header_values[3] + self._V_VALUE_STRINGS_OFFSET
+      data_end_offset = v_header_values[4] + data_start_offset
+      utf16_stream = v_value.data[data_start_offset:data_end_offset]
 
-      values_dict = {u'user_guid': subkey.name}
+      try:
+        username = utf16_stream.decode(u'utf-16-le')
+      except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+        username = utf16_stream.decode(u'utf-16-le', errors=u'replace')
+        parser_mediator.ProduceParseError((
+            u'unable to decode username string with error: {0:s}. Characters '
+            u'that cannot be decoded will be replaced with "?" or '
+            u'"\\ufffd".').format(exception))
 
-      if username:
-        values_dict[u'username'] = username
-      if fullname:
-        values_dict[u'full_name'] = fullname
-      if comments:
-        values_dict[u'comments'] = comments
-      if name_dict:
-        account_create_time = name_dict.get(username, 0)
-      else:
-        account_create_time = 0
+      data_start_offset = v_header_values[6] + self._V_VALUE_STRINGS_OFFSET
+      data_end_offset = v_header_values[7] + data_start_offset
+      utf16_stream = v_value.data[data_start_offset:data_end_offset]
 
-      values_dict[u'account_rid'] = f_data_struct.rid
-      values_dict[u'login_count'] = f_data_struct.login_count
+      try:
+        fullname = utf16_stream.decode(u'utf-16-le')
+      except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+        fullname = utf16_stream.decode(u'utf-16-le', errors=u'replace')
+        parser_mediator.ProduceParseError((
+            u'unable to decode fullname string with error: {0:s}. Characters '
+            u'that cannot be decoded will be replaced with "?" or '
+            u'"\\ufffd".').format(exception))
 
-      if account_create_time > 0:
-        event_object = SAMUsersWindowsRegistryEvent(
-            account_create_time, eventdata.EventTimestamp.ACCOUNT_CREATED,
-            registry_key.path, values_dict,
-            offset=registry_key.offset)
+      data_start_offset = v_header_values[9] + self._V_VALUE_STRINGS_OFFSET
+      data_end_offset = v_header_values[10] + data_start_offset
+      utf16_stream = v_value.data[data_start_offset:data_end_offset]
+
+      try:
+        comments = utf16_stream.decode(u'utf-16-le')
+      except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+        comments = utf16_stream.decode(u'utf-16-le', errors=u'replace')
+        parser_mediator.ProduceParseError((
+            u'unable to decode comments string with error: {0:s}. Characters '
+            u'that cannot be decoded will be replaced with "?" or '
+            u'"\\ufffd".').format(exception))
+
+      filetime = None
+      if usernames_dict:
+        filetime = usernames_dict.get(username, None)
+
+      # TODO: check if subkey.name == f_data_struct.rid
+
+      if filetime:
+        values_dict = {
+            u'account_rid': f_data_struct.rid,
+            u'login_count': f_data_struct.login_count}
+
+        if username:
+          values_dict[u'username'] = username
+        if fullname:
+          values_dict[u'full_name'] = fullname
+        if comments:
+          values_dict[u'comments'] = comments
+
+        event_object = windows_events.WindowsRegistryEvent(
+            filetime, registry_key.path, values_dict,
+            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
       if f_data_struct.last_login > 0:
         event_object = SAMUsersWindowsRegistryEvent(
             f_data_struct.last_login, eventdata.EventTimestamp.LAST_LOGIN_TIME,
-            registry_key.path, f_value.offset, values_dict)
+            registry_key.path, f_value.offset, f_data_struct.rid,
+            f_data_struct.login_count, username, fullname, comments)
         parser_mediator.ProduceEvent(event_object)
 
       if f_data_struct.password_reset > 0:
         event_object = SAMUsersWindowsRegistryEvent(
             f_data_struct.password_reset,
             eventdata.EventTimestamp.LAST_PASSWORD_RESET,
-            registry_key.path, f_value.offset, values_dict)
+            registry_key.path, f_value.offset, f_data_struct.rid,
+            f_data_struct.login_count, username, fullname, comments)
         parser_mediator.ProduceEvent(event_object)
 
 

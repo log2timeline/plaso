@@ -23,8 +23,12 @@ class SAMUsersWindowsRegistryEventFormatterTest(
     event_formatter = sam_users.SAMUsersWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
+        u'account_rid',
+        u'comments',
+        u'fullname',
         u'key_path',
-        u'value_name']
+        u'login_count',
+        u'username']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

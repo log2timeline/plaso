@@ -80,6 +80,8 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:49:37.078067')
