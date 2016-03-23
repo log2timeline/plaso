@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import office_mru
+from plaso.formatters import officemru
 
 from tests.formatters import test_lib
 
