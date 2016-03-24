@@ -9,7 +9,7 @@ RUN apt-get update
 RUN apt-get install -y openjdk-7-jre-headless
 
 # Install plaso bootstrapping deps
-RUN apt-get install -y git python python-dev software-properties-common
+RUN apt-get install -y git python python-dev software-properties-common curl
 
 ENV JENKINS_REMOTING_VERSION 2.52
 ENV HOME /home/jenkins
