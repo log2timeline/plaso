@@ -4,8 +4,7 @@
 EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
-# DISTROS="precise trusty vivid wily";
-DISTROS="precise trusty";
+DISTROS="trusty wily xenial";
 DPKG_VERSION="1";
 DEVELOPMENT_RELEASE=1;
 
