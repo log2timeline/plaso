@@ -6,10 +6,10 @@ import unittest
 
 from tests.formatters import test_lib
 from plaso.formatters import zsh_extended_history
-from plaso.parsers import zsh_extended_history
+from plaso.parsers import zsh_extended_history as zsh_parser
 
 
-class SCCMFormatterTest(test_lib.EventFormatterTestCase):
+class ZshExtendedHistoryFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Zsh extended_history event _formatter."""
 
   def setUp(self):
@@ -32,7 +32,7 @@ class SCCMFormatterTest(test_lib.EventFormatterTestCase):
   def testGetMessages(self):
     """Tests the GetMessages method."""
     mediator = None
-    event = zsh_extended_history.ZshHistoryEvent(1457771210, 0, u'cd plaso')
+    event = zsh_parser.ZshHistoryEvent(1457771210, 0, u'cd plaso')
 
     expected_messages = (u'cd plaso took 0 seconds', u'cd plaso')
     messages = self._formatter.GetMessages(mediator, event)
