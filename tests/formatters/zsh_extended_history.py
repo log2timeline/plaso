@@ -10,15 +10,11 @@ from plaso.parsers import zsh_extended_history as zsh_parser
 
 
 class ZshExtendedHistoryFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Zsh extended_history event _formatter."""
+  """Tests for the Zsh extended_history event formatter."""
 
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._formatter = zsh_extended_history.ZshExtendedHistoryEventFormatter()
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    self.assertIsNotNone(self._formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""

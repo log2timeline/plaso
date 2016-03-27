@@ -11,12 +11,13 @@ class ZshExtendedHistoryEventFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SEPARATOR = u' '
 
-  FORMAT_STRING_PIECES = [u'{command}',
-                          u'took {elapsed_seconds} seconds']
+  FORMAT_STRING_PIECES = [
+      u'{command}',
+      u'took {elapsed_seconds} seconds']
 
   FORMAT_STRING_SHORT_PIECES = [u'{command}']
 
-  SOURCE_LONG = u'Zsh History'
+  SOURCE_LONG = u'Zsh Extended History'
   SOURCE_SHORT = u'HIST'
 
 

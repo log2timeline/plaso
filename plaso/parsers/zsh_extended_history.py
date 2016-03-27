@@ -15,7 +15,12 @@ from plaso.parsers import text_parser
 
 
 class ZshHistoryEvent(time_events.PosixTimeEvent):
-  """Convenience class for Zsh history events."""
+  """Convenience class for Zsh history events.
+
+  Attributes:
+    command: the command that was run.
+    elapsed_seconds: the time in seconds that the command took to execute.
+  """
   DATA_TYPE = u'shell:zsh:history'
 
   def __init__(self, posix_time, elapsed_seconds, command):
@@ -30,8 +35,8 @@ class ZshHistoryEvent(time_events.PosixTimeEvent):
     """
     super(ZshHistoryEvent, self).__init__(
         posix_time, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.elapsed_seconds = elapsed_seconds
     self.command = command
+    self.elapsed_seconds = elapsed_seconds
 
 
 class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -40,9 +45,9 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   NAME = u'zsh_extended_history'
   DESCRIPTION = u'Parser for ZSH extended history files'
 
-  VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
+  _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
-  _pyparsing_components = {
+  _PYPARSING_COMPONENTS = {
       u'timestamp': text_parser.PyparsingConstants.INTEGER.
                     setResultsName(u'timestamp'),
       u'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.
@@ -51,29 +56,29 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
                   setResultsName(u'command'),
   }
 
-  LINE_GRAMMAR = (
+  _LINE_GRAMMAR = (
       pyparsing.Literal(u':') +
-      _pyparsing_components[u'timestamp'] + pyparsing.Literal(u':') +
-      _pyparsing_components[u'elapsed_seconds'] + pyparsing.Literal(u';') +
-      _pyparsing_components[u'command'] + pyparsing.LineEnd())
+      _PYPARSING_COMPONENTS[u'timestamp'] + pyparsing.Literal(u':') +
+      _PYPARSING_COMPONENTS[u'elapsed_seconds'] + pyparsing.Literal(u';') +
+      _PYPARSING_COMPONENTS[u'command'] + pyparsing.LineEnd())
 
-  LINE_STRUCTURES = [(u'line', LINE_GRAMMAR)]
+  LINE_STRUCTURES = [(u'line', _LINE_GRAMMAR)]
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse the record and return a Zsh history event.
+    """Parses a record and produces a Zsh history event.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      key: an identification string indicating the name of the parsed
            structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      structure: the elements parsed from the file (instance of
+                 pyparsing.ParseResults).
 
     Raises:
       UnableToParseFile: if an unexpected key is provided.
     """
     if key != u'line':
-      raise errors.UnableToParseFile(u'Unrecognized key {0:s}'.format(key))
+      raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
 
     event_object = ZshHistoryEvent(
         structure[u'timestamp'], structure[u'elapsed_seconds'],
@@ -84,12 +89,13 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     """Verifies whether content corresponds to a Zsh extended_history file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      lines: A buffer containing lines from a log file.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      lines: a string containing one or more lines of content from the file-like
+             object being evaluate for parsing  .
 
     Returns:
-      Returns a boolean that indicates the lines appear to contain content from
-       a Zsh extended_history file.
+      A boolean that indicates the lines appear to contain content from a
+      Zsh extended_history file.
     """
-    if self.VERIFICATION_REGEX.match(lines):
+    if self._VERIFICATION_REGEX.match(lines):
       return True
