@@ -13,7 +13,7 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._parser =  zsh_extended_history.ZshExtendedHistoryParser()
+    self._parser = zsh_extended_history.ZshExtendedHistoryParser()
 
   def testParse(self):
     """Tests for the Parse method."""
@@ -39,7 +39,7 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     event = event_objects[3]
     expected_timestamp = timelib.Timestamp.CopyFromString(
-      u'2016-03-26 11:54:57')
+        u'2016-03-26 11:54:57')
     self.assertEqual(event.timestamp, expected_timestamp)
 
   def testVerification(self):

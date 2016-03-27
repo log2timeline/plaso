@@ -29,7 +29,7 @@ class ZshHistoryEvent(time_events.PosixTimeEvent):
       command: a string containing the command that was run.
     """
     super(ZshHistoryEvent, self).__init__(
-      posix_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        posix_time, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.elapsed_seconds = elapsed_seconds
     self.command = command
 
@@ -43,12 +43,12 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
   _pyparsing_components = {
-      u'timestamp': text_parser.PyparsingConstants.INTEGER.setResultsName(
-          u'timestamp'),
-      u'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.setResultsName(
-          u'elapsed_seconds'),
-      u'command':  pyparsing.Regex(r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).
-          setResultsName(u'command'),
+      u'timestamp': text_parser.PyparsingConstants.INTEGER.
+                    setResultsName(u'timestamp'),
+      u'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.
+                          setResultsName(u'elapsed_seconds'),
+      u'command': pyparsing.Regex(r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).
+                  setResultsName(u'command'),
   }
 
   LINE_GRAMMAR = (
