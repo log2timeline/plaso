@@ -18,8 +18,9 @@ class ZshHistoryEvent(time_events.PosixTimeEvent):
   """Convenience class for Zsh history events.
 
   Attributes:
-    command: the command that was run.
-    elapsed_seconds: the time in seconds that the command took to execute.
+    command: a string containing the command that was run.
+    elapsed_seconds: an integer containing the time in seconds that the
+                     command took to execute.
   """
   DATA_TYPE = u'shell:zsh:history'
 
@@ -69,13 +70,12 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: an identification string indicating the name of the parsed
-           structure.
+      key: an string indicating the name of the parsed structure.
       structure: the elements parsed from the file (instance of
                  pyparsing.ParseResults).
 
     Raises:
-      UnableToParseFile: if an unexpected key is provided.
+      UnableToParseFile: if an unsupported key is provided.
     """
     if key != u'line':
       raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
@@ -91,7 +91,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
       lines: a string containing one or more lines of content from the file-like
-             object being evaluate for parsing  .
+             object being evaluated for parsing.
 
     Returns:
       A boolean that indicates the lines appear to contain content from a

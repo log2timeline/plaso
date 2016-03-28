@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Zsh extended_history _formatter."""
+"""Tests for the Zsh extended_history formatter."""
 
 import unittest
 
