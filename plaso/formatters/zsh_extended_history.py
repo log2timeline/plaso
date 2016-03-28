@@ -13,7 +13,7 @@ class ZshExtendedHistoryEventFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'{command}',
-      u'Time elapsed {elapsed_seconds} seconds']
+      u'Time elapsed: {elapsed_seconds} seconds']
 
   FORMAT_STRING_SHORT_PIECES = [u'{command}']
 

@@ -30,7 +30,7 @@ class ZshExtendedHistoryFormatterTest(test_lib.EventFormatterTestCase):
     mediator = None
     event = zsh_parser.ZshHistoryEvent(1457771210, 0, u'cd plaso')
 
-    expected_messages = (u'cd plaso took 0 seconds', u'cd plaso')
+    expected_messages = (u'cd plaso Time elapsed: 0 seconds', u'cd plaso')
     messages = self._formatter.GetMessages(mediator, event)
     self.assertEqual(messages, expected_messages)
 
