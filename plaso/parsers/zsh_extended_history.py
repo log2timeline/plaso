@@ -63,7 +63,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
       _PYPARSING_COMPONENTS[u'elapsed_seconds'] + pyparsing.Literal(u';') +
       _PYPARSING_COMPONENTS[u'command'] + pyparsing.LineEnd())
 
-  LINE_STRUCTURES = [(u'line', _LINE_GRAMMAR)]
+  LINE_STRUCTURES = [(u'command', _LINE_GRAMMAR)]
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a Zsh history event.
@@ -77,7 +77,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       UnableToParseFile: if an unsupported key is provided.
     """
-    if key != u'line':
+    if key != u'command':
       raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
 
     event_object = ZshHistoryEvent(
