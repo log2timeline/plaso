@@ -52,7 +52,7 @@ class ParsersManager(object):
           logging.warning(
               u'The excluded parser: {0:s} is not associated with the included '
               u'parsers {1:s}. Ignoring excluded parser.'.format(
-              parser, includes))
+                  parser, includes))
           parser_to_pop.append(parser)
 
       for parser in parser_to_pop:

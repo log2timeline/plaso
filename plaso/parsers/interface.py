@@ -66,11 +66,7 @@ class BaseParser(object):
 
   # Every derived parser class that implements plugins should define
   # its own _plugin_classes dict:
-  # _plugin_classes = {}
-
-  # We deliberately don't define it here to make sure the plugins of
-  # different parser classes don't end up in the same dict.
-  _plugin_classes = None
+  _plugin_classes = {}
   _includes = []
   _excludes = []
 
