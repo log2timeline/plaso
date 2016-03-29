@@ -127,7 +127,6 @@ class ParsersManagerTest(unittest.TestCase):
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
-    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
 
   def testGetParsers(self):
     """Tests the GetParsers function."""

@@ -9,6 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.frontend import extraction_frontend
+from plaso.parsers import manager
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -55,6 +56,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetParserPluginsInformation(self):
     """Tests the GetParserPluginsInformation function."""
+    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
     test_front_end = extraction_frontend.ExtractionFrontend()
     parser_plugins_information = test_front_end.GetParserPluginsInformation()
 
@@ -65,6 +67,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetParserPresetsInformation(self):
     """Tests the GetParserPresetsInformation function."""
+    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
     test_front_end = extraction_frontend.ExtractionFrontend()
     parser_presets_information = test_front_end.GetParserPresetsInformation()
 
@@ -75,6 +78,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetParsersInformation(self):
     """Tests the GetParsersInformation function."""
+    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
     test_front_end = extraction_frontend.ExtractionFrontend()
     parsers_information = test_front_end.GetParsersInformation()
 
@@ -85,6 +89,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetNamesOfParsersWithPlugins(self):
     """Tests the GetNamesOfParsersWithPlugins function."""
+    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
     test_front_end = extraction_frontend.ExtractionFrontend()
     parsers_names = test_front_end.GetNamesOfParsersWithPlugins()
 

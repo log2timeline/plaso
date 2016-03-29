@@ -21,6 +21,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
   def testExtractionWorker(self):
     """Tests the extraction worker functionality."""
+    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
     path_spec_queue = single_process.SingleProcessQueue()
     event_object_queue = single_process.SingleProcessQueue()
     parse_error_queue = single_process.SingleProcessQueue()
