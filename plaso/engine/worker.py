@@ -830,8 +830,7 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     self._file_scanner = parsers_manager.ParsersManager.GetScanner(
         self._specification_store)
 
-    self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
-        parser_filter_string=parser_filter_string)
+    self._parser_objects = parsers_manager.ParsersManager.GetParserObjects()
 
     self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
     if u'filestat' in self._parser_objects:

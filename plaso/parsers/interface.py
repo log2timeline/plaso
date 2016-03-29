@@ -10,7 +10,6 @@ import abc
 import os
 
 from plaso.lib import errors
-from plaso.parsers import manager
 
 
 class BaseFileEntryFilter(object):
@@ -72,6 +71,8 @@ class BaseParser(object):
   # We deliberately don't define it here to make sure the plugins of
   # different parser classes don't end up in the same dict.
   _plugin_classes = None
+  _includes = []
+  _excludes = []
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -93,7 +94,7 @@ class BaseParser(object):
 
     del cls._plugin_classes[plugin_name]
 
-  # TOOD: move this to a filter.
+  # TODO: move this to a filter.
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
@@ -104,19 +105,14 @@ class BaseParser(object):
     return
 
   @classmethod
-  def GetPluginNames(cls, parser_filter_string=None):
+  def GetPluginNames(cls):
     """Retrieves the plugin names.
-
-    Args:
-      parser_filter_string: optional parser filter string.
 
     Returns:
       A list of plugin names.
     """
     plugin_names = []
-
-    for plugin_name, _ in cls.GetPlugins(
-        parser_filter_string=parser_filter_string):
+    for plugin_name, _ in cls.GetPlugins():
       plugin_names.append(plugin_name)
 
     return sorted(plugin_names)
@@ -137,47 +133,33 @@ class BaseParser(object):
     return plugin_class()
 
   @classmethod
-  def GetPluginObjects(cls, parser_filter_string=None):
+  def GetPluginObjects(cls):
     """Retrieves the plugin objects.
-
-    Args:
-      parser_filter_string: optional parser filter string.
 
     Returns:
       A list of plugin objects (instances of BasePlugin).
     """
     plugin_objects = []
 
-    for _, plugin_class in cls.GetPlugins(
-        parser_filter_string=parser_filter_string):
+    for _, plugin_class in cls.GetPlugins():
       plugin_object = plugin_class()
       plugin_objects.append(plugin_object)
 
     return plugin_objects
 
   @classmethod
-  def GetPlugins(cls, parser_filter_string=None):
+  def GetPlugins(cls):
     """Retrieves the registered plugins.
-
-    Args:
-      parser_filter_string: optional parser filter string.
 
     Yields:
       A tuple that contains the uniquely identifying name of the plugin
       and the plugin class (subclass of BasePlugin).
     """
-    if parser_filter_string:
-      includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-          parser_filter_string)
-    else:
-      includes = None
-      excludes = None
-
     for plugin_name, plugin_class in cls._plugin_classes.iteritems():
-      if excludes and plugin_name in excludes:
+      if cls._excludes and plugin_name in cls._excludes:
         continue
 
-      if includes and plugin_name not in includes:
+      if cls._includes and plugin_name not in cls._includes:
         continue
 
       yield plugin_name, plugin_class
@@ -214,6 +196,17 @@ class BaseParser(object):
     """
     for plugin_class in plugin_classes:
       cls.RegisterPlugin(plugin_class)
+
+  @classmethod
+  def SetFilterLists(cls, includes, excludes):
+    """Sets the includes and excludes lists.
+
+    Args:
+      includes: a list of plugins to include
+      excludes: a list of plugins to exclude
+    """
+    cls._includes = includes
+    cls._excludes = excludes
 
   @classmethod
   def SupportsPlugins(cls):
