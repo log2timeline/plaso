@@ -15,7 +15,7 @@ from plaso.lib import py2to3
 from plaso.serializer import interface
 from plaso.storage import collection
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class _AnalysisReportJSONDecoder(json.JSONDecoder):

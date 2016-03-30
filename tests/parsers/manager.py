@@ -15,11 +15,12 @@ class TestParser(interface.BaseParser):
   NAME = u'test_parser'
   DESCRIPTION = u'Test parser.'
 
-  def Parse(self, unused_parser_mediator, **kwargs):
-    """Parsers the file entry and extracts event objects.
+  # pylint: disable=unused-argument
+  def Parse(self, parser_mediator, **kwargs):
+    """Parses the file entry and extracts event objects.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
     """
     return
 
@@ -34,10 +35,10 @@ class TestParserWithPlugins(interface.BaseParser):
 
   # pylint: disable=unused-argument
   def Parse(self, parser_mediator, **kwargs):
-    """Parsers the file entry and extracts event objects.
+    """Parses the file entry and extracts event objects.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
     """
     return
 
@@ -67,9 +68,10 @@ class TestPlugin(plugins.BasePlugin):
 class ParsersManagerTest(unittest.TestCase):
   """Tests for the parsers manager."""
 
+  # pylint: disable=protected-access
+
   def testParserRegistration(self):
     """Tests the RegisterParser and DeregisterParser functions."""
-    # pylint: disable=protected-access
     number_of_parsers = len(manager.ParsersManager._parser_classes)
 
     manager.ParsersManager.RegisterParser(TestParser)
@@ -88,7 +90,6 @@ class ParsersManagerTest(unittest.TestCase):
   def testPluginRegistration(self):
     """Tests the RegisterPlugin and DeregisterPlugin functions."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
-    # pylint: disable=protected-access
     self.assertEqual(
         len(TestParserWithPlugins._plugin_classes), 1)
 

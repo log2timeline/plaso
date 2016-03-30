@@ -12,7 +12,7 @@ from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):

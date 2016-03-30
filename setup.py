@@ -20,7 +20,7 @@ except ImportError:
   from distutils.core import find_packages, setup, Command
 
 # Change PYTHONPATH to include plaso.
-sys.path.insert(0, u'.')
+sys.path.insert(0, '.')
 
 import plaso
 import plaso.dependencies
@@ -28,8 +28,8 @@ import plaso.dependencies
 
 version_tuple = (sys.version_info[0], sys.version_info[1])
 if version_tuple < (2, 7) or version_tuple >= (3, 0):
-  print((u'Unsupported Python version: {0:s}, version 2.7 or higher and '
-         u'lower than 3.x required.').format(sys.version))
+  print(('Unsupported Python version: {0:s}, version 2.7 or higher and '
+         'lower than 3.x required.').format(sys.version))
   sys.exit(1)
 
 
@@ -38,14 +38,14 @@ def GetScripts():
   scripts = []
 
   script_filenames = frozenset([
-      u'image_export.py',
-      u'log2timeline.py',
-      u'pinfo.py',
-      u'preg.py',
-      u'psort.py'])
+      'image_export.py',
+      'log2timeline.py',
+      'pinfo.py',
+      'preg.py',
+      'psort.py'])
 
   for filename in script_filenames:
-    scripts.append(os.path.join(u'tools', filename))
+    scripts.append(os.path.join('tools', filename))
 
   return scripts
 
@@ -77,15 +77,17 @@ sys.setdefaultencoding(encoding)
 
 # Unicode in the description will break python-setuptools, hence
 # "Plaso Langar Að Safna Öllu" was removed.
-plaso_description = (
-    u'plaso is a tool designed to extract timestamps from various files found '
-    u'on a typical computer system(s) and aggregate them.')
+plaso_description = 'Super timeline all the things'
+plaso_long_description = (
+    'log2timeline is a tool designed to extract timestamps from various files '
+    'found on a typical computer system(s) and aggregate them. Plaso is the '
+    'Python rewrite of log2timeline.')
 
 setup(
     name='plaso',
     version=plaso.GetVersion(),
     description=plaso_description,
-    long_description=plaso_description,
+    long_description=plaso_long_description,
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',
     maintainer='Plaso development team',
@@ -106,7 +108,7 @@ setup(
     data_files=[
         ('share/plaso', glob.glob(os.path.join('data', '*'))),
         ('share/doc/plaso', [
-            u'AUTHORS', u'ACKNOWLEDGEMENTS', u'LICENSE', u'README']),
+            'AUTHORS', 'ACKNOWLEDGEMENTS', 'LICENSE', 'README']),
     ],
     # TODO: this is disabled for now since setup.py will actually try
     # to install the depencies directly from pypi.

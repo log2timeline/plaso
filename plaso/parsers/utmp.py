@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Parser for Linux UTMP files."""
 
-import construct
 import logging
 import os
 import socket
+
+import construct
 
 from plaso.containers import time_events
 from plaso.lib import errors

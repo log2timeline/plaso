@@ -279,24 +279,24 @@ class Stream(object):
       dest_ip: Dest IP.
       prot: Protocol (TCP, UDP, ICMP, ARP).
     """
-    self.packet_id = [packet[1]]
-    self.timestamps = [packet[0]]
-    self.size = packet[3]
-    self.start_time = packet[0]
+    super(Stream, self).__init__()
     self.all_data = [prot_data]
-    self.protocol_data = u''
-    self.stream_data = b''
-
-    if prot in [u'TCP', u'UDP']:
-      self.source_port = prot_data.sport
-      self.dest_port = prot_data.dport
-    else:
-      self.source_port = u''
-      self.dest_port = u''
-
-    self.source_ip = source_ip
     self.dest_ip = dest_ip
+    self.packet_id = [packet[1]]
     self.protocol = prot
+    self.protocol_data = u''
+    self.size = packet[3]
+    self.source_ip = source_ip
+    self.start_time = packet[0]
+    self.stream_data = b''
+    self.timestamps = [packet[0]]
+
+    if prot in (u'TCP', u'UDP'):
+      self.dest_port = prot_data.dport
+      self.source_port = prot_data.sport
+    else:
+      self.dest_port = u''
+      self.source_port = u''
 
   def AddPacket(self, packet, prot_data):
     """Add another packet to an existing stream.
@@ -704,7 +704,7 @@ class PcapParser(interface.FileObjectParser):
       stream_object = Stream(
           packet_values, ip_packet.data, source_ip_address,
           destination_ip_address, u'BAD')
-      stream_object.protocolData = u'Bad truncated IP packet'
+      stream_object.protocol_data = u'Bad truncated IP packet'
       other_streams.append(stream_object)
 
     return other_streams

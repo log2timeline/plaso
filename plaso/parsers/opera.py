@@ -4,9 +4,9 @@
 import logging
 import os
 import urllib2
+from xml.etree import ElementTree
 
 from dfvfs.helpers import text_file
-from xml.etree import ElementTree
 
 from plaso.containers import time_events
 from plaso.lib import errors

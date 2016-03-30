@@ -9,7 +9,7 @@ import uuid
 from plaso.lib import errors
 from plaso.lib import timelib
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class TimeLibTest(unittest.TestCase):

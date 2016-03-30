@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for ESE database plugins."""
 
-import construct
 import logging
 
-import pyesedb
+import construct
+import pyesedb  # pylint: disable=wrong-import-order
 
 from plaso.lib import errors
 from plaso.parsers import plugins

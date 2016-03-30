@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains an import statement for each parser."""
+"""Imports for the parsers and plugins manager."""
 
 from plaso.parsers import asl
 from plaso.parsers import android_app_usage

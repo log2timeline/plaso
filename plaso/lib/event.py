@@ -13,6 +13,10 @@ class PreprocessObject(object):
   Attributes:
     collection_information: a dictionary containing the collection information
                             attributes.
+    counter: the parsers counter (instance of collections.Counter) or None.
+    plugin_counter: the parser plugins counter (instance of
+                    collections.Counter) or None.
+    zone: the timezone (instance of pytz.ZoneInfo).
   """
 
   def __init__(self):
@@ -20,6 +24,8 @@ class PreprocessObject(object):
     super(PreprocessObject, self).__init__()
     self._user_ids_to_names = None
     self.collection_information = {}
+    self.counter = None
+    self.plugin_counter = None
     self.zone = pytz.UTC
 
   def GetUserMappings(self):

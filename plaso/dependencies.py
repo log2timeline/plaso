@@ -5,6 +5,7 @@ from __future__ import print_function
 import re
 import sys
 
+# pylint: disable=import-error
 # pylint: disable=no-name-in-module
 if sys.version_info[0] < 3:
   # Keep urllib2 here since we this code should be able to be used

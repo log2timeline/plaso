@@ -259,10 +259,8 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     generator = self._database_file.GetValues(
         table_names, column_names, condition)
-
-    if generator:
-      for values in generator:
-        yield values[u'message_file_key']
+    for values in generator:
+      yield values[u'message_file_key']
 
   def _ReformatMessageString(self, message_string):
     """Reformats the message string.

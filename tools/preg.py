@@ -17,26 +17,25 @@ import os
 import sys
 import textwrap
 
-try:
-  # Support version 1.X of IPython.
-  # pylint: disable=no-name-in-module
-  from IPython.terminal.embed import InteractiveShellEmbed
-except ImportError:
-  # pylint: disable=no-name-in-module
-  from IPython.frontend.terminal.embed import InteractiveShellEmbed
-
 import IPython
-# pylint: disable=no-name-in-module
-from IPython.config.loader import Config
-from IPython.core import magic
-
-import pysmdev
+import pysmdev  # pylint: disable=wrong-import-order
 
 from dfvfs.helpers import source_scanner
 from dfvfs.helpers import windows_path_resolver
 from dfvfs.lib import definitions
 from dfvfs.resolver import resolver
 from dfvfs.volume import tsk_volume_system
+
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
+try:
+  # Support version 1.x of IPython.
+  from IPython.terminal.embed import InteractiveShellEmbed
+except ImportError:
+  from IPython.frontend.terminal.embed import InteractiveShellEmbed
+
+from IPython.config.loader import Config
+from IPython.core import magic
 
 from plaso.cli import hexdump
 from plaso.cli import storage_media_tool
@@ -134,6 +133,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     self._front_end = preg.PregFrontend()
     self._key_path = None
     self._knowledge_base_object = knowledge_base.KnowledgeBase()
+    self._quiet = False
     self._parse_restore_points = False
     self._path_resolvers = []
     self._verbose_output = False

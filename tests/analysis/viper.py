@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the Viper analysis plugin."""
 
-import mock
 import unittest
 
+import mock
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import viper

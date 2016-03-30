@@ -74,7 +74,7 @@ class BaseEngineTest(test_lib.EngineTestCase):
 
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""
-    self._test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine(None, None, None)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -84,7 +84,7 @@ class BaseEngineTest(test_lib.EngineTestCase):
         parent=os_path_spec)
 
     resolver_context = context.Context()
-    test_file_system, test_mount_point = self._test_engine.GetSourceFileSystem(
+    test_file_system, test_mount_point = test_engine.GetSourceFileSystem(
         source_path_spec, resolver_context=resolver_context)
 
     self.assertIsNotNone(test_file_system)
@@ -97,34 +97,34 @@ class BaseEngineTest(test_lib.EngineTestCase):
 
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
-    self._test_engine = TestEngine(None, None, None)
+    test_engine = TestEngine(None, None, None)
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
 
-    self._test_engine.PreprocessSources([source_path_spec])
+    test_engine.PreprocessSources([source_path_spec])
 
-    self.assertEqual(self._test_engine.knowledge_base.platform, u'Windows')
+    self.assertEqual(test_engine.knowledge_base.platform, u'Windows')
 
   def testSetEnableDebugOutput(self):
     """Tests the SetDebugMode function."""
-    self._test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine(None, None, None)
 
-    self._test_engine.SetEnableDebugOutput(True)
+    test_engine.SetEnableDebugOutput(True)
 
   def testSetEnableProfiling(self):
     """Tests the SetEnableProfiling function."""
-    self._test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine(None, None, None)
 
-    self._test_engine.SetEnableProfiling(
+    test_engine.SetEnableProfiling(
         True, profiling_sample_rate=5000, profiling_type=u'all')
 
   def testSupportsMemoryProfiling(self):
     """Tests the SupportsMemoryProfiling function."""
-    self._test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine(None, None, None)
 
     expected_result = hpy is not None
-    result = self._test_engine.SupportsMemoryProfiling()
+    result = test_engine.SupportsMemoryProfiling()
     self.assertEqual(result, expected_result)
 
 

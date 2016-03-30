@@ -49,10 +49,10 @@ class EventBuffer(object):
     self.End()
 
   def Append(self, event_object):
-    """Append an EventObject into the processing pipeline.
+    """Appends an event object.
 
     Args:
-      event_object: the EventObject that is being added.
+      event_object: an event object (instance of EventObject).
     """
     if not self.check_dedups:
       self._output_module.WriteEvent(event_object)
@@ -68,7 +68,11 @@ class EventBuffer(object):
     self._buffer_dict[key] = event_object
 
   def End(self):
-    """Calls the formatter to produce the closing line."""
+    """Closes the buffer.
+
+    Buffered event objects are written using the output module, an optional
+    footer is written and the output is closed.
+    """
     self.Flush()
 
     if self._output_module:
@@ -76,7 +80,10 @@ class EventBuffer(object):
       self._output_module.Close()
 
   def Flush(self):
-    """Flushes the buffer by sending records to a formatter and prints."""
+    """Flushes the buffer.
+
+    Buffered event objects are written using the output module.
+    """
     if not self._buffer_dict:
       return
 

@@ -83,6 +83,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._filter_expression = None
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
+    self._number_of_extraction_workers = 0
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
     self._source_type = None

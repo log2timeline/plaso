@@ -1,44 +1,53 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""Tests for the circular buffer for storing event objects."""
 
 import unittest
 
 from plaso.lib import bufferlib
 
 
-class TestBuffer(unittest.TestCase):
-  """Test the circular buffer."""
+class CircularBufferTest(unittest.TestCase):
+  """Tests for the circular buffer for storing event objects."""
 
   def testBuffer(self):
+    """Tests the circular buffer."""
     items = range(1, 11)
 
     circular_buffer = bufferlib.CircularBuffer(10)
 
     self.assertEqual(len(circular_buffer), 10)
     self.assertEqual(circular_buffer.size, 10)
-    self.assertTrue(circular_buffer.GetCurrent() is None)
+
+    current_item = circular_buffer.GetCurrent()
+    self.assertIsNone(current_item)
 
     for item in items:
       circular_buffer.Append(item)
-      self.assertEqual(circular_buffer.GetCurrent(), item)
+      current_item = circular_buffer.GetCurrent()
+      self.assertEqual(current_item, item)
       self.assertEqual(circular_buffer.size, 10)
 
     content = list(circular_buffer)
     self.assertEqual(items, content)
 
     circular_buffer.Append(11)
-    self.assertEqual(
-        [2, 3, 4, 5, 6, 7, 8, 9, 10, 11], list(circular_buffer.Flush()))
+
+    expected_items = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    items = list(circular_buffer.Flush())
+    self.assertEqual(items, expected_items)
 
     self.assertIsNone(circular_buffer.GetCurrent())
 
-    new_items = range(1, 51)
-    for item in new_items:
+    items = range(1, 51)
+    for item in items:
       circular_buffer.Append(item)
       self.assertEqual(circular_buffer.GetCurrent(), item)
       self.assertEqual(circular_buffer.size, 10)
 
-    self.assertEqual(range(41, 51), list(circular_buffer))
+    expected_items = range(41, 51)
+    items = list(circular_buffer)
+    self.assertEqual(items, expected_items)
 
 
 if __name__ == '__main__':

@@ -93,6 +93,7 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
       if name in names:
         matches.append((name, subkey))
 
+      # pylint: disable=protected-access
       if isinstance(subkey, plistlib._InternalDict):
         self._FindKeys(subkey, names, matches)
 

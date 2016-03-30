@@ -285,7 +285,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
       logging.debug(u'Collector starting collection.')
       self._collector.Collect(self._source_path_specs)
 
-    except Exception as exception:
+    except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception in collector (PID: {0:d}).'.format(self._pid))
       logging.exception(exception)
@@ -1128,7 +1128,7 @@ class MultiProcessEngine(engine.BaseEngine):
       logging.warning(
           u'Processing aborted with engine error: {0:s}.'.format(exception))
 
-    except Exception as exception:
+    except Exception as exception:  # pylint: disable=broad-except
       logging.error(
           u'Processing aborted with error: {0:s}.'.format(exception))
       self._processing_status.error_detected = True
@@ -1330,7 +1330,7 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     try:
       self._extraction_worker.Run()
 
-    except Exception as exception:
+    except Exception as exception:  # pylint: disable=broad-except
       logging.warning((
           u'Unhandled exception in extraction worker {0!s} '
           u'(PID: {1:d}).').format(self._name, self._pid))
@@ -1432,7 +1432,8 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
             u'Storage writer event queue stalled - restarting and waiting for '
             u'extraction to complete.')
         self._storage_writer.WriteEventObjects()
-    except Exception as exception:
+
+    except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception in storage writer (PID: {0:d}).'.format(
               self._pid))

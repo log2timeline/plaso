@@ -13,7 +13,7 @@ from plaso.cli import views
 from plaso.lib import errors
 from plaso.lib import py2to3
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class CLITool(object):
@@ -25,7 +25,6 @@ class CLITool(object):
                         or multi-byte character strings (sometimes referred to
                         as extended ASCII).
   """
-
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
 

@@ -6,11 +6,14 @@ import unittest
 
 from plaso.engine import zeromq_queue
 from plaso.lib import errors
+
 from tests.engine import test_lib
 
 
 class testZeroMQQueues(test_lib.EngineTestCase):
   """Tests for ZeroMQ queues."""
+
+  # pylint: disable=protected-access
 
   _QUEUE_CLASSES = frozenset([
       zeromq_queue.ZeroMQPushBindQueue,

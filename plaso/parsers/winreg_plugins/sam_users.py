@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+""""Windows Registry plugin for SAM Users Account information."""
 
 import logging
 
@@ -14,8 +15,8 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 
 
-class UsersPlugin(interface.WindowsRegistryPlugin):
-  """SAM Windows Registry plugin for Users Account information."""
+class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
+  """Windows Registry plugin for SAM Users Account information."""
 
   NAME = u'windows_sam_users'
   DESCRIPTION = u'Parser for SAM Users and Names Registry keys.'
@@ -170,4 +171,4 @@ class UsersPlugin(interface.WindowsRegistryPlugin):
         parser_mediator.ProduceEvent(event_object)
 
 
-winreg.WinRegistryParser.RegisterPlugin(UsersPlugin)
+winreg.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)

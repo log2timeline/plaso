@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""List of object filters."""
+"""List of object-filters."""
 
 import logging
 import os
@@ -12,7 +12,12 @@ from plaso.lib import errors
 
 
 class ObjectFilterList(interface.FilterObject):
-  """A list of filters with addtional metadata."""
+  """A list of object-filters with additional metadata."""
+
+  def __init__(self):
+    """Initializes an object-filter list object."""
+    super(ObjectFilterList, self).__init__()
+    self.filters = None
 
   def _IncludeKeyword(self, loader, node):
     """Callback for YAML add_constructor.
@@ -123,13 +128,8 @@ class ObjectFilterList(interface.FilterObject):
     if not self.filters:
       return True
 
-    for name, matcher, meta in self.filters:
-      self._decision = matcher.Matches(event_object)
-      if self._decision:
-        meta_description = meta.get(u'description', u'N/A')
-        meta_urls = meta.get(u'urls', [])
-        self._reason = u'[{0:s}] {1:s} {2:s}'.format(
-            name, meta_description, u' - '.join(meta_urls))
+    for _, matcher, _ in self.filters:
+      if matcher.Matches(event_object):
         return True
 
     return False

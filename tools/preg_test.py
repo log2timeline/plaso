@@ -220,6 +220,8 @@ class PregToolTest(test_lib.ToolTestCase):
 class PregConsoleTest(test_lib.ToolTestCase):
   """Tests for the preg console."""
 
+  # pylint: disable=protected-access
+
   _EXPECTED_BANNER_HEADER = [
       b'',
       b'Welcome to PREG - home of the Plaso Windows Registry Parsing.',
@@ -351,6 +353,8 @@ class PregConsoleTest(test_lib.ToolTestCase):
 
 class PregMagicClassTest(test_lib.ToolTestCase):
   """Tests for the IPython magic class."""
+
+  # pylint: disable=protected-access
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""

@@ -46,24 +46,42 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
       lexer.Token(u'STRING', r'([^\n]+)', u'ParseString', u''),
       lexer.Token(u'STRING', r'\n', u'ParseMessage', u'INITIAL')]
 
+  def CreateEvent(self, timestamp, offset, attributes):
+    """Creates an event.
+
+    Args:
+      timestamp: the timestamp which is an integer containing the number
+                 of micro seconds since January 1, 1970, 00:00:00 UTC.
+      offset: an integer containing the offset.
+      attributes: a dictionary containing the event attributes.
+
+    Returns:
+      An event object (instance of EventObject).
+    """
+    event_object = TestTextEvent(timestamp, 0, attributes)
+    event_object.offset = offset
+    return event_object
+
   def ParseStringHost(self, match, **_):
+    """Parses a string containing an username and hostname.
+
+    Args:
+      match: a regular expression match.
+    """
     user, host = match.group(1).split(u':')
     self.attributes[u'hostname'] = host
     self.attributes[u'username'] = user
 
   def SetDate(self, match, **_):
+    """Parses a date string.
+
+    Args:
+      match: a regular expression match.
+    """
     month, day, year = match.group(1).split(u'/')
     self.attributes[u'imonth'] = int(month)
     self.attributes[u'iyear'] = int(year)
     self.attributes[u'iday'] = int(day)
-
-  def Scan(self, unused_file_entry):
-    pass
-
-  def CreateEvent(self, timestamp, offset, attributes):
-    event_object = TestTextEvent(timestamp, 0, attributes)
-    event_object.offset = offset
-    return event_object
 
 
 class TextParserTest(test_lib.ParserTestCase):
@@ -121,40 +139,11 @@ class TextParserTest(test_lib.ParserTestCase):
         TestTextEventFormatter)
 
 
-class PyParserTest(test_lib.ParserTestCase):
-  """Few unit tests for the pyparsing unit."""
+class PyparsingConstantsTest(test_lib.ParserTestCase):
+  """Tests the PyparsingConstants text parser."""
 
-  def _CheckIPv4(self, ip_address):
-    # TODO: Add a similar IPv6 check.
-    try:
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(ip_address)
-      return True
-    except pyparsing.ParseException:
-      return False
-
-  def testPyConstantIPv4(self):
-    """Run few tests to make sure the constants are working."""
-    self.assertTrue(self._CheckIPv4(u'123.51.234.52'))
-    self.assertTrue(self._CheckIPv4(u'255.254.23.1'))
-    self.assertTrue(self._CheckIPv4(u'1.1.34.2'))
-    self.assertFalse(self._CheckIPv4(u'1.1.34.258'))
-    self.assertFalse(self._CheckIPv4(u'a.1.34.258'))
-    self.assertFalse(self._CheckIPv4(u'.34.258'))
-    self.assertFalse(self._CheckIPv4(u'34.258'))
-    self.assertFalse(self._CheckIPv4(u'10.52.34.258'))
-
-  def testPyConstantOctet(self):
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'526')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'1026')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString(
-          u'a9', parseAll=True)
-
-  def testPyConstantOthers(self):
+  def testContstants(self):
+    """Tests parsing with constants."""
     with self.assertRaises(pyparsing.ParseException):
       text_parser.PyparsingConstants.MONTH.parseString(u'MMo')
     with self.assertRaises(pyparsing.ParseException):
@@ -169,6 +158,53 @@ class PyParserTest(test_lib.ParserTestCase):
         line)
     self.assertEqual(parsed_line[-1], u'This is a comment.')
     self.assertEqual(len(parsed_line), 2)
+
+  def testConstantIPv4(self):
+    """Tests parsing with the IPV4_ADDRESS constant."""
+    self.assertTrue(
+        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(
+            u'123.51.234.52'))
+    self.assertTrue(
+        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(
+            u'255.254.23.1'))
+    self.assertTrue(
+        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'1.1.34.2'))
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'1.1.34.258')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'a.1.34.258')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'.34.258')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'34.258')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'10.52.34.258')
+
+  def testConstantOctet(self):
+    """Tests parsing with the IPV4_OCTET constant."""
+    self.assertTrue(
+        text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'0'))
+
+    self.assertTrue(
+        text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'123'))
+
+    self.assertTrue(
+        text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'255'))
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'526')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'1026')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString(
+          u'a9', parseAll=True)
 
 
 if __name__ == u'__main__':

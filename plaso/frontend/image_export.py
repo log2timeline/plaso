@@ -6,12 +6,12 @@ import collections
 import logging
 import os
 
+import pysigscan
+
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
-
-import pysigscan
 
 from plaso.engine import collector
 from plaso.engine import knowledge_base

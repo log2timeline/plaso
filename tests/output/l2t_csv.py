@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the log2timeline (l2t) CSV output class."""
+"""Tests for the log2timeline (l2t) CSV output module."""
 
 import unittest
 
@@ -16,11 +16,11 @@ from tests.output import test_lib
 
 
 class L2TTestEvent(events.EventObject):
-  """Simplified EventObject for testing."""
+  """Test event object."""
   DATA_TYPE = 'test:l2t_csv'
 
   def __init__(self):
-    """Initialize event with data."""
+    """Initializes an event object."""
     super(L2TTestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
@@ -35,7 +35,7 @@ class L2TTestEvent(events.EventObject):
 
 
 class L2TTestEventFormatter(formatters_interface.EventFormatter):
-  """Formatter for the test event."""
+  """Test event formatter."""
   DATA_TYPE = 'test:l2t_csv'
   FORMAT_STRING = u'{text}'
 
@@ -44,7 +44,7 @@ class L2TTestEventFormatter(formatters_interface.EventFormatter):
 
 
 class L2TCSVTest(test_lib.OutputModuleTestCase):
-  """Contains tests to validate the L2tCSV outputter."""
+  """Tests for the L2tCSV output module."""
 
   def setUp(self):
     """Makes preparations before running an individual test."""

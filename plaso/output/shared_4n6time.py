@@ -88,28 +88,31 @@ class Base4n6TimeOutputModule(interface.OutputModule):
 
     extra_attributes = u' '.join(extra_attributes)
 
-    inode = getattr(event_object, u'inode', u'-')
-    if inode == u'-' and hasattr(event_object, u'pathspec'):
+    inode = event_object.inode
+    if inode is None and hasattr(event_object, u'pathspec'):
       inode = getattr(event_object.pathspec, u'inode', u'-')
+    if inode is None:
+      inode = u'-'
 
+    datetime_string = u'N/A'
     if datetime_object:
       datetime_string = (
           u'{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
               datetime_object.year, datetime_object.month, datetime_object.day,
               datetime_object.hour, datetime_object.minute,
               datetime_object.second))
-    else:
-      datetime_string = u'N/A'
 
+    tags = None
     if getattr(event_object, u'tag', None):
       tags = getattr(event_object.tag, u'tags', None)
-    else:
-      tags = None
 
+    taglist = u''
     if isinstance(tags, (list, tuple)):
       taglist = u','.join(tags)
-    else:
-      taglist = u''
+
+    offset = event_object.offset
+    if offset is None:
+      offset = 0
 
     row = {
         u'timezone': u'{0!s}'.format(self._output_mediator.timezone),
@@ -129,7 +132,7 @@ class Base4n6TimeOutputModule(interface.OutputModule):
         u'reportnotes': u'',
         u'inreport': u'',
         u'tag': taglist,
-        u'offset': getattr(event_object, u'offset', 0),
+        u'offset': offset,
         u'vss_store_number': self._GetVSSNumber(event_object),
         u'URL': getattr(event_object, u'url', u'-'),
         u'record_number': getattr(event_object, u'record_number', 0),
