@@ -4,23 +4,33 @@
 import pyparsing
 
 from plaso.parsers import syslog
-from plaso.parsers import syslog_new
 from plaso.parsers import text_parser
-from plaso.lib import errors
 from plaso.parsers.syslog_plugins import interface
 
 
 class SSHLoginEvent(syslog.SyslogLineEvent):
+  """Convenience class for a SSH login event."""
   DATA_TYPE = u'syslog:ssh:login'
 
 
+class SSHFailedConnectionEvent(syslog.SyslogLineEvent):
+  """Convenience class for a SSH failed connection event."""
+  DATA_TYPE = u'syslog:ssh:failed_connection'
+
+
+class SSHOpenedConnectionEvent(syslog.SyslogLineEvent):
+  """Convenience class for a SSH opened connection event."""
+  DATA_TYPE = u'syslog:ssh:opened_connection'
+
+
 class SSHPlugin(interface.SyslogPlugin):
-  NAME = u'SSH'
+  """A plugin for creating events from syslog message produced by SSH."""
+  NAME = u'ssh'
   DESCRIPTION = u'Parser for SSH syslog entries'
   REPORTER = u'sshd'
 
   _PYPARSING_COMPONENTS = {
-    u'username': pyparsing.Word(pyparsing.printables).setResultsName(
+    u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
         u'username'),
     u'address': pyparsing.Or([
         text_parser.PyparsingConstants.IPV4_ADDRESS,
@@ -31,8 +41,10 @@ class SSHPlugin(interface.SyslogPlugin):
         pyparsing.Literal(u'publickey')]).setResultsName(
             u'authentication_method'),
     u'protocol': pyparsing.Literal(u'ssh2').setResultsName(u'protocol'),
-    u'fingerprint': pyparsing.Combine(pyparsing.Literal(u'RSA') + pyparsing.OneOrMore(
-        pyparsing.Word(u':' + pyparsing.hexnums))).setResultsName(u'fingerprint'),
+    u'fingerprint': pyparsing.Combine(
+        pyparsing.Literal(u'RSA') + pyparsing.OneOrMore(
+        pyparsing.Word(u':' + pyparsing.hexnums))).
+        setResultsName(u'fingerprint'),
   }
 
   _LOGIN_GRAMMAR = (
@@ -44,37 +56,50 @@ class SSHPlugin(interface.SyslogPlugin):
     _PYPARSING_COMPONENTS[u'protocol'] +
     pyparsing.Optional(
       pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'fingerprint'])
+      _PYPARSING_COMPONENTS[u'fingerprint']) +
+    pyparsing.LineEnd()
   )
 
-  # example line:  Accepted publickey for onager from 192.168.192.17 port
-  # 59229 ssh2: RSA fc:9c:b6:f7:c8:2c:ac:bb:53:74:ff:3a:03:66:e7:44
-  # example line:  Accepted password for onager from
-  # fdbd:c75e:bd4b:0:a96b:207c:e517:5ee port 42532  ssh2
+  _FAILED_CONNECTION_GRAMMAR = (
+    pyparsing.Literal(u'Failed') +
+    _PYPARSING_COMPONENTS[u'authentication_method'] +
+    pyparsing.Literal(u'for') + _PYPARSING_COMPONENTS[u'username'] +
+    pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
+    pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
+    _PYPARSING_COMPONENTS[u'protocol'] + pyparsing.LineEnd()
+  )
 
+  _OPENED_CONNECTION_GRAMMAR = (
+    pyparsing.Literal(u'Connection from') + _PYPARSING_COMPONENTS[u'address'] +
+    pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
+    pyparsing.LineEnd()
+  )
 
-  def Process(self, parser_mediator, timestamp=None, attributes=None, **kwargs):
-    """Process the data
+  MESSAGE_GRAMMARS = [
+      (u'login', _LOGIN_GRAMMAR),
+      (u'failed_connection', _FAILED_CONNECTION_GRAMMAR),
+      (u'opened_connection', _OPENED_CONNECTION_GRAMMAR),]
+
+  def ParseBody(self, key, timestamp, tokens):
+    """Parses a syslog body that matched one of the defined grammars.
 
     Args:
-      parser_mediator: the parser mediator.
-      timestamp: the timestamp of the syslog event.
-      attributes: the attributes of the syslog line.
+      key: an string indicating the name of the matching grammar.
+      timestamp: the timestamp, which is an integer containing the number
+                  of micro seconds since January 1, 1970, 00:00:00 UTC or 0
+                  on error.
+      tokens: a dictionary containing the results of the syslog grammar, and the
+              cron grammar.
+    Returns:
+      An event object created from the tokens that matched the grammar, or None
+      if no event could be created.
     """
-    message = getattr(attributes, u'message')
-    if not message:
-      raise AttributeError(u'Missing required attribute "message"')
-
-    try:
-      ssh_attributes = self._LOGIN_GRAMMAR.parseString(message)
-      event = SSHLoginEvent(timestamp, 0, ssh_attributes)
-      parser_mediator.ProduceEvent(event)
-      return
-    except pyparsing.ParseException:
-      pass
+    if key == u'login':
+      return SSHLoginEvent(timestamp, 0, tokens)
+    if key == u'failed_connection':
+      return SSHFailedConnectionEvent(timestamp, 0, tokens)
+    if key == u'opened_connection':
+      return SSHOpenedConnectionEvent(timestamp, 0, tokens)
 
 
-    raise errors.WrongPlugin(
-        u'Unable to extract SSH event from {0:s}'.format(message))
-
-syslog_new.NewSyslogParser.RegisterPlugin(SSHPlugin)
+syslog.SyslogParser.RegisterPlugin(SSHPlugin)

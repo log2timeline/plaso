@@ -42,7 +42,6 @@ from plaso.parsers import skydrivelog
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
 from plaso.parsers import syslog
-from plaso.parsers import syslog_new
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
 from plaso.parsers import winevt

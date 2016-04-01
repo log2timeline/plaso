@@ -1,158 +1,191 @@
 # -*- coding: utf-8 -*-
-"""This file contains a syslog parser in plaso."""
+"""Parser for syslog formatted log files"""
+import re
+
+import pyparsing
 
 from plaso.containers import text_events
-from plaso.lib import lexer
+from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
-
 
 class SyslogLineEvent(text_events.TextEvent):
   """Convenience class for a syslog line event."""
   DATA_TYPE = u'syslog:line'
 
+class SyslogCommentEvent(text_events.TextEvent):
+  """Convenience class for a syslog comment."""
+  DATA_TYPE = u'syslog:comment'
 
-class SyslogParser(text_parser.SlowLexicalTextParser):
-  """Parse text based syslog files."""
+class SyslogParser(text_parser.PyparsingMultiLineTextParser):
+  """Parses syslog formatted log files"""
+  NAME = u'new_syslog'
 
-  NAME = u'syslog'
-  DESCRIPTION = u'Parser for syslog files.'
+  DESCRIPTION = u'New Syslog Parser'
 
-  # TODO: can we change this similar to SQLite where create an
-  # event specific object for different lines using a callback function.
-  # Define the tokens that make up the structure of a syslog file.
-  tokens = [
-      lexer.Token(
-          u'INITIAL', u'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ',
-          u'SetMonth', u'DAY'),
-      lexer.Token(u'DAY', r'\s?(\d{1,2})\s+', u'SetDay', u'TIME'),
-      lexer.Token(u'TIME', r'([0-9:\.]+) ', u'SetTime', u'STRING_HOST'),
-      lexer.Token(u'STRING_HOST', r'^--(-)', u'ParseHostname', u'STRING'),
-      lexer.Token(
-          u'STRING_HOST', r'([^\s]+) ', u'ParseHostname', u'STRING_PID'),
-      lexer.Token(u'STRING_PID', r'([^\:\n]+)', u'ParsePid', u'STRING'),
-      lexer.Token(u'STRING', r'([^\n]+)', u'ParseString', u''),
-      lexer.Token(u'STRING', r'\n\t', None, u''),
-      lexer.Token(u'STRING', r'\t', None, u''),
-      lexer.Token(u'STRING', r'\n', u'ParseMessage', u'INITIAL'),
-      lexer.Token(u'.', r'([^\n]+)\n', u'ParseIncomplete', u'INITIAL'),
-      lexer.Token(u'.', r'\n[^\t]', u'ParseIncomplete', u'INITIAL'),
-      lexer.Token(u'S[.]+', r'(.+)', u'ParseString', u''),
-      ]
+  _VERIFICATION_REGEX = re.compile(r'^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
+
+  _plugin_classes = {}
+  _plugin_classes_by_reporter = None
+
+  _pyparsing_components = {
+    u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
+    u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
+    u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'hour'),
+    u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+        u'minute'),
+    u'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+        u'second'),
+    u'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
+        u'fractional_seconds'),
+    u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
+        u'hostname'),
+    u'reporter': pyparsing.Word(pyparsing.alphanums + u'.').setResultsName(
+        u'reporter'),
+    u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
+    u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
+        u'facility'),
+    u'body': pyparsing.Regex(
+        '.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
+        setResultsName(u'body'),
+    u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
+        u'body')
+  }
+  _pyparsing_components[u'date'] = (
+      _pyparsing_components[u'month'] +
+      _pyparsing_components[u'day'] +
+      _pyparsing_components[u'hour'] + pyparsing.Suppress(u':') +
+      _pyparsing_components[u'minute'] + pyparsing.Suppress(u':') +
+      _pyparsing_components[u'second'] + pyparsing.Optional(
+          pyparsing.Suppress(u'.') +
+          _pyparsing_components[u'fractional_seconds']))
+
+
+  LINE_GRAMMAR = (
+      _pyparsing_components[u'date'] +
+      _pyparsing_components[u'hostname'] +
+      _pyparsing_components[u'reporter'] +
+      pyparsing.Optional(
+          pyparsing.Suppress(u'[') + _pyparsing_components[u'pid'] +
+          pyparsing.Suppress(u']')) +
+      pyparsing.Optional(
+          pyparsing.Suppress(u'<') + _pyparsing_components[u'facility'] +
+          pyparsing.Suppress(u'>')) +
+      pyparsing.Optional(pyparsing.Suppress(u':')) +
+      _pyparsing_components[u'body'] + pyparsing.lineEnd())
+
+  SYSLOG_COMMENT = (
+      _pyparsing_components[u'date'] + pyparsing.Suppress(u':') +
+      pyparsing.Suppress(u'---') + _pyparsing_components[u'comment_body'] +
+      pyparsing.Suppress(u'---') + pyparsing.LineEnd())
+
+  LINE_STRUCTURES = [
+      (u'syslog_line', LINE_GRAMMAR),
+      (u'syslog_comment', SYSLOG_COMMENT)]
 
   def __init__(self):
-    """Initializes a syslog parser object."""
-    super(SyslogParser, self).__init__(local_zone=True)
-    # Set the initial year to 0 (fixed in the actual Parse method)
+    """Initialize the parser."""
+    super(SyslogParser, self).__init__()
     self._year_use = 0
+    self._maximum_year = 0
     self._last_month = 0
 
-    # Set some additional attributes.
-    self.attributes[u'reporter'] = u''
-    self.attributes[u'pid'] = u''
-
-  def ParseLine(self, parser_mediator):
-    """Parse a single line from the syslog file.
-
-    This method extends the one from TextParser slightly, adding
-    the context of the reporter and pid values found inside syslog
-    files.
+  def _UpdateYear(self, parser_mediator, month):
+    """Updates the year to use for events, based on last observed month.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      month: an integer containing the month observed by the parser.
     """
     if not self._year_use:
       self._year_use = parser_mediator.GetEstimatedYear()
+    if not self._maximum_year:
+      self._maximum_year = parser_mediator.GetMaximumYear()
 
-    month_compare = int(self.attributes[u'imonth'])
-    if month_compare and self._last_month > month_compare:
-      self._year_use += 1
-
-    self._last_month = int(self.attributes[u'imonth'])
-
-    self.attributes[u'iyear'] = self._year_use
-
-    super(SyslogParser, self).ParseLine(parser_mediator)
-
-  def ParseHostname(self, match=None, **unused_kwargs):
-    """Parses the hostname.
-
-       This is a callback function for the text parser (lexer) and is
-       called by the STRING_HOST lexer state.
-
-    Args:
-      match: The regular expression match object.
-    """
-    self.attributes[u'hostname'] = match.group(1)
-
-  def ParsePid(self, match=None, **unused_kwargs):
-    """Parses the process identifier (PID).
-
-       This is a callback function for the text parser (lexer) and is
-       called by the STRING_PID lexer state.
-
-    Args:
-      match: The regular expression match object.
-    """
-    # TODO: Change this logic and rather add more Tokens that
-    # fully cover all variations of the various PID stages.
-    line = match.group(1)
-    if line[-1] == ']':
-      splits = line.split(u'[')
-      if len(splits) == 2:
-        self.attributes[u'reporter'], pid = splits
-      else:
-        pid = splits[-1]
-        self.attributes[u'reporter'] = u'['.join(splits[:-1])
-      try:
-        self.attributes[u'pid'] = int(pid[:-1])
-      except ValueError:
-        self.attributes[u'pid'] = 0
-    else:
-      self.attributes[u'reporter'] = line
-
-  def ParseString(self, match=None, **unused_kwargs):
-    """Parses a (body text) string.
-
-       This is a callback function for the text parser (lexer) and is
-       called by the STRING lexer state.
-
-    Args:
-      match: The regular expression match object.
-    """
-    if not match:
+    if not self._last_month:
+      self._last_month = month
       return
 
-    try:
-      self.attributes[u'body'] += match.group(1)
-    except UnicodeDecodeError:
-      # TODO: Support other encodings than UTF-8 here, read from the
-      # knowledge base or parse from the file itself.
-      self.attributes[u'body'] += u'{0:s}'.format(
-          match.group(1).decode(u'utf-8', errors=u'replace'))
+    # Some syslog daemons allow out-of-order sequences, so allow some leeway
+    # to not cause Apr->May->Apr to cause the year to increment.
+    # See http://bugzilla.adiscon.com/show_bug.cgi?id=527
+    if self._last_month > (month + 1):
+      if not self._year_use == self._maximum_year:
+        self._year_use += 1
+    self._last_month = month
 
-  def PrintLine(self):
-    """Prints a log line."""
-    self.attributes[u'iyear'] = 2012
-    return super(SyslogParser, self).PrintLine()
 
-  # TODO: this is a rough initial implementation to get this working.
-  def CreateEvent(self, timestamp, offset, attributes):
-    """Creates a syslog line event.
+  def _InitializePlugins(self):
+    """ Initializes plugins prior to processing"""
+    if not self._plugin_classes_by_reporter:
+      self._plugin_classes_by_reporter = {}
 
-       This overrides the default function in TextParser to create
-       syslog line events instead of text events.
+    for plugin in self.GetPluginObjects():
+      reporter = plugin.REPORTER
+      self._plugin_classes_by_reporter[reporter] = plugin
+
+  def VerifyStructure(self, parser_mediator, lines):
+    """Verify that this is a syslog file.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      offset: The offset of the event.
-      attributes: A dict that contains the events attributes.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      lines: a buffer that contains content from the file.
 
     Returns:
-      A text event (SyslogLineEvent).
+      True if the passed buffer appears to contain syslog content.
     """
-    return SyslogLineEvent(timestamp, offset, attributes)
+    return re.match(self._VERIFICATION_REGEX, lines)
 
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parse a match.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      key: a string indicating the name of the parsed structure.
+      structure: the elements parsed from the file (instance of
+                 pyparsing.ParseResults).
+
+    Raises:
+      UnableToParseFile: if an unsupported key is provided.
+    """
+    if key not in [u'syslog_line', u'syslog_comment']:
+      raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
+
+    self._InitializePlugins()
+    month = timelib.MONTH_DICT.get(structure.month.lower(), None)
+    if not month:
+      parser_mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(
+        month))
+      return
+    self._UpdateYear(parser_mediator, month)
+    timestamp = timelib.Timestamp.FromTimeParts(
+        year= self._year_use, month=month, day=structure.day,
+        hour=structure.hour, minutes=structure.minute,
+        seconds=structure.second)
+
+    if key == u'syslog_comment':
+      comment_attributes = {
+          u'hostname': u'',
+          u'reporter': u'',
+          u'pid': u'',
+          u'body': structure.body}
+      event = SyslogCommentEvent(timestamp, 0, comment_attributes)
+      parser_mediator.ProduceEvent(event)
+
+    attributes = {u'hostname': structure.hostname,
+                  u'reporter': structure.reporter,
+                  u'pid': structure.pid,
+                  u'body': structure.body}
+
+    plugin = self._plugin_classes_by_reporter.get(attributes[u'reporter'], None)
+    if plugin:
+      try:
+        plugin.UpdateChainAndProcess(
+            parser_mediator, timestamp=timestamp, syslog_tokens=attributes)
+      except errors.WrongPlugin:
+        parser_mediator.ProduceEvent(SyslogLineEvent(timestamp, 0, attributes))
+    else:
+      parser_mediator.ProduceEvent(SyslogLineEvent(timestamp, 0, attributes))
 
 manager.ParsersManager.RegisterParser(SyslogParser)
