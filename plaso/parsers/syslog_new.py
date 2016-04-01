@@ -1,10 +1,12 @@
 import pyparsing
 import re
 
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 from plaso.parsers import syslog
+
 
 class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
   NAME = u'new_syslog'
@@ -12,6 +14,9 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
   DESCRIPTION = u'New Syslog Parser'
 
   VERIFICATION_REGEX = re.compile('^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
+
+  _plugin_classes = {}
+  _plugin_classes_by_reporter = None
 
   _pyparsing_components = {
     u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
@@ -71,6 +76,7 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
   def __init__(self):
     """Initialize the parser."""
     super(NewSyslogParser, self).__init__()
+    self._default_plugin = None
     self._year_use = 0
     self._maximum_year = 0
     self._last_month = 0
@@ -97,6 +103,16 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
     self._last_month = month
 
 
+  def _InitializePlugins(self):
+    """ Initializes plugins for processing"""
+    if not self._plugin_classes_by_reporter:
+      self._plugin_classes_by_reporter = {}
+
+    for plugin in self.GetPluginObjects():
+      reporter = plugin.REPORTER
+      self._plugin_classes_by_reporter[reporter] = plugin
+    self._default_plugin = self.GetPluginObjectByName(u'default')
+
   def VerifyStructure(self, parser_mediator, lines):
     """Verify that this is a syslog file.
 
@@ -119,6 +135,7 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
     """
+    self._InitializePlugins()
     month = timelib.MONTH_DICT.get(structure.month.lower(), None)
     if not month:
       parser_mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(
@@ -141,7 +158,19 @@ class NewSyslogParser(text_parser.PyparsingMultiLineTextParser):
                     u'pid': structure.pid,
                     u'body': structure.message}
 
-    event = syslog.SyslogLineEvent(timestamp, 0, attributes)
-    parser_mediator.ProduceEvent(event)
+    reporter = attributes[u'reporter']
+    plugin = self._plugin_classes_by_reporter.get(reporter, None)
+    if plugin:
+      try:
+        plugin.UpdateChainAndProcess(
+            parser_mediator, timestamp=timestamp, attributes=attributes)
+      except errors.WrongPlugin:
+        self._default_plugin.UpdateChainAndProcess(
+            parser_mediator, timestamp=timestamp, attributes=attributes)
+    else:
+      self._default_plugin.UpdateChainAndProcess(
+          parser_mediator, timestamp=timestamp, attributes=attributes)
+
+
 
 manager.ParsersManager.RegisterParser(NewSyslogParser)

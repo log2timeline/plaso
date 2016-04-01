@@ -10,9 +10,17 @@ class SyslogPlugin(plugins.BasePlugin):
   NAME = u'syslog'
   DESCRIPTION = u''
 
-  # A dictionary containing syslog reporters to match on.
-  REPORTERS = []
+  # The syslog reporter string that the plugin replies to.
+  REPORTER = u''
 
   @abc.abstractmethod
-  def Process(self, parser_mediator, attributes=None, **kwargs):
-    """Processes the data structure produced by the parser"""
+  def Process(
+        self, parser_mediator, timestamp=None, attributes=None,
+        **kwargs):
+    """Processes the data structure produced by the parser.
+
+    Args:
+      parser_mediator:
+      timestamp:
+      attributes:
+      """
