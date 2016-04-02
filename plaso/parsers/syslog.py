@@ -30,27 +30,27 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _plugin_classes_by_reporter = None
 
   _pyparsing_components = {
-    u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
-    u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
-    u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'hour'),
-    u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-        u'minute'),
-    u'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-        u'second'),
-    u'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
-        u'fractional_seconds'),
-    u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
-        u'hostname'),
-    u'reporter': pyparsing.Word(pyparsing.alphanums + u'.').setResultsName(
-        u'reporter'),
-    u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
-    u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
-        u'facility'),
-    u'body': pyparsing.Regex(
-        r'.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
-        setResultsName(u'body'),
-    u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
-        u'body')
+      u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
+      u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
+      u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'hour'),
+      u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          u'minute'),
+      u'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          u'second'),
+      u'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
+          u'fractional_seconds'),
+      u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
+          u'hostname'),
+      u'reporter': pyparsing.Word(pyparsing.alphanums + u'.').setResultsName(
+          u'reporter'),
+      u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
+      u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
+          u'facility'),
+      u'body': pyparsing.Regex(
+          r'.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
+          setResultsName(u'body'),
+      u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
+          u'body')
   }
   _pyparsing_components[u'date'] = (
       _pyparsing_components[u'month'] +
@@ -156,11 +156,11 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     month = timelib.MONTH_DICT.get(structure.month.lower(), None)
     if not month:
       parser_mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(
-        month))
+          month))
       return
     self._UpdateYear(parser_mediator, month)
     timestamp = timelib.Timestamp.FromTimeParts(
-        year= self._year_use, month=month, day=structure.day,
+        year=self._year_use, month=month, day=structure.day,
         hour=structure.hour, minutes=structure.minute,
         seconds=structure.second)
 

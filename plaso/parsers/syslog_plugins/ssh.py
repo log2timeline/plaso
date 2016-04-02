@@ -35,7 +35,7 @@ class SSHPlugin(interface.SyslogPlugin):
       u'address': pyparsing.Or([
           text_parser.PyparsingConstants.IPV4_ADDRESS,
           text_parser.PyparsingConstants.IPV6_ADDRESS]).
-          setResultsName(u'address'),
+                  setResultsName(u'address'),
       u'port': pyparsing.Word(pyparsing.nums, max=5).setResultsName(u'port'),
       u'authentication_method': pyparsing.Or([
           pyparsing.Literal(u'password'),
@@ -45,7 +45,7 @@ class SSHPlugin(interface.SyslogPlugin):
       u'fingerprint': (pyparsing.Combine(
           pyparsing.Literal(u'RSA ') +
           pyparsing.Word(u':' + pyparsing.hexnums))).
-          setResultsName(u'fingerprint'),
+                  setResultsName(u'fingerprint'),
   }
 
   _LOGIN_GRAMMAR = (
@@ -55,8 +55,7 @@ class SSHPlugin(interface.SyslogPlugin):
       pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
       pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
       _PYPARSING_COMPONENTS[u'protocol'] +
-        pyparsing.Literal(u':') +
-        _PYPARSING_COMPONENTS[u'fingerprint'] +
+      pyparsing.Literal(u':') + _PYPARSING_COMPONENTS[u'fingerprint'] +
       pyparsing.StringEnd()
   )
 

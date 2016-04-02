@@ -61,12 +61,12 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
         event_objects[0], expected_string, expected_string)
 
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-      event_objects[6].timestamp)
+        event_objects[6].timestamp)
     self.assertEqual(event_timestamp, u'2012-02-29T01:15:43+00:00')
 
     # Testing year increment.
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-       event_objects[8].timestamp)
+        event_objects[8].timestamp)
     self.assertEqual(event_timestamp, u'2013-03-23T23:01:18+00:00')
 
     expected_msg = (

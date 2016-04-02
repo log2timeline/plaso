@@ -22,7 +22,7 @@ class CronPlugin(interface.SyslogPlugin):
       u'command': pyparsing.Combine(
           pyparsing.SkipTo(
               pyparsing.Literal(u')') + pyparsing.StringEnd())).
-          setResultsName(u'command'),
+                  setResultsName(u'command'),
       u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
           u'username'),
   }
