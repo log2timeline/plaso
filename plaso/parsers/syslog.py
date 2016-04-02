@@ -20,9 +20,9 @@ class SyslogCommentEvent(text_events.TextEvent):
 
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
-  NAME = u'new_syslog'
+  NAME = u'syslog'
 
-  DESCRIPTION = u'New Syslog Parser'
+  DESCRIPTION = u'Syslog Parser'
 
   _VERIFICATION_REGEX = re.compile(r'^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
 

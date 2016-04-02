@@ -50,7 +50,7 @@ class SyslogPlugin(plugins.BasePlugin):
         event = self.ParseBody(key, timestamp, syslog_tokens)
         parser_mediator.ProduceEvent(event)
         return
-      except pyparsing.ParseException as e:
+      except pyparsing.ParseException:
         pass
     raise errors.WrongPlugin(u'Unable to create event from {0:s}'.format(body))
 
