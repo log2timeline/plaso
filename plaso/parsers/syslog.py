@@ -172,6 +172,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           u'body': structure.body}
       event = SyslogCommentEvent(timestamp, 0, comment_attributes)
       parser_mediator.ProduceEvent(event)
+      return
 
     attributes = {u'hostname': structure.hostname,
                   u'reporter': structure.reporter,

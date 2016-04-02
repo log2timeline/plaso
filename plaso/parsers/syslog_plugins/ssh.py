@@ -41,9 +41,8 @@ class SSHPlugin(interface.SyslogPlugin):
         pyparsing.Literal(u'publickey')]).setResultsName(
             u'authentication_method'),
     u'protocol': pyparsing.Literal(u'ssh2').setResultsName(u'protocol'),
-    u'fingerprint': pyparsing.Combine(
-        pyparsing.Literal(u'RSA') + pyparsing.OneOrMore(
-        pyparsing.Word(u':' + pyparsing.hexnums))).
+    u'fingerprint': (pyparsing.Combine(
+        pyparsing.Literal(u'RSA ') + pyparsing.Word(u':' + pyparsing.hexnums))).
         setResultsName(u'fingerprint'),
   }
 
@@ -54,10 +53,9 @@ class SSHPlugin(interface.SyslogPlugin):
     pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
     pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
     _PYPARSING_COMPONENTS[u'protocol'] +
-    pyparsing.Optional(
       pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'fingerprint']) +
-    pyparsing.LineEnd()
+      _PYPARSING_COMPONENTS[u'fingerprint'] +
+    pyparsing.StringEnd()
   )
 
   _FAILED_CONNECTION_GRAMMAR = (
@@ -66,7 +64,7 @@ class SSHPlugin(interface.SyslogPlugin):
     pyparsing.Literal(u'for') + _PYPARSING_COMPONENTS[u'username'] +
     pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
     pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
-    _PYPARSING_COMPONENTS[u'protocol'] + pyparsing.LineEnd()
+    pyparsing.StringEnd()
   )
 
   _OPENED_CONNECTION_GRAMMAR = (

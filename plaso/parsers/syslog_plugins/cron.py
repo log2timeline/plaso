@@ -19,8 +19,8 @@ class CronPlugin(interface.SyslogPlugin):
   REPORTER = u'CRON'
 
   _PYPARSING_COMPONENTS = {
-      u'command': pyparsing.SkipTo(
-          pyparsing.Literal(u')') + pyparsing.LineEnd()).setResultsName(u'command'),
+      u'command': pyparsing.Combine(pyparsing.SkipTo(
+          pyparsing.Literal(u')') + pyparsing.LineEnd())).setResultsName(u'command'),
       u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
         u'username'),
   }

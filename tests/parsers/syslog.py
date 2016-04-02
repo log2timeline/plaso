@@ -17,6 +17,10 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._parser = syslog.SyslogParser()
+    # We don't want to test syslog plugins
+    plugins = list(self._parser.GetPlugins())
+    for _, plugin in plugins:
+      self._parser.DeregisterPlugin(plugin)
 
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
@@ -46,9 +50,6 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
    event_queue_consumer = self._ParseFile(
        self._parser, test_file, knowledge_base_values=knowledge_base_values)
    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-   self.assertEqual(len(event_objects), 13)
-
    event_timestamp = timelib.Timestamp.CopyToIsoFormat(
       event_objects[0].timestamp)
    self.assertEqual(event_timestamp, u'2012-01-22T07:52:33+00:00')
@@ -76,6 +77,9 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
        u'\tmany syslo...')
    self._TestGetMessageStrings(
        event_objects[11], expected_msg, expected_msg_short)
+
+   self.assertEqual(len(event_objects), 13)
+
 
 if __name__ == '__main__':
   unittest.main()

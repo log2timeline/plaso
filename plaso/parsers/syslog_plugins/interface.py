@@ -47,10 +47,10 @@ class SyslogPlugin(plugins.BasePlugin):
       try:
         tokens = grammar.parseString(body)
         syslog_tokens.update(tokens.asDict())
-        event = self.ParseBody(key, timestamp, tokens, syslog_tokens)
+        event = self.ParseBody(key, timestamp, syslog_tokens)
         parser_mediator.ProduceEvent(event)
         return
-      except pyparsing.ParseException:
+      except pyparsing.ParseException as e:
         pass
     raise errors.WrongPlugin(u'Unable to create event from {0:s}'.format(body))
 
