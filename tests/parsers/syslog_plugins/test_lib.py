@@ -35,7 +35,7 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
       parser.DeregisterPlugin(plugin_class)
 
   def _ParseFileWithPlugin(
-    self, plugin_object, path, knowledge_base_values=None):
+      self, plugin_object, path, knowledge_base_values=None):
     """Parses a syslog file with a specific plugin.
 
     Args:
