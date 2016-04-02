@@ -31,7 +31,7 @@ class CronPlugin(interface.SyslogPlugin):
       pyparsing.Literal(u'(') + _PYPARSING_COMPONENTS[u'username'] +
       pyparsing.Literal(u')') + pyparsing.Literal(u'CMD') +
       pyparsing.Literal(u'(') + _PYPARSING_COMPONENTS[u'command'] +
-      pyparsing.Literal(u')') + pyparsing.LineEnd()
+      pyparsing.Literal(u')') + pyparsing.StringEnd()
   )
 
   MESSAGE_GRAMMARS = [(u'task_run', _TASK_RUN_GRAMMAR)]
