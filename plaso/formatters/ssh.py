@@ -32,11 +32,11 @@ class SSHFailedConnectionEventFormatter(interface.ConditionalEventFormatter):
     FORMAT_STRING_SEPARATOR = u''
 
     FORMAT_STRING_PIECES = [
-      u'Unsuccessful connection of user: {username}',
-      u'from {address}:',
-      u'{port}',
-      u'using authentication method: {authentication_method}',
-      u'ssh pid: {pid}', ]
+        u'Unsuccessful connection of user: {username}',
+        u'from {address}:',
+        u'{port}',
+        u'using authentication method: {authentication_method}',
+        u'ssh pid: {pid}', ]
 
     FORMAT_STRING_SHORT = u'{body}'
 
@@ -51,9 +51,9 @@ class SSHOpenedConnectionEventFormatter(interface.ConditionalEventFormatter):
       FORMAT_STRING_SEPARATOR = u''
 
       FORMAT_STRING_PIECES = [
-        u'Connection opened {address}:',
-        u'{port}',
-        u'ssh pid: {pid}',]
+          u'Connection opened {address}:',
+          u'{port}',
+          u'ssh pid: {pid}',]
 
       FORMAT_STRING_SHORT = u'{body}'
 

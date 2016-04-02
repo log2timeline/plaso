@@ -30,47 +30,50 @@ class SSHPlugin(interface.SyslogPlugin):
   REPORTER = u'sshd'
 
   _PYPARSING_COMPONENTS = {
-    u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
-        u'username'),
-    u'address': pyparsing.Or([
-        text_parser.PyparsingConstants.IPV4_ADDRESS,
-        text_parser.PyparsingConstants.IPV6_ADDRESS]).setResultsName(u'address'),
-    u'port': pyparsing.Word(pyparsing.nums, max=5).setResultsName(u'port'),
-    u'authentication_method': pyparsing.Or([
-        pyparsing.Literal(u'password'),
-        pyparsing.Literal(u'publickey')]).setResultsName(
-            u'authentication_method'),
-    u'protocol': pyparsing.Literal(u'ssh2').setResultsName(u'protocol'),
-    u'fingerprint': (pyparsing.Combine(
-        pyparsing.Literal(u'RSA ') + pyparsing.Word(u':' + pyparsing.hexnums))).
-        setResultsName(u'fingerprint'),
+      u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
+          u'username'),
+      u'address': pyparsing.Or([
+          text_parser.PyparsingConstants.IPV4_ADDRESS,
+          text_parser.PyparsingConstants.IPV6_ADDRESS]).
+          setResultsName(u'address'),
+      u'port': pyparsing.Word(pyparsing.nums, max=5).setResultsName(u'port'),
+      u'authentication_method': pyparsing.Or([
+          pyparsing.Literal(u'password'),
+          pyparsing.Literal(u'publickey')]).setResultsName(
+              u'authentication_method'),
+      u'protocol': pyparsing.Literal(u'ssh2').setResultsName(u'protocol'),
+      u'fingerprint': (pyparsing.Combine(
+          pyparsing.Literal(u'RSA ') +
+          pyparsing.Word(u':' + pyparsing.hexnums))).
+          setResultsName(u'fingerprint'),
   }
 
   _LOGIN_GRAMMAR = (
-    pyparsing.Literal(u'Accepted') +
-    _PYPARSING_COMPONENTS[u'authentication_method'] +
-    pyparsing.Literal(u'for') + _PYPARSING_COMPONENTS[u'username'] +
-    pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
-    pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
-    _PYPARSING_COMPONENTS[u'protocol'] +
-      pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'fingerprint'] +
-    pyparsing.StringEnd()
+      pyparsing.Literal(u'Accepted') +
+      _PYPARSING_COMPONENTS[u'authentication_method'] +
+      pyparsing.Literal(u'for') + _PYPARSING_COMPONENTS[u'username'] +
+      pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
+      pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
+      _PYPARSING_COMPONENTS[u'protocol'] +
+        pyparsing.Literal(u':') +
+        _PYPARSING_COMPONENTS[u'fingerprint'] +
+      pyparsing.StringEnd()
   )
 
   _FAILED_CONNECTION_GRAMMAR = (
-    pyparsing.Literal(u'Failed') +
-    _PYPARSING_COMPONENTS[u'authentication_method'] +
-    pyparsing.Literal(u'for') + _PYPARSING_COMPONENTS[u'username'] +
-    pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
-    pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
-    pyparsing.StringEnd()
+      pyparsing.Literal(u'Failed') +
+      _PYPARSING_COMPONENTS[u'authentication_method'] +
+      pyparsing.Literal(u'for') + _PYPARSING_COMPONENTS[u'username'] +
+      pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
+      pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
+      pyparsing.StringEnd()
   )
 
   _OPENED_CONNECTION_GRAMMAR = (
-    pyparsing.Literal(u'Connection from') + _PYPARSING_COMPONENTS[u'address'] +
-    pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
-    pyparsing.LineEnd()
+      pyparsing.Literal(u'Connection from') +
+      _PYPARSING_COMPONENTS[u'address'] +
+      pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
+      pyparsing.LineEnd()
   )
 
   MESSAGE_GRAMMARS = [

@@ -15,6 +15,7 @@ from plaso.formatters import chrome_cache
 from plaso.formatters import chrome_cookies
 from plaso.formatters import chrome_extension_activity
 from plaso.formatters import chrome_preferences
+from plaso.formatters import cron
 from plaso.formatters import cups_ipp
 from plaso.formatters import docker
 from plaso.formatters import file_history
@@ -58,7 +59,7 @@ from plaso.formatters import skydrivelog
 from plaso.formatters import skype
 from plaso.formatters import symantec
 from plaso.formatters import syslog
-from plaso.formatters import syslog_ssh
+from plaso.formatters import ssh
 from plaso.formatters import task_scheduler
 from plaso.formatters import text
 from plaso.formatters import utmp

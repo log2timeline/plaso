@@ -47,7 +47,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
         u'facility'),
     u'body': pyparsing.Regex(
-        '.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
+        r'.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
         setResultsName(u'body'),
     u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
         u'body')
@@ -111,7 +111,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     # to not cause Apr->May->Apr to cause the year to increment.
     # See http://bugzilla.adiscon.com/show_bug.cgi?id=527
     if self._last_month > (month + 1):
-      if not self._year_use == self._maximum_year:
+      if self._year_use != self._maximum_year:
         self._year_use += 1
     self._last_month = month
 

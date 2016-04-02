@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import syslog_cron
+from plaso.formatters import cron
 
 from tests.formatters import test_lib
 
@@ -14,12 +14,12 @@ class CronEventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = syslog_cron.CronTaskRunEventFormatter()
+    event_formatter = cron.CronTaskRunEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = syslog_cron.CronTaskRunEventFormatter()
+    event_formatter = cron.CronTaskRunEventFormatter()
 
     expected_attribute_names = [
         u'command', u'username', u'pid']

@@ -196,12 +196,12 @@ class ParserMediator(object):
 
     if posix_time is None:
       logging.warning(
-        u'Unable to determine modification year from file stat information.')
+          u'Unable to determine modification year from file stat information.')
       return
 
     try:
       datetime_object = datetime.datetime.fromtimestamp(
-        posix_time, self._knowledge_base.timezone)
+          posix_time, self._knowledge_base.timezone)
 
     except ValueError as exception:
       logging.error((

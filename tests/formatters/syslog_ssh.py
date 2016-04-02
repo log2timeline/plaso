@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import syslog_ssh
+from plaso.formatters import ssh
 
 from tests.formatters import test_lib
 
@@ -14,12 +14,12 @@ class SSHLoginEventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = syslog_ssh.SSHLoginEventFormatter()
+    event_formatter = ssh.SSHLoginEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = syslog_ssh.SSHLoginEventFormatter()
+    event_formatter = ssh.SSHLoginEventFormatter()
 
     expected_attribute_names = [
         u'username', u'address', u'port', u'authentication_method', u'pid']
@@ -35,12 +35,12 @@ class SSHFailedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = syslog_ssh.SSHFailedConnectionEventFormatter()
+    event_formatter = ssh.SSHFailedConnectionEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = syslog_ssh.SSHFailedConnectionEventFormatter()
+    event_formatter = ssh.SSHFailedConnectionEventFormatter()
 
     expected_attribute_names = [
         u'username', u'address', u'port', u'authentication_method', u'pid']
@@ -56,12 +56,12 @@ class SSHOpenedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = syslog_ssh.SSHOpenedConnectionEventFormatter()
+    event_formatter = ssh.SSHOpenedConnectionEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = syslog_ssh.SSHOpenedConnectionEventFormatter()
+    event_formatter = ssh.SSHOpenedConnectionEventFormatter()
 
     expected_attribute_names = [u'address', u'port', u'pid']
 

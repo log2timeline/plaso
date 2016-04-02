@@ -20,9 +20,10 @@ class CronPlugin(interface.SyslogPlugin):
 
   _PYPARSING_COMPONENTS = {
       u'command': pyparsing.Combine(pyparsing.SkipTo(
-          pyparsing.Literal(u')') + pyparsing.LineEnd())).setResultsName(u'command'),
+          pyparsing.Literal(u')') + pyparsing.StringEnd())).
+          setResultsName(u'command'),
       u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
-        u'username'),
+          u'username'),
   }
 
   _TASK_RUN_GRAMMAR = (
