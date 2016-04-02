@@ -32,7 +32,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _pyparsing_components = {
       u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
       u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
-      u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'hour'),
+      u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          u'hour'),
       u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
           u'minute'),
       u'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
@@ -48,7 +49,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           u'facility'),
       u'body': pyparsing.Regex(
           r'.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
-          setResultsName(u'body'),
+               setResultsName(u'body'),
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
           u'body')
   }

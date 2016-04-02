@@ -28,7 +28,7 @@ class SyslogPlugin(plugins.BasePlugin):
   MESSAGE_GRAMMARS = []
 
   def Process(
-    self, parser_mediator, timestamp=None, syslog_tokens=None, **kwargs):
+      self, parser_mediator, timestamp=None, syslog_tokens=None, **kwargs):
     """Processes the data structure produced by the parser.
 
     Args:

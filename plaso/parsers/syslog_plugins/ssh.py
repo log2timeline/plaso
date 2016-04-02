@@ -45,7 +45,7 @@ class SSHPlugin(interface.SyslogPlugin):
       u'fingerprint': (pyparsing.Combine(
           pyparsing.Literal(u'RSA ') +
           pyparsing.Word(u':' + pyparsing.hexnums))).
-                  setResultsName(u'fingerprint'),
+                      setResultsName(u'fingerprint'),
   }
 
   _LOGIN_GRAMMAR = (
