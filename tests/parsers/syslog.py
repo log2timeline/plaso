@@ -17,10 +17,15 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._parser = syslog.SyslogParser()
-    # We don't want to test syslog plugins
-    plugins = list(self._parser.GetPlugins())
-    for _, plugin in plugins:
-      self._parser.DeregisterPlugin(plugin)
+    # We don't want to test syslog plugins, just the parser
+    self.plugins = [plugin for _, plugin in list(self._parser.GetPlugins())]
+    for plugin in self.plugins:
+      syslog.SyslogParser.DeregisterPlugin(plugin)
+
+  def tearDown(self):
+    """Cleans up after running an individual test."""
+    syslog.SyslogParser.RegisterPlugins(self.plugins)
+
 
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
