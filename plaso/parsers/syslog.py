@@ -55,31 +55,31 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   }
 
   _PYPARSING_COMPONENTS[u'date'] = (
-    _PYPARSING_COMPONENTS[u'month'] +
-    _PYPARSING_COMPONENTS[u'day'] +
-    _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Suppress(u':') +
-    _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Suppress(u':') +
-    _PYPARSING_COMPONENTS[u'second'] + pyparsing.Optional(
-      pyparsing.Suppress(u'.') +
-      _PYPARSING_COMPONENTS[u'fractional_seconds']))
+      _PYPARSING_COMPONENTS[u'month'] +
+      _PYPARSING_COMPONENTS[u'day'] +
+      _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Suppress(u':') +
+      _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Suppress(u':') +
+      _PYPARSING_COMPONENTS[u'second'] + pyparsing.Optional(
+        pyparsing.Suppress(u'.') +
+        _PYPARSING_COMPONENTS[u'fractional_seconds']))
 
   _LINE_GRAMMAR = (
-    _PYPARSING_COMPONENTS[u'date'] +
-    _PYPARSING_COMPONENTS[u'hostname'] +
-    _PYPARSING_COMPONENTS[u'reporter'] +
-    pyparsing.Optional(
-      pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
-      pyparsing.Suppress(u']')) +
-    pyparsing.Optional(
-      pyparsing.Suppress(u'<') + _PYPARSING_COMPONENTS[u'facility'] +
-      pyparsing.Suppress(u'>')) +
-    pyparsing.Optional(pyparsing.Suppress(u':')) +
-    _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
+      _PYPARSING_COMPONENTS[u'date'] +
+      _PYPARSING_COMPONENTS[u'hostname'] +
+      _PYPARSING_COMPONENTS[u'reporter'] +
+      pyparsing.Optional(
+        pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
+        pyparsing.Suppress(u']')) +
+      pyparsing.Optional(
+        pyparsing.Suppress(u'<') + _PYPARSING_COMPONENTS[u'facility'] +
+        pyparsing.Suppress(u'>')) +
+      pyparsing.Optional(pyparsing.Suppress(u':')) +
+      _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
 
   SYSLOG_COMMENT = (
-    _PYPARSING_COMPONENTS[u'date'] + pyparsing.Suppress(u':') +
-    pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
-    pyparsing.Suppress(u'---') + pyparsing.LineEnd())
+      _PYPARSING_COMPONENTS[u'date'] + pyparsing.Suppress(u':') +
+      pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
+      pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
   LINE_STRUCTURES = [
       (u'syslog_line', _LINE_GRAMMAR),
@@ -164,9 +164,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       return
 
     attributes = {
-      u'hostname': structure.hostname,
-      u'reporter': structure.reporter,
-      u'pid': structure.pid,
+        u'hostname': structure.hostname,
+        u'reporter': structure.reporter,
+        u'pid': structure.pid,
         u'body': structure.body}
 
     plugin = self._plugin_classes_by_reporter.get(attributes[u'reporter'], None)
