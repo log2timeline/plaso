@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains an interface for syslog plugins."""
+"""This file contains the interface for syslog plugins."""
 
 import abc
 
@@ -39,6 +39,9 @@ class SyslogPlugin(plugins.BasePlugin):
       syslog_tokens: a dictionary whose keys are the names of the fields
                      extracted by the syslog parser, and values are the values
                      of those fields.
+
+      Raises:
+        WrongPlugin: If the plugin is unable to parse the syslog tokens.
     """
     body = syslog_tokens.get(u'body', None)
     if not body:

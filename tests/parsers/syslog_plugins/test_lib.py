@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class SyslogPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for Syslog plugins."""
 
-
   def _RemoveOtherPluginsFromParser(self, plugin_object):
     """Removes unrelated the plugins from the syslog parser.
 
     The parser will load only the specified plugin.
 
     Args:
-      parser: An instance of the syslog parser.
       plugin_object: The plugin object to be used.
 
     Returns:
@@ -76,5 +74,3 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
       syslog.SyslogParser.RegisterPlugins(removed_plugins)
 
     return event_queue_consumer
-
-

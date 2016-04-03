@@ -48,7 +48,8 @@ class CronPlugin(interface.SyslogPlugin):
               cron grammar.
 
     Returns:
-      A CronTaskRunEvent created from the tokens that matched the grammar.
+      An event object (instance of CronTaskRunEvent) created from the tokens
+      that matched the grammar.
     """
     if key == u'task_run':
       return CronTaskRunEvent(timestamp, 0, tokens)

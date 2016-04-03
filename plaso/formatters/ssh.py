@@ -24,6 +24,7 @@ class SSHLoginEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = u'SSH log'
   SOURCE_SHORT = u'LOG'
 
+
 class SSHFailedConnectionEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a ssh failed connection event."""
 
@@ -42,6 +43,7 @@ class SSHFailedConnectionEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = u'SSH log'
   SOURCE_SHORT = u'LOG'
+
 
 class SSHOpenedConnectionEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a ssh opened connection event."""

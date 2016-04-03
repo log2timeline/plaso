@@ -79,6 +79,39 @@ class ParserMediator(object):
     """The year."""
     return self._knowledge_base.year
 
+  def _GetEarliestYearFromFileEntry(self):
+    """Retrieves the year from the file entry date and time values.
+
+    This function uses the creation time if available otherwise the change
+    time (metadata last modification time) is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    file_entry = self.GetFileEntry()
+    stat_object = file_entry.GetStat()
+
+    posix_time = getattr(stat_object, u'crtime', None)
+    if posix_time is None:
+      posix_time = getattr(stat_object, u'ctime', None)
+
+    if posix_time is None:
+      logging.warning(
+        u'Unable to determine creation year from file stat information.')
+      return
+
+    try:
+      datetime_object = datetime.datetime.fromtimestamp(
+        posix_time, self._knowledge_base.timezone)
+
+    except ValueError as exception:
+      logging.error((
+          u'Unable to determine creation year from file stat information with '
+          u'error: {0:s}').format(exception))
+      return
+
+    return datetime_object.year
+
   def _GetInode(self, inode_value):
     """Retrieves the inode from the inode value.
 
@@ -107,6 +140,40 @@ class ParserMediator(object):
       return int(inode_value, 10)
     except ValueError:
       return -1
+
+  def _GetLatestYearFromFileEntry(self):
+    """Retrieves the maximum (highest value) year from the file entry.
+
+    This function uses the modification time if available otherwise the change
+    time (metadata last modification time) is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    file_entry = self.GetFileEntry()
+    stat_object = file_entry.GetStat()
+
+    posix_time = getattr(stat_object, u'mtime', None)
+    if posix_time is None:
+      posix_time = getattr(stat_object, u'ctime', None)
+
+    if posix_time is None:
+      logging.warning(
+        u'Unable to determine modification year from file stat information.')
+      return
+
+    try:
+      datetime_object = datetime.datetime.fromtimestamp(
+        posix_time, self._knowledge_base.timezone)
+
+    except ValueError as exception:
+      logging.error((
+                      u'Unable to determine creation year from file stat '
+                      u'information '
+                      u'with error: {0:s}').format(exception))
+      return
+
+    return datetime_object.year
 
   def _GetRelativePath(self, path_spec):
     """Retrieves the relative path.
@@ -143,74 +210,6 @@ class ParserMediator(object):
       _, _, location = location.partition(self._mount_path)
 
     return location
-
-  def _GetYearFromFileEntry(self):
-    """Retrieves the year from the file entry date and time values.
-
-    This function uses the creation time if available otherwise the change
-    time (metadata last modification time) is used.
-
-    Returns:
-      An integer containing the year of the file entry or None.
-    """
-    file_entry = self.GetFileEntry()
-    stat_object = file_entry.GetStat()
-
-    posix_time = getattr(stat_object, u'crtime', None)
-    if posix_time is None:
-      posix_time = getattr(stat_object, u'ctime', None)
-
-    if posix_time is None:
-      logging.warning(
-          u'Unable to determine creation year from file stat information.')
-      return
-
-    try:
-      datetime_object = datetime.datetime.fromtimestamp(
-          posix_time, self._knowledge_base.timezone)
-
-    except ValueError as exception:
-      logging.error((
-          u'Unable to determine creation year from file stat information '
-          u'with error: {0:s}').format(exception))
-      return
-
-    return datetime_object.year
-
-
-  def _GetMaximumYearFromFileEntry(self):
-    """Retrieves the maximum (most recent) year from the file entry.
-
-    This function uses the modification time if available otherwise the change
-    time (metadata last modification time) is used.
-
-    Returns:
-      An integer containing the year of the file entry or None.
-    """
-    file_entry = self.GetFileEntry()
-    stat_object = file_entry.GetStat()
-
-    posix_time = getattr(stat_object, u'mtime', None)
-    if posix_time is None:
-      posix_time = getattr(stat_object, u'ctime', None)
-
-    if posix_time is None:
-      logging.warning(
-          u'Unable to determine modification year from file stat information.')
-      return
-
-    try:
-      datetime_object = datetime.datetime.fromtimestamp(
-          posix_time, self._knowledge_base.timezone)
-
-    except ValueError as exception:
-      logging.error((
-          u'Unable to determine creation year from file stat '
-          u'information '
-          u'with error: {0:s}').format(exception))
-      return
-
-    return datetime_object.year
 
   def AddEventAttribute(self, attribute_name, attribute_value):
     """Add an attribute that will be set on all events produced.
@@ -309,23 +308,7 @@ class ParserMediator(object):
     if not year:
       # TODO: Find a decent way to actually calculate the correct year
       # instead of relying on stats object.
-      year = self._GetYearFromFileEntry()
-
-    if not year:
-      year = timelib.GetCurrentYear()
-
-    return year
-
-  def GetMaximumYear(self):
-    """Retrieves the maximum (newest) year for an event from a file.
-
-    This function tries to determine the year based on the file entry metadata,
-    if that fails the current year is used.
-
-    Returns:
-      An integer containing the year of the file entry or None.
-    """
-    year = self._GetMaximumYearFromFileEntry()
+      year = self._GetEarliestYearFromFileEntry()
 
     if not year:
       year = timelib.GetCurrentYear()
@@ -354,6 +337,22 @@ class ParserMediator(object):
       return u'{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
 
     return self._file_entry.name
+
+  def GetLatestYear(self):
+    """Retrieves the latest (newest) year for an event from a file.
+
+    This function tries to determine the year based on the file entry metadata,
+    if that fails the current year is used.
+
+    Returns:
+      An integer containing the year of the file entry or None.
+    """
+    year = self._GetLatestYearFromFileEntry()
+
+    if not year:
+      year = timelib.GetCurrentYear()
+
+    return year
 
   def GetParserChain(self):
     """The parser chain up to this point."""
@@ -431,7 +430,7 @@ class ParserMediator(object):
     if not getattr(event_object, u'query', None) and query:
       event_object.query = query
 
-    for attribute, value in self._extra_event_attributes.iteritems():
+    for attribute, value in iter(self._extra_event_attributes.items()):
       if hasattr(event_object, attribute):
         raise KeyError(u'Event already has a value for {0:s}'.format(attribute))
 

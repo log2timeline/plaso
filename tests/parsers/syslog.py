@@ -47,7 +47,6 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(event_objects), 2)
 
-
   def testParse(self):
     """Tests the Parse function."""
     knowledge_base_values = {u'year': 2012}

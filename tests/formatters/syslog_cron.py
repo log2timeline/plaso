@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the cron event formatter."""
+"""Tests for the syslog cron event formatter."""
 
 import unittest
 
@@ -10,7 +10,7 @@ from tests.formatters import test_lib
 
 
 class CronEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the cron task run event formatter."""
+  """Tests for the syslog cron task run event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""

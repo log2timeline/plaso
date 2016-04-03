@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the ssh event formatters."""
+"""Tests for the SSH event formatters."""
 
 import unittest
 
@@ -10,7 +10,7 @@ from tests.formatters import test_lib
 
 
 class SSHLoginEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the ssh login event formatter."""
+  """Tests for the SSH login event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
@@ -31,7 +31,7 @@ class SSHLoginEventFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetSources.
 
 class SSHFailedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the ssh failed connection event formatter."""
+  """Tests for the SSH failed connection event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
@@ -52,7 +52,7 @@ class SSHFailedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetSources.
 
 class SSHOpenedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the ssh opened connection event formatter."""
+  """Tests for the SSH opened connection event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""

@@ -29,7 +29,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _plugin_classes = {}
   _plugin_classes_by_reporter = None
 
-  _pyparsing_components = {
+  _PYPARSING_COMPONENTS = {
       u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
       u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
       u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
@@ -53,56 +53,66 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
           u'body')
   }
-  _pyparsing_components[u'date'] = (
-      _pyparsing_components[u'month'] +
-      _pyparsing_components[u'day'] +
-      _pyparsing_components[u'hour'] + pyparsing.Suppress(u':') +
-      _pyparsing_components[u'minute'] + pyparsing.Suppress(u':') +
-      _pyparsing_components[u'second'] + pyparsing.Optional(
-          pyparsing.Suppress(u'.') +
-          _pyparsing_components[u'fractional_seconds']))
 
+  _PYPARSING_COMPONENTS[u'date'] = (
+    _PYPARSING_COMPONENTS[u'month'] +
+    _PYPARSING_COMPONENTS[u'day'] +
+    _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Suppress(u':') +
+    _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Suppress(u':') +
+    _PYPARSING_COMPONENTS[u'second'] + pyparsing.Optional(
+      pyparsing.Suppress(u'.') +
+      _PYPARSING_COMPONENTS[u'fractional_seconds']))
 
-  LINE_GRAMMAR = (
-      _pyparsing_components[u'date'] +
-      _pyparsing_components[u'hostname'] +
-      _pyparsing_components[u'reporter'] +
-      pyparsing.Optional(
-          pyparsing.Suppress(u'[') + _pyparsing_components[u'pid'] +
-          pyparsing.Suppress(u']')) +
-      pyparsing.Optional(
-          pyparsing.Suppress(u'<') + _pyparsing_components[u'facility'] +
-          pyparsing.Suppress(u'>')) +
-      pyparsing.Optional(pyparsing.Suppress(u':')) +
-      _pyparsing_components[u'body'] + pyparsing.lineEnd())
+  _LINE_GRAMMAR = (
+    _PYPARSING_COMPONENTS[u'date'] +
+    _PYPARSING_COMPONENTS[u'hostname'] +
+    _PYPARSING_COMPONENTS[u'reporter'] +
+    pyparsing.Optional(
+      pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
+      pyparsing.Suppress(u']')) +
+    pyparsing.Optional(
+      pyparsing.Suppress(u'<') + _PYPARSING_COMPONENTS[u'facility'] +
+      pyparsing.Suppress(u'>')) +
+    pyparsing.Optional(pyparsing.Suppress(u':')) +
+    _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
 
   SYSLOG_COMMENT = (
-      _pyparsing_components[u'date'] + pyparsing.Suppress(u':') +
-      pyparsing.Suppress(u'---') + _pyparsing_components[u'comment_body'] +
-      pyparsing.Suppress(u'---') + pyparsing.LineEnd())
+    _PYPARSING_COMPONENTS[u'date'] + pyparsing.Suppress(u':') +
+    pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
+    pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
   LINE_STRUCTURES = [
-      (u'syslog_line', LINE_GRAMMAR),
+      (u'syslog_line', _LINE_GRAMMAR),
       (u'syslog_comment', SYSLOG_COMMENT)]
 
   def __init__(self):
     """Initialize the parser."""
     super(SyslogParser, self).__init__()
-    self._year_use = 0
-    self._maximum_year = 0
     self._last_month = 0
+    self._maximum_year = 0
+    self._year_use = 0
+
+  def _InitializePlugins(self):
+    """Initializes plugins prior to processing"""
+    if not self._plugin_classes_by_reporter:
+      self._plugin_classes_by_reporter = {}
+
+    for plugin in self.GetPluginObjects():
+      reporter = plugin.REPORTER
+      self._plugin_classes_by_reporter[reporter] = plugin
 
   def _UpdateYear(self, parser_mediator, month):
     """Updates the year to use for events, based on last observed month.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      month: an integer containing the month observed by the parser.
+      month: an integer containing the month observed by the parser, where
+             January is 1.
     """
     if not self._year_use:
       self._year_use = parser_mediator.GetEstimatedYear()
     if not self._maximum_year:
-      self._maximum_year = parser_mediator.GetMaximumYear()
+      self._maximum_year = parser_mediator.GetLatestYear()
 
     if not self._last_month:
       self._last_month = month
@@ -115,28 +125,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       if self._year_use != self._maximum_year:
         self._year_use += 1
     self._last_month = month
-
-
-  def _InitializePlugins(self):
-    """ Initializes plugins prior to processing"""
-    if not self._plugin_classes_by_reporter:
-      self._plugin_classes_by_reporter = {}
-
-    for plugin in self.GetPluginObjects():
-      reporter = plugin.REPORTER
-      self._plugin_classes_by_reporter[reporter] = plugin
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verify that this is a syslog file.
-
-    Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      lines: a buffer that contains content from the file.
-
-    Returns:
-      True if the passed buffer appears to contain syslog content.
-    """
-    return re.match(self._VERIFICATION_REGEX, lines)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse a match.
@@ -175,10 +163,11 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       parser_mediator.ProduceEvent(event)
       return
 
-    attributes = {u'hostname': structure.hostname,
-                  u'reporter': structure.reporter,
-                  u'pid': structure.pid,
-                  u'body': structure.body}
+    attributes = {
+      u'hostname': structure.hostname,
+      u'reporter': structure.reporter,
+      u'pid': structure.pid,
+        u'body': structure.body}
 
     plugin = self._plugin_classes_by_reporter.get(attributes[u'reporter'], None)
     if plugin:
@@ -189,5 +178,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
         parser_mediator.ProduceEvent(SyslogLineEvent(timestamp, 0, attributes))
     else:
       parser_mediator.ProduceEvent(SyslogLineEvent(timestamp, 0, attributes))
+
+  def VerifyStructure(self, parser_mediator, lines):
+    """Verifies that this is a syslog-formatted file.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      lines: a buffer that contains content from the file.
+
+    Returns:
+      True if the passed buffer appears to contain syslog content.
+    """
+    return re.match(self._VERIFICATION_REGEX, lines)
+
 
 manager.ParsersManager.RegisterParser(SyslogParser)
