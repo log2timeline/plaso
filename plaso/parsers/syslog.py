@@ -60,19 +60,19 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Suppress(u':') +
       _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Suppress(u':') +
       _PYPARSING_COMPONENTS[u'second'] + pyparsing.Optional(
-        pyparsing.Suppress(u'.') +
-        _PYPARSING_COMPONENTS[u'fractional_seconds']))
+          pyparsing.Suppress(u'.') +
+          _PYPARSING_COMPONENTS[u'fractional_seconds']))
 
   _LINE_GRAMMAR = (
       _PYPARSING_COMPONENTS[u'date'] +
       _PYPARSING_COMPONENTS[u'hostname'] +
       _PYPARSING_COMPONENTS[u'reporter'] +
       pyparsing.Optional(
-        pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
-        pyparsing.Suppress(u']')) +
+          pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
+          pyparsing.Suppress(u']')) +
       pyparsing.Optional(
-        pyparsing.Suppress(u'<') + _PYPARSING_COMPONENTS[u'facility'] +
-        pyparsing.Suppress(u'>')) +
+          pyparsing.Suppress(u'<') + _PYPARSING_COMPONENTS[u'facility'] +
+          pyparsing.Suppress(u'>')) +
       pyparsing.Optional(pyparsing.Suppress(u':')) +
       _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
 

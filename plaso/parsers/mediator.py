@@ -159,7 +159,7 @@ class ParserMediator(object):
 
     if posix_time is None:
       logging.warning(
-        u'Unable to determine modification year from file stat information.')
+          u'Unable to determine modification year from file stat information.')
       return
 
     try:
