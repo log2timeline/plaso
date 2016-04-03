@@ -16,23 +16,27 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for Syslog plugins."""
 
 
-  def _SetPlugin(self, parser, plugin_object):
-    """Sets the plugins in the parser to the minimum required for testing.
+  def _RemoveOtherPluginsFromParser(self, plugin_object):
+    """Removes unrelated the plugins from the syslog parser.
 
-    The parser will load only the specified parser and the default parser.
+    The parser will load only the specified plugin.
 
     Args:
       parser: An instance of the syslog parser.
       plugin_object: The plugin object to be used.
+
+    Returns:
+      The parsers that were unregistered from the syslog parser.
     """
     # We need to save the classes we want to remove as we go, as we can't
     # modify the plugin list while iterating over it in GetPlugins().
     classes_to_remove = []
-    for plugin_name, plugin_class in parser.GetPlugins():
+    for plugin_name, plugin_class in syslog.SyslogParser.GetPlugins():
       if plugin_name != plugin_object.NAME:
         classes_to_remove.append(plugin_class)
     for plugin_class in classes_to_remove:
-      parser.DeregisterPlugin(plugin_class)
+      syslog.SyslogParser.DeregisterPlugin(plugin_class)
+    return classes_to_remove
 
   def _ParseFileWithPlugin(
       self, plugin_object, path, knowledge_base_values=None):
@@ -65,8 +69,11 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     parser_mediator.SetFileEntry(file_entry)
 
     parser = syslog.SyslogParser()
-    self._SetPlugin(parser, plugin_object)
-    parser.Parse(parser_mediator, file_entry.GetFileObject())
+    removed_plugins = self._RemoveOtherPluginsFromParser(plugin_object)
+    try:
+      parser.Parse(parser_mediator, file_entry.GetFileObject())
+    finally:
+      syslog.SyslogParser.RegisterPlugins(removed_plugins)
 
     return event_queue_consumer
 
