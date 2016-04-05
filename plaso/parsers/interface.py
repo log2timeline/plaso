@@ -176,7 +176,7 @@ class BaseParser(object):
         parser_filter_expression=parser_filter_expression)
 
     for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
-      if not includes and excludes.get(plugin_name, None):
+      if excludes and plugin_name in excludes:
         continue
 
       if includes and plugin_name not in includes:
