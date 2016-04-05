@@ -28,6 +28,7 @@ class OleCfParser(interface.FileObjectParser):
   def __init__(self):
     """Initializes a parser object."""
     super(OleCfParser, self).__init__()
+    self._default_plugin = None
     self._plugins = OleCfParser.GetPluginObjects()
 
     for list_index, plugin_object in enumerate(self._plugins):

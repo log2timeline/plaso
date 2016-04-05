@@ -31,7 +31,7 @@ class MacWifiLogEvent(time_events.TimestampEvent):
       agent: TODO
       function: TODO
       text: The log message
-      action: A string containing known WiFI actions, eg: connected to
+      action: A string containing known WiFI actions, e.g. connected to
               an AP, configured, etc. If the action is not known,
               the value is the message of the log (text variable).
     """

@@ -55,6 +55,7 @@ class WinRegistryParser(interface.FileObjectParser):
   def __init__(self):
     """Initializes a parser object."""
     super(WinRegistryParser, self).__init__()
+    self._default_plugin = None
     self._plugins = WinRegistryParser.GetPluginObjects()
     self._plugin_per_key_path = {}
     self._plugins_without_key_paths = []

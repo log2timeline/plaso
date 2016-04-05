@@ -62,7 +62,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(calls, 3)
 
     # TODO: Split this up into separate functions for testing each type of
-    # event, eg: testSMS, etc.
+    # event, e.g. testSMS, etc.
     sms_event_object = event_objects[16]
     call_event_object = event_objects[22]
     event_file = event_objects[18]

@@ -277,8 +277,9 @@ class SingleProcessEngine(engine.BaseEngine):
   def ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, include_directory_stat=True,
-      mount_path=None, parser_filter_string=None, process_archive_files=False,
-      resolver_context=None, status_update_callback=None, text_prepend=None):
+      mount_path=None, parser_filter_expression=None,
+      process_archive_files=False, resolver_context=None,
+      status_update_callback=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -293,7 +294,9 @@ class SingleProcessEngine(engine.BaseEngine):
       include_directory_stat: optional boolean value to indicate whether
                               directory stat information should be collected.
       mount_path: optional string containing the mount path.
-      parser_filter_string: optional parser filter string.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
       process_archive_files: optional boolean value to indicate if the worker
                              should scan for file entries inside files.
       resolver_context: optional resolver context (instance of dfvfs.Context).
@@ -322,7 +325,7 @@ class SingleProcessEngine(engine.BaseEngine):
       self._extraction_worker.SetHashers(hasher_names_string)
 
     self._extraction_worker.InitializeParserObjects(
-        parser_filter_string=parser_filter_string)
+        parser_filter_expression=parser_filter_expression)
 
     # Set the extraction worker and storage writer values so that they
     # can be accessed if the QueueFull exception is raised. This is

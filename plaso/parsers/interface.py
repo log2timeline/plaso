@@ -93,7 +93,7 @@ class BaseParser(object):
 
     del cls._plugin_classes[plugin_name]
 
-  # TOOD: move this to a filter.
+  # TODO: move this to a filter.
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
@@ -104,11 +104,13 @@ class BaseParser(object):
     return
 
   @classmethod
-  def GetPluginNames(cls, parser_filter_string=None):
+  def GetPluginNames(cls, parser_filter_expression=None):
     """Retrieves the plugin names.
 
     Args:
-      parser_filter_string: optional parser filter string.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
 
     Returns:
       A list of plugin names.
@@ -116,7 +118,7 @@ class BaseParser(object):
     plugin_names = []
 
     for plugin_name, _ in cls.GetPlugins(
-        parser_filter_string=parser_filter_string):
+        parser_filter_expression=parser_filter_expression):
       plugin_names.append(plugin_name)
 
     return sorted(plugin_names)
@@ -137,11 +139,13 @@ class BaseParser(object):
     return plugin_class()
 
   @classmethod
-  def GetPluginObjects(cls, parser_filter_string=None):
+  def GetPluginObjects(cls, parser_filter_expression=None):
     """Retrieves the plugin objects.
 
     Args:
-      parser_filter_string: optional parser filter string.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
 
     Returns:
       A list of plugin objects (instances of BasePlugin).
@@ -149,32 +153,30 @@ class BaseParser(object):
     plugin_objects = []
 
     for _, plugin_class in cls.GetPlugins(
-        parser_filter_string=parser_filter_string):
+        parser_filter_expression=parser_filter_expression):
       plugin_object = plugin_class()
       plugin_objects.append(plugin_object)
 
     return plugin_objects
 
   @classmethod
-  def GetPlugins(cls, parser_filter_string=None):
+  def GetPlugins(cls, parser_filter_expression=None):
     """Retrieves the registered plugins.
 
     Args:
-      parser_filter_string: optional parser filter string.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
 
     Yields:
       A tuple that contains the uniquely identifying name of the plugin
       and the plugin class (subclass of BasePlugin).
     """
-    if parser_filter_string:
-      includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-          parser_filter_string)
-    else:
-      includes = None
-      excludes = None
+    includes, excludes = manager.ParsersManager.GetParserFilters(
+        parser_filter_expression=parser_filter_expression)
 
-    for plugin_name, plugin_class in cls._plugin_classes.iteritems():
-      if excludes and plugin_name in excludes:
+    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+      if not includes and excludes.get(plugin_name, None):
         continue
 
       if includes and plugin_name not in includes:
