@@ -88,6 +88,7 @@ class BaseParser(object):
           u'Plugin class not set for name: {0:s}.'.format(
               plugin_class.NAME))
 
+    # pylint: disable=unsubscriptable-object
     del cls._plugin_classes[plugin_name]
 
   # TODO: move this to a filter.
@@ -178,6 +179,7 @@ class BaseParser(object):
           u'Plugin class already set for name: {0:s}.').format(
               plugin_class.NAME))
 
+    # pylint: disable=unsubscriptable-object
     cls._plugin_classes[plugin_name] = plugin_class
 
   @classmethod
