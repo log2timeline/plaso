@@ -118,7 +118,7 @@ class ParsersManagerTest(unittest.TestCase):
     self.assertEqual(includes, {})
     self.assertEqual(excludes, {u'test_parser': []})
 
-    manager.ParsersManager.parser_filter_string(
+    manager.ParsersManager.parser_filter_string = (
         u'test_parser_with_plugins/test_plugin')
     includes, excludes = manager.ParsersManager.GetFilterDicts()
 
