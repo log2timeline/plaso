@@ -106,19 +106,19 @@ class ParsersManagerTest(unittest.TestCase):
     manager.ParsersManager.RegisterParser(TestParserWithPlugins)
     manager.ParsersManager.RegisterParser(TestParser)
 
-    manager.ParsersManager.SetParserFilterString(u'test_parser')
+    manager.ParsersManager.parser_filter_string = u'test_parser'
     includes, excludes = manager.ParsersManager.GetFilterDicts()
 
     self.assertEqual(includes, {u'test_parser': []})
     self.assertEqual(excludes, {})
 
-    manager.ParsersManager.SetParserFilterString(u'!test_parser')
+    manager.ParsersManager.parser_filter_string = u'!test_parser'
     includes, excludes = manager.ParsersManager.GetFilterDicts()
 
     self.assertEqual(includes, {})
     self.assertEqual(excludes, {u'test_parser': []})
 
-    manager.ParsersManager.SetParserFilterString(
+    manager.ParsersManager.parser_filter_string(
         u'test_parser_with_plugins/test_plugin')
     includes, excludes = manager.ParsersManager.GetFilterDicts()
 

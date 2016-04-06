@@ -4,8 +4,8 @@
 
 import unittest
 
-from plaso.parsers import sqlite
 from plaso.parsers import manager
+from plaso.parsers import sqlite
 
 from tests.parsers import test_lib
 

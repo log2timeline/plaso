@@ -16,7 +16,8 @@ class ParsersManager(object):
 
   @classmethod
   def _CheckForIntersection(cls, includes, excludes):
-    """Checks for parsers and plugins in both the inclusion and exclusion
+    """
+    Checks for parsers and plugins in both the inclusion and exclusion
     sets. If an intersection is found, the parser or plugin is removed from
     the inclusion set.
 
@@ -25,7 +26,7 @@ class ParsersManager(object):
       excludes: the parsers and plugins to exclude
     """
     if includes and excludes:
-      for matching_parser in set(includes) & set(excludes):
+      for matching_parser in set(includes).intersection(excludes):
         # Check parser and plugin list for exact equivalence
         if includes[matching_parser] == excludes[matching_parser]:
           logging.warning(
@@ -36,7 +37,8 @@ class ParsersManager(object):
         # Check if plugins are in both lists
         else:
           intersection = (
-              set(includes[matching_parser]) &set(excludes[matching_parser]))
+              set(includes[matching_parser]).intersection(
+                  excludes[matching_parser]))
           if intersection:
             logging.warning(
                 u'Plugin {0:s}/{1:s} was in both the inclusion and exclusion '
@@ -79,16 +81,17 @@ class ParsersManager(object):
 
   @classmethod
   def GetFilterDicts(cls):
-    """Determines an include and exclude dict of parser keys and associated
+    """
+    Determines an include and exclude dictionary of parser keys and associated
     plugins.
 
-    Takes a comma separated string and splits it up into two dicts,
+    Takes a comma separated string and splits it up into two dictionaries,
     of parsers and plugins to include and to exclude from selection. If a
     particular filter is prepended with an exclamation point it will be
     added to the exclude section, otherwise in the include.
 
     Returns:
-      A tuple of two dicts, include and exclude.
+      A tuple of two dictionaries, include and exclude.
     """
     if not cls.parser_filter_string:
       return {}, {}
@@ -175,8 +178,8 @@ class ParsersManager(object):
   def GetParsers(cls, parser_filter_string=None):
     """Retrieves the registered parsers and plugins.
 
-    Retrieves a dict of all registered parsers and associated plugins from a
-    parser filter string. The filter string can contain direct names of
+    Retrieves a dictionary of all registered parsers and associated plugins
+    from a filter string. The filter string can contain direct names of
     parsers, presets or plugins. The filter string can also negate selection
     if prepended with an exclamation point,
     eg: foo,!foo/bar would include parser foo but not include plugin bar.
@@ -200,7 +203,7 @@ class ParsersManager(object):
       and the parser class (subclass of BaseParser).
     """
     if parser_filter_string:
-      cls.SetParserFilterString(parser_filter_string=parser_filter_string)
+      cls.parser_filter_string = parser_filter_string
     includes, excludes = cls.GetFilterDicts()
 
     for parser_name, parser_class in cls._parser_classes.iteritems():
@@ -338,13 +341,3 @@ class ParsersManager(object):
     """
     for parser_class in parser_classes:
       cls.RegisterParser(parser_class)
-
-  @classmethod
-  def SetParserFilterString(cls, parser_filter_string):
-    """Sets the parser_filter_string class variable
-
-    Args:
-      parser_filter_string: the string to set as the parser_filter_string
-      class variable
-    """
-    cls.parser_filter_string = parser_filter_string

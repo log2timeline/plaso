@@ -56,7 +56,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetParserPluginsInformation(self):
     """Tests the GetParserPluginsInformation function."""
-    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
+    manager.ParsersManager.parser_filter_string = None
     test_front_end = extraction_frontend.ExtractionFrontend()
     parser_plugins_information = test_front_end.GetParserPluginsInformation()
 
@@ -67,7 +67,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetParserPresetsInformation(self):
     """Tests the GetParserPresetsInformation function."""
-    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
+    manager.ParsersManager.parser_filter_string = None
     test_front_end = extraction_frontend.ExtractionFrontend()
     parser_presets_information = test_front_end.GetParserPresetsInformation()
 
@@ -78,7 +78,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetParsersInformation(self):
     """Tests the GetParsersInformation function."""
-    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
+    manager.ParsersManager.parser_filter_string = None
     test_front_end = extraction_frontend.ExtractionFrontend()
     parsers_information = test_front_end.GetParsersInformation()
 
@@ -89,7 +89,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testGetNamesOfParsersWithPlugins(self):
     """Tests the GetNamesOfParsersWithPlugins function."""
-    manager.ParsersManager.SetParserFilterString(parser_filter_string=None)
+    manager.ParsersManager.parser_filter_string = None
     test_front_end = extraction_frontend.ExtractionFrontend()
     parsers_names = test_front_end.GetNamesOfParsersWithPlugins()
 
