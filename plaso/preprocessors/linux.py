@@ -3,8 +3,6 @@
 
 import csv
 
-import pytz
-
 from dfvfs.helpers import text_file
 
 from plaso.lib import errors
@@ -77,7 +75,7 @@ class LinuxTimezone(interface.PreprocessPlugin):
     file_entry = self._FindFileEntry(searcher, path)
     if not file_entry:
       raise errors.PreProcessFail(
-        u'Unable to find file entry for path: {0:s}.'.format(path))
+          u'Unable to find file entry for path: {0:s}.'.format(path))
 
     file_object = file_entry.GetFileObject()
     text_file_object = text_file.TextFile(file_object)

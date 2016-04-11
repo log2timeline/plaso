@@ -4,8 +4,6 @@
 
 import unittest
 
-import pytz
-
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
@@ -52,7 +50,7 @@ class LinuxTimezoneTest(test_lib.PreprocessPluginTest):
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
-      file_system_builder.file_system, mount_point)
+        file_system_builder.file_system, mount_point)
 
   def testGetValue(self):
     """Test the GetValue function."""
