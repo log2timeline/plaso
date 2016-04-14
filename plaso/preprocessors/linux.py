@@ -66,7 +66,8 @@ class LinuxTimezone(interface.PreprocessPlugin):
                       for parsing.
 
     Returns:
-      The timezone.
+      A string containing a tzdata (Olsen) timezone name (for example,
+      America/New_York).
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -78,9 +79,11 @@ class LinuxTimezone(interface.PreprocessPlugin):
           u'Unable to find file entry for path: {0:s}.'.format(path))
 
     file_object = file_entry.GetFileObject()
-    text_file_object = text_file.TextFile(file_object)
-
-    file_data = text_file_object.readline()
+    try:
+      text_file_object = text_file.TextFile(file_object)
+      file_data = text_file_object.readline()
+    finally:
+      file_object.close()
     return file_data.strip()
 
 
