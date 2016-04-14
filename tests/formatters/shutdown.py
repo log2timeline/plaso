@@ -1,29 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Windows services event formatter."""
+"""Tests for the shutdown Windows Registry event formatter."""
 
 import unittest
 
-from plaso.formatters import winregservice
+from plaso.formatters import shutdown
 
 from tests.formatters import test_lib
 
 
-class WinRegistryServiceFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Windows service event formatter."""
+class ShutdownWindowsRegistryEventFormatterTest(
+    test_lib.EventFormatterTestCase):
+  """Tests for the shutdown Windows Registry event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = winregservice.WinRegistryServiceFormatter()
+    event_formatter = shutdown.ShutdownWindowsRegistryEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = winregservice.WinRegistryServiceFormatter()
+    event_formatter = shutdown.ShutdownWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
         u'key_path',
-        u'text']
+        u'value_name']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

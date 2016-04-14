@@ -1,14 +1,45 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for MS Office MRUs for Plaso."""
+""""Windows Registry plugin for the Microsoft Office MRU."""
 
 import re
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
+
+
+class OfficeMRUWindowsRegistryEvent(time_events.FiletimeEvent):
+  """Convenience class for an Microsoft Office MRU Windows Registry event.
+
+  Attributes:
+    key_path: a string containing the Windows Registry key path.
+    offset: an integer containing the data offset of the Microsoft Office MRU
+            Windows Registry value.
+    value_string: a string containing the MRU value.
+  """
+  DATA_TYPE = 'windows:registry:office_mru'
+
+  def __init__(self, filetime, key_path, offset, value_string):
+    """Initializes a Windows Registry event.
+
+    Args:
+      filetime: an integer containing a FILETIME timestamp.
+      key_path: a string containing the Windows Registry key path.
+      offset: an integer containing the data offset of the Microsoft Office MRU
+              Windows Registry value.
+      value_string: a string containing the MRU value.
+    """
+    # TODO: determine if this should be last written time.
+    super(OfficeMRUWindowsRegistryEvent, self).__init__(
+        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+    self.key_path = key_path
+    self.offset = offset
+    self.value_string = value_string
 
 
 class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
@@ -63,7 +94,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
                     dfwinreg.WinRegistryKey).
     """
     # TODO: Test other Office versions to make sure this plugin is applicable.
-    mru_values_dict = {}
+    values_dict = {}
     for registry_value in registry_key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
       if not registry_value.name or not self._RE_VALUE_NAME.search(
@@ -89,17 +120,15 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
             u'value: {0:s}.').format(registry_value.name))
         continue
 
-      mru_values_dict[registry_value.name] = value_string
+      values_dict[registry_value.name] = value_string
 
-      # TODO: change into a separate event object.
-      values_dict = {registry_value.name: value_string}
-      event_object = windows_events.WindowsRegistryEvent(
-          filetime, registry_key.path, values_dict,
-          offset=registry_key.offset, source_append=self._SOURCE_APPEND)
+      # TODO: split value string in individual values?
+      event_object = OfficeMRUWindowsRegistryEvent(
+          filetime, registry_key.path, registry_value.offset, value_string)
       parser_mediator.ProduceEvent(event_object)
 
     event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, mru_values_dict,
+        registry_key.last_written_time, registry_key.path, values_dict,
         offset=registry_key.offset, source_append=self._SOURCE_APPEND)
     parser_mediator.ProduceEvent(event_object)
 

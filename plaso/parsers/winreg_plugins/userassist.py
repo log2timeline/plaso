@@ -1,15 +1,48 @@
 # -*- coding: utf-8 -*-
-"""This file contains the UserAssist Windows Registry plugin."""
+"""The UserAssist Windows Registry plugin."""
 
 import logging
 
 import construct
 
-from plaso.containers import windows_events
+from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand
 from plaso.winnt import known_folder_ids
+
+
+class UserAssistWindowsRegistryEvent(time_events.FiletimeEvent):
+  """Convenience class for an UserAssist Windows Registry event.
+
+  Attributes:
+    key_path: a string containing the Windows Registry key path.
+    offset: an integer containing the data offset of the UserAssist
+            Windows Registry value.
+    regvalue: a dictionary containing the UserAssist values.
+  """
+
+  DATA_TYPE = 'windows:registry:userassist'
+
+  def __init__(self, filetime, key_path, offset, values_dict):
+    """Initializes an UserAssist Windows Registry event.
+
+    Args:
+      filetime: an integer containing a FILETIME timestamp.
+      key_path: a string containing the Windows Registry key path.
+      offset: an integer containing the data offset of the UserAssist
+              Windows Registry value.
+      values_dict: dictionary object containing the UserAssist values.
+    """
+    # TODO: check if last written is correct.
+    super(UserAssistWindowsRegistryEvent, self).__init__(
+        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+
+    self.key_path = key_path
+    self.offset = offset
+    # TODO: rename regvalue to ???.
+    self.regvalue = values_dict
 
 
 class UserAssistWindowsRegistryKeyPathFilter(
@@ -178,9 +211,8 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
           values_dict = {}
           values_dict[value_name] = u'[Count: {0:d}]'.format(count)
-          event_object = windows_events.WindowsRegistryEvent(
-              filetime, count_subkey.path, values_dict,
-              offset=registry_value.offset)
+          event_object = UserAssistWindowsRegistryEvent(
+              filetime, count_subkey.path, registry_value.offset, values_dict)
           parser_mediator.ProduceEvent(event_object)
 
       elif format_version == 5:
@@ -203,9 +235,8 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
                 userassist_entry_index, count, app_focus_count,
                 focus_duration)
 
-        event_object = windows_events.WindowsRegistryEvent(
-            filetime, count_subkey.path, values_dict,
-            offset=count_subkey.offset)
+        event_object = UserAssistWindowsRegistryEvent(
+            filetime, count_subkey.path, count_subkey.offset, values_dict)
         parser_mediator.ProduceEvent(event_object)
 
 

@@ -206,7 +206,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     event_objects = data.get(usb_plugin, [])
 
-    self.assertEquals(len(event_objects), 3)
+    self.assertEquals(len(event_objects), 5)
     event_object = event_objects[2]
 
     self.assertEquals(event_object.data_type, u'windows:registry:key_value')

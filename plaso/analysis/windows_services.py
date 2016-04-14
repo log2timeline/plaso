@@ -16,39 +16,42 @@ class WindowsService(yaml.YAMLObject):
   # not be used during evaluation of whether two services are the same.
   COMPARE_EXCLUDE = frozenset([u'sources'])
 
-  KEY_PATH_SEPARATOR = u'\\'
+  _REGISTRY_KEY_PATH_SEPARATOR = u'\\'
 
   # YAML attributes
   yaml_tag = u'!WindowsService'
   yaml_loader = yaml.SafeLoader
   yaml_dumper = yaml.SafeDumper
 
-
-  def __init__(self, name, service_type, image_path, start_type, object_name,
-               source, service_dll=None):
-    """Initializes a new Windows service object.
+  def __init__(
+      self, name, service_type, image_path, start_type, object_name, source,
+      service_dll=None):
+    """Initializes a Windows service object.
 
     Args:
-      name: The name of the service
+      name: A string that contains the name of the service
       service_type: The value of the Type value of the service key.
       image_path: The value of the ImagePath value of the service key.
       start_type: The value of the Start value of the service key.
       object_name: The value of the ObjectName value of the service key.
       source: A tuple of (pathspec, Registry key) describing where the
-          service was found
+              service was found
       service_dll: Optional string value of the ServiceDll value in the
-          service's Parameters subkey.
+                   service's Parameters subkey.
 
     Raises:
       TypeError: If a tuple with two elements is not passed as the 'source'
-      argument.
+                 argument.
     """
-    self.name = name
-    self.service_type = service_type
+    super(WindowsService, self).__init__()
+    self.anomalies = []
     self.image_path = image_path
-    self.start_type = start_type
-    self.service_dll = service_dll
+    self.name = name
     self.object_name = object_name
+    self.service_dll = service_dll
+    self.service_type = service_type
+    self.start_type = start_type
+
     if isinstance(source, tuple):
       if len(source) != 2:
         raise TypeError(u'Source arguments must be tuple of length 2.')
@@ -57,19 +60,54 @@ class WindowsService(yaml.YAMLObject):
       self.sources = [source]
     else:
       raise TypeError(u'Source argument must be a tuple.')
-    self.anomalies = []
+
+  def __eq__(self, other_service):
+    """Custom equality method so that we match near-duplicates.
+
+    Compares two service objects together and evaluates if they are
+    the same or close enough to be considered to represent the same service.
+
+    For two service objects to be considered the same they need to
+    have the the same set of attributes and same values for all their
+    attributes, other than those enumerated as reserved in the
+    COMPARE_EXCLUDE constant.
+
+    Args:
+      other_service: The service (instance of WindowsService) we are testing
+      for equality.
+
+    Returns:
+      A boolean value to indicate the services are equal.
+    """
+    if not isinstance(other_service, WindowsService):
+      return False
+
+    attributes = set(self.__dict__.keys())
+    other_attributes = set(self.__dict__.keys())
+
+    if attributes != other_attributes:
+      return False
+
+    # We compare the values for all attributes, other than those specifically
+    # enumerated as not relevant for equality comparisons.
+    for attribute in attributes.difference(self.COMPARE_EXCLUDE):
+      if getattr(self, attribute, None) != getattr(
+          other_service, attribute, None):
+        return False
+
+    return True
 
   @classmethod
   def FromEvent(cls, service_event):
-    """Creates a Service object from an plaso event.
+    """Creates a service object from an event object.
 
     Args:
-      service_event: The event object (instance of EventObject) to create a new
-          Service object from.
+      service_event: an event object (instance of EventObject)
+                     to create a new service object from.
 
     """
-    _, _, name = service_event.keyname.rpartition(
-        WindowsService.KEY_PATH_SEPARATOR)
+    _, _, name = service_event.key_path.rpartition(
+        WindowsService._REGISTRY_KEY_PATH_SEPARATOR)
     service_type = service_event.regvalue.get(u'Type')
     image_path = service_event.regvalue.get(u'ImagePath')
     start_type = service_event.regvalue.get(u'Start')
@@ -77,7 +115,7 @@ class WindowsService(yaml.YAMLObject):
     object_name = service_event.regvalue.get(u'ObjectName', u'')
 
     if service_event.pathspec:
-      source = (service_event.pathspec.location, service_event.keyname)
+      source = (service_event.pathspec.location, service_event.key_path)
     else:
       source = (u'Unknown', u'Unknown')
     return cls(
@@ -99,56 +137,20 @@ class WindowsService(yaml.YAMLObject):
     return human_readable_service_enums.SERVICE_ENUMS[u'Start'].get(
         self.start_type, u'{0:d}'.format(self.start_type))
 
-  def __eq__(self, other_service):
-    """Custom equality method so that we match near-duplicates.
-
-    Compares two service objects together and evaluates if they are
-    the same or close enough to be considered to represent the same service.
-
-    For two service objects to be considered the same they need to
-    have the the same set of attributes and same values for all their
-    attributes, other than those enumerated as reserved in the
-    COMPARE_EXCLUDE constant.
-
-    Args:
-      other_service: The service (instance of WindowsService) we are testing
-      for equality.
-
-    Returns:
-      A boolean value to indicate whether the services are equal.
-
-    """
-    if not isinstance(other_service, WindowsService):
-      return False
-
-    attributes = set(self.__dict__.keys())
-    other_attributes = set(self.__dict__.keys())
-
-    if attributes != other_attributes:
-      return False
-
-    # We compare the values for all attributes, other than those specifically
-    # enumerated as not relevant for equality comparisons.
-    for attribute in attributes.difference(self.COMPARE_EXCLUDE):
-      if getattr(self, attribute, None) != getattr(
-          other_service, attribute, None):
-        return False
-
-    return True
-
 
 class WindowsServiceCollection(object):
   """Class to hold and de-duplicate Windows Services."""
 
   def __init__(self):
     """Initialize a collection that holds Windows Service."""
+    super(WindowsServiceCollection, self).__init__()
     self._services = []
 
   def AddService(self, new_service):
     """Add a new service to the list of ones we know about.
 
     Args:
-      new_service: The service (instance of WindowsService) to add.
+      new_service: the service object (instance of WindowsService) to add.
     """
     for service in self._services:
       if new_service == service:
@@ -156,6 +158,7 @@ class WindowsServiceCollection(object):
         # just want to add where it came from.
         service.sources.append(new_service.sources[0])
         return
+
     # We only add a new object to our list if we don't have
     # an identical one already.
     self._services.append(new_service)
@@ -174,7 +177,6 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-
   def __init__(self, incoming_queue):
     """Initializes the Windows Services plugin
 
@@ -184,33 +186,6 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     super(WindowsServicesPlugin, self).__init__(incoming_queue)
     self._output_format = u'text'
     self._service_collection = WindowsServiceCollection()
-
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Analyzes an event_object and creates Windows Services as required.
-
-      At present, this method only handles events extracted from the Registry.
-
-    Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: The event object (instance of EventObject) to examine.
-    """
-    # TODO: Handle event log entries here also (ie, event id 4697).
-    if getattr(event_object, u'data_type', None) != u'windows:registry:service':
-      return
-    else:
-      # Create and store the service.
-      service = WindowsService.FromEvent(event_object)
-      self._service_collection.AddService(service)
-
-  def SetOutputFormat(self, output_format):
-    """Sets the output format of the generated report.
-
-    Args:
-      output_format: The format the the plugin should used to produce its
-                     output, as a string.
-    """
-    self._output_format = output_format
 
   def _FormatServiceText(self, service):
     """Produces a human readable multi-line string representing the service.
@@ -226,6 +201,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
         u'\tService Dll   = {0:s}'.format(service.service_dll),
         u'\tObject Name   = {0:s}'.format(service.object_name),
         u'\tSources:']
+
     for source in service.sources:
       string_segments.append(u'\t\t{0:s}:{1:s}'.format(source[0], source[1]))
     return u'\n'.join(string_segments)
@@ -254,6 +230,33 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
     return reports.AnalysisReport(self.NAME, text=report_text)
+
+  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
+    """Analyzes an event_object and creates Windows Services as required.
+
+      At present, this method only handles events extracted from the Registry.
+
+    Args:
+      analysis_mediator: The analysis mediator object (instance of
+                         AnalysisMediator).
+      event_object: The event object (instance of EventObject) to examine.
+    """
+    # TODO: Handle event log entries here also (ie, event id 4697).
+    if getattr(event_object, u'data_type', None) != u'windows:registry:service':
+      return
+    else:
+      # Create and store the service.
+      service = WindowsService.FromEvent(event_object)
+      self._service_collection.AddService(service)
+
+  def SetOutputFormat(self, output_format):
+    """Sets the output format of the generated report.
+
+    Args:
+      output_format: The format the the plugin should used to produce its
+                     output, as a string.
+    """
+    self._output_format = output_format
 
 
 manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesPlugin)

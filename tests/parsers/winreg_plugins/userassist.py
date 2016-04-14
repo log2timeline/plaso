@@ -4,7 +4,8 @@
 
 import unittest
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import userassist as _  # pylint: disable=unused-import
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import userassist
 
@@ -43,17 +44,20 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:11:22.811067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
-    regvalue_identifier = u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
+    userassist_identifier = u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
     expected_value = u'[Count: 14]'
-    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
+    self._TestRegvalue(event_object, userassist_identifier, expected_value)
 
-    expected_message = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
-        key_path, regvalue_identifier, expected_value)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    userassist_value = u'{0:s}: {1:s}'.format(
+        userassist_identifier, expected_value)
+    expected_message = u'[{0:s}\\Count] {1:s}'.format(
+        key_path, userassist_value)
 
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+        event_object, expected_message, userassist_value)
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
@@ -76,20 +80,24 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:49:37.078067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    regvalue_identifier = u'Microsoft.Windows.GettingStarted'
+    userassist_identifier = u'Microsoft.Windows.GettingStarted'
     expected_value = (
         u'[UserAssist entry: 1, Count: 14, Application focus count: 21, '
         u'Focus duration: 420000]')
-    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
+    self._TestRegvalue(event_object, userassist_identifier, expected_value)
 
-    expected_message = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
-        key_path, regvalue_identifier, expected_value)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    userassist_value = u'{0:s}: {1:s}'.format(
+        userassist_identifier, expected_value)
+    expected_message = u'[{0:s}\\Count] {1:s}'.format(
+        key_path, userassist_value)
+    expected_short_message = u'{0:s}...'.format(userassist_value[0:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

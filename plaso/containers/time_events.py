@@ -21,7 +21,8 @@ class TimestampEvent(events.EventObject):
     Args:
       timestamp: an integer containing a timestamp of the number
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -41,7 +42,8 @@ class CocoaTimeEvent(TimestampEvent):
 
     Args:
       cocoa_time: the Cocoa time value.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -58,7 +60,8 @@ class DelphiTimeEvent(TimestampEvent):
 
     Args:
       delphi_time: the Delphi time value.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -75,7 +78,8 @@ class FatDateTimeEvent(TimestampEvent):
 
     Args:
       fat_date_time: the FAT date time value.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -92,7 +96,8 @@ class FiletimeEvent(TimestampEvent):
 
     Args:
       filetime: the FILETIME timestamp value.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -110,7 +115,8 @@ class JavaTimeEvent(TimestampEvent):
     Args:
       java_time: the Java timestamp which is an integer containing the number
                  of milliseconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -129,7 +135,8 @@ class PosixTimeEvent(TimestampEvent):
     Args:
       posix_time: the POSIX time value, which contains the number of seconds
                   since January 1, 1970 00:00:00 UTC.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
       micro_seconds: optional number of micro seconds.
@@ -152,7 +159,8 @@ class PythonDatetimeEvent(TimestampEvent):
 
     Args:
       datetime_time: the datetime object (instance of datetime.datetime).
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
@@ -173,7 +181,8 @@ class UUIDTimeEvent(TimestampEvent):
 
     Args:
       uuid: a uuid object (instance of uuid.UUID).
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
 
     Raises:
       ValueError: if the UUID version is not supported.
@@ -199,7 +208,8 @@ class WebKitTimeEvent(TimestampEvent):
 
     Args:
       webkit_time: the WebKit time value.
-      timestamp_description: the usage string for the timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
       data_type: optional event data type. If not set data_type is
                  derived from the DATA_TYPE attribute.
     """
