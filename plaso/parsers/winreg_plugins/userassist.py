@@ -35,7 +35,7 @@ class UserAssistWindowsRegistryEvent(time_events.FiletimeEvent):
               Windows Registry value.
       values_dict: dictionary object containing the UserAssist values.
     """
-    # TODO: check if is last written is correct.
+    # TODO: check if last written is correct.
     super(UserAssistWindowsRegistryEvent, self).__init__(
         filetime, eventdata.EventTimestamp.WRITTEN_TIME)
 
