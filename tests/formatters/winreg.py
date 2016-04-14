@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Windows NT Registry (REGF) file event formatter."""
+"""Tests for the Windows Registry key or value event formatter."""
 
 import unittest
 
@@ -22,7 +22,7 @@ class WinRegistryGenericFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winreg.WinRegistryGenericFormatter()
 
     expected_attribute_names = [
-        u'keyname',
+        u'key_path',
         u'text']
 
     self._TestGetFormatStringAttributeNames(

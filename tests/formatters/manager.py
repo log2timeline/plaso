@@ -59,25 +59,26 @@ class FormattersManagerTest(unittest.TestCase):
       message_strings.append(csv_message_strings)
 
     self.assertIn((
-        u'1334961526929596,REG,UNKNOWN,[MY AutoRun key] Run: '
-        u'c:/Temp/evil.exe'), message_strings)
+        u'1334961526929596,REG,UNKNOWN,[MY AutoRun key] '
+        u'Run: c:/Temp/evil.exe'), message_strings)
 
     self.assertIn(
-        (u'1334966206929596,REG,UNKNOWN,[//HKCU/Secret/EvilEmpire/'
-         u'Malicious_key] Value: send all the exes to the other '
-         u'world'), message_strings)
+        (u'1334966206929596,REG,UNKNOWN,'
+         u'[HKCU\\Secret\\EvilEmpire\\Malicious_key] '
+         u'Value: send all the exes to the other world'), message_strings)
     self.assertIn(
-        (u'1334940286000000,REG,UNKNOWN,[//HKCU/Windows'
-         u'/Normal] Value: run all the benign stuff'), message_strings)
+        (u'1334940286000000,REG,UNKNOWN,'
+         u'[HKCU\\Windows\\Normal] '
+         u'Value: run all the benign stuff'), message_strings)
     self.assertIn(
         (u'1335781787929596,FILE,Weird Log File,This log line reads '
          u'ohh so much.'), message_strings)
     self.assertIn(
-        (u'1335781787929596,FILE,Weird Log File,Nothing of interest'
-         u' here, move on.'), message_strings)
+        (u'1335781787929596,FILE,Weird Log File,Nothing of interest '
+         u'here, move on.'), message_strings)
     self.assertIn(
-        (u'1335791207939596,FILE,Weird Log File,Mr. Evil just logged'
-         u' into the machine and got root.'), message_strings)
+        (u'1335791207939596,FILE,Weird Log File,Mr. Evil just logged '
+         u'into the machine and got root.'), message_strings)
 
     expected_text_message = (
         u'This is a line by someone not reading the log line properly. And '

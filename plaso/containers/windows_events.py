@@ -33,55 +33,67 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
 
 
 class WindowsRegistryEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows Registry-based event."""
+  """Convenience class for a Windows Registry-based event.
+
+  Attributes:
+    key_path: a string containing the Windows Registry key path.
+    offset: an integer containing the data offset of the Windows Registry
+            key or value.
+    regvalue: a dictionary containing the values of the key.
+    urls: optional list of strings containing URLs.
+  """
 
   DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(
       self, filetime, key_path, values_dict, usage=None, offset=None,
       source_append=None, urls=None):
-    """Initializes a Windows registry event.
+    """Initializes a Windows Registry event.
 
     Args:
-      filetime: the FILETIME timestamp value.
-      key_path: the Windows Registry key path.
+      filetime: a FILETIME timestamp time object (instance of
+                dfdatetime.Filetime).
+      key_path: a string containing the Windows Registry key path.
       values_dict: dictionary object containing values of the key.
-      usage: optional description of the usage of the time value.
-      offset: optional (data) offset of the Registry key or value.
+      usage: optional string containing the description of the usage of
+             the filetime timestamp.
+      offset: optional integer containing the data offset of the Windows
+              Registry key or value.
       source_append: optional string to append to the source_long of the event.
-      urls: optional list of URLs.
+      urls: optional list of strings containing URLs.
     """
+    # TODO: remove this override any other meaning derived from the timestamp
+    # should be done at the analysis phase.
     if usage is None:
       usage = eventdata.EventTimestamp.WRITTEN_TIME
 
-    super(WindowsRegistryEvent, self).__init__(filetime, usage)
+    super(WindowsRegistryEvent, self).__init__(filetime.timestamp, usage)
 
-    if key_path:
-      # TODO: rename keyname to key_path
-      self.keyname = key_path
-
+    self.key_path = key_path
+    # TODO: rename regvalue to ???.
     self.regvalue = values_dict
 
     # TODO: determine how should offset 0 be handled.
     if offset or isinstance(offset, py2to3.INTEGER_TYPES):
       self.offset = offset
 
+    # TODO: deprecate and remove.
     if source_append:
       self.source_append = source_append
 
     if urls:
-      self.url = u' - '.join(urls)
+      self.urls = urls
 
 
 class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
   """Convenience class for a Windows installation event.
 
   Attributes:
-    key_path: the Windows Registry key path.
-    owner: string containing the owner.
-    product_name: string containing the produce name.
-    service_pack: string containing service pack.
-    version: string containing the version.
+    key_path: a string containing the Windows Registry key path.
+    owner: a string containing the owner.
+    product_name: a string containing the produce name.
+    service_pack: a string containing service pack.
+    version: a string containing the version.
   """
   DATA_TYPE = 'windows:registry:installation'
 
@@ -91,11 +103,11 @@ class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
 
     Args:
       posix_time: the POSIX time value.
-      key_path: the Windows Registry key path.
-      owner: string containing the owner.
-      product_name: string containing the produce name.
-      service_pack: string containing service pack.
-      version: string containing the version.
+      key_path: a string containing the Windows Registry key path.
+      owner: a string containing the owner.
+      product_name: a string containing the produce name.
+      service_pack: a string containing service pack.
+      version: a string containing the version.
     """
     super(WindowsRegistryInstallationEvent, self).__init__(
         posix_time, eventdata.EventTimestamp.INSTALLATION_TIME)
@@ -111,32 +123,29 @@ class WindowsRegistryListEvent(time_events.FiletimeEvent):
   """Convenience class for a list retrieved from the Registry e.g. MRU.
 
   Attributes:
-    key_path: string containing the Windows Registry key path.
-    list_name: string containing the name of the list.
-    list_values: string containing the list values.
-    value_name: string containing the Windows Registry value name.
+    key_path: a string containing the Windows Registry key path.
+    list_name: a string containing the name of the list.
+    list_values: a string containing the list values.
+    value_name: a string containing the Windows Registry value name.
   """
   DATA_TYPE = 'windows:registry:list'
 
   def __init__(
       self, filetime, key_path, list_name, list_values,
       timestamp_description=None, value_name=None):
-    """Initializes a Windows registry event.
+    """Initializes a Windows Registry event.
 
     Args:
-      filetime: the FILETIME timestamp value.
-      key_path: string containing the Windows Registry key path.
-      list_name: string containing the name of the list.
-      list_values: string containing the list values.
+      filetime: a FILETIME timestamp time object (instance of
+                dfdatetime.Filetime).
+      key_path: a string containing the Windows Registry key path.
+      list_name: a string containing the name of the list.
+      list_values: a string containing the list values.
       timestamp_description: optional usage string for the timestamp value.
       value_name: optional string containing the Windows Registry value name.
     """
-    if timestamp_description is None:
-      timestamp_description = eventdata.EventTimestamp.WRITTEN_TIME
-
     super(WindowsRegistryListEvent, self).__init__(
-        filetime, timestamp_description)
-
+        filetime.timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
     self.key_path = key_path
     self.list_name = list_name
     self.list_values = list_values
@@ -163,7 +172,7 @@ class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
     """Initializes an event object.
 
     Args:
-      filetime: the FILETIME timestamp value.
+      filetime: an integer containing the FILETIME timestamp value.
       device_path: a string containing the volume device path.
       serial_number: a string containing the volume serial number.
       origin: a string containing the origin of the event (event source).

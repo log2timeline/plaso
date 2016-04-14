@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import sam_users
 
@@ -38,22 +39,48 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestRegvalue(event_object, u'account_rid', 500)
     self._TestRegvalue(event_object, u'login_count', 6)
-    self._TestRegvalue(event_object, u'user_guid', u'000001F4')
     self._TestRegvalue(event_object, u'username', u'Administrator')
 
-    # Match UTC timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-09-24 03:36:06.358837')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_message = (
         u'[{0:s}] '
         u'account_rid: 500 '
         u'comments: Built-in account for administering the computer/domain '
         u'login_count: 6 '
-        u'user_guid: 000001F4 '
         u'username: Administrator').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_short_message)
+
+    # Test SAMUsersWindowsRegistryEvent.
+    event_object = event_objects[1]
+
+    self.assertEqual(event_object.account_rid, 500)
+    self.assertEqual(event_object.login_count, 6)
+    self.assertEqual(event_object.username, u'Administrator')
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-11-20 21:48:12.569244')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_LOGIN_TIME)
+
+    expected_message = (
+        u'[{0:s}] '
+        u'Username: Administrator '
+        u'Comments: Built-in account for administering the computer/domain '
+        u'RID: 500 '
+        u'Login count: 6').format(key_path)
+    expected_short_message = (
+        u'Administrator '
+        u'RID: 500 '
+        u'Login count: 6')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

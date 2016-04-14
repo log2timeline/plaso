@@ -86,6 +86,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     return event_queue_consumer
 
+  # TODO: deprecate the usage of "event_object.regvalue".
   def _TestRegvalue(self, event_object, identifier, expected_value):
     """Tests a specific 'regvalue' attribute within the event object.
 

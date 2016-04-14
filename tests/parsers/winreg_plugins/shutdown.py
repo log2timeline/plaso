@@ -4,7 +4,8 @@
 
 import unittest
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import shutdown as _  # pylint: disable=unused-import
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import shutdown
 
@@ -41,18 +42,19 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_value = u'ShutdownTime'
-    self._TestRegvalue(event_object, u'Description', expected_value)
+    self.assertEqual(event_object.value_name, u'ShutdownTime')
 
     # Match UTC timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-04 01:58:40.839249')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_SHUTDOWN)
 
     expected_message = (
         u'[{0:s}] '
         u'Description: ShutdownTime').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'ShutdownTime'
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

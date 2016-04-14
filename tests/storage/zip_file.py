@@ -474,7 +474,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.tag.labels[0], u'Malware')
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
-    self.assertEqual(message[0:15], u'[\\HKCU\\Windows\\')
+    self.assertEqual(message[0:14], u'[HKCU\\Windows\\')
 
     event_object = tagged_events[2]
     self.assertEqual(event_object.tag.comment, u'This is interesting')
