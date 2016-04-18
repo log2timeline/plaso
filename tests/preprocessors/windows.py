@@ -25,8 +25,9 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
     path_attributes = {u'systemroot': u'\\Windows'}
 
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(
-        u'/Windows/System32/config/SOFTWARE', [u'SOFTWARE'])
+    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    file_system_builder.AddFileReadData(
+        u'/Windows/System32/config/SOFTWARE', test_file_path)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
@@ -45,8 +46,9 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
     path_attributes = {u'systemroot': u'\\Windows'}
 
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(
-        u'/Windows/System32/config/SYSTEM', [u'SYSTEM'])
+    test_file_path = self._GetTestFilePath([u'SYSTEM'])
+    file_system_builder.AddFileReadData(
+        u'/Windows/System32/config/SYSTEM', test_file_path)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')

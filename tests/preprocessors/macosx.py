@@ -116,9 +116,9 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
   def setUp(self):
     """Makes preparations before running an individual test."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddTestFile(
-        u'/Library/Preferences/com.apple.HIToolbox.plist',
-        [u'com.apple.HIToolbox.plist'])
+    test_file_path = self._GetTestFilePath([u'com.apple.HIToolbox.plist'])
+    file_system_builder.AddFileReadData(
+        u'/Library/Preferences/com.apple.HIToolbox.plist', test_file_path)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(
@@ -165,9 +165,10 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
   def setUp(self):
     """Makes preparations before running an individual test."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddTestFile(
+    test_file_path = self._GetTestFilePath([u'com.apple.HIToolbox.plist'])
+    file_system_builder.AddFileReadData(
         u'/private/var/db/dslocal/nodes/Default/users/nobody.plist',
-        [u'com.apple.HIToolbox.plist'])
+        test_file_path)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
     self._searcher = file_system_searcher.FileSystemSearcher(

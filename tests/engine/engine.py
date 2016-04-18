@@ -37,10 +37,12 @@ class TestEngine(engine.BaseEngine):
         path_spec_queue, event_object_queue, parse_error_queue)
 
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddTestFile(
-        u'/Windows/System32/config/SOFTWARE', [u'SOFTWARE'])
-    file_system_builder.AddTestFile(
-        u'/Windows/System32/config/SYSTEM', [u'SYSTEM'])
+    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    file_system_builder.AddFileReadData(
+        u'/Windows/System32/config/SOFTWARE', test_file_path)
+    test_file_path = self._GetTestFilePath([u'SYSTEM'])
+    file_system_builder.AddFileReadData(
+        u'/Windows/System32/config/SYSTEM', test_file_path)
 
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
