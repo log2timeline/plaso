@@ -4,6 +4,7 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
@@ -13,7 +14,6 @@ from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
 from plaso.preprocessors import windows
 
-from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -24,8 +24,8 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
     """Makes preparations before running an individual test."""
     path_attributes = {u'systemroot': u'\\Windows'}
 
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
-    file_system_builder.AddTestFile(
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
         u'/Windows/System32/config/SOFTWARE', [u'SOFTWARE'])
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
@@ -44,8 +44,8 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
     """Makes preparations before running an individual test."""
     path_attributes = {u'systemroot': u'\\Windows'}
 
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
-    file_system_builder.AddTestFile(
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', [u'SYSTEM'])
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
@@ -120,7 +120,7 @@ class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
 
@@ -147,7 +147,7 @@ class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
 

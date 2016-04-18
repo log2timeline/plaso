@@ -4,13 +4,13 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
 from plaso.engine import knowledge_base
 from plaso.preprocessors import macosx
 
-from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -38,7 +38,7 @@ class MacOSXBuildTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/System/Library/CoreServices/SystemVersion.plist',
         self._FILE_DATA)
@@ -91,7 +91,7 @@ class MacOSXHostname(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Library/Preferences/SystemConfiguration/preferences.plist',
         self._FILE_DATA)
@@ -115,7 +115,7 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddTestFile(
         u'/Library/Preferences/com.apple.HIToolbox.plist',
         [u'com.apple.HIToolbox.plist'])
@@ -140,7 +140,7 @@ class MacOSXTimezone(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddSymbolicLink(
         u'/private/etc/localtime', u'/usr/share/zoneinfo/Europe/Amsterdam')
 
@@ -164,7 +164,7 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddTestFile(
         u'/private/var/db/dslocal/nodes/Default/users/nobody.plist',
         [u'com.apple.HIToolbox.plist'])

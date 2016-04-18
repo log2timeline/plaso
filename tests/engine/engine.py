@@ -10,6 +10,7 @@ try:
 except ImportError:
   hpy = None
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.path import path_spec
@@ -18,7 +19,6 @@ from dfvfs.vfs import file_system
 
 from plaso.engine import engine
 
-from tests import test_lib as shared_test_lib
 from tests.engine import test_lib
 
 
@@ -36,7 +36,7 @@ class TestEngine(engine.BaseEngine):
     super(TestEngine, self).__init__(
         path_spec_queue, event_object_queue, parse_error_queue)
 
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddTestFile(
         u'/Windows/System32/config/SOFTWARE', [u'SOFTWARE'])
     file_system_builder.AddTestFile(
