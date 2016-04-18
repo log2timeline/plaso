@@ -25,6 +25,8 @@ from tests.engine import test_lib
 class TestEngine(engine.BaseEngine):
   """Class that defines the processing engine for testing."""
 
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
+
   def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
     """Initialize the engine object.
 
@@ -47,6 +49,19 @@ class TestEngine(engine.BaseEngine):
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
