@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-"""This file contains a class to provide a parsing framework to plaso.
-
-This class contains a base framework class for parsing fileobjects, and
-also some implementations that extend it to provide a more comprehensive
-parser.
-"""
+"""The parsers and plugins interface classes."""
 
 import abc
+import logging
 import os
 
 from plaso.lib import errors
-from plaso.parsers import manager
 
 
 class BaseFileEntryFilter(object):
@@ -74,6 +69,65 @@ class BaseParser(object):
   _plugin_classes = None
 
   @classmethod
+  def _CheckForIntersection(cls, includes, excludes):
+    """Checks for plugins in both the inclusion and exclusion sets.
+
+    If an intersection is found, the plugin is removed from the inclusion set.
+
+    Args:
+      includes: a list of the names of the plugins to include.
+      excludes: a list of the names of the plugins to exclude.
+    """
+    if not includes or not excludes:
+      return
+
+    for plugin_name in set(includes).intersection(excludes):
+      logging.warning(
+          u'The plugin: {0:s} was in both the inclusion and exclusion lists. '
+          u'Ignoring included plugin.'.format(plugin_name))
+      includes.remove(plugin_name)
+
+  @classmethod
+  def _GetPluginFilters(cls, plugin_filter_expression):
+    """Retrieves the plugins include and exclude dictionaries.
+
+    Takes a comma separated string and splits it up into two dictionaries,
+    of plugins to include and to exclude from selection. If a particular
+    filter is prepended with an exclamation point it will be added to the
+    exclude section, otherwise in the include.
+
+    Args:
+      plugin_filter_expression: a string containing the plugin filter
+                                expression, where None represents all plugins.
+
+    Returns:
+      A tuple containing lists of the names of the included and excluded
+      plugins.
+    """
+    if not plugin_filter_expression:
+      return [], []
+
+    includes = []
+    excludes = []
+
+    for plugin_filter in plugin_filter_expression.split(u','):
+      plugin_filter = plugin_filter.strip()
+      if not plugin_filter:
+        continue
+
+      if plugin_filter.startswith(u'!'):
+        plugin_filter = plugin_filter[1:]
+        active_list = excludes
+      else:
+        active_list = includes
+
+      if plugin_filter:
+        active_list.append(plugin_filter)
+
+    cls._CheckForIntersection(includes, excludes)
+    return includes, excludes
+
+  @classmethod
   def DeregisterPlugin(cls, plugin_class):
     """Deregisters a plugin class.
 
@@ -104,21 +158,19 @@ class BaseParser(object):
     return
 
   @classmethod
-  def GetPluginNames(cls, parser_filter_expression=None):
+  def GetPluginNames(cls, plugin_filter_expression=None):
     """Retrieves the plugin names.
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      plugin_filter_expression: optional string containing the plugin filter
+                                expression, where None represents all plugins.
 
     Returns:
       A list of plugin names.
     """
     plugin_names = []
-
     for plugin_name, _ in cls.GetPlugins(
-        parser_filter_expression=parser_filter_expression):
+        plugin_filter_expression=plugin_filter_expression):
       plugin_names.append(plugin_name)
 
     return sorted(plugin_names)
@@ -139,13 +191,12 @@ class BaseParser(object):
     return plugin_class()
 
   @classmethod
-  def GetPluginObjects(cls, parser_filter_expression=None):
+  def GetPluginObjects(cls, plugin_filter_expression=None):
     """Retrieves the plugin objects.
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      plugin_filter_expression: optional string containing the plugin filter
+                                expression, where None represents all plugins.
 
     Returns:
       A list of plugin objects (instances of BasePlugin).
@@ -153,27 +204,25 @@ class BaseParser(object):
     plugin_objects = []
 
     for _, plugin_class in cls.GetPlugins(
-        parser_filter_expression=parser_filter_expression):
+        plugin_filter_expression=plugin_filter_expression):
       plugin_object = plugin_class()
       plugin_objects.append(plugin_object)
 
     return plugin_objects
 
   @classmethod
-  def GetPlugins(cls, parser_filter_expression=None):
+  def GetPlugins(cls, plugin_filter_expression=None):
     """Retrieves the registered plugins.
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      plugin_filter_expression: optional string containing the plugin filter
+                                expression, where None represents all plugins.
 
     Yields:
       A tuple that contains the uniquely identifying name of the plugin
       and the plugin class (subclass of BasePlugin).
     """
-    includes, excludes = manager.ParsersManager.GetParserFilters(
-        parser_filter_expression=parser_filter_expression)
+    includes, excludes = cls._GetPluginFilters(plugin_filter_expression)
 
     for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
       if excludes and plugin_name in excludes:

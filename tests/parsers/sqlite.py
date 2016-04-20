@@ -30,7 +30,9 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     for _, parser_class in manager.ParsersManager.GetParsers(
         parser_filter_expression=test_parser_filter):
       parser_names.append(parser_class.NAME)
-    plugin_names = sqlite.SQLiteParser.GetPluginNames()
+
+    plugin_names = sqlite.SQLiteParser.GetPluginNames(
+        plugin_filter_expression=u'chrome_history,firefox_history')
 
     self.assertEqual(len(parser_names), 1)
     self.assertEqual(len(plugin_names), 2)
@@ -43,7 +45,9 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     for _, parser_class in manager.ParsersManager.GetParsers(
         parser_filter_expression=u'sqlite,!sqlite/skype'):
       parser_names.append(parser_class.NAME)
-    plugin_names = sqlite.SQLiteParser.GetPluginNames()
+
+    plugin_names = sqlite.SQLiteParser.GetPluginNames(
+        plugin_filter_expression=u'!skype')
 
     # This should result in all plugins EXCEPT the skype one.
     self.assertEqual(len(parser_names), 1)
