@@ -70,43 +70,6 @@ class ParsersManagerTest(unittest.TestCase):
 
   # pylint: disable=protected-access
 
-  def testCheckForIntersection(self):
-    """Tests the CheckForIntersection function."""
-    includes = {}
-    excludes = {}
-
-    manager.ParsersManager._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, {})
-    self.assertEqual(excludes, {})
-
-    includes = {u'test_include': u''}
-    excludes = {u'test_exclude': u''}
-
-    manager.ParsersManager._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, {u'test_include': u''})
-    self.assertEqual(excludes, {})
-
-    includes = {u'test_include': u'', u'test_intersection': u''}
-    excludes = {u'test_exclude': u'', u'test_intersection': u''}
-
-    manager.ParsersManager._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, {u'test_include': u''})
-    self.assertEqual(excludes, {})
-
-    includes = {u'test': [u'include']}
-    excludes = {u'test': [u'exclude']}
-
-    manager.ParsersManager._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, {u'test': [u'include']})
-    self.assertEqual(excludes, {u'test': [u'exclude']})
-
-    includes = {u'test': [u'include', u'intersection']}
-    excludes = {u'test': [u'exclude', u'intersection']}
-
-    manager.ParsersManager._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, {u'test': [u'include']})
-    self.assertEqual(excludes, {u'test': [u'exclude', u'intersection']})
-
   def testGetParserFilters(self):
     """Tests the GetParserFilters function."""
     parser_filter_expression = u''
@@ -138,6 +101,43 @@ class ParsersManagerTest(unittest.TestCase):
         u'test/include,test/intersection,!test/exclude,!test/intersection')
     includes, excludes = manager.ParsersManager._GetParserFilters(
         parser_filter_expression)
+    self.assertEqual(includes, {u'test': [u'include']})
+    self.assertEqual(excludes, {u'test': [u'exclude', u'intersection']})
+
+  def testReduceParserFilters(self):
+    """Tests the ReduceParserFilters function."""
+    includes = {}
+    excludes = {}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {})
+    self.assertEqual(excludes, {})
+
+    includes = {u'test_include': u''}
+    excludes = {u'test_exclude': u''}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test_include': u''})
+    self.assertEqual(excludes, {})
+
+    includes = {u'test_include': u'', u'test_intersection': u''}
+    excludes = {u'test_exclude': u'', u'test_intersection': u''}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test_include': u''})
+    self.assertEqual(excludes, {})
+
+    includes = {u'test': [u'include']}
+    excludes = {u'test': [u'exclude']}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test': [u'include']})
+    self.assertEqual(excludes, {u'test': [u'exclude']})
+
+    includes = {u'test': [u'include', u'intersection']}
+    excludes = {u'test': [u'exclude', u'intersection']}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
     self.assertEqual(includes, {u'test': [u'include']})
     self.assertEqual(excludes, {u'test': [u'exclude', u'intersection']})
 

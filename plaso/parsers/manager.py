@@ -2,6 +2,7 @@
 """The parsers and plugins manager."""
 
 import logging
+
 import pysigscan
 
 from plaso.frontend import presets
@@ -14,63 +15,8 @@ class ParsersManager(object):
   _parser_classes = {}
 
   @classmethod
-  def _CheckForIntersection(cls, includes, excludes):
-    """Checks for parsers and plugins in both the inclusion and exclusion sets.
-
-    If an intersection is found, the parser or plugin is removed from
-    the inclusion set.
-
-    Args:
-      includes: a dictionary of the names of the parsers and plugins to include.
-      excludes: a dictionary of the names of the parsers and plugins to exclude.
-    """
-    if not includes or not excludes:
-      return
-
-    for parser_name in set(includes).intersection(excludes):
-      # Check parser and plugin list for exact equivalence.
-      if includes[parser_name] == excludes[parser_name]:
-        logging.warning(
-            u'Parser {0:s} was in both the inclusion and exclusion lists. '
-            u'Ignoring included parser.'.format(parser_name))
-        includes.pop(parser_name)
-        continue
-
-      # Remove plugins that defined are in both inclusion and exclusion lists.
-      plugin_includes = includes[parser_name]
-      plugin_excludes = excludes[parser_name]
-      intersection = set(plugin_includes).intersection(plugin_excludes)
-      if not intersection:
-        continue
-
-      logging.warning(
-          u'Parser {0:s} plugins: {1:s} in both the inclusion and exclusion '
-          u'lists. Ignoring included plugins.'.format(
-              parser_name, u', '.join(intersection)))
-      plugins_list = list(set(plugin_includes).difference(intersection))
-      includes[parser_name] = plugins_list
-
-    # TODO: determine if this is needed since it is not obvious from
-    # the function name.
-
-    # Remove unnecessary excluded parsers.
-    parsers_to_pop = []
-    for parser_name in excludes:
-      if parser_name in includes:
-        continue
-
-      logging.warning(
-          u'The excluded parser: {0:s} is not associated with the included '
-          u'parsers: {1:s}. Ignoring excluded parser.'.format(
-              parser_name, u', '.join(includes.keys())))
-      parsers_to_pop.append(parser_name)
-
-    for parser_name in parsers_to_pop:
-      excludes.pop(parser_name)
-
-  @classmethod
   def _GetParserFilters(cls, parser_filter_expression):
-    """Retrieves the parsers and plugins include and exclude dictionaries.
+    """Retrieves the parsers and plugins to include and exclude.
 
     Takes a comma separated string and splits it up into two dictionaries,
     of parsers and plugins to include and to exclude from selection. If a
@@ -120,8 +66,61 @@ class ParsersManager(object):
         if plugin:
           active_dict[parser].append(plugin)
 
-    cls._CheckForIntersection(includes, excludes)
+    cls._ReduceParserFilters(includes, excludes)
     return includes, excludes
+
+  @classmethod
+  def _ReduceParserFilters(cls, includes, excludes):
+    """Reduces the parsers and plugins to include and exclude.
+
+    If an intersection is found, the parser or plugin is removed from
+    the inclusion set. If a parser is not in inclusion set there is no need
+    to have it in the exclusion set.
+
+    Args:
+      includes: a dictionary of the names of the parsers and plugins to include.
+      excludes: a dictionary of the names of the parsers and plugins to exclude.
+    """
+    if not includes or not excludes:
+      return
+
+    for parser_name in set(includes).intersection(excludes):
+      # Check parser and plugin list for exact equivalence.
+      if includes[parser_name] == excludes[parser_name]:
+        logging.warning(
+            u'Parser {0:s} was in both the inclusion and exclusion lists. '
+            u'Ignoring included parser.'.format(parser_name))
+        includes.pop(parser_name)
+        continue
+
+      # Remove plugins that defined are in both inclusion and exclusion lists.
+      plugin_includes = includes[parser_name]
+      plugin_excludes = excludes[parser_name]
+      intersection = set(plugin_includes).intersection(plugin_excludes)
+      if not intersection:
+        continue
+
+      logging.warning(
+          u'Parser {0:s} plugins: {1:s} in both the inclusion and exclusion '
+          u'lists. Ignoring included plugins.'.format(
+              parser_name, u', '.join(intersection)))
+      plugins_list = list(set(plugin_includes).difference(intersection))
+      includes[parser_name] = plugins_list
+
+    # Remove excluded parsers that do not run.
+    parsers_to_pop = []
+    for parser_name in excludes:
+      if parser_name in includes:
+        continue
+
+      logging.warning(
+          u'The excluded parser: {0:s} is not associated with the included '
+          u'parsers: {1:s}. Ignoring excluded parser.'.format(
+              parser_name, u', '.join(includes.keys())))
+      parsers_to_pop.append(parser_name)
+
+    for parser_name in parsers_to_pop:
+      excludes.pop(parser_name)
 
   @classmethod
   def DeregisterParser(cls, parser_class):

@@ -14,29 +14,6 @@ class BaseParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def testCheckForIntersection(self):
-    """Tests the CheckForIntersection function."""
-    includes = []
-    excludes = []
-
-    interface.BaseParser._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, [])
-    self.assertEqual(excludes, [])
-
-    includes = [u'test_include']
-    excludes = [u'test_exclude']
-
-    interface.BaseParser._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, [u'test_include'])
-    self.assertEqual(excludes, [u'test_exclude'])
-
-    includes = [u'test_include', u'test_intersection']
-    excludes = [u'test_exclude', u'test_intersection']
-
-    interface.BaseParser._CheckForIntersection(includes, excludes)
-    self.assertEqual(includes, [u'test_include'])
-    self.assertEqual(excludes, [u'test_exclude', u'test_intersection'])
-
   def testGetPluginFilters(self):
     """Tests the GetPluginFilters function."""
     plugin_filter_expression = u''
@@ -55,6 +32,29 @@ class BaseParserTest(test_lib.ParserTestCase):
         u'test_include,test_intersection,!test_exclude,!test_intersection')
     includes, excludes = interface.BaseParser._GetPluginFilters(
         plugin_filter_expression)
+    self.assertEqual(includes, [u'test_include'])
+    self.assertEqual(excludes, [u'test_exclude', u'test_intersection'])
+
+  def testReducePluginFilters(self):
+    """Tests the ReducePluginFilters function."""
+    includes = []
+    excludes = []
+
+    interface.BaseParser._ReducePluginFilters(includes, excludes)
+    self.assertEqual(includes, [])
+    self.assertEqual(excludes, [])
+
+    includes = [u'test_include']
+    excludes = [u'test_exclude']
+
+    interface.BaseParser._ReducePluginFilters(includes, excludes)
+    self.assertEqual(includes, [u'test_include'])
+    self.assertEqual(excludes, [u'test_exclude'])
+
+    includes = [u'test_include', u'test_intersection']
+    excludes = [u'test_exclude', u'test_intersection']
+
+    interface.BaseParser._ReducePluginFilters(includes, excludes)
     self.assertEqual(includes, [u'test_include'])
     self.assertEqual(excludes, [u'test_exclude', u'test_intersection'])
 

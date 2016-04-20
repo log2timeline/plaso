@@ -69,27 +69,8 @@ class BaseParser(object):
   _plugin_classes = None
 
   @classmethod
-  def _CheckForIntersection(cls, includes, excludes):
-    """Checks for plugins in both the inclusion and exclusion sets.
-
-    If an intersection is found, the plugin is removed from the inclusion set.
-
-    Args:
-      includes: a list of the names of the plugins to include.
-      excludes: a list of the names of the plugins to exclude.
-    """
-    if not includes or not excludes:
-      return
-
-    for plugin_name in set(includes).intersection(excludes):
-      logging.warning(
-          u'The plugin: {0:s} was in both the inclusion and exclusion lists. '
-          u'Ignoring included plugin.'.format(plugin_name))
-      includes.remove(plugin_name)
-
-  @classmethod
   def _GetPluginFilters(cls, plugin_filter_expression):
-    """Retrieves the plugins include and exclude dictionaries.
+    """Retrieves the plugins to include and exclude.
 
     Takes a comma separated string and splits it up into two dictionaries,
     of plugins to include and to exclude from selection. If a particular
@@ -124,8 +105,27 @@ class BaseParser(object):
       if plugin_filter:
         active_list.append(plugin_filter)
 
-    cls._CheckForIntersection(includes, excludes)
+    cls._ReducePluginFilters(includes, excludes)
     return includes, excludes
+
+  @classmethod
+  def _ReducePluginFilters(cls, includes, excludes):
+    """Reduces the plugins to include and exclude.
+
+    If an intersection is found, the plugin is removed from the inclusion set.
+
+    Args:
+      includes: a list of the names of the plugins to include.
+      excludes: a list of the names of the plugins to exclude.
+    """
+    if not includes or not excludes:
+      return
+
+    for plugin_name in set(includes).intersection(excludes):
+      logging.warning(
+          u'The plugin: {0:s} was in both the inclusion and exclusion lists. '
+          u'Ignoring included plugin.'.format(plugin_name))
+      includes.remove(plugin_name)
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
