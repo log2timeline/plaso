@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The UserAssist Windows Registry plugin."""
 
-import logging
-
 import construct
 
 from plaso.containers import time_events
@@ -154,7 +152,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       try:
         value_name = registry_value.name.decode(u'rot-13')
       except UnicodeEncodeError as exception:
-        logging.debug((
+        parser_mediator.ProduceParseDebug((
             u'Unable to decode UserAssist string: {0:s} with error: {1:s}.\n'
             u'Attempting piecewise decoding.').format(
                 registry_value.name, exception))

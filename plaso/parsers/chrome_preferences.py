@@ -2,7 +2,6 @@
 """A parser for the Chrome preferences file."""
 
 import json
-import logging
 import os
 
 from plaso.containers import time_events
@@ -46,7 +45,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
       try:
         install_time = int(extension.get(u'install_time', u'0'), 10)
       except ValueError as exception:
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'Extension ID {0:s} is missing timestamp: {1:s}'.format(
                 extension_id, exception))
         continue

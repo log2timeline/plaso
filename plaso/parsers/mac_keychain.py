@@ -14,7 +14,6 @@
 
 
 import binascii
-import logging
 import os
 
 import construct
@@ -236,10 +235,9 @@ class KeychainParser(interface.FileObjectParser):
     try:
       record = self.RECORD_HEADER_APP.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      logging.warning((
-          u'[{0:s}] Unsupported record header at 0x{1:08x} in file: '
-          u'{2:s}').format(
-              self.NAME, offset, parser_mediator.GetDisplayName()))
+      parser_mediator.ProduceParseWarning((
+          u'Unsupported record header at 0x{0:08x} in file: '
+          u'{1:s}').format(offset, parser_mediator.GetDisplayName()))
       return
 
     (ssgp_hash, creation_time, last_modification_time, text_description,
@@ -372,10 +370,9 @@ class KeychainParser(interface.FileObjectParser):
     try:
       record = self.RECORD_HEADER_INET.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      logging.warning((
-          u'[{0:s}] Unsupported record header at 0x{1:08x} in file: '
-          u'{2:s}').format(
-              self.NAME, offset, parser_mediator.GetDisplayName()))
+      parser_mediator.ProduceParseWarning((
+          u'Unsupported record header at 0x{0:08x} in file: '
+          u'{1:s}').format(offset, parser_mediator.GetDisplayName()))
       return
 
     (ssgp_hash, creation_time, last_modification_time, text_description,
@@ -480,10 +477,9 @@ class KeychainParser(interface.FileObjectParser):
       try:
         table = self.TABLE_HEADER.parse_stream(file_object)
       except construct.FieldError as exception:
-        logging.warning((
-            u'[{0:s}] Unable to parse table header in file: {1:s} '
-            u'with error: {2:s}.').format(
-                self.NAME, parser_mediator.GetDisplayName(),
+        parser_mediator.ProduceParseWarning((
+            u'Unable to parse table header in file: {0:s} '
+            u'with error: {1:s}.').format(parser_mediator.GetDisplayName(),
                 exception))
         continue
 

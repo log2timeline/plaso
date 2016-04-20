@@ -5,7 +5,6 @@ Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 """
 
 import binascii
-import logging
 
 from binplist import binplist
 
@@ -123,8 +122,9 @@ class PlistParser(interface.FileObjectParser):
             parser_mediator, plist_name=filename, top_level=top_level_object)
 
       except errors.WrongPlistPlugin as exception:
-        logging.debug(u'Wrong plugin: {0:s} for: {1:s}'.format(
-            exception.args[0], exception.args[1]))
+        parser_mediator.ProduceParseDebug(
+            u'Wrong plugin: {0:s} for: {1:s}'.format(
+                exception.args[0], exception.args[1]))
 
 
 manager.ParsersManager.RegisterParser(PlistParser)

@@ -35,8 +35,6 @@ References
 http://xchat.org
 """
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -125,18 +123,19 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     try:
       parsed_structure = structure.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a XChat scrollback log file')
+      parser_mediator.ProduceParseDebug(u'Not a XChat scrollback log file')
       return False
 
     try:
       posix_time = int(parsed_structure.timestamp)
     except ValueError:
-      logging.debug(
+      parser_mediator.ProduceParseDebug(
           u'Not a XChat scrollback log file, invalid timestamp string')
       return False
 
     if not timelib.Timestamp.FromPosixTime(posix_time):
-      logging.debug(u'Not a XChat scrollback log file, invalid timestamp')
+      parser_mediator.ProduceParseDebug(
+          u'Not a XChat scrollback log file, invalid timestamp')
       return False
 
     return True
@@ -152,21 +151,23 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
                  log file.
     """
     if key != u'logline':
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
       return
 
     try:
       posix_time = int(structure.timestamp)
     except ValueError:
-      logging.debug(u'Invalid timestamp string {0:s}, skipping record'.format(
-          structure.timestamp))
+      parser_mediator.ProduceParseDebug(
+          u'Invalid timestamp string {0:s}, skipping record'.format(
+              structure.timestamp))
       return
 
     try:
       nickname, text = self._StripThenGetNicknameAndText(structure.text)
     except pyparsing.ParseException:
-      logging.debug(u'Error parsing entry at offset {0:d}'.format(self.offset))
+      parser_mediator.ProduceParseDebug(
+          u'Error parsing entry at offset {0:d}'.format(self.offset))
       return
 
     event_object = XChatScrollbackEvent(posix_time, self.offset, nickname, text)

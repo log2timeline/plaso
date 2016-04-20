@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Firewall Log file."""
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -155,7 +153,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       self._ParseLogLine(parser_mediator, structure)
 
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, unused_parser_mediator, line):

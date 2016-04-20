@@ -250,10 +250,11 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         return self._FORMAT_TYPE_10
 
   def _DetermineCacheEntrySize(
-      self, format_type, value_data, cached_entry_offset):
+      self, parser_mediator, format_type, value_data, cached_entry_offset):
     """Determines the size of a cached entry.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       format_type: integer value that contains the format type.
       value_data: a binary string containing the value data.
       cached_entry_offset: integer value that contains the offset of
@@ -290,14 +291,12 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
           cached_entry_data[8:16])
 
       if maximum_path_size < path_size:
-        logging.error(
-            u'[{0:s}] Path size value out of bounds.'.format(self.NAME))
+        parser_mediator.ProduceParseError(u'Path size value out of bounds.')
         return
 
       path_end_of_string_size = maximum_path_size - path_size
       if path_size == 0 or path_end_of_string_size != 2:
-        logging.error(
-            u'[{0:s}] Unsupported path size values.'.format(self.NAME))
+        parser_mediator.ProduceParseError(u'Unsupported path size values.')
         return
 
       # Assume the entry is 64-bit if the 32-bit path offset is 0 and
@@ -582,7 +581,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     cached_entry_offset = header_object.header_size
     cached_entry_size = self._DetermineCacheEntrySize(
-        format_type, value_data, cached_entry_offset)
+        parser_mediator, format_type, value_data, cached_entry_offset)
 
     if not cached_entry_size:
       parser_mediator.ProduceParseError((

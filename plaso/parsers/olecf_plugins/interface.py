@@ -2,7 +2,6 @@
 """This file contains the necessary interface for OLECF plugins."""
 
 import abc
-import logging
 
 from plaso.lib import errors
 from plaso.parsers import plugins
@@ -16,10 +15,11 @@ class OlecfPlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])
 
-  def GetTimestamps(self, olecf_item):
+  def GetTimestamps(self, parser_mediator, olecf_item):
     """Takes an OLECF object and returns extracted timestamps.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       olecf_item: A OLECF item (instance of pyolecf.item).
 
     Returns:
@@ -31,7 +31,7 @@ class OlecfPlugin(plugins.BasePlugin):
     try:
       creation_time = olecf_item.get_creation_time_as_integer()
     except OverflowError as exception:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to read the creation time with error: {0:s}'.format(
               exception))
       creation_time = 0
@@ -39,7 +39,7 @@ class OlecfPlugin(plugins.BasePlugin):
     try:
       modification_time = olecf_item.get_modification_time_as_integer()
     except OverflowError as exception:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to read the modification time with error: {0:s}'.format(
               exception))
       modification_time = 0

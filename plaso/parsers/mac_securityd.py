@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the ASL securityd log plaintext parser."""
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -193,10 +191,10 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     if key in (u'logline', u'repeated'):
       self._ParseLogLine(parser_mediator, structure, key)
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, unused_parser_mediator, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a ASL securityd log file.
 
     Args:
@@ -209,7 +207,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       line = self.SECURITYD_LINE.parseString(line)
     except pyparsing.ParseException as exception:
-      logging.debug((
+      parser_mediator.ProduceParseDebug((
           u'Unable to parse file as an ASL securityd log file with error: '
           u'{0:s}').format(exception))
       return False
@@ -217,14 +215,15 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     # Check if the day, month and time is valid taking a random year.
     month = timelib.MONTH_DICT.get(line.month.lower())
     if not month:
-      logging.debug(u'Unsuported month value: {0:s}'.format(line.month))
+      parser_mediator.ProduceParseDebug(
+          u'Unsuported month value: {0:s}'.format(line.month))
       return False
 
     try:
       self._ConvertToTimestamp(line.day, month, self._DEFAULT_YEAR, line.time)
     except errors.TimestampError as exception:
-      logging.debug(u'Unable to determine timestamp with error: {0:s}'.format(
-          exception))
+      parser_mediator.ProduceParseDebug(
+          u'Unable to determine timestamp with error: {0:s}'.format(exception))
       return False
 
     return True

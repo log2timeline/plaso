@@ -2,7 +2,6 @@
 """This file contains a MRUList Registry plugin."""
 
 import abc
-import logging
 
 import construct
 
@@ -68,10 +67,11 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       A string containing the value.
     """
 
-  def _ParseMRUListValue(self, key):
+  def _ParseMRUListValue(self, parser_mediator, key):
     """Parses the MRUList value in a given Registry key.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUList value.
 
@@ -88,8 +88,8 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
     try:
       mru_list = self._MRULIST_STRUCT.parse(mru_list_value.data)
     except construct.FieldError:
-      logging.warning(u'[{0:s}] Unable to parse the MRU key: {1:s}'.format(
-          self.NAME, key.path))
+      parser_mediator.ProduceParseWarning(
+          u'Unable to parse the MRU key: {0:s}'.format(key.path))
       return enumerate([])
 
     return enumerate(mru_list)
@@ -103,7 +103,8 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       codepage: Optional extended ASCII string codepage.
     """
     values_dict = {}
-    for entry_index, entry_letter in self._ParseMRUListValue(key):
+    for entry_index, entry_letter in self._ParseMRUListValue(
+          parser_mediator, key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with \0 (0x0000).
       if entry_letter == 0:
@@ -153,27 +154,27 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     value = key.GetValueByName(u'{0:s}'.format(entry_letter))
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
-              self.NAME, entry_letter, key.path))
+      parser_mediator.ProduceParseDebug(
+          u'Missing MRUList entry value: {0:s} in key: {1:s}.'.format(
+              entry_letter, key.path))
 
     elif value.DataIsString():
       value_string = value.GetDataAsObject()
 
     elif value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-string MRUList entry value: {1:s} parsed as string '
-          u'in key: {2:s}.').format(self.NAME, entry_letter, key.path))
+      parser_mediator.ProduceParseDebug((
+          u'Non-string MRUList entry value: {0:s} parsed as string '
+          u'in key: {1:s}.').format(entry_letter, key.path))
       utf16_stream = binary.ByteStreamCopyToUTF16Stream(value.data)
 
       try:
         value_string = utf16_stream.decode(u'utf-16-le')
       except UnicodeDecodeError as exception:
         value_string = binary.HexifyBuffer(utf16_stream)
-        logging.warning((
-            u'[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUList entry '
-            u'value: {2:s} in key: {3:s} with error: {4:s}').format(
-                self.NAME, value_string, entry_letter, key.path, exception))
+        parser_mediator.ProduceParseWarning((
+            u'Unable to decode UTF-16 stream: {0:s} in MRUList entry '
+            u'value: {1:s} in key: {2:s} with error: {3:s}').format(
+                value_string, entry_letter, key.path, exception))
 
     return value_string
 
@@ -223,14 +224,14 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     value = key.GetValueByName(u'{0:s}'.format(entry_letter))
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
-              self.NAME, entry_letter, key.path))
+      parser_mediator.ProduceParseDebug(
+          u'Missing MRUList entry value: {0:s} in key: {1:s}.'.format(
+              entry_letter, key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-binary MRUList entry value: {1:s} in key: '
-          u'{2:s}.').format(self.NAME, entry_letter, key.path))
+      parser_mediator.ProduceParseDebug((
+          u'Non-binary MRUList entry value: {0:s} in key: '
+          u'{1:s}.').format(entry_letter, key.path))
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)

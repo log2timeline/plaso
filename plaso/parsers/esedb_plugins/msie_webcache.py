@@ -5,8 +5,6 @@ The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE
 as of version 10.
 """
 
-import logging
-
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import py2to3
@@ -145,7 +143,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
                       The container name indicates the table type.
     """
     if table is None:
-      logging.warning(u'[{0:s}] invalid Container_# table'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid Container_# table')
       return
 
     for record_index, esedb_record in enumerate(table.records):
@@ -158,7 +156,8 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
 
       try:
         record_values = self._GetRecordValues(
-            table.name, esedb_record, value_mappings=value_mappings)
+            parser_mediator, table.name, esedb_record,
+            value_mappings=value_mappings)
 
       except UnicodeDecodeError:
         parser_mediator.ProduceParseError((
@@ -217,15 +216,16 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       table: Optional table object (instance of pyesedb.table).
     """
     if database is None:
-      logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid database')
       return
 
     if table is None:
-      logging.warning(u'[{0:s}] invalid Containers table'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid Containers table')
       return
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:
@@ -264,15 +264,16 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       table: Optional table object (instance of pyesedb.table).
     """
     if database is None:
-      logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid database')
       return
 
     if table is None:
-      logging.warning(u'[{0:s}] invalid LeakFiles table'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid LeakFiles table')
       return
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       timestamp = record_values.get(u'CreationTime', 0)
       if timestamp:
@@ -290,15 +291,16 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       table: Optional table object (instance of pyesedb.table).
     """
     if database is None:
-      logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid database')
       return
 
     if table is None:
-      logging.warning(u'[{0:s}] invalid Partitions table'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid Partitions table')
       return
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:

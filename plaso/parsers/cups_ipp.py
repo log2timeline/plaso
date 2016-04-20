@@ -19,8 +19,6 @@ CUPS IPP version 2.0:
 * N/A
 """
 
-import logging
-
 import construct
 
 from plaso.containers import time_events
@@ -231,7 +229,7 @@ class CupsIppParser(interface.FileObjectParser):
     if header.operation_id != self.IPP_OP_ID:
       # Warn if the operation ID differs from the standard one. We should be
       # able to parse the file nonetheless.
-      logging.debug(
+      parser_mediator.ProduceParseDebug(
           u'[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
@@ -319,7 +317,7 @@ class CupsIppParser(interface.FileObjectParser):
       _ = self.INTEGER_8.parse_stream(file_object)
 
     except (IOError, construct.FieldError):
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'[{0:s}] Unsupported identifier in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
       return None, None
@@ -328,7 +326,7 @@ class CupsIppParser(interface.FileObjectParser):
     try:
       name = self.PAIR_NAME.parse_stream(file_object).text
     except (IOError, construct.FieldError):
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'[{0:s}] Unsupported name in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
       return None, None
@@ -354,7 +352,7 @@ class CupsIppParser(interface.FileObjectParser):
         value = self.TEXT.parse_stream(file_object)
 
     except (IOError, UnicodeDecodeError, construct.FieldError):
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'[{0:s}] Unsupported value in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
       return None, None

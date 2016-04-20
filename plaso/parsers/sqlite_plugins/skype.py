@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a basic Skype SQLite parser."""
 
-import logging
-
 from plaso.containers import time_events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -405,9 +403,9 @@ class SkypePlugin(interface.SQLitePlugin):
           parser_mediator.ProduceEvent(event_object, query=query)
 
         except ValueError:
-          logging.debug((
-              u'[{0:s}] Unable to determine when the call {1:s} was '
-              u'finished.').format(self.NAME, row['id']))
+          parser_mediator.ProduceParseDebug((
+              u'Unable to determine when the call {0:s} was '
+              u'finished.').format(row['id']))
 
   def ParseFileTransfer(
       self, parser_mediator, row, cache=None, database=None, query=None,

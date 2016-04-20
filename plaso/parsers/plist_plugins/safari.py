@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a default plist plugin in Plaso."""
 
-import logging
-
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -51,8 +49,9 @@ class SafariHistoryPlugin(interface.PlistPlugin):
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
     """
     if match.get(u'WebHistoryFileVersion', 0) != 1:
-      logging.warning(u'Unable to parse Safari version: {0:s}'.format(
-          match.get(u'WebHistoryFileVersion', 0)))
+      parser_mediator.ProduceParseWarning(
+          u'Unable to parse Safari version: {0:s}'.format(
+              match.get(u'WebHistoryFileVersion', 0)))
       return
 
     if u'WebHistoryDates' not in match:
@@ -63,12 +62,13 @@ class SafariHistoryPlugin(interface.PlistPlugin):
         time = timelib.Timestamp.FromCocoaTime(float(
             history_entry.get(u'lastVisitedDate', 0)))
       except ValueError:
-        logging.warning(u'Unable to translate timestamp: {0:s}'.format(
-            history_entry.get(u'lastVisitedDate', 0)))
+        parser_mediator.ProduceParseWarning(
+            u'Unable to translate timestamp: {0:s}'.format(
+                history_entry.get(u'lastVisitedDate', 0)))
         continue
 
       if not time:
-        logging.debug(u'No timestamp set, skipping record.')
+        parser_mediator.ProduceParseDebug(u'No timestamp set, skipping record.')
         continue
 
       event_object = SafariHistoryEvent(time, history_entry)

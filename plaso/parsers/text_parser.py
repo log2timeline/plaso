@@ -176,7 +176,7 @@ class SlowLexicalTextParser(
         self.next_entry_offset = file_object.tell() - len(self.buffer)
 
       if not self._file_verified and self.error >= self.MAX_LINES * 2:
-        logging.debug(
+        parser_mediator.ProduceParseDebug(
             u'Lexer error count: {0:d} and current state {1:s}'.format(
                 self.error, self.state))
         raise errors.UnableToParseFile(
@@ -191,15 +191,14 @@ class SlowLexicalTextParser(
         except errors.TimestampError as exception:
           error_count += 1
           if self._file_verified:
-            logging.debug(
+            parser_mediator.ProduceParseDebug(
                 u'[{0:s} VERIFIED] Error count: {1:d} and ERROR: {2:d}'.format(
                     path_spec_printable, error_count, self.error))
-            logging.warning(
-                u'[{0:s}] Unable to parse timestamp with error: {1:s}'.format(
-                    self.NAME, exception))
+            parser_mediator.ProduceParseWarning(
+                u'Unable to parse timestamp with error: {0:s}'.format(exception))
 
           else:
-            logging.debug((
+            parser_mediator.ProduceParseDebug((
                 u'[{0:s} EVALUATING] Error count: {1:d} and ERROR: '
                 u'{2:d})').format(path_spec_printable, error_count, self.error))
 
@@ -782,7 +781,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     except UnicodeDecodeError:
       if not quiet:
         display_name = parser_mediator.GetDisplayName()
-        logging.warning((
+        parser_mediator.ProduceParseWarning((
             u'Unable to decode line [{0:s}...] with encoding: {1:s} in '
             u'file: {2:s}').format(
                 repr(line[1:30]), self.encoding, display_name))
@@ -814,11 +813,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
-      logging.debug((
+      parser_mediator.ProduceParseDebug((
           u'Trying to read a line and reached the maximum allowed length of '
-          u'{0:d}. The last few bytes of the line are: {1:s} [parser '
-          u'{2:s}]').format(
-              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
+          u'{0:d}. The last few bytes of the line are: {1:s}').format(
+              self.MAX_LINE_LENGTH, repr(line[-10:])))
 
     if not utils.IsText(line):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')

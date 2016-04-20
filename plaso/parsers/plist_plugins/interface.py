@@ -197,8 +197,8 @@ class PlistPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(PlistPlugin, self).Process(parser_mediator)
 
-    logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
-        self.NAME, plist_name))
+    parser_mediator.ProduceParseDebug(
+        u'Plist Plugin Used: {0:s} for: {1:s}'.format(self.NAME, plist_name))
     match = self._GetKeys(top_level, self.PLIST_KEYS)
     self.GetEntries(parser_mediator, top_level=top_level, match=match)
 

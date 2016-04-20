@@ -2,13 +2,14 @@
 """The parser mediator object."""
 
 import datetime
+import inspect
 import logging
 import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
 # TODO: disabled as long nothing is listening on the parse error queue.
-# from plaso.lib import event
+# from plaso.containers import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 
@@ -161,7 +162,7 @@ class ParserMediator(object):
       posix_time = getattr(stat_object, u'ctime', None)
 
     if posix_time is None:
-      logging.warning(
+      self.ProduceParseWarning(
           u'Unable to determine creation year from file stat information.')
       return
 
@@ -170,7 +171,7 @@ class ParserMediator(object):
           posix_time, self._knowledge_base.timezone)
 
     except ValueError as exception:
-      logging.error((
+      self.ProduceParseError((
           u'Unable to determine creation year from file stat information '
           u'with error: {0:s}').format(exception))
       return
@@ -414,26 +415,71 @@ class ParserMediator(object):
     for event_object in event_objects:
       self.ProduceEvent(event_object, query=query)
 
+  def ProduceParseDebug(self, message):
+    """Produces a parse debug log.
+
+    Args:
+      message: The message of the debug log.
+    """
+    self.ProduceParseLog(message, caller_level=2, level=logging.DEBUG)
+
   def ProduceParseError(self, message):
     """Produces a parse error.
 
     Args:
       message: The message of the error.
     """
+    self.ProduceParseLog(message, caller_level=2, level=logging.ERROR)
+
+  def ProduceParseInfo(self, message):
+    """Produces a parse info log.
+
+    Args:
+      message: The message of the info log.
+    """
+    self.ProduceParseLog(message, caller_level=2, level=logging.INFO)
+
+  def ProduceParseLog(self, message, caller_level=1, level=None):
+    """Produces a parse log.
+
+    Args:
+      message: The message of the log.
+      caller_level: An integer representing the number of levels up the call
+                    stat the caller of the log is located.
+      level: An integer containing the logging level to set.
+    """
+    if not level:
+      level = logging.INFO
+
     self.number_of_parse_errors += 1
     # TODO: Remove call to logging when parser error queue is fully functional.
-    logging.error(
-        u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-            self.GetParserChain(), self.GetDisplayName(), message))
+    if self._file_entry:
+      logging.log(
+          level, 
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.GetParserChain(), self.GetDisplayName(), message))
+    else:
+      logging.log(
+        level, u'[{0:s}] {1:s}'.format(self.GetParserChain(), message))
 
     # TODO: disabled as long nothing is listening on the parse error queue.
     # if self._parse_error_queue_producer:
+    #   caller = inspect.getframeinfo(inspect.stack()[caller_level][0])
     #   path_spec = self._file_entry.path_spec
     #   parser_chain = self.GetParserChain()
-    #   parse_error = event.ExtractionError(
-    #       parser_chain, message, path_spec=path_spec)
+    #   parse_error = errors.ExtractionError(
+    #       parser_chain, message, file_path=caller.filename, level=level,
+    #       line_number=caller.lineno, path_spec=path_spec)
     #   self._parse_error_queue_producer.ProduceItem(parse_error)
     #   self.number_of_parse_errors += 1
+
+  def ProduceParseWarning(self, message):
+    """Produce a parse warning log.
+
+    Args:
+      message: The message of the warning log.
+    """
+    self.ProduceParseLog(message, caller_level=2, level=logging.WARNING)
 
   def ResetCounters(self):
     """Resets the counters."""

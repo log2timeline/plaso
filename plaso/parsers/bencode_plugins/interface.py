@@ -11,7 +11,6 @@ BencodeParser.
 """
 
 import abc
-import logging
 
 from plaso.lib import errors
 from plaso.parsers import plugins
@@ -33,7 +32,7 @@ class BencodePlugin(plugins.BasePlugin):
 
   NAME = u'bencode'
 
-  def _GetKeys(self, data, keys, depth=1):
+  def _GetKeys(self, parser_mediator, data, keys, depth=1):
     """Helper function to return keys nested in a bencode dict.
 
     By default this function will return the values for the named keys requested
@@ -46,6 +45,7 @@ class BencodePlugin(plugins.BasePlugin):
     override the depth limit and use _GetKeys to fetch from a deeper level.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       data: bencode data in dictionary form.
       keys: A list of keys that should be returned.
       depth: Defines how many levels deep to check for a match.
@@ -61,14 +61,14 @@ class BencodePlugin(plugins.BasePlugin):
         match[key] = data[key]
     else:
       for _, parsed_key, parsed_value in self._RecurseKey(
-          data, depth=depth):
+          parser_mediator, data, depth=depth):
         if parsed_key in keys:
           match[parsed_key] = parsed_value
           if set(match.keys()) == keys:
             return match
     return match
 
-  def _RecurseKey(self, recur_item, root=u'', depth=15):
+  def _RecurseKey(self, parser_mediator, recur_item, root=u'', depth=15):
     """Flattens nested dictionaries and lists by yielding it's values.
 
     The hierarchy of a bencode file is a series of nested dictionaries and
@@ -80,6 +80,7 @@ class BencodePlugin(plugins.BasePlugin):
     message is logged indicating which key processing stopped on.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       recur_item: An object to be checked for additional nested items.
       root: The pathname of the current working key.
       depth: A counter to ensure we stop at the maximum recursion depth.
@@ -88,12 +89,13 @@ class BencodePlugin(plugins.BasePlugin):
       A tuple of the root, key, and value from a bencoded file.
     """
     if depth < 1:
-      logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
+      parser_mediator.ProduceParseWarning(
+          u'Recursion limit hit for key: {0:s}'.format(root))
       return
 
     if isinstance(recur_item, (list, tuple)):
       for recur in recur_item:
-        for key in self._RecurseKey(recur, root, depth):
+        for key in self._RecurseKey(parser_mediator, recur, root, depth):
           yield key
       return
 
@@ -108,7 +110,7 @@ class BencodePlugin(plugins.BasePlugin):
         for item in value:
           if isinstance(item, dict):
             for keyval in self._RecurseKey(
-                item, root=root + u'/' + key, depth=depth - 1):
+                parser_mediator, item, root=root + u'/' + key, depth=depth - 1):
               yield keyval
 
   @abc.abstractmethod
@@ -166,7 +168,8 @@ class BencodePlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(BencodePlugin, self).Process(parser_mediator)
 
-    logging.debug(u'Bencode Plugin Used: {0:s}'.format(self.NAME))
-    match = self._GetKeys(data, self.BENCODE_KEYS, 3)
+    parser_mediator.ProduceParseDebug(
+        u'Bencode Plugin Used: {0:s}'.format(self.NAME))
+    match = self._GetKeys(parser_mediator, data, self.BENCODE_KEYS, 3)
 
     self.GetEntries(parser_mediator, data=data, match=match)

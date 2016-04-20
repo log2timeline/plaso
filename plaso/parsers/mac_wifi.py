@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the wifi.log (Mac OS X) parser."""
 
-import logging
 import re
 
 import pyparsing
@@ -212,7 +211,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     if key == u'logline':
       self._ParseLogLine(parser_mediator, structure)
     elif key != u'header':
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
@@ -228,7 +227,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       _ = self.WIFI_HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a Mac Wifi log file')
+      parser_mediator.ProduceParseDebug(u'Not a Mac Wifi log file')
       return False
     return True
 

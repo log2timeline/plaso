@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USB Device key."""
 
-import logging
-
 from plaso.containers import windows_events
 from plaso.lib import eventdata
 from plaso.parsers import winreg
@@ -48,7 +46,7 @@ class USBPlugin(interface.WindowsRegistryPlugin):
           vendor_identification = subkey_name_parts[0]
           product_identification = subkey_name_parts[1]
       except ValueError as exception:
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'Unable to split string: {0:s} with error: {1:s}'.format(
                 subkey.name, exception))
 

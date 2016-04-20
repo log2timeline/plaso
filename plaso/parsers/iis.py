@@ -7,8 +7,6 @@ IIS/676400bc-8969-4aa7-851a-9319490a9bbb.mspx?mfr=true
 
 """
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -233,7 +231,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     elif key == u'logline':
       self._ParseLogLine(parser_mediator, structure)
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, unused_parser_mediator, line):

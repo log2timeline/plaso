@@ -2,7 +2,6 @@
 """Basic Security Module Parser."""
 
 import binascii
-import logging
 import os
 import socket
 
@@ -545,10 +544,11 @@ class BsmParser(interface.FileObjectParser):
     """
     return u''.join([u'{0:02x}'.format(byte) for byte in byte_array])
 
-  def _CopyUtf8ByteArrayToString(self, byte_array):
+  def _CopyUtf8ByteArrayToString(self, parser_mediator, byte_array):
     """Copies a UTF-8 encoded byte array into a Unicode string.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       byte_array: A byte array containing an UTF-8 encoded string.
 
     Returns:
@@ -559,7 +559,8 @@ class BsmParser(interface.FileObjectParser):
     try:
       string = byte_stream.decode(u'utf-8')
     except UnicodeDecodeError:
-      logging.warning(u'Unable to decode UTF-8 formatted byte array.')
+      parser_mediator.ProduceParseWarning(
+          u'Unable to decode UTF-8 formatted byte array.')
       string = byte_stream.decode(u'utf-8', errors=u'ignore')
 
     string, _, _ = string.partition(b'\x00')
@@ -607,10 +608,11 @@ class BsmParser(interface.FileObjectParser):
         address.append(str_address[pos:pos + 4].lstrip(u'0'))
     return u':'.join(address)
 
-  def _RawToUTF8(self, byte_stream):
+  def _RawToUTF8(self, parser_mediator, byte_stream):
     """Copies a UTF-8 byte stream into a Unicode string.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       byte_stream: A byte stream containing an UTF-8 encoded string.
 
     Returns:
@@ -619,7 +621,7 @@ class BsmParser(interface.FileObjectParser):
     try:
       string = byte_stream.decode(u'utf-8')
     except UnicodeDecodeError:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Decode UTF8 failed, the message string may be cut short.')
       string = byte_stream.decode(u'utf-8', errors=u'ignore')
     return string.partition(b'\x00')[0]
@@ -680,7 +682,7 @@ class BsmParser(interface.FileObjectParser):
     elif bsm_type == u'BSM_HEADER32_EX':
       token = structure.parse_stream(file_object)
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Token ID Header {0} not expected at position 0x{1:X}.'
           u'The parsing of the file cannot be continued'.format(
               token_id, file_object.tell()))
@@ -701,20 +703,21 @@ class BsmParser(interface.FileObjectParser):
       try:
         token_id = self.BSM_TYPE.parse_stream(file_object)
       except (IOError, construct.FieldError):
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'Unable to parse the Token ID at position: {0:d}'.format(
                 file_object.tell()))
         return
       if not token_id in self.BSM_TYPE_LIST:
         pending = (offset + length) - file_object.tell()
         extra_tokens.extend(self.TryWithUntestedStructures(
-            file_object, token_id, pending))
+            parser_mediator, file_object, token_id, pending))
       else:
         token = self.BSM_TYPE_LIST[token_id][1].parse_stream(file_object)
-        extra_tokens.append(self.FormatToken(token_id, token, file_object))
+        extra_tokens.append(self.FormatToken(
+            parser_mediator, token_id, token, file_object))
 
     if file_object.tell() > (offset + length):
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Token ID {0} not expected at position 0x{1:X}.'
           u'Jumping for the next entry.'.format(
               token_id, file_object.tell()))
@@ -722,7 +725,7 @@ class BsmParser(interface.FileObjectParser):
         file_object.seek(
             (offset + length) - file_object.tell(), os.SEEK_CUR)
       except (IOError, construct.FieldError) as exception:
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'Unable to jump to next entry with error: {0:s}'.format(exception))
         return
 
@@ -811,26 +814,30 @@ class BsmParser(interface.FileObjectParser):
         return False
 
       if bsm_type_list[0] != u'BSM_TOKEN_TEXT':
-        logging.warning(u'It is not a valid first entry for Mac OS X BSM.')
+        parser_mediator.ProduceParseWarning(
+            u'It is not a valid first entry for Mac OS X BSM.')
         return False
       try:
         token = self.BSM_TOKEN_TEXT.parse_stream(file_object)
       except (IOError, construct.FieldError):
         return
 
-      text = self._CopyUtf8ByteArrayToString(token.text)
+      text = self._CopyUtf8ByteArrayToString(parser_mediator, token.text)
       if (text != u'launchctl::Audit startup' and
           text != u'launchctl::Audit recovery'):
-        logging.warning(u'It is not a valid first entry for Mac OS X BSM.')
+        parser_mediator.ProduceParseWarning(
+            u'It is not a valid first entry for Mac OS X BSM.')
         return False
 
     file_object.seek(0)
     return True
 
-  def TryWithUntestedStructures(self, file_object, token_id, pending):
+  def TryWithUntestedStructures(
+      self, parser_mediator, file_object, token_id, pending):
     """Try to parse the pending part of the entry using untested structures.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: BSM file.
       token_id: integer with the id that comes from the unknown token.
       pending: pending length of the entry.
@@ -855,7 +862,7 @@ class BsmParser(interface.FileObjectParser):
           try:
             token_id = self.BSM_TYPE.parse_stream(file_object)
           except (IOError, construct.FieldError):
-            logging.warning(
+            parser_mediator.ProduceParseWarning(
                 u'Unable to parse the Token ID at position: {0:d}'.format(
                     file_object.tell()))
             return
@@ -870,8 +877,9 @@ class BsmParser(interface.FileObjectParser):
     next_entry = (start_position + pending)
     if file_object.tell() != next_entry:
       # Unknown Structure.
-      logging.warning(u'Unknown Token at "0x{0:X}", ID: {1} (0x{2:X})'.format(
-          start_position-1, token_id, token_id))
+      parser_mediator.ProduceParseWarning(
+          u'Unknown Token at "0x{0:X}", ID: {1} (0x{2:X})'.format(
+              start_position-1, token_id, token_id))
       # TODO: another way to save this information must be found.
       extra_tokens.append(
           u'Plaso: some tokens from this entry can '
@@ -889,10 +897,11 @@ class BsmParser(interface.FileObjectParser):
   # TODO: instead of compare the text to know what structure was parsed
   #       is better to compare directly the numeric number (token_id),
   #       less readable, but better performance.
-  def FormatToken(self, token_id, token, file_object):
+  def FormatToken(self, parser_mediator, token_id, token, file_object):
     """Parse the Token depending of the type of the structure.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       token_id: Identification integer of the token_type.
       token: Token struct to parse.
       file_object: BSM file.
@@ -908,7 +917,7 @@ class BsmParser(interface.FileObjectParser):
     if bsm_type in [
         u'BSM_TOKEN_TEXT', u'BSM_TOKEN_PATH', u'BSM_TOKEN_ZONENAME']:
       try:
-        string = self._CopyUtf8ByteArrayToString(token.text)
+        string = self._CopyUtf8ByteArrayToString(parser_mediator, token.text)
       except TypeError:
         string = u'Unknown'
       return u'[{0}: {1:s}]'.format(bsm_type, string)
@@ -952,7 +961,7 @@ class BsmParser(interface.FileObjectParser):
               token.terminal_port, ip)
 
     elif bsm_type in [u'BSM_TOKEN_ARGUMENT32', u'BSM_TOKEN_ARGUMENT64']:
-      string = self._CopyUtf8ByteArrayToString(token.text)
+      string = self._CopyUtf8ByteArrayToString(parser_mediator, token.text)
       return u'[{0}: {1:s}({2}) is 0x{3:X}]'.format(
           bsm_type, string, token.num_arg, token.name_arg)
 
@@ -960,7 +969,8 @@ class BsmParser(interface.FileObjectParser):
       arguments = []
       for _ in range(0, token):
         sub_token = self.BSM_TOKEN_EXEC_ARGUMENT.parse_stream(file_object)
-        string = self._CopyUtf8ByteArrayToString(sub_token.text)
+        string = self._CopyUtf8ByteArrayToString(
+            parser_mediator, sub_token.text)
         arguments.append(string)
       return u'[{0}: {1:s}]'.format(bsm_type, u' '.join(arguments))
 
@@ -1001,7 +1011,7 @@ class BsmParser(interface.FileObjectParser):
       date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.UTC)
       date_time_string = date_time.strftime(u'%Y-%m-%d %H:%M:%S')
 
-      string = self._CopyUtf8ByteArrayToString(token.text)
+      string = self._CopyUtf8ByteArrayToString(parser_mediator, token.text)
       return u'[{0}: {1:s}, timestamp: {2:s}]'.format(
           bsm_type, string, date_time_string)
 
@@ -1059,7 +1069,7 @@ class BsmParser(interface.FileObjectParser):
       #       after uses the UTF-8 conversion.
       return u'[{0}: Format data: {1}, Data: {2}]'.format(
           bsm_type, bsmtoken.BSM_TOKEN_DATA_PRINT[token.how_to_print],
-          self._RawToUTF8(u''.join(data)))
+          self._RawToUTF8(parser_mediator, u''.join(data)))
 
     elif bsm_type in [u'BSM_TOKEN_ATTR32', u'BSM_TOKEN_ATTR64']:
       return (
@@ -1072,6 +1082,7 @@ class BsmParser(interface.FileObjectParser):
       arguments = []
       for _ in range(token):
         arguments.append(self._RawToUTF8(
+            parser_mediator,
             self.BSM_TOKEN_DATA_INTEGER.parse_stream(file_object)))
       return u'[{0}: {1:s}]'.format(bsm_type, u','.join(arguments))
 
@@ -1099,7 +1110,7 @@ class BsmParser(interface.FileObjectParser):
               token.creator_user_id, token.creator_group_id, token.access_mode)
 
     elif bsm_type == u'BSM_TOKEN_SOCKET_UNIX':
-      string = self._CopyUtf8ByteArrayToString(token.path)
+      string = self._CopyUtf8ByteArrayToString(parser_mediator, token.path)
       return u'[{0}: Family {1}, Path {2:s}]'.format(
           bsm_type, token.family, string)
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Linux UTMP files."""
 
-import logging
 import os
 import socket
 
@@ -137,13 +136,13 @@ class UtmpParser(interface.FileObjectParser):
 
     # Check few values.
     terminal = self._GetTextFromNullTerminatedString(
-        structure.terminal, self._DEFAULT_TEST_VALUE)
+        parser_mediator, structure.terminal, self._DEFAULT_TEST_VALUE)
     if terminal == self._DEFAULT_TEST_VALUE:
       raise errors.UnableToParseFile(
           u'Not an UTMP file, no terminal set.')
 
     username = self._GetTextFromNullTerminatedString(
-        structure.username, self._DEFAULT_TEST_VALUE)
+        parser_mediator, structure.username, self._DEFAULT_TEST_VALUE)
 
     if username == self._DEFAULT_TEST_VALUE:
       raise errors.UnableToParseFile(
@@ -154,11 +153,11 @@ class UtmpParser(interface.FileObjectParser):
           u'Not an UTMP file, no timestamp set in the first record.')
 
     file_object.seek(0, os.SEEK_SET)
-    event_object = self._ReadUtmpEvent(file_object)
+    event_object = self._ReadUtmpEvent(parser_mediator, file_object)
     while event_object:
       event_object.offset = file_object.tell()
       parser_mediator.ProduceEvent(event_object)
-      event_object = self._ReadUtmpEvent(file_object)
+      event_object = self._ReadUtmpEvent(parser_mediator, file_object)
 
   def _VerifyTextField(self, text):
     """Check if a byte stream is a null terminated string.
@@ -174,10 +173,11 @@ class UtmpParser(interface.FileObjectParser):
       return False
     return len(null_chars) == null_chars.count(b'\x00')
 
-  def _ReadUtmpEvent(self, file_object):
+  def _ReadUtmpEvent(self, parser_mediator, file_object):
     """Returns an UtmpEvent from a single UTMP entry.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: a file-like object that points to an UTMP file.
 
     Returns:
@@ -191,15 +191,18 @@ class UtmpParser(interface.FileObjectParser):
     try:
       entry = self.LINUX_UTMP_ENTRY.parse(data)
     except (IOError, construct.FieldError):
-      logging.warning((
+      parser_mediator.ProduceParseWarning((
           u'UTMP entry at 0x{0:x} couldn\'t be parsed.').format(offset))
-      return self._ReadUtmpEvent(file_object)
+      return self._ReadUtmpEvent(parser_mediator, file_object)
 
-    user = self._GetTextFromNullTerminatedString(entry.username)
-    terminal = self._GetTextFromNullTerminatedString(entry.terminal)
+    user = self._GetTextFromNullTerminatedString(
+        parser_mediator, entry.username)
+    terminal = self._GetTextFromNullTerminatedString(
+        parser_mediator, entry.terminal)
     if terminal == u'~':
       terminal = u'system boot'
-    computer_name = self._GetTextFromNullTerminatedString(entry.hostname)
+    computer_name = self._GetTextFromNullTerminatedString(
+        parser_mediator, entry.hostname)
     if computer_name == u'N/A' or computer_name == u':0':
       computer_name = u'localhost'
     status = self.STATUS_TYPE.get(entry.type, u'N/A')
@@ -221,10 +224,11 @@ class UtmpParser(interface.FileObjectParser):
         status, ip_address, entry)
 
   def _GetTextFromNullTerminatedString(
-      self, null_terminated_string, default_string=u'N/A'):
+      self, parser_mediator, null_terminated_string, default_string=u'N/A'):
     """Get a UTF-8 text from a raw null terminated string.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       null_terminated_string: Raw string terminated with null character.
       default_string: The default string returned if the parser fails.
 
@@ -236,7 +240,7 @@ class UtmpParser(interface.FileObjectParser):
     try:
       text = text.decode(u'utf-8')
     except UnicodeDecodeError:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'[UTMP] Decode UTF8 failed, the message string may be cut short.')
       text = text.decode(u'utf-8', u'ignore')
     if not text:

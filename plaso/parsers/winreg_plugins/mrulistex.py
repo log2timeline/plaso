@@ -2,7 +2,6 @@
 """This file contains MRUListEx Windows Registry plugins."""
 
 import abc
-import logging
 
 import construct
 
@@ -79,10 +78,11 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
       A string containing the value.
     """
 
-  def _ParseMRUListExValue(self, key):
+  def _ParseMRUListExValue(self, parser_mediator, key):
     """Parses the MRUListEx value in a given Registry key.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of dfwinreg.WinRegistryKey) that contains
            the MRUListEx value.
 
@@ -99,8 +99,8 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
     try:
       mru_list = self._MRULISTEX_STRUCT.parse(mru_list_value.data)
     except construct.FieldError:
-      logging.warning(u'[{0:s}] Unable to parse the MRU key: {1:s}'.format(
-          self.NAME, key.path))
+      parser_mediator.ProduceParseWarning(
+          u'Unable to parse the MRU key: {0:s}'.format(key.path))
       return enumerate([])
 
     return enumerate(mru_list)
@@ -114,7 +114,8 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
       codepage: Optional extended ASCII string codepage.
     """
     values_dict = {}
-    for entry_index, entry_number in self._ParseMRUListExValue(key):
+    for entry_index, entry_number in self._ParseMRUListExValue(
+        parser_mediator, key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with 0xffffffff (-1).
       if entry_number == 0xffffffff:
@@ -169,27 +170,27 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
 
     value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug(
+          u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+              entry_number, key.path))
 
     elif value.DataIsString():
       value_string = value.GetDataAsObject()
 
     elif value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-string MRUListEx entry value: {1:d} parsed as string '
-          u'in key: {2:s}.').format(self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug((
+          u'Non-string MRUListEx entry value: {0:d} parsed as string '
+          u'in key: {1:s}.').format(entry_number, key.path))
       utf16_stream = binary.ByteStreamCopyToUTF16Stream(value.data)
 
       try:
         value_string = utf16_stream.decode(u'utf-16-le')
       except UnicodeDecodeError as exception:
         value_string = binary.HexifyBuffer(utf16_stream)
-        logging.warning((
-            u'[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUListEx entry '
-            u'value: {2:d} in key: {3:s} with error: {4:s}').format(
-                self.NAME, value_string, entry_number, key.path, exception))
+        parser_mediator.ProduceParseWarning((
+            u'Unable to decode UTF-16 stream: {0:s} in MRUListEx entry '
+            u'value: {1:d} in key: {2:s} with error: {3:s}').format(
+                value_string, entry_number, key.path, exception))
 
     return value_string
 
@@ -240,14 +241,14 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
 
     value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug(
+          u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+              entry_number, key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
-          u'{2:s}.').format(self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug((
+          u'Non-binary MRUListEx entry value: {0:d} in key: '
+          u'{1:s}.').format(entry_number, key.path))
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
@@ -316,14 +317,14 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
 
     value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug(
+          u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+              entry_number, key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
-          u'{2:s}.').format(self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug((
+          u'Non-binary MRUListEx entry value: {0:d} in key: '
+          u'{1:s}.').format(entry_number, key.path))
 
     elif value.data:
       value_struct = self._STRING_AND_SHELL_ITEM_STRUCT.parse(value.data)
@@ -333,18 +334,18 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
         # to strip off.
         path = b''.join(value_struct.string).decode(u'utf16')[:-1]
       except UnicodeDecodeError as exception:
-        logging.warning((
-            u'[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
-            u'in key: {2:s} with error: {3:s}').format(
-                self.NAME, entry_number, key.path, exception))
+        parser_mediator.ProduceParseWarning((
+            u'Unable to decode string MRUListEx entry value: {0:d} '
+            u'in key: {1:s} with error: {2:s}').format(
+                entry_number, key.path, exception))
         path = u''
 
       if path:
         shell_item_list_data = value.data[value_struct.shell_item:]
         if not shell_item_list_data:
-          logging.debug((
-              u'[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
-              u'in key: {2:s}').format(self.NAME, entry_number, key.path))
+          parser_mediator.ProduceParseDebug((
+              u'Missing shell item in MRUListEx entry value: {0:d}'
+              u'in key: {1:s}').format(entry_number, key.path))
           value_string = u'Path: {0:s}'.format(path)
 
         else:
@@ -413,14 +414,14 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
 
     value = key.GetValueByName(u'{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
-          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug(
+          u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+              entry_number, key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
-          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
-          u'{2:s}.').format(self.NAME, entry_number, key.path))
+      parser_mediator.ProduceParseDebug((
+          u'Non-binary MRUListEx entry value: {0:d} in key: '
+          u'{1:s}.').format(entry_number, key.path))
 
     elif value.data:
       value_struct = self._STRING_AND_SHELL_ITEM_LIST_STRUCT.parse(value.data)
@@ -430,18 +431,18 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
         # to strip off.
         path = b''.join(value_struct.string).decode(u'utf16')[:-1]
       except UnicodeDecodeError as exception:
-        logging.warning((
-            u'[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
-            u'in key: {2:s} with error: {3:s}').format(
-                self.NAME, entry_number, key.path, exception))
+        parser_mediator.ProduceParseWarning((
+            u'Unable to decode string MRUListEx entry value: {0:d} '
+            u'in key: {1:s} with error: {2:s}').format(
+                entry_number, key.path, exception))
         path = u''
 
       if path:
         shell_item_list_data = value.data[value_struct.shell_item_list:]
         if not shell_item_list_data:
-          logging.debug((
-              u'[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
-              u'in key: {2:s}').format(self.NAME, entry_number, key.path))
+          parser_mediator.ProduceParseDebug((
+              u'Missing shell item in MRUListEx entry value: {0:d}'
+              u'in key: {1:s}').format(entry_number, key.path))
           value_string = u'Path: {0:s}'.format(path)
 
         else:

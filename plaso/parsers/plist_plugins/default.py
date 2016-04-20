@@ -2,7 +2,6 @@
 """This file contains a default plist plugin in Plaso."""
 
 import datetime
-import logging
 
 from plaso.containers import plist_event
 from plaso.parsers import plist
@@ -47,8 +46,8 @@ class DefaultPlugin(interface.PlistPlugin):
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
     """
-    logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
-        self.NAME, plist_name))
+    parser_mediator.ProduceParseDebug(
+        u'Plist {0:s} plugin used for: {1:s}'.format(self.NAME, plist_name))
     self.GetEntries(parser_mediator, top_level=top_level, **kwargs)
 
 

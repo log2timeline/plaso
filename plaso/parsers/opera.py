@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parsers for Opera Browser history files."""
 
-import logging
 import os
 import urllib2
 from xml.etree import ElementTree
@@ -139,7 +138,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
     return False
 
-  def _ReadRecord(self, text_file_object, max_line_length=0):
+  def _ReadRecord(self, parser_mediator, text_file_object, max_line_length=0):
     """Return a single record from an Opera global_history file.
 
     A single record consists of four lines, with each line as:
@@ -149,6 +148,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       Popularity index (-1 if first time visited).
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       text_file_object: A text file object (instance of dfvfs.TextFile).
       max_line_length: An integer that denotes the maximum byte
                        length for each line read.
@@ -185,18 +185,19 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     except ValueError:
       if len(timestamp_line) > 30:
         timestamp_line = timestamp_line[0:30]
-      logging.debug(u'Unable to read in timestamp [{0!r}]'.format(
-          timestamp_line))
+      parser_mediator.ProduceParseDebug(
+          u'Unable to read in timestamp [{0!r}]'.format(timestamp_line))
       return None, None, None, None
 
     try:
       popularity_index = int(popularity_line, 10)
     except ValueError:
       try:
-        logging.debug(u'Unable to read in popularity index[{0:s}]'.format(
-            popularity_line))
+        parser_mediator.ProduceParseDebug(
+            u'Unable to read in popularity index[{0:s}]'.format(
+                popularity_line))
       except UnicodeDecodeError:
-        logging.debug(
+        parser_mediator.ProduceParseDebug(
             u'Unable to read in popularity index [unable to print '
             u'bad line]')
       return None, None, None, None
@@ -212,7 +213,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
     return title_unicode, url, timestamp, popularity_index
 
-  def _ReadRecords(self, text_file_object):
+  def _ReadRecords(self, parser_mediator, text_file_object):
     """Yield records read from an Opera global_history file.
 
     A single record consists of four lines, with each line as:
@@ -222,6 +223,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       Popularity index (-1 if first time visited).
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       text_file_object: A text file object (instance of dfvfs.TextFile).
 
     Yields:
@@ -229,7 +231,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     """
     while True:
       title, url, timestamp, popularity_index = self._ReadRecord(
-          text_file_object)
+          parser_mediator, text_file_object)
 
       if not title:
         raise StopIteration
@@ -256,7 +258,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
     try:
       title, url, timestamp, popularity_index = self._ReadRecord(
-          text_file_object, 400)
+          parser_mediator, text_file_object, 400)
     except errors.NotAText:
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a text file].')
@@ -279,7 +281,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
     # Read in the rest of the history file.
     for title, url, timestamp, popularity_index in self._ReadRecords(
-        text_file_object):
+        parser_mediator, text_file_object):
       event_object = OperaGlobalHistoryEvent(
           timestamp, url, title, popularity_index)
       parser_mediator.ProduceEvent(event_object)

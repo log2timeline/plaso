@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for ESE database plugins."""
 
-import logging
 
 import construct
 import pyesedb  # pylint: disable=wrong-import-order
@@ -156,10 +155,12 @@ class EseDbPlugin(plugins.BasePlugin):
       return long_value.get_data()
     return record.get_value_data(value_entry)
 
-  def _GetRecordValues(self, table_name, record, value_mappings=None):
+  def _GetRecordValues(
+      self, parser_mediator, table_name, record, value_mappings=None):
     """Retrieves the values from the record.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       table_name: The name of the table.
       record: The ESE record object (instance of pyesedb.record).
       value_mappings: Optional dict of value mappings, which map the column
@@ -173,7 +174,7 @@ class EseDbPlugin(plugins.BasePlugin):
     for value_entry in range(0, record.number_of_values):
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
                 self.NAME, column_name, table_name))
         continue
@@ -184,7 +185,7 @@ class EseDbPlugin(plugins.BasePlugin):
         if value_callback_method:
           value_callback = getattr(self, value_callback_method, None)
           if value_callback is None:
-            logging.warning((
+            parser_mediator.ProduceParseWarning((
                 u'[{0:s}] missing value callback method: {1:s} for column: '
                 u'{2:s} in table: {3:s}').format(
                     self.NAME, value_callback_method, column_name, table_name))
@@ -192,7 +193,7 @@ class EseDbPlugin(plugins.BasePlugin):
       try:
         value = self._GetRecordValue(record, value_entry)
       except ValueError as exception:
-        logging.warning(exception)
+        parser_mediator.ProduceParseWarning(exception)
 
       if value_callback:
         value = value_callback(value)
@@ -238,14 +239,14 @@ class EseDbPlugin(plugins.BasePlugin):
 
       callback = getattr(self, callback_method, None)
       if callback is None:
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
                 self.NAME, callback_method, table_name))
         continue
 
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        logging.warning(u'[{0:s}] missing table: {1:s}'.format(
+        parser_mediator.ProduceParseWarning(u'[{0:s}] missing table: {1:s}'.format(
             self.NAME, table_name))
         continue
 

@@ -339,7 +339,8 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
       root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
     """
-    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+    root_creation_time, root_modification_time = self.GetTimestamps(
+        parser_mediator, root_item)
 
     for item in items:
       if root_creation_time:
@@ -372,7 +373,8 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
       root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
     """
-    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+    root_creation_time, root_modification_time = self.GetTimestamps(
+        parser_mediator, root_item)
 
     for item in items:
       summary_information_object = OleCfSummaryInfo(item)

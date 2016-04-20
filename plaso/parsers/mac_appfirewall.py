@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a appfirewall.log (Mac OS X Firewall) parser."""
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -155,7 +153,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     try:
       action = structure.action.decode(u'utf-8')
     except UnicodeDecodeError:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Decode UTF8 failed, the message string may be cut short.')
       action = structure.action.decode(u'utf-8', u'ignore')
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces
@@ -179,7 +177,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if key in [u'logline', u'repeated']:
       self._ParseLogLine(parser_mediator, structure, key)
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
@@ -195,14 +193,14 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     try:
       line = self.FIREWALL_LINE.parseString(line)
     except pyparsing.ParseException as exception:
-      logging.debug((
+      parser_mediator.ProduceParseDebug((
           u'Unable to parse file as a Mac AppFirewall log file with error: '
           u'{0:s}').format(exception))
       return False
 
     if (line.action != u'creating /var/log/appfirewall.log' or
         line.status != u'Error'):
-      logging.debug(
+      parser_mediator.ProduceParseDebug(
           u'Unsupported Mac AppFirewall action: {0:s} or status: {1:s}'.format(
               line.action, line.status))
       return False

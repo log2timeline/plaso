@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for .customDestinations-ms files."""
 
-import logging
 import os
 
 import construct
@@ -162,7 +161,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
         if not first_guid_checked:
           raise errors.UnableToParseFile(error_message)
 
-        logging.warning(error_message)
+        parser_mediator.ProduceParseWarning(error_message)
         break
 
       if entry_header.guid != self._LNK_GUID:
@@ -182,7 +181,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
               u'with error: {1:s}').format(file_offset, exception))
 
         if file_footer.signature != self._FOOTER_SIGNATURE:
-          logging.warning(error_message)
+          parser_mediator.ProduceParseWarning(error_message)
 
         file_object.seek(-4, os.SEEK_CUR)
 
@@ -204,12 +203,12 @@ class CustomDestinationsParser(interface.FileObjectParser):
     try:
       file_footer = self._FILE_FOOTER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      logging.warning((
+      parser_mediator.ProduceParseWarning((
           u'Invalid Custom Destination file: {0:s} - unable to parse '
           u'footer with error: {1:s}').format(display_name, exception))
 
     if file_footer.signature != self._FOOTER_SIGNATURE:
-      logging.warning((
+      parser_mediator.ProduceParseWarning((
           u'Unsupported Custom Destination file: {0:s} - invalid footer '
           u'signature.').format(display_name))
 
