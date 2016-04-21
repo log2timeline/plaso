@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Application Compatibility Cache key."""
 
-import logging
-
 import construct
 
 from plaso.containers import time_events

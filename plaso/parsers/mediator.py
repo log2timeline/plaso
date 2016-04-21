@@ -460,7 +460,7 @@ class ParserMediator(object):
           level,
           u'[{0:s}:{1:d} - {2:s}] unable to parse file: {3:s} with error: '
           u'{4:s}'.format(
-              caller.filename, caller.lineno, self.GetParserChain(), 
+              caller.filename, caller.lineno, self.GetParserChain(),
               self.GetDisplayName(), message))
     else:
       logging.log(
