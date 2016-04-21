@@ -856,7 +856,8 @@ class BsmParser(interface.FileObjectParser):
     try:
       if token_id in self.bsm_type_list_all:
         token = self.bsm_type_list_all[token_id][1].parse_stream(file_object)
-        extra_tokens.append(self.FormatToken(token_id, token, file_object))
+        extra_tokens.append(self.FormatToken(
+            parser_mediator, token_id, token, file_object))
         while file_object.tell() < (start_position + pending):
           # Check if it is a known token.
           try:
@@ -870,7 +871,8 @@ class BsmParser(interface.FileObjectParser):
             break
           token = self.bsm_type_list_all[token_id][1].parse_stream(
               file_object)
-          extra_tokens.append(self.FormatToken(token_id, token, file_object))
+          extra_tokens.append(self.FormatToken(
+              parser_mediator, token_id, token, file_object))
     except (IOError, construct.FieldError):
       token_id = 255
 

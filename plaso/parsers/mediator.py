@@ -451,16 +451,21 @@ class ParserMediator(object):
     if not level:
       level = logging.INFO
 
+    caller = inspect.getframeinfo(inspect.stack()[caller_level][0])
+
     self.number_of_parse_errors += 1
     # TODO: Remove call to logging when parser error queue is fully functional.
     if self._file_entry:
       logging.log(
-          level, 
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.GetParserChain(), self.GetDisplayName(), message))
+          level,
+          u'[{0:s}:{1:d} - {2:s}] unable to parse file: {3:s} with error: '
+          u'{4:s}'.format(
+              caller.filename, caller.lineno, self.GetParserChain(), 
+              self.GetDisplayName(), message))
     else:
       logging.log(
-          level, u'[{0:s}] {1:s}'.format(self.GetParserChain(), message))
+          level, u'[{0:s}:{1:d} - {2:s}] {3:s}'.format(
+              caller.filename, caller.lineno, self.GetParserChain(), message))
 
     # TODO: disabled as long nothing is listening on the parse error queue.
     # if self._parse_error_queue_producer:
