@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains SkyDrive log file parser in plaso."""
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -200,13 +198,14 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, microseconds=microsecond)
 
-  def _ParseHeader(self, structure):
+  def _ParseHeader(self, parser_mediator, structure):
     """Parse header lines and store appropriate attributes.
 
     [u'Logging started.', u'Version=', u'17.0.2011.0627',
     [2013, 7, 25], 16, 3, 23, 291, u'StartLocalTime', u'<details>']
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from an header line in the
                  log file.
 
@@ -215,7 +214,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     """
     timestamp = self._GetTimestampFromHeader(structure.hdr_timestamp)
     if not timestamp:
-      logging.debug(
+      parser_mediator.ProduceParseDebug(
           u'SkyDriveLog invalid timestamp {0:d}'.format(
               structure.hdr_timestamp))
       return
@@ -225,10 +224,11 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
         structure.details)
     return SkyDriveLogEvent(timestamp, detail)
 
-  def _ParseLine(self, structure):
+  def _ParseLine(self, parser_mediator, structure):
     """Parse a logline and store appropriate attributes.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from a line in the log file.
 
     Returns:
@@ -236,8 +236,8 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     """
     timestamp = self._GetTimestampFromLine(structure.timestamp)
     if not timestamp:
-      logging.debug(u'SkyDriveLog invalid timestamp {0:s}'.format(
-          structure.timestamp))
+      parser_mediator.ProduceParseDebug(
+          u'SkyDriveLog invalid timestamp {0:s}'.format(structure.timestamp))
       return
 
     # Replace newlines with spaces in structure.detail to preserve output.
@@ -259,11 +259,11 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     event_object = None
 
     if key == u'logline':
-      event_object = self._ParseLine(structure)
+      event_object = self._ParseLine(parser_mediator, structure)
     elif key == u'header':
-      event_object = self._ParseHeader(structure)
+      event_object = self._ParseHeader(parser_mediator, structure)
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if event_object:
@@ -282,12 +282,12 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       parsed_structure = self.SDF_HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a SkyDrive log file')
+      parser_mediator.ProduceParseDebug(u'Not a SkyDrive log file')
       return False
 
     timestamp = self._GetTimestampFromHeader(parsed_structure.hdr_timestamp)
     if not timestamp:
-      logging.debug(
+      parser_mediator.ProduceParseDebug(
           u'Not a SkyDrive log file, invalid timestamp {0:s}'.format(
               parsed_structure.timestamp))
       return False
@@ -406,7 +406,8 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
                  log file.
     """
     if not self._last_event_object:
-      logging.debug(u'SkyDrive, found isolated line with no previous events')
+      parser_mediator.ProduceParseDebug(
+          u'SkyDrive, found isolated line with no previous events')
       return
 
     event_object = SkyDriveOldLogEvent(
@@ -434,7 +435,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       self._ParseNoHeaderSingleLine(parser_mediator, structure)
 
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
@@ -450,13 +451,13 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       parsed_structure = self.SDOL_LINE.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a SkyDrive old log file')
+      parser_mediator.ProduceParseDebug(u'Not a SkyDrive old log file')
       return False
 
     try:
       self._ConvertToTimestamp(parsed_structure.sdol_timestamp)
     except errors.TimestampError:
-      logging.debug(
+      parser_mediator.ProduceParseDebug(
           u'Not a SkyDrive old log file, invalid timestamp {0:s}'.format(
               parsed_structure.sdol_timestamp))
       return False

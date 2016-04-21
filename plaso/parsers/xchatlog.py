@@ -52,8 +52,6 @@ References
 http://xchat.org
 """
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -203,8 +201,8 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       parser_mediator.ProduceEvent(event_object)
 
     else:
-      logging.warning(u'Unknown log action: {0:s}.'.format(
-          structure.log_action))
+      parser_mediator.ProduceParseWarning(
+          u'Unknown log action: {0:s}.'.format(structure.log_action))
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
@@ -215,7 +213,8 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
                  that contains the log line.
     """
     if not self._xchat_year:
-      logging.debug(u'XChatLogParser, missing year information.')
+      parser_mediator.ProduceParseDebug(
+          u'XChatLogParser, missing year information.')
       return
 
     try:
@@ -255,11 +254,11 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       # is found. Stop parsing is done setting xchat_year to 0.
       # Note that the code assumes that LINE_STRUCTURES will be used in the
       # exact order as defined!
-      logging.warning(u'Unknown locale header.')
+      parser_mediator.ProduceParseWarning(u'Unknown locale header.')
       self._xchat_year = 0
 
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
@@ -275,13 +274,15 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       parse_result = self.HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Unable to parse, not a valid XChat log file header')
+      parser_mediator.ProduceParseDebug(
+          u'Unable to parse, not a valid XChat log file header')
       return False
 
     try:
       self._ConvertToTimestamp(parse_result, parser_mediator.timezone)
     except errors.TimestampError:
-      logging.debug(u'Wrong XChat timestamp: {0:s}'.format(parse_result))
+      parser_mediator.ProduceParseDebug(
+          u'Wrong XChat timestamp: {0:s}'.format(parse_result))
       return False
 
     # Unset the xchat_year since we are only verifying structure.

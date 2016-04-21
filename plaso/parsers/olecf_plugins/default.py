@@ -51,7 +51,8 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     event_object = None
     result = False
 
-    creation_time, modification_time = self.GetTimestamps(olecf_item)
+    creation_time, modification_time = self.GetTimestamps(
+        parser_mediator, olecf_item)
 
     if creation_time:
       event_object = OleCfItemEvent(

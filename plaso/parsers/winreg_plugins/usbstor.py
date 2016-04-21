@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USBStor key."""
 
-import logging
-
 from plaso.containers import windows_events
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
@@ -48,7 +46,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
       # Normally we expect 4 fields here however that is not always the case.
       if number_of_name_values != 4:
-        logging.warning(
+        parser_mediator.ProduceParseWarning(
             u'Expected 4 &-separated values in: {0:s}'.format(subkey.name))
 
       if number_of_name_values >= 1:

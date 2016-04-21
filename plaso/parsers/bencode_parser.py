@@ -5,7 +5,6 @@ Plaso's engine calls BencodeParser when it encounters bencoded files to be
 processed, typically seen for BitTorrent data.
 """
 
-import logging
 import re
 import os
 
@@ -78,8 +77,8 @@ class BencodeParser(interface.FileObjectParser):
       try:
         plugin_object.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
-        logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
-            self.NAME, exception))
+        parser_mediator.ProduceParseDebug(
+            u'Wrong plugin: {0:s}'.format(exception))
 
 
 manager.ParsersManager.RegisterParser(BencodeParser)

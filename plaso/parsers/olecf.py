@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for OLE Compound Files (OLECF)."""
 
-import logging
-
 import pyolecf
 
 from plaso import dependencies
@@ -84,10 +82,9 @@ class OleCfParser(interface.FileObjectParser):
         plugin_object.UpdateChainAndProcess(
             parser_mediator, root_item=root_item, item_names=item_names)
       except errors.WrongPlugin:
-        logging.debug(
-            u'[{0:s}] plugin: {1:s} cannot parse the OLECF file: {2:s}'.format(
-                self.NAME, plugin_object.NAME,
-                parser_mediator.GetDisplayName()))
+        parser_mediator.ProduceParseDebug(
+            u'{0:s} cannot parse the OLECF file: {1:s}'.format(
+                plugin_object.NAME, parser_mediator.GetDisplayName()))
 
     # Check if we still haven't parsed the file, and if so we will use
     # the default OLECF plugin.

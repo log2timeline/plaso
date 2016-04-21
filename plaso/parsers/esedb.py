@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Extensible Storage Engine (ESE) database files (EDB)."""
 
-import logging
-
 import pyesedb
 
 from plaso import dependencies
@@ -74,7 +72,7 @@ class EseDbParser(interface.FileObjectParser):
         plugin_object.UpdateChainAndProcess(
             parser_mediator, database=esedb_file, cache=cache)
       except errors.WrongPlugin:
-        logging.debug((
+        parser_mediator.ProduceParseDebug((
             u'[{0:s}] plugin: {1:s} cannot parse the ESE database: '
             u'{2:s}').format(
                 self.NAME, plugin_object.NAME,

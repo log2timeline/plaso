@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for OXML files (i.e. MS Office 2007+)."""
 
-import logging
 import re
 import struct
 import zipfile
@@ -141,9 +140,9 @@ class OpenXMLParser(interface.FileObjectParser):
         except (
             OverflowError, IndexError, KeyError, ValueError,
             zipfile.BadZipfile) as exception:
-          logging.warning(
-              u'[{0:s}] unable to read property with error: {1:s}.'.format(
-                  self.NAME, exception))
+          parser_mediator.ProduceParseWarning(
+              u'Unable to read property with error: {0:s}.'.format(
+                  exception))
           continue
 
         for element in root.iter():

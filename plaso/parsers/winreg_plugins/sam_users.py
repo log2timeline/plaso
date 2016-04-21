@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for SAM Users Account information."""
-
 import construct
 
 from plaso.containers import time_events

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for the Microsoft File History ESE database."""
 
-import logging
 
 from plaso.containers import time_events
 from plaso.lib import eventdata
@@ -85,11 +84,11 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
       table: Optional table object (instance of pyesedb.table).
     """
     if database is None:
-      logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid database')
       return
 
     if table is None:
-      logging.warning(u'[{0:s}] invalid Containers table'.format(self.NAME))
+      parser_mediator.ProduceParseWarning(u'Invalid Containers table')
       return
 
     strings = cache.GetResults(u'strings')
@@ -99,7 +98,8 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
       cache.StoreDictInCache(u'strings', strings)
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       filename = strings.get(record_values.get(u'id', -1), u'')
       created_timestamp = record_values.get(u'fileCreated')

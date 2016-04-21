@@ -2,7 +2,6 @@
 """Implements a parser for Firefox cache 1 and 2 files."""
 
 import collections
-import logging
 import os
 
 import construct
@@ -49,10 +48,12 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
       u'CONNECT', u'DELETE', u'GET', u'HEAD', u'OPTIONS', u'PATCH', u'POST',
       u'PUT', u'TRACE'])
 
-  def _ParseHTTPHeaders(self, header_data, offset, display_name):
+  def _ParseHTTPHeaders(
+      self, parser_mediator, header_data, offset, display_name):
     """Extract relevant information from HTTP header.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       header_data: binary string containing the HTTP header data.
       offset: the offset of the cache record.
       display_name: the display name.
@@ -60,7 +61,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     try:
       http_header_start = header_data.index(b'request-method')
     except ValueError:
-      logging.debug(u'No request method in header: "{0:s}"'.format(header_data))
+      parser_mediator.ProduceParseDebug(
+          u'No request method in header: "{0:s}"'.format(header_data))
       return None, None
 
     # HTTP request and response headers.
@@ -73,7 +75,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
     if request_method not in self._REQUEST_METHODS:
       safe_headers = header_data.decode(u'ascii', errors=u'replace')
-      logging.debug((
+      parser_mediator.ProduceParseDebug((
           u'[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
           u'headers: \'{4:s}\'').format(
               self.NAME, display_name, offset, request_method, safe_headers))
@@ -81,7 +83,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     try:
       response_head_start = http_headers.index(b'response-head')
     except ValueError:
-      logging.debug(u'No response head in header: "{0:s}"'.format(header_data))
+      parser_mediator.ProduceParseDebug(
+          u'No response head in header: "{0:s}"'.format(header_data))
       return request_method, None
 
     # HTTP response headers.
@@ -101,7 +104,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
     if not response_code.startswith(b'HTTP'):
       safe_headers = header_data.decode(u'ascii', errors=u'replace')
-      logging.debug((
+      parser_mediator.ProduceParseDebug((
           u'[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
           u'Response headers: \'{3:s}\'.').format(
               self.NAME, display_name, offset, safe_headers))
@@ -166,10 +169,11 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       u'firefox_cache_config',
       u'block_size first_record_offset')
 
-  def _GetFirefoxConfig(self, file_object, display_name):
+  def _GetFirefoxConfig(self, parser_mediator, file_object, display_name):
     """Determine cache file block size.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
       display_name: the display name.
 
@@ -187,7 +191,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
         # We have not yet determined the block size, so we use the smallest
         # possible size.
         fetched, _, _ = self._NextRecord(
-            file_object, display_name, self._MINUMUM_BLOCK_SIZE)
+            parser_mediator, file_object, display_name,
+            self._MINUMUM_BLOCK_SIZE)
 
         record_size = (
             self._CACHE_RECORD_HEADER_SIZE + fetched.request_size +
@@ -206,16 +211,17 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
         return self.FIREFOX_CACHE_CONFIG(block_size, offset)
 
       except IOError:
-        logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid record.'.format(
-            self.NAME, display_name, offset))
+        parser_mediator.ProduceParseDebug(
+            u'{0:s}:{1:d}: Invalid record.'.format(display_name, offset))
 
     raise errors.UnableToParseFile(
         u'Could not find a valid cache record. Not a Firefox cache file.')
 
-  def _NextRecord(self, file_object, display_name, block_size):
+  def _NextRecord(self, parser_mediator, file_object, display_name, block_size):
     """Provide the next cache record.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
       display_name: the display name.
       block_size: the block size.
@@ -245,7 +251,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     header_data = file_object.read(cache_record_header.info_size)
 
     request_method, response_code = self._ParseHTTPHeaders(
-        header_data, offset, display_name)
+        parser_mediator, header_data, offset, display_name)
 
     # A request can span multiple blocks, so we use modulo.
     file_offset = file_object.get_offset() - offset
@@ -309,14 +315,16 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       if not filename.startswith(u'_CACHE_00'):
         raise errors.UnableToParseFile(u'Not a Firefox cache1 file.')
 
-    firefox_config = self._GetFirefoxConfig(file_object, display_name)
+    firefox_config = self._GetFirefoxConfig(
+        parser_mediator, file_object, display_name)
 
     file_object.seek(firefox_config.first_record_offset)
 
     while file_object.get_offset() < file_object.get_size():
       try:
         fetched, modified, expire = self._NextRecord(
-            file_object, display_name, firefox_config.block_size)
+            parser_mediator, file_object, display_name,
+            firefox_config.block_size)
         parser_mediator.ProduceEvent(fetched)
 
         if modified:
@@ -326,9 +334,9 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
           parser_mediator.ProduceEvent(expire)
       except IOError:
         file_offset = file_object.get_offset() - self._MINUMUM_BLOCK_SIZE
-        logging.debug((
-            u'[{0:s}] Invalid cache record in file: {1:s} at offset: '
-            u'{2:d}.').format(self.NAME, display_name, file_offset))
+        parser_mediator.ProduceParseDebug((
+            u'Invalid cache record in file: {0:s} at offset: '
+            u'{1:d}.').format(display_name, file_offset))
 
 
 class FirefoxCache2Parser(BaseFirefoxCacheParser):
@@ -430,7 +438,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
 
     display_name = parser_mediator.GetDisplayName()
     request_method, response_code = self._ParseHTTPHeaders(
-        header_data, meta_start, display_name)
+        parser_mediator, header_data, meta_start, display_name)
 
     cache_record_values = {
         u'fetch_count': cache_record_header.fetch_count,

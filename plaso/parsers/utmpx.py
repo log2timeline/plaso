@@ -4,8 +4,6 @@
 # TODO: Add support for other implementations than Mac OS X.
 #       The parser should be checked against IOS UTMPX file.
 
-import logging
-
 import construct
 
 from plaso.containers import time_events
@@ -78,10 +76,11 @@ class UtmpxParser(interface.FileObjectParser):
 
   _STATUS_TYPE_SIGNATURE = 10
 
-  def _ReadEntry(self, file_object):
+  def _ReadEntry(self, parser_mediator, file_object):
     """Reads an UTMPX entry.
 
     Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: a file-like object that points to an UTMPX file.
 
     Returns:
@@ -95,7 +94,7 @@ class UtmpxParser(interface.FileObjectParser):
     try:
       entry_struct = self._UTMPX_ENTRY.parse(data)
     except (IOError, construct.FieldError) as exception:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(
               exception))
       return
@@ -170,12 +169,12 @@ class UtmpxParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           u'The file is not an UTMPX file.')
 
-    event_object = self._ReadEntry(file_object)
+    event_object = self._ReadEntry(parser_mediator, file_object)
     while event_object:
       event_object.offset = file_object.tell()
       parser_mediator.ProduceEvent(event_object)
 
-      event_object = self._ReadEntry(file_object)
+      event_object = self._ReadEntry(parser_mediator, file_object)
 
 
 manager.ParsersManager.RegisterParser(UtmpxParser)

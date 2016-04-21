@@ -130,7 +130,7 @@ class OleCfSummaryInfo(object):
     property_name = self._PROPERTY_NAMES_INT32.get(
         property_value.identifier, None)
 
-    if property_name and not property_name in self.attributes:
+    if property_name and property_name not in self.attributes:
       self.attributes[property_name] = property_value.data_as_integer
 
   def _InitFromPropertyValueTypeString(self, property_value):
@@ -143,7 +143,7 @@ class OleCfSummaryInfo(object):
     property_name = self._PROPERTY_NAMES_STRING.get(
         property_value.identifier, None)
 
-    if property_name and not property_name in self.attributes:
+    if property_name and property_name not in self.attributes:
       self.attributes[property_name] = property_value.data_as_string
 
   def _InitFromPropertyValueTypeFiletime(self, property_value):
@@ -339,7 +339,8 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
       root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
     """
-    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+    root_creation_time, root_modification_time = self.GetTimestamps(
+        parser_mediator, root_item)
 
     for item in items:
       if root_creation_time:
@@ -372,7 +373,8 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
       root_item: Optional root item of the OLECF file.
       item_names: Optional list of all items discovered in the root.
     """
-    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+    root_creation_time, root_modification_time = self.GetTimestamps(
+        parser_mediator, root_item)
 
     for item in items:
       summary_information_object = OleCfSummaryInfo(item)

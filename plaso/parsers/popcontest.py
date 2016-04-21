@@ -80,8 +80,6 @@ The popularity-contest output looks like this:
    reported in the log line.
 """
 
-import logging
-
 import pyparsing
 
 from plaso.containers import time_events
@@ -230,7 +228,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
 
     elif key == u'header':
       if not structure.timestamp:
-        logging.debug(
+        parser_mediator.ProduceParseDebug(
             u'PopularityContestParser, header with invalid timestamp.')
         return
 
@@ -242,7 +240,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
 
     elif key == u'footer':
       if not structure.timestamp:
-        logging.debug(
+        parser_mediator.ProduceParseDebug(
             u'PopularityContestParser, footer with invalid timestamp.')
         return
 
@@ -252,7 +250,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       parser_mediator.ProduceEvent(event_object)
 
     else:
-      logging.warning(
+      parser_mediator.ProduceParseWarning(
           u'PopularityContestParser, unknown structure: {0:s}.'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
@@ -268,11 +266,13 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     try:
       header_struct = self.HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a Popularity Contest log file, invalid header')
+      parser_mediator.ProduceParseDebug(
+          u'Not a Popularity Contest log file, invalid header')
       return False
 
     if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
-      logging.debug(u'Invalid Popularity Contest log file header timestamp.')
+      parser_mediator.ProduceParseDebug(
+          u'Invalid Popularity Contest log file header timestamp.')
       return False
     return True
 

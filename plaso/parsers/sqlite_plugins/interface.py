@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a SQLite parser."""
 
-import logging
-
+# pylint: disable=wrong-import-order
 try:
   from pysqlite2 import dbapi2 as sqlite3
 except ImportError:
@@ -39,9 +38,9 @@ class SQLitePlugin(plugins.BasePlugin):
       try:
         callback = getattr(self, callback_method, None)
         if callback is None:
-          logging.warning(
-              u'[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
-                  self.NAME, callback_method, query))
+          parser_mediator.ProduceParseWarning(
+              u'Missing callback method: {0:s} for query: {1:s}'.format(
+                  callback_method, query))
           continue
 
         sql_results = database.Query(query)
@@ -54,7 +53,8 @@ class SQLitePlugin(plugins.BasePlugin):
           row = sql_results.fetchone()
 
       except sqlite3.DatabaseError as exception:
-        logging.debug(u'SQLite error occurred: {0:s}'.format(exception))
+        parser_mediator.ProduceParseWarning(
+            u'SQLite error occurred: {0:s}'.format(exception))
 
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
     """Determine if this is the right plugin for this database.
@@ -79,7 +79,7 @@ class SQLitePlugin(plugins.BasePlugin):
     if database is None:
       raise ValueError(u'Database is not set.')
 
-    if not frozenset(database.tables) >= self.REQUIRED_TABLES:
+    if frozenset(database.tables) < self.REQUIRED_TABLES:
       raise errors.WrongPlugin(
           u'Not the correct database tables for: {0:s}'.format(self.NAME))
 
