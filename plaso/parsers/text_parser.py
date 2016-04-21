@@ -10,9 +10,9 @@ import abc
 import csv
 import logging
 import os
+import pyparsing
 
 from dfvfs.helpers import text_file
-import pyparsing
 
 from plaso.containers import events
 from plaso.containers import text_events
@@ -195,7 +195,8 @@ class SlowLexicalTextParser(
                 u'[{0:s} VERIFIED] Error count: {1:d} and ERROR: {2:d}'.format(
                     path_spec_printable, error_count, self.error))
             parser_mediator.ProduceParseWarning(
-                u'Unable to parse timestamp with error: {0:s}'.format(exception))
+                u'Unable to parse timestamp with error: {0:s}'.format(
+                    exception))
 
           else:
             parser_mediator.ProduceParseDebug((

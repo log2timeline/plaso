@@ -85,7 +85,7 @@ class OlecfPlugin(plugins.BasePlugin):
     if root_item is None or item_names is None:
       raise ValueError(u'Root item or items are not set.')
 
-    if not frozenset(item_names) >= self.REQUIRED_ITEMS:
+    if frozenset(item_names) < self.REQUIRED_ITEMS:
       raise errors.WrongPlugin(
           u'Not the correct items for: {0:s}'.format(self.NAME))
 

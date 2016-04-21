@@ -240,14 +240,14 @@ class EseDbPlugin(plugins.BasePlugin):
       callback = getattr(self, callback_method, None)
       if callback is None:
         parser_mediator.ProduceParseWarning(
-            u'[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
-                self.NAME, callback_method, table_name))
+            u'Missing callback method: {0:s} for table: {1:s}'.format(
+                callback_method, table_name))
         continue
 
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        parser_mediator.ProduceParseWarning(u'[{0:s}] missing table: {1:s}'.format(
-            self.NAME, table_name))
+        parser_mediator.ProduceParseWarning(u'Missing table: {0:s}'.format(
+            table_name))
         continue
 
       # The database is passed in case the database contains table names

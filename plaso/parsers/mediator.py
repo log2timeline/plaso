@@ -460,7 +460,7 @@ class ParserMediator(object):
               self.GetParserChain(), self.GetDisplayName(), message))
     else:
       logging.log(
-        level, u'[{0:s}] {1:s}'.format(self.GetParserChain(), message))
+          level, u'[{0:s}] {1:s}'.format(self.GetParserChain(), message))
 
     # TODO: disabled as long nothing is listening on the parse error queue.
     # if self._parse_error_queue_producer:

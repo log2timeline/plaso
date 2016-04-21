@@ -477,10 +477,10 @@ class KeychainParser(interface.FileObjectParser):
       try:
         table = self.TABLE_HEADER.parse_stream(file_object)
       except construct.FieldError as exception:
-        parser_mediator.ProduceParseWarning((
+        parser_mediator.ProduceParseWarning(
             u'Unable to parse table header in file: {0:s} '
-            u'with error: {1:s}.').format(parser_mediator.GetDisplayName(),
-                exception))
+            u'with error: {1:s}.'.format(
+                parser_mediator.GetDisplayName(), exception))
         continue
 
       # Table_offset: absolute byte in the file where the table starts.

@@ -2,7 +2,6 @@
 """Implements a parser for Firefox cache 1 and 2 files."""
 
 import collections
-import logging
 import os
 
 import construct
@@ -324,7 +323,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     while file_object.get_offset() < file_object.get_size():
       try:
         fetched, modified, expire = self._NextRecord(
-            parser_mediator, file_object, display_name, 
+            parser_mediator, file_object, display_name,
             firefox_config.block_size)
         parser_mediator.ProduceEvent(fetched)
 

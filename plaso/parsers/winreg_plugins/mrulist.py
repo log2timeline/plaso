@@ -104,7 +104,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
     """
     values_dict = {}
     for entry_index, entry_letter in self._ParseMRUListValue(
-          parser_mediator, key):
+        parser_mediator, key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with \0 (0x0000).
       if entry_letter == 0:
