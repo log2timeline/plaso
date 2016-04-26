@@ -163,12 +163,13 @@ class ParsersManager(object):
 
     return parser_plugins_information
 
+  # Note this is only used by plaso/frontend/preg.py
   @classmethod
   def GetParserObjectByName(cls, parser_name):
     """Retrieves a specific parser object by its name.
 
     Args:
-      parser_name: the name of the parser.
+      parser_name: a string containing the name of the parser.
 
     Returns:
       A parser object (instance of BaseParser) or None.
@@ -176,7 +177,7 @@ class ParsersManager(object):
     parser_class = cls._parser_classes.get(parser_name, None)
     if not parser_class:
       return
-    # TODO: add support for plugin_includes
+    # Note that we deliberately do not pass the plugin_includes argument here.
     return parser_class()
 
   @classmethod
@@ -192,12 +193,22 @@ class ParsersManager(object):
       A dictionary mapping parser names to parsers objects (instances of
       BaseParser).
     """
-    parser_objects = {}
+    includes, excludes = cls._GetParserFilters(parser_filter_expression)
 
-    for parser_name, parser_class in cls.GetParsers(
-        parser_filter_expression=parser_filter_expression):
-      # TODO: add support for plugin_includes
-      parser_objects[parser_name] = parser_class()
+    parser_objects = {}
+    for parser_name, parser_class in iter(cls._parser_classes.items()):
+      if not includes and excludes.get(parser_name, None):
+        continue
+
+      if includes and parser_name not in includes:
+        continue
+
+      plugin_includes = None
+      if parser_name in includes:
+        plugin_includes = includes[parser_name]
+
+      parser_objects[parser_name] = parser_class(
+          plugin_includes=plugin_includes)
 
     return parser_objects
 

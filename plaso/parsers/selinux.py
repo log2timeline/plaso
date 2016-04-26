@@ -76,10 +76,18 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       lexer.Token(u'.', r'([^\r\n]+)\r?\n', u'ParseFailed', u'INITIAL')
   ]
 
-  def __init__(self):
-    """Initializes a parser object."""
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
     # Set local_zone to false, since timestamps are UTC.
-    super(SELinuxParser, self).__init__(local_zone=False)
+    super(SELinuxParser, self).__init__(
+        local_zone=False, plugin_includes=plugin_includes)
     self.attributes = {u'audit_type': u'', u'pid': u'', u'body': u''}
     self.timestamp = 0
 

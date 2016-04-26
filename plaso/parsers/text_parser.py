@@ -54,18 +54,22 @@ class SlowLexicalTextParser(
       lexer.Token(u'INITIAL', r'(.+)\n', u'ParseString', u''),
       ]
 
-  def __init__(self, local_zone=True):
-    """Constructor for the SlowLexicalTextParser.
+  def __init__(self, local_zone=True, plugin_includes=None):
+    """Initializes a parser object.
 
     Args:
       local_zone: a boolean value that determines if the entries
                   in the log file are stored in the local time
                   zone of the computer that stored it or in a fixed
                   timezone, like UTC.
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
     """
     # TODO: remove the multiple inheritance.
     lexer.SelfFeederMixIn.__init__(self)
-    interface.FileObjectParser.__init__(self)
+    interface.FileObjectParser.__init__(self, plugin_includes=plugin_includes)
     self._file_verified = False
 
     self.attributes = {
@@ -427,14 +431,18 @@ class TextCSVParser(interface.FileObjectParser):
   # file to see if it confirms to standards.
   MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
-  def __init__(self, encoding=None):
-    """Initialize the CSV reader.
+  def __init__(self, encoding=None, plugin_includes=None):
+    """Initializes a parser object.
 
-    Arguments:
-      encoding: Optional encoding used in the CSV file. If None, the system
+    Args:
+      encoding: optional encoding used in the CSV file. If None, the system
                 codepage set in the parser mediator will be used.
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
     """
-    super(TextCSVParser, self).__init__()
+    super(TextCSVParser, self).__init__(plugin_includes=plugin_includes)
     self.encoding = encoding
 
   def _ConvertRowToUnicode(self, parser_mediator, row):
@@ -730,14 +738,23 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   # attribute.
   _ENCODING = u'ascii'
 
-  def __init__(self):
-    """Initializes the pyparsing single-line text parser object."""
-    super(PyparsingSingleLineTextParser, self).__init__()
-    self.encoding = self._ENCODING
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(PyparsingSingleLineTextParser, self).__init__(
+        plugin_includes=plugin_includes)
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     self._line_structures = self.LINE_STRUCTURES
+
+    self.encoding = self._ENCODING
 
   def _ReadLine(
       self, parser_mediator, text_file_object, max_len=0, quiet=False, depth=0):
@@ -1025,9 +1042,17 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
   BUFFER_SIZE = 2048
 
-  def __init__(self):
-    """Initializes the pyparsing multi-line text parser object."""
-    super(PyparsingMultiLineTextParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(PyparsingMultiLineTextParser, self).__init__(
+        plugin_includes=plugin_includes)
     self._buffer_size = self.BUFFER_SIZE
     self._text_reader = EncodedTextReader(
         buffer_size=self.BUFFER_SIZE, encoding=self._ENCODING)

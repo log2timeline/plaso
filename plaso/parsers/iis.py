@@ -139,9 +139,16 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   # Define a signature value for the log file.
   SIGNATURE = b'#Software: Microsoft Internet Information Services'
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(WinIISParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(WinIISParser, self).__init__(plugin_includes=plugin_includes)
     self._date = None
     self._time = None
     self.software = None

@@ -527,9 +527,16 @@ class BsmParser(interface.FileObjectParser):
       129: [u'BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128],
       130: [u'BSM_TOKEN_SOCKET_UNIX', BSM_TOKEN_SOCKET_UNIX]}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(BsmParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(BsmParser, self).__init__(plugin_includes=plugin_includes)
     # Create the dictionary with all token IDs: tested and untested.
     self.bsm_type_list_all = self.BSM_TYPE_LIST.copy()
     self.bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)

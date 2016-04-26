@@ -60,9 +60,16 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   DATA_TYPE = u'windows:firewall:log_entry'
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(WinFirewallParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(WinFirewallParser, self).__init__(plugin_includes=plugin_includes)
     self._software = None
     self._use_local_timezone = False
     self._version = None

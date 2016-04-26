@@ -87,9 +87,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       (u'syslog_line', _LINE_GRAMMAR),
       (u'syslog_comment', _SYSLOG_COMMENT)]
 
-  def __init__(self):
-    """Initializes a syslog parser."""
-    super(SyslogParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(SyslogParser, self).__init__(
+        local_zone=True, plugin_includes=plugin_includes)
+    # Set the initial year to 0 (fixed in the actual Parse method)
     self._last_month = 0
     self._maximum_year = 0
     self._year_use = 0

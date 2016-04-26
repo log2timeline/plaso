@@ -131,9 +131,16 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       (u'header_signature', HEADER_SIGNATURE),
   ]
 
-  def __init__(self):
-    """Initializes a XChatLog parser object."""
-    super(XChatLogParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(XChatLogParser, self).__init__(plugin_includes=plugin_includes)
     self._xchat_year = 0
     self.offset = 0
 

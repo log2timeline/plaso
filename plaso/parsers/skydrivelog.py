@@ -342,9 +342,16 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       (u'no_header_single_line', SDOL_NO_HEADER_SINGLE_LINE),
   ]
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(SkyDriveOldLogParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(SkyDriveOldLogParser, self).__init__(plugin_includes=plugin_includes)
     self._last_event_object = None
     self.offset = 0
 

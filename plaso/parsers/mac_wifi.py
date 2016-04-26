@@ -81,11 +81,18 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       (u'logline', WIFI_LINE),
       (u'header', WIFI_HEADER)]
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(MacWifiLogParser, self).__init__()
-    self._year_use = 0
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(MacWifiLogParser, self).__init__(plugin_includes=plugin_includes)
     self._last_month = None
+    self._year_use = 0
 
   def _GetAction(self, agent, function, text):
     """Parse the well know actions for easy reading.

@@ -98,9 +98,16 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       (u'logline', SECURITYD_LINE),
       (u'repeated', REPEATED_LINE)]
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(MacSecuritydLogParser, self).__init__()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(MacSecuritydLogParser, self).__init__(plugin_includes=plugin_includes)
     self._last_month = None
     self._previous_structure = None
     self._year_use = 0

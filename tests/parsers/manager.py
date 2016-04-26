@@ -216,21 +216,10 @@ class ParsersManagerTest(unittest.TestCase):
     """Tests the GetPlugins function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
 
-    generator = TestParserWithPlugins.GetPlugins(
-        plugin_filter_expression=u'test_plugin')
+    generator = TestParserWithPlugins.GetPlugins()
     plugin_tuples = list(generator)
-    self.assertEqual(len(plugin_tuples), 1)
+    self.assertNotEqual(len(plugin_tuples), 0)
     self.assertIsNotNone(plugin_tuples[0])
-
-    generator = TestParserWithPlugins.GetPlugins(
-        plugin_filter_expression=u'!test_plugin')
-    plugin_tuples = list(generator)
-    self.assertEqual(len(plugin_tuples), 0)
-
-    generator = TestParserWithPlugins.GetPlugins(
-        plugin_filter_expression=u'bogus')
-    plugin_tuples = list(generator)
-    self.assertEqual(len(plugin_tuples), 0)
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 
