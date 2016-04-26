@@ -5,6 +5,8 @@
 import unittest
 
 from plaso.parsers import winreg
+# Register all plugins.
+from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 
 from tests.parsers import test_lib
 
@@ -35,7 +37,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   def testInitialize(self):
     """Tests the initialization."""
-    parser_object = winreg.WinRegistryParser()
+    parser_object = winreg.WinRegistryParser([u'appcompatcache'])
 
     self.assertIsNotNone(parser_object)
     self.assertIsNotNone(parser_object._default_plugin)
