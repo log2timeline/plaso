@@ -176,6 +176,7 @@ class ParsersManager(object):
     parser_class = cls._parser_classes.get(parser_name, None)
     if not parser_class:
       return
+    # TODO: add support for plugin_includes
     return parser_class()
 
   @classmethod
@@ -195,6 +196,7 @@ class ParsersManager(object):
 
     for parser_name, parser_class in cls.GetParsers(
         parser_filter_expression=parser_filter_expression):
+      # TODO: add support for plugin_includes
       parser_objects[parser_name] = parser_class()
 
     return parser_objects

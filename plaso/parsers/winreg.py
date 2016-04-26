@@ -52,18 +52,23 @@ class WinRegistryParser(interface.FileObjectParser):
   _NORMALIZED_CONTROL_SET_PREFIX = (
       u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet').lower()
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(WinRegistryParser, self).__init__()
-    self._default_plugin = None
-    self._plugins = WinRegistryParser.GetPluginObjects()
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(WinRegistryParser, self).__init__(plugin_includes=plugin_includes)
     self._plugin_per_key_path = {}
     self._plugins_without_key_paths = []
 
     default_plugin_list_index = None
     key_paths = []
 
-    for list_index, plugin_object in enumerate(self._plugins):
+    for list_index, plugin_object in enumerate(self._plugin_objects):
       if plugin_object.NAME == u'winreg_default':
         default_plugin_list_index = list_index
         continue
@@ -90,7 +95,7 @@ class WinRegistryParser(interface.FileObjectParser):
           key_paths.append(plugin_key_path)
 
     if default_plugin_list_index is not None:
-      self._default_plugin = self._plugins.pop(default_plugin_list_index)
+      self._default_plugin = self._plugin_objects.pop(default_plugin_list_index)
 
     self._path_filter = path_filter.PathFilterScanTree(
         key_paths, case_sensitive=False, path_segment_separator=u'\\')

@@ -34,11 +34,6 @@ class PlistParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(PlistParser, self).__init__()
-    self._plugins = PlistParser.GetPluginObjects()
-
   def GetTopLevel(self, file_object, file_name=u''):
     """Returns the deserialized content of a plist as a dictionary object.
 
@@ -117,7 +112,8 @@ class PlistParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           u'Unable to parse: {0:s} skipping.'.format(filename))
 
-    for plugin_object in self._plugins:
+    # TODO: add a parser filter.
+    for plugin_object in self._plugin_objects:
       try:
         plugin_object.UpdateChainAndProcess(
             parser_mediator, plist_name=filename, top_level=top_level_object)
@@ -125,6 +121,10 @@ class PlistParser(interface.FileObjectParser):
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'Wrong plugin: {0:s} for: {1:s}'.format(
             exception.args[0], exception.args[1]))
+
+    if self._default_plugin:
+      self._default_plugin.UpdateChainAndProcess(
+          parser_mediator, plist_name=filename, top_level=top_level_object)
 
 
 manager.ParsersManager.RegisterParser(PlistParser)

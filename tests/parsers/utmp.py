@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class UtmpParserTest(test_lib.ParserTestCase):
   """The unit test for UTMP parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = utmp.UtmpParser()
-
   def testParseUtmpFile(self):
     """Tests the Parse function for an UTMP file."""
+    parser_object = utmp.UtmpParser()
+
     test_file = self._GetTestFilePath([u'utmp'])
-    events = self._ParseFile(self._parser, test_file)
+    events = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(events)
     self.assertEqual(len(event_objects), 14)
     event_object = event_objects[0]
@@ -84,8 +82,10 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
   def testParseWtmpFile(self):
     """Tests the Parse function for an WTMP file."""
+    parser_object = utmp.UtmpParser()
+
     test_file = self._GetTestFilePath([u'wtmp.1'])
-    events = self._ParseFile(self._parser, test_file)
+    events = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(events)
     self.assertEqual(len(event_objects), 4)
 

@@ -219,12 +219,6 @@ class SQLiteParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(SQLiteParser, self).__init__()
-    self._local_zone = False
-    self._plugins = SQLiteParser.GetPluginObjects()
-
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification."""
@@ -261,7 +255,7 @@ class SQLiteParser(interface.FileObjectParser):
     cache = SQLiteCache()
     try:
       # TODO: add a table name filter here.
-      for plugin_object in self._plugins:
+      for plugin_object in self._plugin_objects:
         try:
           plugin_object.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database)

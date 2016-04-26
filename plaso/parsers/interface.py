@@ -68,11 +68,39 @@ class BaseParser(object):
   # different parser classes don't end up in the same dict.
   _plugin_classes = None
 
+  def __init__(self, plugin_includes=None):
+    """Initializes a parser object.
+
+    Args:
+      plugin_includes: optional list of strings containing the names of
+                       the plugins to include, where None represents all
+                       plugins. The default plugin, named "NAME_default",
+                       is handled seperately.
+    """
+    super(BaseParser, self).__init__()
+    self._default_plugin = None
+    self._plugin_objects = []
+
+    if not self._plugin_classes:
+      return
+
+    default_plugin_name = u'{0:s}_default'.format(self.NAME)
+    for plugin_name, plugin_class in iter(self._plugin_classes.items()):
+      if plugin_name == default_plugin_name:
+        self._default_plugin = plugin_class()
+        continue
+
+      if plugin_includes and plugin_name not in plugin_includes:
+        continue
+
+      plugin_object = plugin_class()
+      self._plugin_objects.append(plugin_object)
+
   @classmethod
   def _GetPluginFilters(cls, plugin_filter_expression):
     """Retrieves the plugins to include and exclude.
 
-    Takes a comma separated string and splits it up into two dictionaries,
+    Takes a comma separated string and splits it up into two lists,
     of plugins to include and to exclude from selection. If a particular
     filter is prepended with an exclamation point it will be added to the
     exclude section, otherwise in the include.
@@ -158,24 +186,6 @@ class BaseParser(object):
     return
 
   @classmethod
-  def GetPluginNames(cls, plugin_filter_expression=None):
-    """Retrieves the plugin names.
-
-    Args:
-      plugin_filter_expression: optional string containing the plugin filter
-                                expression, where None represents all plugins.
-
-    Returns:
-      A list of plugin names.
-    """
-    plugin_names = []
-    for plugin_name, _ in cls.GetPlugins(
-        plugin_filter_expression=plugin_filter_expression):
-      plugin_names.append(plugin_name)
-
-    return sorted(plugin_names)
-
-  @classmethod
   def GetPluginObjectByName(cls, plugin_name):
     """Retrieves a specific plugin object by its name.
 
@@ -189,26 +199,6 @@ class BaseParser(object):
     if not plugin_class:
       return
     return plugin_class()
-
-  @classmethod
-  def GetPluginObjects(cls, plugin_filter_expression=None):
-    """Retrieves the plugin objects.
-
-    Args:
-      plugin_filter_expression: optional string containing the plugin filter
-                                expression, where None represents all plugins.
-
-    Returns:
-      A list of plugin objects (instances of BasePlugin).
-    """
-    plugin_objects = []
-
-    for _, plugin_class in cls.GetPlugins(
-        plugin_filter_expression=plugin_filter_expression):
-      plugin_object = plugin_class()
-      plugin_objects.append(plugin_object)
-
-    return plugin_objects
 
   @classmethod
   def GetPlugins(cls, plugin_filter_expression=None):

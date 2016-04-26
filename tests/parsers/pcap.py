@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class PcapParserTest(test_lib.ParserTestCase):
   """Tests for the PCAP parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = pcap.PcapParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = pcap.PcapParser()
+
     test_file = self._GetTestFilePath([u'test.pcap'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # PCAP information:

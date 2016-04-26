@@ -14,16 +14,14 @@ from tests.parsers import test_lib
 class MacWifiUnitTest(test_lib.ParserTestCase):
   """Tests for the Mac wifi.log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mac_wifi.MacWifiLogParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = mac_wifi.MacWifiLogParser()
+
     knowledge_base_values = {u'year': 2013}
     test_file = self._GetTestFilePath([u'wifi.log'])
     event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 9)

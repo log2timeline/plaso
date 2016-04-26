@@ -14,14 +14,23 @@ from tests.parsers import test_lib
 class PlistParserTest(test_lib.ParserTestCase):
   """Tests the plist parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = plist.PlistParser()
+  # pylint: disable=protected-access
+
+  def testInitialize(self):
+    """Tests the initialization."""
+    parser_object = plist.PlistParser([u'airport'])
+
+    self.assertIsNotNone(parser_object)
+    self.assertIsNotNone(parser_object._default_plugin)
+    self.assertNotEqual(parser_object._plugin_objects, [])
+    self.assertEqual(len(parser_object._plugin_objects), 1)
 
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = plist.PlistParser()
+
     test_file = self._GetTestFilePath([u'plist_binary'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 12)

@@ -39,11 +39,6 @@ class EseDbParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(EseDbParser, self).__init__()
-    self._plugins = EseDbParser.GetPluginObjects()
-
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification."""
@@ -67,9 +62,9 @@ class EseDbParser(interface.FileObjectParser):
           u'unable to open file with error: {0:s}'.format(exception))
       return
 
-    # Compare the list of available plugins.
+    # Compare the list of available plugin objects.
     cache = EseDbCache()
-    for plugin_object in self._plugins:
+    for plugin_object in self._plugin_objects:
       try:
         plugin_object.UpdateChainAndProcess(
             parser_mediator, database=esedb_file, cache=cache)

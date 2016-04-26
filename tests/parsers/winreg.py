@@ -9,12 +9,10 @@ from plaso.parsers import winreg
 from tests.parsers import test_lib
 
 
-class WinRegTest(test_lib.ParserTestCase):
+class WinRegistryParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Registry file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = winreg.WinRegistryParser()
+  # pylint: disable=protected-access
 
   def _GetParserChains(self, event_objects):
     """Return a dict with a plugin count given a list of event objects."""
@@ -35,10 +33,21 @@ class WinRegTest(test_lib.ParserTestCase):
     """Generate the correct parser chain for a given plugin."""
     return u'winreg/{0:s}'.format(plugin_name)
 
+  def testInitialize(self):
+    """Tests the initialization."""
+    parser_object = winreg.WinRegistryParser()
+
+    self.assertIsNotNone(parser_object)
+    self.assertIsNotNone(parser_object._default_plugin)
+    self.assertNotEqual(parser_object._plugin_objects, [])
+    self.assertEqual(len(parser_object._plugin_objects), 1)
+
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
+    parser_object = winreg.WinRegistryParser()
+
     test_file = self._GetTestFilePath([u'NTUSER.DAT'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     parser_chains = self._GetParserChains(event_objects)
@@ -50,16 +59,20 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
+    parser_object = winreg.WinRegistryParser()
+
     test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 0)
 
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
+    parser_object = winreg.WinRegistryParser()
+
     test_file = self._GetTestFilePath([u'SYSTEM'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     parser_chains = self._GetParserChains(event_objects)

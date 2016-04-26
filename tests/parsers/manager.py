@@ -200,23 +200,6 @@ class ParsersManagerTest(unittest.TestCase):
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
 
-  def testGetPluginNames(self):
-    """Tests the GetPluginNames function."""
-    TestParserWithPlugins.RegisterPlugin(TestPlugin)
-
-    plugin_names = TestParserWithPlugins.GetPluginNames()
-    self.assertEqual(plugin_names, [u'test_plugin'])
-
-    plugin_names = TestParserWithPlugins.GetPluginNames(
-        plugin_filter_expression=u'!test_plugin')
-    self.assertEqual(plugin_names, [])
-
-    plugin_names = TestParserWithPlugins.GetPluginNames(
-        plugin_filter_expression=u'bogus')
-    self.assertEqual(plugin_names, [])
-
-    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-
   def testGetPluginObjectByName(self):
     """Tests the GetPluginObjectByName function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
@@ -226,25 +209,6 @@ class ParsersManagerTest(unittest.TestCase):
 
     plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'bogus')
     self.assertIsNone(plugin_object)
-
-    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-
-  def testGetPluginObjects(self):
-    """Tests the GetPluginObjects function."""
-    TestParserWithPlugins.RegisterPlugin(TestPlugin)
-
-    plugin_objects = TestParserWithPlugins.GetPluginObjects(
-        plugin_filter_expression=u'test_plugin')
-    self.assertEqual(len(plugin_objects), 1)
-    self.assertIsNotNone(plugin_objects[0])
-
-    plugin_objects = TestParserWithPlugins.GetPluginObjects(
-        plugin_filter_expression=u'!test_plugin')
-    self.assertEqual(len(plugin_objects), 0)
-
-    plugin_objects = TestParserWithPlugins.GetPluginObjects(
-        plugin_filter_expression=u'bogus')
-    self.assertEqual(len(plugin_objects), 0)
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 

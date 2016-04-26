@@ -5,7 +5,8 @@
 import unittest
 
 from plaso.parsers import sqlite
-from plaso.parsers import manager
+# Register all plugins.
+from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 
 from tests.parsers import test_lib
 
@@ -13,55 +14,23 @@ from tests.parsers import test_lib
 class SQLiteParserTest(test_lib.ParserTestCase):
   """Tests for the SQLite database parser."""
 
-  def testGetPluginNames(self):
-    """Tests the GetPluginNames function."""
-    all_plugin_names = sqlite.SQLiteParser.GetPluginNames()
+  # pylint: disable=protected-access
 
-    self.assertNotEqual(all_plugin_names, [])
+  def testInitialize(self):
+    """Tests the initialization."""
+    parser_object = sqlite.SQLiteParser([u'chrome_history'])
 
-    self.assertTrue(u'skype' in all_plugin_names)
-    self.assertTrue(u'chrome_history' in all_plugin_names)
-    self.assertTrue(u'firefox_history' in all_plugin_names)
-
-    # Change the calculations of the parsers.
-    test_parser_filter = u'sqlite/chrome_history,sqlite/firefox_history'
-
-    parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
-        parser_filter_expression=test_parser_filter):
-      parser_names.append(parser_class.NAME)
-
-    plugin_names = sqlite.SQLiteParser.GetPluginNames(
-        plugin_filter_expression=u'chrome_history,firefox_history')
-
-    self.assertEqual(len(parser_names), 1)
-    self.assertEqual(len(plugin_names), 2)
-    self.assertFalse(u'skype' in plugin_names)
-    self.assertTrue(u'chrome_history' in plugin_names)
-    self.assertTrue(u'firefox_history' in plugin_names)
-
-    # Test with a different plugin selection.
-    parser_names = []
-    for _, parser_class in manager.ParsersManager.GetParsers(
-        parser_filter_expression=u'sqlite,!sqlite/skype'):
-      parser_names.append(parser_class.NAME)
-
-    plugin_names = sqlite.SQLiteParser.GetPluginNames(
-        plugin_filter_expression=u'!skype')
-
-    # This should result in all plugins EXCEPT the skype one.
-    self.assertEqual(len(parser_names), 1)
-    self.assertEqual(len(plugin_names), len(all_plugin_names) - 1)
-    self.assertFalse(u'skype' in plugin_names)
-    self.assertTrue(u'chrome_history' in plugin_names)
-    self.assertTrue(u'firefox_history' in plugin_names)
+    self.assertIsNotNone(parser_object)
+    self.assertIsNone(parser_object._default_plugin)
+    self.assertNotEqual(parser_object._plugin_objects, [])
+    self.assertEqual(len(parser_object._plugin_objects), 1)
 
   def testFileParserChainMaintenance(self):
     """Tests that the parser chain is correctly maintained by the parser."""
-    parser = sqlite.SQLiteParser()
+    parser_object = sqlite.SQLiteParser()
     test_file = self._GetTestFilePath([u'contacts2.db'])
 
-    event_queue_consumer = self._ParseFile(parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
     for event in event_objects:
       chain = event.parser

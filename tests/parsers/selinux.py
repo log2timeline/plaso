@@ -17,16 +17,14 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class SELinuxUnitTest(test_lib.ParserTestCase):
   """Tests for the selinux log file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = selinux.SELinuxParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = selinux.SELinuxParser()
+
     knowledge_base_values = {u'year': 2013}
     test_file = self._GetTestFilePath([u'selinux.log'])
     event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 5)

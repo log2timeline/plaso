@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class WinRecycleBinParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycle Bin parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = recycler.WinRecycleBinParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = recycler.WinRecycleBinParser()
+
     test_file = self._GetTestFilePath([u'$II3DF3L.zip'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)
@@ -50,14 +48,12 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycler INFO2 parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = recycler.WinRecyclerInfo2Parser()
-
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
+    parser_object = recycler.WinRecyclerInfo2Parser()
+
     test_file = self._GetTestFilePath([u'INFO2'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 4)

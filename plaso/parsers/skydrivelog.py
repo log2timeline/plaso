@@ -146,11 +146,6 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       (u'header', SDF_HEADER)
   ]
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(SkyDriveLogParser, self).__init__()
-    self.use_local_zone = False
-
   def _GetTimestampFromHeader(self, structure):
     """Gets a timestamp from the structure.
 
