@@ -195,7 +195,7 @@ class FileSystemCollector(plaso_queue.ItemQueueProducer):
 
     Returns:
       A hash value (string) that can be used to determine if a file's timestamp
-    value has changed.
+      value has changed.
     """
     stat_object = file_entry.GetStat()
     ret_hash = hashlib.md5()

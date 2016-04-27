@@ -100,7 +100,8 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
     self._json_dict = {
         u'__type__': u'AnalysisReport',
         u'_event_tags': [{
-            u'__type__': u'EventTag',
+            u'__container_type__': u'event_tag',
+            u'__type__': u'AttributesContainer',
             u'comment': self._comment,
             u'event_uuid': self._event_uuid,
             u'labels': self._labels,
@@ -134,13 +135,14 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         self._serializer, analysis_report, self._json_dict)
 
 
-class JSONEventObjectSerializerTest(JSONSerializerTestCase):
-  """Tests for the JSON event object serializer object."""
+class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
+  """Tests for the JSON attribute container serializer object."""
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._json_dict = {
-        u'__type__': u'EventObject',
+    self._event_object_json_dict = {
+        u'__type__': u'AttributeContainer',
+        u'__container_type__': u'event',
         u'a_tuple': [
             u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35],
         u'binary_string': {
@@ -164,11 +166,11 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
         u'zero_integer': 0
     }
 
-    self._serializer = json_serializer.JSONEventObjectSerializer
-
-  def testReadSerialized(self):
-    """Tests the ReadSerialized function."""
-    event_object = self._TestReadSerialized(self._serializer, self._json_dict)
+  def testReadSerializedEventObject(self):
+    """Tests the ReadSerialized function on an event object."""
+    event_object = self._TestReadSerialized(
+        json_serializer.JSONAttributeContainerSerializer,
+        self._event_object_json_dict)
 
     # An integer value containing 0 should get stored.
     self.assertTrue(hasattr(event_object, u'zero_integer'))
@@ -188,8 +190,8 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
     attribute_value = getattr(event_object, u'a_tuple', ())
     self.assertEqual(len(attribute_value), 4)
 
-  def testWriteSerialized(self):
-    """Tests the WriteSerialized function."""
+  def testWriteSerializedEventObject(self):
+    """Tests the WriteSerialized function on an event object."""
     event_object = events.EventObject()
 
     event_object.data_type = u'test:event2'
@@ -212,9 +214,12 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
     event_object.null_value = None
 
     json_string = self._TestWriteSerialized(
-        self._serializer, event_object, self._json_dict)
+        json_serializer.JSONAttributeContainerSerializer, event_object,
+        self._event_object_json_dict)
 
-    event_object = self._serializer.ReadSerialized(json_string)
+    event_object = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
 
     # TODO: fix this.
     # An empty string should not get stored.
@@ -223,41 +228,36 @@ class JSONEventObjectSerializerTest(JSONSerializerTestCase):
     # A None (or Null) value should not get stored.
     # self.assertFalse(hasattr(event_object, u'null_value'))
 
+  def testReadAndWriteSerializedEventTag(self):
+    """Test the ReadSerialized and WriteSerialized functions of EventTag."""
+    expected_event_tag = events.EventTag(comment=u'My first comment.')
+    expected_event_tag.store_number = 234
+    expected_event_tag.store_index = 18
+    expected_event_tag.AddLabels([u'Malware', u'Common'])
 
-class JSONEventTagSerializerTest(JSONSerializerTestCase):
-  """Test for the JSON Event Tag serializer object."""
+    serialized_event_tag = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_tag))
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._event_tag = events.EventTag(comment=u'My first comment.')
-    self._event_tag.store_number = 234
-    self._event_tag.store_index = 18
-    self._event_tag.AddLabels([u'Malware', u'Common'])
+    self.assertIsNotNone(serialized_event_tag)
 
-    self._event_tag_dict = {
+    event_tag = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            serialized_event_tag))
+
+    self.assertIsNotNone(event_tag)
+
+    expected_event_tag_dict = {
         u'comment': u'My first comment.',
         u'labels': [u'Malware', u'Common'],
         u'store_index': 18,
         u'store_number': 234,
     }
 
-  def testReadAndWriteSerialized(self):
-    """Test the ReadSerialized and WriteSerialized functions."""
-    serialized_event_tag = (
-        json_serializer.JSONEventTagSerializer.WriteSerialized(
-            self._event_tag))
-
-    self.assertIsNotNone(serialized_event_tag)
-
-    event_tag = (
-        json_serializer.JSONEventTagSerializer.ReadSerialized(
-            serialized_event_tag))
-
-    self.assertIsNotNone(event_tag)
-
     event_tag_dict = event_tag.CopyToDict()
     self.assertEqual(
-        sorted(event_tag_dict.items()), sorted(self._event_tag_dict.items()))
+        sorted(event_tag_dict.items()),
+        sorted(expected_event_tag_dict.items()))
 
 
 class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
