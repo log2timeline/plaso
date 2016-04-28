@@ -65,17 +65,15 @@ class JSONSerializerTestCase(unittest.TestCase):
     return json_string
 
 
-class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
-  """Tests for the JSON analysis report serializer object."""
+class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
+  """Tests for the JSON attribute container serializer object."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._comment = u'This is a test event tag.'
-    self._event_uuid = u'403818f93dce467bac497ef0f263fde8'
-    self._labels = [u'Test', u'AnotherTest']
-
-    # TODO: preserve the tuples in the report dict.
-    self._report_dict = {
+  def testReadAndWriteSerializedAnalysisReport(self):
+    """Test ReadSerialized and WriteSerialized of AnalysisReport."""
+    expected_comment = u'This is a test event tag.'
+    expected_uuid = u'403818f93dce467bac497ef0f263fde8'
+    expected_labels = [u'Test', u'AnotherTest']
+    expected_report_dict = {
         u'dude': [
             [u'Google Keep - notes and lists',
              u'hmjkmjkepdijhoojdojkdfohbdgmmhki']
@@ -85,8 +83,7 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
             [u'Google Play Music', u'icppfcnhkcmnfdhfhphakoifcfokfdhg']
         ]
     }
-
-    self._report_text = (
+    expected_report_text = (
         u' == USER: dude ==\n'
         u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]\n'
         u'\n'
@@ -95,59 +92,90 @@ class JSONAnalysisReportSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
+    expected_event_tag = events.EventTag(
+        comment=expected_comment, event_uuid=expected_uuid)
+    expected_event_tag.AddLabels(expected_labels)
+
+    self.assertTrue(expected_event_tag.IsValidForSerialization())
+
+    expected_analysis_report = reports.AnalysisReport(
+        plugin_name=u'chrome_extension_test', text=expected_report_text)
+    expected_analysis_report.report_dict = expected_report_dict
+    expected_analysis_report.time_compiled = 1431978243000000
+    expected_analysis_report.SetTags([expected_event_tag])
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_analysis_report))
+
+    self.assertIsNotNone(json_string)
+
+    analysis_report = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(analysis_report)
+    self.assertIsInstance(analysis_report, reports.AnalysisReport)
+
+    # TODO: preserve the tuples in the report dict.
     # TODO: add report_array tests.
 
-    self._json_dict = {
-        u'__type__': u'AnalysisReport',
+    expected_analysis_report_dict = {
         u'_event_tags': [{
-            u'__container_type__': u'event_tag',
-            u'__type__': u'AttributesContainer',
-            u'comment': self._comment,
-            u'event_uuid': self._event_uuid,
-            u'labels': self._labels,
+            u'comment': expected_comment,
+            u'event_uuid': expected_uuid,
+            u'labels': expected_labels,
         }],
         u'plugin_name': u'chrome_extension_test',
-        u'report_dict': self._report_dict,
-        u'text': self._report_text,
+        u'report_dict': expected_report_dict,
+        u'text': expected_report_text,
         u'time_compiled': 1431978243000000}
 
-    self._serializer = json_serializer.JSONAnalysisReportSerializer
+    analysis_report_dict = analysis_report.CopyToDict()
+    self.assertEqual(
+        sorted(analysis_report_dict.items()),
+        sorted(expected_analysis_report_dict.items()))
 
-  def testReadSerialized(self):
-    """Tests the ReadSerialized function."""
-    self._TestReadSerialized(self._serializer, self._json_dict)
+  def testReadAndWriteSerializedEventObject(self):
+    """Test ReadSerialized and WriteSerialized of EventObject."""
+    expected_event_object = events.EventObject()
 
-  def testWriteSerialized(self):
-    """Tests the WriteSerialized function."""
-    event_tag = events.EventTag(
-        comment=self._comment, event_uuid=self._event_uuid)
-    event_tag.AddLabels(self._labels)
+    expected_event_object.data_type = u'test:event2'
+    expected_event_object.timestamp = 1234124
+    expected_event_object.timestamp_desc = u'Written'
+    # Prevent the event object for generating its own UUID.
+    expected_event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
-    self.assertTrue(event_tag.IsValidForSerialization())
+    expected_event_object.binary_string = b'\xc0\x90\x90binary'
+    expected_event_object.empty_string = u''
+    expected_event_object.zero_integer = 0
+    expected_event_object.integer = 34
+    expected_event_object.string = u'Normal string'
+    expected_event_object.unicode_string = u'And I am a unicorn.'
+    expected_event_object.my_list = [u'asf', 4234, 2, 54, u'asf']
+    expected_event_object.my_dict = {
+        u'a': u'not b', u'c': 34, u'list': [u'sf', 234], u'an': [234, 32]}
+    expected_event_object.a_tuple = (
+        u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35)
+    expected_event_object.null_value = None
 
-    analysis_report = reports.AnalysisReport(
-        u'chrome_extension_test', text=self._report_text)
-    analysis_report.report_dict = self._report_dict
-    analysis_report.time_compiled = 1431978243000000
-    analysis_report.SetTags([event_tag])
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_object))
 
-    self._TestWriteSerialized(
-        self._serializer, analysis_report, self._json_dict)
+    self.assertIsNotNone(json_string)
 
+    event_object = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
 
-class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
-  """Tests for the JSON attribute container serializer object."""
+    self.assertIsNotNone(event_object)
+    self.assertIsInstance(event_object, events.EventObject)
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._event_object_json_dict = {
-        u'__type__': u'AttributeContainer',
-        u'__container_type__': u'event',
-        u'a_tuple': [
-            u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35],
-        u'binary_string': {
-            u'__type__': u'bytes',
-            u'stream': u'=C0=90=90binary'},
+    expected_event_object_dict = {
+        u'a_tuple': (
+            u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35),
+        u'binary_string': b'\xc0\x90\x90binary',
         u'data_type': u'test:event2',
         u'empty_string': u'',
         u'integer': 34,
@@ -166,86 +194,30 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'zero_integer': 0
     }
 
-  def testReadSerializedEventObject(self):
-    """Tests the ReadSerialized function on an event object."""
-    event_object = self._TestReadSerialized(
-        json_serializer.JSONAttributeContainerSerializer,
-        self._event_object_json_dict)
-
-    # An integer value containing 0 should get stored.
-    self.assertTrue(hasattr(event_object, u'zero_integer'))
-
-    attribute_value = getattr(event_object, u'integer', 0)
-    self.assertEqual(attribute_value, 34)
-
-    attribute_value = getattr(event_object, u'my_list', [])
-    self.assertEqual(len(attribute_value), 5)
-
-    attribute_value = getattr(event_object, u'string', u'')
-    self.assertEqual(attribute_value, u'Normal string')
-
-    attribute_value = getattr(event_object, u'unicode_string', u'')
-    self.assertEqual(attribute_value, u'And I am a unicorn.')
-
-    attribute_value = getattr(event_object, u'a_tuple', ())
-    self.assertEqual(len(attribute_value), 4)
-
-  def testWriteSerializedEventObject(self):
-    """Tests the WriteSerialized function on an event object."""
-    event_object = events.EventObject()
-
-    event_object.data_type = u'test:event2'
-    event_object.timestamp = 1234124
-    event_object.timestamp_desc = u'Written'
-    # Prevent the event object for generating its own UUID.
-    event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
-
-    event_object.binary_string = b'\xc0\x90\x90binary'
-    event_object.empty_string = u''
-    event_object.zero_integer = 0
-    event_object.integer = 34
-    event_object.string = u'Normal string'
-    event_object.unicode_string = u'And I am a unicorn.'
-    event_object.my_list = [u'asf', 4234, 2, 54, u'asf']
-    event_object.my_dict = {
-        u'a': u'not b', u'c': 34, u'list': [u'sf', 234], u'an': [234, 32]}
-    event_object.a_tuple = (
-        u'some item', [234, 52, 15], {u'a': u'not a', u'b': u'not b'}, 35)
-    event_object.null_value = None
-
-    json_string = self._TestWriteSerialized(
-        json_serializer.JSONAttributeContainerSerializer, event_object,
-        self._event_object_json_dict)
-
-    event_object = (
-        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
-            json_string))
-
-    # TODO: fix this.
-    # An empty string should not get stored.
-    # self.assertFalse(hasattr(event_object, u'empty_string'))
-
-    # A None (or Null) value should not get stored.
-    # self.assertFalse(hasattr(event_object, u'null_value'))
+    event_object_dict = event_object.CopyToDict()
+    self.assertEqual(
+        sorted(event_object_dict.items()),
+        sorted(expected_event_object_dict.items()))
 
   def testReadAndWriteSerializedEventTag(self):
-    """Test the ReadSerialized and WriteSerialized functions of EventTag."""
+    """Test ReadSerialized and WriteSerialized of EventTag."""
     expected_event_tag = events.EventTag(comment=u'My first comment.')
     expected_event_tag.store_number = 234
     expected_event_tag.store_index = 18
     expected_event_tag.AddLabels([u'Malware', u'Common'])
 
-    serialized_event_tag = (
+    json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_event_tag))
 
-    self.assertIsNotNone(serialized_event_tag)
+    self.assertIsNotNone(json_string)
 
     event_tag = (
         json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
-            serialized_event_tag))
+            json_string))
 
     self.assertIsNotNone(event_tag)
+    self.assertIsInstance(event_tag, events.EventTag)
 
     expected_event_tag_dict = {
         u'comment': u'My first comment.',

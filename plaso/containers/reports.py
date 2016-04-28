@@ -19,13 +19,14 @@ class AnalysisReport(interface.AttributeContainer):
     time_compiled: a timestamp containing the date and time the report was
                    compiled.
   """
+  CONTAINER_TYPE = u'report'
 
-  def __init__(self, plugin_name, text=None):
+  def __init__(self, plugin_name=None, text=None):
     """Initializes the analysis report.
 
     Args:
-      plugin_name: a string containing the name of the analysis plugin that
-                   generated the report.
+      plugin_name: optional string containing the name of the analysis plugin
+                   that generated the report.
       text: optional string containing the report text.
     """
     super(AnalysisReport, self).__init__()
@@ -38,6 +39,29 @@ class AnalysisReport(interface.AttributeContainer):
     # TODO: rename text to body?
     self.text = text
     self.time_compiled = None
+
+  def CopyToDict(self):
+    """Copies the attribute container to a dictionary.
+
+    Returns:
+      A dictionary containing the attribute container attributes.
+    """
+    dictionary = {}
+    for attribute_name in iter(self.__dict__.keys()):
+      attribute_value = getattr(self, attribute_name, None)
+      if attribute_value is None:
+        continue
+
+      if attribute_name == u'_event_tags':
+        event_tags = []
+        for event_tag in attribute_value:
+          event_tags.append(event_tag.CopyToDict())
+
+        attribute_value = event_tags
+
+      dictionary[attribute_name] = attribute_value
+
+    return dictionary
 
   def GetString(self):
     """Retrievs a string representation of the report.

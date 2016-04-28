@@ -19,80 +19,6 @@ from plaso.storage import collection
 import pytz  # pylint: disable=wrong-import-order
 
 
-class _AnalysisReportJSONDecoder(json.JSONDecoder):
-  """A class that implements an analysis report object JSON decoder."""
-
-  _CLASS_TYPES = frozenset([u'AnalysisReport', u'EventTag', u'bytes'])
-
-  def __init__(self, *args, **kargs):
-    """Initializes the JSON decoder object."""
-    super(_AnalysisReportJSONDecoder, self).__init__(
-        *args, object_hook=self._ConvertDictToObject, **kargs)
-
-  def _ConvertDictToAnalysisReport(self, json_dict):
-    """Converts a JSON dict into an analysis report.
-
-    The dictionary of the JSON serialized objects consists of:
-    {
-        '__type__': 'AnalysisReport'
-        '_event_tags': { ... }
-        'report_array': { ... }
-        'report_dict': { ... }
-        ...
-    }
-
-    Here '__type__' indicates the object base type. In this case this should
-    be 'AnalysisReport'. The rest of the elements of the dictionary make up
-    the preprocessing object properties.
-
-    Args:
-      json_dict: a dictionary of the JSON serialized objects.
-
-    Returns:
-      An analysis report (instance of AnalysisReport).
-    """
-    # Plugin name is set as one of the attributes.
-    analysis_report = reports.AnalysisReport(u'')
-
-    for key, value in iter(json_dict.items()):
-      setattr(analysis_report, key, value)
-
-    return analysis_report
-
-  def _ConvertDictToObject(self, json_dict):
-    """Converts a JSON dict into an object.
-
-    Note that json_dict is a dict of dicts and the _ConvertDictToObject
-    method will be called for every dict. That is how the deserialized
-    objects are created.
-
-    Args:
-      json_dict: a dictionary of the JSON serialized objects.
-
-    Returns:
-      A deserialized object which can be:
-        * an analysis report (instance of AnalysisReport);
-        * a dictionary.
-    """
-    # Use __type__ to indicate the object class type.
-    class_type = json_dict.get(u'__type__', None)
-
-    if class_type not in self._CLASS_TYPES:
-      # Dealing with a regular dict.
-      return json_dict
-
-    # Remove the class type from the JSON dict since we cannot pass it.
-    del json_dict[u'__type__']
-
-    if class_type == u'bytes':
-      return binascii.a2b_qp(json_dict[u'stream'])
-
-    elif class_type == u'EventTag':
-      return JSONAttributeContainerSerializer.ReadSerializedDict(json_dict)
-
-    return self._ConvertDictToAnalysisReport(json_dict)
-
-
 class _PreprocessObjectJSONDecoder(json.JSONDecoder):
   """A class that implements a preprocessing object JSON decoder."""
 
@@ -203,65 +129,6 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
       return pytz.timezone(json_dict.get(u'zone', u'UTC'))
 
     return self._ConvertDictToPreprocessObject(json_dict)
-
-
-class _AnalysisReportJSONEncoder(json.JSONEncoder):
-  """A class that implements an analysis report JSON encoder."""
-
-  # Note: that the following functions do not follow the style guide
-  # because they are part of the json.JSONEncoder object interface.
-
-  # pylint: disable=method-hidden
-  def default(self, analysis_report):
-    """Converts an analysis report object into a JSON dictionary.
-
-    The resulting dictionary of the JSON serialized objects consists of:
-    {
-        '__type__': 'AnalysisReport'
-        '_event_tags': { ... }
-        'report_array': { ... }
-        'report_dict': { ... }
-        ...
-    }
-
-    Here '__type__' indicates the object base type. In this case
-    'AnalysisReport'. The rest of the elements of the dictionary
-    make up the preprocessing object attributes.
-
-    Args:
-      analysis_report: an analysis report (instance of AnalysisReport).
-
-    Returns:
-      A dictionary of the JSON serialized objects.
-
-    Raises:
-      TypeError: if not an instance of AnalysisReport.
-    """
-    if not isinstance(analysis_report, reports.AnalysisReport):
-      raise TypeError
-
-    json_dict = {u'__type__': u'AnalysisReport'}
-    for attribute_name, attribute_value in analysis_report.GetAttributes():
-      if attribute_value is None:
-        continue
-
-      if attribute_name == u'_event_tags':
-        event_tags = []
-        for event_tag in attribute_value:
-          event_tag = JSONAttributeContainerSerializer.WriteSerializedDict(
-              event_tag)
-          event_tags.append(event_tag)
-        attribute_value = event_tags
-
-      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
-        attribute_value = {
-            u'__type__': u'bytes',
-            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
-        }
-
-      json_dict[attribute_name] = attribute_value
-
-    return json_dict
 
 
 class _PreprocessObjectJSONEncoder(json.JSONEncoder):
@@ -411,44 +278,14 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
     return json_dict
 
 
-class JSONAnalysisReportSerializer(interface.AnalysisReportSerializer):
-  """Class that implements the json analysis report serializer."""
-
-  @classmethod
-  def ReadSerialized(cls, json_string):
-    """Reads an analysis report from serialized form.
-
-    Args:
-      json_string: a JSON string containing the serialized form.
-
-    Returns:
-      An analysis report (instance of AnalysisReport).
-    """
-    json_decoder = _AnalysisReportJSONDecoder()
-    return json_decoder.decode(json_string)
-
-  @classmethod
-  def WriteSerialized(cls, analysis_report):
-    """Writes an analysis report to serialized form.
-
-    Args:
-      analysis_report: an analysis report (instance of AnalysisReport).
-
-    Returns:
-      A JSON string containing the serialized form.
-    """
-    return json.dumps(analysis_report, cls=_AnalysisReportJSONEncoder)
-
-
 class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
   """Class that implements the json attribute container serializer."""
 
   _CONTAINER_CLASS_PER_TYPE = {
       u'event': events.EventObject,
       u'event_tag': events.EventTag,
+      u'report': reports.AnalysisReport,
   }
-
-  _CONTAINER_CLASSES = (events.EventObject, events.EventTag)
 
   @classmethod
   def _ConvertAttributeContainerToDict(cls, attribute_container):
@@ -494,21 +331,50 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       if attribute_value is None:
         continue
 
-      if isinstance(attribute_value, py2to3.BYTES_TYPE):
-        attribute_value = {
-            u'__type__': u'bytes',
-            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
-        }
-
-      elif container_type == u'event' and attribute_name == u'pathspec':
-        attribute_value = cls._ConvertPathSpecToDict(attribute_value)
-
-      elif isinstance(attribute_value, cls._CONTAINER_CLASSES):
-        attribute_value = cls.default(attribute_value)
-
-      json_dict[attribute_name] = attribute_value
+      json_dict[attribute_name] = cls._ConvertAttributeValueToDict(
+          attribute_value)
 
     return json_dict
+
+  @classmethod
+  def _ConvertAttributeValueToDict(cls, attribute_value):
+    """Converts an attribute value into a JSON dictionary.
+
+    Args:
+      attribute_value: an attribute value.
+
+    Returns:
+      The JSON serialized object which can be:
+        * a dictionary;
+        * a list.
+    """
+    if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      attribute_value = {
+          u'__type__': u'bytes',
+          u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+      }
+
+    elif isinstance(attribute_value, (list, tuple)):
+      json_list = []
+      for list_element in attribute_value:
+        json_dict = cls._ConvertAttributeValueToDict(list_element)
+        json_list.append(json_dict)
+
+      if isinstance(attribute_value, list):
+        attribute_value = json_list
+      else:
+        attribute_value = {
+            u'__type__': u'tuple',
+            u'values': json_list
+        }
+
+    elif isinstance(attribute_value, dfvfs_path_spec.PathSpec):
+      attribute_value = cls._ConvertPathSpecToDict(attribute_value)
+
+    elif isinstance(attribute_value, containers_interface.AttributeContainer):
+      attribute_value = cls._ConvertAttributeContainerToDict(attribute_value)
+
+    return attribute_value
 
   @classmethod
   def _ConvertDictToObject(cls, json_dict):
@@ -534,10 +400,12 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       A deserialized object which can be:
         * an attribute container (instance of AttributeContainer);
-        * a dictionary.
+        * a dictionary;
+        * a list;
+        * a tuple.
 
     Raises:
-      ValueError: if the container type is not supported.
+      ValueError: if the class type or container type is not supported.
     """
     # Use __type__ to indicate the object class type.
     class_type = json_dict.get(u'__type__', None)
@@ -548,13 +416,30 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if class_type == u'bytes':
       return binascii.a2b_qp(json_dict[u'stream'])
 
+    elif class_type == u'tuple':
+      return tuple(cls._ConvertListToObject(json_dict[u'values']))
+
+    elif class_type == u'AttributeContainer':
+      # Use __container_type__ to indicate the attribute container type.
+      container_type = json_dict.get(u'__container_type__', None)
+
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
     elif class_type == u'PathSpec':
       return cls._ConvertDictToPathSpec(json_dict)
 
-    # Use __container_type__ to indicate the attribute container type.
-    container_type = json_dict.get(u'__container_type__', None)
+    # Provide backwards compatibility.
+    elif class_type == u'EventObject':
+      container_type = u'event'
+
+    elif class_type == u'EventTag':
+      container_type = u'event_tag'
+
+    elif class_type == u'AnalysisReport':
+      container_type = u'report'
+
+    else:
+      raise ValueError(u'Unsupported class type: {0:s}'.format(class_type))
 
     container_class = cls._CONTAINER_CLASS_PER_TYPE.get(container_type, None)
     if not container_class:
@@ -563,7 +448,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     container_object = container_class()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      if attribute_name.startswith(u'_'):
+      if attribute_name.startswith(u'__'):
         continue
 
       # Be strict about which attributes to set in non event objects.
@@ -579,9 +464,35 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       if isinstance(attribute_value, dict):
         attribute_value = cls._ConvertDictToObject(attribute_value)
 
+      elif isinstance(attribute_value, list):
+        attribute_value = cls._ConvertListToObject(attribute_value)
+
       setattr(container_object, attribute_name, attribute_value)
 
     return container_object
+
+  @classmethod
+  def _ConvertListToObject(cls, json_list):
+    """Converts a JSON list into an object.
+
+    Args:
+      json_list: a list of the JSON serialized objects.
+
+    Returns:
+      A deserialized list.
+    """
+    list_value = []
+    for json_list_element in json_list:
+      if isinstance(json_list_element, dict):
+        list_value.append(cls._ConvertDictToObject(json_list_element))
+
+      elif isinstance(json_list_element, list):
+        list_value.append(cls._ConvertListToObject(json_list_element))
+
+      else:
+        list_value.append(json_list_element)
+
+    return list_value
 
   @classmethod
   def _ConvertDictToPathSpec(cls, json_dict):

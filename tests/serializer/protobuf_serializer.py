@@ -108,7 +108,7 @@ class ProtobufAnalysisReportSerializerTest(ProtobufSerializerTestCase):
   def testWriteSerialized(self):
     """Tests the WriteSerialized function."""
     analysis_report = reports.AnalysisReport(
-        u'chrome_extension_test', text=self._report_text)
+        plugin_name=u'chrome_extension_test', text=self._report_text)
     analysis_report.report_dict = self._report_dict
     analysis_report.time_compiled = 1431978243000000
 
