@@ -139,13 +139,13 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     # TODO: have sample output generated from the test.
 
     self._start_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-07-24 21:45:24')
+        u'2015-01-22 07:52:33')
     self._end_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-11-18 01:15:43')
+        u'2016-03-23 23:01:18.000123')
 
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within time bounds."""
-    storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = storage_zip_file.StorageFile(
         storage_file_path, read_only=True)
     time_range = storage_time_range.TimeRange(
@@ -156,7 +156,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       for event_object in storage_reader.GetEvents(time_range=time_range):
         timestamp_list.append(event_object.timestamp)
 
-    self.assertEqual(len(timestamp_list), 15)
+    self.assertEqual(len(timestamp_list), 24)
     self.assertEqual(timestamp_list[0], self._start_timestamp)
     self.assertEqual(timestamp_list[-1], self._end_timestamp)
 
@@ -167,7 +167,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     test_front_end.SetPreferredLanguageIdentifier(u'en-US')
     test_front_end.SetQuietMode(True)
 
-    storage_file_path = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
 
     try:
@@ -181,7 +181,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     finally:
       storage_file.Close()
 
-    self.assertEqual(counter[u'Stored Events'], 15)
+    self.assertEqual(counter[u'Stored Events'], 32)
 
     output_writer.SeekToBeginning()
     lines = []
@@ -193,9 +193,14 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     self.assertEqual(len(lines), 16)
 
     expected_line = (
-        u'2015-12-31T17:54:32+00:00,Entry Written,LOG,Log File,[anacron  '
-        u'pid: 1234] : Another one just like this (124 job run),syslog,'
-        u'OS:syslog,-\n')
+        u'2016-12-31T17:54:32+00:00,'
+        u'Content Modification Time,'
+        u'LOG,'
+        u'Log File,'
+        u'[anacron  pid: 1234] : Another one just like this (124 job run),'
+        u'syslog,'
+        u'OS:/usr/local/google/home/dmwhite/code/onager_plaso/test_data/syslog,'
+        u'-\n')
     self.assertEquals(lines[13], expected_line)
 
   def testOutput(self):

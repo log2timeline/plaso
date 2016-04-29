@@ -911,7 +911,7 @@ class StorageFile(ZIPStorageFile):
 
   def __init__(
       self, output_file, buffer_size=0, read_only=False,
-      serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
+      serializer_format=definitions.SERIALIZER_FORMAT_JSON):
     """Initializes the storage file.
 
     Args:
@@ -1151,7 +1151,7 @@ class StorageFile(ZIPStorageFile):
   # pylint: disable=arguments-differ
   def _Open(
       self, path, access_mode='r',
-      serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF):
+      serializer_format=definitions.SERIALIZER_FORMAT_JSON):
     """Opens the storage file.
 
     Args:

@@ -16,19 +16,15 @@ from tests.output import test_lib
 class PstorageTest(test_lib.OutputModuleTestCase):
   """Tests for the plaso storage outputter."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
-
   def testOutput(self):
     """Tests the Output function."""
+    test_filename = os.path.join(u'test_data', u'psort_test.json.plaso')
+
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'pstorage.plaso')
 
       # Copy events to pstorage dump.
-      storage_file = storage_zip_file.StorageFile(
-          self._test_filename, read_only=True)
-
+      storage_file = storage_zip_file.StorageFile(test_filename, read_only=True)
       with storage_zip_file.ZIPStorageFileReader(
           storage_file) as storage_reader:
 
@@ -43,8 +39,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
             output_buffer.Append(event_object)
 
       # Make sure original and dump have the same events.
-      original = storage_zip_file.StorageFile(
-          self._test_filename, read_only=True)
+      original = storage_zip_file.StorageFile(test_filename, read_only=True)
       dump = storage_zip_file.StorageFile(temp_file, read_only=True)
       event_object_original = original.GetSortedEntry()
       event_object_dump = dump.GetSortedEntry()
