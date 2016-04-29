@@ -19,7 +19,7 @@ class AnalysisReport(interface.AttributeContainer):
     time_compiled: a timestamp containing the date and time the report was
                    compiled.
   """
-  CONTAINER_TYPE = u'report'
+  CONTAINER_TYPE = u'analysis_report'
 
   def __init__(self, plugin_name=None, text=None):
     """Initializes the analysis report.

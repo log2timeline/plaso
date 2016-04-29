@@ -282,9 +282,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
   """Class that implements the json attribute container serializer."""
 
   _CONTAINER_CLASS_PER_TYPE = {
+      u'analysis_report': reports.AnalysisReport,
       u'event': events.EventObject,
       u'event_tag': events.EventTag,
-      u'report': reports.AnalysisReport,
   }
 
   @classmethod
@@ -436,7 +436,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       container_type = u'event_tag'
 
     elif class_type == u'AnalysisReport':
-      container_type = u'report'
+      container_type = u'analysis_report'
 
     else:
       raise ValueError(u'Unsupported class type: {0:s}'.format(class_type))
