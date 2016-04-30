@@ -139,9 +139,9 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     # TODO: have sample output generated from the test.
 
     self._start_timestamp = timelib.Timestamp.CopyFromString(
-        u'2015-01-22 07:52:33')
+        u'2016-01-22 07:52:33')
     self._end_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-03-23 23:01:18.000123')
+        u'2016-02-29 01:15:43')
 
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within time bounds."""
@@ -156,7 +156,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       for event_object in storage_reader.GetEvents(time_range=time_range):
         timestamp_list.append(event_object.timestamp)
 
-    self.assertEqual(len(timestamp_list), 24)
+    self.assertEqual(len(timestamp_list), 14)
     self.assertEqual(timestamp_list[0], self._start_timestamp)
     self.assertEqual(timestamp_list[-1], self._end_timestamp)
 
@@ -190,17 +190,16 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       lines.append(line)
       line = output_writer.GetLine()
 
-    self.assertEqual(len(lines), 16)
+    self.assertEqual(len(lines), 20)
 
     expected_line = (
-        u'2016-12-31T17:54:32+00:00,'
-        u'Content Modification Time,'
-        u'LOG,'
-        u'Log File,'
-        u'[anacron  pid: 1234] : Another one just like this (124 job run),'
-        u'syslog,'
-        u'OS:/usr/local/google/home/dmwhite/code/onager_plaso/test_data/syslog,'
-        u'-\n')
+        u'2016-04-30T06:41:50+00:00,'
+        u'atime,'
+        u'FILE,'
+        u'OS atime,'
+        u'OS:/tmp/test/test_data/syslog Type: file,'
+        u'filestat,'
+        u'OS:/tmp/test/test_data/syslog,-\n')
     self.assertEquals(lines[13], expected_line)
 
   def testOutput(self):
