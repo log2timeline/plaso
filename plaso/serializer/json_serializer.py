@@ -426,6 +426,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
     elif class_type == u'PathSpec':
+      # Remove the class type from the JSON dict since we cannot pass it.
+      del json_dict[u'__type__']
+
       return cls._ConvertDictToPathSpec(json_dict)
 
     # Provide backwards compatibility.
