@@ -39,7 +39,7 @@ class Collector(object):
     """Return a hash value calculated from a NTFS file's metadata.
 
     Args:
-      file_entry: the file entry (instance of dfvfs.FileEntry).
+      file_entry: a file entry (instance of dfvfs.FileEntry).
 
     Returns:
       A hash value (string) that can be used to determine if a file's timestamp
