@@ -53,8 +53,6 @@ PYTHON_DEPENDENCIES = [
     (u'dfvfs', u'__version__', u'20160510', None),
     (u'dfwinreg', u'__version__', u'20160320', None),
     (u'dpkt', u'__version__', u'1.8', None),
-    # The protobuf module does not appear to have version information.
-    (u'google.protobuf', u'', u'', None),
     (u'hachoir_core', u'__version__', u'1.3.3', None),
     (u'hachoir_parser', u'__version__', u'1.3.4', None),
     (u'hachoir_metadata', u'__version__', u'1.3.3', None),
