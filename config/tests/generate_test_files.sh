@@ -76,7 +76,7 @@ PYTHONPATH=. ./tools/log2timeline.py -z Iceland ${TEST_FILE} test_data/syslog;
 
 cd ${OLD_PWD};
 
-mv ${TEST_DIRECTORY}/test.plaso test_data/;
+mv ${TEST_DIRECTORY}/${TEST_FILE} test_data/;
 
 rm -rf ${TEST_DIRECTORY};
 
