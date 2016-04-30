@@ -78,7 +78,7 @@ mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
 TEST_FILE="pinfo_test.json.plaso";
 
-PYTHONPATH=. ./tools/log2timeline.py ${TEST_FILE} test_data/tsk_volume_system.raw;
+PYTHONPATH=. ./tools/log2timeline.py --partition=all ${TEST_FILE} test_data/tsk_volume_system.raw;
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
