@@ -125,8 +125,9 @@ class MacUserPlugin(interface.PlistPlugin):
           resolver_context = context.Context()
           fake_file = fake_file_io.FakeFile(
               resolver_context, shadow_hash_data)
-          fake_file.open(path_spec=fake_path_spec.FakePathSpec(
-              location=u'ShadowHashData'))
+          fake_path_spec = fake_path_spec.FakePathSpec(
+              location=u'ShadowHashData')
+          fake_file.open(path_spec=fake_path_spec)
 
           try:
             plist_file = binplist.BinaryPlist(file_obj=fake_file)
