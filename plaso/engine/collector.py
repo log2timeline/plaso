@@ -39,7 +39,7 @@ class Collector(object):
     """Return a hash value calculated from a NTFS file's metadata.
 
     Args:
-      file_entry: the file entry (instance of TSKFileEntry).
+      file_entry: the file entry (instance of FileEntry).
 
     Returns:
       A hash value (string) that can be used to determine if a file's timestamp
@@ -311,13 +311,9 @@ class CollectorQueueProducer(plaso_queue.ItemQueueProducer):
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""
-    produced_number_of_path_specs = (
-        self.number_of_produced_items +
-        self._collector.number_of_produced_items)
-
     return {
         u'processing_status': self._status,
-        u'produced_number_of_path_specs': produced_number_of_path_specs,
+        u'produced_number_of_path_specs': self._number_of_produced_items,
         u'path_spec_queue_port': getattr(self._queue, u'port', None),
         u'type': definitions.PROCESS_TYPE_COLLECTOR}
 
