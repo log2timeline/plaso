@@ -53,10 +53,20 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     self._test_tool.PrintStorageInformation()
 
     expected_parsers = u', '.join(sorted([
+        u'android_app_usage',
         u'asl_log',
         u'bencode',
+        u'binary_cookies',
         u'bsm_log',
+        u'chrome_cache',
+        u'chrome_preferences',
+        u'cups_ipp',
+        u'custom_destinations',
+        u'dockerjson',
+        u'esedb',
         u'filestat',
+        u'firefox_cache',
+        u'firefox_cache2',
         u'hachoir',
         u'java_idx',
         u'lnk',
@@ -66,26 +76,34 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         u'mactime',
         u'macwifi',
         u'mcafee_protection',
+        u'mft',
         u'msiecf',
         u'olecf',
         u'openxml',
         u'opera_global',
         u'opera_typed_history',
+        u'pe',
         u'plist',
+        u'pls_recall',
+        u'popularity_contest',
         u'prefetch',
         u'recycle_bin',
         u'recycle_bin_info2',
+        u'rplog',
+        u'sccm',
         u'selinux',
         u'skydrive_log',
-        u'skydrive_log_error',
+        u'skydrive_log_old',
         u'sqlite',
         u'symantec_scanlog',
         u'syslog',
+        u'usnjrnl',
         u'utmp',
         u'utmpx',
         u'winevt',
         u'winevtx',
         u'winfirewall',
+        u'winiis',
         u'winjob',
         u'winreg',
         u'xchatlog',
@@ -98,33 +116,67 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'---------------------------------------------------------------------'
         b'-----------\n'
         b'Storage file:\t\t{0:s}\n'
-        b'Serialization format:\tproto\n'
-        b'Source processed:\tsyslog\nTime of processing:\t'
-        b'2014-02-15T04:33:16+00:00\n'
+        b'Serialization format:\tjson\n'
+        b'Source processed:\tN/A\n'
+        b'Time of processing:\t2016-04-30T06:41:49+00:00\n'
         b'\n'
         b'Collection information:\n'
-        b'\tparser_selection = \n'
-        b'\tos_detected = N/A\n'
-        b'\tconfigured_zone = UTC\n'
-        b'\tdebug = False\n'
-        b'\tparsers = {1:s}\n'
-        b'\tprotobuf_size = 300\n'
-        b'\tvss parsing = False\n'
+        b'\tparser_selection = (no list set)\n'
         b'\trecursive = False\n'
         b'\tpreferred_encoding = UTF-8\n'
-        b'\tworkers = 12\n'
-        b'\toutput_file = psort_test.out\n'
-        b'\tversion = 1.1.0-dev_20140213\n'
-        b'\tcmd_line = /usr/local/bin/log2timeline.py psort_test.out syslog '
-        b'--buffer_size=300\n'
+        b'\tos_detected = N/A\n'
+        b'\tconfigured_zone = UTC\n'
+        b'\toutput_file = psort_test.json.plaso\n'
         b'\tpreprocess = False\n'
-        b'\truntime = multi threaded\n'
+        b'\tversion = 1.4.1_20160414\n'
+        b'\tcmd_line = ./tools/log2timeline.py --buffer_size=300 '
+        b'psort_test.json.plaso test_data/syslog\n'
+        b'\tdebug = False\n'
+        b'\truntime = single process mode\n'
+        b'\tparsers = {1:s}\n'
         b'\tmethod = OS collection\n'
+        b'\tprotobuf_size = 0\n'
         b'\n'
         b'Parser counter information:\n'
         b'\tfilestat = 3\n'
-        b'\tsyslog = 12\n'
-        b'\tTotal = 15\n'
+        b'\tsyslog = 13\n'
+        b'\tTotal = 16\n'
+        b'\n'
+        b'Preprocessing information omitted (to see use: --verbose).\n'
+        b'\n'
+        b'-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+'
+        b'-+-+-+-+-+-+\n'
+        b'---------------------------------------------------------------------'
+        b'-----------\n'
+        b'\t\tPlaso Storage Information\n'
+        b'---------------------------------------------------------------------'
+        b'-----------\n'
+        b'Storage file:\t\t{0:s}\n'
+        b'Serialization format:\tjson\n'
+        b'Source processed:\tN/A\n'
+        b'Time of processing:\t2016-04-30T06:41:50+00:00\n'
+        b'\n'
+        b'Collection information:\n'
+        b'\tparser_selection = (no list set)\n'
+        b'\trecursive = False\n'
+        b'\tpreferred_encoding = UTF-8\n'
+        b'\tos_detected = N/A\n'
+        b'\tconfigured_zone = Iceland\n'
+        b'\toutput_file = psort_test.json.plaso\n'
+        b'\tpreprocess = False\n'
+        b'\tversion = 1.4.1_20160414\n'
+        b'\tcmd_line = ./tools/log2timeline.py -z Iceland '
+        b'psort_test.json.plaso test_data/syslog\n'
+        b'\tdebug = False\n'
+        b'\truntime = single process mode\n'
+        b'\tparsers = {1:s}\n'
+        b'\tmethod = OS collection\n'
+        b'\tprotobuf_size = 0\n'
+        b'\n'
+        b'Parser counter information:\n'
+        b'\tfilestat = 3\n'
+        b'\tsyslog = 13\n'
+        b'\tTotal = 16\n'
         b'\n'
         b'Preprocessing information omitted (to see use: --verbose).\n'
         b'\n'
