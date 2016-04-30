@@ -74,9 +74,15 @@ TEST_FILE="psort_test.json.plaso";
 PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 ${TEST_FILE} test_data/syslog;
 PYTHONPATH=. ./tools/log2timeline.py -z Iceland ${TEST_FILE} test_data/syslog;
 
-cd ${OLD_PWD};
+mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
-mv ${TEST_DIRECTORY}/${TEST_FILE} test_data/;
+TEST_FILE="pinfo_test.json.plaso";
+
+PYTHONPATH=. ./tools/log2timeline.py ${TEST_FILE} test_data/tsk_volume_system.raw;
+
+mv ${TEST_FILE} ${OLD_PWD}/test_data/;
+
+cd ${OLD_PWD};
 
 rm -rf ${TEST_DIRECTORY};
 
