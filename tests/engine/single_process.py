@@ -25,17 +25,6 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
     self._test_engine = single_process.SingleProcessEngine(
         maximum_number_of_queued_items=100)
 
-  def testCreateCollector(self):
-    """Tests the _CreateCollector function."""
-    resolver_context = context.Context()
-
-    test_collector = self._test_engine._CreateCollector(
-        filter_find_specs=None, include_directory_stat=False,
-        resolver_context=resolver_context)
-    self.assertIsNotNone(test_collector)
-    self.assertIsInstance(
-        test_collector, single_process.SingleProcessCollector)
-
   def testCreateExtractionWorker(self):
     """Tests the _CreateExtractionWorker function."""
     test_extraction_worker = self._test_engine._CreateExtractionWorker(0)

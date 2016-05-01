@@ -162,8 +162,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       try:
         storage_file = storage_zip_file.StorageFile(
             options.output, read_only=True)
-      except IOError:
-        self.fail(u'Unable to open storage file after processing.')
+      except IOError as exception:
+        self.fail((
+            u'Unable to open storage file after processing with error: '
+            u'{0:s}.').format(exception))
 
       event_objects = []
       event_object = storage_file.GetSortedEntry()

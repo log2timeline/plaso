@@ -51,7 +51,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._hasher_names = []
     self._mount_path = None
     self._operating_system = None
-    self._output_module = None
     self._parser_names = None
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
@@ -526,19 +525,13 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
-    if self._output_module:
-      storage_writer_object = storage_writer.BypassStorageWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          pre_obj, output_module_string=self._output_module)
-    else:
-      storage_writer_object = storage_zip_file.ZIPStorageFileWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          pre_obj, buffer_size=self._buffer_size,
-          serializer_format=storage_serializer_format)
+    storage_writer_object = storage_zip_file.ZIPStorageFileWriter(
+        self._engine.event_object_queue, self._storage_file_path,
+        pre_obj, buffer_size=self._buffer_size,
+        serializer_format=storage_serializer_format)
 
-      storage_writer_object.SetEnableProfiling(
-          self._enable_profiling,
-          profiling_type=self._profiling_type)
+    storage_writer_object.SetEnableProfiling(
+        self._enable_profiling, profiling_type=self._profiling_type)
 
     processing_status = None
     try:

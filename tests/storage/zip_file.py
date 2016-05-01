@@ -189,6 +189,10 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
+  # The _GetSerializedDataStream function is tested by the
+  # _GetSerializedEventOffsetTable and _GetSerializedEventSourceOffsetTable
+  # tests.
+
   def testGetSerializedEventOffsetTable(self):
     """Tests the _GetSerializedEventOffsetTable function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -196,6 +200,36 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
     offset_table = storage_file._GetSerializedEventOffsetTable(2)
     self.assertIsNotNone(offset_table)
+
+    with self.assertRaises(IOError):
+      storage_file._GetSerializedEventOffsetTable(99)
+
+    storage_file.Close()
+
+  def testGetSerializedEventSourceOffsetTable(self):
+    """Tests the _GetSerializedEventSourceOffsetTable function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    # TODO: add positive test.
+
+    with self.assertRaises(IOError):
+      storage_file._GetSerializedEventSourceOffsetTable(99)
+
+    storage_file.Close()
+
+  # The _GetSerializedDataStream function is tested by the
+  # _GetSerializedEventSourceStream and _GetSerializedEventStream tests.
+
+  def testGetSerializedEventSourceStream(self):
+    """Tests the _GetSerializedEventSourceStream function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    # TODO: add positive test.
+
+    with self.assertRaises(IOError):
+      storage_file._GetSerializedEventSourceStream(99)
 
     storage_file.Close()
 
@@ -206,6 +240,23 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
     data_stream = storage_file._GetSerializedEventStream(2)
     self.assertIsNotNone(data_stream)
+
+    with self.assertRaises(IOError):
+      storage_file._GetSerializedEventStream(99)
+
+    storage_file.Close()
+
+  # The _GetSerializedDataStreamNumbers function is tested by the
+  # _GetSerializedEventStreamNumbers and _GetSerializedEventSourceStreamNumbers
+  # tests.
+
+  def testGetSerializedEventSourceStreamNumbers(self):
+    """Tests the _GetSerializedEventSourceStreamNumbers function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    stream_numbers = storage_file._GetSerializedEventSourceStreamNumbers()
+    self.assertEqual(len(stream_numbers), 0)
 
     storage_file.Close()
 
@@ -278,7 +329,7 @@ class ZIPStorageFile(test_lib.StorageTestCase):
   def testWriteStream(self):
     """Tests the _WriteStream function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
       storage_file._WriteStream(u'bogus', b'test')
@@ -402,7 +453,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_objects = test_lib.CreateTestEventObjects()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
       for event_object in event_objects:
@@ -410,13 +461,13 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testGetReports(self):
-    """Tests the GetReports function."""
+  def testGetAnalysisReports(self):
+    """Tests the GetAnalysisReports function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    analysis_reports = list(storage_file.GetReports())
+    analysis_reports = list(storage_file.GetAnalysisReports())
     self.assertEqual(len(analysis_reports), 2)
 
     storage_file.Close()
@@ -425,10 +476,81 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    analysis_reports = list(storage_file.GetReports())
+    analysis_reports = list(storage_file.GetAnalysisReports())
     self.assertEqual(len(analysis_reports), 0)
 
     storage_file.Close()
+
+  def testGetEventSources(self):
+    """Tests the GetEventSources function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    event_sources = list(storage_file.GetEventSources())
+    self.assertEqual(len(event_sources), 0)
+
+    storage_file.Close()
+
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
+
+    event_sources = list(storage_file.GetEventSources())
+    self.assertEqual(len(event_sources), 0)
+
+    storage_file.Close()
+
+  def testGetEventTags(self):
+    """Tests the GetEventTags function."""
+    formatter_mediator = formatters_mediator.FormatterMediator()
+
+    tagged_events = []
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      self._CreateTestStorageFileWithTags(temp_file)
+
+      storage_file = zip_file.StorageFile(temp_file, read_only=True)
+
+      for event_tag in storage_file.GetEventTags():
+        event_object = self._GetTaggedEvent(storage_file, event_tag)
+        tagged_events.append(event_object)
+
+      storage_file.Close()
+
+    self.assertEqual(len(tagged_events), 4)
+
+    event_object = tagged_events[0]
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-04-05 12:27:39')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.store_number, 1)
+    self.assertEqual(event_object.store_index, 0)
+    self.assertEqual(event_object.tag.comment, u'My comment')
+
+    message, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        formatter_mediator, event_object)
+    self.assertEqual(message[0:10], u'This is a ')
+
+    event_object = tagged_events[1]
+    self.assertEqual(event_object.tag.labels[0], u'Malware')
+    message, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        formatter_mediator, event_object)
+    self.assertEqual(message[0:14], u'[HKCU\\Windows\\')
+
+    event_object = tagged_events[2]
+    self.assertEqual(event_object.tag.comment, u'This is interesting')
+    self.assertEqual(event_object.tag.labels[0], u'Malware')
+    self.assertEqual(event_object.tag.labels[1], u'Benign')
+
+    self.assertEqual(event_object.parser, u'UNKNOWN')
+
+    # Test the newly added fourth tag, which should include data from
+    # the first version as well.
+    event_object = tagged_events[3]
+    self.assertEqual(event_object.tag.labels[0], u'Interesting')
+    self.assertEqual(event_object.tag.labels[1], u'Malware')
 
   def testGetSortedEntry(self):
     """Tests the GetSortedEntry function."""
@@ -481,57 +603,6 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testGetTagging(self):
-    """Tests the GetTagging function."""
-    formatter_mediator = formatters_mediator.FormatterMediator()
-
-    tagged_events = []
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
-      self._CreateTestStorageFileWithTags(temp_file)
-
-      storage_file = zip_file.StorageFile(temp_file, read_only=True)
-
-      for tag in storage_file.GetTagging():
-        event_object = self._GetTaggedEvent(storage_file, tag)
-        tagged_events.append(event_object)
-
-      storage_file.Close()
-
-    self.assertEqual(len(tagged_events), 4)
-
-    event_object = tagged_events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2009-04-05 12:27:39')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.store_number, 1)
-    self.assertEqual(event_object.store_index, 0)
-    self.assertEqual(event_object.tag.comment, u'My comment')
-
-    message, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        formatter_mediator, event_object)
-    self.assertEqual(message[0:10], u'This is a ')
-
-    event_object = tagged_events[1]
-    self.assertEqual(event_object.tag.labels[0], u'Malware')
-    message, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        formatter_mediator, event_object)
-    self.assertEqual(message[0:14], u'[HKCU\\Windows\\')
-
-    event_object = tagged_events[2]
-    self.assertEqual(event_object.tag.comment, u'This is interesting')
-    self.assertEqual(event_object.tag.labels[0], u'Malware')
-    self.assertEqual(event_object.tag.labels[1], u'Benign')
-
-    self.assertEqual(event_object.parser, u'UNKNOWN')
-
-    # Test the newly added fourth tag, which should include data from
-    # the first version as well.
-    event_object = tagged_events[3]
-    self.assertEqual(event_object.tag.labels[0], u'Interesting')
-    self.assertEqual(event_object.tag.labels[1], u'Malware')
-
   def testHasReports(self):
     """Tests the HasReports function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -560,7 +631,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       self._CreateTestStorageFileWithTags(temp_file)
 
       storage_file = zip_file.StorageFile(temp_file, read_only=True)
@@ -572,7 +643,7 @@ class StorageFileTest(test_lib.StorageTestCase):
   def testSetEnableProfiling(self):
     """Tests the SetEnableProfiling function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
       storage_file.SetEnableProfiling(True)
@@ -589,7 +660,7 @@ class StorageFileTest(test_lib.StorageTestCase):
         plugin_name=u'test', text=u'test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
       storage_file.StoreReport(analysis_report)
@@ -602,7 +673,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
       for event_object in event_objects:
@@ -618,7 +689,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     preprocessing_object = event.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
       storage_file.WritePreprocessObject(preprocessing_object)
@@ -721,7 +792,7 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
     preprocessing_object = event.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
           test_queue, temp_file, preprocessing_object)
       storage_writer.WriteEventObjects()

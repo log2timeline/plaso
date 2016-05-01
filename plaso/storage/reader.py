@@ -23,5 +23,13 @@ class StorageReader(object):
       time_range: an optional time range object (instance of TimeRange).
 
     Yields:
-      An event object (instance of EventObject).
+      Event objects (instance of EventObject).
+    """
+
+  @abc.abstractmethod
+  def GetEventSources(self):
+    """Retrieves event sources.
+
+    Yields:
+      Event source objects (instance of EventSourceObject).
     """

@@ -9,6 +9,7 @@ import time
 
 from dfvfs.resolver import context
 
+from plaso.containers import event_sources
 from plaso.engine import collector
 from plaso.engine import engine
 from plaso.engine import plaso_queue
@@ -18,10 +19,10 @@ from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
-class SingleProcessCollector(collector.CollectorQueueProducer):
+class SingleProcessCollectorQueueProducer(plaso_queue.ItemQueueProducer):
   """Class that implements a single process collector object."""
 
-  def __init__(self, path_spec_queue, resolver_context=None):
+  def __init__(self, path_spec_queue):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -33,11 +34,12 @@ class SingleProcessCollector(collector.CollectorQueueProducer):
                        This queue contains the path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
     """
-    super(SingleProcessCollector, self).__init__(
-        path_spec_queue, resolver_context=resolver_context)
+    super(SingleProcessCollectorQueueProducer, self).__init__(path_spec_queue)
     self._extraction_worker = None
+
+    # Attributes that contain the current status of the collector.
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
@@ -49,6 +51,29 @@ class SingleProcessCollector(collector.CollectorQueueProducer):
     """Updates the processing status."""
     # Set the collector status to waiting while emptying the queue.
     self._status = definitions.PROCESSING_STATUS_WAITING
+
+  def Collect(self):
+    """Collects file entry path specifications."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    for path_spec in self._collector.CollectPathSpecs(
+        source_path_spec, find_specs=self._filter_find_specs):
+      if self._abort:
+        break
+
+      self.ProduceItem(path_spec)
+
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+  def GetStatus(self):
+    """Returns a dictionary containing the status."""
+    return {
+        u'processing_status': self._status,
+        u'produced_number_of_path_specs': self._number_of_produced_items,
+        u'path_spec_queue_port': getattr(self._queue, u'port', None),
+        u'type': definitions.PROCESS_TYPE_COLLECTOR}
 
   def SetExtractionWorker(self, extraction_worker):
     """Sets the extraction worker.
@@ -92,35 +117,6 @@ class SingleProcessEngine(engine.BaseEngine):
         parse_error_queue)
     self._status_update_callback = None
     self._storage_writer = None
-
-  def _CreateCollector(
-      self, filter_find_specs=None, include_directory_stat=True,
-      resolver_context=None):
-    """Creates a collector object.
-
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
-
-    Args:
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-      include_directory_stat: optional boolean value to indicate whether
-                              directory stat information should be collected.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-
-    Returns:
-      A collector object (instance of Collector).
-    """
-    collector_object = SingleProcessCollector(
-        self._path_spec_queue, resolver_context=resolver_context)
-
-    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
-
-    if filter_find_specs:
-      collector_object.SetFilter(filter_find_specs)
-
-    return collector_object
 
   def _CreateExtractionWorker(
       self, worker_number, filter_object=None, mount_path=None,
@@ -268,6 +264,42 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._last_status_update_timestamp = current_timestamp
 
+  def _ProcessSourcesCollectEventSources(
+      self, source_path_specs, storage_writer, filter_find_specs=None,
+      include_directory_stat=True, resolver_context=None):
+    """Processes the sources and extract event sources.
+
+    Args:
+      source_path_specs: a list of path specifications (instances of
+                         dfvfs.PathSpec) of the sources to process.
+      storage_writer: a storage writer object (instance of BaseStorageWriter).
+      filter_find_specs: optional list of filter find specifications (instances
+                         of dfvfs.FindSpec).
+      include_directory_stat: optional boolean value to indicate whether
+                              directory stat information should be collected.
+      resolver_context: optional resolver context (instance of dfvfs.Context).
+    """
+    collector_object = collector.Collector(resolver_context=resolver_context)
+
+    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
+
+    if filter_find_specs:
+      collector_object.SetFilter(filter_find_specs)
+
+    storage_writer.Open()
+
+    try:
+      for source_path_spec in source_path_specs:
+        for path_spec in collector_object.CollectPathSpecs(source_path_spec):
+          # TODO: determine if event sources should be DataStream or FileEntry
+          # or both.
+          event_source = event_sources.FileEntryEventSource(
+              path_spec=path_spec)
+          storage_writer.AddEventSource(event_source)
+
+    finally:
+      storage_writer.Close()
+
   def ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, include_directory_stat=True,
@@ -277,8 +309,8 @@ class SingleProcessEngine(engine.BaseEngine):
     """Processes the sources and extract event objects.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
+      source_path_specs: a list of path specifications (instances of
+                         dfvfs.PathSpec) of the sources to process.
       storage_writer: a storage writer object (instance of BaseStorageWriter).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
@@ -301,10 +333,15 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       The processing status (instance of ProcessingStatus).
     """
-    self._collector = self._CreateCollector(
+    # TODO: pass callback.
+    self._ProcessSourcesCollectEventSources(
+        source_path_specs, storage_writer,
         filter_find_specs=filter_find_specs,
         include_directory_stat=include_directory_stat,
         resolver_context=resolver_context)
+
+    self._collector = SingleProcessCollectorQueueProducer(
+        self._path_spec_queue)
 
     self._extraction_worker = self._CreateExtractionWorker(
         0, filter_object=filter_object, mount_path=mount_path,
@@ -332,9 +369,11 @@ class SingleProcessEngine(engine.BaseEngine):
     logging.debug(u'Processing started.')
 
     self._UpdateStatus()
+    # TODO: refactor collector to read from storage file.
     self._collector.Collect(source_path_specs)
 
     self._UpdateStatus()
+    # TODO: split hashing and extraction phases.
     self._extraction_worker.Run()
 
     self._UpdateStatus()
