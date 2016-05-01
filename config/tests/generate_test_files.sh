@@ -72,7 +72,7 @@ cp -rf ${SOURCE_DIRECTORY}/* .;
 TEST_FILE="psort_test.json.plaso";
 
 PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet ${TEST_FILE} test_data/syslog;
-PYTHONPATH=. ./tools/log2timeline.py --quiet -timezone=Iceland ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland ${TEST_FILE} test_data/syslog;
 
 cat > tagging.txt <<EOI
 repeated
