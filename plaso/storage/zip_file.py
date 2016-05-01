@@ -2,64 +2,86 @@
 """The ZIP-based storage.
 
 The ZIP-based storage can be described as a collection of storage files
-(or streams) bundled in a single ZIP archive file.
+(named streams) bundled in a single ZIP archive file.
 
-There are multiple types of storage files:
+There are multiple types of streams:
 * metadata.txt
-  File that contains the storage metadata.
-* plaso_proto.#
-  These files contain the serialized event objects. These files are referred
-  to as "proto files" because of historical reasons. The event objects stored
-  inside a "proto file" are ordered ascending based on their timestamp.
-* plaso_index.#
-  These files contain an index of the data offsets of the serialized event
-  objects stored in the "proto files". These files are referred to as
-  "index files".
-* plaso_timestamps.#
-  These files contain an index of the timestamps of the serialized event
-  objects stored in the "proto files".
-* serializer.txt
-  File that contains the serializer format. This is now deprecated and
-  has been replaced by the storage metadata.
+  Stream that contains the storage metadata.
+* event_data.#
+  The event data streams contain the serialized event objects.
+* event_tag_data.#
+  The event tag data streams contain the serialized event tag objects.
+* event_index.#
+  The event index streams contain the stream offset to the serialized
+  event objects.
+* event_tag_index.#
+  The event tag index streams contain the stream offset to the serialized
+  event tag objects.
+* event_timestamps.#
+  The event timestamps streams contain the timestamp of the serialized
+  event objects.
+* information.dump
 
-The # in the filenames is referred to as the "store number".
+The # in a stream name is referred to as the "store number". Streams with
+the same prefix e.g. "event_" and "store number" are related.
 
-+ The index file
++ The event data streams
 
-+ plaso_index
+The event data streams contain the serialized event objects. The serialized
+events are stored in ascending timestamp order within an individual event data
+stream. Note that the event data streams themselves are not ordered.
 
-The index file contains an index to all the entries stored within
-the "protobuf" file, so that it can be easily seeked. The layout is:
+The event data steams were previously referred to as "proto files" because
+historically the event data was serialized as protobufs.
 
-+-----+-----+-...+
-| int | int | ...|
-+-----+-----+-...+
-
-Where int is an unsigned integer '<I' that represents the byte offset
-into the .proto file where the beginning of the size variable lies.
-
-This can be used to seek the proto file directly to read a particular
-entry within the proto file.
-
-  + plaso_timestamps
-
-This is a simple file that contains all the timestamp values of the entries
-within the proto file. Each entry is a a long int ('<q') that contains the value
-of the EventObject of that timestamps index into the file.
-
-The structure is:
-+-----------+-----------+-...-+
-| timestamp | timestamp | ... |
-+-----------+-----------+-...-+
-
-+ The proto file
-
-A proto file consists of:
+An event data stream consists of:
 +------+-----------------+------+-...-+
 | size | serialized data | size | ... |
 +------+-----------------+------+-...-+
 
-Historically the data was serialized using protobuf.
+Where size is a 32-bit integer.
+
++ The event index stream
+
+The event index streams contain the stream offset to the serialized event
+objects stored in the corresponding event data stream.
+
+An event data stream consists of an array of 32-bit integers:
++-----+-----+-...+
+| int | int | ...|
++-----+-----+-...+
+
++ The event timestamps stream
+
+The event timestamps streams contain the timestamp of the serialized
+event objects.
+
+An event data stream consists of an array of 64-bit integers:
++-----------+-----------+-...-+
+| timestamp | timestamp | ... |
++-----------+-----------+-...-+
+
++ Version information
+
+Deprecated in version 20160501:
+* serializer.txt
+  Stream that contains the serializer format.
+
+Deprecated in version 20160502:
+* plaso_index.#
+  The event index streams contain the stream offset to the serialized
+  event objects.
+* plaso_proto.#
+  The event data streams contain the serialized event objects.
+* plaso_report.#
+* plaso_tagging.#
+  The event tag data streams contain the serialized event tag objects.
+* plaso_tag_index.#
+  The event tag index streams contain the stream offset to the serialized
+  event tag objects.
+* plaso_timestamps.#
+  The event timestamps streams contain the timestamp of the serialized
+  event objects.
 """
 
 import collections
@@ -808,13 +830,20 @@ class ZIPStorageFile(object):
 
   This class contains the lower-level stream management functionality.
 
-  The ZIP-based storagefile contains several streams (files) that contain
-  serialized event objects named:
+  The ZIP-based storage file contains several streams (files) that contain
+  serialized attribute containers. E.g. event objects:
 
-        plaso_proto.###
+        event_data.#
 
-  Where ### is an increasing integer that starts at 1.
+  Where # is an increasing integer that starts at 1.
   """
+
+  # The format version.
+  _FORMAT_VERSION = 20160502
+
+  # The earliest format version, stored in-file, that this class
+  # is able to read.
+  _COMPATIBLE_FORMAT_VERSION = 20160501
 
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 5
@@ -822,12 +851,13 @@ class ZIPStorageFile(object):
   def __init__(self):
     """Initializes a ZIP-based storage file object."""
     super(ZIPStorageFile, self).__init__()
-    self._event_object_streams = {}
-    self._offset_tables = {}
-    self._offset_tables_lfu = []
+    self._event_offset_tables = {}
+    self._event_offset_tables_lfu = []
+    self._event_streams = {}
+    self._event_timestamp_tables = {}
+    self._event_timestamp_tables_lfu = []
+    self._format_version = self._FORMAT_VERSION
     self._path = None
-    self._timestamp_tables = {}
-    self._timestamp_tables_lfu = []
     self._zipfile = None
 
   def _Close(self):
@@ -835,16 +865,16 @@ class ZIPStorageFile(object):
     if not self._zipfile:
       return
 
-    self._event_object_streams = {}
-    self._offset_tables = {}
-    self._offset_tables_lfu = []
-    self._timestamp_tables = {}
-    self._timestamp_tables_lfu = []
+    self._event_streams = {}
+    self._event_offset_tables = {}
+    self._event_offset_tables_lfu = []
+    self._event_timestamp_tables = {}
+    self._event_timestamp_tables_lfu = []
 
     self._zipfile.close()
     self._zipfile = None
 
-  def _GetSerializedEventObjectOffsetTable(self, stream_number):
+  def _GetSerializedEventOffsetTable(self, stream_number):
     """Retrieves the serialized event object stream offset table.
 
     Args:
@@ -856,30 +886,36 @@ class ZIPStorageFile(object):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    offset_table = self._offset_tables.get(stream_number, None)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_index'
+    else:
+      stream_name_prefix = u'event_index'
+
+    offset_table = self._event_offset_tables.get(stream_number, None)
     if not offset_table:
-      stream_name = u'plaso_index.{0:06d}'.format(stream_number)
+      stream_name = u'{0:s}.{1:06d}'.format(stream_name_prefix, stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
       offset_table.Read()
 
-      if len(self._offset_tables) >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
-        lfu_stream_number = self._offset_tables_lfu.pop()
-        del self._offset_tables[lfu_stream_number]
+      number_of_tables = len(self._event_offset_tables)
+      if number_of_tables >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
+        lfu_stream_number = self._event_offset_tables_lfu.pop()
+        del self._event_offset_tables[lfu_stream_number]
 
-      self._offset_tables[stream_number] = offset_table
+      self._event_offset_tables[stream_number] = offset_table
 
-    if stream_number in self._offset_tables_lfu:
-      lfu_index = self._offset_tables_lfu.index(stream_number)
-      self._offset_tables_lfu.pop(lfu_index)
+    if stream_number in self._event_offset_tables_lfu:
+      lfu_index = self._event_offset_tables_lfu.index(stream_number)
+      self._event_offset_tables_lfu.pop(lfu_index)
 
-    self._offset_tables_lfu.append(stream_number)
+    self._event_offset_tables_lfu.append(stream_number)
 
     return offset_table
 
-  def _GetSerializedEventObjectStream(self, stream_number):
+  def _GetSerializedEventStream(self, stream_number):
     """Retrieves the serialized event object stream.
 
     Args:
@@ -891,19 +927,24 @@ class ZIPStorageFile(object):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    data_stream = self._event_object_streams.get(stream_number, None)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_proto'
+    else:
+      stream_name_prefix = u'event_data'
+
+    data_stream = self._event_streams.get(stream_number, None)
     if not data_stream:
-      stream_name = u'plaso_proto.{0:06d}'.format(stream_number)
+      stream_name = u'{0:s}.{1:06d}'.format(stream_name_prefix, stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
           self._zipfile, self._path, stream_name)
-      self._event_object_streams[stream_number] = data_stream
+      self._event_streams[stream_number] = data_stream
 
     return data_stream
 
-  def _GetSerializedEventObjectTimestampTable(self, stream_number):
+  def _GetSerializedEventTimestampTable(self, stream_number):
     """Retrieves the serialized event object stream timestamp table.
 
     Args:
@@ -916,36 +957,47 @@ class ZIPStorageFile(object):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    timestamp_table = self._timestamp_tables.get(stream_number, None)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_timestamps'
+    else:
+      stream_name_prefix = u'event_timestamps'
+
+    timestamp_table = self._event_timestamp_tables.get(stream_number, None)
     if not timestamp_table:
-      stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+      stream_name = u'{0:s}.{1:06d}'.format(stream_name_prefix, stream_number)
       timestamp_table = _SerializedDataTimestampTable(
           self._zipfile, stream_name)
       timestamp_table.Read()
 
-      if len(self._timestamp_tables) >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
-        lfu_stream_number = self._timestamp_tables_lfu.pop()
-        del self._timestamp_tables[lfu_stream_number]
+      number_of_tables = len(self._event_timestamp_tables)
+      if number_of_tables >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
+        lfu_stream_number = self._event_timestamp_tables_lfu.pop()
+        del self._event_timestamp_tables[lfu_stream_number]
 
-      self._timestamp_tables[stream_number] = timestamp_table
+      self._event_timestamp_tables[stream_number] = timestamp_table
 
-    if stream_number in self._timestamp_tables_lfu:
-      lfu_index = self._timestamp_tables_lfu.index(stream_number)
-      self._timestamp_tables_lfu.pop(lfu_index)
+    if stream_number in self._event_timestamp_tables_lfu:
+      lfu_index = self._event_timestamp_tables_lfu.index(stream_number)
+      self._event_timestamp_tables_lfu.pop(lfu_index)
 
-    self._timestamp_tables_lfu.append(stream_number)
+    self._event_timestamp_tables_lfu.append(stream_number)
 
     return timestamp_table
 
-  def _GetSerializedEventObjectStreamNumbers(self):
+  def _GetSerializedEventStreamNumbers(self):
     """Retrieves the available serialized event object stream numbers.
 
     Returns:
       A sorted list of integers of the available serialized data stream numbers.
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_proto'
+    else:
+      stream_name_prefix = u'event_data'
+
     stream_numbers = []
     for stream_name in self._zipfile.namelist():
-      if not stream_name.startswith(u'plaso_proto'):
+      if not stream_name.startswith(stream_name_prefix):
         continue
 
       _, _, stream_number = stream_name.partition(u'.')
@@ -1071,13 +1123,6 @@ class StorageFile(ZIPStorageFile):
   # The maximum serialized report size to 24 MiB.
   MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
-  # The format version.
-  _FORMAT_VERSION = 20160501
-
-  # The earliest format version, stored in-file, that this class
-  # is able to read.
-  _COMPATIBLE_FORMAT_VERSION = 20160501
-
   def __init__(
       self, output_file, buffer_size=0, read_only=False,
       serializer_format=definitions.SERIALIZER_FORMAT_JSON):
@@ -1102,7 +1147,6 @@ class StorageFile(ZIPStorageFile):
     self._event_tag_index = None
     self._file_number = 1
     self._first_file_number = None
-    self._format_version = self._FORMAT_VERSION
     self._max_buffer_size = buffer_size or self.MAXIMUM_BUFFER_SIZE
     self._merge_buffer = None
     self._output_file = output_file
@@ -1139,10 +1183,15 @@ class StorageFile(ZIPStorageFile):
     Raises:
       IOError: if the stream cannot be opened.
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_tag_index.'
+    else:
+      stream_name_prefix = u'event_tag_index.'
+
     self._event_tag_index = {}
 
     for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(u'plaso_tag_index.'):
+      if not stream_name.startswith(stream_name_prefix):
         continue
 
       event_tag_index_table = _SerializedEventTagIndexTable(
@@ -1204,7 +1253,7 @@ class StorageFile(ZIPStorageFile):
       IOError: if the stream cannot be opened.
     """
     try:
-      data_stream = self._GetSerializedEventObjectStream(stream_number)
+      data_stream = self._GetSerializedEventStream(stream_number)
     except IOError as exception:
       logging.error((
           u'Unable to retrieve serialized data steam: {0:d} '
@@ -1213,7 +1262,7 @@ class StorageFile(ZIPStorageFile):
 
     if entry_index >= 0:
       try:
-        offset_table = self._GetSerializedEventObjectOffsetTable(stream_number)
+        offset_table = self._GetSerializedEventOffsetTable(stream_number)
         stream_offset = offset_table.GetOffset(entry_index)
       except (IOError, IndexError):
         logging.error((
@@ -1267,16 +1316,21 @@ class StorageFile(ZIPStorageFile):
     Args:
       time_range: an optional time range object (instance of TimeRange).
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_timestamps'
+    else:
+      stream_name_prefix = u'event_timestamps'
+
     self._merge_buffer = _EventsHeap()
 
-    number_range = self._GetSerializedEventObjectStreamNumbers()
+    number_range = self._GetSerializedEventStreamNumbers()
     for stream_number in number_range:
       entry_index = -1
       if time_range:
-        stream_name = u'plaso_timestamps.{0:06d}'.format(stream_number)
+        stream_name = u'{0:s}.{1:06d}'.format(stream_name_prefix, stream_number)
         if self._HasStream(stream_name):
           try:
-            timestamp_table = self._GetSerializedEventObjectTimestampTable(
+            timestamp_table = self._GetSerializedEventTimestampTable(
                 stream_number)
           except IOError as exception:
             logging.error((
@@ -1339,6 +1393,8 @@ class StorageFile(ZIPStorageFile):
 
       stored_serializer_format = self._ReadSerializerStream()
       if stored_serializer_format:
+        self._format_version = 20160431
+
         self._serializer_format = stored_serializer_format
 
     if self._serializer_format != definitions.SERIALIZER_FORMAT_JSON:
@@ -1357,9 +1413,14 @@ class StorageFile(ZIPStorageFile):
     logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
         self._max_buffer_size))
 
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_proto.'
+    else:
+      stream_name_prefix = u'event_data.'
+
     # Determine the the last stream number.
     for stream_name in self._GetStreamNames():
-      if stream_name.startswith(u'plaso_proto.'):
+      if stream_name.startswith(stream_name_prefix):
         _, _, file_number = stream_name.partition(u'.')
 
         try:
@@ -1380,6 +1441,29 @@ class StorageFile(ZIPStorageFile):
     """Stops the profiling."""
     if self._serializers_profiler:
       self._serializers_profiler.Write()
+
+  def _ReadAnalysisReport(self, data_stream):
+    """Reads an analysis report.
+
+    Args:
+      data_stream: the data stream object (instance of _SerializedDataStream).
+
+    Returns:
+      An analysis report (instance of AnalysisReport) or None.
+    """
+    analysis_report_data = data_stream.ReadEntry()
+    if not analysis_report_data:
+      return
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'analysis_report')
+
+    analysis_report = self._serializer.ReadSerialized(analysis_report_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'analysis_report')
+
+    return analysis_report
 
   def _ReadEventTag(self, data_stream):
     """Reads an event tag.
@@ -1413,7 +1497,7 @@ class StorageFile(ZIPStorageFile):
       uuid: the UUID string.
 
     Returns:
-      The event tag (instance of EventTag).
+      The event tag (instance of EventTag) or None.
 
     Raises:
       IOError: if the event tag data stream cannot be opened.
@@ -1423,7 +1507,13 @@ class StorageFile(ZIPStorageFile):
     if tag_index_value is None:
       return
 
-    stream_name = u'plaso_tagging.{0:06d}'.format(tag_index_value.store_number)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_tagging'
+    else:
+      stream_name_prefix = u'event_tag_data'
+
+    stream_name = u'{0:s}.{1:06d}'.format(
+        stream_name_prefix, tag_index_value.store_number)
     if not self._HasStream(stream_name):
       raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
@@ -1462,6 +1552,9 @@ class StorageFile(ZIPStorageFile):
 
   def _ReadSerializerStream(self):
     """Reads the serializer stream.
+
+    Note that the serializer stream has been deprecated in format version
+    20160501 in favor of the the store metadata stream.
 
     Returns:
       The stored serializer format.
@@ -1527,16 +1620,16 @@ class StorageFile(ZIPStorageFile):
     if not self._buffer.data_size:
       return
 
-    stream_name = u'plaso_index.{0:06d}'.format(self._file_number)
+    stream_name = u'event_index.{0:06d}'.format(self._file_number)
     offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
 
-    stream_name = u'plaso_timestamps.{0:06d}'.format(self._file_number)
+    stream_name = u'event_timestamps.{0:06d}'.format(self._file_number)
     timestamp_table = _SerializedDataTimestampTable(self._zipfile, stream_name)
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'write')
 
-    stream_name = u'plaso_proto.{0:06d}'.format(self._file_number)
+    stream_name = u'event_data.{0:06d}'.format(self._file_number)
     data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
     try:
@@ -1646,16 +1739,34 @@ class StorageFile(ZIPStorageFile):
     Raises:
       IOError: if the stream cannot be opened.
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_report.'
+    else:
+      stream_name_prefix = u'analysis_report_data.'
+
     for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(u'plaso_report.'):
+      if not stream_name.startswith(stream_name_prefix):
         continue
 
-      file_object = self._OpenStream(stream_name)
-      if file_object is None:
-        raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-      report_string = file_object.read(self.MAXIMUM_SERIALIZED_REPORT_SIZE)
-      yield self._serializer.ReadSerialized(report_string)
+      if self._format_version <= 20160501:
+        file_object = self._OpenStream(stream_name)
+        if file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+        report_string = file_object.read(self.MAXIMUM_SERIALIZED_REPORT_SIZE)
+        yield self._serializer.ReadSerialized(report_string)
+
+      else:
+        data_stream = _SerializedDataStream(
+            self._zipfile, self._path, stream_name)
+
+        analysis_report = self._ReadAnalysisReport(data_stream)
+        while analysis_report:
+          yield analysis_report
+          analysis_report = self._ReadAnalysisReport(data_stream)
 
   def GetSortedEntry(self, time_range=None):
     """Retrieves a sorted entry.
@@ -1728,8 +1839,13 @@ class StorageFile(ZIPStorageFile):
     Raises:
       IOError: if the stream cannot be opened.
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_tagging.'
+    else:
+      stream_name_prefix = u'event_tag_data.'
+
     for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(u'plaso_tagging.'):
+      if not stream_name.startswith(stream_name_prefix):
         continue
 
       if not self._HasStream(stream_name):
@@ -1749,9 +1865,15 @@ class StorageFile(ZIPStorageFile):
     Returns:
       A boolean value indicating if the storage file contains reports.
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_report.'
+    else:
+      stream_name_prefix = u'analysis_report_data.'
+
     for name in self._GetStreamNames():
-      if name.startswith(u'plaso_report'):
+      if name.startswith(stream_name_prefix):
         return True
+
     return False
 
   def HasTagging(self):
@@ -1760,9 +1882,15 @@ class StorageFile(ZIPStorageFile):
     Returns:
       A boolean value indicating if the storage file contains event tags.
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_tagging.'
+    else:
+      stream_name_prefix = u'event_tag_data.'
+
     for name in self._GetStreamNames():
-      if name.startswith(u'plaso_tagging.'):
+      if name.startswith(stream_name_prefix):
         return True
+
     return False
 
   def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
@@ -1786,9 +1914,15 @@ class StorageFile(ZIPStorageFile):
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
     """
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_report.'
+    else:
+      stream_name_prefix = u'analysis_report_data.'
+
     report_number = 1
     for name in self._GetStreamNames():
-      if name.startswith(u'plaso_report.'):
+      if name.startswith(stream_name_prefix):
+
         _, _, number_string = name.partition(u'.')
         try:
           number = int(number_string, 10)
@@ -1798,7 +1932,12 @@ class StorageFile(ZIPStorageFile):
         if number >= report_number:
           report_number = number + 1
 
-    stream_name = u'plaso_report.{0:06}'.format(report_number)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_report'
+    else:
+      stream_name_prefix = u'analysis_report_data'
+
+    stream_name = u'{0:s}.{1:06}'.format(stream_name_prefix, report_number)
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'analysis_report')
@@ -1808,7 +1947,14 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'analysis_report')
 
-    self._WriteStream(stream_name, serialized_report)
+    if self._format_version <= 20160501:
+      self._WriteStream(stream_name, serialized_report)
+    else:
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._path, stream_name)
+      data_stream.WriteInitialize()
+      data_stream.WriteEntry(serialized_report)
+      data_stream.WriteFinalize()
 
   def StoreTagging(self, tags):
     """Store tag information into the storage file.
@@ -1828,7 +1974,12 @@ class StorageFile(ZIPStorageFile):
     """
     tag_number = 1
     for name in self._GetStreamNames():
-      if not name.startswith(u'plaso_tagging.'):
+      if self._format_version <= 20160501:
+        stream_name_prefix = u'plaso_tagging.'
+      else:
+        stream_name_prefix = u'event_tag_data.'
+
+      if not name.startswith(stream_name_prefix):
         continue
 
       _, _, number_string = name.partition(u'.')
@@ -1852,8 +2003,13 @@ class StorageFile(ZIPStorageFile):
       # This particular event has already been tagged on a previous occasion,
       # we need to make sure we are appending to that particular tag.
       if tag_index_value is not None:
-        stream_name = u'plaso_tagging.{0:06d}'.format(
-            tag_index_value.store_number)
+        if self._format_version <= 20160501:
+          stream_name_prefix = u'plaso_tagging'
+        else:
+          stream_name_prefix = u'event_tag_data'
+
+        stream_name = u'{0:s}.{1:06d}'.format(
+            stream_name_prefix, tag_index_value.store_number)
 
         if not self._HasStream(stream_name):
           raise IOError(u'No such stream: {0:s}'.format(stream_name))
@@ -1885,11 +2041,21 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'write')
 
-    stream_name = u'plaso_tag_index.{0:06d}'.format(tag_number)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_tag_index'
+    else:
+      stream_name_prefix = u'event_tag_index'
+
+    stream_name = u'{0:s}.{1:06d}'.format(stream_name_prefix, tag_number)
     event_tag_index_table = _SerializedEventTagIndexTable(
         self._zipfile, stream_name)
 
-    stream_name = u'plaso_tagging.{0:06d}'.format(tag_number)
+    if self._format_version <= 20160501:
+      stream_name_prefix = u'plaso_tagging'
+    else:
+      stream_name_prefix = u'event_tag_data'
+
+    stream_name = u'{0:s}.{1:06d}'.format(stream_name_prefix, tag_number)
     data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
