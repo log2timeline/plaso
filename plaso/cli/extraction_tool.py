@@ -56,7 +56,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
-    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_PROTOBUF
+    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._text_prepend = None
 
     self.list_hashers = False
@@ -154,7 +154,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the options are invalid.
     """
     serializer_format = getattr(
-        options, u'serializer_format', definitions.SERIALIZER_FORMAT_PROTOBUF)
+        options, u'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
     if serializer_format not in definitions.SERIALIZER_FORMATS:
       raise errors.BadConfigOption(
           u'Unsupported storage serializer format: {0:s}.'.format(

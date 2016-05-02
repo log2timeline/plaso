@@ -118,7 +118,7 @@ class PsortToolTest(test_lib.ToolTestCase):
   def testProcessStorageWithMissingParameters(self):
     """Test the ProcessStorage function with half-configured output module."""
     options = cli_test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     options.output_format = u'test_missing'
 
     output_manager.OutputManager.RegisterOutput(
@@ -142,7 +142,8 @@ class PsortToolTest(test_lib.ToolTestCase):
     self.assertEqual(TestOutputModuleMissingParameters.missing, u'foobar')
     self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
 
-    self.assertIn(u'FILE/UNKNOWN ctime OS:syslog', lines)
+    expected_line = u'FILE/OS ctime OS:/tmp/test/test_data/syslog Type: file'
+    self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(
         TestOutputModuleMissingParameters)
