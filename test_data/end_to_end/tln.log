@@ -9,8 +9,8 @@ Time|Source|Host|User|Description
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
+1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1461998510|FILE|-|-|2016-04-30T06:41:50+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1482083672|LOG|myhostname.myhost.com|-|2016-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] : No true exit can exist (124 job run)
 1490310078|LOG|myhostname.myhost.com|-|2017-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 1915] : This syslog message is brought to you by me (and not the other guy)

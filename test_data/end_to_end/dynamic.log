@@ -6,11 +6,11 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2016-01-22T07:54:01+00:00,Content Modification Time,LOG,Log File,[CRON  pid: 31067] : (root) CMD (/sbin/status.mycheck)),syslog,OS:/tmp/test/test_data/syslog,-
 2016-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job `cron.daily' terminated,syslog,OS:/tmp/test/test_data/syslog,-
 2016-02-29T01:15:43+00:00,Content Modification Time,LOG,Log File,[]  testing leap year in parsing  events take place in 2012 ---,syslog,OS:/tmp/test/test_data/syslog,-
+2016-04-30T06:41:49+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-04-30T06:41:49+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-04-30T06:41:49+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-04-30T06:41:49+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-04-30T06:41:49+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2016-04-30T06:41:49+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-04-30T06:41:50+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] : No true exit can exist (124 job run),syslog,OS:/tmp/test/test_data/syslog,-
 2017-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] : This syslog message is brought to you by me (and not the other guy),syslog,OS:/tmp/test/test_data/syslog,-
