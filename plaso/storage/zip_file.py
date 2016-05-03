@@ -82,7 +82,6 @@ class _EventsHeap(object):
     """Initializes an event objects heap."""
     super(_EventsHeap, self).__init__()
     self._heap = []
-    self.p = 0
 
   @property
   def number_of_events(self):
@@ -115,7 +114,6 @@ class _EventsHeap(object):
     heap_values = (
         event_object.timestamp, stream_number, entry_index, event_object)
     heapq.heappush(self._heap, heap_values)
-    self.p += 1
 
 
 class _SerializedEventsHeap(object):
