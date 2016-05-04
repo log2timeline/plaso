@@ -116,6 +116,14 @@ plaso.formatters.chrome_preferences module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.cron module
+----------------------------
+
+.. automodule:: plaso.formatters.cron
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.cups_ipp module
 --------------------------------
 
@@ -496,6 +504,14 @@ plaso.formatters.skype module
 -----------------------------
 
 .. automodule:: plaso.formatters.skype
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.ssh module
+---------------------------
+
+.. automodule:: plaso.formatters.ssh
     :members:
     :undoc-members:
     :show-inheritance:

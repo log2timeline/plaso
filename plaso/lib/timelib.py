@@ -843,3 +843,23 @@ def GetCurrentYear():
   """Determines the current year."""
   datetime_object = datetime.datetime.now()
   return datetime_object.year
+
+
+def GetYearFromPosixTime(posix_time, timezone=pytz.UTC):
+  """Gets the year from a POSIX timestamp
+
+  The POSIX time is the number of seconds since 1970-01-01 00:00:00 UTC.
+
+  Args:
+    posix_time: An integer containing the number of seconds since
+                1970-01-01 00:00:00 UTC.
+    timezone: Optional timezone of the POSIX timestamp.
+
+  Returns:
+    The year of the POSIX timestamp.
+
+  Raises:
+    ValueError: If the posix timestamp is out of the range of supported values.
+  """
+  datetime_object = datetime.datetime.fromtimestamp(posix_time, tz=timezone)
+  return datetime_object.year
