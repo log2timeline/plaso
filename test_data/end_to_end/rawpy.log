@@ -6,20 +6,20 @@
   
 
 [Reserved attributes]:
-  {body} : INFO No new content.
+  {body} : INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 0
+  {offset} 74
   {parser} syslog
-  {store_index} 1
+  {store_index} 0
   {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 08c23edfacf44949ab17696f6358a6ee
+  {uuid} 30488c01f6a24ee5ba555a997b5982c0
 
 [Additional attributes]:
   {iday} 22
@@ -37,20 +37,20 @@
   
 
 [Reserved attributes]:
-  {body} : INFO No change in [/etc/netgroup]. Done
+  {body} : INFO No new content.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 74
+  {offset} 0
   {parser} syslog
-  {store_index} 0
+  {store_index} 1
   {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 30488c01f6a24ee5ba555a997b5982c0
+  {uuid} 08c23edfacf44949ab17696f6358a6ee
 
 [Additional attributes]:
   {iday} 22
@@ -302,12 +302,12 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 7
-  {store_number} 2
+  {store_index} 8
+  {store_number} 1
   {timestamp} 1461998509000000
   {timestamp_desc} mtime
   {username} -
-  {uuid} 3f0f91c17c7949e19fbcf4b40f22173b
+  {uuid} 58b49d978e4145f6a83cc8a0ee30ddc5
 
 [Additional attributes]:
   {file_entry_type} 3
@@ -328,12 +328,12 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 8
-  {store_number} 1
+  {store_index} 7
+  {store_number} 2
   {timestamp} 1461998509000000
   {timestamp_desc} mtime
   {username} -
-  {uuid} 58b49d978e4145f6a83cc8a0ee30ddc5
+  {uuid} 3f0f91c17c7949e19fbcf4b40f22173b
 
 [Additional attributes]:
   {file_entry_type} 3

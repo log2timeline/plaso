@@ -28,7 +28,7 @@ class _EventsHeap(object):
       An event object (instance of EventObject).
     """
     try:
-      _, _, event_object = heapq.heappop(self._heap)
+      _, _, _, _, event_object = heapq.heappop(self._heap)
       return event_object
 
     except IndexError:
@@ -40,8 +40,12 @@ class _EventsHeap(object):
     Args:
       event_object: an event object (instance of EventObject).
     """
+    # TODO: remove store number and store index once no longer exposed.
+    # Replace them by event object specific attributes relevant to sorting.
     heap_values = (
-        event_object.timestamp, event_object.timestamp_desc, event_object)
+        event_object.timestamp, event_object.timestamp_desc,
+        event_object.store_number, event_object.store_index,
+        event_object)
     heapq.heappush(self._heap, heap_values)
 
   def PushEvents(self, event_objects):

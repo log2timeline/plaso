@@ -1,6 +1,6 @@
 Time|Source|Host|User|Description|TZ|Notes
-1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] : INFO No new content.|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] : INFO No change in [/etc/netgroup]. Done|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
+1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] : INFO No new content.|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1453449181|LOG|myhostname.myhost.com|-|2016-01-22T07:53:01+00:00; Content Modification Time; [CRON, pid: 31051] : (root) CMD (touch /var/run/crond.somecheck)|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1453449241|LOG|myhostname.myhost.com|-|2016-01-22T07:54:01+00:00; Content Modification Time; [CRON, pid: 31067] : (root) CMD (/sbin/status.mycheck))|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1453449241|LOG|myhostname.myhost.com|-|2016-01-22T07:54:01+00:00; Content Modification Time; [CRON, pid: 31068] : (root) CMD (touch /var/run/crond.somecheck)|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
