@@ -71,14 +71,24 @@ cp -rf ${SOURCE_DIRECTORY}/* .;
 
 TEST_FILE="psort_test.json.plaso";
 
-PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 ${TEST_FILE} test_data/syslog;
-PYTHONPATH=. ./tools/log2timeline.py -z Iceland ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland ${TEST_FILE} test_data/syslog;
+
+cat > tagging.txt <<EOI
+repeated
+  body contains 'last message repeated'
+EOI
+
+PYTHONPATH=. ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
+
+# Run tagging twice.
+PYTHONPATH=. ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
 TEST_FILE="pinfo_test.json.plaso";
 
-PYTHONPATH=. ./tools/log2timeline.py --partition=all ${TEST_FILE} test_data/tsk_volume_system.raw;
+PYTHONPATH=. ./tools/log2timeline.py --partition=all --quiet ${TEST_FILE} test_data/tsk_volume_system.raw;
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
