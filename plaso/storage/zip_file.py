@@ -61,7 +61,6 @@ import collections
 import heapq
 import logging
 import os
-import sys
 import warnings
 import zipfile
 
@@ -74,6 +73,101 @@ from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
 from plaso.storage import reader
 from plaso.storage import writer
+
+
+class _EventsHeap(object):
+  """Class that defines the event objects heap."""
+
+  def __init__(self):
+    """Initializes an event objects heap."""
+    super(_EventsHeap, self).__init__()
+    self._heap = []
+
+  @property
+  def number_of_events(self):
+    """The number of serialized event objects on the heap."""
+    return len(self._heap)
+
+  def PopEvent(self):
+    """Pops an event object from the heap.
+
+    Returns:
+      A tuple containing an event object (instance of EventObject),
+      an integer containing the number of the stream.
+      If the heap is empty the values in the tuple will be None.
+    """
+    try:
+      _, stream_number, _, event_object = heapq.heappop(self._heap)
+      return event_object, stream_number
+
+    except IndexError:
+      return None, None
+
+  def PushEvent(self, event_object, stream_number, entry_index):
+    """Pushes an event object onto the heap.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+      stream_number: an integer containing the number of the stream.
+      entry_index: an integer containing the serialized data stream entry index.
+    """
+    heap_values = (
+        event_object.timestamp, stream_number, entry_index, event_object)
+    heapq.heappush(self._heap, heap_values)
+
+
+class _SerializedEventsHeap(object):
+  """Class that defines the serialized event objects heap.
+
+  Attributes:
+    data_size: an integer containing the total data size of the serialized
+               event objects on the heap.
+  """
+
+  def __init__(self):
+    """Initializes a serialized event objects heap."""
+    super(_SerializedEventsHeap, self).__init__()
+    self._heap = []
+    self.data_size = 0
+
+  @property
+  def number_of_events(self):
+    """The number of serialized event objects on the heap."""
+    return len(self._heap)
+
+  def Empty(self):
+    """Empties the heap."""
+    self._heap = []
+    self.data_size = 0
+
+  def PopEvent(self):
+    """Pops an event object from the heap.
+
+    Returns:
+      A tuple containing an integer containing the event timestamp and
+      a binary string containing the serialized event object data.
+      If the heap is empty the values in the tuple will be None.
+    """
+    try:
+      timestamp, event_object_data = heapq.heappop(self._heap)
+
+      self.data_size -= len(event_object_data)
+      return timestamp, event_object_data
+
+    except IndexError:
+      return None, None
+
+  def PushEvent(self, timestamp, event_object_data):
+    """Pushes a serialized event object onto the heap.
+
+    Args:
+      timestamp: an integer containing the event timestamp.
+      event_object_data: binary string containing the serialized
+                         event object data.
+    """
+    heap_values = (timestamp, event_object_data)
+    heapq.heappush(self._heap, heap_values)
+    self.data_size += len(event_object_data)
 
 
 class _EventTagIndexValue(object):
@@ -928,10 +1022,7 @@ class StorageFile(ZIPStorageFile):
     """
     super(StorageFile, self).__init__()
     self._analysis_report_serializer = None
-    self._buffer = []
-    self._buffer_first_timestamp = sys.maxint
-    self._buffer_last_timestamp = -sys.maxint - 1
-    self._buffer_size = 0
+    self._buffer = _SerializedEventsHeap()
     self._event_object_serializer = None
     self._event_tag_index = None
     self._event_tag_serializer = None
@@ -939,7 +1030,6 @@ class StorageFile(ZIPStorageFile):
     self._first_file_number = None
     self._max_buffer_size = buffer_size or self.MAXIMUM_BUFFER_SIZE
     self._merge_buffer = None
-    self._number_of_events_in_buffer = 0
     self._output_file = output_file
     self._preprocess_object_serializer = None
     self._read_only = read_only
@@ -1104,7 +1194,7 @@ class StorageFile(ZIPStorageFile):
     Args:
       time_range: an optional time range object (instance of TimeRange).
     """
-    self._merge_buffer = []
+    self._merge_buffer = _EventsHeap()
 
     number_range = self._GetSerializedEventObjectStreamNumbers()
     for stream_number in number_range:
@@ -1140,13 +1230,20 @@ class StorageFile(ZIPStorageFile):
         event_object = self._GetEventObject(stream_number)
 
       if event_object:
-        if (time_range and
-            event_object.timestamp > time_range.end_timestamp):
+        if time_range and event_object.timestamp > time_range.end_timestamp:
           continue
 
-        heapq.heappush(
-            self._merge_buffer,
-            (event_object.timestamp, stream_number, event_object))
+        self._merge_buffer.PushEvent(
+            event_object, stream_number, event_object.store_number)
+
+        reference_timestamp = event_object.timestamp
+        while event_object.timestamp == reference_timestamp:
+          event_object = self._GetEventObject(stream_number)
+          if not event_object:
+            break
+
+          self._merge_buffer.PushEvent(
+              event_object, stream_number, event_object.store_number)
 
   # pylint: disable=arguments-differ
   def _Open(
@@ -1320,7 +1417,7 @@ class StorageFile(ZIPStorageFile):
 
   def _WriteBuffer(self):
     """Writes the buffered event objects to the storage file."""
-    if not self._buffer_size:
+    if not self._buffer.data_size:
       return
 
     stream_name = u'plaso_index.{0:06d}'.format(self._file_number)
@@ -1336,8 +1433,8 @@ class StorageFile(ZIPStorageFile):
     data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
     try:
-      for _ in range(len(self._buffer)):
-        timestamp, entry_data = heapq.heappop(self._buffer)
+      for _ in range(0, self._buffer.number_of_events):
+        timestamp, entry_data = self._buffer.PopEvent()
 
         timestamp_table.AddTimestamp(timestamp)
         offset_table.AddOffset(entry_data_offset)
@@ -1360,10 +1457,7 @@ class StorageFile(ZIPStorageFile):
       self._serializers_profiler.StopTiming(u'write')
 
     self._file_number += 1
-    self._buffer_size = 0
-    self._buffer = []
-    self._buffer_first_timestamp = sys.maxint
-    self._buffer_last_timestamp = -sys.maxint - 1
+    self._buffer.Empty()
 
   def AddEventObject(self, event_object):
     """Adds an event object to the storage.
@@ -1400,20 +1494,9 @@ class StorageFile(ZIPStorageFile):
       if self._serializers_profiler:
         self._serializers_profiler.StopTiming(u'event_object')
 
-    if event_object.timestamp > self._buffer_last_timestamp:
-      self._buffer_last_timestamp = event_object.timestamp
+    self._buffer.PushEvent(event_object.timestamp, event_object_data)
 
-    # TODO: support negative timestamps.
-    if (event_object.timestamp < self._buffer_first_timestamp and
-        event_object.timestamp > 0):
-      self._buffer_first_timestamp = event_object.timestamp
-
-    heapq.heappush(
-        self._buffer, (event_object.timestamp, event_object_data))
-    self._buffer_size += len(event_object_data)
-    self._number_of_events_in_buffer += 1
-
-    if self._buffer_size > self._max_buffer_size:
+    if self._buffer.data_size > self._max_buffer_size:
       self._WriteBuffer()
 
   def Close(self):
@@ -1422,11 +1505,13 @@ class StorageFile(ZIPStorageFile):
       return
 
     if not self._read_only:
+      number_of_events = self._buffer.number_of_events
+
       self._WriteBuffer()
 
       logging.debug((
           u'[Storage] Closing the storage, number of events added: '
-          u'{0:d}').format(self._number_of_events_in_buffer))
+          u'{0:d}').format(number_of_events))
 
     self._Close()
 
@@ -1461,13 +1546,12 @@ class StorageFile(ZIPStorageFile):
     Returns:
       An event object (instance of EventObject).
     """
-    if self._merge_buffer is None:
-      self._InitializeMergeBuffer(time_range=time_range)
-
     if not self._merge_buffer:
-      return
+      self._InitializeMergeBuffer(time_range=time_range)
+      if not self._merge_buffer:
+        return
 
-    _, stream_number, event_object = heapq.heappop(self._merge_buffer)
+    event_object, stream_number = self._merge_buffer.PopEvent()
     if not event_object:
       return
 
@@ -1475,12 +1559,19 @@ class StorageFile(ZIPStorageFile):
     if time_range and event_object.timestamp > time_range.end_timestamp:
       return
 
-    # Read the next event object in a stream.
     next_event_object = self._GetEventObject(stream_number)
     if next_event_object:
-      heapq.heappush(
-          self._merge_buffer,
-          (next_event_object.timestamp, stream_number, next_event_object))
+      self._merge_buffer.PushEvent(
+          next_event_object, stream_number, event_object.store_index)
+
+      reference_timestamp = next_event_object.timestamp
+      while next_event_object.timestamp == reference_timestamp:
+        next_event_object = self._GetEventObject(stream_number)
+        if not next_event_object:
+          break
+
+        self._merge_buffer.PushEvent(
+            next_event_object, stream_number, event_object.store_index)
 
     event_object.tag = self._ReadEventTagByIdentifier(
         event_object.store_number, event_object.store_index, event_object.uuid)

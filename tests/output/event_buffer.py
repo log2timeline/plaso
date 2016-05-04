@@ -48,7 +48,7 @@ class EventBufferTest(test_lib.OutputModuleTestCase):
     if not event_buffer_object.check_dedups:
       expected_length = 0
 
-    self.assertEqual(len(event_buffer_object._buffer_dict), expected_length)
+    self.assertEqual(len(event_buffer_object._events_per_key), expected_length)
 
   def testFlush(self):
     """Tests the Flush function."""
