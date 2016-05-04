@@ -14,9 +14,11 @@ class SyslogLineEvent(text_events.TextEvent):
   """Convenience class for a syslog line event."""
   DATA_TYPE = u'syslog:line'
 
+
 class SyslogCommentEvent(text_events.TextEvent):
   """Convenience class for a syslog comment."""
   DATA_TYPE = u'syslog:comment'
+
 
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
@@ -76,24 +78,24 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Optional(pyparsing.Suppress(u':')) +
       _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
 
-  SYSLOG_COMMENT = (
+  _SYSLOG_COMMENT = (
       _PYPARSING_COMPONENTS[u'date'] + pyparsing.Suppress(u':') +
       pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
       pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
   LINE_STRUCTURES = [
       (u'syslog_line', _LINE_GRAMMAR),
-      (u'syslog_comment', SYSLOG_COMMENT)]
+      (u'syslog_comment', _SYSLOG_COMMENT)]
 
   def __init__(self):
-    """Initialize the parser."""
+    """Initializes a syslog parser."""
     super(SyslogParser, self).__init__()
     self._last_month = 0
     self._maximum_year = 0
     self._year_use = 0
 
   def _InitializePlugins(self):
-    """Initializes plugins prior to processing"""
+    """Initializes parser plugins prior to processing."""
     if not self._plugin_classes_by_reporter:
       self._plugin_classes_by_reporter = {}
 
@@ -127,18 +129,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     self._last_month = month
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse a match.
+    """Parses a matching entry.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: a string indicating the name of the parsed structure.
+      key: a string containing the name of the parsed structure.
       structure: the elements parsed from the file (instance of
                  pyparsing.ParseResults).
 
     Raises:
       UnableToParseFile: if an unsupported key is provided.
     """
-    if key not in [u'syslog_line', u'syslog_comment']:
+    if key not in (u'syslog_line', u'syslog_comment'):
       raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
 
     self._InitializePlugins()
@@ -151,7 +153,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     timestamp = timelib.Timestamp.FromTimeParts(
         year=self._year_use, month=month, day=structure.day,
         hour=structure.hour, minutes=structure.minute,
-        seconds=structure.second)
+        seconds=structure.second, timezone=parser_mediator.timezone)
 
     if key == u'syslog_comment':
       comment_attributes = {
@@ -163,13 +165,14 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       parser_mediator.ProduceEvent(event)
       return
 
+    reporter = structure.reporter
     attributes = {
         u'hostname': structure.hostname,
-        u'reporter': structure.reporter,
+        u'reporter': reporter,
         u'pid': structure.pid,
         u'body': structure.body}
 
-    plugin = self._plugin_classes_by_reporter.get(attributes[u'reporter'], None)
+    plugin = self._plugin_classes_by_reporter.get(reporter, None)
     if plugin:
       try:
         plugin.UpdateChainAndProcess(
@@ -187,9 +190,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       lines: a buffer that contains content from the file.
 
     Returns:
-      True if the passed buffer appears to contain syslog content.
+      A boolean value to indicate that passed buffer appears to contain syslog
+      content.
     """
-    return re.match(self._VERIFICATION_REGEX, lines)
+    return re.match(self._VERIFICATION_REGEX, lines) is not None
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)

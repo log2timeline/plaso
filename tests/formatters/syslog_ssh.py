@@ -30,6 +30,7 @@ class SSHLoginEventFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
   # TODO: add test for GetSources.
 
+
 class SSHFailedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the SSH failed connection event formatter."""
 
@@ -51,6 +52,7 @@ class SSHFailedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
   # TODO: add test for GetSources.
 
+
 class SSHOpenedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the SSH opened connection event formatter."""
 
@@ -70,6 +72,7 @@ class SSHOpenedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
 
   # TODO: add test for GetMessages.
   # TODO: add test for GetSources.
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""The syslog ssh file event formatter."""
+"""The syslog SSH file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class SSHLoginEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a ssh successful login event."""
+  """Formatter for a SSH successful login event."""
 
   DATA_TYPE = u'syslog:ssh:login'
 
@@ -26,7 +26,7 @@ class SSHLoginEventFormatter(interface.ConditionalEventFormatter):
 
 
 class SSHFailedConnectionEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a ssh failed connection event."""
+  """Formatter for a SSH failed connection event."""
 
   DATA_TYPE = u'syslog:ssh:failed_connection'
 
@@ -46,7 +46,7 @@ class SSHFailedConnectionEventFormatter(interface.ConditionalEventFormatter):
 
 
 class SSHOpenedConnectionEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a ssh opened connection event."""
+  """Formatter for a SSH opened connection event."""
 
   DATA_TYPE = u'syslog:ssh:opened_connection'
 

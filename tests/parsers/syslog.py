@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the new syslog parser."""
+"""Tests for the syslog parser."""
 
 import unittest
 
@@ -25,7 +25,6 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
   def tearDown(self):
     """Cleans up after running an individual test."""
     syslog.SyslogParser.RegisterPlugins(self.plugins)
-
 
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""

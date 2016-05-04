@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for the SSH syslog plugin."""
 import unittest
@@ -8,6 +9,7 @@ from plaso.parsers.syslog_plugins import ssh
 
 from tests.parsers.syslog_plugins import test_lib
 
+
 class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
   """Tests for the SSH syslog plugin."""
 
@@ -16,7 +18,7 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
     self._plugin = ssh.SSHPlugin()
 
   def testParse(self):
-    """Tests the parsing functionality on a sample file."""
+    """Tests the Parse function."""
     test_file = self._GetTestFilePath([u'syslog_ssh.log'])
     event_queue_consumer = self._ParseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

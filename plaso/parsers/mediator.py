@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The parser mediator object."""
 
-import datetime
 import logging
 import os
 
@@ -101,16 +100,14 @@ class ParserMediator(object):
       return
 
     try:
-      datetime_object = datetime.datetime.fromtimestamp(
-          posix_time, self._knowledge_base.timezone)
-
+      year = timelib.GetYearFromPosixTime(
+          posix_time, timezone=self._knowledge_base.timezone)
+      return year
     except ValueError as exception:
       logging.error((
           u'Unable to determine creation year from file stat information with '
           u'error: {0:s}').format(exception))
       return
-
-    return datetime_object.year
 
   def _GetInode(self, inode_value):
     """Retrieves the inode from the inode value.
@@ -163,16 +160,14 @@ class ParserMediator(object):
       return
 
     try:
-      datetime_object = datetime.datetime.fromtimestamp(
-          posix_time, self._knowledge_base.timezone)
-
+      year = timelib.GetYearFromPosixTime(
+          posix_time, timezone=self._knowledge_base.timezone)
+      return year
     except ValueError as exception:
       logging.error((
           u'Unable to determine creation year from file stat '
           u'information with error: {0:s}').format(exception))
       return
-
-    return datetime_object.year
 
   def _GetRelativePath(self, path_spec):
     """Retrieves the relative path.
@@ -298,7 +293,7 @@ class ParserMediator(object):
     that fails the current year is used.
 
     Returns:
-      An integer containing the year of the file entry or None.
+      An integer containing the year of the file entry or the current year.
     """
     # TODO: improve this method to get a more reliable estimate.
     # Preserve the year-less date and sort this out in the psort phase.
@@ -344,7 +339,7 @@ class ParserMediator(object):
     if that fails the current year is used.
 
     Returns:
-      An integer containing the year of the file entry or None.
+      An integer containing the year of the file entry or the current year.
     """
     year = self._GetLatestYearFromFileEntry()
 

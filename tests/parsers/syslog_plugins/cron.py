@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for the cron syslog plugin."""
 import unittest
@@ -9,7 +10,7 @@ from tests.parsers.syslog_plugins import test_lib
 
 
 class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
-  """Tests for the SSH syslog plugin."""
+  """Tests for the cron syslog plugin."""
 
   def setUp(self):
     """Makes preparations before running an individual test."""

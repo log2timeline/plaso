@@ -8,6 +8,7 @@ import pyparsing
 from plaso.lib import errors
 from plaso.parsers import plugins
 
+
 class SyslogPlugin(plugins.BasePlugin):
   """The interface for syslog plugins."""
   NAME = u'syslog_plugin'
@@ -23,12 +24,11 @@ class SyslogPlugin(plugins.BasePlugin):
   # defined. This is so that each plugin can handle multiple types of message.
   # The tuple should have two entries, a key and a grammar. This is done to
   # keep the structures in an order of priority/preference.
-  # The key is a comment or an identification that is passed to the ParseBody
+  # The key is a comment or an identification that is passed to the ParseMessage
   # method so that the plugin can identify which grammar matched.
   MESSAGE_GRAMMARS = []
 
-  def Process(
-      self, parser_mediator, timestamp=None, syslog_tokens=None, **kwargs):
+  def Process(self, parser_mediator, timestamp, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 
     Args:
@@ -40,8 +40,9 @@ class SyslogPlugin(plugins.BasePlugin):
                      extracted by the syslog parser, and values are the values
                      of those fields.
 
-      Raises:
-        WrongPlugin: If the plugin is unable to parse the syslog tokens.
+    Raises:
+      AttributeError: If the syslog_tokens do not include a 'body' attribute.
+      WrongPlugin: If the plugin is unable to parse the syslog tokens.
     """
     body = syslog_tokens.get(u'body', None)
     if not body:
@@ -50,27 +51,23 @@ class SyslogPlugin(plugins.BasePlugin):
       try:
         tokens = grammar.parseString(body)
         syslog_tokens.update(tokens.asDict())
-        event = self.ParseBody(key, timestamp, syslog_tokens)
-        parser_mediator.ProduceEvent(event)
+        self.ParseMessage(parser_mediator, key, timestamp, syslog_tokens)
         return
       except pyparsing.ParseException:
         pass
     raise errors.WrongPlugin(u'Unable to create event from {0:s}'.format(body))
 
   @abc.abstractmethod
-  def ParseBody(self, key, timestamp, tokens):
-    """Parses a syslog body that matched one of the grammars the parser defined.
+  def ParseMessage(self, parser_mediator, key, timestamp, tokens):
+    """Parses a syslog body that matched one of the grammars the plugin defined.
 
     Args:
-      key: an string indicating the name of the matching grammar.
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      key: a string indicating the name of the matching grammar.
       timestamp: the timestamp, which is an integer containing the number
                   of micro seconds since January 1, 1970, 00:00:00 UTC or 0
                   on error.
       tokens: a dictionary whose keys are the names of the fields
               extracted by the syslog parser and the matching grammar, and
               values are the values of those fields.
-
-    Returns:
-      An event object created from the tokens that matched the grammar, or None
-      if no event could be created.
     """

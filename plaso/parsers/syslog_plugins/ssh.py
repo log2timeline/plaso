@@ -80,26 +80,31 @@ class SSHPlugin(interface.SyslogPlugin):
       (u'failed_connection', _FAILED_CONNECTION_GRAMMAR),
       (u'opened_connection', _OPENED_CONNECTION_GRAMMAR),]
 
-  def ParseBody(self, key, timestamp, tokens):
-    """Parses a syslog body that matched one of the defined grammars.
+  def ParseMessage(self, parser_mediator, key, timestamp, tokens):
+    """Produces an event from a syslog body that matched one of the grammars.
 
     Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
       key: an string indicating the name of the matching grammar.
       timestamp: the timestamp, which is an integer containing the number
                   of micro seconds since January 1, 1970, 00:00:00 UTC or 0
                   on error.
       tokens: a dictionary containing the results of the syslog grammar, and the
-              cron grammar.
-    Returns:
-      An event object created from the tokens that matched the grammar, or None
-      if no event could be created.
+              ssh grammar.
+
+    Raises:
+      AttributeError: If an unknown key is provided.
     """
     if key == u'login':
-      return SSHLoginEvent(timestamp, 0, tokens)
-    if key == u'failed_connection':
-      return SSHFailedConnectionEvent(timestamp, 0, tokens)
-    if key == u'opened_connection':
-      return SSHOpenedConnectionEvent(timestamp, 0, tokens)
+      parser_mediator.ProduceEvent(SSHLoginEvent(timestamp, 0, tokens))
+    elif key == u'failed_connection':
+      parser_mediator.ProduceEvent(
+          SSHFailedConnectionEvent(timestamp, 0, tokens))
+    elif key == u'opened_connection':
+      parser_mediator.ProduceEvent(
+          SSHOpenedConnectionEvent(timestamp, 0, tokens))
+    else:
+      raise AttributeError(u'Unknown grammar key: {0:s}'.format(key))
 
 
 syslog.SyslogParser.RegisterPlugin(SSHPlugin)
