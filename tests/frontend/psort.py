@@ -105,7 +105,8 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
     Args:
       event_object: an event object (instance of EventObject).
     """
-    self._buffer_dict[event_object.EqualityString()] = event_object
+    key = event_object.EqualityString()
+    self._events_per_key[key] = event_object
     self.record_count += 1
 
   def End(self):
@@ -121,9 +122,9 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
 
     Buffered event objects are written using the output module.
     """
-    for event_object_key in self._buffer_dict:
-      self._output_module.WriteEventBody(self._buffer_dict[event_object_key])
-    self._buffer_dict = {}
+    for key in iter(self._events_per_key.keys()):
+      self._output_module.WriteEventBody(self._events_per_key[key])
+    self._events_per_key = {}
 
 
 class PsortFrontendTest(test_lib.FrontendTestCase):

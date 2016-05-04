@@ -379,7 +379,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       time_slice: optional time slice object (instance of TimeRange).
 
     Returns:
-      A Counter object (instance of collections.Counter), that tracks the
+      A counter object (instance of collections.Counter), that tracks the
       number of unique events extracted from storage.
     """
     counter = collections.Counter()
