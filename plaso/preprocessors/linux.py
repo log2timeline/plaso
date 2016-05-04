@@ -13,9 +13,9 @@ from plaso.preprocessors import manager
 class LinuxHostname(interface.PreprocessPlugin):
   """A preprocessing class that fetches hostname on Linux."""
 
-  SUPPORTED_OS = ['Linux']
+  SUPPORTED_OS = [u'Linux']
   WEIGHT = 1
-  ATTRIBUTE = 'hostname'
+  ATTRIBUTE = u'hostname'
 
   def GetValue(self, searcher, unused_knowledge_base):
     """Determines the hostname based on the contents of /etc/hostname.
@@ -47,12 +47,52 @@ class LinuxHostname(interface.PreprocessPlugin):
     return u'{0:s}'.format(hostname)
 
 
+class LinuxTimezone(interface.PreprocessPlugin):
+  """A preprocessing class that fetches the timezone on Linux."""
+
+  ATTRIBUTE = u'time_zone_str'
+  DEFAULT_ATTRIBUTE_VALUE = u'UTC'
+  SUPPORTED_OS = [u'Linux']
+  WEIGHT = 1
+
+  def GetValue(self, searcher, unused_knowledge_base):
+    """Determines the timezone based on the contents of /etc/timezone.
+
+    Args:
+      searcher: The file system searcher object (instance of
+                dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
+
+    Returns:
+      A string containing a tzdata (Olsen) timezone name (for example,
+      America/New_York).
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    path = u'/etc/timezone'
+    file_entry = self._FindFileEntry(searcher, path)
+    if not file_entry:
+      raise errors.PreProcessFail(
+          u'Unable to find file entry for path: {0:s}.'.format(path))
+
+    file_object = file_entry.GetFileObject()
+    try:
+      text_file_object = text_file.TextFile(file_object)
+      file_data = text_file_object.readline()
+    finally:
+      file_object.close()
+    return file_data.strip()
+
+
 class LinuxUsernames(interface.PreprocessPlugin):
   """A preprocessing class that fetches usernames on Linux."""
 
-  SUPPORTED_OS = ['Linux']
+  SUPPORTED_OS = [u'Linux']
   WEIGHT = 1
-  ATTRIBUTE = 'users'
+  ATTRIBUTE = u'users'
 
   def GetValue(self, searcher, unused_knowledge_base):
     """Determines the user information based on the contents of /etc/passwd.
@@ -87,11 +127,11 @@ class LinuxUsernames(interface.PreprocessPlugin):
     for row in reader:
       # TODO: as part of artifacts, create a proper object for this.
       user = {
-          'uid': row[2],
-          'gid': row[3],
-          'name': row[0],
-          'path': row[5],
-          'shell': row[6]}
+          u'uid': row[2],
+          u'gid': row[3],
+          u'name': row[0],
+          u'path': row[5],
+          u'shell': row[6]}
       users.append(user)
 
     file_object.close()
@@ -99,4 +139,4 @@ class LinuxUsernames(interface.PreprocessPlugin):
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    LinuxHostname, LinuxUsernames])
+    LinuxHostname, LinuxTimezone, LinuxUsernames])
