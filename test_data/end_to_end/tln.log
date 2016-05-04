@@ -1,15 +1,15 @@
 Time|Source|Host|User|Description
-1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] : INFO No change in [/etc/netgroup]. Done
 1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] : INFO No new content.
+1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] : INFO No change in [/etc/netgroup]. Done
 1453449181|LOG|myhostname.myhost.com|-|2016-01-22T07:53:01+00:00; Content Modification Time; [CRON, pid: 31051] : (root) CMD (touch /var/run/crond.somecheck)
-1453449241|LOG|myhostname.myhost.com|-|2016-01-22T07:54:01+00:00; Content Modification Time; [CRON, pid: 31068] : (root) CMD (touch /var/run/crond.somecheck)
 1453449241|LOG|myhostname.myhost.com|-|2016-01-22T07:54:01+00:00; Content Modification Time; [CRON, pid: 31067] : (root) CMD (/sbin/status.mycheck))
+1453449241|LOG|myhostname.myhost.com|-|2016-01-22T07:54:01+00:00; Content Modification Time; [CRON, pid: 31068] : (root) CMD (touch /var/run/crond.somecheck)
 1453449272|LOG|myhostname.myhost.com|-|2016-01-22T07:54:32+00:00; Content Modification Time; [Job `cron.daily' terminated
 1456708543|LOG|-|-|2016-02-29T01:15:43+00:00; Content Modification Time; []  testing leap year in parsing, events take place in 2012 ---
+1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1461998509|FILE|-|-|2016-04-30T06:41:49+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
 1461998510|FILE|-|-|2016-04-30T06:41:50+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1482083672|LOG|myhostname.myhost.com|-|2016-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] : No true exit can exist (124 job run)

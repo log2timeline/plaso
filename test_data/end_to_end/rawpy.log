@@ -6,20 +6,20 @@
   
 
 [Reserved attributes]:
-  {body} : INFO No change in [/etc/netgroup]. Done
+  {body} : INFO No new content.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 74
+  {offset} 0
   {parser} syslog
-  {store_index} 0
+  {store_index} 1
   {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 30488c01f6a24ee5ba555a997b5982c0
+  {uuid} 08c23edfacf44949ab17696f6358a6ee
 
 [Additional attributes]:
   {iday} 22
@@ -37,20 +37,20 @@
   
 
 [Reserved attributes]:
-  {body} : INFO No new content.
+  {body} : INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 0
+  {offset} 74
   {parser} syslog
-  {store_index} 1
+  {store_index} 0
   {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 08c23edfacf44949ab17696f6358a6ee
+  {uuid} 30488c01f6a24ee5ba555a997b5982c0
 
 [Additional attributes]:
   {iday} 22
@@ -99,37 +99,6 @@
   
 
 [Reserved attributes]:
-  {body} : (root) CMD (touch /var/run/crond.somecheck)
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} myhostname.myhost.com
-  {inode} 0
-  {offset} 262
-  {parser} syslog
-  {store_index} 4
-  {store_number} 2
-  {timestamp} 1453449241000000
-  {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 4e2c7404129745f6b9c112f620c8969a
-
-[Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
-  {pid} 31068
-  {reporter} CRON
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:54:01
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-01-22T07:54:01+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
   {body} : (root) CMD (/sbin/status.mycheck))
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -150,6 +119,37 @@
   {imonth} 1
   {iyear} 2016
   {pid} 31067
+  {reporter} CRON
+  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
+  {time} 07:54:01
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-01-22T07:54:01+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} : (root) CMD (touch /var/run/crond.somecheck)
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} myhostname.myhost.com
+  {inode} 0
+  {offset} 262
+  {parser} syslog
+  {store_index} 4
+  {store_number} 2
+  {timestamp} 1453449241000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} 4e2c7404129745f6b9c112f620c8969a
+
+[Additional attributes]:
+  {iday} 22
+  {imonth} 1
+  {iyear} 2016
+  {pid} 31068
   {reporter} CRON
   {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
   {time} 07:54:01
@@ -224,6 +224,58 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
+  {store_index} 9
+  {store_number} 1
+  {timestamp} 1461998509000000
+  {timestamp_desc} atime
+  {username} -
+  {uuid} bfdca8991ad84ad39efbfed890a75341
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} [1328]
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-04-30T06:41:49+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 7
+  {store_number} 1
+  {timestamp} 1461998509000000
+  {timestamp_desc} ctime
+  {username} -
+  {uuid} 1ab0fd1b35e64db9969cc7587a86b5f0
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} [1328]
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-04-30T06:41:49+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
   {store_index} 8
   {store_number} 2
   {timestamp} 1461998509000000
@@ -282,58 +334,6 @@
   {timestamp_desc} mtime
   {username} -
   {uuid} 58b49d978e4145f6a83cc8a0ee30ddc5
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} [1328]
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-04-30T06:41:49+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 9
-  {store_number} 1
-  {timestamp} 1461998509000000
-  {timestamp_desc} atime
-  {username} -
-  {uuid} bfdca8991ad84ad39efbfed890a75341
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} [1328]
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-04-30T06:41:49+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 7
-  {store_number} 1
-  {timestamp} 1461998509000000
-  {timestamp_desc} ctime
-  {username} -
-  {uuid} 1ab0fd1b35e64db9969cc7587a86b5f0
 
 [Additional attributes]:
   {file_entry_type} 3
