@@ -1,15 +1,65 @@
 # -*- coding: utf-8 -*-
 """This file contains the event buffer class."""
 
+import heapq
 import logging
 
 from plaso.lib import errors
 from plaso.lib import utils
 
 
-# TODO: fix docstrings after determining this class is still needed.
+class _EventsHeap(object):
+  """Class that defines the event objects heap."""
+
+  def __init__(self):
+    """Initializes an event objects heap."""
+    super(_EventsHeap, self).__init__()
+    self._heap = []
+
+  @property
+  def number_of_events(self):
+    """The number of serialized event objects on the heap."""
+    return len(self._heap)
+
+  def PopEvent(self):
+    """Pops an event object from the heap.
+
+    Returns:
+      An event object (instance of EventObject).
+    """
+    try:
+      _, _, event_object = heapq.heappop(self._heap)
+      return event_object
+
+    except IndexError:
+      return None
+
+  def PushEvent(self, event_object):
+    """Pushes an event object onto the heap.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+    heap_values = (
+        event_object.timestamp, event_object.timestamp_desc, event_object)
+    heapq.heappush(self._heap, heap_values)
+
+  def PushEvents(self, event_objects):
+    """Pushes event objects onto the heap.
+
+    Args:
+      event_objects: a list of event objects (instances of EventObject).
+    """
+    for event_object in event_objects:
+      self.PushEvent(event_object)
+
+
+# TODO: rename class and fix docstrings.
 class EventBuffer(object):
   """Buffer class for event object output processing.
+
+  The event buffer is used to deduplicate event objects and make sure
+  they are sorted before output.
 
   Attributes:
     check_dedups: boolean value indicating whether or not the buffer
@@ -17,7 +67,7 @@ class EventBuffer(object):
     duplicate_counter: integer that contains the number of duplicates.
   """
 
-  MERGE_ATTRIBUTES = [u'inode', u'filename', u'display_name']
+  _MERGE_ATTRIBUTES = frozenset([u'inode', u'filename', u'display_name'])
 
   def __init__(self, output_module, check_dedups=True):
     """Initializes an event buffer object.
@@ -31,8 +81,8 @@ class EventBuffer(object):
       check_dedups: optional boolean value indicating whether or not the buffer
                     should check and merge duplicate entries or not.
     """
-    self._buffer_dict = {}
     self._current_timestamp = 0
+    self._events_per_key = {}
     self._output_module = output_module
     self._output_module.Open()
     self._output_module.WriteHeader()
@@ -63,9 +113,11 @@ class EventBuffer(object):
       self.Flush()
 
     key = event_object.EqualityString()
-    if key in self._buffer_dict:
-      self.JoinEvents(event_object, self._buffer_dict.pop(key))
-    self._buffer_dict[key] = event_object
+    if key in self._events_per_key:
+      duplicate_event_object = self._events_per_key.pop(key)
+      self.JoinEvents(event_object, duplicate_event_object)
+
+    self._events_per_key[key] = event_object
 
   def End(self):
     """Closes the buffer.
@@ -84,16 +136,25 @@ class EventBuffer(object):
 
     Buffered event objects are written using the output module.
     """
-    if not self._buffer_dict:
+    if not self._events_per_key:
       return
 
-    for event_object in self._buffer_dict.values():
+    # The heap is used to make sure the events are sorted in
+    # a deterministic way.
+    events_heap = _EventsHeap()
+    events_heap.PushEvents(self._events_per_key.values())
+    self._events_per_key = {}
+
+    event_object = events_heap.PopEvent()
+    while event_object:
       try:
         self._output_module.WriteEvent(event_object)
       except errors.WrongFormatter as exception:
-        logging.error(u'Unable to write event: {0:s}'.format(exception))
+        # TODO: store errors and report them at the end of psort.
+        logging.error(
+            u'Unable to write event with error: {0:s}'.format(exception))
 
-    self._buffer_dict = {}
+      event_object = events_heap.PopEvent()
 
   def JoinEvents(self, first_event, second_event):
     """Joins two event objects.
@@ -108,7 +169,7 @@ class EventBuffer(object):
     # inside the combined event, however which one should be chosen is
     # perhaps something that can be evaluated here (regular TSK in favor of
     # an event stored deep inside a VSS for instance).
-    for attr in self.MERGE_ATTRIBUTES:
+    for attr in self._MERGE_ATTRIBUTES:
       # TODO: remove need for GetUnicodeString.
       first_value = set(utils.GetUnicodeString(
           getattr(first_event, attr, u'')).split(u';'))
