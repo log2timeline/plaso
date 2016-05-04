@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import usbstor
 
@@ -29,7 +30,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         self._plugin, registry_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 5)
 
     event_object = event_objects[0]
 
@@ -41,6 +42,8 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-07 10:31:37.640871')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_value = u'Disk&Ven_HP&Prod_v100w&Rev_1024'
     self._TestRegvalue(event_object, u'subkey_name', expected_value)

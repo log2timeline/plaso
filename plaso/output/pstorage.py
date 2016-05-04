@@ -69,7 +69,7 @@ class PlasoStorageOutputModule(interface.OutputModule):
       inode_list = inode.split(u';')
       try:
         new_inode = int(inode_list[0])
-      except (ValueError, IndexError):
+      except (IndexError, ValueError):
         new_inode = 0
 
       event_object.inode = new_inode

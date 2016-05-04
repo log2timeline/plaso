@@ -394,9 +394,10 @@ class PregTool(storage_media_tool.StorageMediaTool):
                 event_object.timestamp)))
         self._output_writer.Write(u'\n')
 
-    if hasattr(event_object, u'keyname'):
-      self._output_writer.Write(
-          format_string.format(u'Key Path', event_object.keyname))
+    key_path = getattr(event_object, u'key_path', None)
+    if key_path:
+      output_string = format_string.format(u'Key Path', key_path)
+      self._output_writer.Write(output_string)
       self._output_writer.Write(u'\n')
 
     if event_object.timestamp_desc != eventdata.EventTimestamp.WRITTEN_TIME:

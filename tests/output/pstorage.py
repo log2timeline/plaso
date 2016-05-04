@@ -16,19 +16,14 @@ from tests.output import test_lib
 class PstorageTest(test_lib.OutputModuleTestCase):
   """Tests for the plaso storage outputter."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._test_filename = os.path.join(u'test_data', u'psort_test.proto.plaso')
-
   def testOutput(self):
     """Tests the Output function."""
+    test_filename = os.path.join(u'test_data', u'psort_test.json.plaso')
+
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'pstorage.plaso')
 
-      # Copy events to pstorage dump.
-      storage_file = storage_zip_file.StorageFile(
-          self._test_filename, read_only=True)
-
+      storage_file = storage_zip_file.StorageFile(test_filename, read_only=True)
       with storage_zip_file.ZIPStorageFileReader(
           storage_file) as storage_reader:
 
@@ -42,25 +37,36 @@ class PstorageTest(test_lib.OutputModuleTestCase):
           for event_object in storage_reader.GetEvents():
             output_buffer.Append(event_object)
 
-      # Make sure original and dump have the same events.
-      original = storage_zip_file.StorageFile(
-          self._test_filename, read_only=True)
-      dump = storage_zip_file.StorageFile(temp_file, read_only=True)
-      event_object_original = original.GetSortedEntry()
-      event_object_dump = dump.GetSortedEntry()
+      original_zip_file = storage_zip_file.StorageFile(
+          test_filename, read_only=True)
+      pstorage_zip_file = storage_zip_file.StorageFile(
+          temp_file, read_only=True)
+
       original_list = []
-      dump_list = []
+      pstorage_list = []
 
+      event_object_original = original_zip_file.GetSortedEntry()
+      event_object_pstorage = pstorage_zip_file.GetSortedEntry()
       while event_object_original:
-        original_list.append(event_object_original.EqualityString())
-        dump_list.append(event_object_dump.EqualityString())
-        event_object_original = original.GetSortedEntry()
-        event_object_dump = dump.GetSortedEntry()
+        original_equality_string = event_object_original.EqualityString()
+        pstorage_equality_string = event_object_pstorage.EqualityString()
 
-      self.assertFalse(event_object_dump)
+	# Remove the UUID for comparision.
+        original_equality_string, _, _ = original_equality_string.rpartition(
+            u'|')
+        pstorage_equality_string, _, _ = pstorage_equality_string.rpartition(
+            u'|')
+
+        original_list.append(original_equality_string)
+        pstorage_list.append(pstorage_equality_string)
+
+        event_object_original = original_zip_file.GetSortedEntry()
+        event_object_pstorage = pstorage_zip_file.GetSortedEntry()
+
+      self.assertFalse(event_object_pstorage)
 
       for original_str, dump_str in zip(
-          sorted(original_list), sorted(dump_list)):
+          sorted(original_list), sorted(pstorage_list)):
         self.assertEqual(original_str, dump_str)
 
 

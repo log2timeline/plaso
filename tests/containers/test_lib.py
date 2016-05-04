@@ -4,7 +4,7 @@
 
 import unittest
 
-from dfwinreg import filetime as dfwinreg_filetime
+from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import text_events
@@ -28,13 +28,13 @@ def GetEventObjects():
 
   test_events.append(event_object)
 
-  filetime = dfwinreg_filetime.Filetime()
+  filetime = dfdatetime_filetime.Filetime()
 
   # TODO: move this to a WindowsRegistryEvent unit test.
   filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
   values_dict = {u'Run': u'c:/Temp/evil.exe'}
   event_object = windows_events.WindowsRegistryEvent(
-      filetime.timestamp, u'MY AutoRun key', values_dict)
+      filetime, u'MY AutoRun key', values_dict)
   event_object.hostname = hostname
 
   test_events.append(event_object)
@@ -42,8 +42,7 @@ def GetEventObjects():
   filetime.CopyFromString(u'2012-04-20 23:56:46.929596')
   values_dict = {u'Value': u'send all the exes to the other world'}
   event_object = windows_events.WindowsRegistryEvent(
-      filetime.timestamp, u'//HKCU/Secret/EvilEmpire/Malicious_key',
-      values_dict)
+      filetime, u'HKCU\\Secret\\EvilEmpire\\Malicious_key', values_dict)
   event_object.hostname = hostname
 
   test_events.append(event_object)
@@ -51,7 +50,7 @@ def GetEventObjects():
   filetime.CopyFromString(u'2012-04-20 16:44:46.000000')
   values_dict = {u'Value': u'run all the benign stuff'}
   event_object = windows_events.WindowsRegistryEvent(
-      filetime.timestamp, u'//HKCU/Windows/Normal', values_dict)
+      filetime, u'HKCU\\Windows\\Normal', values_dict)
   event_object.hostname = hostname
 
   test_events.append(event_object)
