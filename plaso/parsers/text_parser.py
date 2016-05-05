@@ -753,7 +753,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     self._line_structures = self.LINE_STRUCTURES
-
     self.encoding = self._ENCODING
 
   def _ReadLine(

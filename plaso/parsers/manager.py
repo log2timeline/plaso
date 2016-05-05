@@ -197,7 +197,8 @@ class ParsersManager(object):
 
     parser_objects = {}
     for parser_name, parser_class in iter(cls._parser_classes.items()):
-      if not includes and excludes.get(parser_name, None):
+      # If there are no includes all parsers are included by default.
+      if not includes and parser_name in excludes:
         continue
 
       if includes and parser_name not in includes:
@@ -243,7 +244,8 @@ class ParsersManager(object):
     includes, excludes = cls._GetParserFilters(parser_filter_expression)
 
     for parser_name, parser_class in iter(cls._parser_classes.items()):
-      if not includes and excludes.get(parser_name, None):
+      # If there are no includes all parsers are included by default.
+      if not includes and parser_name in excludes:
         continue
 
       if includes and parser_name not in includes:

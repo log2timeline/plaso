@@ -96,9 +96,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
                        plugins. The default plugin, named "NAME_default",
                        is handled seperately.
     """
-    super(SyslogParser, self).__init__(
-        local_zone=True, plugin_includes=plugin_includes)
-    # Set the initial year to 0 (fixed in the actual Parse method)
+    super(SyslogParser, self).__init__(plugin_includes=plugin_includes)
     self._last_month = 0
     self._maximum_year = 0
     self._year_use = 0
