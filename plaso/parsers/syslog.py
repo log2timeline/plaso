@@ -29,7 +29,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _VERIFICATION_REGEX = re.compile(r'^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
 
   _plugin_classes = {}
-  _plugin_classes_by_reporter = None
 
   _PYPARSING_COMPONENTS = {
       u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
@@ -99,16 +98,13 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     super(SyslogParser, self).__init__(plugin_includes=plugin_includes)
     self._last_month = 0
     self._maximum_year = 0
+    self._plugin_objects_by_reporter = {}
     self._year_use = 0
 
   def _InitializePlugins(self):
     """Initializes parser plugins prior to processing."""
-    if not self._plugin_classes_by_reporter:
-      self._plugin_classes_by_reporter = {}
-
-    for plugin in self.GetPluginObjects():
-      reporter = plugin.REPORTER
-      self._plugin_classes_by_reporter[reporter] = plugin
+    for _, plugin_class in self.GetPlugins():
+      self._plugin_objects_by_reporter[plugin_class.REPORTER] = plugin_class()
 
   def _UpdateYear(self, parser_mediator, month):
     """Updates the year to use for events, based on last observed month.
@@ -156,6 +152,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       parser_mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(
           month))
       return
+
     self._UpdateYear(parser_mediator, month)
     timestamp = timelib.Timestamp.FromTimeParts(
         year=self._year_use, month=month, day=structure.day,
@@ -179,15 +176,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
         u'pid': structure.pid,
         u'body': structure.body}
 
-    plugin = self._plugin_classes_by_reporter.get(reporter, None)
-    if plugin:
-      try:
-        plugin.UpdateChainAndProcess(
-            parser_mediator, timestamp=timestamp, syslog_tokens=attributes)
-      except errors.WrongPlugin:
-        parser_mediator.ProduceEvent(SyslogLineEvent(timestamp, 0, attributes))
+    plugin_object = self._plugin_objects_by_reporter.get(reporter, None)
+    if not plugin_object:
+      event_object = SyslogLineEvent(timestamp, 0, attributes)
+      parser_mediator.ProduceEvent(event_object)
+
     else:
-      parser_mediator.ProduceEvent(SyslogLineEvent(timestamp, 0, attributes))
+      try:
+        plugin_object.Process(parser_mediator, timestamp, attributes)
+
+      except errors.WrongPlugin:
+        event_object = SyslogLineEvent(timestamp, 0, attributes)
+        parser_mediator.ProduceEvent(event_object)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies that this is a syslog-formatted file.
