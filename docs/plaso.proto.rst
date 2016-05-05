@@ -12,6 +12,14 @@ plaso.proto.plaso_storage_pb2 module
     :undoc-members:
     :show-inheritance:
 
+plaso.proto.transmission_pb2 module
+-----------------------------------
+
+.. automodule:: plaso.proto.transmission_pb2
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
