@@ -9,8 +9,10 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import knowledge_base
+from plaso.engine import plaso_queue
 from plaso.engine import processing_status
 from plaso.engine import profiler
+from plaso.lib import definitions
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -143,3 +145,43 @@ class BaseEngine(object):
   def SupportsMemoryProfiling(cls):
     """Returns a boolean value to indicate if memory profiling is supported."""
     return profiler.GuppyMemoryProfiler.IsSupported()
+
+
+class PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
+  """Class that implements a path specification queue producer object."""
+
+  def __init__(self, path_spec_queue, storage_object):
+    """Initializes the queue producer object.
+
+    Args:
+      path_spec_queue: the path specification queue (instance of Queue).
+                       This queue contains path specifications (instances
+                       of dfvfs.PathSpec) of the file entries that need
+                       to be processed.
+      storage_object: a storage object (instance of StorageWriter).
+    """
+    super(PathSpecQueueProducer, self).__init__(path_spec_queue)
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._storage_object = storage_object
+
+  def GetStatus(self):
+    """Returns a dictionary containing the status."""
+    return {
+        u'processing_status': self._status,
+        u'produced_number_of_path_specs': self._number_of_produced_items,
+        u'path_spec_queue_port': getattr(self._queue, u'port', None),
+        u'type': definitions.PROCESS_TYPE_COLLECTOR}
+
+  def Run(self):
+    """Produces path specifications onto the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    for event_source in self._storage_object.GetEventSources():
+      if self._abort:
+        break
+
+      self.ProduceItem(event_source.path_spec)
+
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED

@@ -14,6 +14,7 @@ import time
 
 from dfvfs.resolver import context
 
+from plaso.containers import event_sources
 from plaso.engine import collector
 from plaso.engine import engine
 from plaso.engine import plaso_queue
@@ -230,42 +231,29 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing collector process."""
 
   def __init__(
-      self, stop_collector_event, source_path_specs, path_spec_queue,
-      filter_find_specs=None, include_directory_stat=True, **kwargs):
+      self, stop_collector_event, storage_writer, path_spec_queue, **kwargs):
     """Initializes the process object.
 
     Args:
       stop_collector_event: the stop process event (instance of
                             multiprocessing.Event). The collector
                             should exit after this event is set.
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
+      storage_writer: a storage writer object (instance of StorageWriter).
       path_spec_queue: the path specification queue object (instance of
                        MultiProcessingQueue).
-      filter_find_specs: Optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-      include_directory_stat: Optional boolean value to indicate whether
-                              directory stat information should be collected.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessCollectorProcess, self).__init__(
         definitions.PROCESS_TYPE_COLLECTOR, **kwargs)
-    resolver_context = context.Context()
-
-    self._collector = collector.CollectorQueueProducer(
-        path_spec_queue, resolver_context=resolver_context)
     self._path_spec_queue = path_spec_queue
     self._path_spec_queue_port = None
-    self._source_path_specs = source_path_specs
+    self._path_spec_producer = engine.PathSpecQueueProducer(
+        path_spec_queue, storage_writer)
     self._stop_collector_event = stop_collector_event
-    self._collector.SetCollectDirectoryMetadata(include_directory_stat)
-
-    if filter_find_specs:
-      self._collector.SetFilter(filter_find_specs)
 
   def _GetStatus(self):
     """Returns a status dictionary."""
-    status = self._collector.GetStatus()
+    status = self._path_spec_producer.GetStatus()
     status[u'path_spec_queue_port'] = self._path_spec_queue_port
     self._status_is_running = status.get(u'is_running', False)
     return status
@@ -283,7 +271,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     abort = False
     try:
       logging.debug(u'Collector starting collection.')
-      self._collector.Collect(self._source_path_specs)
+      self._path_spec_producer.Run()
 
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
@@ -311,7 +299,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    self._collector.SignalAbort()
+    self._path_spec_producer.SignalAbort()
 
 
 class MultiProcessEngine(engine.BaseEngine):
@@ -586,9 +574,61 @@ class MultiProcessEngine(engine.BaseEngine):
       terminate_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       terminate_queue.Close()
 
-  def _CollectorQueueHasBound(self):
-    """Checks if the collector has bound to a queue."""
-    return self._path_spec_queue_port is not None
+  def _ProcessSourcesCollectEventSources(
+      self, source_path_specs, storage_writer, filter_find_specs=None,
+      include_directory_stat=True, resolver_context=None):
+    """Processes the sources and extract event sources.
+
+    Args:
+      source_path_specs: a list of path specifications (instances of
+                         dfvfs.PathSpec) of the sources to process.
+      storage_writer: a storage writer object (instance of StorageWriter).
+      filter_find_specs: optional list of filter find specifications (instances
+                         of dfvfs.FindSpec).
+      include_directory_stat: optional boolean value to indicate whether
+                              directory stat information should be collected.
+      resolver_context: optional resolver context (instance of dfvfs.Context).
+    """
+    collector_object = collector.Collector(resolver_context=resolver_context)
+
+    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
+
+    if filter_find_specs:
+      collector_object.SetFilter(filter_find_specs)
+
+    for source_path_spec in source_path_specs:
+      for path_spec in collector_object.CollectPathSpecs(source_path_spec):
+        # TODO: determine if event sources should be DataStream or FileEntry
+        # or both.
+        event_source = event_sources.FileEntryEventSource(
+            path_spec=path_spec)
+        storage_writer.AddEventSource(event_source)
+
+  def _GetPathSpecQueuePort(self, collector_process):
+    """Ensures that port number for the collector pathspec queue is captured.
+
+    Args:
+      collector_process: the collector process object (instance of
+                         MultiProcessCollectorProcess).
+
+    Raises:
+      RuntimeError: if the collector is not able to start its queue before the
+                    the timeout is reached.
+    """
+    path_spec_queue_port = None
+    queue_start_wait_attempts = 0
+    while (path_spec_queue_port is None and
+           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
+      status = self._GetProcessStatus(collector_process)
+      path_spec_queue_port = status.get(u'path_spec_queue_port', None)
+
+      queue_start_wait_attempts += 1
+      time.sleep(self._QUEUE_START_WAIT)
+
+    if path_spec_queue_port is None:
+      raise RuntimeError(u'Collector queue did not bind in time.')
+
+    return path_spec_queue_port
 
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
@@ -607,6 +647,28 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       process_status = None
     return process_status
+
+  def _GetStorageQueuePorts(self, storage_writer_process):
+    """Ensures that port numbers for the storage writer queues are captured.
+
+    Args:
+      storage_writer_process: the storage writer process object (instance of
+                              MultiProcessStorageWriterProcess).
+
+    Raises:
+      RuntimeError: if the storage writer process is not able to starts its
+                    queues before the timeout is reached.
+    """
+    queue_start_wait_attempts = 0
+    while (not self._StorageQueuesBound() and
+           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
+      status = self._GetProcessStatus(storage_writer_process)
+      self._event_object_queue_port = status[u'event_object_queue_port']
+      self._parse_error_queue_port = status[u'parse_error_queue_port']
+      queue_start_wait_attempts += 1
+      time.sleep(self._QUEUE_START_WAIT)
+    if not self._StorageQueuesBound():
+      raise RuntimeError(u'Storage queues did not bind in time.')
 
   def _KillProcess(self, pid):
     """Issues a SIGKILL or equivalent to the process.
@@ -649,6 +711,52 @@ class MultiProcessEngine(engine.BaseEngine):
             process.name, memory_info.rss, memory_info.vms,
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
+
+  def _RaiseIfNotMonitored(self, pid):
+    """Raises if the process is not monitored by the engine.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not monitored by the engine.
+    """
+    if pid not in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not monitored by engine.'.format(pid))
+
+  def _RaiseIfNotRegistered(self, pid):
+    """Raises if the process is not registered with the engine.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the engine.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with engine'.format(pid))
+
+  def _RegisterProcess(self, process):
+    """Registers a process with the engine.
+
+    Args:
+      process: The process object (instance of MultiProcessBaseProcess).
+
+    Raises:
+      KeyError: if the process is already registered with the engine.
+      ValueError: if the process object is missing.
+    """
+    if process is None:
+      raise ValueError(u'Missing process object.')
+
+    if process.pid in self._processes_per_pid:
+      raise KeyError(
+          u'Already managing process: {0!s} (PID: {1:d})'.format(
+              process.name, process.pid))
+
+    self._processes_per_pid[process.pid] = process
 
   def _StartExtractionWorkerProcess(self):
     """Creates, starts and registers an extraction worker process.
@@ -771,6 +879,34 @@ class MultiProcessEngine(engine.BaseEngine):
       # the collector dies.
       self._AbortKill()
 
+  def _StopMonitoringProcess(self, pid):
+    """Stops monitoring a process.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the engine or
+                if the process is registered, but not monitored.
+    """
+    self._RaiseIfNotRegistered(pid)
+    self._RaiseIfNotMonitored(pid)
+
+    process = self._processes_per_pid[pid]
+    del self._process_information_per_pid[pid]
+
+    rpc_client = self._rpc_clients_per_pid.get(pid, None)
+    if rpc_client:
+      rpc_client.Close()
+      del self._rpc_clients_per_pid[pid]
+
+    if pid in self._rpc_errors_per_pid:
+      del self._rpc_errors_per_pid[pid]
+
+    logging.debug((
+        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
+        u'list.').format(process.name, pid))
+
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
 
@@ -819,6 +955,11 @@ class MultiProcessEngine(engine.BaseEngine):
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
+  def _StopProcessMonitoring(self):
+    """Stops monitoring processes."""
+    for pid in iter(self._process_information_per_pid.keys()):
+      self._StopMonitoringProcess(pid)
+
   def _StorageQueuesBound(self):
     """Checks if the storage queues are bound to ports.
 
@@ -828,86 +969,6 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     return (self._event_object_queue_port is not None and
             self._parse_error_queue_port is not None)
-
-  def _RaiseIfNotMonitored(self, pid):
-    """Raises if the process is not monitored by the engine.
-
-    Args:
-      pid: The process identifier.
-
-    Raises:
-      KeyError: if the process is not monitored by the engine.
-    """
-    if pid not in self._process_information_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not monitored by engine.'.format(pid))
-
-  def _RaiseIfNotRegistered(self, pid):
-    """Raises if the process is not registered with the engine.
-
-    Args:
-      pid: The process identifier.
-
-    Raises:
-      KeyError: if the process is not registered with the engine.
-    """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with engine'.format(pid))
-
-  def _RegisterProcess(self, process):
-    """Registers a process with the engine.
-
-    Args:
-      process: The process object (instance of MultiProcessBaseProcess).
-
-    Raises:
-      KeyError: if the process is already registered with the engine.
-      ValueError: if the process object is missing.
-    """
-    if process is None:
-      raise ValueError(u'Missing process object.')
-
-    if process.pid in self._processes_per_pid:
-      raise KeyError(
-          u'Already managing process: {0!s} (PID: {1:d})'.format(
-              process.name, process.pid))
-
-    self._processes_per_pid[process.pid] = process
-
-
-  def _StopMonitoringProcess(self, pid):
-    """Stops monitoring a process.
-
-    Args:
-      pid: The process identifier.
-
-    Raises:
-      KeyError: if the process is not registered with the engine or
-                if the process is registered, but not monitored.
-    """
-    self._RaiseIfNotRegistered(pid)
-    self._RaiseIfNotMonitored(pid)
-
-    process = self._processes_per_pid[pid]
-    del self._process_information_per_pid[pid]
-
-    rpc_client = self._rpc_clients_per_pid.get(pid, None)
-    if rpc_client:
-      rpc_client.Close()
-      del self._rpc_clients_per_pid[pid]
-
-    if pid in self._rpc_errors_per_pid:
-      del self._rpc_errors_per_pid[pid]
-
-    logging.debug((
-        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
-        u'list.').format(process.name, pid))
-
-  def _StopProcessMonitoring(self):
-    """Stops monitoring processes."""
-    for pid in iter(self._process_information_per_pid.keys()):
-      self._StopMonitoringProcess(pid)
 
   def _TerminateProcess(self, pid):
     """Terminate a process.
@@ -1057,6 +1118,20 @@ class MultiProcessEngine(engine.BaseEngine):
     self._process_archive_files = process_archive_files
     self._text_prepend = text_prepend
 
+    resolver_context = context.Context()
+
+    # TODO: pass status update callback.
+    self._ProcessSourcesCollectEventSources(
+        source_path_specs, storage_writer,
+        filter_find_specs=filter_find_specs,
+        include_directory_stat=include_directory_stat,
+        resolver_context=resolver_context)
+
+    # TODO: closing the storage writer here for now to
+    # make sure it re-opens in another process.
+    storage_writer._storage_file.Close()  # pylint: disable=protected-access
+    storage_writer._storage_file = None  # pylint: disable=protected-access
+
     logging.debug(u'Starting processes.')
 
     # Start the storage writer first, as we need it to start up and bind its
@@ -1084,23 +1159,22 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._use_zeromq:
       self._GetStorageQueuePorts(storage_writer_process)
 
-   # Next start the collector, as we needs its port number for the workers as
-   # well.
+    # Next start the collector, as we needs its port number for the workers as
+    # well.
     self._stop_collector_event = multiprocessing.Event()
     collector_process = MultiProcessCollectorProcess(
-        self._stop_collector_event, source_path_specs, self._path_spec_queue,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
-        filter_find_specs=self._filter_find_specs,
-        include_directory_stat=self._include_directory_stat, name=u'Collector')
+        self._stop_collector_event, storage_writer, self._path_spec_queue,
+        enable_sigsegv_handler=self._enable_sigsegv_handler, name=u'Collector')
     collector_process.start()
     self._RegisterProcess(collector_process)
     self._StartMonitoringProcess(collector_process.pid)
 
     if self._use_zeromq:
-      self._GetCollectorStoragePorts(collector_process)
+      self._path_spec_queue_port = self._GetPathSpecQueuePort(
+          collector_process)
 
     # Finally, start the workers.
-    for _ in range(number_of_extraction_workers):
+    for _ in range(0, number_of_extraction_workers):
       extraction_process = self._StartExtractionWorkerProcess()
       self._StartMonitoringProcess(extraction_process.pid)
 
@@ -1138,49 +1212,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._StopExtractionProcesses(abort=self._processing_status.error_detected)
 
     return self._processing_status
-
-  def _GetCollectorStoragePorts(self, collector_process):
-    """Ensures that port number for the collector pathspec queue is captured.
-
-    Args:
-      collector_process: the collector process object (instance of
-                         MultiProcessCollectorProcess).
-
-    Raises:
-      RuntimeError: if the collector is not able to start its queue before the
-                    the timeout is reached.
-    """
-    queue_start_wait_attempts = 0
-    while (not self._CollectorQueueHasBound() and
-           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
-      status = self._GetProcessStatus(collector_process)
-      self._path_spec_queue_port = status[u'path_spec_queue_port']
-      queue_start_wait_attempts += 1
-      time.sleep(self._QUEUE_START_WAIT)
-    if not self._CollectorQueueHasBound():
-      raise RuntimeError(u'Collector queue did not bind in time.')
-
-  def _GetStorageQueuePorts(self, storage_writer_process):
-    """Ensures that port numbers for the storage writer queues are captured.
-
-    Args:
-      storage_writer_process: the storage writer process object (instance of
-                              MultiProcessStorageWriterProcess).
-
-    Raises:
-      RuntimeError: if the storage writer process is not able to starts its
-                    queues before the timeout is reached.
-    """
-    queue_start_wait_attempts = 0
-    while (not self._StorageQueuesBound() and
-           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
-      status = self._GetProcessStatus(storage_writer_process)
-      self._event_object_queue_port = status[u'event_object_queue_port']
-      self._parse_error_queue_port = status[u'parse_error_queue_port']
-      queue_start_wait_attempts += 1
-      time.sleep(self._QUEUE_START_WAIT)
-    if not self._StorageQueuesBound():
-      raise RuntimeError(u'Storage queues did not bind in time.')
 
   def SignalAbort(self):
     """Signals the engine to abort."""

@@ -10,9 +10,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import plaso_queue
-from plaso.lib import definitions
-
 
 class Collector(object):
   """Class that implements a source collector object."""
@@ -258,80 +255,3 @@ class Collector(object):
                                   directory metadata.
     """
     self._collect_directory_metadata = collect_directory_metadata
-
-
-class CollectorQueueProducer(plaso_queue.ItemQueueProducer):
-  """Class that implements a collector queue producer object."""
-
-  def __init__(self, path_spec_queue, resolver_context=None):
-    """Initializes the collector queue producer object.
-
-    The collector queue producer discovers all the files that need to
-    be processed by the workers. Once a file is discovered it is added
-    to the path specification queue as a path specification (instance
-    of dfvfs.PathSpec).
-
-    Args:
-      path_spec_queue: the path specification queue (instance of Queue).
-                       This queue contains path specifications (instances
-                       of dfvfs.PathSpec) of the file entries that need
-                       to be processed.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-    """
-    super(CollectorQueueProducer, self).__init__(path_spec_queue)
-    self._collector = Collector(resolver_context=resolver_context)
-    self._filter_find_specs = None
-
-    # Attributes that contain the current status of the collector.
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
-
-  def Collect(self, source_path_specs):
-    """Collects file entry path specifications.
-
-    Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to collect from.
-    """
-    if not source_path_specs:
-      logging.warning(u'No files to collect.')
-      return
-
-    for source_path_spec in source_path_specs:
-      if self._abort:
-        break
-
-      self._status = definitions.PROCESSING_STATUS_RUNNING
-      for path_spec in self._collector.CollectPathSpecs(
-          source_path_spec, find_specs=self._filter_find_specs):
-        self.ProduceItem(path_spec)
-
-    if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-  def GetStatus(self):
-    """Returns a dictionary containing the status."""
-    return {
-        u'processing_status': self._status,
-        u'produced_number_of_path_specs': self._number_of_produced_items,
-        u'path_spec_queue_port': getattr(self._queue, u'port', None),
-        u'type': definitions.PROCESS_TYPE_COLLECTOR}
-
-  def SetCollectDirectoryMetadata(self, collect_directory_metadata):
-    """Sets the collect directory metadata flag.
-
-    Args:
-      collect_directory_metadata: boolean value to indicate to collect
-                                  directory metadata.
-    """
-    self._collector.SetCollectDirectoryMetadata(collect_directory_metadata)
-
-  def SetFilter(self, filter_find_specs):
-    """Sets the collection filter find specifications.
-
-    Args:
-      filter_find_specs: list of filter find specifications (instances of
-                         dfvfs.FindSpec).
-    """
-    self._filter_find_specs = filter_find_specs

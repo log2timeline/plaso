@@ -23,7 +23,6 @@ from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
-from plaso.storage import writer as storage_writer
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
@@ -525,12 +524,12 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
-    storage_writer_object = storage_zip_file.ZIPStorageFileWriter(
+    storage_writer = storage_zip_file.ZIPStorageFileWriter(
         self._engine.event_object_queue, self._storage_file_path,
         pre_obj, buffer_size=self._buffer_size,
         serializer_format=storage_serializer_format)
 
-    storage_writer_object.SetEnableProfiling(
+    storage_writer.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)
 
     processing_status = None
@@ -539,7 +538,7 @@ class ExtractionFrontend(frontend.Frontend):
         logging.debug(u'Starting extraction in single process mode.')
 
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer_object,
+            source_path_specs, storage_writer,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
@@ -556,7 +555,7 @@ class ExtractionFrontend(frontend.Frontend):
 
         # TODO: pass number_of_extraction_workers.
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer_object,
+            source_path_specs, storage_writer,
             enable_sigsegv_handler=enable_sigsegv_handler,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,

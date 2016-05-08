@@ -5,6 +5,7 @@ import os
 import unittest
 
 from plaso.engine import plaso_queue
+from plaso.lib import definitions
 from plaso.storage import writer as storage_writer
 
 
@@ -57,7 +58,12 @@ class TestQueueConsumer(plaso_queue.ItemQueueConsumer):
 
 
 class TestStorageWriter(storage_writer.StorageWriter):
-  """Class that implements a test storage writer object."""
+  """Class that implements a test storage writer object.
+
+  Attributes:
+    event_objects: a list of event objects (instances of EventObject).
+    event_sources: a list of event sources (instances of EventSource).
+  """
 
   def __init__(self, event_object_queue):
     """Initializes a storage writer object.
@@ -67,7 +73,31 @@ class TestStorageWriter(storage_writer.StorageWriter):
     """
     super(TestStorageWriter, self).__init__(event_object_queue)
     self.event_objects = []
+    self.event_sources = []
 
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems."""
     self.event_objects.append(event_object)
+
+  def AddEventSource(self, event_source):
+    """Adds an event source to the storage.
+
+    Args:
+      event_source: an event source object (instance of EventSource).
+    """
+    self.event_sources.append(event_source)
+
+  def GetEventSources(self):
+    """Retrieves the event sources.
+
+    Yields:
+      An event source object (instance of EventSource).
+    """
+    for event_source in self.event_sources:
+      yield event_source
+
+  def WriteEventObjects(self):
+    """Writes the event objects that are pushed on the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self.ConsumeItems()
+    self._status = definitions.PROCESSING_STATUS_COMPLETED

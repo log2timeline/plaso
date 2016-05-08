@@ -440,12 +440,13 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
           # TODO: change this to pass the archive file path spec to
           # the collector process and have the collector implement a maximum
           # path spec "depth" to prevent ZIP bombs and equiv.
-          file_system_collector = collector.CollectorQueueProducer(
-              self._queue, resolver_context=self._resolver_context)
+          collector_object = collector.Collector(
+              resolver_context=self._resolver_context)
 
-          file_system_collector.Collect([archive_path_spec])
+          # TODO: produce event sources to process.
+          _ = collector_object.CollectPathSpecs(archive_path_spec)
           self._produced_number_of_path_specs += (
-              file_system_collector.number_of_produced_items)
+              collector_object.number_of_produced_items)
 
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(

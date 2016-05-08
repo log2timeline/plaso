@@ -22,10 +22,6 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
-class DummyObject(object):
-  """Dummy object."""
-
-
 class SerializedDataStream(test_lib.StorageTestCase):
   """Tests for the serialized data stream object."""
 
@@ -603,12 +599,12 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testHasReports(self):
-    """Tests the HasReports function."""
+  def testHasAnalysisReports(self):
+    """Tests the HasAnalysisReports function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    has_reports = storage_file.HasReports()
+    has_reports = storage_file.HasAnalysisReports()
     self.assertTrue(has_reports)
 
     storage_file.Close()
@@ -616,17 +612,17 @@ class StorageFileTest(test_lib.StorageTestCase):
     test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    has_reports = storage_file.HasReports()
+    has_reports = storage_file.HasAnalysisReports()
     self.assertFalse(has_reports)
 
     storage_file.Close()
 
-  def testHasTagging(self):
-    """Tests the HasTagging function."""
+  def testHasEventTags(self):
+    """Tests the HasEventTags function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    self.assertFalse(storage_file.HasTagging())
+    self.assertFalse(storage_file.HasEventTags())
 
     storage_file.Close()
 
@@ -636,7 +632,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       storage_file = zip_file.StorageFile(temp_file, read_only=True)
 
-      self.assertTrue(storage_file.HasTagging())
+      self.assertTrue(storage_file.HasEventTags())
 
       storage_file.Close()
 

@@ -14,6 +14,8 @@ class EventSource(interface.AttributeContainer):
   Attributes:
     data_type: a string containing the event data type indicator.
     path_spec: a path specification (instance of dfvfs.PathSpec) or None.
+    storage_session: an integer containing the storage session number or
+                     0 if not set.
   """
   CONTAINER_TYPE = u'event_source'
   DATA_TYPE = None
@@ -28,6 +30,7 @@ class EventSource(interface.AttributeContainer):
     super(EventSource, self).__init__()
     self.data_type = self.DATA_TYPE
     self.path_spec = path_spec
+    self.storage_session = 0
 
 
 class FileEntryEventSource(EventSource):

@@ -400,8 +400,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Returns:
       A string containing the formatted reports.
     """
-    if not storage_file.HasReports():
-      return u'No reports stored.'
+    if not storage_file.HasAnalysisReports():
+      return u'No analysis reports stored.'
 
     if not self._verbose:
       return u'Reporting information omitted (to see use: --verbose).'

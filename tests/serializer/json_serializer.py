@@ -254,10 +254,15 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_source, event_sources.EventSource)
 
     expected_event_source_dict = {
-        u'path_spec': test_path_spec,
+        u'path_spec': test_path_spec.comparable,
+        u'storage_session': 0,
     }
 
     event_source_dict = event_source.CopyToDict()
+    path_spec = event_source_dict.get(u'path_spec', None)
+    if path_spec:
+      event_source_dict[u'path_spec'] = path_spec.comparable
+
     self.assertEqual(
         sorted(event_source_dict.items()),
         sorted(expected_event_source_dict.items()))

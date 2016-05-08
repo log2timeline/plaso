@@ -15,8 +15,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import collector
 from plaso.engine import knowledge_base
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
 from plaso.hashers import manager as hashers_manager
@@ -549,45 +547,6 @@ class FileSaver(object):
       file_object.close()
 
 
-class ImageExtractorQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements an image extractor queue consumer."""
-
-  def __init__(
-      self, process_queue, file_saver, destination_path, filter_collection):
-    """Initializes the image extractor queue consumer.
-
-    Args:
-      process_queue: the process queue (instance of Queue).
-      file_saver: the file saver object (instance of FileSaver)
-      destination_path: the path where the extracted files should be stored.
-      filter_collection: the file entry filter collection (instance of
-                         FileEntryFilterCollection)
-    """
-    super(ImageExtractorQueueConsumer, self).__init__(process_queue)
-    self._destination_path = destination_path
-    self._file_saver = file_saver
-    self._filter_collection = filter_collection
-
-  def _ConsumeItem(self, path_spec, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      path_spec: a path specification (instance of dfvfs.PathSpec).
-    """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    if not self._filter_collection.Matches(file_entry):
-      return
-
-    vss_store_number = getattr(path_spec, u'vss_store_number', None)
-    if vss_store_number is not None:
-      filename_prefix = u'vss_{0:d}'.format(vss_store_number + 1)
-    else:
-      filename_prefix = u''
-
-    self._file_saver.WriteFile(
-        path_spec, self._destination_path, filename_prefix=filename_prefix)
-
-
 class ImageExportFrontend(frontend.Frontend):
   """Class that implements the image export front-end."""
 
@@ -614,14 +573,13 @@ class ImageExportFrontend(frontend.Frontend):
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
-    input_queue = single_process.SingleProcessQueue()
-    image_collector = collector.CollectorQueueProducer(input_queue)
-    image_collector.Collect(source_path_specs)
-
+    image_collector = collector.Collector(
+        resolver_context=self._resolver_context)
     file_saver = FileSaver(skip_duplicates=remove_duplicates)
-    input_queue_consumer = ImageExtractorQueueConsumer(
-        input_queue, file_saver, destination_path, self._filter_collection)
-    input_queue_consumer.ConsumeItems()
+
+    for source_path_spec in source_path_specs:
+      for path_spec in image_collector.CollectPathSpecs(source_path_spec):
+        self._ExtractFile(file_saver, path_spec, destination_path)
 
   def _ExtractFile(self, file_saver, path_spec, destination_path):
     """Extracts a file.

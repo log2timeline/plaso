@@ -584,6 +584,8 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
                      collections.Counter).
   """
 
+  # pylint: disable=abstract-method
+
   def __init__(
       self, queue_object, storage_file, filter_string, preprocess_object,
       preferred_encoding=u'utf-8'):
