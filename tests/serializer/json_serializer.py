@@ -4,7 +4,11 @@
 
 import collections
 import json
+import os
 import unittest
+
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
 from plaso.containers import reports
@@ -18,9 +22,24 @@ import pytz  # pylint: disable=wrong-import-order
 class JSONSerializerTestCase(unittest.TestCase):
   """Tests for a JSON serializer object."""
 
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
+
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
   maxDiff = None
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def _TestReadSerialized(self, serializer_object, json_dict):
     """Tests the ReadSerialized function.
@@ -138,9 +157,18 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
+    test_file = self._GetTestFilePath([u'ímynd.dd'])
+
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
+
     expected_event_object = events.EventObject()
 
     expected_event_object.data_type = u'test:event2'
+    expected_event_object.pathspec = path_spec
     expected_event_object.timestamp = 1234124
     expected_event_object.timestamp_desc = u'Written'
     # Prevent the event object for generating its own UUID.
@@ -186,6 +214,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             u'list': [u'sf', 234]
         },
         u'my_list': [u'asf', 4234, 2, 54, u'asf'],
+        u'pathspec': path_spec.comparable,
         u'string': u'Normal string',
         u'timestamp_desc': u'Written',
         u'timestamp': 1234124,
@@ -195,6 +224,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     }
 
     event_object_dict = event_object.CopyToDict()
+    path_spec = event_object_dict.get(u'pathspec', None)
+    if path_spec:
+      event_object_dict[u'pathspec'] = path_spec.comparable
+
     self.assertEqual(
         sorted(event_object_dict.items()),
         sorted(expected_event_object_dict.items()))

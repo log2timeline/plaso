@@ -426,9 +426,6 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
     elif class_type == u'PathSpec':
-      # Remove the class type from the JSON dict since we cannot pass it.
-      del json_dict[u'__type__']
-
       return cls._ConvertDictToPathSpec(json_dict)
 
     # Provide backwards compatibility.
@@ -522,6 +519,12 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     type_indicator = json_dict.get(u'type_indicator', None)
     if type_indicator:
       del json_dict[u'type_indicator']
+
+    if u'parent' in json_dict:
+      json_dict[u'parent'] = cls._ConvertDictToPathSpec(json_dict[u'parent'])
+
+    # Remove the class type from the JSON dict since we cannot pass it.
+    del json_dict[u'__type__']
 
     return dfvfs_path_spec_factory.Factory.NewPathSpec(
         type_indicator, **json_dict)
