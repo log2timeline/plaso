@@ -203,6 +203,7 @@ class ParsersManagerTest(unittest.TestCase):
         parser_filter_expression=u'!test_parser')
     for _, parser_object in iter(parser_objects.items()):
       parser_names.append(parser_object.NAME)
+    self.assertNotEqual(len(parser_names), 0)
     self.assertNotIn(u'test_parser', parser_names)
 
     parser_names = []
@@ -240,6 +241,7 @@ class ParsersManagerTest(unittest.TestCase):
     for _, parser_class in manager.ParsersManager.GetParsers(
         parser_filter_expression=u'!test_parser'):
       parser_names.append(parser_class.NAME)
+    self.assertNotEqual(len(parser_names), 0)
     self.assertNotIn(u'test_parser', parser_names)
 
     parser_names = []
