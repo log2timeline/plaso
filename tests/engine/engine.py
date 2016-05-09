@@ -207,6 +207,16 @@ class PathSpecQueueProducerTest(test_lib.EngineTestCase):
 
     self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 2)
 
+    expected_path_specs = [
+        u'type: OS, location: /tmp/test/test_data/syslog\n',
+        u'type: OS, location: /tmp/test/test_data/syslog\n']
+
+    path_specs = []
+    for path_spec_object in test_collector_queue_consumer.path_specs:
+      path_specs.append(path_spec_object.comparable)
+
+    self.assertEqual(sorted(path_specs), sorted(expected_path_specs))
+
 
 if __name__ == '__main__':
   unittest.main()

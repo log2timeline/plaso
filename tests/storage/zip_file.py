@@ -796,15 +796,17 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
       storage_file = zipfile.ZipFile(
           temp_file, mode='r', compression=zipfile.ZIP_DEFLATED)
 
-      expected_filename_list = [
+      expected_filename_list = sorted([
           u'event_data.000001',
           u'event_index.000001',
           u'event_timestamps.000001',
           u'information.dump',
-          u'metadata.txt']
+          u'metadata.txt',
+          u'session_end.000001',
+          u'session_start.000001'])
 
       filename_list = sorted(storage_file.namelist())
-      self.assertEqual(len(filename_list), 5)
+      self.assertEqual(len(filename_list), 7)
       self.assertEqual(filename_list, expected_filename_list)
 
 

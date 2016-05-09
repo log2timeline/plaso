@@ -2831,6 +2831,7 @@ class ZIPStorageFileWriter(writer.StorageWriter):
     self._storage_file.WritePreprocessObject(self._preprocess_object)
 
     self._storage_file.Close()
+    self._storage_file = None
 
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
@@ -2877,6 +2878,17 @@ class ZIPStorageFileWriter(writer.StorageWriter):
 
     self._storage_file.AddEventSource(event_source)
     self.number_of_event_sources += 1
+
+  # TODO: remove during phased processing refactor.
+  def ForceClose(self):
+    """Forces the storage writer to close."""
+    self._storage_file.Close()
+    self._storage_file = None
+
+  # TODO: remove during phased processing refactor.
+  def ForceFlush(self):
+    """Forces the storage writer to flush."""
+    self._storage_file.Flush()
 
   def GetEventSources(self):
     """Retrieves the event sources.

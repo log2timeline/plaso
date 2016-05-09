@@ -87,6 +87,16 @@ class TestStorageWriter(storage_writer.StorageWriter):
     """
     self.event_sources.append(event_source)
 
+  # TODO: remove during phased processing refactor.
+  def ForceClose(self):
+    """Forces the storage writer to close."""
+    return
+
+  # TODO: remove during phased processing refactor.
+  def ForceFlush(self):
+    """Forces the storage writer to flush."""
+    return
+
   def GetEventSources(self):
     """Retrieves the event sources.
 

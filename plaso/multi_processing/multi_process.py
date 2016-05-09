@@ -1127,10 +1127,9 @@ class MultiProcessEngine(engine.BaseEngine):
         include_directory_stat=include_directory_stat,
         resolver_context=resolver_context)
 
-    # TODO: closing the storage writer here for now to
-    # make sure it re-opens in another process.
-    storage_writer._storage_file.Close()  # pylint: disable=protected-access
-    storage_writer._storage_file = None  # pylint: disable=protected-access
+    # TODO: closing the storage writer here for now to make sure it re-opens
+    # in another process. Remove this during phased processing refactor.
+    storage_writer.ForceClose()
 
     logging.debug(u'Starting processes.')
 

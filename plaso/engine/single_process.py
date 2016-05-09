@@ -329,7 +329,10 @@ class SingleProcessEngine(engine.BaseEngine):
         include_directory_stat=include_directory_stat,
         resolver_context=resolver_context)
 
-    storage_writer._storage_file.Flush()  # pylint: disable=protected-access
+    # TODO: flushing the storage writer here for now to make sure the event
+    # sources are written to disk. Remove this during phased processing
+    # refactor.
+    storage_writer.ForceFlush()
 
     self._path_spec_producer = _PathSpecQueueProducer(
         self._path_spec_queue, storage_writer)

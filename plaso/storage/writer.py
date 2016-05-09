@@ -44,6 +44,16 @@ class StorageWriter(plaso_queue.ItemQueueConsumer):
       event_source: an event source object (instance of EventSource).
     """
 
+  # TODO: remove during phased processing refactor.
+  @abc.abstractmethod
+  def ForceClose(self):
+    """Forces the storage writer to close."""
+
+  # TODO: remove during phased processing refactor.
+  @abc.abstractmethod
+  def ForceFlush(self):
+    """Forces the storage writer to flush."""
+
   @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves the event sources.

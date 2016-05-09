@@ -33,7 +33,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -53,7 +53,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'bdetogo.raw'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -72,7 +72,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -94,7 +94,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -114,7 +114,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.vss_stores = u'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -133,7 +133,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 
@@ -153,7 +153,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'test_pe.exe'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'test.plaso')
+      options.output = os.path.join(temp_directory, u'storage.plaso')
 
       self._test_tool.ParseOptions(options)
 

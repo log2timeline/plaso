@@ -443,10 +443,11 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
           collector_object = collector.Collector(
               resolver_context=self._resolver_context)
 
-          # TODO: produce event sources to process.
-          _ = collector_object.CollectPathSpecs(archive_path_spec)
-          self._produced_number_of_path_specs += (
-              collector_object.number_of_produced_items)
+          for path_spec in collector_object.CollectPathSpecs(
+              archive_path_spec):
+            # TODO: produce event sources to process.
+            self._queue.PushItem(path_spec)
+            self._produced_number_of_path_specs += 1
 
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
