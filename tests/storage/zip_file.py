@@ -791,7 +791,12 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
           test_queue, temp_file, preprocessing_object)
+
+      storage_writer.Open()
+      storage_writer.StartSession()
       storage_writer.WriteEventObjects()
+      storage_writer.StopSession()
+      storage_writer.Close()
 
       storage_file = zipfile.ZipFile(
           temp_file, mode='r', compression=zipfile.ZIP_DEFLATED)

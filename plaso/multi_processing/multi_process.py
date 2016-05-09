@@ -250,6 +250,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     self._path_spec_producer = engine.PathSpecQueueProducer(
         path_spec_queue, storage_writer)
     self._stop_collector_event = stop_collector_event
+    self._storage_writer = storage_writer
 
   def _GetStatus(self):
     """Returns a status dictionary."""
@@ -268,6 +269,9 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
       self._path_spec_queue.Open()
       self._path_spec_queue_port = self._path_spec_queue.port
 
+    # Remove this during phased processing refactor.
+    self._storage_writer.Open()
+
     abort = False
     try:
       logging.debug(u'Collector starting collection.')
@@ -278,6 +282,10 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
           u'Unhandled exception in collector (PID: {0:d}).'.format(self._pid))
       logging.exception(exception)
       abort = True
+
+    finally:
+      # Remove this during phased processing refactor.
+      self._storage_writer.ForceClose()
 
     self._path_spec_queue.Close()
 
@@ -1120,6 +1128,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     resolver_context = context.Context()
 
+    logging.debug(u'Starting processes.')
+
+    storage_writer.Open()
+    storage_writer.StartSession()
+
     # TODO: pass status update callback.
     self._ProcessSourcesCollectEventSources(
         source_path_specs, storage_writer,
@@ -1130,8 +1143,6 @@ class MultiProcessEngine(engine.BaseEngine):
     # TODO: closing the storage writer here for now to make sure it re-opens
     # in another process. Remove this during phased processing refactor.
     storage_writer.ForceClose()
-
-    logging.debug(u'Starting processes.')
 
     # Start the storage writer first, as we need it to start up and bind its
     # queues to ports before we can start the workers.
@@ -1459,6 +1470,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
       self._parse_error_queue_port = self._parse_error_queue.port
 
     try:
+      self._storage_writer.Open()
       self._storage_writer.WriteEventObjects()
       while (event_queue_is_zeromq and
              not self._extraction_complete_event.is_set()):
@@ -1472,6 +1484,11 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
           u'Unhandled exception in storage writer (PID: {0:d}).'.format(
               self._pid))
       logging.exception(exception)
+
+    self._storage_writer.StopSession()
+    self._storage_writer.Close()
+
+    self._storage_writer = None
 
     # Set the storage writer completion event to indicate that it is complete
     # and the process can be terminated.

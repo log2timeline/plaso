@@ -87,6 +87,10 @@ class TestStorageWriter(storage_writer.StorageWriter):
     """
     self.event_sources.append(event_source)
 
+  def Close(self):
+    """Closes the storage writer."""
+    return
+
   # TODO: remove during phased processing refactor.
   def ForceClose(self):
     """Forces the storage writer to close."""
@@ -105,6 +109,18 @@ class TestStorageWriter(storage_writer.StorageWriter):
     """
     for event_source in self.event_sources:
       yield event_source
+
+  def Open(self):
+    """Opens the storage writer."""
+    return
+
+  def StartSession(self):
+    """Starts a session."""
+    return
+
+  def StopSession(self):
+    """Stops a session."""
+    return
 
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""

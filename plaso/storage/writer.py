@@ -44,6 +44,10 @@ class StorageWriter(plaso_queue.ItemQueueConsumer):
       event_source: an event source object (instance of EventSource).
     """
 
+  @abc.abstractmethod
+  def Close(self):
+    """Closes the storage writer."""
+
   # TODO: remove during phased processing refactor.
   @abc.abstractmethod
   def ForceClose(self):
@@ -69,6 +73,10 @@ class StorageWriter(plaso_queue.ItemQueueConsumer):
         u'processing_status': self._status,
         u'type': definitions.PROCESS_TYPE_STORAGE_WRITER}
 
+  @abc.abstractmethod
+  def Open(self):
+    """Opens the storage writer."""
+
   def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
     """Enables or disables profiling.
 
@@ -79,6 +87,14 @@ class StorageWriter(plaso_queue.ItemQueueConsumer):
     """
     self._enable_profiling = enable_profiling
     self._profiling_type = profiling_type
+
+  @abc.abstractmethod
+  def StartSession(self):
+    """Starts a session."""
+
+  @abc.abstractmethod
+  def StopSession(self):
+    """Stops a session."""
 
   @abc.abstractmethod
   def WriteEventObjects(self):

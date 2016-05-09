@@ -322,6 +322,14 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       The processing status (instance of ProcessingStatus).
     """
+    logging.debug(u'Processing started.')
+
+    self._storage_writer = storage_writer
+    self._status_update_callback = status_update_callback
+
+    self._storage_writer.Open()
+    self._storage_writer.StartSession()
+
     # TODO: pass status update callback.
     self._ProcessSourcesCollectEventSources(
         source_path_specs, storage_writer,
@@ -342,10 +350,6 @@ class SingleProcessEngine(engine.BaseEngine):
         process_archive_files=process_archive_files,
         text_prepend=text_prepend)
 
-    self._storage_writer = storage_writer
-
-    self._status_update_callback = status_update_callback
-
     if hasher_names_string:
       self._extraction_worker.SetHashers(hasher_names_string)
 
@@ -360,8 +364,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._event_queue_producer.SetStorageWriter(self._storage_writer)
     self._parse_error_queue_producer.SetStorageWriter(self._storage_writer)
 
-    logging.debug(u'Processing started.')
-
     self._UpdateStatus()
     self._path_spec_producer.Run()
 
@@ -373,6 +375,9 @@ class SingleProcessEngine(engine.BaseEngine):
     self._storage_writer.WriteEventObjects()
 
     self._UpdateStatus(processing_completed=True)
+
+    self._storage_writer.StopSession()
+    self._storage_writer.Close()
 
     # Reset the extraction worker and storage writer values to return
     # the objects in their original state. This will prevent access

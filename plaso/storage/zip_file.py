@@ -57,9 +57,9 @@ The event index streams contain the stream offset to the serialized event
 objects stored in the corresponding event data stream.
 
 An event data stream consists of an array of 32-bit integers:
-+-----+-----+-...+
-| int | int | ...|
-+-----+-----+-...+
++-----+-----+-...-+
+| int | int | ... |
++-----+-----+-...-+
 
 + The event timestamps stream
 
@@ -77,7 +77,7 @@ Deprecated in version 20160501:
 * serializer.txt
   Stream that contains the serializer format.
 
-Deprecated in version 20160502:
+Deprecated in version 20160508:
 * plaso_index.#
   The event index streams contain the stream offset to the serialized
   event objects.
@@ -1380,7 +1380,6 @@ class StorageFile(ZIPStorageFile):
     self._event_source_file_number = 1
     self._event_tag_index = None
     self._last_session = 0
-    self._last_session_on_open = 0
     self._max_buffer_size = buffer_size or self._MAXIMUM_BUFFER_SIZE
     self._merge_buffer = None
     self._output_file = output_file
@@ -1764,11 +1763,9 @@ class StorageFile(ZIPStorageFile):
       logging.warning(u'Detected unclosed session.')
 
     self._last_session = last_session_end
-    self._last_session_on_open = self._last_session
 
     if not self._read_only:
       self._OpenWrite()
-      self._StartSession()
 
   def _OpenWrite(self):
     """Opens the storage file for writing."""
@@ -2023,25 +2020,6 @@ class StorageFile(ZIPStorageFile):
 
     return True
 
-  def _StartSession(self):
-    """Starts a session."""
-    if self._format_version < 20160508:
-      return
-
-    self._storage_session_start = _StorageSessionStart()
-    self._storage_session_end = None
-    self._WriteStorageSessionStart()
-
-  def _StopSession(self):
-    """Stops a session."""
-    if self._format_version < 20160508:
-      return
-
-    self._storage_session_end = _StorageSessionEnd()
-    self._storage_session_start = None
-    self._WriteStorageSessionEnd()
-    self._last_session += 1
-
   def _WriteEventsBuffer(self):
     """Writes the events buffer to the storage file."""
     if not self._buffered_events.data_size:
@@ -2248,7 +2226,6 @@ class StorageFile(ZIPStorageFile):
     """Flushes the write buffers and closes the ZIP file."""
     if not self._read_only:
       self.Flush()
-      self._StopSession()
 
     self._Close()
     self._ProfilingStop()
@@ -2331,8 +2308,8 @@ class StorageFile(ZIPStorageFile):
         yield event_source
         event_source = self._ReadEventSource(data_stream)
 
-  def GetEventSourcesSinceOpen(self):
-    """Retrieves the event sources since the open.
+  def GetEventSourcesCurrentSession(self):
+    """Retrieves the event sources of the current session.
 
     Yields:
       An event source object (instance of EventSource).
@@ -2354,7 +2331,7 @@ class StorageFile(ZIPStorageFile):
 
       event_source = self._ReadEventSource(data_stream)
       while event_source:
-        if event_source.storage_session >= self._last_session_on_open:
+        if event_source.storage_session >= self._last_session:
           yield event_source
         event_source = self._ReadEventSource(data_stream)
 
@@ -2497,6 +2474,51 @@ class StorageFile(ZIPStorageFile):
       if (profiling_type in (u'all', u'serializers') and
           not self._serializers_profiler):
         self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
+
+  def StartSession(self):
+    """Starts a session.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(
+          u'Unable to add an analysis report to a closed storage file.')
+
+    if self._read_only:
+      raise IOError(
+          u'Unable to add an analysis report to a read-only storage file.')
+
+    if self._format_version < 20160508:
+      return
+
+    self._storage_session_start = _StorageSessionStart()
+    self._storage_session_end = None
+    self._WriteStorageSessionStart()
+
+  def StopSession(self):
+    """Stops a session.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(
+          u'Unable to add an analysis report to a closed storage file.')
+
+    if self._read_only:
+      raise IOError(
+          u'Unable to add an analysis report to a read-only storage file.')
+
+    if self._format_version < 20160508:
+      return
+
+    self.Flush()
+
+    self._storage_session_end = _StorageSessionEnd()
+    self._storage_session_start = None
+    self._WriteStorageSessionEnd()
+    self._last_session += 1
 
   # TODO: rename to AddAnalysisReport.
   def StoreReport(self, analysis_report):
@@ -2819,20 +2841,6 @@ class ZIPStorageFileWriter(writer.StorageWriter):
     self._serializer_format = serializer_format
     self._storage_file = None
 
-  def _Close(self):
-    """Closes the storage writer."""
-    # TODO: move the counters out of preprocessing object.
-    # Kept for backwards compatibility for now.
-    self._preprocess_object.counter = self._parsers_counter
-    self._preprocess_object.plugin_counter = self._plugins_counter
-
-    # TODO: refactor this currently create a preprocessing object
-    # for every sync in single processing.
-    self._storage_file.WritePreprocessObject(self._preprocess_object)
-
-    self._storage_file.Close()
-    self._storage_file = None
-
   def _ConsumeItem(self, event_object, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
 
@@ -2841,15 +2849,6 @@ class ZIPStorageFileWriter(writer.StorageWriter):
     """
     self._storage_file.AddEventObject(event_object)
     self._UpdateCounters(event_object)
-
-  def _Open(self):
-    """Opens the storage writer."""
-    self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size,
-        serializer_format=self._serializer_format)
-
-    self._storage_file.SetEnableProfiling(
-        self._enable_profiling, profiling_type=self._profiling_type)
 
   def _UpdateCounters(self, event_object):
     """Updates the counters.
@@ -2872,22 +2871,61 @@ class ZIPStorageFileWriter(writer.StorageWriter):
 
     Args:
       event_source: an event source object (instance of EventSource).
+
+    Raises:
+      IOError: when the storage writer is closed.
     """
     if not self._storage_file:
-      self._Open()
+      raise IOError(
+          u'Unable to add an event source to a closed storage writer.')
 
     self._storage_file.AddEventSource(event_source)
     self.number_of_event_sources += 1
 
+  def Close(self):
+    """Closes the storage writer.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    # TODO: move the counters out of preprocessing object.
+    # Kept for backwards compatibility for now.
+    self._preprocess_object.counter = self._parsers_counter
+    self._preprocess_object.plugin_counter = self._plugins_counter
+
+    # TODO: refactor this currently create a preprocessing object
+    # for every sync in single processing.
+    self._storage_file.WritePreprocessObject(self._preprocess_object)
+
+    self._storage_file.Close()
+    self._storage_file = None
+
   # TODO: remove during phased processing refactor.
   def ForceClose(self):
-    """Forces the storage writer to close."""
+    """Forces the storage writer to close.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
     self._storage_file.Close()
     self._storage_file = None
 
   # TODO: remove during phased processing refactor.
   def ForceFlush(self):
-    """Forces the storage writer to flush."""
+    """Forces the storage writer to flush.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
     self._storage_file.Flush()
 
   def GetEventSources(self):
@@ -2895,19 +2933,62 @@ class ZIPStorageFileWriter(writer.StorageWriter):
 
     Returns:
       A generator of event source objects (instances of EventSourceObject).
+
+    Raises:
+      IOError: when the storage writer is closed.
     """
     if not self._storage_file:
-      self._Open()
+      raise IOError(u'Unable to write to closed storage writer.')
 
-    return self._storage_file.GetEventSourcesSinceOpen()
+    return self._storage_file.GetEventSourcesCurrentSession()
+
+  def Open(self):
+    """Opens the storage writer.
+
+    Raises:
+      IOError: if the storage writer is already opened.
+    """
+    if self._storage_file:
+      raise IOError(u'Storage writer already opened.')
+
+    self._storage_file = StorageFile(
+        self._output_file, buffer_size=self._buffer_size,
+        serializer_format=self._serializer_format)
+
+    self._storage_file.SetEnableProfiling(
+        self._enable_profiling, profiling_type=self._profiling_type)
+
+  def StartSession(self):
+    """Starts a session.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.StartSession()
+
+  def StopSession(self):
+    """Stops a session.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.StopSession()
 
   def WriteEventObjects(self):
-    """Writes the event objects that are pushed on the queue."""
+    """Writes the event objects that are pushed on the queue.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
     if not self._storage_file:
-      self._Open()
+      raise IOError(u'Unable to write to closed storage writer.')
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
     self.ConsumeItems()
     self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-    self._Close()
