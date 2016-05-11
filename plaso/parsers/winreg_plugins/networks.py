@@ -30,7 +30,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
     """Retrieves the network info within the signatures subkey.
 
     Args:
-      signatures_key: A Windows Registry key 
+      signatures_key: A Windows Registry key
                       (instance of dfwinreg.WinRegistryKey).
 
     Returns:
