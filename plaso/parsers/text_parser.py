@@ -65,7 +65,7 @@ class SlowLexicalTextParser(
       plugin_includes: optional list of strings containing the names of
                        the plugins to include, where None represents all
                        plugins. The default plugin, named "NAME_default",
-                       is handled seperately.
+                       is handled separately.
     """
     # TODO: remove the multiple inheritance.
     lexer.SelfFeederMixIn.__init__(self)
@@ -440,7 +440,7 @@ class TextCSVParser(interface.FileObjectParser):
       plugin_includes: optional list of strings containing the names of
                        the plugins to include, where None represents all
                        plugins. The default plugin, named "NAME_default",
-                       is handled seperately.
+                       is handled separately.
     """
     super(TextCSVParser, self).__init__(plugin_includes=plugin_includes)
     self.encoding = encoding
@@ -745,7 +745,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       plugin_includes: optional list of strings containing the names of
                        the plugins to include, where None represents all
                        plugins. The default plugin, named "NAME_default",
-                       is handled seperately.
+                       is handled separately.
     """
     super(PyparsingSingleLineTextParser, self).__init__(
         plugin_includes=plugin_includes)
@@ -1048,7 +1048,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       plugin_includes: optional list of strings containing the names of
                        the plugins to include, where None represents all
                        plugins. The default plugin, named "NAME_default",
-                       is handled seperately.
+                       is handled separately.
     """
     super(PyparsingMultiLineTextParser, self).__init__(
         plugin_includes=plugin_includes)

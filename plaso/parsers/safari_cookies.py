@@ -84,7 +84,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       plugin_includes: optional list of strings containing the names of
                        the plugins to include, where None represents all
                        plugins. The default plugin, named "NAME_default",
-                       is handled seperately.
+                       is handled separately.
     """
     super(BinaryCookieParser, self).__init__(plugin_includes=plugin_includes)
     self._cookie_plugins = (

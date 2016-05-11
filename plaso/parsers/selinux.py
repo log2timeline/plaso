@@ -83,7 +83,7 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       plugin_includes: optional list of strings containing the names of
                        the plugins to include, where None represents all
                        plugins. The default plugin, named "NAME_default",
-                       is handled seperately.
+                       is handled separately.
     """
     # Set local_zone to false, since timestamps are UTC.
     super(SELinuxParser, self).__init__(
