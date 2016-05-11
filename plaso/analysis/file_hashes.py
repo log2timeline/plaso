@@ -86,7 +86,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
-    return reports.AnalysisReport(self.NAME, text=report_text)
+    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(FileHashesPlugin)
