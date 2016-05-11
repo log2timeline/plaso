@@ -4,7 +4,6 @@ include utils/check_dependencies.py
 recursive-include config *
 recursive-include data *
 recursive-include doc *
-recursive-include plaso *.proto
 recursive-include test_data *
 exclude .gitignore
 exclude *.pyc

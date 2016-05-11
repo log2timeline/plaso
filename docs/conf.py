@@ -70,7 +70,7 @@ class Mock(MagicMock):
 # Mock all the dependencies! (except the ones we don't want to).
 modules_to_mock = [
     dependency for dependency, _, _, _ in dependencies.PYTHON_DEPENDENCIES]
-for key, value in dependencies.LIBYAL_DEPENDENCIES.iteritems():
+for key, value in iter(dependencies.LIBYAL_DEPENDENCIES.items()):
   modules_to_mock.append(key)
 
 # We also need to mock some modules that we don't have explicit dependencies on
@@ -90,8 +90,7 @@ modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 
 # There are some modules we install via pip on readthedocs that we don't need
 # to mock.
-PIP_INSTALLED_MODULES = set(
-    [u'google.protobuf', u'six', u'pyparsing', u'construct'])
+PIP_INSTALLED_MODULES = set([u'construct', u'pyparsing', u'six'])
 modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
 print(u'Mocking modules')
 for module_name in modules_to_mock:

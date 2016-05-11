@@ -43,6 +43,9 @@ class EventObject(interface.AttributeContainer):
                of micro seconds since January 1, 1970, 00:00:00 UTC.
     uuid: a string containing a unique identifier (UUID).
   """
+  CONTAINER_TYPE = u'event'
+  # TODO: eventually move data type out of event since the event source
+  # has a data type not the event itself.
   DATA_TYPE = None
 
   # This is a reserved variable just used for comparison operation and defines
@@ -212,8 +215,6 @@ class EventObject(interface.AttributeContainer):
     return attribute_names
 
 
-# TODO: deprecate store number and index.
-
 class EventTag(interface.AttributeContainer):
   """Class to represent an event tag attribute container.
 
@@ -232,6 +233,8 @@ class EventTag(interface.AttributeContainer):
     store_number: an integer containing the store number of the corresponding
                   event or None if not set.
   """
+  CONTAINER_TYPE = u'event_tag'
+
   _ATTRIBUTE_NAMES = frozenset([
       u'comment', u'event_uuid', u'labels', u'store_index', u'store_number'])
 
@@ -250,6 +253,7 @@ class EventTag(interface.AttributeContainer):
     self.comment = comment
     self.event_uuid = event_uuid
     self.labels = []
+    # TODO: deprecate store number and index.
     self.store_index = None
     self.store_number = None
 

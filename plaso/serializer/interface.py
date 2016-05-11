@@ -35,6 +35,33 @@ class AnalysisReportSerializer(object):
     """
 
 
+class AttributeContainerSerializer(object):
+  """Class that implements the attribute container serializer interface."""
+
+  @abc.abstractmethod
+  def ReadSerialized(cls, serialized):
+    """Reads an attribute container from serialized form.
+
+    Args:
+      serialized: an object containing the serialized form.
+
+    Returns:
+      An attribute container (instance of AttributeContainer).
+    """
+
+  @abc.abstractmethod
+  def WriteSerialized(cls, attribute_container):
+    """Writes an attribute container to serialized form.
+
+    Args:
+      attribute_container: an attribute container (instance of
+                           AttributeContainer).
+
+    Returns:
+      An object containing the serialized form.
+    """
+
+
 class EventGroupSerializer(object):
   """Class that implements the event group serializer interface."""
 

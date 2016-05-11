@@ -19,7 +19,6 @@ Subpackages
     plaso.output
     plaso.parsers
     plaso.preprocessors
-    plaso.proto
     plaso.serializer
     plaso.storage
     plaso.unix
