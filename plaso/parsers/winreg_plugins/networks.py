@@ -30,7 +30,8 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
     """Retrieves the network info within the signatures subkey.
 
     Args:
-      signatures_key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      signatures_key: A Windows Registry key 
+                      (instance of dfwinreg.WinRegistryKey).
 
     Returns:
         A dictionary containing tuples (default_gateway_mac, dnssuffix) hashed

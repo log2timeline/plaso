@@ -13,8 +13,8 @@ import calendar
 import construct
 import datetime
 import logging
-import time
 import pytz
+import time
 
 import dateutil.parser
 
