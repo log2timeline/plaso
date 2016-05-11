@@ -64,12 +64,13 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
 
     expected_json_dict = {
         u'event_0': {
-            u'__type__': u'EventObject',
+            u'__container_type__': u'event',
+            u'__type__': u'AttributeContainer',
             u'data_type': u'test:output',
             u'display_name': u'OS: /var/log/syslog.1',
             u'hostname': u'ubuntu',
-            'inode': 12345678,
-            'pathspec': {
+            u'inode': 12345678,
+            u'pathspec': {
                 u'__type__': u'PathSpec',
                 u'type_indicator': u'TSK',
                 u'location': u'/var/log/syslog.1',

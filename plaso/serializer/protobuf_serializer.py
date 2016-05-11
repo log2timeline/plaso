@@ -364,7 +364,7 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
       An analysis report (instance of AnalysisReport).
     """
     # Plugin name is set as one of the attributes.
-    analysis_report = reports.AnalysisReport(u'')
+    analysis_report = reports.AnalysisReport()
 
     for proto_attribute, value in proto.ListFields():
 

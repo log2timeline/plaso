@@ -1391,11 +1391,11 @@ class StorageFile(ZIPStorageFile):
       self._serializer_format_string = u'json'
 
       self._analysis_report_serializer = (
-          json_serializer.JSONAnalysisReportSerializer)
+          json_serializer.JSONAttributeContainerSerializer)
       self._event_object_serializer = (
-          json_serializer.JSONEventObjectSerializer)
+          json_serializer.JSONAttributeContainerSerializer)
       self._event_tag_serializer = (
-          json_serializer.JSONEventTagSerializer)
+          json_serializer.JSONAttributeContainerSerializer)
       self._preprocess_object_serializer = (
           json_serializer.JSONPreprocessObjectSerializer)
 
