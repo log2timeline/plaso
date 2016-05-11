@@ -282,7 +282,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         dest=u'serializer_format', default=u'json', metavar=u'FORMAT', help=(
             u'By default the storage uses JSON for serializing event '
             u'objects. This parameter can be used to change that behavior. '
-            u'The choices are "proto" and "json".'))
+            u'The choices are "json".'))
 
   def ParseOptions(self, options):
     """Parses tool specific options.

@@ -24,7 +24,7 @@ The # in the filenames is referred to as the "store number".
 + plaso_index
 
 The index file contains an index to all the entries stored within
-the protobuf file, so that it can be easily seeked. The layout is:
+the "protobuf" file, so that it can be easily seeked. The layout is:
 
 +-----+-----+-...+
 | int | int | ...|
@@ -70,7 +70,6 @@ from plaso.engine import profiler
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
-from plaso.serializer import protobuf_serializer
 from plaso.storage import reader
 from plaso.storage import writer
 
@@ -991,16 +990,13 @@ class ZIPStorageFile(object):
 class StorageFile(ZIPStorageFile):
   """Class that defines the ZIP-based storage file."""
 
-  # Set the maximum buffer size to 196 MiB
+  # The maximum buffer size to 196 MiB.
   MAXIMUM_BUFFER_SIZE = 196 * 1024 * 1024
 
-  # Set the maximum protobuf string size to 40 MiB
-  MAXIMUM_PROTO_STRING_SIZE = 40 * 1024 * 1024
+  # The maximum serialized report size to 24 MiB.
+  MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
-  # Set the maximum report protobuf string size to 24 MiB
-  MAXIMUM_REPORT_PROTOBUF_SIZE = 24 * 1024 * 1024
-
-  # Set the version of this storage mechanism.
+  # The version of the storage file.
   STORAGE_VERSION = 1
 
   def __init__(
@@ -1010,7 +1006,7 @@ class StorageFile(ZIPStorageFile):
 
     Args:
       output_file: a string containing the name of the output file.
-      buffer_size: optional maximum size of a single storage (protobuf) file.
+      buffer_size: optional maximum size of a single storage file.
                    The default is 0, which indicates no limit.
       read_only: optional boolean to indicate we are opening the storage file
                  for reading only.
@@ -1399,18 +1395,6 @@ class StorageFile(ZIPStorageFile):
       self._preprocess_object_serializer = (
           json_serializer.JSONPreprocessObjectSerializer)
 
-    elif serializer_format == definitions.SERIALIZER_FORMAT_PROTOBUF:
-      self._serializer_format_string = u'proto'
-
-      self._analysis_report_serializer = (
-          protobuf_serializer.ProtobufAnalysisReportSerializer)
-      self._event_object_serializer = (
-          protobuf_serializer.ProtobufEventObjectSerializer)
-      self._event_tag_serializer = (
-          protobuf_serializer.ProtobufEventTagSerializer)
-      self._preprocess_object_serializer = (
-          protobuf_serializer.ProtobufPreprocessObjectSerializer)
-
     else:
       raise ValueError(
           u'Unsupported serializer format: {0:s}'.format(serializer_format))
@@ -1534,7 +1518,7 @@ class StorageFile(ZIPStorageFile):
       if file_object is None:
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
-      report_string = file_object.read(self.MAXIMUM_REPORT_PROTOBUF_SIZE)
+      report_string = file_object.read(self.MAXIMUM_SERIALIZED_REPORT_SIZE)
       yield self._analysis_report_serializer.ReadSerialized(report_string)
 
   def GetSortedEntry(self, time_range=None):
@@ -1683,13 +1667,13 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'analysis_report')
 
-    serialized_report_proto = self._analysis_report_serializer.WriteSerialized(
+    serialized_report = self._analysis_report_serializer.WriteSerialized(
         analysis_report)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'analysis_report')
 
-    self._WriteStream(stream_name, serialized_report_proto)
+    self._WriteStream(stream_name, serialized_report)
 
   def StoreTagging(self, tags):
     """Store tag information into the storage file.
@@ -1886,16 +1870,16 @@ class ZIPStorageFileWriter(writer.StorageWriter):
 
   def __init__(
       self, event_object_queue, output_file, preprocess_object,
-      buffer_size=0, serializer_format=u'proto'):
+      buffer_size=0, serializer_format=definitions.SERIALIZER_FORMAT_JSON):
     """Initializes a storage writer object.
 
     Args:
       event_object_queue: an event object queue (instance of Queue).
       output_file: a string containing the path to the output file.
       preprocess_object: a preprocess object (instance of PreprocessObject).
-      buffer_size: an integer containing the estimated size of a protobuf file.
-      serializer_format: a string containing the serializer format either
-                         "proto" or "json".
+      buffer_size: optional integer containing the estimated size of
+                   a protobuf file.
+      serializer_format: optional storage serializer format.
     """
     super(ZIPStorageFileWriter, self).__init__(event_object_queue)
     self._buffer_size = buffer_size
