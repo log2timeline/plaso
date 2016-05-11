@@ -10,6 +10,7 @@ try:
 except ImportError:
   hpy = None
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.path import path_spec
@@ -18,12 +19,13 @@ from dfvfs.vfs import file_system
 
 from plaso.engine import engine
 
-from tests import test_lib as shared_test_lib
 from tests.engine import test_lib
 
 
 class TestEngine(engine.BaseEngine):
   """Class that defines the processing engine for testing."""
+
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
     """Initialize the engine object.
@@ -36,15 +38,30 @@ class TestEngine(engine.BaseEngine):
     super(TestEngine, self).__init__(
         path_spec_queue, event_object_queue, parse_error_queue)
 
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
-    file_system_builder.AddTestFile(
-        u'/Windows/System32/config/SOFTWARE', [u'SOFTWARE'])
-    file_system_builder.AddTestFile(
-        u'/Windows/System32/config/SYSTEM', [u'SYSTEM'])
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    file_system_builder.AddFileReadData(
+        u'/Windows/System32/config/SOFTWARE', test_file_path)
+    test_file_path = self._GetTestFilePath([u'SYSTEM'])
+    file_system_builder.AddFileReadData(
+        u'/Windows/System32/config/SYSTEM', test_file_path)
 
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
