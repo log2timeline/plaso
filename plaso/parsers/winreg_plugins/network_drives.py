@@ -26,7 +26,7 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
     for subkey in registry_key.GetSubkeys():
       drive_letter = subkey.name
       if not drive_letter:
-          continue
+        continue
 
       values_dict = {
           u'DriveLetter': drive_letter,
