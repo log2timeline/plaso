@@ -15,7 +15,7 @@ class AnalysisReportTest(test_lib.AttributeContainerTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     event_tag = reports.AnalysisReport(
-        u'test', text=u'This is a test analysis report')
+        plugin_name=u'test', text=u'This is a test analysis report')
 
     expected_dict = {
         u'_event_tags': [],

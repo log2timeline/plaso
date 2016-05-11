@@ -352,7 +352,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
-    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report = reports.AnalysisReport(
+        plugin_name=self.NAME, text=report_text)
     analysis_report.SetTags(tags)
     return analysis_report
 
