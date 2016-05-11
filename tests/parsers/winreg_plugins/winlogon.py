@@ -278,7 +278,8 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     # Because the order the subkeys are parsed are not guaranteed we will sort
     # the event_objects.
-    event_objects.sort()
+    event_objects = sorted(
+        event_objects, key=lambda evt: evt.EqualityString())
 
     event_object = event_objects[0]
 
@@ -286,10 +287,10 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'Application: Shell '
-        u'Command: explorer.exe '
-        u'Trigger: Logon').format(key_path)
+        u'[{0:s}\\Notify\\NavLogon] '
+        u'Application: NavLogon '
+        u'Handler: NavLogoffEvent '
+        u'Trigger: Logoff').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
@@ -301,10 +302,10 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}\\Notify\\NavLogon] '
-        u'Application: NavLogon '
-        u'Handler: NavStartShellEvent '
-        u'Trigger: StartShell').format(key_path)
+        u'[{0:s}] '
+        u'Application: VmApplet '
+        u'Command: SystemPropertiesPerformance.exe/pagefile '
+        u'Trigger: Logon').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
