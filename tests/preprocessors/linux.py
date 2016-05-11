@@ -4,13 +4,13 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
 from plaso.engine import knowledge_base
 from plaso.preprocessors import linux
 
-from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -21,7 +21,7 @@ class LinuxHostnameTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/hostname', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
@@ -45,7 +45,7 @@ class LinuxTimezoneTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/timezone', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
@@ -83,7 +83,7 @@ class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/passwd', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')

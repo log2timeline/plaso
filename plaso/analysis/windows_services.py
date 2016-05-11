@@ -229,7 +229,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
-    return reports.AnalysisReport(self.NAME, text=report_text)
+    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
   def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
     """Analyzes an event_object and creates Windows Services as required.
