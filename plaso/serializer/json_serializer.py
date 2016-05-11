@@ -294,13 +294,15 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     The resulting dictionary of the JSON serialized objects consists of:
     {
         '__type__': 'AttributeContainer'
-        '_container_type': ...
+        '__container_type__': ...
         ...
     }
 
     Here '__type__' indicates the object base type. In this case
-    'AttributeContainer'. The rest of the elements of the dictionary
-    make up the preprocessing object attributes.
+    'AttributeContainer'.
+
+    '__container_type__' indicates the container type and rest of the elements
+    of the dictionary make up the attributes of the container.
 
     Args:
       attribute_container: an attribute container (instance of
