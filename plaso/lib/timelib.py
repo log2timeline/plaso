@@ -12,10 +12,10 @@ human readable form.
 import calendar
 import datetime
 import logging
-import pytz
 import time
 
 import construct
+import pytz
 
 import dateutil.parser
 
