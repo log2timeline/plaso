@@ -157,6 +157,45 @@ class WindowsRegistryServiceEvent(WindowsRegistryEvent):
   DATA_TYPE = 'windows:registry:service'
 
 
+class WindowsRegistryNetworkEvent(time_events.TimestampEvent):
+  """Convenience class for a Windows network event.
+
+  Attributes:
+    ssid: the SSID of the connection.
+    description: a string containing the description of the wireless connection.
+    connection_type: a string containing the type of connection.
+    default_gateway_mac: MAC address for the default gateway.
+    dns_suffix: the DNS suffix.
+    source_append: optional string to append to the source_long of the event.
+  """
+  DATA_TYPE = 'windows:registry:network'
+
+  def __init__(
+      self, timestamp, timestamp_description, ssid, description,
+      connection_type, default_gateway_mac, dns_suffix):
+    """Initializes an event object.
+
+    Args:
+      timestamp: the unix timestamp in milliseconds.
+      timestamp_description: string containing timestamp description.
+      ssid: the SSID of the connection.
+      description: a string containing the description of the wireless
+                   connection.
+      connection_type: a string containing the type of connection.
+      default_gateway_mac: MAC address for the default gateway.
+      dns_suffix: the DNS suffix.
+    """
+    super(WindowsRegistryNetworkEvent, self).__init__(
+        timestamp, timestamp_description)
+
+    self.ssid = ssid
+    self.description = description
+    self.connection_type = connection_type
+    self.default_gateway_mac = default_gateway_mac
+    self.dns_suffix = dns_suffix
+    self.source_append = u': Network Connection'
+
+
 class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows volume creation event.
 

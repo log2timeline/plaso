@@ -62,6 +62,22 @@ class WindowsRegistryListEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = u'LOG'
 
 
+class WindowsRegistryNetworkEventFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a Windows network event."""
+
+  DATA_TYPE = u'windows:registry:network'
+
+  FORMAT_STRING_PIECES = [
+      u'SSID: {ssid}',
+      u'Description: {description}',
+      u'Connection Type: {connection_type}',
+      u'Default Gateway Mac: {default_gateway_mac}',
+      u'DNS Suffix: {dns_suffix}']
+
+  SOURCE_LONG = u'System'
+  SOURCE_SHORT = u'LOG'
+
+
 class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows volume creation event."""
 
@@ -83,5 +99,6 @@ class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
 manager.FormattersManager.RegisterFormatters([
     WindowsDistributedLinkTrackingCreationEventFormatter,
     WindowsRegistryListEventFormatter,
+    WindowsRegistryNetworkEventFormatter,
     WindowsRegistryInstallationEventFormatter,
     WindowsVolumeCreationEventFormatter])
