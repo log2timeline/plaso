@@ -129,8 +129,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'serializing event'),
       (u'                        objects. This parameter can be used to '
        u'change that'),
-      (u'                        behavior. The choices are "proto" and '
-       u'"json".'),
+      u'                        behavior. The choices are "json".',
       u''])
 
   def testAddExtractionOptions(self):

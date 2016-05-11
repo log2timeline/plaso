@@ -272,7 +272,7 @@ class ExtractionFrontend(frontend.Frontend):
       collection_information[u'os_detected'] = u'N/A'
 
     # TODO: processing settings:
-    collection_information[u'protobuf_size'] = self._buffer_size
+    collection_information[u'serialized_buffer_size'] = self._buffer_size
     collection_information[u'time_of_run'] = timelib.Timestamp.GetNow()
 
     if self._single_process_mode:

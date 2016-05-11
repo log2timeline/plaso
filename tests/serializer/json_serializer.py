@@ -287,7 +287,7 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
         u'__type__': u'PreprocessObject',
         u'collection_information': {
             u'cmd_line': (
-                u'/usr/bin/log2timeline.py pinfo_test.out '
+                u'/usr/bin/log2timeline.py pinfo_test.json.plaso '
                 u'tsk_volume_system.raw'),
             u'configured_zone': {
                 u'__type__': u'timezone',
@@ -298,14 +298,14 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
             u'image_offset': 180224,
             u'method': u'imaged processed',
             u'os_detected': u'N/A',
-            u'output_file': u'pinfo_test.out',
+            u'output_file': u'pinfo_test.json.plaso',
             u'parser_selection': u'(no list set)',
             u'parsers': self._parsers,
             u'preferred_encoding': u'utf-8',
             u'preprocess': True,
-            u'protobuf_size': 0,
             u'recursive': False,
             u'runtime': u'multi process mode',
+            u'serialized_buffer_size': 0,
             u'time_of_run': 1430290411000000,
             u'version': u'1.2.1_20150424',
             u'vss parsing': False,
@@ -352,21 +352,22 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
     preprocess_object = event.PreprocessObject()
     preprocess_object.collection_information = {
         u'cmd_line': (
-            u'/usr/bin/log2timeline.py pinfo_test.out tsk_volume_system.raw'),
+            u'/usr/bin/log2timeline.py pinfo_test.json.plaso '
+            u'tsk_volume_system.raw'),
         u'configured_zone': pytz.UTC,
         u'debug': False,
         u'file_processed': u'/tmp/tsk_volume_system.raw',
         u'image_offset': 180224,
         u'method': u'imaged processed',
         u'os_detected': u'N/A',
-        u'output_file': u'pinfo_test.out',
+        u'output_file': u'pinfo_test.json.plaso',
         u'parser_selection': u'(no list set)',
         u'parsers': self._parsers,
         u'preferred_encoding': u'utf-8',
         u'preprocess': True,
-        u'protobuf_size': 0,
         u'recursive': False,
         u'runtime': u'multi process mode',
+        u'serialized_buffer_size': 0,
         u'time_of_run': 1430290411000000,
         u'version': u'1.2.1_20150424',
         u'vss parsing': False,
