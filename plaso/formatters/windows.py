@@ -74,7 +74,7 @@ class WindowsRegistryNetworkEventFormatter(interface.ConditionalEventFormatter):
       u'Default Gateway Mac: {default_gateway_mac}',
       u'DNS Suffix: {dns_suffix}']
 
-  SOURCE_LONG = u'System'
+  SOURCE_LONG = u'System: Network Connection'
   SOURCE_SHORT = u'LOG'
 
 

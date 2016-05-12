@@ -169,6 +169,24 @@ class PythonDatetimeEvent(TimestampEvent):
         timestamp, timestamp_description, data_type=data_type)
 
 
+class SystemtimeEvent(TimestampEvent):
+  """Convenience class for a SYSTEMTIME timestamp-based event."""
+
+  def __init__(self, systemtime, timestamp_description, data_type=None):
+    """Initializes an event object.
+
+    Args:
+      systemtime: the SYSTEMTIME timestamp value.
+      timestamp_description: a string containing the usage of
+                             the timestamp value.
+      data_type: optional event data type. If not set data_type is
+                 derived from the DATA_TYPE attribute.
+    """
+    timestamp = timelib.Timestamp.FromSystemtime(systemtime)
+    super(SystemtimeEvent, self).__init__(
+        timestamp, timestamp_description, data_type=data_type)
+
+
 class UUIDTimeEvent(TimestampEvent):
   """Convenience class for an UUID version time-based event.
 
