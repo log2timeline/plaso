@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Winlogon registry plugin."""
+"""This file contains the Winlogon Registry plugin."""
 
 from plaso.containers import windows_events
 from plaso.parsers import winreg
@@ -26,28 +26,14 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
       u'Shell', u'Userinit', u'AppSetup', u'GinaDLL', u'System', u'VmApplet',
       u'taskman', u'UIHost']
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Retrieves information from the Winlogon registry key.
+  def _ParseRegisteredDLLs(self, parser_mediator, registry_key):
+    """Parses the registered DLLs that receive event notifications.
 
     Args:
         parser_mediator: A parser mediator object (instance of ParserMediator).
         registry_key: A Windows Registry key (instance of
                       dfwinreg.WinRegistryKey).
     """
-    # Get logon applications
-    for application in self._LOGON_APPLICATIONS:
-      command = registry_key.GetValueByName(application)
-      if command:
-        values_dict = {
-            u'Application': application,
-            u'Command': command.GetDataAsObject(),
-            u'Trigger': u'Logon'}
-        event_object = windows_events.WindowsRegistryEvent(
-            registry_key.last_written_time, registry_key.path, values_dict,
-            offset=registry_key.offset, source_append=u': Winlogon')
-        parser_mediator.ProduceEvent(event_object)
-
-    # Get registered DLLs that receive event notifications
     key = registry_key.GetSubkeyByName(u'Notify')
     if key:
       for subkey in key.GetSubkeys():
@@ -61,12 +47,43 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
 
             command = subkey.GetValueByName(u'DllName')
             if command:
-              values_dict[u'command'] = command.GetDataAsObject()
+              values_dict[u'Command'] = command.GetDataAsObject()
 
             event_object = windows_events.WindowsRegistryEvent(
                 subkey.last_written_time, subkey.path, values_dict,
                 offset=subkey.offset, source_append=u': Winlogon')
             parser_mediator.ProduceEvent(event_object)
+
+  def _ParseLogonApplications(self, parser_mediator, registry_key):
+    """Parses the registered logon applications.
+
+    Args:
+        parser_mediator: A parser mediator object (instance of ParserMediator).
+        registry_key: A Windows Registry key (instance of
+                      dfwinreg.WinRegistryKey).
+    """
+    for application in self._LOGON_APPLICATIONS:
+      command = registry_key.GetValueByName(application)
+      if command:
+        values_dict = {
+            u'Application': application,
+            u'Command': command.GetDataAsObject(),
+            u'Trigger': u'Logon'}
+        event_object = windows_events.WindowsRegistryEvent(
+            registry_key.last_written_time, registry_key.path, values_dict,
+            offset=registry_key.offset, source_append=u': Winlogon')
+        parser_mediator.ProduceEvent(event_object)
+
+  def GetEntries(self, parser_mediator, registry_key, **kwargs):
+    """Retrieves information from the Winlogon registry key.
+
+    Args:
+        parser_mediator: A parser mediator object (instance of ParserMediator).
+        registry_key: A Windows Registry key (instance of
+                      dfwinreg.WinRegistryKey).
+    """
+    self._ParseLogonApplications(parser_mediator, registry_key)
+    self._ParseRegisteredDLLs(parser_mediator, registry_key)
 
 
 winreg.WinRegistryParser.RegisterPlugin(WinlogonPlugin)
