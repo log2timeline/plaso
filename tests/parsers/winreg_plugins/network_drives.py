@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Network Drives Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = network_drives.NetworkDrivesPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -140,8 +136,9 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'HKEY_CURRENT_USER\\Network'
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
+    plugin = network_drives.NetworkDrivesPlugin()
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)

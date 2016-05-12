@@ -19,9 +19,9 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
     """Retrieves information from the Network registry key.
 
     Args:
-        parser_mediator: A parser mediator object (instance of ParserMediator).
-        registry_key: A Windows Registry key (instance of
-                      dfwinreg.WinRegistryKey).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
     """
     for subkey in registry_key.GetSubkeys():
       drive_letter = subkey.name
@@ -33,9 +33,9 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
           u'Type': u'Mapped Drive'}
 
       # Get the remote path if it exists.
-      remote_path = subkey.GetValueByName(u'RemotePath')
-      if remote_path:
-        remote_path = remote_path.GetDataAsObject()
+      remote_path_value = subkey.GetValueByName(u'RemotePath')
+      if remote_path_value:
+        remote_path = remote_path_value.GetDataAsObject()
 
         if remote_path.startswith(u'\\\\'):
           server_name, _, share_name = remote_path[2:].partition(u'\\')
