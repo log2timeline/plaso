@@ -584,8 +584,6 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
                      collections.Counter).
   """
 
-  # pylint: disable=abstract-method
-
   def __init__(
       self, queue_object, storage_file, filter_string, preprocess_object,
       preferred_encoding=u'utf-8'):
@@ -609,18 +607,6 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
 
     # Counter containing the number of reports.
     self.reports_counter = collections.Counter()
-
-  def _Close(self):
-    """Closes the storage writer."""
-    # TODO: write the tags incrementally instead of buffering them
-    # into a list.
-    self._storage_file.StoreTagging(self._tags)
-
-    # TODO: move the counters out of preprocessing object.
-    # Kept for backwards compatibility for now.
-    self._preprocess_object.counter = self._tags_counter
-
-    self._storage_file.WritePreprocessObject(self._preprocess_object)
 
   def _ConsumeItem(self, analysis_report, **unused_kwargs):
     """Consumes an item callback for ConsumeItems.
@@ -661,10 +647,64 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')
 
-  def _Open(self):
+  def AddEventSource(self, event_source):
+    """Adds an event source to the storage.
+
+    Args:
+      event_source: an event source object (instance of EventSource).
+    """
+    return
+
+  def Close(self):
+    """Closes the storage writer."""
+    # TODO: write the tags incrementally instead of buffering them
+    # into a list.
+    self._storage_file.StoreTagging(self._tags)
+
+    # TODO: move the counters out of preprocessing object.
+    # Kept for backwards compatibility for now.
+    self._preprocess_object.counter = self._tags_counter
+
+    self._storage_file.WritePreprocessObject(self._preprocess_object)
+
+  # TODO: remove during phased processing refactor.
+  def ForceClose(self):
+    """Forces the storage writer to close."""
+    return
+
+  # TODO: remove during phased processing refactor.
+  def ForceFlush(self):
+    """Forces the storage writer to flush."""
+    return
+
+  def GetEventSources(self):
+    """Retrieves the event sources.
+
+    Yields:
+      An event source object (instance of EventSource).
+    """
+    return
+
+  def Open(self):
     """Opens the storage writer."""
     self._storage_file.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)
+
+  def WriteEventObjects(self):
+    """Writes event objects."""
+    return
+
+  def WriteSessionCompletion(self):
+    """Writes session completion information."""
+    return
+
+  def WriteSessionStart(self, session_start):
+    """Writes session start information.
+
+    Args:
+      session_start: the session start information (instance of SessionStart).
+    """
+    return
 
 
 class PsortAnalysisProcess(object):
