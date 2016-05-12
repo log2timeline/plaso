@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Winlogon Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = winlogon.WinlogonPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -174,6 +170,12 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'NavLogon', last_written_time=filetime.timestamp)
     notify.AddSubkey(navlogon)
 
+    value_data = u'NavLogon.dll'.encode(u'utf_16_le')
+    registry_value = dfwinreg_fake.FakeWinRegistryValue(
+        u'DllName', data=value_data,
+        data_type=dfwinreg_definitions.REG_SZ)
+    navlogon.AddValue(registry_value)
+
     value_data = u'NavLogoffEvent'.encode(u'utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         u'Logoff', data=value_data,
@@ -270,8 +272,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
+    plugin = winlogon.WinlogonPlugin()
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(plugin, registry_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 14)
@@ -289,6 +292,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[{0:s}\\Notify\\NavLogon] '
         u'Application: NavLogon '
+        u'Command: NavLogon.dll '
         u'Handler: NavLogoffEvent '
         u'Trigger: Logoff').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
