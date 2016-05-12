@@ -34,25 +34,27 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
         registry_key: A Windows Registry key (instance of
                       dfwinreg.WinRegistryKey).
     """
-    key = registry_key.GetSubkeyByName(u'Notify')
-    if key:
-      for subkey in key.GetSubkeys():
-        for trigger in self._TRIGGERS:
-          handler = subkey.GetValueByName(trigger)
-          if handler:
-            values_dict = {
-                u'Application': subkey.name,
-                u'Handler': handler.GetDataAsObject(),
-                u'Trigger': trigger}
+    notify_key = registry_key.GetSubkeyByName(u'Notify')
+    if not notify_key:
+      return
 
-            command = subkey.GetValueByName(u'DllName')
-            if command:
-              values_dict[u'Command'] = command.GetDataAsObject()
+    for subkey in notify_key.GetSubkeys():
+      for trigger in self._TRIGGERS:
+        handler_value = subkey.GetValueByName(trigger)
+        if handler_value:
+          values_dict = {
+              u'Application': subkey.name,
+              u'Handler': handler_value.GetDataAsObject(),
+              u'Trigger': trigger}
 
-            event_object = windows_events.WindowsRegistryEvent(
-                subkey.last_written_time, subkey.path, values_dict,
-                offset=subkey.offset, source_append=u': Winlogon')
-            parser_mediator.ProduceEvent(event_object)
+          command_value = subkey.GetValueByName(u'DllName')
+          if command_value:
+            values_dict[u'Command'] = command_value.GetDataAsObject()
+
+          event_object = windows_events.WindowsRegistryEvent(
+              subkey.last_written_time, subkey.path, values_dict,
+              offset=subkey.offset, source_append=u': Winlogon')
+          parser_mediator.ProduceEvent(event_object)
 
   def _ParseLogonApplications(self, parser_mediator, registry_key):
     """Parses the registered logon applications.
@@ -63,11 +65,11 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
                       dfwinreg.WinRegistryKey).
     """
     for application in self._LOGON_APPLICATIONS:
-      command = registry_key.GetValueByName(application)
-      if command:
+      command_value = registry_key.GetValueByName(application)
+      if command_value:
         values_dict = {
             u'Application': application,
-            u'Command': command.GetDataAsObject(),
+            u'Command': command_value.GetDataAsObject(),
             u'Trigger': u'Logon'}
         event_object = windows_events.WindowsRegistryEvent(
             registry_key.last_written_time, registry_key.path, values_dict,
