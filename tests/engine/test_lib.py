@@ -114,16 +114,20 @@ class TestStorageWriter(storage_writer.StorageWriter):
     """Opens the storage writer."""
     return
 
-  def StartSession(self):
-    """Starts a session."""
-    return
-
-  def StopSession(self):
-    """Stops a session."""
-    return
-
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
     self._status = definitions.PROCESSING_STATUS_RUNNING
     self.ConsumeItems()
     self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+  def WriteSessionCompletion(self):
+    """Writes session completion information."""
+    return
+
+  def WriteSessionStart(self, session_start):
+    """Writes session start information.
+
+    Args:
+      session_start: the session start information (instance of SessionStart).
+    """
+    return

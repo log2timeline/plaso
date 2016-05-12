@@ -1130,9 +1130,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
     logging.debug(u'Starting processes.')
 
-    storage_writer.Open()
-    storage_writer.StartSession()
-
     # TODO: pass status update callback.
     self._ProcessSourcesCollectEventSources(
         source_path_specs, storage_writer,
@@ -1485,7 +1482,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
               self._pid))
       logging.exception(exception)
 
-    self._storage_writer.StopSession()
+    self._storage_writer.WriteSessionCompletion()
     self._storage_writer.Close()
 
     self._storage_writer = None

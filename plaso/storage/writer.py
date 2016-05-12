@@ -89,13 +89,17 @@ class StorageWriter(plaso_queue.ItemQueueConsumer):
     self._profiling_type = profiling_type
 
   @abc.abstractmethod
-  def StartSession(self):
-    """Starts a session."""
-
-  @abc.abstractmethod
-  def StopSession(self):
-    """Stops a session."""
-
-  @abc.abstractmethod
   def WriteEventObjects(self):
-    """Writes the event objects that are pushed on the queue."""
+    """Writes event objects."""
+
+  @abc.abstractmethod
+  def WriteSessionCompletion(self):
+    """Writes session completion information."""
+
+  @abc.abstractmethod
+  def WriteSessionStart(self, session_start):
+    """Writes session start information.
+
+    Args:
+      session_start: the session start information (instance of SessionStart).
+    """

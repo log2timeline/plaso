@@ -12,6 +12,7 @@ from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import interface as containers_interface
 from plaso.containers import reports
+from plaso.containers import sessions
 from plaso.lib import event
 from plaso.lib import py2to3
 from plaso.serializer import interface
@@ -287,6 +288,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       u'event': events.EventObject,
       u'event_source': event_sources.EventSource,
       u'event_tag': events.EventTag,
+      u'session_completion': sessions.SessionCompletion,
+      u'session_start': sessions.SessionStart,
   }
 
   @classmethod

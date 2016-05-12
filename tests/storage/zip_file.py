@@ -8,6 +8,7 @@ import zipfile
 
 from plaso.containers import events
 from plaso.containers import reports
+from plaso.containers import sessions
 from plaso.engine import plaso_queue
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -785,6 +786,7 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
 
     test_queue_producer.SignalAbort()
 
+    session_start = sessions.SessionStart()
     preprocessing_object = event.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -793,9 +795,9 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
           test_queue, temp_file, preprocessing_object)
 
       storage_writer.Open()
-      storage_writer.StartSession()
+      storage_writer.WriteSessionStart(session_start)
       storage_writer.WriteEventObjects()
-      storage_writer.StopSession()
+      storage_writer.WriteSessionCompletion()
       storage_writer.Close()
 
       storage_file = zipfile.ZipFile(
@@ -807,7 +809,7 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
           u'event_timestamps.000001',
           u'information.dump',
           u'metadata.txt',
-          u'session_end.000001',
+          u'session_completion.000001',
           u'session_start.000001'])
 
       filename_list = sorted(storage_file.namelist())

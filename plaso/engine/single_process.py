@@ -327,9 +327,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._storage_writer = storage_writer
     self._status_update_callback = status_update_callback
 
-    self._storage_writer.Open()
-    self._storage_writer.StartSession()
-
     # TODO: pass status update callback.
     self._ProcessSourcesCollectEventSources(
         source_path_specs, storage_writer,
@@ -376,7 +373,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._UpdateStatus(processing_completed=True)
 
-    self._storage_writer.StopSession()
+    self._storage_writer.WriteSessionCompletion()
     self._storage_writer.Close()
 
     # Reset the extraction worker and storage writer values to return

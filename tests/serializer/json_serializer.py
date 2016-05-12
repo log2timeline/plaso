@@ -299,6 +299,9 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(event_tag_dict.items()),
         sorted(expected_event_tag_dict.items()))
 
+  # TODO: add SessionCompletion tests.
+  # TODO: add SessionStart tests.
+
 
 class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON preprocessing object serializer object."""
