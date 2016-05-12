@@ -205,7 +205,7 @@ class UUIDTimeEvent(TimestampEvent):
     Raises:
       ValueError: if the UUID version is not supported.
     """
-    if not uuid.version == 1:
+    if uuid.version != 1:
       raise ValueError(u'Unsupported UUID version.')
 
     timestamp = timelib.Timestamp.FromUUIDTime(uuid.time)
