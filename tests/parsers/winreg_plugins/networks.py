@@ -203,7 +203,8 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
 
     # Because the order the subkeys are parsed are not guaranteed we will sort
     # the event_objects.
-    event_objects.sort()
+    event_objects = sorted(
+        event_objects, key=lambda evt: evt.EqualityString())
 
     event_object = event_objects[0]
 
