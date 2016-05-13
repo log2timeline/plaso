@@ -270,20 +270,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'The profiling type: "all", "memory", "parsers" or '
             u'"serializers".'))
 
-  def AddStorageOptions(self, argument_group):
-    """Adds the storage options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        u'--serializer-format', u'--serializer_format', action=u'store',
-        dest=u'serializer_format', default=u'json', metavar=u'FORMAT', help=(
-            u'By default the storage uses JSON for serializing event '
-            u'objects. This parameter can be used to change that behavior. '
-            u'The choices are "json".'))
-
   def ParseOptions(self, options):
     """Parses tool specific options.
 

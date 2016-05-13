@@ -518,7 +518,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
     self.AddOutputOptions(output_group)
-    self.AddStorageOptions(output_group)
 
     processing_group = argument_parser.add_argument_group(
         u'Processing Arguments')
