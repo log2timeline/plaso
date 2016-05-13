@@ -10,6 +10,7 @@ from plaso.parsers.winreg_plugins import mountpoints
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import mrulistex
 from plaso.parsers.winreg_plugins import msie_zones
+from plaso.parsers.winreg_plugins import network_drives
 from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import outlook
 from plaso.parsers.winreg_plugins import programscache
