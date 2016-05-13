@@ -8,7 +8,7 @@ class EventSource(interface.AttributeContainer):
   """Class to represent an event source attribute container.
 
   The event source object contains information about where a specific
-  event originates from e.g. a file, the $STANDARD_INFORMATION MFT attribute,
+  event originates e.g. a file, the $STANDARD_INFORMATION MFT attribute,
   or Application Compatibility cache.
 
   Attributes:
