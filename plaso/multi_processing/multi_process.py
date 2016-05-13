@@ -798,7 +798,7 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       parse_error_queue = self._parse_error_queue
       path_spec_queue = self._path_spec_queue
-      event_object_queue = self.event_object_queue
+      event_object_queue = self._event_object_queue
 
     worker_process = MultiProcessEventExtractionWorkerProcess(
         path_spec_queue, event_object_queue,
@@ -848,14 +848,14 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       logging.debug(u'Emptying queues.')
       self._path_spec_queue.Empty()
-      self.event_object_queue.Empty()
+      self._event_object_queue.Empty()
       self._parse_error_queue.Empty()
 
       # Wake the processes to make sure that they are not blocking
       # waiting for new items.
       for _ in range(self._number_of_extraction_workers):
         self._path_spec_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-      self.event_object_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+      self._event_object_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
       # TODO: The following line is commented out as a work around for
       # infinite blocking wait in storage writer process. Fix this by
@@ -880,7 +880,8 @@ class MultiProcessEngine(engine.BaseEngine):
     # For Multiprocessing queues, set abort to True to stop queue.join_thread()
     # from blocking.
     extraction_queues = [
-        self._path_spec_queue, self.event_object_queue, self._parse_error_queue]
+        self._path_spec_queue, self._event_object_queue,
+        self._parse_error_queue]
     for extraction_queue in extraction_queues:
       if isinstance(extraction_queue, MultiProcessingQueue):
         extraction_queue.Close(abort=True)
@@ -1158,7 +1159,7 @@ class MultiProcessEngine(engine.BaseEngine):
       parse_error_queue = None
 
     storage_writer_process = MultiProcessStorageWriterProcess(
-        self.event_object_queue, self._extraction_complete_event,
+        self._event_object_queue, self._extraction_complete_event,
         self._storage_writer_complete_event, parse_error_queue,
         storage_writer, enable_sigsegv_handler=self._enable_sigsegv_handler,
         name=u'StorageWriter')

@@ -21,7 +21,6 @@ class BaseEngine(object):
   """Class that defines the processing engine base.
 
   Attributes:
-    event_object_queue: the event object queue (instance of Queue).
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
   """
 
@@ -35,13 +34,12 @@ class BaseEngine(object):
     """
     self._enable_debug_output = False
     self._enable_profiling = False
+    self._event_object_queue = event_object_queue
     self._path_spec_queue = path_spec_queue
     self._parse_error_queue = parse_error_queue
     self._processing_status = processing_status.ProcessingStatus()
     self._profiling_sample_rate = 1000
     self._profiling_type = u'all'
-
-    self.event_object_queue = event_object_queue
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):

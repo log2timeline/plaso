@@ -116,3 +116,88 @@ class StorageReader(object):
     Yields:
       Event source objects (instance of EventSourceObject).
     """
+
+
+class StorageWriter(object):
+  """Class that defines the storage writer interface.
+
+  Attributes:
+    number_of_event_sources: an integer containing the number of event
+                             sources written.
+  """
+
+  def __init__(self, event_object_queue):
+    """Initializes a storage writer object.
+
+    Args:
+      event_object_queue: the event object queue (instance of Queue).
+    """
+    super(StorageWriter, self).__init__(event_object_queue)
+    self._enable_profiling = False
+    self._profiling_type = u'all'
+    self.number_of_event_sources = 0
+
+  @abc.abstractmethod
+  def AddEvent(self, event_object):
+    """Adds an event object to the storage.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+
+  @abc.abstractmethod
+  def AddEventSource(self, event_source):
+    """Adds an event source to the storage.
+
+    Args:
+      event_source: an event source object (instance of EventSource).
+    """
+
+  @abc.abstractmethod
+  def Close(self):
+    """Closes the storage writer."""
+
+  # TODO: remove during phased processing refactor.
+  @abc.abstractmethod
+  def ForceClose(self):
+    """Forces the storage writer to close."""
+
+  # TODO: remove during phased processing refactor.
+  @abc.abstractmethod
+  def ForceFlush(self):
+    """Forces the storage writer to flush."""
+
+  @abc.abstractmethod
+  def GetEventSources(self):
+    """Retrieves the event sources.
+
+    Yields:
+      An event source object (instance of EventSource).
+    """
+
+  @abc.abstractmethod
+  def Open(self):
+    """Opens the storage writer."""
+
+  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
+      profiling_type: optional profiling type.
+    """
+    self._enable_profiling = enable_profiling
+    self._profiling_type = profiling_type
+
+  @abc.abstractmethod
+  def WriteSessionCompletion(self):
+    """Writes session completion information."""
+
+  @abc.abstractmethod
+  def WriteSessionStart(self, session_start):
+    """Writes session start information.
+
+    Args:
+      session_start: the session start information (instance of SessionStart).
+    """

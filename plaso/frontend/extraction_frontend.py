@@ -360,7 +360,6 @@ class ExtractionFrontend(frontend.Frontend):
       number_of_extraction_workers=0, preferred_encoding=u'utf-8',
       parser_filter_expression=None, single_process_mode=False,
       status_update_callback=None,
-      storage_serializer_format=definitions.SERIALIZER_FORMAT_JSON,
       timezone=pytz.UTC):
     """Processes the sources.
 
@@ -385,7 +384,6 @@ class ExtractionFrontend(frontend.Frontend):
       single_process_mode: optional boolean value to indicate if the front-end
                            should run in single process mode.
       status_update_callback: optional callback function for status updates.
-      storage_serializer_format: optional storage serializer format.
       timezone: optional preferred timezone.
 
     Returns:
@@ -473,9 +471,7 @@ class ExtractionFrontend(frontend.Frontend):
         preferred_encoding=preferred_encoding)
 
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        self._engine.event_object_queue, self._storage_file_path,
-        pre_obj, buffer_size=self._buffer_size,
-        serializer_format=storage_serializer_format)
+        self._storage_file_path, pre_obj, buffer_size=self._buffer_size)
 
     storage_writer.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)

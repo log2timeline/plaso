@@ -19,6 +19,45 @@ from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
+class _EventObjectQueueConsumer(plaso_queue.ItemQueueConsumer):
+  """Class that implements an event object queue consumer.
+
+  The consumer subscribes to updates on the queue.
+  """
+
+  def __init__(self, queue_object, storage_writer):
+    """Initializes the item queue consumer.
+
+    Args:
+      queue_object: a queue object (instance of Queue).
+      storage_writer: a strorage writer (instance of StorageWriter).
+    """
+    super(_EventObjectQueueConsumer, self).__init__(queue_object)
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._storage_writer = storage_writer
+
+  def _ConsumeItem(self, event_object, **kwargs):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+    self._storage_writer.AddEvent(event_object)
+
+  def GetStatus(self):
+    """Returns a dictionary containing the status."""
+    return {
+        u'number_of_events': self.number_of_consumed_items,
+        u'processing_status': self._status,
+        u'type': definitions.PROCESS_TYPE_STORAGE_WRITER}
+
+  def WriteEventObjects(self):
+    """Writes the event objects that are pushed on the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self.ConsumeItems()
+    self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+
 class _PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
   """Class that implements a path specification queue producer object."""
 
@@ -106,6 +145,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker = None
     self._event_queue_producer = SingleProcessItemQueueProducer(
         event_object_queue)
+    self._event_object_consumer = None
     self._last_status_update_timestamp = time.time()
     self._parse_error_queue_producer = SingleProcessItemQueueProducer(
         parse_error_queue)
@@ -221,7 +261,7 @@ class SingleProcessEngine(engine.BaseEngine):
       processing_completed: optional boolean value the processing has been
                             completed.
     """
-    status = self._storage_writer.GetStatus()
+    status = self._event_object_consumer.GetStatus()
     status_indicator = status.get(u'processing_status', None)
     number_of_events = status.get(u'number_of_events', 0)
 
@@ -324,7 +364,6 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     logging.debug(u'Processing started.')
 
-    self._storage_writer = storage_writer
     self._status_update_callback = status_update_callback
 
     # TODO: pass status update callback.
@@ -353,13 +392,16 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.InitializeParserObjects(
         parser_filter_expression=parser_filter_expression)
 
+    self._event_object_consumer = _EventObjectQueueConsumer(
+        self._event_object_queue, storage_writer)
+
     # Set the extraction worker and storage writer values so that they
     # can be accessed if the QueueFull exception is raised. This is
     # needed in single process mode to prevent the queue consuming too
     # much memory.
     self._path_spec_producer.SetExtractionWorker(self._extraction_worker)
-    self._event_queue_producer.SetStorageWriter(self._storage_writer)
-    self._parse_error_queue_producer.SetStorageWriter(self._storage_writer)
+    self._event_queue_producer.SetStorageWriter(storage_writer)
+    self._parse_error_queue_producer.SetStorageWriter(storage_writer)
 
     self._UpdateStatus()
     self._path_spec_producer.Run()
@@ -369,19 +411,18 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.Run()
 
     self._UpdateStatus()
-    self._storage_writer.WriteEventObjects()
+    storage_writer.WriteEventObjects()
 
     self._UpdateStatus(processing_completed=True)
 
-    self._storage_writer.WriteSessionCompletion()
-    self._storage_writer.Close()
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
 
     # Reset the extraction worker and storage writer values to return
     # the objects in their original state. This will prevent access
     # to the extraction worker outside this function and allow it
     # to be garbage collected.
     self._extraction_worker = None
-    self._storage_writer = None
     self._status_update_callback = None
     self._event_queue_producer.SetStorageWriter(None)
     self._parse_error_queue_producer.SetStorageWriter(None)

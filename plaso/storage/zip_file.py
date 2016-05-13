@@ -115,7 +115,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
 from plaso.storage import interface
-from plaso.storage import writer
 
 
 class _EventsHeap(object):
@@ -1235,9 +1234,7 @@ class StorageFile(ZIPStorageFile):
   # The maximum serialized report size to 24 MiB.
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
-  def __init__(
-      self, output_file, buffer_size=0, read_only=False,
-      serializer_format=definitions.SERIALIZER_FORMAT_JSON):
+  def __init__(self, output_file, buffer_size=0, read_only=False):
     """Initializes the storage file.
 
     Args:
@@ -1247,7 +1244,6 @@ class StorageFile(ZIPStorageFile):
                    _MAXIMUM_BUFFER_SIZE.
       read_only: optional boolean to indicate we are opening the storage file
                  for reading only.
-      serializer_format: optional storage serializer format.
 
     Raises:
       IOError: if we open the file in read only mode and the file does
@@ -1267,7 +1263,7 @@ class StorageFile(ZIPStorageFile):
     self._preprocess_object_serializer = None
     self._read_only = read_only
     self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializer_format = serializer_format
+    self._serializer_format = definitions.SERIALIZER_FORMAT_JSON
 
     if self._read_only:
       access_mode = 'r'
@@ -2031,10 +2027,10 @@ class StorageFile(ZIPStorageFile):
                if the event object cannot be serialized.
     """
     if not self._is_open:
-      raise IOError(u'Unable to add an event to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(u'Unable to add an event to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     # We try to serialize the event object first, so we can skip some
     # processing if it is invalid.
@@ -2056,11 +2052,10 @@ class StorageFile(ZIPStorageFile):
                if the event source cannot be serialized.
     """
     if not self._is_open:
-      raise IOError(u'Unable to add an event source to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(
-          u'Unable to add an event source to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     event_source.storage_session = self._last_session
 
@@ -2345,12 +2340,10 @@ class StorageFile(ZIPStorageFile):
       IOError: when the storage file is closed or read-only.
     """
     if not self._is_open:
-      raise IOError(
-          u'Unable to add an analysis report to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(
-          u'Unable to add an analysis report to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     if self._format_version <= 20160501:
       stream_name_prefix = u'plaso_report.'
@@ -2412,10 +2405,10 @@ class StorageFile(ZIPStorageFile):
                if the stream cannot be opened.
     """
     if not self._is_open:
-      raise IOError(u'Unable to add event tags to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(u'Unable to add event tags to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     tag_number = 1
     for name in self._GetStreamNames():
@@ -2556,11 +2549,10 @@ class StorageFile(ZIPStorageFile):
                if the stream cannot be opened.
     """
     if not self._is_open:
-      raise IOError(u'Unable to preprocess object to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(
-          u'Unable to preprocess object to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     stream_name = u'information.dump'
     existing_stream_data = self._ReadStream(stream_name)
@@ -2597,12 +2589,10 @@ class StorageFile(ZIPStorageFile):
       IOError: when the storage file is closed or read-only.
     """
     if not self._is_open:
-      raise IOError(
-          u'Unable to add an analysis report to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(
-          u'Unable to add an analysis report to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     if self._format_version < 20160511:
       return
@@ -2622,12 +2612,10 @@ class StorageFile(ZIPStorageFile):
       IOError: when the storage file is closed or read-only.
     """
     if not self._is_open:
-      raise IOError(
-          u'Unable to add an analysis report to a closed storage file.')
+      raise IOError(u'Unable to write to closed storage file.')
 
     if self._read_only:
-      raise IOError(
-          u'Unable to add an analysis report to a read-only storage file.')
+      raise IOError(u'Unable to write to read-only storage file.')
 
     if self._format_version < 20160511:
       return
@@ -2677,23 +2665,19 @@ class ZIPStorageFileReader(interface.StorageReader):
     return self._zip_storage_file.GetEventSources()
 
 
-class ZIPStorageFileWriter(writer.StorageWriter):
+class ZIPStorageFileWriter(interface.StorageWriter):
   """Class that implements the ZIP-based storage file writer."""
 
-  def __init__(
-      self, event_object_queue, output_file, preprocess_object,
-      buffer_size=0, serializer_format=definitions.SERIALIZER_FORMAT_JSON):
+  def __init__(self, output_file, preprocess_object, buffer_size=0):
     """Initializes a storage writer object.
 
     Args:
-      event_object_queue: an event object queue (instance of Queue).
       output_file: a string containing the path to the output file.
       preprocess_object: a preprocess object (instance of PreprocessObject).
       buffer_size: optional integer containing the estimated size of
                    a protobuf file.
-      serializer_format: optional storage serializer format.
     """
-    super(ZIPStorageFileWriter, self).__init__(event_object_queue)
+    super(ZIPStorageFileWriter, self).__init__()
     self._buffer_size = buffer_size
     self._output_file = output_file
     # Counter containing the number of events per parser.
@@ -2701,17 +2685,7 @@ class ZIPStorageFileWriter(writer.StorageWriter):
     # Counter containing the number of events per parser plugin.
     self._parser_plugins_counter = collections.Counter()
     self._preprocess_object = preprocess_object
-    self._serializer_format = serializer_format
     self._storage_file = None
-
-  def _ConsumeItem(self, event_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      event_object: an event object (instance of EventObject).
-    """
-    self._storage_file.AddEventObject(event_object)
-    self._UpdateCounters(event_object)
 
   def _UpdateCounters(self, event_object):
     """Updates the counters.
@@ -2729,6 +2703,21 @@ class ZIPStorageFileWriter(writer.StorageWriter):
       plugin_name = getattr(event_object, u'plugin', u'N/A')
       self._parser_plugins_counter[plugin_name] += 1
 
+  def AddEvent(self, event_object):
+    """Adds an event object to the storage.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddEventObject(event_object)
+    self._UpdateCounters(event_object)
+
   def AddEventSource(self, event_source):
     """Adds an event source to the storage.
 
@@ -2739,8 +2728,7 @@ class ZIPStorageFileWriter(writer.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._storage_file:
-      raise IOError(
-          u'Unable to add an event source to a closed storage writer.')
+      raise IOError(u'Unable to write to closed storage writer.')
 
     self._storage_file.AddEventSource(event_source)
     self.number_of_event_sources += 1
@@ -2810,24 +2798,10 @@ class ZIPStorageFileWriter(writer.StorageWriter):
       raise IOError(u'Storage writer already opened.')
 
     self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size,
-        serializer_format=self._serializer_format)
+        self._output_file, buffer_size=self._buffer_size)
 
     self._storage_file.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)
-
-  def WriteEventObjects(self):
-    """Writes the event objects that are pushed on the queue.
-
-    Raises:
-      IOError: when the storage writer is closed.
-    """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
-
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    self.ConsumeItems()
-    self._status = definitions.PROCESSING_STATUS_COMPLETED
 
   def WriteSessionCompletion(self):
     """Writes session completion information.

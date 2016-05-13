@@ -62,7 +62,7 @@ class QueueConsumer(object):
     """Initializes the queue consumer.
 
     Args:
-      queue_object: the queue object (instance of Queue).
+      queue_object: a queue object (instance of Queue).
     """
     super(QueueConsumer, self).__init__()
     self._abort = False
@@ -83,7 +83,7 @@ class QueueProducer(object):
     """Initializes the queue producer.
 
     Args:
-      queue_object: the queue object (instance of Queue).
+      queue_object: a queue object (instance of Queue).
     """
     super(QueueProducer, self).__init__()
     self._abort = False
@@ -104,7 +104,7 @@ class ItemQueueConsumer(QueueConsumer):
     """Initializes the item queue consumer.
 
     Args:
-      queue_object: the queue object (instance of Queue).
+      queue_object: a queue object (instance of Queue).
     """
     super(ItemQueueConsumer, self).__init__(queue_object)
     self._number_of_consumed_items = 0
@@ -155,7 +155,7 @@ class ItemQueueProducer(QueueProducer):
     """Initializes the item queue producer.
 
     Args:
-      queue_object: the queue object (instance of Queue).
+      queue_object: a queue object (instance of Queue).
     """
     super(ItemQueueProducer, self).__init__(queue_object)
     self._number_of_produced_items = 0

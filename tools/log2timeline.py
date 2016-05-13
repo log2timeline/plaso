@@ -731,7 +731,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         preferred_encoding=self.preferred_encoding,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
-        storage_serializer_format=self._storage_serializer_format,
         timezone=self._timezone)
 
     if processing_status and not processing_status.error_detected:
