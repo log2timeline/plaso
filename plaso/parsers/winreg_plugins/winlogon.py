@@ -30,9 +30,9 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
     """Parses the registered DLLs that receive event notifications.
 
     Args:
-        parser_mediator: A parser mediator object (instance of ParserMediator).
-        registry_key: A Windows Registry key (instance of
-                      dfwinreg.WinRegistryKey).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
     """
     notify_key = registry_key.GetSubkeyByName(u'Notify')
     if not notify_key:
@@ -60,9 +60,9 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
     """Parses the registered logon applications.
 
     Args:
-        parser_mediator: A parser mediator object (instance of ParserMediator).
-        registry_key: A Windows Registry key (instance of
-                      dfwinreg.WinRegistryKey).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      registry_key: A Windows Registry key (instance of
+                    dfwinreg.WinRegistryKey).
     """
     for application in self._LOGON_APPLICATIONS:
       command_value = registry_key.GetValueByName(application)
