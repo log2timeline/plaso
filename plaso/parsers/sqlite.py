@@ -5,6 +5,7 @@ import logging
 import os
 import tempfile
 
+# pylint: disable=wrong-import-order
 try:
   from pysqlite2 import dbapi2 as sqlite3
 except ImportError:
@@ -261,7 +262,7 @@ class SQLiteParser(interface.FileObjectParser):
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
-      # TODO: add a table name filter and do the plugin selection here.
+      # TODO: add a table name filter here.
       for plugin_object in self._plugins:
         try:
           plugin_object.UpdateChainAndProcess(

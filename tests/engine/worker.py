@@ -11,6 +11,7 @@ from dfvfs.resolver import context
 from plaso.engine import knowledge_base
 from plaso.engine import single_process
 from plaso.engine import worker
+from plaso.parsers import manager
 from plaso.parsers import mediator as parsers_mediator
 
 from tests.engine import test_lib
@@ -21,6 +22,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
   def testExtractionWorker(self):
     """Tests the extraction worker functionality."""
+    manager.ParsersManager.parser_filter_string = None
     path_spec_queue = single_process.SingleProcessQueue()
     event_object_queue = single_process.SingleProcessQueue()
     parse_error_queue = single_process.SingleProcessQueue()

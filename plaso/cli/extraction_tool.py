@@ -79,6 +79,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     self._parser_filter_string = self.ParseStringOption(
         options, u'parsers', default_value=u'')
+    self._parser_filter_string = self._parser_filter_string.replace(u'\\', u'/')
 
     if (isinstance(self._parser_filter_string, py2to3.STRING_TYPES) and
         self._parser_filter_string.lower() == u'list'):

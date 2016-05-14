@@ -434,8 +434,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     table_view.Write(self._output_writer)
 
     for parser_name in self._front_end.GetNamesOfParsersWithPlugins():
-      plugins_information = self._front_end.GetParserPluginsInformation(
-          parser_filter_string=parser_name)
+      plugins_information = self._front_end.GetParserPluginsInformation()
 
       table_title = u'Parser plugins: {0:s}'.format(parser_name)
       table_view = cli_views.ViewsFactory.GetTableView(

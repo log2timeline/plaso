@@ -360,18 +360,13 @@ class ExtractionFrontend(frontend.Frontend):
     """
     return hashers_manager.HashersManager.GetHashersInformation()
 
-  def GetParserPluginsInformation(self, parser_filter_string=None):
+  def GetParserPluginsInformation(self):
     """Retrieves the parser plugins information.
-
-    Args:
-      parser_filter_string: Optional parser filter string, where None
-                            represents all parsers and plugins.
 
     Returns:
       A list of tuples of parser plugin names and descriptions.
     """
-    return parsers_manager.ParsersManager.GetParserPluginsInformation(
-        parser_filter_string=parser_filter_string)
+    return parsers_manager.ParsersManager.GetParserPluginsInformation()
 
   def GetParserPresetsInformation(self):
     """Retrieves the parser presets information.
