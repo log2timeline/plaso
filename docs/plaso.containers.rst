@@ -12,6 +12,14 @@ plaso.containers.errors module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.event_sources module
+-------------------------------------
+
+.. automodule:: plaso.containers.event_sources
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.events module
 ------------------------------
 

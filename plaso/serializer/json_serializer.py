@@ -8,6 +8,7 @@ import json
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
+from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import interface as containers_interface
 from plaso.containers import reports
@@ -284,6 +285,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
   _CONTAINER_CLASS_PER_TYPE = {
       u'analysis_report': reports.AnalysisReport,
       u'event': events.EventObject,
+      u'event_source': event_sources.EventSource,
       u'event_tag': events.EventTag,
   }
 
