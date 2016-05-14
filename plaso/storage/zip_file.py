@@ -1369,7 +1369,6 @@ class StorageFile(ZIPStorageFile):
           logging.warning((
               u'Found unsupported stream name: {0:s} while determining '
               u'the last storage number').format(stream_name))
-          pass
 
     self._first_file_number = self._file_number
 
