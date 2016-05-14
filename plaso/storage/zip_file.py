@@ -19,8 +19,8 @@ There are multiple types of storage files:
   These files contain an index of the timestamps of the serialized event
   objects stored in the "proto files".
 * serializer.txt
-  File that contains the serializer format. Deprecated replaced by the storage
-  metadata.
+  File that contains the serializer format. This is now deprecated and
+  has been replaced by the storage metadata.
 
 The # in the filenames is referred to as the "store number".
 
@@ -1074,7 +1074,7 @@ class StorageFile(ZIPStorageFile):
   # The format version.
   _FORMAT_VERSION = 20160501
 
-  # The earliest format version which the storage file is compatible with.
+  # The earliest format version with which the storage file is compatible.
   _COMPATIBLE_FORMAT_VERSION = 20160501
 
   def __init__(
@@ -1334,7 +1334,7 @@ class StorageFile(ZIPStorageFile):
     if not has_storage_metadata:
       # TODO: remove serializer.txt stream support in favor
       # of storage metatdata.
-      logging.warning(u'Deprecated plaso storage file format detected.')
+      logging.warning(u'Storage file does not contain a metadata stream.')
 
       stored_serializer_format = self._ReadSerializerStream()
       if stored_serializer_format:
@@ -1366,7 +1366,9 @@ class StorageFile(ZIPStorageFile):
           if file_number >= self._file_number:
             self._file_number = file_number + 1
         except ValueError:
-          # Ignore invalid stream names.
+          logging.warning((
+              u'Found unsupported stream name: {0:s} while determining '
+              u'the last storage number').format(stream_name))
           pass
 
     self._first_file_number = self._file_number
