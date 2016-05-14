@@ -19,46 +19,7 @@ from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
-class _EventObjectQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements an event object queue consumer.
-
-  The consumer subscribes to updates on the queue.
-  """
-
-  def __init__(self, queue_object, storage_writer):
-    """Initializes the item queue consumer.
-
-    Args:
-      queue_object: a queue object (instance of Queue).
-      storage_writer: a strorage writer (instance of StorageWriter).
-    """
-    super(_EventObjectQueueConsumer, self).__init__(queue_object)
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._storage_writer = storage_writer
-
-  def _ConsumeItem(self, event_object, **kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      event_object: an event object (instance of EventObject).
-    """
-    self._storage_writer.AddEvent(event_object)
-
-  def GetStatus(self):
-    """Returns a dictionary containing the status."""
-    return {
-        u'number_of_events': self.number_of_consumed_items,
-        u'processing_status': self._status,
-        u'type': definitions.PROCESS_TYPE_STORAGE_WRITER}
-
-  def WriteEventObjects(self):
-    """Writes the event objects that are pushed on the queue."""
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    self.ConsumeItems()
-    self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-
-class _PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
+class SingleProcessPathSpecQueueProducer(engine.PathSpecQueueProducer):
   """Class that implements a path specification queue producer object."""
 
   def __init__(self, path_spec_queue, storage_writer):
@@ -71,10 +32,9 @@ class _PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
                        to be processed.
       storage_writer: a storage writer object (instance of StorageWriter).
     """
-    super(_PathSpecQueueProducer, self).__init__(path_spec_queue)
+    super(SingleProcessPathSpecQueueProducer, self).__init__(
+        path_spec_queue, storage_writer)
     self._extraction_worker = None
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._storage_writer = storage_writer
 
   def _FlushQueue(self):
     """Flushes the queue, callback for the QueueFull exception."""
@@ -86,28 +46,6 @@ class _PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
     """Updates the processing status."""
     # Set the status to waiting while emptying the queue.
     self._status = definitions.PROCESSING_STATUS_WAITING
-
-  def GetStatus(self):
-    """Returns a dictionary containing the status."""
-    return {
-        u'processing_status': self._status,
-        u'produced_number_of_path_specs': self._number_of_produced_items,
-        u'path_spec_queue_port': getattr(self._queue, u'port', None),
-        u'type': definitions.PROCESS_TYPE_COLLECTOR}
-
-  def Run(self):
-    """Produces path specifications onto the queue."""
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    for event_source in self._storage_writer.GetEventSources():
-      if self._abort:
-        break
-
-      self.ProduceItem(event_source.path_spec)
-
-    if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
 
   def SetExtractionWorker(self, extraction_worker):
     """Sets the extraction worker.
@@ -151,7 +89,6 @@ class SingleProcessEngine(engine.BaseEngine):
         parse_error_queue)
     self._path_spec_producer = None
     self._status_update_callback = None
-    self._storage_writer = None
 
   def _CreateExtractionWorker(
       self, worker_number, filter_object=None, mount_path=None,
@@ -378,7 +315,7 @@ class SingleProcessEngine(engine.BaseEngine):
     # refactor.
     storage_writer.ForceFlush()
 
-    self._path_spec_producer = _PathSpecQueueProducer(
+    self._path_spec_producer = SingleProcessPathSpecQueueProducer(
         self._path_spec_queue, storage_writer)
 
     self._extraction_worker = self._CreateExtractionWorker(
@@ -392,7 +329,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.InitializeParserObjects(
         parser_filter_expression=parser_filter_expression)
 
-    self._event_object_consumer = _EventObjectQueueConsumer(
+    self._event_object_consumer = engine.EventObjectQueueConsumer(
         self._event_object_queue, storage_writer)
 
     # Set the extraction worker and storage writer values so that they
@@ -400,10 +337,13 @@ class SingleProcessEngine(engine.BaseEngine):
     # needed in single process mode to prevent the queue consuming too
     # much memory.
     self._path_spec_producer.SetExtractionWorker(self._extraction_worker)
-    self._event_queue_producer.SetStorageWriter(storage_writer)
-    self._parse_error_queue_producer.SetStorageWriter(storage_writer)
+    self._event_queue_producer.SetEventObjectConsumer(
+        self._event_object_consumer)
+    self._parse_error_queue_producer.SetEventObjectConsumer(
+        self._event_object_consumer)
 
     self._UpdateStatus()
+    # TODO: remove queues.
     self._path_spec_producer.Run()
 
     self._UpdateStatus()
@@ -411,7 +351,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.Run()
 
     self._UpdateStatus()
-    storage_writer.WriteEventObjects()
+    self._event_object_consumer.Run()
 
     self._UpdateStatus(processing_completed=True)
 
@@ -423,10 +363,11 @@ class SingleProcessEngine(engine.BaseEngine):
     # to the extraction worker outside this function and allow it
     # to be garbage collected.
     self._extraction_worker = None
-    self._status_update_callback = None
-    self._event_queue_producer.SetStorageWriter(None)
-    self._parse_error_queue_producer.SetStorageWriter(None)
+    self._event_object_consumer = None
+    self._event_queue_producer.SetEventObjectConsumer(None)
+    self._parse_error_queue_producer.SetEventObjectConsumer(None)
     self._path_spec_producer = None
+    self._status_update_callback = None
 
     logging.debug(u'Processing completed.')
 
@@ -501,20 +442,20 @@ class SingleProcessItemQueueProducer(plaso_queue.ItemQueueProducer):
       queue_object: the queue object (instance of Queue).
     """
     super(SingleProcessItemQueueProducer, self).__init__(queue_object)
-
-    self._storage_writer = None
+    self._event_object_consumer = None
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
-    self._storage_writer.WriteEventObjects()
+    self._event_object_consumer.Run()
 
-  def SetStorageWriter(self, storage_writer):
-    """Sets the storage writer.
+  def SetEventObjectConsumer(self, event_object_consumer):
+    """Sets the event object queue consumer.
 
     Args:
-      storage_writer: the storage writer object (instance of StorageWriter).
+      event_object_consumer: an event object queue consumer (instance of
+                             ItemQueueConsumer).
     """
-    self._storage_writer = storage_writer
+    self._event_object_consumer = event_object_consumer
 
 
 class SingleProcessQueue(plaso_queue.Queue):

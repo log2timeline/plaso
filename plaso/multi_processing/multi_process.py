@@ -1436,6 +1436,8 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
     super(MultiProcessStorageWriterProcess, self).__init__(
         definitions.PROCESS_TYPE_STORAGE_WRITER, **kwargs)
     self._extraction_complete_event = extraction_complete_event
+    self._event_object_consumer = engine.EventObjectQueueConsumer(
+        event_object_queue, storage_writer)
     self._event_object_queue = event_object_queue
     self._event_object_queue_port = None
     self._parse_error_queue = parse_error_queue
@@ -1445,7 +1447,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
 
   def _GetStatus(self):
     """Returns a status dictionary."""
-    status = self._storage_writer.GetStatus()
+    status = self._event_object_consumer.GetStatus()
     status[u'event_object_queue_port'] = self._event_object_queue_port
     status[u'parse_error_queue_port'] = self._parse_error_queue_port
     self._status_is_running = status.get(u'is_running', False)
@@ -1472,19 +1474,21 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
 
     try:
       self._storage_writer.Open()
-      self._storage_writer.WriteEventObjects()
+      self._event_object_consumer.Run()
       while (event_queue_is_zeromq and
              not self._extraction_complete_event.is_set()):
         logging.debug(
             u'Storage writer event queue stalled - restarting and waiting for '
             u'extraction to complete.')
-        self._storage_writer.WriteEventObjects()
+        self._event_object_consumer.Run()
 
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception in storage writer (PID: {0:d}).'.format(
               self._pid))
       logging.exception(exception)
+
+    self._event_object_consumer = None
 
     self._storage_writer.WriteSessionCompletion()
     self._storage_writer.Close()
@@ -1507,7 +1511,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    self._storage_writer.SignalAbort()
+    self._event_object_consumer.SignalAbort()
 
 
 class MultiProcessingQueue(plaso_queue.Queue):

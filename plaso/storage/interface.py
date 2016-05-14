@@ -126,13 +126,9 @@ class StorageWriter(object):
                              sources written.
   """
 
-  def __init__(self, event_object_queue):
-    """Initializes a storage writer object.
-
-    Args:
-      event_object_queue: the event object queue (instance of Queue).
-    """
-    super(StorageWriter, self).__init__(event_object_queue)
+  def __init__(self):
+    """Initializes a storage writer object."""
+    super(StorageWriter, self).__init__()
     self._enable_profiling = False
     self._profiling_type = u'all'
     self.number_of_event_sources = 0
