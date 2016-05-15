@@ -52,16 +52,9 @@ class WinRegistryParser(interface.FileObjectParser):
   _NORMALIZED_CONTROL_SET_PREFIX = (
       u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet').lower()
 
-  def __init__(self, plugin_includes=None):
-    """Initializes a parser object.
-
-    Args:
-      plugin_includes: optional list of strings containing the names of
-                       the plugins to include, where None represents all
-                       plugins. The default plugin, named "NAME_default",
-                       is handled separately.
-    """
-    super(WinRegistryParser, self).__init__(plugin_includes=plugin_includes)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(WinRegistryParser, self).__init__()
     self._plugin_per_key_path = {}
     self._plugins_without_key_paths = []
 

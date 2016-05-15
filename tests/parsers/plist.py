@@ -16,9 +16,10 @@ class PlistParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def testInitialize(self):
-    """Tests the initialization."""
-    parser_object = plist.PlistParser([u'airport'])
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser_object = plist.PlistParser()
+    parser_object.EnablePlugins([u'airport'])
 
     self.assertIsNotNone(parser_object)
     self.assertIsNotNone(parser_object._default_plugin)

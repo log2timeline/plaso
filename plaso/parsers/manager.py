@@ -177,7 +177,6 @@ class ParsersManager(object):
     parser_class = cls._parser_classes.get(parser_name, None)
     if not parser_class:
       return
-    # Note that we deliberately do not pass the plugin_includes argument here.
     return parser_class()
 
   @classmethod
@@ -204,12 +203,15 @@ class ParsersManager(object):
       if includes and parser_name not in includes:
         continue
 
-      plugin_includes = None
-      if parser_name in includes:
-        plugin_includes = includes[parser_name]
+      parser_object = parser_class()
+      if parser_class.SupportsPlugins():
+        plugin_includes = None
+        if parser_name in includes:
+          plugin_includes = includes[parser_name]
 
-      parser_objects[parser_name] = parser_class(
-          plugin_includes=plugin_includes)
+        parser_object.EnablePlugins(plugin_includes)
+
+      parser_objects[parser_name] = parser_object
 
     return parser_objects
 

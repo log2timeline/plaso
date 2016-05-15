@@ -113,17 +113,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
-  def __init__(self, plugin_includes=None):
-    """Initializes a parser object.
-
-    Args:
-      plugin_includes: optional list of strings containing the names of
-                       the plugins to include, where None represents all
-                       plugins. The default plugin, named "NAME_default",
-                       is handled separately.
-    """
-    super(XChatScrollbackParser, self).__init__(
-        plugin_includes=plugin_includes)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(XChatScrollbackParser, self).__init__()
     self._offset = 0
 
   def VerifyStructure(self, parser_mediator, line):

@@ -16,10 +16,10 @@ class BencodeTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def testInitialize(self):
-    """Tests the initialization."""
-    parser_object = bencode_parser.BencodeParser([
-        u'bencode_transmission'])
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser_object = bencode_parser.BencodeParser()
+    parser_object.EnablePlugins([u'bencode_transmission'])
 
     self.assertIsNotNone(parser_object)
     self.assertIsNone(parser_object._default_plugin)

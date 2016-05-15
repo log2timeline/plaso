@@ -12,14 +12,10 @@ from tests.parsers.syslog_plugins import test_lib
 class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
   """Tests for the cron syslog plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = cron.CronPlugin()
-
   def testParse(self):
     """Tests the parsing functionality on a sample file."""
     test_file = self._GetTestFilePath([u'syslog_cron.log'])
-    event_queue_consumer = self._ParseFileWithPlugin(self._plugin, test_file)
+    event_queue_consumer = self._ParseFileWithPlugin(u'cron', test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 9)

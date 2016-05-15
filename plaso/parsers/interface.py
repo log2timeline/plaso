@@ -67,33 +67,19 @@ class BaseParser(object):
   # different parser classes don't end up in the same dict.
   _plugin_classes = None
 
-  def __init__(self, plugin_includes=None):
+  def __init__(self):
     """Initializes a parser object.
 
-    Args:
-      plugin_includes: optional list of strings containing the names of
-                       the plugins to include, where None represents all
-                       plugins. The default plugin, named "NAME_default",
-                       is handled separately.
+    By default all plugins will be enabled. To only enable specific plugins
+    use the EnablePlugins method and pass it a list of strings containing
+    the names of the plugins to enable.
+
+    The default plugin, named "{self.NAME:s}_default", is handled separately.
     """
     super(BaseParser, self).__init__()
     self._default_plugin = None
-    self._plugin_objects = []
-
-    if not self._plugin_classes:
-      return
-
-    default_plugin_name = u'{0:s}_default'.format(self.NAME)
-    for plugin_name, plugin_class in iter(self._plugin_classes.items()):
-      if plugin_name == default_plugin_name:
-        self._default_plugin = plugin_class()
-        continue
-
-      if plugin_includes and plugin_name not in plugin_includes:
-        continue
-
-      plugin_object = plugin_class()
-      self._plugin_objects.append(plugin_object)
+    self._plugin_objects = None
+    self.EnablePlugins([])
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -114,6 +100,31 @@ class BaseParser(object):
               plugin_class.NAME))
 
     del cls._plugin_classes[plugin_name]
+
+  def EnablePlugins(self, plugin_includes):
+    """Enables parser plugins.
+
+    Args:
+      plugin_includes: a list of strings containing the names of the plugins
+                       to enable, where None or an empty list represents all
+                       plugins. Not that the default plugin is handled
+                       separately.
+    """
+    self._plugin_objects = []
+    if not self._plugin_classes:
+      return
+
+    default_plugin_name = u'{0:s}_default'.format(self.NAME)
+    for plugin_name, plugin_class in iter(self._plugin_classes.items()):
+      if plugin_name == default_plugin_name:
+        self._default_plugin = plugin_class()
+        continue
+
+      if plugin_includes and plugin_name not in plugin_includes:
+        continue
+
+      plugin_object = plugin_class()
+      self._plugin_objects.append(plugin_object)
 
   # TODO: move this to a filter.
   @classmethod

@@ -16,9 +16,10 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def testInitialize(self):
-    """Tests the initialization."""
-    parser_object = sqlite.SQLiteParser([u'chrome_history'])
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser_object = sqlite.SQLiteParser()
+    parser_object.EnablePlugins([u'chrome_history'])
 
     self.assertIsNotNone(parser_object)
     self.assertIsNone(parser_object._default_plugin)

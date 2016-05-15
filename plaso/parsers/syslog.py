@@ -10,6 +10,7 @@ from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
+
 class SyslogLineEvent(text_events.TextEvent):
   """Convenience class for a syslog line event."""
   DATA_TYPE = u'syslog:line'
@@ -86,25 +87,15 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       (u'syslog_line', _LINE_GRAMMAR),
       (u'syslog_comment', _SYSLOG_COMMENT)]
 
-  def __init__(self, plugin_includes=None):
-    """Initializes a parser object.
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
-    Args:
-      plugin_includes: optional list of strings containing the names of
-                       the plugins to include, where None represents all
-                       plugins. The default plugin, named "NAME_default",
-                       is handled separately.
-    """
-    super(SyslogParser, self).__init__(plugin_includes=plugin_includes)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(SyslogParser, self).__init__()
     self._last_month = 0
     self._maximum_year = 0
     self._plugin_objects_by_reporter = {}
     self._year_use = 0
-
-  def _InitializePlugins(self):
-    """Initializes parser plugins prior to processing."""
-    for _, plugin_class in self.GetPlugins():
-      self._plugin_objects_by_reporter[plugin_class.REPORTER] = plugin_class()
 
   def _UpdateYear(self, parser_mediator, month):
     """Updates the year to use for events, based on last observed month.
@@ -131,6 +122,21 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
         self._year_use += 1
     self._last_month = month
 
+  def EnablePlugins(self, plugin_includes):
+    """Enables parser plugins.
+
+    Args:
+      plugin_includes: a list of strings containing the names of the plugins
+                       to enable, where None or an empty list represents all
+                       plugins. Not that the default plugin is handled
+                       separately.
+    """
+    super(SyslogParser, self).EnablePlugins(plugin_includes)
+
+    self._plugin_objects_by_reporter = {}
+    for plugin_object in self._plugin_objects:
+      self._plugin_objects_by_reporter[plugin_object.REPORTER] = plugin_object
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a matching entry.
 
@@ -143,14 +149,13 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       UnableToParseFile: if an unsupported key is provided.
     """
-    if key not in (u'syslog_line', u'syslog_comment'):
-      raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
 
-    self._InitializePlugins()
     month = timelib.MONTH_DICT.get(structure.month.lower(), None)
     if not month:
-      parser_mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(
-          month))
+      parser_mediator.ProduceParserError(
+          u'Invalid month value: {0:s}'.format(month))
       return
 
     self._UpdateYear(parser_mediator, month)

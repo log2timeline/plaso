@@ -35,9 +35,10 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     """Generate the correct parser chain for a given plugin."""
     return u'winreg/{0:s}'.format(plugin_name)
 
-  def testInitialize(self):
-    """Tests the initialization."""
-    parser_object = winreg.WinRegistryParser([u'appcompatcache'])
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser_object = winreg.WinRegistryParser()
+    parser_object.EnablePlugins([u'appcompatcache'])
 
     self.assertIsNotNone(parser_object)
     self.assertIsNotNone(parser_object._default_plugin)
