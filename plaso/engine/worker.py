@@ -679,10 +679,10 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     self._profiling_sample_rate = profiling_sample_rate
 
     if self._enable_profiling:
-      if profiling_type in [u'all', u'memory'] and not self._memory_profiler:
+      if profiling_type in (u'all', u'memory') and not self._memory_profiler:
         self._memory_profiler = profiler.GuppyMemoryProfiler(self._identifier)
 
-      if profiling_type in [u'all', u'parsers']:
+      if profiling_type in (u'all', u'parsers'):
         self._enable_parsers_profiling = True
 
   def SetFilterObject(self, filter_object):
