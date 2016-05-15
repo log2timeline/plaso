@@ -15,8 +15,8 @@ import time
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
-from plaso.engine import collector
 from plaso.engine import engine
+from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.engine import zeromq_queue
@@ -377,7 +377,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
-    self._include_directory_stat = True
     self._last_worker_number = 0
     self._mount_path = None
     self._number_of_extraction_workers = 0
@@ -590,27 +589,20 @@ class MultiProcessEngine(engine.BaseEngine):
     Args:
       source_path_specs: a list of path specifications (instances of
                          dfvfs.PathSpec) of the sources to process.
+      resolver_context: resolver context (instance of dfvfs.Context).
       storage_writer: a storage writer object (instance of StorageWriter).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
-      include_directory_stat: optional boolean value to indicate whether
-                              directory stat information should be collected.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
     """
-    collector_object = collector.Collector(resolver_context=resolver_context)
+    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
+    for path_spec in path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, find_specs=filter_find_specs):
 
-    if filter_find_specs:
-      collector_object.SetFilter(filter_find_specs)
-
-    for source_path_spec in source_path_specs:
-      for path_spec in collector_object.CollectPathSpecs(source_path_spec):
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(
-            path_spec=path_spec)
-        storage_writer.AddEventSource(event_source)
+      # TODO: determine if event sources should be DataStream or FileEntry
+      # or both.
+      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+      storage_writer.AddEventSource(event_source)
 
   def _GetPathSpecQueuePort(self, collector_process):
     """Retrieves the path specification queue port number.
@@ -1058,10 +1050,9 @@ class MultiProcessEngine(engine.BaseEngine):
   def ProcessSources(
       self, source_path_specs, storage_writer, enable_sigsegv_handler=False,
       filter_find_specs=None, filter_object=None, hasher_names_string=None,
-      include_directory_stat=True, mount_path=None,
-      number_of_extraction_workers=0, parser_filter_expression=None,
-      process_archive_files=False, status_update_callback=None,
-      show_memory_usage=False, text_prepend=None):
+      mount_path=None, number_of_extraction_workers=0,
+      parser_filter_expression=None, process_archive_files=False,
+      status_update_callback=None, show_memory_usage=False, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -1075,8 +1066,6 @@ class MultiProcessEngine(engine.BaseEngine):
       filter_object: Optional filter object (instance of objectfilter.Filter).
       hasher_names_string: Optional comma separated string of names of
                            hashers to enable enable.
-      include_directory_stat: Optional boolean value to indicate whether
-                              directory stat information should be collected.
       mount_path: Optional string containing the mount path. The default
                   is None.
       number_of_extraction_workers: Optional number of extraction worker
@@ -1124,7 +1113,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_find_specs = filter_find_specs
     self._filter_object = filter_object
     self._hasher_names_string = hasher_names_string
-    self._include_directory_stat = include_directory_stat
     self._mount_path = mount_path
     self._parser_filter_expression = parser_filter_expression
     self._process_archive_files = process_archive_files
