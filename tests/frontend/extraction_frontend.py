@@ -12,10 +12,9 @@ from plaso.frontend import extraction_frontend
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
-from tests.frontend import test_lib
 
 
-class ExtractionFrontendTests(test_lib.FrontendTestCase):
+class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   """Tests for the extraction front-end object."""
 
   def _GetTestScanNode(self, scan_context):

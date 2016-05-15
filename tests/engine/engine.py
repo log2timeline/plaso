@@ -22,7 +22,7 @@ from plaso.engine import plaso_queue
 from plaso.engine import single_process
 from plaso.storage import zip_file as storage_zip_file
 
-from tests.engine import test_lib
+from tests import test_lib as shared_test_lib
 
 
 class TestPathSpecQueueConsumer(plaso_queue.ItemQueueConsumer):
@@ -128,7 +128,7 @@ class TestEngine(engine.BaseEngine):
     return self._file_system, self._mount_point
 
 
-class BaseEngineTest(test_lib.EngineTestCase):
+class BaseEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the engine object."""
 
   def testGetSourceFileSystem(self):
@@ -187,7 +187,7 @@ class BaseEngineTest(test_lib.EngineTestCase):
     self.assertEqual(result, expected_result)
 
 
-class PathSpecQueueProducerTest(test_lib.EngineTestCase):
+class PathSpecQueueProducerTest(shared_test_lib.BaseTestCase):
   """Tests for the path specification producer object."""
 
   def testRun(self):

@@ -8,13 +8,16 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.lib import errors
+from plaso.storage import fake_storage
 
+from tests import test_lib as shared_test_lib
 from tests.engine import test_lib
 
 
-class SingleProcessEngineTest(test_lib.EngineTestCase):
+class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the single process engine object."""
 
   # pylint: disable=protected-access
@@ -43,7 +46,12 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
 
     self._test_engine.PreprocessSources([source_path_spec])
 
-    storage_writer = test_lib.TestStorageWriter()
+    session_start = sessions.SessionStart()
+
+    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer.Open()
+    storage_writer.WriteSessionStart(session_start)
+
     self._test_engine.ProcessSources(
         [source_path_spec], storage_writer,
         parser_filter_expression=u'filestat')
@@ -51,7 +59,7 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
     self.assertEqual(len(storage_writer.event_objects), 15)
 
 
-class SingleProcessQueueTest(unittest.TestCase):
+class SingleProcessQueueTest(shared_test_lib.BaseTestCase):
   """Tests the single process queue."""
 
   _ITEMS = frozenset([u'item1', u'item2', u'item3', u'item4'])

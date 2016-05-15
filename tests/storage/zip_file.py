@@ -21,7 +21,7 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
-class SerializedDataStream(test_lib.StorageTestCase):
+class SerializedDataStream(shared_test_lib.BaseTestCase):
   """Tests for the serialized data stream object."""
 
   # pylint: disable=protected-access
@@ -85,7 +85,7 @@ class SerializedDataStream(test_lib.StorageTestCase):
     zip_file_object.close()
 
 
-class SerializedDataOffsetTable(test_lib.StorageTestCase):
+class SerializedDataOffsetTable(shared_test_lib.BaseTestCase):
   """Tests for the serialized data offset table object."""
 
   # pylint: disable=protected-access
@@ -132,7 +132,7 @@ class SerializedDataOffsetTable(test_lib.StorageTestCase):
       offset_table.Read()
 
 
-class SerializedDataTimestampTable(test_lib.StorageTestCase):
+class SerializedDataTimestampTable(shared_test_lib.BaseTestCase):
   """Tests for the serialized data offset table object."""
 
   # pylint: disable=protected-access
@@ -179,7 +179,7 @@ class SerializedDataTimestampTable(test_lib.StorageTestCase):
       offset_table.Read()
 
 
-class ZIPStorageFile(test_lib.StorageTestCase):
+class ZIPStorageFile(shared_test_lib.BaseTestCase):
   """Tests for the ZIP-based storage file object."""
 
   # pylint: disable=protected-access
@@ -339,7 +339,7 @@ class ZIPStorageFile(test_lib.StorageTestCase):
       storage_file.Close()
 
 
-class StorageFileTest(test_lib.StorageTestCase):
+class StorageFileTest(shared_test_lib.BaseTestCase):
   """Tests for the ZIP storage file object."""
 
   # pylint: disable=protected-access
@@ -697,7 +697,7 @@ class StorageFileTest(test_lib.StorageTestCase):
       storage_file.Close()
 
 
-class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
+class ZIPStorageFileReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the ZIP-based storage file reader object."""
 
   def testGetEvents(self):
