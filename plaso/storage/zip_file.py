@@ -31,8 +31,8 @@ The event data streams contain the serialized event objects. The serialized
 events are stored in ascending timestamp order within an individual event data
 stream. Note that the event data streams themselves are not ordered.
 
-The event data steams were previously referred to as "proto files" because
-historically the event data was serialized as protobufs.
+The event data streams were previously referred to as "proto files" because
+historically the event data was serialized as protocol buffers (protobufs).
 
 An event data stream consists of:
 +------+-----------------+------+-...-+
@@ -845,6 +845,10 @@ class ZIPStorageFile(object):
   # is able to read.
   _COMPATIBLE_FORMAT_VERSION = 20160501
 
+  # The format version used for storage files predating storing
+  # a format version.
+  _LEGACY_FORMAT_VERSION = 20160431
+
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 5
 
@@ -1393,7 +1397,7 @@ class StorageFile(ZIPStorageFile):
 
       stored_serializer_format = self._ReadSerializerStream()
       if stored_serializer_format:
-        self._format_version = 20160431
+        self._format_version = self._LEGACY_FORMAT_VERSION
 
         self._serializer_format = stored_serializer_format
 
