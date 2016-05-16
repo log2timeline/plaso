@@ -51,11 +51,10 @@ class PFilterTest(unittest.TestCase):
   def testPlasoEvents(self):
     """Test plaso EventObjects, both Python and Protobuf version.
 
-    These are more plaso specific tests than the more generic
-    objectfilter ones. It will create an EventObject that stores
-    some attributes. These objects will then be serialzed into an
-    EventObject protobuf and all tests run against both the native
-    Python object as well as the protobuf.
+    These are more plaso specific tests than the more generic object filter
+    ones. It will create an event object that stores some attributes. These
+    objects will then be serialzed and all tests run against both the Python
+    objects as well as the serialized ones.
     """
     event_object = events.EventObject()
     event_object.data_type = 'Weirdo:Made up Source:Last Written'

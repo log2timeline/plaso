@@ -157,7 +157,8 @@ class TaggingPlugin(interface.AnalysisPlugin):
     """
     report_text = u'Tagging plugin produced {0:d} tags.\n'.format(
         len(self._tags))
-    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report = reports.AnalysisReport(
+        plugin_name=self.NAME, text=report_text)
     analysis_report.SetTags(self._tags)
     return analysis_report
 

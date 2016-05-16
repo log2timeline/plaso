@@ -20,14 +20,6 @@ plaso.serializer.json_serializer module
     :undoc-members:
     :show-inheritance:
 
-plaso.serializer.protobuf_serializer module
--------------------------------------------
-
-.. automodule:: plaso.serializer.protobuf_serializer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------

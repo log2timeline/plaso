@@ -192,7 +192,7 @@ class UtmpParser(interface.FileObjectParser):
       entry = self.LINUX_UTMP_ENTRY.parse(data)
     except (IOError, construct.FieldError):
       logging.warning((
-          u'UTMP entry at 0x{:x} couldn\'t be parsed.').format(offset))
+          u'UTMP entry at 0x{0:x} couldn\'t be parsed.').format(offset))
       return self._ReadUtmpEvent(file_object)
 
     user = self._GetTextFromNullTerminatedString(entry.username)

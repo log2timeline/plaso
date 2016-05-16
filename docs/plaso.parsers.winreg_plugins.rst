@@ -84,6 +84,22 @@ plaso.parsers.winreg_plugins.msie_zones module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.winreg_plugins.network_drives module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.network_drives
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.winreg_plugins.networks module
+--------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.networks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.winreg_plugins.officemru module
 ---------------------------------------------
 
@@ -192,6 +208,14 @@ plaso.parsers.winreg_plugins.userassist module
 ----------------------------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.userassist
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.winreg_plugins.winlogon module
+--------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.winlogon
     :members:
     :undoc-members:
     :show-inheritance:

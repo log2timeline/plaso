@@ -18,16 +18,17 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
   """Test for the unique hashes analysis plugin."""
   _EVENT_DICTS = [
       {u'path_spec': fake_path_spec.FakePathSpec(
-          u'/var/testing directory with space/file.txt'),
+          location=u'/var/testing directory with space/file.txt'),
        u'test_hash': u'4'},
-      {u'path_spec': fake_path_spec.FakePathSpec(u'C:\\Windows\\a.file.txt'),
-       u'test_hash': u'4'},
-      {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/dfvfs'),
-       u'test_hash': u'4'},
-      {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/2hash_file'),
-       u'test_hash': u'4',
+      {u'path_spec': fake_path_spec.FakePathSpec(
+          location=u'C:\\Windows\\a.file.txt'), u'test_hash': u'4'},
+      {u'path_spec': fake_path_spec.FakePathSpec(
+          location=u'/opt/dfvfs'), u'test_hash': u'4'},
+      {u'path_spec': fake_path_spec.FakePathSpec(
+          location=u'/opt/2hash_file'), u'test_hash': u'4',
        u'alternate_test_hash': u'5'},
-      {u'path_spec': fake_path_spec.FakePathSpec(u'/opt/no_hash_file')}
+      {u'path_spec': fake_path_spec.FakePathSpec(
+          location=u'/opt/no_hash_file')}
   ]
 
   def _CreateTestEventObject(self, event_dict):

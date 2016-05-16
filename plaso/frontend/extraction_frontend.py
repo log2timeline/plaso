@@ -272,7 +272,7 @@ class ExtractionFrontend(frontend.Frontend):
       collection_information[u'os_detected'] = u'N/A'
 
     # TODO: processing settings:
-    collection_information[u'protobuf_size'] = self._buffer_size
+    collection_information[u'serialized_buffer_size'] = self._buffer_size
     collection_information[u'time_of_run'] = timelib.Timestamp.GetNow()
 
     if self._single_process_mode:
@@ -407,7 +407,7 @@ class ExtractionFrontend(frontend.Frontend):
       number_of_extraction_workers=0, parser_filter_string=None,
       preferred_encoding=u'utf-8', single_process_mode=False,
       status_update_callback=None,
-      storage_serializer_format=definitions.SERIALIZER_FORMAT_PROTOBUF,
+      storage_serializer_format=definitions.SERIALIZER_FORMAT_JSON,
       timezone=pytz.UTC):
     """Processes the sources.
 

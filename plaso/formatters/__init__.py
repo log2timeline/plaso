@@ -15,6 +15,7 @@ from plaso.formatters import chrome_cache
 from plaso.formatters import chrome_cookies
 from plaso.formatters import chrome_extension_activity
 from plaso.formatters import chrome_preferences
+from plaso.formatters import cron
 from plaso.formatters import cups_ipp
 from plaso.formatters import docker
 from plaso.formatters import file_history
@@ -40,6 +41,7 @@ from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
 from plaso.formatters import msie_webcache
 from plaso.formatters import msiecf
+from plaso.formatters import officemru
 from plaso.formatters import olecf
 from plaso.formatters import opera
 from plaso.formatters import oxml
@@ -51,15 +53,19 @@ from plaso.formatters import pls_recall
 from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import safari_cookies
+from plaso.formatters import sam_users
 from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import shell_items
+from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
 from plaso.formatters import skype
 from plaso.formatters import symantec
 from plaso.formatters import syslog
+from plaso.formatters import ssh
 from plaso.formatters import task_scheduler
 from plaso.formatters import text
+from plaso.formatters import userassist
 from plaso.formatters import utmp
 from plaso.formatters import utmpx
 from plaso.formatters import windows

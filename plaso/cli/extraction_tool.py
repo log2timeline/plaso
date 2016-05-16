@@ -56,7 +56,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
-    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_PROTOBUF
+    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._text_prepend = None
 
     self.list_hashers = False
@@ -154,7 +154,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the options are invalid.
     """
     serializer_format = getattr(
-        options, u'serializer_format', definitions.SERIALIZER_FORMAT_PROTOBUF)
+        options, u'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
     if serializer_format not in definitions.SERIALIZER_FORMATS:
       raise errors.BadConfigOption(
           u'Unsupported storage serializer format: {0:s}.'.format(
@@ -269,20 +269,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         metavar=u'TYPE', default=None, help=(
             u'The profiling type: "all", "memory", "parsers" or '
             u'"serializers".'))
-
-  def AddStorageOptions(self, argument_group):
-    """Adds the storage options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        u'--serializer-format', u'--serializer_format', action=u'store',
-        dest=u'serializer_format', default=u'json', metavar=u'FORMAT', help=(
-            u'By default the storage uses JSON for serializing event '
-            u'objects. This parameter can be used to change that behavior. '
-            u'The choices are "proto" and "json".'))
 
   def ParseOptions(self, options):
     """Parses tool specific options.

@@ -61,4 +61,5 @@ from plaso.parsers import esedb_plugins
 from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins
 from plaso.parsers import sqlite_plugins
+from plaso.parsers import syslog_plugins
 from plaso.parsers import winreg_plugins

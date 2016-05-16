@@ -116,6 +116,14 @@ plaso.formatters.chrome_preferences module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.cron module
+----------------------------
+
+.. automodule:: plaso.formatters.cron
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.cups_ipp module
 --------------------------------
 
@@ -348,6 +356,14 @@ plaso.formatters.msiecf module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.officemru module
+---------------------------------
+
+.. automodule:: plaso.formatters.officemru
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.olecf module
 -----------------------------
 
@@ -436,6 +452,14 @@ plaso.formatters.safari_cookies module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.sam_users module
+---------------------------------
+
+.. automodule:: plaso.formatters.sam_users
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.sccm module
 ----------------------------
 
@@ -460,6 +484,14 @@ plaso.formatters.shell_items module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.shutdown module
+--------------------------------
+
+.. automodule:: plaso.formatters.shutdown
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.skydrivelog module
 -----------------------------------
 
@@ -472,6 +504,14 @@ plaso.formatters.skype module
 -----------------------------
 
 .. automodule:: plaso.formatters.skype
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.ssh module
+---------------------------
+
+.. automodule:: plaso.formatters.ssh
     :members:
     :undoc-members:
     :show-inheritance:
@@ -504,6 +544,14 @@ plaso.formatters.text module
 ----------------------------
 
 .. automodule:: plaso.formatters.text
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.userassist module
+----------------------------------
+
+.. automodule:: plaso.formatters.userassist
     :members:
     :undoc-members:
     :show-inheritance:

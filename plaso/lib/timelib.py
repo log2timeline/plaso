@@ -13,6 +13,8 @@ import calendar
 import datetime
 import logging
 import time
+
+import construct
 import pytz
 
 import dateutil.parser
@@ -100,6 +102,18 @@ class Timestamp(object):
   # The difference between POSIX (Jan 1, 1970) and DELPHI (Dec 30, 1899).
   # http://docwiki.embarcadero.com/Libraries/XE3/en/System.TDateTime
   DELPHI_TIME_TO_POSIX_BASE = 25569
+
+  # The Windows SYSTEMTIME structure.
+  SYSTEMTIME_STRUCT = construct.Struct(
+      u'timestamp',
+      construct.ULInt16(u'year'),
+      construct.ULInt16(u'month'),
+      construct.ULInt16(u'weekday'),
+      construct.ULInt16(u'day'),
+      construct.ULInt16(u'hour'),
+      construct.ULInt16(u'minutes'),
+      construct.ULInt16(u'seconds'),
+      construct.ULInt16(u'milliseconds'))
 
   @classmethod
   def CopyFromString(cls, time_string):
@@ -646,6 +660,45 @@ class Timestamp(object):
         year, month, day, hour, minutes, seconds, microseconds, timezone)
 
   @classmethod
+  def FromSystemtime(cls, systemtime):
+    """Converts a SYSTEMTIME structure into a timestamp.
+
+    The SYSTEMTIME structure is mainly used in Windows registries.
+
+    The SYSTEMTIME structure is a 128-bit struct containing 8 little endian
+    16-bit integers structured like so:
+      struct {
+        WORD year,
+        WORD month,
+        WORD day_of_week,
+        WORD day,
+        WORD hour,
+        WORD minute,
+        WORD second,
+        WORD millisecond
+      }
+
+    Args:
+      systemtime: The 128-bit SYSTEMTIME timestamp.
+
+    Returns:
+      The timestamp which is an integer containing the number of micro seconds
+      since January 1, 1970, 00:00:00 UTC or 0 on error.
+    """
+    try:
+      timestamp = cls.SYSTEMTIME_STRUCT.parse(systemtime)
+    except construct.ConstructError as exception:
+      raise errors.TimestampError(
+          u'Unable to create timestamp from {0:s} with error: {1:s}'.format(
+              systemtime, exception))
+    return cls.FromTimeParts(
+        year=timestamp.year, month=timestamp.month,
+        day=timestamp.day, hour=timestamp.hour,
+        minutes=timestamp.minutes, seconds=timestamp.seconds,
+        microseconds=(
+            timestamp.milliseconds * cls.MILLI_SECONDS_TO_MICRO_SECONDS))
+
+  @classmethod
   def FromTimeParts(
       cls, year, month, day, hour, minutes, seconds, microseconds=0,
       timezone=pytz.UTC):
@@ -842,4 +895,24 @@ class Timestamp(object):
 def GetCurrentYear():
   """Determines the current year."""
   datetime_object = datetime.datetime.now()
+  return datetime_object.year
+
+
+def GetYearFromPosixTime(posix_time, timezone=pytz.UTC):
+  """Gets the year from a POSIX timestamp
+
+  The POSIX time is the number of seconds since 1970-01-01 00:00:00 UTC.
+
+  Args:
+    posix_time: An integer containing the number of seconds since
+                1970-01-01 00:00:00 UTC.
+    timezone: Optional timezone of the POSIX timestamp.
+
+  Returns:
+    The year of the POSIX timestamp.
+
+  Raises:
+    ValueError: If the posix timestamp is out of the range of supported values.
+  """
+  datetime_object = datetime.datetime.fromtimestamp(posix_time, tz=timezone)
   return datetime_object.year

@@ -13,6 +13,7 @@ Subpackages
     plaso.parsers.plist_plugins
     plaso.parsers.shared
     plaso.parsers.sqlite_plugins
+    plaso.parsers.syslog_plugins
     plaso.parsers.winreg_plugins
 
 Submodules

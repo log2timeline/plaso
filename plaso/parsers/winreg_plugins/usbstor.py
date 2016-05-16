@@ -4,7 +4,6 @@
 import logging
 
 from plaso.containers import windows_events
-from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -41,8 +40,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       # Time last USB device of this class was first inserted.
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset, source_append=self._SOURCE_APPEND,
-          usage=eventdata.EventTimestamp.FIRST_CONNECTED)
+          offset=registry_key.offset, source_append=self._SOURCE_APPEND)
       parser_mediator.ProduceEvent(event_object)
 
       name_values = subkey.name.split(u'&')
@@ -62,17 +60,17 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       if number_of_name_values >= 4:
         values_dict[u'revision'] = name_values[3]
 
-      for devicekey in subkey.GetSubkeys():
-        values_dict[u'serial'] = devicekey.name
+      for device_key in subkey.GetSubkeys():
+        values_dict[u'serial'] = device_key.name
 
-        friendly_name_value = devicekey.GetValueByName(u'FriendlyName')
+        friendly_name_value = device_key.GetValueByName(u'FriendlyName')
         if friendly_name_value:
           values_dict[u'friendly_name'] = friendly_name_value.GetDataAsObject()
         else:
           values_dict.pop(u'friendly_name', None)
 
         # ParentIdPrefix applies to Windows XP Only.
-        parent_id_prefix_value = devicekey.GetValueByName(u'ParentIdPrefix')
+        parent_id_prefix_value = device_key.GetValueByName(u'ParentIdPrefix')
         if parent_id_prefix_value:
           values_dict[u'parent_id_prefix'] = (
               parent_id_prefix_value.GetDataAsObject())
@@ -82,33 +80,32 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
         event_object = windows_events.WindowsRegistryEvent(
-            devicekey.last_written_time, registry_key.path, values_dict,
-            offset=registry_key.offset, source_append=self._SOURCE_APPEND,
-            usage=eventdata.EventTimestamp.LAST_CONNECTED)
+            device_key.last_written_time, registry_key.path, values_dict,
+            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
         parser_mediator.ProduceEvent(event_object)
 
-        # Build list of first Insertion times.
-        first_insert = []
-        device_parameter_key = devicekey.GetSubkeyByName(u'Device Parameters')
+        device_parameter_key = device_key.GetSubkeyByName(u'Device Parameters')
         if device_parameter_key:
-          first_insert.append(device_parameter_key.last_written_time)
-
-        log_configuration_key = devicekey.GetSubkeyByName(u'LogConf')
-        if (log_configuration_key and
-            log_configuration_key.last_written_time not in first_insert):
-          first_insert.append(log_configuration_key.last_written_time)
-
-        properties_key = devicekey.GetSubkeyByName(u'Properties')
-        if (properties_key and
-            properties_key.last_written_time not in first_insert):
-          first_insert.append(properties_key.last_written_time)
-
-        # Add first Insertion times.
-        for timestamp in first_insert:
           event_object = windows_events.WindowsRegistryEvent(
-              timestamp, registry_key.path, values_dict,
-              offset=registry_key.offset, source_append=self._SOURCE_APPEND,
-              usage=eventdata.EventTimestamp.LAST_CONNECTED)
+              device_parameter_key.last_written_time, registry_key.path,
+              values_dict, offset=registry_key.offset,
+              source_append=self._SOURCE_APPEND)
+          parser_mediator.ProduceEvent(event_object)
+
+        log_configuration_key = device_key.GetSubkeyByName(u'LogConf')
+        if log_configuration_key:
+          event_object = windows_events.WindowsRegistryEvent(
+              log_configuration_key.last_written_time, registry_key.path,
+              values_dict, offset=registry_key.offset,
+              source_append=self._SOURCE_APPEND)
+          parser_mediator.ProduceEvent(event_object)
+
+        properties_key = device_key.GetSubkeyByName(u'Properties')
+        if properties_key:
+          event_object = windows_events.WindowsRegistryEvent(
+              properties_key.last_written_time, registry_key.path,
+              values_dict, offset=registry_key.offset,
+              source_append=self._SOURCE_APPEND)
           parser_mediator.ProduceEvent(event_object)
 
 

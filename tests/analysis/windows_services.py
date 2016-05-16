@@ -4,6 +4,7 @@
 
 import unittest
 
+from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
@@ -41,12 +42,12 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     Returns:
       An EventObject representing the service to be created.
     """
-    test_pathspec = fake_path_spec.FakePathSpec(
-        location=u'C:\\WINDOWS\\system32\\SYSTEM')
+    filetime = dfdatetime_filetime.Filetime(
+        timestamp=service_event[u'timestamp'])
     event_object = windows_events.WindowsRegistryServiceEvent(
-        service_event[u'timestamp'], service_event[u'path'],
-        service_event[u'text_dict'])
-    event_object.pathspec = test_pathspec
+        filetime, service_event[u'path'], service_event[u'text_dict'])
+    event_object.pathspec = fake_path_spec.FakePathSpec(
+        location=u'C:\\WINDOWS\\system32\\SYSTEM')
     return event_object
 
   def testSyntheticKeysText(self):
@@ -120,6 +121,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         u'Sources:',
         u'ControlSet001',
         u'ControlSet002']
+
     for string in test_strings:
       self.assertTrue(string in text)
 

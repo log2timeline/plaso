@@ -62,7 +62,8 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join(u'cases', u'image.dd'))
 
     expected_json_dict = {
-        u'__type__': u'EventObject',
+        u'__container_type__': u'event',
+        u'__type__': u'AttributeContainer',
         u'data_type': u'test:output',
         u'display_name': u'OS: /var/log/syslog.1',
         u'hostname': u'ubuntu',

@@ -11,11 +11,9 @@ from plaso.engine import plaso_queue
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.multi_processing import multi_process
-from plaso.serializer import protobuf_serializer
 from plaso.storage import time_range
 from plaso.storage import zip_file
 
@@ -34,44 +32,47 @@ class SerializedDataStream(test_lib.StorageTestCase):
 
   def testReadAndSeek(self):
     """Tests the ReadEntry and SeekEntryAtOffset functions."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'plaso_proto.000003'
+    stream_name = u'plaso_proto.000002'
     data_stream = zip_file._SerializedDataStream(
         zip_file_object, test_file, stream_name)
 
-    # The plaso_index.000003 stream contains 2 protobuf serialized
-    # event objects. One at offset 0 of size 271 (including the 4 bytes of
-    # the entry size) and one at offset 271 of size 271.
+    # The plaso_index.000002 stream contains 3 protobuf serialized
+    # event objects. The first one at offset 0 of size 762 (including the
+    # 4 bytes of the entry size) and the second one at offset 762 of size 742.
     self.assertEqual(data_stream.entry_index, 0)
 
     entry_data1 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 271)
+    self.assertEqual(data_stream._stream_offset, 762)
     self.assertIsNotNone(entry_data1)
 
     entry_data2 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 542)
+    self.assertEqual(data_stream._stream_offset, 1504)
     self.assertIsNotNone(entry_data2)
 
-    entry_data = data_stream.ReadEntry()
-    self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 542)
+    # Read more entries than in the stream.
+    for _ in range(3, 18):
+      entry_data = data_stream.ReadEntry()
+
+    self.assertEqual(data_stream.entry_index, 16)
+    self.assertEqual(data_stream._stream_offset, 11605)
     self.assertIsNone(entry_data)
 
-    data_stream.SeekEntryAtOffset(1, 271)
+    data_stream.SeekEntryAtOffset(1, 762)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 542)
+    self.assertEqual(data_stream._stream_offset, 1504)
     self.assertEqual(entry_data, entry_data2)
 
     data_stream.SeekEntryAtOffset(0, 0)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 271)
+    self.assertEqual(data_stream._stream_offset, 762)
     self.assertEqual(entry_data, entry_data1)
 
     with self.assertRaises(IOError):
@@ -95,34 +96,34 @@ class SerializedDataOffsetTable(test_lib.StorageTestCase):
 
   def testGetOffset(self):
     """Tests the GetOffset function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'plaso_index.000003'
+    stream_name = u'plaso_index.000002'
     offset_table = zip_file._SerializedDataOffsetTable(
         zip_file_object, stream_name)
     offset_table.Read()
 
     self.assertEqual(offset_table.GetOffset(0), 0)
-    self.assertEqual(offset_table.GetOffset(1), 271)
+    self.assertEqual(offset_table.GetOffset(1), 762)
 
     with self.assertRaises(IndexError):
-      offset_table.GetOffset(2)
+      offset_table.GetOffset(99)
 
-    self.assertEqual(offset_table.GetOffset(-1), 271)
-    self.assertEqual(offset_table.GetOffset(-2), 0)
+    self.assertEqual(offset_table.GetOffset(-1), 10902)
+    self.assertEqual(offset_table.GetOffset(-2), 10110)
 
     with self.assertRaises(IndexError):
-      offset_table.GetOffset(-3)
+      offset_table.GetOffset(-99)
 
   def testRead(self):
     """Tests the Read function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'plaso_index.000003'
+    stream_name = u'plaso_index.000002'
     offset_table = zip_file._SerializedDataOffsetTable(
         zip_file_object, stream_name)
     offset_table.Read()
@@ -142,34 +143,34 @@ class SerializedDataTimestampTable(test_lib.StorageTestCase):
 
   def testGetTimestamp(self):
     """Tests the GetTimestamp function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'plaso_timestamps.000003'
+    stream_name = u'plaso_timestamps.000002'
     offset_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
     offset_table.Read()
 
-    self.assertEqual(offset_table.GetTimestamp(0), 1390377181000000)
-    self.assertEqual(offset_table.GetTimestamp(1), 1390377241000000)
+    self.assertEqual(offset_table.GetTimestamp(0), 1453449153000000)
+    self.assertEqual(offset_table.GetTimestamp(1), 1453449153000000)
 
     with self.assertRaises(IndexError):
-      offset_table.GetTimestamp(2)
+      offset_table.GetTimestamp(99)
 
-    self.assertEqual(offset_table.GetTimestamp(-1), 1390377241000000)
-    self.assertEqual(offset_table.GetTimestamp(-2), 1390377181000000)
+    self.assertEqual(offset_table.GetTimestamp(-1), 1542503743000000)
+    self.assertEqual(offset_table.GetTimestamp(-2), 1542503720000000)
 
     with self.assertRaises(IndexError):
-      offset_table.GetTimestamp(-3)
+      offset_table.GetTimestamp(-99)
 
   def testRead(self):
     """Tests the Read function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'plaso_timestamps.000003'
+    stream_name = u'plaso_timestamps.000002'
     offset_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
     offset_table.Read()
@@ -189,60 +190,60 @@ class ZIPStorageFile(test_lib.StorageTestCase):
 
   def testGetSerializedEventObjectOffsetTable(self):
     """Tests the _GetSerializedEventObjectOffsetTable function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    offset_table = storage_file._GetSerializedEventObjectOffsetTable(3)
+    offset_table = storage_file._GetSerializedEventObjectOffsetTable(2)
     self.assertIsNotNone(offset_table)
 
     storage_file.Close()
 
   def testGetSerializedEventObjectStream(self):
     """Tests the _GetSerializedEventObjectStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    data_stream = storage_file._GetSerializedEventObjectStream(3)
+    data_stream = storage_file._GetSerializedEventObjectStream(2)
     self.assertIsNotNone(data_stream)
 
     storage_file.Close()
 
   def testGetSerializedEventObjectStreamNumbers(self):
     """Tests the _GetSerializedEventObjectStreamNumbers function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     stream_numbers = storage_file._GetSerializedEventObjectStreamNumbers()
-    self.assertEqual(len(stream_numbers), 7)
+    self.assertEqual(len(stream_numbers), 2)
 
     storage_file.Close()
 
   def testGetSerializedEventObjectTimestampTable(self):
     """Tests the _GetSerializedEventObjectTimestampTable function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    timestamp_table = storage_file._GetSerializedEventObjectTimestampTable(3)
+    timestamp_table = storage_file._GetSerializedEventObjectTimestampTable(2)
     self.assertIsNotNone(timestamp_table)
 
     storage_file.Close()
 
   def testGetStreamNames(self):
     """Tests the _GetStreamNames function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     stream_names = list(storage_file._GetStreamNames())
-    self.assertEqual(len(stream_names), 29)
+    self.assertEqual(len(stream_names), 9)
 
     storage_file.Close()
 
   def testHasStream(self):
     """Tests the _HasStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    self.assertTrue(storage_file._HasStream(u'plaso_timestamps.000003'))
+    self.assertTrue(storage_file._HasStream(u'plaso_timestamps.000002'))
     self.assertFalse(storage_file._HasStream(u'bogus'))
 
     storage_file.Close()
@@ -316,22 +317,6 @@ class StorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def _GetEventObjects(self, storage_file, stream_number):
-    """Retrieves all the event object in specific serialized data stream.
-
-    Args:
-      storage_file: a storage file (instance of StorageFile).
-      stream_number: an integer containing the number of the serialized event
-                     object stream.
-
-    Yields:
-      An event object (instance of EventObject).
-    """
-    event_object = storage_file._GetEventObject(stream_number)
-    while event_object:
-      yield event_object
-      event_object = storage_file._GetEventObject(stream_number)
-
   def _GetEventsFromGroup(self, storage_file, event_group):
     """Return a generator with all EventObjects from a group.
 
@@ -389,25 +374,25 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testGetSortedEntry(self):
     """Tests the GetSortedEntry function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    expected_timestamp = 1343166324000000
+    expected_timestamp = 1453449153000000
 
     event_object = storage_file.GetSortedEntry()
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Test lower bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'),
         timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
 
     storage_file.Close()
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    expected_timestamp = 1418925272000000
+    expected_timestamp = 1461998509000000
 
     event_object = storage_file.GetSortedEntry(time_range=test_time_range)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -415,13 +400,13 @@ class StorageFileTest(test_lib.StorageTestCase):
     # Test upper bound time range filter.
     test_time_range = time_range.TimeRange(
         timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
+        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'))
 
     storage_file.Close()
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    expected_timestamp = 1343166324000000
+    expected_timestamp = 1453449153000000
 
     event_object = storage_file.GetSortedEntry(time_range=test_time_range)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -430,11 +415,11 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testGetStorageInformation(self):
     """Tests the GetStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     storage_information = storage_file.GetStorageInformation()
-    self.assertEqual(len(storage_information), 1)
+    self.assertEqual(len(storage_information), 2)
 
     storage_file.Close()
 
@@ -474,7 +459,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.tag.labels[0], u'Malware')
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
-    self.assertEqual(message[0:15], u'[\\HKCU\\Windows\\')
+    self.assertEqual(message[0:14], u'[HKCU\\Windows\\')
 
     event_object = tagged_events[2]
     self.assertEqual(event_object.tag.comment, u'This is interesting')
@@ -491,7 +476,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testHasReports(self):
     """Tests the HasReports function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     self.assertFalse(storage_file.HasReports())
@@ -500,7 +485,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testHasTagging(self):
     """Tests the HasTagging function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     self.assertFalse(storage_file.HasTagging())
@@ -562,58 +547,13 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  # TODO: move the functionality of this test to other more specific tests.
-  def testStorage(self):
-    """Test the storage object."""
-    event_objects = []
-    timestamps = []
-    same_events = []
-
-    serializer = protobuf_serializer.ProtobufEventObjectSerializer
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
-      self._CreateTestStorageFileWithTags(temp_file)
-
-      storage_file = zip_file.StorageFile(temp_file, read_only=True)
-
-      for event_object in self._GetEventObjects(storage_file, 1):
-        event_objects.append(event_object)
-        timestamps.append(event_object.timestamp)
-        if event_object.data_type == 'windows:registry:key_value':
-          self.assertEqual(
-              event_object.timestamp_desc,
-              eventdata.EventTimestamp.WRITTEN_TIME)
-        else:
-          self.assertEqual(
-              event_object.timestamp_desc,
-              eventdata.EventTimestamp.WRITTEN_TIME)
-
-      # Read the same events that were put in the group, just to compare
-      # against.
-      event_object = storage_file._GetEventObject(1, entry_index=1)
-      serialized_event_object = serializer.WriteSerialized(event_object)
-      same_events.append(serialized_event_object)
-
-      event_object = storage_file._GetEventObject(1, entry_index=2)
-      serialized_event_object = serializer.WriteSerialized(event_object)
-      same_events.append(serialized_event_object)
-
-      storage_file.Close()
-
-    self.assertEqual(len(event_objects), 4)
-
-    expected_timestamps = [
-        1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
-    self.assertEqual(timestamps, expected_timestamps)
-
 
 class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
   """Tests for the ZIP-based storage file reader object."""
 
   def testGetEvents(self):
     """Tests the GetEvents function."""
-    test_file = self._GetTestFilePath([u'psort_test.proto.plaso'])
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
@@ -623,16 +563,21 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
-        1343166324000000, 1344270407000000, 1390377153000000, 1390377153000000,
-        1390377181000000, 1390377241000000, 1390377241000000, 1390377272000000,
-        1392438730000000, 1418925272000000, 1427151678000000, 1427151678000123,
-        1451584472000000, 1479431720000000, 1479431743000000]
+        1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
+        1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
+        1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
+        1456708543000000, 1456708543000000, 1461998509000000, 1461998509000000,
+        1461998509000000, 1461998509000000, 1461998509000000, 1461998510000000,
+        1482083672000000, 1482083672000000, 1490310078000000, 1490310078000000,
+        1490310078000123, 1490310078000123, 1514742872000000, 1514742872000000,
+        1542503720000000, 1542503720000000, 1542503743000000, 1542503743000000]
 
+    self.assertEqual(len(timestamps), 32)
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test lower bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'),
         timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
@@ -644,19 +589,18 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
-        1418925272000000,
-        1427151678000000,
-        1427151678000123,
-        1451584472000000,
-        1479431720000000,
-        1479431743000000]
+        1461998509000000, 1461998509000000, 1461998509000000, 1461998509000000,
+        1461998509000000, 1461998510000000, 1482083672000000, 1482083672000000,
+        1490310078000000, 1490310078000000, 1490310078000123, 1490310078000123,
+        1514742872000000, 1514742872000000, 1542503720000000, 1542503720000000,
+        1542503743000000, 1542503743000000]
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test upper bound time range filter.
     test_time_range = time_range.TimeRange(
         timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2014-02-16 00:00:00'))
+        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'))
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
@@ -667,15 +611,11 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
-        1343166324000000,
-        1344270407000000,
-        1390377153000000,
-        1390377153000000,
-        1390377181000000,
-        1390377241000000,
-        1390377241000000,
-        1390377272000000,
-        1392438730000000]
+        1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
+        1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
+        1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
+        1456708543000000, 1456708543000000, 1461998509000000, 1461998509000000,
+        1461998509000000, 1461998509000000, 1461998509000000]
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
@@ -713,8 +653,11 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
           temp_file, mode='r', compression=zipfile.ZIP_DEFLATED)
 
       expected_filename_list = [
-          u'information.dump', u'plaso_index.000001', u'plaso_proto.000001',
-          u'plaso_timestamps.000001', u'serializer.txt']
+          u'information.dump',
+          u'metadata.txt',
+          u'plaso_index.000001',
+          u'plaso_proto.000001',
+          u'plaso_timestamps.000001']
 
       filename_list = sorted(storage_file.namelist())
       self.assertEqual(len(filename_list), 5)
