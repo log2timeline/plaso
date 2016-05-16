@@ -458,6 +458,11 @@ class StorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+    # TODO: add test for exceeding buffer limit in AddEventObject.
+
+  # TODO: add test for AddEventSource.
+  # TODO: add test for exceeding buffer limit in AddEventSource.
+
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])

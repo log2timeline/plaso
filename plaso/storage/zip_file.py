@@ -2043,7 +2043,7 @@ class StorageFile(ZIPStorageFile):
     self._buffered_events.PushEvent(event_object.timestamp, event_object_data)
 
     if self._buffered_events.data_size > self._max_buffer_size:
-      self._WriteBuffer()
+      self._WriteEventsBuffer()
 
   def AddEventSource(self, event_source):
     """Adds an event source to the storage.
