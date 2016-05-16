@@ -268,7 +268,8 @@ class CollectorQueueProducer(plaso_queue.ItemQueueProducer):
 
     The collector queue producer discovers all the files that need to
     be processed by the workers. Once a file is discovered it is added
-    to the process queue as a path specification (instance of dfvfs.PathSpec).
+    to the path specification queue as a path specification (instance
+    of dfvfs.PathSpec).
 
     Args:
       path_spec_queue: the path specification queue (instance of Queue).
