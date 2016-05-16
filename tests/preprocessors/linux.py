@@ -45,7 +45,7 @@ class LinuxTimezoneTest(test_lib.PreprocessPluginTest):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    file_system_builder = shared_test_lib.FakeFileSystemBuilder()
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/timezone', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
