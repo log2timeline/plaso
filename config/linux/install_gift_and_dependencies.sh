@@ -51,15 +51,16 @@ TEST_DEPENDENCIES="python-coverage
                    python-mock"
 
 # Additional dependencies for doing Plaso development, alphabetized, one per line.
-DEVELOPMENT_DEPENDENCIES="python-sphinx"
+DEVELOPMENT_DEPENDENCIES="python-sphinx
+                          pylint"
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PLASO_DEPENDENCIES}
-if [[ "$@" == "include-test" ]]; then
+if [[ "$*" =~ "include-test" ]]; then
     sudo apt-get install -y ${TEST_DEPENDENCIES}
 fi
 
-if [[ "$@" == "include-development" ]]; then
-    sudo apt-get install -y ${TEST_DEPENDENCIES}
+if [[ "$*" =~ "include-development" ]]; then
+    sudo apt-get install -y ${DEVELOPMENT_DEPENDENCIES}
 fi
