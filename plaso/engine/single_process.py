@@ -18,7 +18,7 @@ from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
-class SingleProcessCollector(collector.Collector):
+class SingleProcessCollector(collector.CollectorQueueProducer):
   """Class that implements a single process collector object."""
 
   def __init__(self, path_spec_queue, resolver_context=None):
@@ -37,11 +37,7 @@ class SingleProcessCollector(collector.Collector):
     """
     super(SingleProcessCollector, self).__init__(
         path_spec_queue, resolver_context=resolver_context)
-
     self._extraction_worker = None
-    self._fs_collector = SingleProcessFileSystemCollector(
-        path_spec_queue, resolver_context=resolver_context,
-        status_update_callback=self._UpdateStatus)
 
   def _FlushQueue(self):
     """Flushes the queue callback for the QueueFull exception."""
@@ -62,8 +58,6 @@ class SingleProcessCollector(collector.Collector):
                          EventExtractionWorker).
     """
     self._extraction_worker = extraction_worker
-
-    self._fs_collector.SetExtractionWorker(extraction_worker)
 
 
 class SingleProcessEngine(engine.BaseEngine):
@@ -417,53 +411,6 @@ class SingleProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
   def _DebugProcessPathSpec(self):
     """Callback for debugging path specification processing failures."""
     pdb.post_mortem()
-
-
-class SingleProcessFileSystemCollector(collector.FileSystemCollector):
-  """Class that implements a single process file system collector object."""
-
-  def __init__(
-      self, path_spec_queue, resolver_context=None,
-      status_update_callback=None):
-    """Initializes the collector object.
-
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
-
-    Args:
-      path_spec_queue: the path specification queue (instance of Queue).
-                       This queue contains the path specifications (instances
-                       of dfvfs.PathSpec) of the file entries that need
-                       to be processed.
-      processing_status: the processing status (instance of ProcessingStatus).
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-      status_update_callback: optional callback function for status updates.
-                              This callback is invoked when the collector
-                              flushes its queue.
-    """
-    super(SingleProcessFileSystemCollector, self).__init__(
-        path_spec_queue, resolver_context=resolver_context)
-
-    self._extraction_worker = None
-    self._status_update_callback = status_update_callback
-
-  def _FlushQueue(self):
-    """Flushes the queue callback for the QueueFull exception."""
-    if self._status_update_callback:
-      self._status_update_callback()
-
-    while not self._queue.IsEmpty():
-      self._extraction_worker.Run()
-
-  def SetExtractionWorker(self, extraction_worker):
-    """Sets the extraction worker.
-
-    Args:
-      extraction_worker: the extraction worker object (instance of
-                         EventExtractionWorker).
-    """
-    self._extraction_worker = extraction_worker
 
 
 class SingleProcessItemQueueProducer(plaso_queue.ItemQueueProducer):

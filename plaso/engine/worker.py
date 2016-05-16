@@ -435,29 +435,24 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
 
       if archive_path_spec and self._process_archive_files:
         try:
-          file_system = path_spec_resolver.Resolver.OpenFileSystem(
-              archive_path_spec, resolver_context=self._resolver_context)
+          # TODO: make sure to handle the abort here.
 
-          try:
-            # TODO: make sure to handle the abort here.
+          # TODO: change this to pass the archive file path spec to
+          # the collector process and have the collector implement a maximum
+          # path spec "depth" to prevent ZIP bombs and equiv.
+          file_system_collector = collector.CollectorQueueProducer(
+              self._queue, resolver_context=self._resolver_context)
 
-            # TODO: change this to pass the archive file path spec to
-            # the collector process and have the collector implement a maximum
-            # path spec "depth" to prevent ZIP bombs and equiv.
-            file_system_collector = collector.FileSystemCollector(self._queue)
-            file_system_collector.Collect(file_system, archive_path_spec)
-            self._produced_number_of_path_specs += (
-                file_system_collector.number_of_produced_items)
-
-          finally:
-            file_system.Close()
-
-            # Make sure frame.f_locals does not keep a reference to file_entry.
-            file_entry = None
+          file_system_collector.Collect([archive_path_spec])
+          self._produced_number_of_path_specs += (
+              file_system_collector.number_of_produced_items)
 
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
               self._current_display_name))
+
+          # Make sure frame.f_locals does not keep a reference to file_entry.
+          file_entry = None
 
     return True
 

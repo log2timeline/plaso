@@ -615,7 +615,7 @@ class ImageExportFrontend(frontend.Frontend):
       os.makedirs(destination_path)
 
     input_queue = single_process.SingleProcessQueue()
-    image_collector = collector.Collector(input_queue)
+    image_collector = collector.CollectorQueueProducer(input_queue)
     image_collector.Collect(source_path_specs)
 
     file_saver = FileSaver(skip_duplicates=remove_duplicates)

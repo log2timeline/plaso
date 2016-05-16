@@ -252,7 +252,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
         definitions.PROCESS_TYPE_COLLECTOR, **kwargs)
     resolver_context = context.Context()
 
-    self._collector = collector.Collector(
+    self._collector = collector.CollectorQueueProducer(
         path_spec_queue, resolver_context=resolver_context)
     self._path_spec_queue = path_spec_queue
     self._path_spec_queue_port = None
