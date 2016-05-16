@@ -1074,7 +1074,8 @@ class StorageFile(ZIPStorageFile):
   # The format version.
   _FORMAT_VERSION = 20160501
 
-  # The earliest format version with which the storage file is compatible.
+  # The earliest format version, stored in-file, that this class
+  # is able to read.
   _COMPATIBLE_FORMAT_VERSION = 20160501
 
   def __init__(
