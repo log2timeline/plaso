@@ -74,7 +74,8 @@ class BaseParser(object):
     use the EnablePlugins method and pass it a list of strings containing
     the names of the plugins to enable.
 
-    The default plugin, named "{self.NAME:s}_default", is handled separately.
+    The default plugin, named "{self.NAME:s}_default", if it exitsts,
+    is always enabled and cannot be disabled.
     """
     super(BaseParser, self).__init__()
     self._default_plugin = None
@@ -107,8 +108,8 @@ class BaseParser(object):
     Args:
       plugin_includes: a list of strings containing the names of the plugins
                        to enable, where None or an empty list represents all
-                       plugins. Not that the default plugin is handled
-                       separately.
+                       plugins. Note the default plugin, if it exitsts, is
+                       always enabled and cannot be disabled.
     """
     self._plugin_objects = []
     if not self._plugin_classes:

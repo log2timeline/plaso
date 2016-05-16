@@ -113,16 +113,18 @@ class PlistParser(interface.FileObjectParser):
           u'Unable to parse: {0:s} skipping.'.format(filename))
 
     # TODO: add a parser filter.
+    matching_plugin = None
     for plugin_object in self._plugin_objects:
       try:
         plugin_object.UpdateChainAndProcess(
             parser_mediator, plist_name=filename, top_level=top_level_object)
+        matching_plugin = plugin_object
 
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'Wrong plugin: {0:s} for: {1:s}'.format(
             exception.args[0], exception.args[1]))
 
-    if self._default_plugin:
+    if not matching_plugin and self._default_plugin:
       self._default_plugin.UpdateChainAndProcess(
           parser_mediator, plist_name=filename, top_level=top_level_object)
 
