@@ -20,7 +20,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   def testCompareStorageInformation(self):
     """Tests the CompareStorageInformation function."""
     test_file1 = self._GetTestFilePath([u'psort_test.json.plaso'])
-    test_file2 = self._GetTestFilePath([u'pinfo_test.out'])
+    test_file2 = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
     options = cli_test_lib.TestOptions()
     options.compare_storage_file = test_file1

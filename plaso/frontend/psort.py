@@ -23,8 +23,6 @@ from plaso.multi_processing import multi_process
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
-from plaso.proto import plaso_storage_pb2
-from plaso.serializer import protobuf_serializer
 from plaso.storage import time_range as storage_time_range
 from plaso.storage import writer as storage_writer
 from plaso.storage import zip_file as storage_zip_file
@@ -379,7 +377,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       time_slice: optional time slice object (instance of TimeRange).
 
     Returns:
-      A Counter object (instance of collections.Counter), that tracks the
+      A counter object (instance of collections.Counter), that tracks the
       number of unique events extracted from storage.
     """
     counter = collections.Counter()
@@ -394,14 +392,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         counter[u'Events Included'] += 1
         self._AppendEvent(event_object, output_buffer, analysis_queues)
       else:
-        event_match = event_object
-        if isinstance(event_object, plaso_storage_pb2.EventObject):
-          # TODO: move serialization to storage, if low-level filtering is
-          # needed storage should provide functions for it.
-          serializer = protobuf_serializer.ProtobufEventObjectSerializer
-          event_match = serializer.ReadSerialized(event_object)
-
-        if my_filter.Match(event_match):
+        if my_filter.Match(event_object):
           counter[u'Events Included'] += 1
           if filter_buffer:
             # Indicate we want forward buffering.

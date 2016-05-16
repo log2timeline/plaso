@@ -25,10 +25,11 @@ class JSONOutputModule(interface.LinearOutputModule):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object: an event object (instance of EventObject).
     """
-    json_string = json_serializer.JSONEventObjectSerializer.WriteSerialized(
-        event_object)
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            event_object))
 
     if self._event_counter == 0:
       self._WriteLine(u'"event_{0:d}": {1:s}\n'.format(

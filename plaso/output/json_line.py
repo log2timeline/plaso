@@ -31,8 +31,10 @@ class JSONLineOutputModule(interface.LinearOutputModule):
     if message:
       event_object.message = message
 
-    self._WriteLine(json_serializer.JSONEventObjectSerializer.WriteSerialized(
-        event_object))
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            event_object))
+    self._WriteLine(json_string)
     self._WriteLine(u'\n')
 
 

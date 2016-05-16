@@ -117,7 +117,8 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
-    analysis_report = reports.AnalysisReport(self.NAME, text=report_text)
+    analysis_report = reports.AnalysisReport(
+        plugin_name=self.NAME, text=report_text)
     analysis_report.report_dict = self._results
     return analysis_report
 

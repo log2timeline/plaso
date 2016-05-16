@@ -118,21 +118,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        "serializers".',
       u''])
 
-  _EXPECTED_STORAGE_OPTIONS = u'\n'.join([
-      u'usage: extraction_tool_test.py [--serializer-format FORMAT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --serializer-format FORMAT, --serializer_format FORMAT',
-      (u'                        By default the storage uses JSON for '
-       u'serializing event'),
-      (u'                        objects. This parameter can be used to '
-       u'change that'),
-      (u'                        behavior. The choices are "proto" and '
-       u'"json".'),
-      u''])
-
   def testAddExtractionOptions(self):
     """Tests the AddExtractionOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -168,18 +153,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
-
-  def testAddStorageOptions(self):
-    """Tests the AddStorageOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    test_tool = extraction_tool.ExtractionTool()
-    test_tool.AddStorageOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_STORAGE_OPTIONS)
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""

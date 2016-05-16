@@ -572,6 +572,7 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         1490310078000123, 1490310078000123, 1514742872000000, 1514742872000000,
         1542503720000000, 1542503720000000, 1542503743000000, 1542503743000000]
 
+    self.assertEqual(len(timestamps), 32)
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test lower bound time range filter.
