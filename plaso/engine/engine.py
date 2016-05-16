@@ -145,6 +145,7 @@ class BaseEngine(object):
     return profiler.GuppyMemoryProfiler.IsSupported()
 
 
+# TODO: remove this class further in the phased processing refactor.
 class EventObjectQueueConsumer(plaso_queue.ItemQueueConsumer):
   """Class that implements an event object queue consumer.
 
@@ -156,7 +157,7 @@ class EventObjectQueueConsumer(plaso_queue.ItemQueueConsumer):
 
     Args:
       queue_object: a queue object (instance of Queue).
-      storage_writer: a strorage writer (instance of StorageWriter).
+      storage_writer: a storage writer (instance of StorageWriter).
     """
     super(EventObjectQueueConsumer, self).__init__(queue_object)
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
