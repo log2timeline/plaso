@@ -84,8 +84,8 @@ class CollectorTestCase(unittest.TestCase):
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
 
-class CollectorTest(CollectorTestCase):
-  """Tests for the collector."""
+class CollectorQueueProducerTest(CollectorTestCase):
+  """Tests for the collector queue producer."""
 
   def testFileSystemCollection(self):
     """Test collection on the file system."""
@@ -104,7 +104,7 @@ class CollectorTest(CollectorTestCase):
 
       test_path_spec_queue = single_process.SingleProcessQueue()
       resolver_context = context.Context()
-      test_collector = collector.Collector(
+      test_collector = collector.CollectorQueueProducer(
           test_path_spec_queue, resolver_context=resolver_context)
       test_collector.Collect([path_spec])
 
@@ -129,7 +129,7 @@ class CollectorTest(CollectorTestCase):
 
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.Collector(
+    test_collector = collector.CollectorQueueProducer(
         test_path_spec_queue, resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
@@ -202,7 +202,7 @@ class CollectorTest(CollectorTestCase):
 
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.Collector(
+    test_collector = collector.CollectorQueueProducer(
         test_path_spec_queue, resolver_context=resolver_context)
     test_collector.Collect([path_spec])
 
@@ -231,7 +231,7 @@ class CollectorTest(CollectorTestCase):
 
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.Collector(
+    test_collector = collector.CollectorQueueProducer(
         test_path_spec_queue, resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
@@ -299,7 +299,7 @@ class CollectorTest(CollectorTestCase):
 
     test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.Collector(
+    test_collector = collector.CollectorQueueProducer(
         test_path_spec_queue, resolver_context=resolver_context)
     test_collector.SetCollectDirectoryMetadata(collect_directory_metadata)
 
