@@ -2,9 +2,11 @@
 """The ZIP-based storage.
 
 The ZIP-based storage can be described as a collection of storage files
-bundled in a single ZIP archive file.
+(or streams) bundled in a single ZIP archive file.
 
 There are multiple types of storage files:
+* metadata.txt
+  File that contains the storage metadata.
 * plaso_proto.#
   These files contain the serialized event objects. These files are referred
   to as "proto files" because of historical reasons. The event objects stored
@@ -16,6 +18,9 @@ There are multiple types of storage files:
 * plaso_timestamps.#
   These files contain an index of the timestamps of the serialized event
   objects stored in the "proto files".
+* serializer.txt
+  File that contains the serializer format. This is now deprecated and
+  has been replaced by the storage metadata.
 
 The # in the filenames is referred to as the "store number".
 
@@ -59,10 +64,16 @@ Historically the data was serialized using protobuf.
 
 import collections
 import heapq
+import io
 import logging
 import os
 import warnings
 import zipfile
+
+try:
+  import ConfigParser as configparser
+except ImportError:
+  import configparser  # pylint: disable=import-error
 
 import construct
 
@@ -728,6 +739,70 @@ class _SerializedEventTagIndexTable(object):
     self._zip_file.writestr(self._stream_name, table_data)
 
 
+class _StorageMetadata(object):
+  """Class that implements storage metadata.
+
+  Attributes:
+    format_version: an integer containing the storage format version.
+    serialization_format: a string containing the serialization format.
+  """
+
+  def __init__(self):
+    """Initializes storage metadata."""
+    super(_StorageMetadata, self).__init__()
+    self.format_version = None
+    self.serialization_format = None
+
+
+class _StorageMetadataReader(object):
+  """Class that implements a storage metadata reader."""
+
+  def _GetConfigValue(self, config_parser, section_name, value_name):
+    """Retrieves a value from the config parser.
+
+    Args:
+      config_parser: the configuration parser (instance of ConfigParser).
+      section_name: the name of the section that contains the value.
+      value_name: the name of the value.
+
+    Returns:
+      An object containing the value or None if the value does not exists.
+    """
+    try:
+      return config_parser.get(section_name, value_name).decode('utf-8')
+    except (configparser.NoOptionError, configparser.NoSectionError):
+      return
+
+  def Read(self, stream_data):
+    """Reads the storage metadata.
+
+    Args:
+      stream_data: a byte string containing the data of the steam.
+
+    Returns:
+      The storeage metadata (instance of _StorageMetadata).
+    """
+    config_parser = configparser.RawConfigParser()
+    config_parser.readfp(io.BytesIO(stream_data))
+
+    section_name = u'plaso_storage_file'
+
+    storage_metadata = _StorageMetadata()
+
+    format_version = self._GetConfigValue(
+        config_parser, section_name, u'format_version')
+
+    try:
+      storage_metadata.format_version = int(format_version, 10)
+    except (TypeError, ValueError):
+      storage_metadata.format_version = None
+
+    storage_metadata.serialization_format = self._GetConfigValue(
+        config_parser, section_name, u'serialization_format')
+
+    return storage_metadata
+
+
 class ZIPStorageFile(object):
   """Class that defines the ZIP-based storage file.
 
@@ -975,8 +1050,8 @@ class ZIPStorageFile(object):
     """Writes data to a stream.
 
     Args:
-      stream_name: string containing the name of the stream.
-      stream_data: the data of the steam.
+      stream_name: a string containing the name of the stream.
+      stream_data: a byte string containing the data of the steam.
     """
     # TODO: this can raise an IOError e.g. "Stale NFS file handle".
     # Determine if this be handled more error resiliently.
@@ -996,8 +1071,12 @@ class StorageFile(ZIPStorageFile):
   # The maximum serialized report size to 24 MiB.
   MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
-  # The version of the storage file.
-  STORAGE_VERSION = 1
+  # The format version.
+  _FORMAT_VERSION = 20160501
+
+  # The earliest format version, stored in-file, that this class
+  # is able to read.
+  _COMPATIBLE_FORMAT_VERSION = 20160501
 
   def __init__(
       self, output_file, buffer_size=0, read_only=False,
@@ -1013,32 +1092,31 @@ class StorageFile(ZIPStorageFile):
       serializer_format: optional storage serializer format.
 
     Raises:
-      IOError: if we open up the file in read only mode and the file does
-      not exist.
+      IOError: if we open the file in read only mode and the file does
+               not exist.
     """
     super(StorageFile, self).__init__()
     self._analysis_report_serializer = None
     self._buffer = _SerializedEventsHeap()
     self._event_object_serializer = None
     self._event_tag_index = None
-    self._event_tag_serializer = None
     self._file_number = 1
     self._first_file_number = None
+    self._format_version = self._FORMAT_VERSION
     self._max_buffer_size = buffer_size or self.MAXIMUM_BUFFER_SIZE
     self._merge_buffer = None
     self._output_file = output_file
     self._preprocess_object_serializer = None
     self._read_only = read_only
-    self._serializer_format_string = u''
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializer_format = serializer_format
 
     if self._read_only:
       access_mode = 'r'
     else:
       access_mode = 'a'
 
-    self._Open(
-        output_file, access_mode=access_mode,
-        serializer_format=serializer_format)
+    self._Open(output_file, access_mode=access_mode)
 
     # Attributes for profiling.
     self._enable_profiling = False
@@ -1053,7 +1131,7 @@ class StorageFile(ZIPStorageFile):
   @property
   def serialization_format(self):
     """The serialization format."""
-    return self._serializer_format_string
+    return self._serializer_format
 
   def _BuildTagIndex(self):
     """Builds the tag index that contains the offsets for each tag.
@@ -1096,8 +1174,7 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'event_object')
 
-    event_object = self._event_object_serializer.ReadSerialized(
-        event_object_data)
+    event_object = self._serializer.ReadSerialized(event_object_data)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'event_object')
@@ -1241,54 +1318,63 @@ class StorageFile(ZIPStorageFile):
           self._merge_buffer.PushEvent(
               event_object, stream_number, event_object.store_number)
 
-  # pylint: disable=arguments-differ
-  def _Open(
-      self, path, access_mode='r',
-      serializer_format=definitions.SERIALIZER_FORMAT_JSON):
+  def _Open(self, path, access_mode='r'):
     """Opens the storage file.
 
     Args:
       path: string containing the path of the storage file.
       access_mode: optional string indicating the access mode.
-      serializer_format: optional storage serializer format.
 
     Raises:
       IOError: if the file is opened in read only mode and the file does
-               not exist.
+               not exist or if the serializer format is not supported.
     """
     super(StorageFile, self)._Open(path, access_mode=access_mode)
 
-    serializer_stream_name = u'serializer.txt'
-    has_serializer_stream = self._HasStream(serializer_stream_name)
-    if has_serializer_stream:
-      stored_serializer_format = self._ReadStream(serializer_stream_name)
+    has_storage_metadata = self._ReadStorageMetadata()
+    if not has_storage_metadata:
+      # TODO: remove serializer.txt stream support in favor
+      # of storage metatdata.
+      logging.warning(u'Storage file does not contain a metadata stream.')
+
+      stored_serializer_format = self._ReadSerializerStream()
       if stored_serializer_format:
-        serializer_format = stored_serializer_format
+        self._serializer_format = stored_serializer_format
 
-    self._SetSerializerFormat(serializer_format)
+    if self._serializer_format != definitions.SERIALIZER_FORMAT_JSON:
+      raise IOError(u'Unsupported serializer format: {0:s}'.format(
+          self._serializer_format))
 
-    if access_mode != 'r' and not has_serializer_stream:
-      # Note that _serializer_format_string is set by _SetSerializerFormat().
-      self._WriteStream(serializer_stream_name, self._serializer_format_string)
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._preprocess_object_serializer = (
+        json_serializer.JSONPreprocessObjectSerializer)
 
-    if not self._read_only:
-      logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
-          self._max_buffer_size))
+    if access_mode != 'r':
+      self._OpenWrite()
 
-      # Need to get the last number in the list.
-      for stream_name in self._GetStreamNames():
-        if stream_name.startswith(u'plaso_proto.'):
-          _, _, file_number = stream_name.partition(u'.')
+  def _OpenWrite(self):
+    """Opens the storage file for writing."""
+    logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
+        self._max_buffer_size))
 
-          try:
-            file_number = int(file_number, 10)
-            if file_number >= self._file_number:
-              self._file_number = file_number + 1
-          except ValueError:
-            # Ignore invalid stream names.
-            pass
+    # Determine the the last stream number.
+    for stream_name in self._GetStreamNames():
+      if stream_name.startswith(u'plaso_proto.'):
+        _, _, file_number = stream_name.partition(u'.')
 
-      self._first_file_number = self._file_number
+        try:
+          file_number = int(file_number, 10)
+          if file_number >= self._file_number:
+            self._file_number = file_number + 1
+        except ValueError:
+          logging.warning((
+              u'Found unsupported stream name: {0:s} while determining '
+              u'the last storage number').format(stream_name))
+
+    self._first_file_number = self._file_number
+
+    if self._first_file_number == 1:
+      self._WriteStorageMetadata()
 
   def _ProfilingStop(self):
     """Stops the profiling."""
@@ -1311,7 +1397,7 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'event_tag')
 
-    event_tag = self._event_tag_serializer.ReadSerialized(event_tag_data)
+    event_tag = self._serializer.ReadSerialized(event_tag_data)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'event_tag')
@@ -1374,30 +1460,67 @@ class StorageFile(ZIPStorageFile):
 
     return preprocess_object
 
-  def _SetSerializerFormat(self, serializer_format):
-    """Set the serializer format.
+  def _ReadSerializerStream(self):
+    """Reads the serializer stream.
 
-    Args:
-      serializer_format: the storage serializer format.
+    Returns:
+      The stored serializer format.
 
     Raises:
       ValueError: if the serializer format is not supported.
     """
-    if serializer_format == definitions.SERIALIZER_FORMAT_JSON:
-      self._serializer_format_string = u'json'
+    stream_name = u'serializer.txt'
+    if not self._HasStream(stream_name):
+      return
 
-      self._analysis_report_serializer = (
-          json_serializer.JSONAttributeContainerSerializer)
-      self._event_object_serializer = (
-          json_serializer.JSONAttributeContainerSerializer)
-      self._event_tag_serializer = (
-          json_serializer.JSONAttributeContainerSerializer)
-      self._preprocess_object_serializer = (
-          json_serializer.JSONPreprocessObjectSerializer)
-
-    else:
+    serializer_format = self._ReadStream(stream_name)
+    if serializer_format != definitions.SERIALIZER_FORMAT_JSON:
       raise ValueError(
-          u'Unsupported serializer format: {0:s}'.format(serializer_format))
+          u'Unsupported stored serializer format: {0:s}'.format(
+              serializer_format))
+
+    return serializer_format
+
+  def _ReadStorageMetadata(self):
+    """Reads the storage metadata.
+
+    Returns:
+      A boolean value to indicate if the storage metadata was read.
+
+    Raises:
+      IOError: if the format version or the serializer format is not supported.
+    """
+    stream_name = u'metadata.txt'
+    if not self._HasStream(stream_name):
+      return False
+
+    storage_metadata_reader = _StorageMetadataReader()
+    stream_data = self._ReadStream(stream_name)
+    storage_metadata = storage_metadata_reader.Read(stream_data)
+
+    if not storage_metadata.format_version:
+      raise IOError(u'Missing format version.')
+
+    if storage_metadata.format_version < self._COMPATIBLE_FORMAT_VERSION:
+      raise IOError(
+          u'Format version: {0:d} is too old and no longer supported.'.format(
+              storage_metadata.format_version))
+
+    if storage_metadata.format_version > self._FORMAT_VERSION:
+      raise IOError(
+          u'Format version: {0:d} is too new and not yet supported.'.format(
+              storage_metadata.format_version))
+
+    serialization_format = storage_metadata.serialization_format
+    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
+      raise IOError(
+          u'Unsupported serialization format: {0:s}'.format(
+              serialization_format))
+
+    self._format_version = storage_metadata.format_version
+    self._serializer_format = serialization_format
+
+    return True
 
   def _WriteBuffer(self):
     """Writes the buffered event objects to the storage file."""
@@ -1443,6 +1566,20 @@ class StorageFile(ZIPStorageFile):
     self._file_number += 1
     self._buffer.Empty()
 
+  def _WriteStorageMetadata(self):
+    """Writes the storage metadata."""
+    stream_name = u'metadata.txt'
+    if self._HasStream(stream_name):
+      return
+
+    stream_data = (
+        b'[plaso_storage_file]\n'
+        b'format_version: {0:d}\n'
+        b'serialization_format: {1:s}\n'
+        b'\n').format(self._FORMAT_VERSION, self._serializer_format)
+
+    self._WriteStream(stream_name, stream_data)
+
   def AddEventObject(self, event_object):
     """Adds an event object to the storage.
 
@@ -1460,8 +1597,7 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'event_object')
     try:
-      event_object_data = self._event_object_serializer.WriteSerialized(
-          event_object)
+      event_object_data = self._serializer.WriteSerialized(event_object)
       # TODO: Re-think this approach with the re-design of the storage.
       # Check if the event object failed to serialize (none is returned).
       if event_object_data is None:
@@ -1519,7 +1655,7 @@ class StorageFile(ZIPStorageFile):
         raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
       report_string = file_object.read(self.MAXIMUM_SERIALIZED_REPORT_SIZE)
-      yield self._analysis_report_serializer.ReadSerialized(report_string)
+      yield self._serializer.ReadSerialized(report_string)
 
   def GetSortedEntry(self, time_range=None):
     """Retrieves a sorted entry.
@@ -1667,8 +1803,7 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'analysis_report')
 
-    serialized_report = self._analysis_report_serializer.WriteSerialized(
-        analysis_report)
+    serialized_report = self._serializer.WriteSerialized(analysis_report)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'analysis_report')
@@ -1740,7 +1875,7 @@ class StorageFile(ZIPStorageFile):
       if self._serializers_profiler:
         self._serializers_profiler.StartTiming(u'event_tag')
 
-      serialized_event_tag = self._event_tag_serializer.WriteSerialized(tag)
+      serialized_event_tag = self._serializer.WriteSerialized(tag)
 
       if self._serializers_profiler:
         self._serializers_profiler.StopTiming(u'event_tag')
