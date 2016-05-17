@@ -96,15 +96,18 @@ class SSHPlugin(interface.SyslogPlugin):
       AttributeError: If an unknown key is provided.
     """
     if key == u'login':
-      parser_mediator.ProduceEvent(SSHLoginEvent(timestamp, 0, tokens))
+      event_object = SSHLoginEvent(timestamp, 0, tokens)
+
     elif key == u'failed_connection':
-      parser_mediator.ProduceEvent(
-          SSHFailedConnectionEvent(timestamp, 0, tokens))
+      event_object = SSHFailedConnectionEvent(timestamp, 0, tokens)
+
     elif key == u'opened_connection':
-      parser_mediator.ProduceEvent(
-          SSHOpenedConnectionEvent(timestamp, 0, tokens))
+      event_object = SSHOpenedConnectionEvent(timestamp, 0, tokens)
+
     else:
       raise AttributeError(u'Unknown grammar key: {0:s}'.format(key))
+
+    parser_mediator.ProduceEvent(event_object)
 
 
 syslog.SyslogParser.RegisterPlugin(SSHPlugin)

@@ -6,7 +6,6 @@ import unittest
 
 from plaso.containers import plist_event
 from plaso.lib import errors
-from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 from tests.parsers.plist_plugins import test_lib
@@ -43,14 +42,6 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
             u'44-00-00-00-00-02': {
                 u'Name': u'test-macpro', u'ClockOffset': 28180,
                 u'PageScanPeriod': 2, u'PageScanRepetitionMode': 1}}}
-
-  def testGetPluginNames(self):
-    """Tests the GetPluginNames function."""
-    plugin_names = plist.PlistParser.GetPluginNames()
-
-    self.assertNotEqual(plugin_names, [])
-
-    self.assertTrue(u'plist_default' in plugin_names)
 
   def testGetKeys(self):
     """Tests the _GetKeys function."""

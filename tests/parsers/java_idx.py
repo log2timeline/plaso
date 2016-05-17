@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class IDXTest(test_lib.ParserTestCase):
   """Tests for Java Cache IDX file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = java_idx.JavaIDXParser()
-
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
+    parser_object = java_idx.JavaIDXParser()
+
     test_file = self._GetTestFilePath([u'java_602.idx'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)
@@ -61,8 +59,10 @@ class IDXTest(test_lib.ParserTestCase):
 
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
+    parser_object = java_idx.JavaIDXParser()
+
     test_file = self._GetTestFilePath([u'java.idx'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)

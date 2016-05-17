@@ -40,11 +40,6 @@ class BencodeParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(BencodeParser, self).__init__()
-    self._plugins = BencodeParser.GetPluginObjects()
-
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a bencoded file-like object.
 
@@ -74,7 +69,7 @@ class BencodeParser(interface.FileObjectParser):
           u'[{0:s}] missing decoded data for file: {1:s}'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
-    for plugin_object in self._plugins:
+    for plugin_object in self._plugin_objects:
       try:
         plugin_object.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:

@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the McAfee AV Log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mcafeeav.McafeeAccessProtectionParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = mcafeeav.McafeeAccessProtectionParser()
+
     test_file = self._GetTestFilePath([u'AccessProtectionLog.txt'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The file contains 14 lines which results in 14 event objects.

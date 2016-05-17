@@ -55,7 +55,7 @@ class SlowLexicalTextParser(
       ]
 
   def __init__(self, local_zone=True):
-    """Constructor for the SlowLexicalTextParser.
+    """Initializes a parser object.
 
     Args:
       local_zone: a boolean value that determines if the entries
@@ -428,10 +428,10 @@ class TextCSVParser(interface.FileObjectParser):
   MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
   def __init__(self, encoding=None):
-    """Initialize the CSV reader.
+    """Initializes a parser object.
 
-    Arguments:
-      encoding: Optional encoding used in the CSV file. If None, the system
+    Args:
+      encoding: optional encoding used in the CSV file. If None, the system
                 codepage set in the parser mediator will be used.
     """
     super(TextCSVParser, self).__init__()
@@ -731,13 +731,13 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   _ENCODING = u'ascii'
 
   def __init__(self):
-    """Initializes the pyparsing single-line text parser object."""
+    """Initializes a parser object."""
     super(PyparsingSingleLineTextParser, self).__init__()
-    self.encoding = self._ENCODING
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     self._line_structures = self.LINE_STRUCTURES
+    self.encoding = self._ENCODING
 
   def _ReadLine(
       self, parser_mediator, text_file_object, max_len=0, quiet=False, depth=0):
@@ -1026,7 +1026,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
   BUFFER_SIZE = 2048
 
   def __init__(self):
-    """Initializes the pyparsing multi-line text parser object."""
+    """Initializes a parser object."""
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
     self._text_reader = EncodedTextReader(

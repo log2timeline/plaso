@@ -16,32 +16,30 @@ from tests.parsers.bencode_plugins import test_lib
 class UTorrentPluginTest(test_lib.BencodePluginTestCase):
   """Tests for bencode parser plugin for uTorrent files."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = bencode_parser.BencodeParser()
-
   def testProcess(self):
     """Tests the Process function."""
+    parser_object = bencode_parser.BencodeParser()
+
     test_file = self._GetTestFilePath([u'bencode_utorrent'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 4)
 
-    caption_expected = u'plaso test'
-    path_expected = u'e:\\torrent\\files\\plaso test'
+    expected_caption = u'plaso test'
+    expected_path = u'e:\\torrent\\files\\plaso test'
 
     # First test on when the torrent was added to the client.
     event_object = event_objects[0]
 
-    self.assertEqual(event_object.caption, caption_expected)
+    self.assertEqual(event_object.caption, expected_caption)
 
-    self.assertEqual(event_object.path, path_expected)
+    self.assertEqual(event_object.path, expected_path)
 
     self.assertEqual(event_object.seedtime, 511)
 
-    description_expected = eventdata.EventTimestamp.ADDED_TIME
-    self.assertEqual(event_object.timestamp_desc, description_expected)
+    expected_description = eventdata.EventTimestamp.ADDED_TIME
+    self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 14:52:12')
@@ -50,12 +48,12 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     # Second test on when the torrent file was completely downloaded.
     event_object = event_objects[3]
 
-    self.assertEqual(event_object.caption, caption_expected)
-    self.assertEqual(event_object.path, path_expected)
+    self.assertEqual(event_object.caption, expected_caption)
+    self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
-    self.assertEqual(event_object.timestamp_desc, description_expected)
+    expected_description = eventdata.EventTimestamp.FILE_DOWNLOADED
+    self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 18:11:35')
@@ -64,12 +62,12 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     # Third test on when the torrent was first modified.
     event_object = event_objects[2]
 
-    self.assertEqual(event_object.caption, caption_expected)
-    self.assertEqual(event_object.path, path_expected)
+    self.assertEqual(event_object.caption, expected_caption)
+    self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    description_expected = eventdata.EventTimestamp.MODIFICATION_TIME
-    self.assertEqual(event_object.timestamp_desc, description_expected)
+    expected_description = eventdata.EventTimestamp.MODIFICATION_TIME
+    self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 18:11:34')
@@ -78,12 +76,12 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     # Fourth test on when the torrent was again modified.
     event_object = event_objects[1]
 
-    self.assertEqual(event_object.caption, caption_expected)
-    self.assertEqual(event_object.path, path_expected)
+    self.assertEqual(event_object.caption, expected_caption)
+    self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    description_expected = eventdata.EventTimestamp.MODIFICATION_TIME
-    self.assertEqual(event_object.timestamp_desc, description_expected)
+    expected_description = eventdata.EventTimestamp.MODIFICATION_TIME
+    self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 16:27:59')

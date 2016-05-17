@@ -62,7 +62,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     plugin_names: a list containing names of selected Windows Registry plugins
                   to be used, defaults to an empty list.
     registry_file: a string containing the path to a Windows Registry file or
-                   a Registry file type, eg: NTUSER, SOFTWARE, etc.
+                   a Registry file type, e.g. NTUSER, SOFTWARE, etc.
     run_mode: the run mode of the tool, determines if the tool should
               be running in a plugin mode, parsing an entire Registry file,
               being run in a console, etc.
@@ -709,7 +709,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         type=str, metavar=u'PLUGIN_NAME', help=(
             u'Substring match of the Registry plugin to be used, this '
             u'parameter can be repeated to create a list of plugins to be '
-            u'run against, eg: "-p userassist -p rdp" or "-p userassist".'))
+            u'run against, e.g. "-p userassist -p rdp" or "-p userassist".'))
 
     argument_parser.add_argument(
         u'registry_file', action=u'store', metavar=u'REGHIVE', nargs=u'?',

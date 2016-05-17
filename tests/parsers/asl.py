@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class ASLParserTest(test_lib.ParserTestCase):
   """Tests for Apple System Log file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = asl.ASLParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = asl.ASLParser()
+
     test_file = self._GetTestFilePath([u'applesystemlog.asl'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)

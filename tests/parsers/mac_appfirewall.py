@@ -15,16 +15,14 @@ from tests.parsers import test_lib
 class MacAppFirewallUnitTest(test_lib.ParserTestCase):
   """Tests for Mac AppFirewall log file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mac_appfirewall.MacAppFirewallParser()
-
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
+    parser_object = mac_appfirewall.MacAppFirewallParser()
+
     knowledge_base_values = {u'year': 2013}
     test_file = self._GetTestFilePath([u'appfirewall.log'])
     event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 47)

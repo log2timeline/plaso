@@ -126,7 +126,7 @@ class MactimeParser(text_parser.TextCSVParser):
     try:
       # Verify that the "size" field is an integer, thus cast it to int
       # and then back to string so it can be compared, if the value is
-      # not a string representation of an integer, eg: '12a' then this
+      # not a string representation of an integer, e.g. '12a' then this
       # conversion will fail and we return a False value.
       if str(int(row.get(u'size', b'0'), 10)) != row.get(u'size', None):
         return False

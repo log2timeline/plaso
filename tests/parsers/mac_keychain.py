@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class MacKeychainParserTest(test_lib.ParserTestCase):
   """Tests for keychain file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mac_keychain.KeychainParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = mac_keychain.KeychainParser()
+
     test_file = self._GetTestFilePath([u'login.keychain'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 5)

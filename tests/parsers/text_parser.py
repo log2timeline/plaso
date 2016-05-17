@@ -87,26 +87,26 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
 class TextParserTest(test_lib.ParserTestCase):
   """An unit test for the plaso parser library."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = TestTextParser()
-
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
+    parser_object = TestTextParser()
+
     test_file = self._GetTestFilePath([u'text_parser', u'test1.txt'])
 
     with self.assertRaises(errors.UnableToParseFile):
-      _ = self._ParseFile(self._parser, test_file)
+      _ = self._ParseFile(parser_object, test_file)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
+    parser_object = TestTextParser()
+
     formatters_manager.FormattersManager.RegisterFormatter(
         TestTextEventFormatter)
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
     test_file = self._GetTestFilePath([u'text_parser', u'test2.txt'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     event_object = event_objects[0]

@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-"""This file contains a class to provide a parsing framework to plaso.
-
-This class contains a base framework class for parsing fileobjects, and
-also some implementations that extend it to provide a more comprehensive
-parser.
-"""
+"""The parsers and plugins interface classes."""
 
 import abc
 import os
 
 from plaso.lib import errors
-from plaso.parsers import manager
 
 
 class BaseFileEntryFilter(object):
@@ -73,6 +67,21 @@ class BaseParser(object):
   # different parser classes don't end up in the same dict.
   _plugin_classes = None
 
+  def __init__(self):
+    """Initializes a parser object.
+
+    By default all plugins will be enabled. To only enable specific plugins
+    use the EnablePlugins method and pass it a list of strings containing
+    the names of the plugins to enable.
+
+    The default plugin, named "{self.NAME:s}_default", if it exists,
+    is always enabled and cannot be disabled.
+    """
+    super(BaseParser, self).__init__()
+    self._default_plugin = None
+    self._plugin_objects = None
+    self.EnablePlugins([])
+
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
     """Deregisters a plugin class.
@@ -93,7 +102,32 @@ class BaseParser(object):
 
     del cls._plugin_classes[plugin_name]
 
-  # TOOD: move this to a filter.
+  def EnablePlugins(self, plugin_includes):
+    """Enables parser plugins.
+
+    Args:
+      plugin_includes: a list of strings containing the names of the plugins
+                       to enable, where None or an empty list represents all
+                       plugins. Note the default plugin, if it exists, is
+                       always enabled and cannot be disabled.
+    """
+    self._plugin_objects = []
+    if not self._plugin_classes:
+      return
+
+    default_plugin_name = u'{0:s}_default'.format(self.NAME)
+    for plugin_name, plugin_class in iter(self._plugin_classes.items()):
+      if plugin_name == default_plugin_name:
+        self._default_plugin = plugin_class()
+        continue
+
+      if plugin_includes and plugin_name not in plugin_includes:
+        continue
+
+      plugin_object = plugin_class()
+      self._plugin_objects.append(plugin_object)
+
+  # TODO: move this to a filter.
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
@@ -102,24 +136,6 @@ class BaseParser(object):
       The format specification (instance of FormatSpecification) or
       None if not available."""
     return
-
-  @classmethod
-  def GetPluginNames(cls, parser_filter_string=None):
-    """Retrieves the plugin names.
-
-    Args:
-      parser_filter_string: optional parser filter string.
-
-    Returns:
-      A list of plugin names.
-    """
-    plugin_names = []
-
-    for plugin_name, _ in cls.GetPlugins(
-        parser_filter_string=parser_filter_string):
-      plugin_names.append(plugin_name)
-
-    return sorted(plugin_names)
 
   @classmethod
   def GetPluginObjectByName(cls, plugin_name):
@@ -137,49 +153,14 @@ class BaseParser(object):
     return plugin_class()
 
   @classmethod
-  def GetPluginObjects(cls, parser_filter_string=None):
-    """Retrieves the plugin objects.
-
-    Args:
-      parser_filter_string: optional parser filter string.
-
-    Returns:
-      A list of plugin objects (instances of BasePlugin).
-    """
-    plugin_objects = []
-
-    for _, plugin_class in cls.GetPlugins(
-        parser_filter_string=parser_filter_string):
-      plugin_object = plugin_class()
-      plugin_objects.append(plugin_object)
-
-    return plugin_objects
-
-  @classmethod
-  def GetPlugins(cls, parser_filter_string=None):
+  def GetPlugins(cls):
     """Retrieves the registered plugins.
-
-    Args:
-      parser_filter_string: optional parser filter string.
 
     Yields:
       A tuple that contains the uniquely identifying name of the plugin
       and the plugin class (subclass of BasePlugin).
     """
-    if parser_filter_string:
-      includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-          parser_filter_string)
-    else:
-      includes = None
-      excludes = None
-
-    for plugin_name, plugin_class in cls._plugin_classes.iteritems():
-      if excludes and plugin_name in excludes:
-        continue
-
-      if includes and plugin_name not in includes:
-        continue
-
+    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
       yield plugin_name, plugin_class
 
   @classmethod

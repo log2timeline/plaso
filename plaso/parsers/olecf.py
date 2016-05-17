@@ -25,16 +25,6 @@ class OleCfParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(OleCfParser, self).__init__()
-    self._plugins = OleCfParser.GetPluginObjects()
-
-    for list_index, plugin_object in enumerate(self._plugins):
-      if plugin_object.NAME == u'olecf_default':
-        self._default_plugin = self._plugins.pop(list_index)
-        break
-
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification."""
@@ -71,15 +61,16 @@ class OleCfParser(interface.FileObjectParser):
     if not root_item:
       return
 
-    # Get a list of all items in the root item from the OLE CF file.
+    # Get a list of all items in the root item from the OLECF file.
     item_names = [item.name for item in root_item.sub_items]
 
-    # Compare the list of available plugins.
+    # Compare the list of available plugin objects.
     # We will try to use every plugin against the file (except
     # the default plugin) and run it. Only if none of the plugins
     # works will we use the default plugin.
-    parsed = False
-    for plugin_object in self._plugins:
+
+    # TODO: add a parser filter.
+    for plugin_object in self._plugin_objects:
       try:
         plugin_object.UpdateChainAndProcess(
             parser_mediator, root_item=root_item, item_names=item_names)
@@ -89,9 +80,7 @@ class OleCfParser(interface.FileObjectParser):
                 self.NAME, plugin_object.NAME,
                 parser_mediator.GetDisplayName()))
 
-    # Check if we still haven't parsed the file, and if so we will use
-    # the default OLECF plugin.
-    if not parsed and self._default_plugin:
+    if self._default_plugin:
       self._default_plugin.UpdateChainAndProcess(
           parser_mediator, root_item=root_item, item_names=item_names)
 

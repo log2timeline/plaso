@@ -18,14 +18,12 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class SkyDriveLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = skydrivelog.SkyDriveLogParser()
-
   def testParseErrorLog(self):
     """Tests the Parse function or error log."""
+    parser_object = skydrivelog.SkyDriveLogParser()
+
     test_file = self._GetTestFilePath([u'skydriveerr.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 19)
@@ -71,8 +69,10 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
   def testParseErrorLogUnicode(self):
     """Tests the Parse function on Unicode error log."""
+    parser_object = skydrivelog.SkyDriveLogParser()
+
     test_file = self._GetTestFilePath([u'skydriveerr-unicode.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 19)
@@ -85,8 +85,10 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
   def testParseLog(self):
     """Tests the Parse function on normal log."""
+    parser_object = skydrivelog.SkyDriveLogParser()
+
     test_file = self._GetTestFilePath([u'skydrive.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 17)
@@ -150,14 +152,12 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive old log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = skydrivelog.SkyDriveOldLogParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = skydrivelog.SkyDriveOldLogParser()
+
     test_file = self._GetTestFilePath([u'skydrive_old.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 18)

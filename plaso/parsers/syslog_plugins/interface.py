@@ -28,6 +28,21 @@ class SyslogPlugin(plugins.BasePlugin):
   # method so that the plugin can identify which grammar matched.
   MESSAGE_GRAMMARS = []
 
+  @abc.abstractmethod
+  def ParseMessage(self, parser_mediator, key, timestamp, tokens):
+    """Parses a syslog body that matched one of the grammars the plugin defined.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      key: a string indicating the name of the matching grammar.
+      timestamp: the timestamp, which is an integer containing the number
+                  of micro seconds since January 1, 1970, 00:00:00 UTC or 0
+                  on error.
+      tokens: a dictionary whose keys are the names of the fields
+              extracted by the syslog parser and the matching grammar, and
+              values are the values of those fields.
+    """
+
   def Process(self, parser_mediator, timestamp, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 
@@ -46,7 +61,8 @@ class SyslogPlugin(plugins.BasePlugin):
     """
     body = syslog_tokens.get(u'body', None)
     if not body:
-      raise AttributeError(u'Missing required attribute "body"')
+      raise AttributeError(u'Missing required attribute: body')
+
     for key, grammar in iter(self.MESSAGE_GRAMMARS):
       try:
         tokens = grammar.parseString(body)
@@ -55,19 +71,5 @@ class SyslogPlugin(plugins.BasePlugin):
         return
       except pyparsing.ParseException:
         pass
-    raise errors.WrongPlugin(u'Unable to create event from {0:s}'.format(body))
 
-  @abc.abstractmethod
-  def ParseMessage(self, parser_mediator, key, timestamp, tokens):
-    """Parses a syslog body that matched one of the grammars the plugin defined.
-
-    Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: a string indicating the name of the matching grammar.
-      timestamp: the timestamp, which is an integer containing the number
-                  of micro seconds since January 1, 1970, 00:00:00 UTC or 0
-                  on error.
-      tokens: a dictionary whose keys are the names of the fields
-              extracted by the syslog parser and the matching grammar, and
-              values are the values of those fields.
-    """
+    raise errors.WrongPlugin(u'Unable to create event from: {0:s}'.format(body))

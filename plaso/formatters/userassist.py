@@ -19,7 +19,7 @@ class UserAssistWindowsRegistryEventFormatter(
   FORMAT_STRING_SHORT_PIECES = [
       u'{text}']
 
-  SOURCE_LONG = u'Registry Key UserAssist'
+  SOURCE_LONG = u'Registry Key: UserAssist'
   SOURCE_SHORT = u'REG'
 
   def GetMessages(self, unused_formatter_mediator, event_object):

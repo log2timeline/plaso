@@ -48,10 +48,12 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = syslog.SyslogParser()
+
     knowledge_base_values = {u'year': 2012}
     test_file = self._GetTestFilePath([u'syslog'])
     event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
         event_objects[0].timestamp)

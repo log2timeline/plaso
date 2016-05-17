@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class ChromePreferencesParserTest(test_lib.ParserTestCase):
   """Tests for the Google Chrome Preferences file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = chrome_preferences.ChromePreferencesParser()
-
   def testParseFile(self):
     """Tests parsing a default profile Preferences file."""
+    parser_object = chrome_preferences.ChromePreferencesParser()
+
     test_file = self._GetTestFilePath([u'Preferences'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     event_object = event_objects[14]

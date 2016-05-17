@@ -78,7 +78,7 @@ class BinaryCookieParser(interface.FileObjectParser):
   COOKIE_FLAG_HTTP_ONLY = 4
 
   def __init__(self):
-    """Initialize the parser."""
+    """Initializes a parser object."""
     super(BinaryCookieParser, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
