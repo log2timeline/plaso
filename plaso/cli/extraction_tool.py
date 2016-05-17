@@ -50,7 +50,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._old_preprocess = False
     self._operating_system = None
     self._output_module = None
-    self._parser_filter_string = None
+    self._parser_filter_expression = None
     self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
@@ -77,11 +77,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
 
-    self._parser_filter_string = self.ParseStringOption(
+    parser_filter_expression = self.ParseStringOption(
         options, u'parsers', default_value=u'')
+    self._parser_filter_expression = parser_filter_expression.replace(
+        u'\\', u'/')
 
-    if (isinstance(self._parser_filter_string, py2to3.STRING_TYPES) and
-        self._parser_filter_string.lower() == u'list'):
+    if (isinstance(self._parser_filter_expression, py2to3.STRING_TYPES) and
+        self._parser_filter_expression.lower() == u'list'):
       self.list_parsers_and_plugins = True
 
     # TODO: preprocess.
@@ -178,7 +180,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'or "--info" to list the available '
             u'hashers.'))
 
-    # TODO: rename option name to parser_filter_string.
+    # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(
         u'--parsers', dest=u'parsers', type=str, action=u'store',
         default=u'', metavar=u'PARSER_LIST', help=(

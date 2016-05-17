@@ -14,16 +14,14 @@ from tests.parsers import test_lib
 class MacOSXBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = bsm.BsmParser()
-
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
+    parser_object = bsm.BsmParser()
+
     knowledge_base_values = {u'guessed_os': u'MacOSX'}
     test_file = self._GetTestFilePath([u'apple.bsm'])
     event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 54)
@@ -121,16 +119,14 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 class OpenBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = bsm.BsmParser()
-
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
+    parser_object = bsm.BsmParser()
+
     knowledge_base_values = {u'guessed_os': u'openbsm'}
     test_file = self._GetTestFilePath([u'openbsm.bsm'])
     event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 50)

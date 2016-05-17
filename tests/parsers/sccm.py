@@ -13,14 +13,12 @@ from plaso.lib import timelib
 class SCCMLogsUnitTest(test_lib.ParserTestCase):
   """Tests for the SCCM Logs Parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = sccm.SCCMParser()
-
   def testParse(self):
     """Tests for the Parse function."""
+    parser_object = sccm.SCCMParser()
+
     test_file = self._GetTestFilePath([u'sccm_various.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 10)

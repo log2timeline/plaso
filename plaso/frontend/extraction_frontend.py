@@ -113,7 +113,8 @@ class ExtractionFrontend(frontend.Frontend):
                   determined by the preprocessing.
 
     Returns:
-      The parser filter string or None.
+      A string containing the parser filter preset, where None represents
+      all parsers and plugins.
     """
     # TODO: Make this more sane. Currently we are only checking against
     # one possible version of Windows, and then making the assumption if
@@ -123,33 +124,33 @@ class ExtractionFrontend(frontend.Frontend):
     # this behavior, need to add a parameter to the frontend that takes
     # care of overwriting this behavior.
 
-    parser_filter_string = None
+    parser_filter_preset = None
 
-    if not parser_filter_string and os_version:
+    if not parser_filter_preset and os_version:
       os_version = os_version.lower()
 
       # TODO: Improve this detection, this should be more 'intelligent', since
       # there are quite a lot of versions out there that would benefit from
       # loading up the set of 'winxp' parsers.
       if u'windows xp' in os_version:
-        parser_filter_string = u'winxp'
+        parser_filter_preset = u'winxp'
       elif u'windows server 2000' in os_version:
-        parser_filter_string = u'winxp'
+        parser_filter_preset = u'winxp'
       elif u'windows server 2003' in os_version:
-        parser_filter_string = u'winxp'
+        parser_filter_preset = u'winxp'
       elif u'windows' in os_version:
         # Fallback for other Windows versions.
-        parser_filter_string = u'win7'
+        parser_filter_preset = u'win7'
 
-    if not parser_filter_string and os_guess:
+    if not parser_filter_preset and os_guess:
       if os_guess == definitions.OS_LINUX:
-        parser_filter_string = u'linux'
+        parser_filter_preset = u'linux'
       elif os_guess == definitions.OS_MACOSX:
-        parser_filter_string = u'macosx'
+        parser_filter_preset = u'macosx'
       elif os_guess == definitions.OS_WINDOWS:
-        parser_filter_string = u'win7'
+        parser_filter_preset = u'win7'
 
-    return parser_filter_string
+    return parser_filter_preset
 
   def _PreprocessSources(self, source_path_specs, source_type):
     """Preprocesses the sources.
@@ -226,7 +227,8 @@ class ExtractionFrontend(frontend.Frontend):
 
   def _PreprocessSetCollectionInformation(
       self, pre_obj, source_type, unused_engine, command_line_arguments=None,
-      filter_file=None, parser_filter_string=None, preferred_encoding=u'utf-8'):
+      filter_file=None, preferred_encoding=u'utf-8',
+      parser_filter_expression=None):
     """Sets the collection information as part of the preprocessing.
 
     Args:
@@ -236,8 +238,10 @@ class ExtractionFrontend(frontend.Frontend):
       command_line_arguments: optional string of the command line arguments or
                               None if not set.
       filter_file: optional path to a file that contains find specifications.
-      parser_filter_string: optional parser filter string.
       preferred_encoding: optional preferred encoding.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
     """
     collection_information = {}
 
@@ -246,9 +250,9 @@ class ExtractionFrontend(frontend.Frontend):
     collection_information[u'debug'] = self._debug_mode
 
     # TODO: extraction preferences:
-    if not parser_filter_string:
-      parser_filter_string = u'(no list set)'
-    collection_information[u'parser_selection'] = parser_filter_string
+    if not parser_filter_expression:
+      parser_filter_expression = u'(no list set)'
+    collection_information[u'parser_selection'] = parser_filter_expression
     collection_information[u'preferred_encoding'] = preferred_encoding
 
     # TODO: extraction info:
@@ -360,18 +364,19 @@ class ExtractionFrontend(frontend.Frontend):
     """
     return hashers_manager.HashersManager.GetHashersInformation()
 
-  def GetParserPluginsInformation(self, parser_filter_string=None):
+  def GetParserPluginsInformation(self, parser_filter_expression=None):
     """Retrieves the parser plugins information.
 
     Args:
-      parser_filter_string: Optional parser filter string, where None
-                            represents all parsers and plugins.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
 
     Returns:
       A list of tuples of parser plugin names and descriptions.
     """
     return parsers_manager.ParsersManager.GetParserPluginsInformation(
-        parser_filter_string=parser_filter_string)
+        parser_filter_expression=parser_filter_expression)
 
   def GetParserPresetsInformation(self):
     """Retrieves the parser presets information.
@@ -404,8 +409,8 @@ class ExtractionFrontend(frontend.Frontend):
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,
       enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
-      number_of_extraction_workers=0, parser_filter_string=None,
-      preferred_encoding=u'utf-8', single_process_mode=False,
+      number_of_extraction_workers=0, preferred_encoding=u'utf-8',
+      parser_filter_expression=None, single_process_mode=False,
       status_update_callback=None,
       storage_serializer_format=definitions.SERIALIZER_FORMAT_JSON,
       timezone=pytz.UTC):
@@ -425,8 +430,10 @@ class ExtractionFrontend(frontend.Frontend):
       number_of_extraction_workers: the number of extraction workers to run. If
                                     0, the number will be selected
                                     automatically.
-      parser_filter_string: optional parser filter string.
       preferred_encoding: optional preferred encoding.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
       single_process_mode: optional boolean value to indicate if the front-end
                            should run in single process mode.
       status_update_callback: optional callback function for status updates.
@@ -479,19 +486,19 @@ class ExtractionFrontend(frontend.Frontend):
 
     self._operating_system = getattr(pre_obj, u'guessed_os', None)
 
-    if not parser_filter_string:
+    if not parser_filter_expression:
       guessed_os = self._operating_system
       os_version = getattr(pre_obj, u'osversion', u'')
-      parser_filter_string = self._GetParserFilterPreset(
+      parser_filter_expression = self._GetParserFilterPreset(
           os_guess=guessed_os, os_version=os_version)
 
-      if parser_filter_string:
+      if parser_filter_expression:
         logging.info(u'Parser filter expression changed to: {0:s}'.format(
-            parser_filter_string))
+            parser_filter_expression))
 
     self._parser_names = []
     for _, parser_class in parsers_manager.ParsersManager.GetParsers(
-        parser_filter_string=parser_filter_string):
+        parser_filter_expression=parser_filter_expression):
       self._parser_names.append(parser_class.NAME)
 
     if u'filestat' in self._parser_names:
@@ -516,7 +523,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._PreprocessSetCollectionInformation(
         pre_obj, source_type, self._engine,
         command_line_arguments=command_line_arguments, filter_file=filter_file,
-        parser_filter_string=parser_filter_string,
+        parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
     if self._output_module:
@@ -545,7 +552,7 @@ class ExtractionFrontend(frontend.Frontend):
             hasher_names_string=hasher_names_string,
             include_directory_stat=include_directory_stat,
             mount_path=self._mount_path,
-            parser_filter_string=parser_filter_string,
+            parser_filter_expression=parser_filter_expression,
             process_archive_files=self._process_archive_files,
             resolver_context=self._resolver_context,
             status_update_callback=status_update_callback,
@@ -564,7 +571,7 @@ class ExtractionFrontend(frontend.Frontend):
             include_directory_stat=include_directory_stat,
             mount_path=self._mount_path,
             number_of_extraction_workers=number_of_extraction_workers,
-            parser_filter_string=parser_filter_string,
+            parser_filter_expression=parser_filter_expression,
             process_archive_files=self._process_archive_files,
             status_update_callback=status_update_callback,
             show_memory_usage=self._show_worker_memory_information,

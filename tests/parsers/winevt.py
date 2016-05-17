@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class WinEvtParserTest(test_lib.ParserTestCase):
   """Tests for the Windows EventLog (EVT) parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = winevt.WinEvtParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = winevt.WinEvtParser()
+
     test_file = self._GetTestFilePath([u'SysEvent.Evt'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # Windows Event Log (EVT) information:

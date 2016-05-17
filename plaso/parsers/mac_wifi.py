@@ -31,7 +31,7 @@ class MacWifiLogEvent(time_events.TimestampEvent):
       agent: TODO
       function: TODO
       text: The log message
-      action: A string containing known WiFI actions, eg: connected to
+      action: A string containing known WiFI actions, e.g. connected to
               an AP, configured, etc. If the action is not known,
               the value is the message of the log (text variable).
     """
@@ -84,8 +84,8 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a parser object."""
     super(MacWifiLogParser, self).__init__()
-    self._year_use = 0
     self._last_month = None
+    self._year_use = 0
 
   def _GetAction(self, agent, function, text):
     """Parse the well know actions for easy reading.

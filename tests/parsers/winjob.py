@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class WinJobTest(test_lib.ParserTestCase):
   """Tests for the Windows Scheduled Task job file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = winjob.WinJobParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = winjob.WinJobParser()
+
     test_file = self._GetTestFilePath([u'wintask.job'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)

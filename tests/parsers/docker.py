@@ -13,18 +13,16 @@ from tests.parsers import test_lib
 class DockerJSONUnitTest(test_lib.ParserTestCase):
   """Tests for the Docker JSON parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = docker.DockerJSONParser()
-
   def testParseContainerLog(self):
     """Tests the _ParseContainerLogJSON function."""
+    parser_object = docker.DockerJSONParser()
+
     container_id = (u'e7d0b7ea5ccf08366e2b0c8afa231867'
                     u'4e8aefe802315378125d2bb83fe3110c')
     test_file = self._GetTestFilePath(
         [u'docker', u'containers', container_id, u'container-json.log'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 10)
@@ -66,12 +64,14 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""
+    parser_object = docker.DockerJSONParser()
+
     container_id = (u'e7d0b7ea5ccf08366e2b0c8afa231867'
                     u'4e8aefe802315378125d2bb83fe3110c')
     test_file = self._GetTestFilePath(
         [u'docker', u'containers', container_id, u'config.json'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)
@@ -94,11 +94,13 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
 
   def testParseLayerConfig(self):
     """Tests the _ParseLayerConfigJSON function."""
+    parser_object = docker.DockerJSONParser()
+
     layer_id = (u'3c9a9d7cc6a235eb2de58ca9ef3551c6'
                 u'7ae42a991933ba4958d207b29142902b')
     test_file = self._GetTestFilePath(['docker', u'graph', layer_id, u'json'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 1)

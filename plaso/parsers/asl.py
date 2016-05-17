@@ -420,7 +420,7 @@ class ASLParser(interface.FileObjectParser):
     extra_information = u''
     if number_of_values > 4 and number_of_values % 2 == 0:
       # Taking all the extra attributes and merging them together,
-      # eg: a = [1, 2, 3, 4] will look like "1: 2, 3: 4".
+      # e.g. a = [1, 2, 3, 4] will look like "1: 2, 3: 4".
       try:
         extra_values = map(py2to3.UNICODE_TYPE, values[4:])
         extra_information = u', '.join(

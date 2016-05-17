@@ -386,7 +386,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._mount_path = None
     self._number_of_extraction_workers = 0
     self._parse_error_queue_port = None
-    self._parser_filter_string = None
+    self._parser_filter_expression = None
     self._path_spec_queue_port = None
     self._process_archive_files = False
     self._process_information_per_pid = {}
@@ -690,7 +690,7 @@ class MultiProcessEngine(engine.BaseEngine):
         filter_object=self._filter_object,
         hasher_names_string=self._hasher_names_string,
         mount_path=self._mount_path, name=process_name,
-        parser_filter_string=self._parser_filter_string,
+        parser_filter_expression=self._parser_filter_expression,
         process_archive_files=self._process_archive_files,
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type, text_prepend=self._text_prepend)
@@ -986,7 +986,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self, source_path_specs, storage_writer, enable_sigsegv_handler=False,
       filter_find_specs=None, filter_object=None, hasher_names_string=None,
       include_directory_stat=True, mount_path=None,
-      number_of_extraction_workers=0, parser_filter_string=None,
+      number_of_extraction_workers=0, parser_filter_expression=None,
       process_archive_files=False, status_update_callback=None,
       show_memory_usage=False, text_prepend=None):
     """Processes the sources and extract event objects.
@@ -1010,7 +1010,9 @@ class MultiProcessEngine(engine.BaseEngine):
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
-      parser_filter_string: Optional parser filter string.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
       process_archive_files: Optional boolean value to indicate if the worker
                              should scan for file entries inside files.
       status_update_callback: Optional callback function for status updates.
@@ -1051,7 +1053,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._hasher_names_string = hasher_names_string
     self._include_directory_stat = include_directory_stat
     self._mount_path = mount_path
-    self._parser_filter_string = parser_filter_string
+    self._parser_filter_expression = parser_filter_expression
     self._process_archive_files = process_archive_files
     self._text_prepend = text_prepend
 
@@ -1200,9 +1202,9 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
       self, path_spec_queue, event_object_queue, parse_error_queue,
       knowledge_base, worker_number, enable_debug_output=False,
       enable_profiling=False, filter_object=None, hasher_names_string=None,
-      mount_path=None, parser_filter_string=None, process_archive_files=False,
-      profiling_sample_rate=1000, profiling_type=u'all', text_prepend=None,
-      **kwargs):
+      mount_path=None, parser_filter_expression=None,
+      process_archive_files=False, profiling_sample_rate=1000,
+      profiling_type=u'all', text_prepend=None, **kwargs):
     """Initializes the process object.
 
     Args:
@@ -1212,27 +1214,29 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
                           MultiProcessingQueue).
       parse_error_queue: the parser error queue object (instance of
                          MultiProcessingQueue).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+      knowledge_base: a knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
-      worker_number: A number that identifies the worker.
-      enable_debug_output: Optional boolean value to indicate if the debug
+      worker_number: a number that identifies the worker.
+      enable_debug_output: optional boolean value to indicate if the debug
                            output should be enabled.
-      enable_profiling: Optional boolean value to indicate if profiling should
+      enable_profiling: optional boolean value to indicate if profiling should
                         be enabled.
-      filter_object: Optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: Optional comma separated string of names of
+      filter_object: optional filter object (instance of objectfilter.Filter).
+      hasher_names_string: optional comma separated string of names of
                            hashers to enable enable.
-      mount_path: Optional string containing the mount path. The default
+      mount_path: optional string containing the mount path. The default
                   is None.
-      parser_filter_string: Optional parser filter string.
-      process_archive_files: Optional boolean value to indicate if the worker
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
+      process_archive_files: optional boolean value to indicate if the worker
                              should scan for file entries inside files.
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
       profiling_type: optional profiling type.
-      text_prepend: Optional string that contains the text to prepend to every
+      text_prepend: optional string that contains the text to prepend to every
                     event object.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
@@ -1260,7 +1264,7 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     self._hasher_names_string = hasher_names_string
     self._mount_path = mount_path
     self._process_archive_files = process_archive_files
-    self._parser_filter_string = parser_filter_string
+    self._parser_filter_expression = parser_filter_expression
     self._text_prepend = text_prepend
 
   def _GetStatus(self):
@@ -1319,7 +1323,7 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
     self._extraction_worker.InitializeParserObjects(
-        parser_filter_string=self._parser_filter_string)
+        parser_filter_expression=self._parser_filter_expression)
 
     if self._hasher_names_string:
       self._extraction_worker.SetHashers(self._hasher_names_string)

@@ -5,6 +5,7 @@ import logging
 import os
 import tempfile
 
+# pylint: disable=wrong-import-order
 try:
   from pysqlite2 import dbapi2 as sqlite3
 except ImportError:
@@ -22,7 +23,7 @@ class SQLiteCache(plugins.BasePluginCache):
 
   def CacheQueryResults(
       self, sql_results, attribute_name, key_name, column_names):
-    """Build a dict object based on a SQL command.
+    """Build a dictionary object based on a SQL command.
 
     This function will take a SQL command, execute it and for
     each resulting row it will store a key in a dictionary.
@@ -39,7 +40,7 @@ class SQLiteCache(plugins.BasePluginCache):
     'first', 'stuff', 'things'
     'second', 'another stuff', 'another thing'
 
-    This will result in a dict object being created in the
+    This will result in a dictionary object being created in the
     cache, called 'all_the_things' and it will contain the following value::
 
       all_the_things = {
@@ -51,11 +52,11 @@ class SQLiteCache(plugins.BasePluginCache):
                    a SQL command on the database.
       attribute_name: The attribute name in the cache to store
                       results to. This will be the name of the
-                      dict attribute.
+                      dictionary attribute.
       key_name: The name of the result field that should be used
-                as a key in the resulting dict that is created.
+                as a key in the resulting dictionary that is created.
       column_names: A list of column names that are stored as values
-                    to the dict. If this list has only one value in it
+                    to the dictionary. If this list has only one value in it
                     the value will be stored directly, otherwise the value
                     will be a list containing the extracted results based
                     on the names provided in this list.
@@ -65,7 +66,6 @@ class SQLiteCache(plugins.BasePluginCache):
 
     setattr(self, attribute_name, {})
     attribute = getattr(self, attribute_name)
-
 
     row = sql_results.fetchone()
     while row:
@@ -219,13 +219,6 @@ class SQLiteParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(SQLiteParser, self).__init__()
-    self._local_zone = False
-    self._plugins = SQLiteParser.GetPluginObjects()
-    self.db = None
-
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification."""
@@ -261,8 +254,8 @@ class SQLiteParser(interface.FileObjectParser):
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
-      # TODO: add a table name filter and do the plugin selection here.
-      for plugin_object in self._plugins:
+      # TODO: add a table name filter here.
+      for plugin_object in self._plugin_objects:
         try:
           plugin_object.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database)

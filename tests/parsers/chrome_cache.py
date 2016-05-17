@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class ChromeCacheParserTest(test_lib.ParserTestCase):
   """Tests for the Chrome Cache files parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = chrome_cache.ChromeCacheParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = chrome_cache.ChromeCacheParser()
+
     test_file = self._GetTestFilePath([u'chrome_cache', u'index'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 217)

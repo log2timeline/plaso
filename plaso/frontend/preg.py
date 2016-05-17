@@ -608,7 +608,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           types.add(registry_file_type.upper())
       else:
         for plugin_name in plugin_names:
-          types.extend(self._registry_plugin_list.GetRegistryTypes(plugin_name))
+          types.update(self._registry_plugin_list.GetRegistryTypes(plugin_name))
 
       paths = self.GetRegistryFilePaths(types)
 

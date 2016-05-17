@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class OperaTypedParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Typed History parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = opera.OperaTypedHistoryParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = opera.OperaTypedHistoryParser()
+
     test_file = self._GetTestFilePath([u'typed_history.xml'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 4)
@@ -52,14 +50,12 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 class OperaGlobalParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Global History parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = opera.OperaGlobalHistoryParser()
-
   def testParseFile(self):
     """Read a history file and run a few tests."""
+    parser_object = opera.OperaGlobalHistoryParser()
+
     test_file = self._GetTestFilePath([u'global_history.dat'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 37)

@@ -17,14 +17,12 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class XChatScrollbackUnitTest(test_lib.ParserTestCase):
   """Tests for the xchatscrollback log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = xchatscrollback.XChatScrollbackParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = xchatscrollback.XChatScrollbackParser()
+
     test_file = self._GetTestFilePath([u'xchatscrollback.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 10)

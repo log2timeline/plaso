@@ -15,15 +15,13 @@ from tests.parsers import test_lib
 class CupsIppParserTest(test_lib.ParserTestCase):
   """The unit test for Mac Cups IPP parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = cups_ipp.CupsIppParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = cups_ipp.CupsIppParser()
+
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
     test_file = self._GetTestFilePath([u'mac_cups_ipp'])
-    events = self._ParseFile(self._parser, test_file)
+    events = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(events)
 
     self.assertEqual(len(event_objects), 3)

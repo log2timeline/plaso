@@ -14,14 +14,12 @@ from tests.parsers import test_lib
 class PlsRecallTest(test_lib.ParserTestCase):
   """Tests for PL-SQL recall file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = pls_recall.PlsRecallParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = pls_recall.PlsRecallParser()
+
     test_file = self._GetTestFilePath([u'PLSRecall_Test.dat'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # There are two events in test file.

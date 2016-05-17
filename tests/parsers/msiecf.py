@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class MsiecfParserTest(test_lib.ParserTestCase):
   """Tests for the MSIE Cache Files (MSIECF) parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = msiecf.MsiecfParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = msiecf.MsiecfParser()
+
     test_file = self._GetTestFilePath([u'index.dat'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # MSIE Cache File information:
@@ -97,7 +95,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
     # Test file with leak and redirected records.
     test_file = self._GetTestFilePath([u'nfury_index.dat'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # MSIE Cache File information:

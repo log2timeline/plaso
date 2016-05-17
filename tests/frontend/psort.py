@@ -194,7 +194,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     self.assertEqual(len(lines), 20)
 
     expected_line = (
-        u'2016-04-30T06:41:50+00:00,'
+        u'2016-05-01T12:19:30+00:00,'
         u'atime,'
         u'FILE,'
         u'OS atime,'

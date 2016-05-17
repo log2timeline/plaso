@@ -33,14 +33,12 @@ class MactimeTest(test_lib.ParserTestCase):
     return sorted(
         event_objects, key=lambda event_object: event_object.timestamp)
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mactime.MactimeParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = mactime.MactimeParser()
+
     test_file = self._GetTestFilePath([u'mactime.body'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The file contains 13 lines x 4 timestamps per line, which should be
