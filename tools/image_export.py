@@ -116,7 +116,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             u'or 6 digits. The time of day, seconds fraction and timezone '
             u'offset are optional. The default timezone is UTC. E.g. "atime, '
             u'2013-01-01 23:12:14, 2013-02-23". This parameter can be repeated '
-            u'as needed to add additional date date boundaries, eg: once for '
+            u'as needed to add additional date date boundaries, e.g. once for '
             u'atime, once for crtime, etc.'))
 
     argument_parser.add_argument(
@@ -130,7 +130,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         type=str, metavar=u'NAMES', help=(
             u'If the purpose is to find all files given a certain names '
             u'this options should be used. This option accepts a comma '
-            u'separated string denoting all file names, eg: -x '
+            u'separated string denoting all file names, e.g. -x '
             u'"NTUSER.DAT,UsrClass.dat".'))
 
     argument_parser.add_argument(

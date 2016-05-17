@@ -15,14 +15,12 @@ from tests.parsers import test_lib
 class WinPrefetchParserTest(test_lib.ParserTestCase):
   """Tests for the Windows prefetch parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = winprefetch.WinPrefetchParser()
-
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
+    parser_object = winprefetch.WinPrefetchParser()
+
     test_file = self._GetTestFilePath([u'CMD.EXE-087B4001.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)
@@ -104,8 +102,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
+    parser_object = winprefetch.WinPrefetchParser()
+
     test_file = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 2)
@@ -151,8 +151,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
+    parser_object = winprefetch.WinPrefetchParser()
+
     test_file = self._GetTestFilePath([u'WUAUCLT.EXE-830BCC14.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)
@@ -217,8 +219,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
+    parser_object = winprefetch.WinPrefetchParser()
+
     test_file = self._GetTestFilePath([u'TASKHOST.EXE-3AE259FC.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 5)

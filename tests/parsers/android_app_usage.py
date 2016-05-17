@@ -16,14 +16,12 @@ from tests.parsers import test_lib
 class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   """Tests for the Android Application Usage History parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = android_app_usage.AndroidAppUsageParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = android_app_usage.AndroidAppUsageParser()
+
     test_file = self._GetTestFilePath([u'usage-history.xml'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 28)

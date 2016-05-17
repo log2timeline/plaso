@@ -14,16 +14,14 @@ from tests.parsers import test_lib
 class MacSecurityUnitTest(test_lib.ParserTestCase):
   """A unit test for the ASL securityd log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mac_securityd.MacSecuritydLogParser()
-
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""
+    parser_object = mac_securityd.MacSecuritydLogParser()
+
     knowledge_base_values = {u'year': 2013}
     test_file = self._GetTestFilePath([u'security.log'])
     events = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+        parser_object, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(events)
 
     self.assertEqual(len(event_objects), 9)

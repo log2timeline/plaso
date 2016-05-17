@@ -15,15 +15,13 @@ from tests.parsers import test_lib
 class CustomDestinationsParserTest(test_lib.ParserTestCase):
   """Tests for the .customDestinations-ms file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = custom_destinations.CustomDestinationsParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = custom_destinations.CustomDestinationsParser()
+
     test_file = self._GetTestFilePath([
         u'5afe4de1b92fc382.customDestinations-ms'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 126)

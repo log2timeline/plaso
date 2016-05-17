@@ -132,7 +132,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   def __init__(self):
-    """Initializes a XChatLog parser object."""
+    """Initializes a parser object."""
     super(XChatLogParser, self).__init__()
     self._xchat_year = 0
     self.offset = 0

@@ -17,14 +17,12 @@ __author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
 class WinIISUnitTest(test_lib.ParserTestCase):
   """Tests for the Windows IIS parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = iis.WinIISParser()
-
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = iis.WinIISParser()
+
     test_file = self._GetTestFilePath([u'iis.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 11)
@@ -79,8 +77,10 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
   def testParseWithoutDate(self):
     """Tests the Parse function with logs without a date column."""
+    parser_object = iis.WinIISParser()
+
     test_file = self._GetTestFilePath([u'iis_without_date.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 11)

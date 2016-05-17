@@ -797,24 +797,26 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
         u'produced_number_of_path_specs': self._produced_number_of_path_specs,
         u'type': definitions.PROCESS_TYPE_WORKER}
 
-  def InitializeParserObjects(self, parser_filter_string=None):
+  def InitializeParserObjects(self, parser_filter_expression=None):
     """Initializes the parser objects.
 
-    The parser_filter_string is a simple comma separated value string that
+    The parser_filter_expression is a comma separated value string that
     denotes a list of parser names to include and/or exclude. Each entry
     can have the value of:
 
-    * Exact match of a list of parsers, or a preset (see
+    * An exact match of a list of parsers, or a preset (see
       plaso/frontend/presets.py for a full list of available presets).
-    * A name of a single parser (case insensitive), eg. msiecfparser.
-    * A glob name for a single parser, eg: '*msie*' (case insensitive).
+    * A name of a single parser (case insensitive), e.g. msiecf.
+    * A glob name for a single parser, e.g. '*msie*' (case insensitive).
 
     Args:
-      parser_filter_string: Optional parser filter string.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
     """
     self._specification_store, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetSpecificationStore(
-            parser_filter_string=parser_filter_string))
+            parser_filter_expression=parser_filter_expression))
 
     self._non_sigscan_parser_names = []
     for parser_name in non_sigscan_parser_names:
@@ -826,7 +828,7 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
         self._specification_store)
 
     self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
-        parser_filter_string=parser_filter_string)
+        parser_filter_expression=parser_filter_expression)
 
     self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
     if u'filestat' in self._parser_objects:

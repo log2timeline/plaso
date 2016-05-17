@@ -18,10 +18,6 @@ __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
 class FirefoxCacheParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCacheParser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = firefox_cache.FirefoxCacheParser()
-
   def VerifyMajorMinor(self, events):
     """Verify that valid Firefox cache version is extracted."""
     for event_object in events:
@@ -30,17 +26,21 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
   def testParseCache_InvalidFile(self):
     """Verify that parser do not accept small, invalid files."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([u'firefox_cache', u'invalid_file'])
 
     with self.assertRaises(errors.UnableToParseFile):
-      self._ParseFile(self._parser, test_file)
+      self._ParseFile(parser_object, test_file)
 
   def testParseCache_001(self):
     """Test Firefox 28 cache file _CACHE_001_ parsing."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox28', u'_CACHE_001_'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(1665, len(event_objects))
@@ -66,10 +66,12 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
   def testParseCache_002(self):
     """Test Firefox 28 cache file _CACHE_002_ parsing."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox28', u'_CACHE_002_'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     expected_url = (
@@ -93,10 +95,12 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
   def testParseCache_003(self):
     """Test Firefox 28 cache file _CACHE_003_ parsing."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox28', u'_CACHE_003_'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(9, len(event_objects))
@@ -114,20 +118,24 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
   def testParseAlternativeFilename(self):
     """Test Firefox 28 cache 003 file with alternative filename."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox28', u'E8D65m01'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(9, len(event_objects))
 
   def testParseLegacyCache_001(self):
     """Test Firefox 3 cache file _CACHE_001_ parsing."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox3', u'_CACHE_001_'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(73, len(event_objects))
@@ -149,10 +157,12 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox3', u'_CACHE_002_'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(6, len(event_objects))
@@ -163,10 +173,12 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
   def testParseLegacyCache_003(self):
     """Test Firefox 3 cache file _CACHE_003_ parsing."""
+    parser_object = firefox_cache.FirefoxCacheParser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'firefox3', u'_CACHE_003_'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(6, len(event_objects))
@@ -179,17 +191,15 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 class FirefoxCache2ParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCache2Parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = firefox_cache.FirefoxCache2Parser()
-
   def testParseCache2Entry(self):
     """Test Firefox cache2 file parsing."""
+    parser_object = firefox_cache.FirefoxCache2Parser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'cache2',
         u'1F4B3A4FC81FB19C530758231FA54313BE8F6FA2'])
 
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_queue_consumer = self._ParseFile(parser_object, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(3, len(event_objects))
@@ -217,12 +227,14 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
   def testParseInvalidCache2Entry(self):
     """Test file with valid filename and invalid content."""
+    parser_object = firefox_cache.FirefoxCache2Parser()
+
     test_file = self._GetTestFilePath([
         u'firefox_cache', u'cache2',
         u'C966EB70794E44E7E3E8A260106D0C72439AF65B'])
 
     with self.assertRaises(errors.UnableToParseFile):
-      self._ParseFile(self._parser, test_file)
+      self._ParseFile(parser_object, test_file)
 
 
 if __name__ == '__main__':

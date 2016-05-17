@@ -64,7 +64,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """Initializes a parser object."""
     super(WinFirewallParser, self).__init__()
     self._software = None
-    self._use_local_zone = False
+    self._use_local_timezone = False
     self._version = None
 
   def _ParseCommentRecord(self, structure):
@@ -82,7 +82,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     elif comment.startswith(u'Time'):
       _, _, time_format = comment.partition(u':')
       if u'local' in time_format.lower():
-        self._use_local_zone = True
+        self._use_local_timezone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and and produce an event object.
@@ -102,7 +102,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
           u'unable to extract timestamp from logline.')
       return
 
-    if self._use_local_zone:
+    if self._use_local_timezone:
       zone = parser_mediator.timezone
     else:
       zone = pytz.UTC

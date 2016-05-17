@@ -30,13 +30,11 @@ class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
 
     test_engine.PreprocessSources([source_path_spec])
 
-    parser_filter_string = u'filestat'
-
     storage_writer = engine_test_lib.TestStorageWriter(
         test_engine.event_object_queue)
     test_engine.ProcessSources(
         [source_path_spec], storage_writer,
-        parser_filter_string=parser_filter_string)
+        parser_filter_expression=u'filestat')
 
     # TODO: implement a way to obtain the resuls without relying
     # on multi-process primitives e.g. by writing to a file.

@@ -70,6 +70,77 @@ class ParsersManagerTest(unittest.TestCase):
 
   # pylint: disable=protected-access
 
+  def testGetParserFilters(self):
+    """Tests the GetParserFilters function."""
+    parser_filter_expression = u''
+    includes, excludes = manager.ParsersManager._GetParserFilters(
+        parser_filter_expression)
+    self.assertEqual(includes, {})
+    self.assertEqual(excludes, {})
+
+    parser_filter_expression = u'test_include,!test_exclude'
+    includes, excludes = manager.ParsersManager._GetParserFilters(
+        parser_filter_expression)
+    self.assertEqual(includes, {u'test_include': []})
+    self.assertEqual(excludes, {})
+
+    parser_filter_expression = (
+        u'test_include,test_intersection,!test_exclude,!test_intersection')
+    includes, excludes = manager.ParsersManager._GetParserFilters(
+        parser_filter_expression)
+    self.assertEqual(includes, {u'test_include': []})
+    self.assertEqual(excludes, {})
+
+    parser_filter_expression = u'test/include,!test/exclude'
+    includes, excludes = manager.ParsersManager._GetParserFilters(
+        parser_filter_expression)
+    self.assertEqual(includes, {u'test': [u'include']})
+    self.assertEqual(excludes, {u'test': [u'exclude']})
+
+    parser_filter_expression = (
+        u'test/include,test/intersection,!test/exclude,!test/intersection')
+    includes, excludes = manager.ParsersManager._GetParserFilters(
+        parser_filter_expression)
+    self.assertEqual(includes, {u'test': [u'include']})
+    self.assertEqual(excludes, {u'test': [u'exclude', u'intersection']})
+
+  def testReduceParserFilters(self):
+    """Tests the ReduceParserFilters function."""
+    includes = {}
+    excludes = {}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {})
+    self.assertEqual(excludes, {})
+
+    includes = {u'test_include': u''}
+    excludes = {u'test_exclude': u''}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test_include': u''})
+    self.assertEqual(excludes, {})
+
+    includes = {u'test_include': u'', u'test_intersection': u''}
+    excludes = {u'test_exclude': u'', u'test_intersection': u''}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test_include': u''})
+    self.assertEqual(excludes, {})
+
+    includes = {u'test': [u'include']}
+    excludes = {u'test': [u'exclude']}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test': [u'include']})
+    self.assertEqual(excludes, {u'test': [u'exclude']})
+
+    includes = {u'test': [u'include', u'intersection']}
+    excludes = {u'test': [u'exclude', u'intersection']}
+
+    manager.ParsersManager._ReduceParserFilters(includes, excludes)
+    self.assertEqual(includes, {u'test': [u'include']})
+    self.assertEqual(excludes, {u'test': [u'exclude', u'intersection']})
+
   def testParserRegistration(self):
     """Tests the RegisterParser and DeregisterParser functions."""
     number_of_parsers = len(manager.ParsersManager._parser_classes)
@@ -100,28 +171,55 @@ class ParsersManagerTest(unittest.TestCase):
     self.assertEqual(
         len(TestParserWithPlugins._plugin_classes), 0)
 
-  def testGetFilterListsFromString(self):
-    """Tests the GetFilterListsFromString function."""
+  def testGetParserObjectByName(self):
+    """Tests the GetParserObjectByName function."""
+    manager.ParsersManager.RegisterParser(TestParser)
+
+    parser_object = manager.ParsersManager.GetParserObjectByName(
+        u'test_parser')
+    self.assertIsNotNone(parser_object)
+    self.assertEqual(parser_object.NAME, u'test_parser')
+
+    parser_object = manager.ParsersManager.GetParserObjectByName(u'bogus')
+    self.assertIsNone(parser_object)
+
+    manager.ParsersManager.DeregisterParser(TestParser)
+
+  def testGetParserObjects(self):
+    """Tests the GetParserObjects function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
     manager.ParsersManager.RegisterParser(TestParserWithPlugins)
     manager.ParsersManager.RegisterParser(TestParser)
 
-    includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-        u'test_parser')
+    parser_names = []
+    parser_objects = manager.ParsersManager.GetParserObjects(
+        parser_filter_expression=u'test_parser')
+    for _, parser_object in iter(parser_objects.items()):
+      parser_names.append(parser_object.NAME)
+    self.assertEqual(parser_names, [u'test_parser'])
 
-    self.assertEqual(includes, [u'test_parser'])
-    self.assertEqual(excludes, [])
+    parser_names = []
+    parser_objects = manager.ParsersManager.GetParserObjects(
+        parser_filter_expression=u'!test_parser')
+    for _, parser_object in iter(parser_objects.items()):
+      parser_names.append(parser_object.NAME)
+    self.assertNotEqual(len(parser_names), 0)
+    self.assertNotIn(u'test_parser', parser_names)
 
-    includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-        u'-test_parser')
+    parser_names = []
+    parser_objects = manager.ParsersManager.GetParserObjects(
+        parser_filter_expression=u'test_parser_with_plugins/test_plugin')
+    for _, parser_object in iter(parser_objects.items()):
+      parser_names.append(parser_object.NAME)
+    self.assertEqual(parser_names, [u'test_parser_with_plugins'])
 
-    self.assertEqual(includes, [])
-    self.assertEqual(excludes, [u'test_parser'])
-
-    includes, excludes = manager.ParsersManager.GetFilterListsFromString(
-        u'test_parser_with_plugins')
-
-    self.assertEqual(includes, [u'test_parser_with_plugins', u'test_plugin'])
+    # Test with a parser name, not using plugin names.
+    parser_names = []
+    parser_objects = manager.ParsersManager.GetParserObjects(
+        parser_filter_expression=u'test_parser_with_plugins')
+    for _, parser_object in iter(parser_objects.items()):
+      parser_names.append(parser_object.NAME)
+    self.assertEqual(parser_names, [u'test_parser_with_plugins'])
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
@@ -133,25 +231,64 @@ class ParsersManagerTest(unittest.TestCase):
     manager.ParsersManager.RegisterParser(TestParserWithPlugins)
     manager.ParsersManager.RegisterParser(TestParser)
 
-    # Add a plugin, the parser name should be included.
-    test_filter_string = u'test_plugin,test_parser'
-    expected_set = set([u'test_parser', u'test_parser_with_plugins'])
-    parser_set = set([name for name, _ in list(
-        manager.ParsersManager.GetParsers(
-            parser_filter_string=test_filter_string))])
-    self.assertSetEqual(parser_set, expected_set)
+    parser_names = []
+    for _, parser_class in manager.ParsersManager.GetParsers(
+        parser_filter_expression=u'test_parser'):
+      parser_names.append(parser_class.NAME)
+    self.assertEqual(parser_names, [u'test_parser'])
+
+    parser_names = []
+    for _, parser_class in manager.ParsersManager.GetParsers(
+        parser_filter_expression=u'!test_parser'):
+      parser_names.append(parser_class.NAME)
+    self.assertNotEqual(len(parser_names), 0)
+    self.assertNotIn(u'test_parser', parser_names)
+
+    parser_names = []
+    for _, parser_class in manager.ParsersManager.GetParsers(
+        parser_filter_expression=u'test_parser_with_plugins/test_plugin'):
+      parser_names.append(parser_class.NAME)
+    self.assertEqual(parser_names, [u'test_parser_with_plugins'])
 
     # Test with a parser name, not using plugin names.
-    test_filter_string = u'test_parser_with_plugins'
-    expected_set = set([u'test_parser_with_plugins'])
-    parser_set = set([name for name, _ in list(
-        manager.ParsersManager.GetParsers(
-            parser_filter_string=test_filter_string))])
-    self.assertSetEqual(parser_set, expected_set)
+    parser_names = []
+    for _, parser_class in manager.ParsersManager.GetParsers(
+        parser_filter_expression=u'test_parser_with_plugins'):
+      parser_names.append(parser_class.NAME)
+    self.assertEqual(parser_names, [u'test_parser_with_plugins'])
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
+
+  def testGetPluginObjectByName(self):
+    """Tests the GetPluginObjectByName function."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+
+    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'test_plugin')
+    self.assertIsNotNone(plugin_object)
+
+    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'bogus')
+    self.assertIsNone(plugin_object)
+
+    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+
+  def testGetPlugins(self):
+    """Tests the GetPlugins function."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+
+    generator = TestParserWithPlugins.GetPlugins()
+    plugin_tuples = list(generator)
+    self.assertNotEqual(len(plugin_tuples), 0)
+    self.assertIsNotNone(plugin_tuples[0])
+
+    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+
+  # TODO: add GetParsersInformation test.
+  # TODO: add GetNamesOfParsersWithPlugins test.
+  # TODO: add GetScanner test.
+  # TODO: add GetSpecificationStore test.
+  # TODO: add  test.
 
 
 if __name__ == '__main__':

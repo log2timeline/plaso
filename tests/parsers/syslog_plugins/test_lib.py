@@ -15,41 +15,18 @@ from tests.parsers import test_lib
 class SyslogPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for Syslog plugins."""
 
-  def _RemoveOtherPluginsFromParser(self, plugin_object):
-    """Removes unrelated the plugins from the syslog parser.
-
-    The parser will load only the specified plugin.
-
-    Args:
-      plugin_object: The plugin object to be used.
-
-    Returns:
-      The parsers that were unregistered from the syslog parser.
-    """
-    # We need to save the classes we want to remove as we go, as we can't
-    # modify the plugin list while iterating over it in GetPlugins().
-    classes_to_remove = []
-    for plugin_name, plugin_class in syslog.SyslogParser.GetPlugins():
-      if plugin_name != plugin_object.NAME:
-        classes_to_remove.append(plugin_class)
-    for plugin_class in classes_to_remove:
-      syslog.SyslogParser.DeregisterPlugin(plugin_class)
-    return classes_to_remove
-
   def _ParseFileWithPlugin(
-      self, plugin_object, path, knowledge_base_values=None):
+      self, plugin_name, path, knowledge_base_values=None):
     """Parses a syslog file with a specific plugin.
 
     Args:
-      plugin_object: The plugin object that is used to extract an event
-                     generator.
-      path: The path to the syslog file.
-      knowledge_base_values: optional dict containing the knowledge base
+      plugin_name: a string containing the name of the plugin.
+      path: a string containing the path to the syslog file.
+      knowledge_base_values: optional dictionary containing the knowledge base
                              values.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      An event object queue consumer object (instance of ItemQueueConsumer).
     """
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
@@ -66,11 +43,13 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
-    parser = syslog.SyslogParser()
-    removed_plugins = self._RemoveOtherPluginsFromParser(plugin_object)
+    parser_object = syslog.SyslogParser()
+    parser_object.EnablePlugins([plugin_name])
+
+    file_object = file_entry.GetFileObject()
     try:
-      parser.Parse(parser_mediator, file_entry.GetFileObject())
+      parser_object.Parse(parser_mediator, file_object)
     finally:
-      syslog.SyslogParser.RegisterPlugins(removed_plugins)
+      file_object.close()
 
     return event_queue_consumer
