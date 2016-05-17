@@ -1,14 +1,12 @@
-# This Dockerfile is used to build an image containing basic stuff to be used as a Jenkins slave build node.
+# This Dockerfile is used to build an image containing components to be used as a Jenkins slave build node.
 FROM ubuntu:trusty
-MAINTAINER Onager <onager@deerpie.com>
+MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 ENV JENKINS_REMOTING_VERSION 2.52
 ENV HOME /home/jenkins
 
 # Make sure the package repository is up to date.
 RUN apt-get update && apt-get install -y openjdk-7-jre-headless git python python-dev software-properties-common curl
-
-
 
 # Add user jenkins to the image
 RUN useradd -c "Jenkins user" -d $HOME -m jenkins
