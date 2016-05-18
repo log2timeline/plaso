@@ -44,19 +44,22 @@ PLASO_DEPENDENCIES="ipython
                    python-tz
                    python-zmq"
 
-# Additional dependencies for running Plaso tests, alphabetized, one per line.
+# Additional dependencies for running Plaso tests, alphabetized,
+# one per line.
 TEST_DEPENDENCIES="python-coverage
                    python-coveralls
                    python-docopt
                    python-mock"
 
-# Additional dependencies for doing Plaso development, alphabetized, one per line.
+# Additional dependencies for doing Plaso development, alphabetized,
+# one per line.
 DEVELOPMENT_DEPENDENCIES="python-sphinx
                           pylint"
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PLASO_DEPENDENCIES}
+test
 if [[ "$*" =~ "include-test" ]]; then
     sudo apt-get install -y ${TEST_DEPENDENCIES}
 fi

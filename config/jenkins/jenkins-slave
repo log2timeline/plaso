@@ -1,4 +1,7 @@
 #!/bin/bash
+# Based on:
+# https://github.com/jenkinsci/docker-jnlp-slave/blob/master/jenkins-slave
+#
 # The MIT License
 #
 #  Copyright (c) 2015, CloudBees, Inc.
@@ -23,12 +26,14 @@
 
 # Usage jenkins-slave.sh [options] -url http://jenkins SECRET SLAVE_NAME
 # Optional environment variables :
-# * JENKINS_TUNNEL : HOST:PORT for a tunnel to route TCP traffic to jenkins host, when jenkins can't be directly accessed over network
+# * JENKINS_TUNNEL : HOST:PORT for a tunnel to route TCP traffic to jenkins
+# host, when jenkins can't be directly accessed over network
 # * JENKINS_URL : alternate jenkins URL
 
 if [[ $# -eq 1 ]]; then
 
-	# if `docker run` only has one arguments, we assume user is running alternate command like `bash` to inspect the image
+	# if `docker run` only has one arguments, we assume user is running an
+	# alternate command like `bash` to inspect the image
 	exec "$@"
 
 else
@@ -44,5 +49,6 @@ else
 		URL="-url $JENKINS_URL"
 	fi
 
-	exec java $JAVA_OPTS -cp /usr/share/jenkins/slave.jar hudson.remoting.jnlp.Main -headless $TUNNEL $URL "$@"
+	exec java $JAVA_OPTS -cp /usr/share/jenkins/slave.jar \
+	    hudson.remoting.jnlp.Main -headless $TUNNEL $URL "$@"
 fi
