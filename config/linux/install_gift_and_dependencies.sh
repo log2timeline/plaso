@@ -59,7 +59,6 @@ DEVELOPMENT_DEPENDENCIES="python-sphinx
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PLASO_DEPENDENCIES}
-test
 if [[ "$*" =~ "include-test" ]]; then
     sudo apt-get install -y ${TEST_DEPENDENCIES}
 fi
