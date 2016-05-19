@@ -17,7 +17,7 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._plugin = android_sms.AndroidSmsPlugin()
+    self._plugin = android_sms.AndroidSMSPlugin()
 
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""

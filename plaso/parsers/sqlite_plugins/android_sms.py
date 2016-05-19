@@ -22,8 +22,8 @@ class AndroidSmsEvent(time_events.JavaTimeEvent):
       java_time: The Java time value.
       identifier: The row identifier.
       address: The phone number associated to the sender/receiver.
-      status:  Read or Unread.
-      type: Sent or Received.
+      sms_read:  Read or Unread.
+      sms_type: Sent or Received.
       body: Content of the SMS text message.
     """
     super(AndroidSmsEvent, self).__init__(
@@ -35,7 +35,7 @@ class AndroidSmsEvent(time_events.JavaTimeEvent):
     self.body = body
 
 
-class AndroidSmsPlugin(interface.SQLitePlugin):
+class AndroidSMSPlugin(interface.SQLitePlugin):
   """Parse Android SMS database."""
 
   NAME = u'android_sms'
@@ -76,4 +76,4 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEvent(event_object, query=query)
 
 
-sqlite.SQLiteParser.RegisterPlugin(AndroidSmsPlugin)
+sqlite.SQLiteParser.RegisterPlugin(AndroidSMSPlugin)
