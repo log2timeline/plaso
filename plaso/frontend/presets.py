@@ -40,8 +40,10 @@ categories = {
     # mode.
     u'macosx_slow': [u'macosx', u'syslog'],
     u'android': [
-        u'android_app_usage', u'filestat', u'sqlite/android_calls',
-        u'sqlite/android_sms']}
+        u'android_app_usage', u'filestat', u'chrome_cache',
+        u'sqlite/android_calls', u'sqlite/android_sms',
+        u'sqlite/android_webview', u'sqlite/android_webviewcache',
+        u'sqlite/chrome_cookies', u'sqlite/chrome_history', u'sqlite/skype',]}
 
 
 def GetParsersFromCategory(category):
