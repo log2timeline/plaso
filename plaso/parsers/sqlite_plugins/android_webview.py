@@ -91,4 +91,4 @@ class WebViewPlugin(interface.SQLitePlugin):
           pass
 
 
-sqlite.manager.ParsersManager.RegisterParser(WebViewPlugin)
+sqlite.SQLiteParser.RegisterPlugin(WebViewPlugin)

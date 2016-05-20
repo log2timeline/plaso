@@ -46,7 +46,7 @@ class WebViewCacheURLExpirationEventFormatter(WebViewCacheFormatter):
   DATA_TYPE = u'android:webviewcache:url_expiry'
 
 
-class WebViewCacheURLModificationEventFormatter(interface.ConditionalEventFormatter):
+class WebViewCacheURLModificationEventFormatter(WebViewCacheFormatter):
   """Formatter for an Android WebViewCache URL expiry event."""
 
   DATA_TYPE = u'android:webviewcache:url_modification'

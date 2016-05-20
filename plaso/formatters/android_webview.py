@@ -12,12 +12,12 @@ class WebViewCookieExpiryEventFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'Domain: {domain}',
-      u'Path: {path}'
+      u'Path: {path}',
       u'Cookie name: {name}',
       u'Value: {value}',
-      u'Secure: {secure}']
+      u'Secure: {secure}',]
 
-  FORMAT_STRING_SHORT_PIECES = [u'{domain} {name} {value}']
+  FORMAT_STRING_SHORT_PIECES = [u'{domain}', u'{name}', u'{value}']
 
   SOURCE_LONG = u'Android WebView'
   SOURCE_SHORT = u'WebView'

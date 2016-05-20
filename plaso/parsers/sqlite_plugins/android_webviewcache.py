@@ -58,4 +58,4 @@ class WebViewCachePlugin(interface.SQLitePlugin):
         parser_mediator.ProduceEvent(modification_event, query=query)
 
 
-sqlite.manager.ParsersManager.RegisterParser(WebViewCachePlugin)
+sqlite.SQLiteParser.RegisterPlugin(WebViewCachePlugin)
