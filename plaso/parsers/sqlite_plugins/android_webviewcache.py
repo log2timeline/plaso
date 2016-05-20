@@ -8,10 +8,11 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class WebViewCacheURLModificationEvent(time_events.JavaTimeEvent):
+  """Convenience class for a WebViewCache modification event"""
   DATA_TYPE = u'android:webviewcache:url_modification'
 
   def __init__(self, timestamp, url, content_length):
-    """Convenience class for WebView cache modification event"""
+    """Convenience class for a WebViewCache modification event"""
     super(WebViewCacheURLModificationEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.content_length = content_length

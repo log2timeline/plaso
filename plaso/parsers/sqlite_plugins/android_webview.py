@@ -61,7 +61,7 @@ class WebViewPlugin(interface.SQLitePlugin):
     """Initializes a plugin object."""
     super(WebViewPlugin, self).__init__()
     self._cookie_plugins = (
-      cookie_plugins_manager.CookiePluginsManager.GetPlugins())
+        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
   def ParseCookieRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a row from the database.
