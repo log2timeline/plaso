@@ -576,6 +576,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._use_zeromq = use_zeromq
 
 
+# TODO: remove the need for a psort specific storage writer.
 class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
   """Class that implements the analysis report ZIP-based storage file writer.
 

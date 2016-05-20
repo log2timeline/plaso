@@ -220,10 +220,10 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _GetSessionStart(
+  def _CreateSessionStart(
       self, command_line_arguments=None, filter_file=None,
       parser_filter_expression=None, preferred_encoding=u'utf-8'):
-    """Retrieves the session start information.
+    """Creates the session start information.
 
     Args:
       command_line_arguments: optional string containing the command line
@@ -467,7 +467,7 @@ class ExtractionFrontend(frontend.Frontend):
     # TODO: deprecate the need for this function.
     self._PreprocessSetCollectionInformation(pre_obj)
 
-    session_start = self._GetSessionStart(
+    session_start = self._CreateSessionStart(
         command_line_arguments=command_line_arguments, filter_file=filter_file,
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)

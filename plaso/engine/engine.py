@@ -148,10 +148,10 @@ class BaseEngine(object):
 
 
 class PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
-  """Class that implements a path specification queue producer object."""
+  """Class that implements a path specification queue producer."""
 
   def __init__(self, path_spec_queue, storage_object):
-    """Initializes the queue producer object.
+    """Initializes a queue producer object.
 
     Args:
       path_spec_queue: the path specification queue (instance of Queue).

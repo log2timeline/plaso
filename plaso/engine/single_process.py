@@ -259,7 +259,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._last_status_update_timestamp = current_timestamp
 
-  def _ProcessSourcesCollectEventSources(
+  def _ExtractEventSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
       include_directory_stat=True, resolver_context=None):
     """Processes the sources and extract event sources.
@@ -328,7 +328,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._status_update_callback = status_update_callback
 
     # TODO: pass status update callback.
-    self._ProcessSourcesCollectEventSources(
+    self._ExtractEventSources(
         source_path_specs, storage_writer,
         filter_find_specs=filter_find_specs,
         include_directory_stat=include_directory_stat,

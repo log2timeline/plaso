@@ -582,7 +582,7 @@ class MultiProcessEngine(engine.BaseEngine):
       terminate_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       terminate_queue.Close()
 
-  def _ProcessSourcesCollectEventSources(
+  def _ExtractEventSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
       include_directory_stat=True, resolver_context=None):
     """Processes the sources and extract event sources.
@@ -613,11 +613,14 @@ class MultiProcessEngine(engine.BaseEngine):
         storage_writer.AddEventSource(event_source)
 
   def _GetPathSpecQueuePort(self, collector_process):
-    """Ensures that port number for the collector pathspec queue is captured.
+    """Retrieves the path specification queue port number.
 
     Args:
       collector_process: the collector process object (instance of
                          MultiProcessCollectorProcess).
+
+    Returns:
+      An integer containing the path specification queue port number.
 
     Raises:
       RuntimeError: if the collector is not able to start its queue before the
@@ -1131,7 +1134,7 @@ class MultiProcessEngine(engine.BaseEngine):
     logging.debug(u'Starting processes.')
 
     # TODO: pass status update callback.
-    self._ProcessSourcesCollectEventSources(
+    self._ExtractEventSources(
         source_path_specs, storage_writer,
         filter_find_specs=filter_find_specs,
         include_directory_stat=include_directory_stat,
