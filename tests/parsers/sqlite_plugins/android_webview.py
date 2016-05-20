@@ -26,7 +26,7 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.timestamp, expected_timestamp)
     self.assertEqual(test_event.cookie_name, u'SC')
     expected_data = (
-      u'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER=')
+        u'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER=')
     self.assertEqual(test_event.data, expected_data)
 
     self.assertEqual(len(event_objects), 3)
