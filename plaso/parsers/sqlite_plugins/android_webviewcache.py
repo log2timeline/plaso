@@ -28,34 +28,34 @@ class WebViewCacheURLExpirationEvent(time_events.JavaTimeEvent):
     self.url = url
 
 class WebViewCachePlugin(interface.SQLitePlugin):
-    """Parser for WebViewCache databases."""
+  """Parser for WebViewCache databases."""
 
-    NAME = u'android_webviewcache'
-    DESCRIPTION = u'Parser for Android WebViewCache databases'
+  NAME = u'android_webviewcache'
+  DESCRIPTION = u'Parser for Android WebViewCache databases'
 
-    REQUIRED_TABLES = frozenset([u'android_metadata', u'cache'])
+  REQUIRED_TABLES = frozenset([u'android_metadata', u'cache'])
 
-    QUERIES = frozenset([
-        (u'SELECT url, contentlength, expires, lastmodify FROM cache',
-         u'ParseRow')])
+  QUERIES = frozenset([
+      (u'SELECT url, contentlength, expires, lastmodify FROM cache',
+       u'ParseRow')])
 
-    def ParseRow(self, parser_mediator, row, query=None, **unused_kwargs):
-      """Parses a row from the database.
+  def ParseRow(self, parser_mediator, row, query=None, **unused_kwargs):
+    """Parses a row from the database.
 
-      Args:
-        parser_mediator: A parser mediator object (instance of ParserMediator).
-        row: The row resulting from the query.
-        query: Optional query string.
-      """
-      if row['expires'] is not None:
-        expires_event = WebViewCacheURLExpirationEvent(
-            row['expires'], row['url'], row['contentlength'])
-        parser_mediator.ProduceEvent(expires_event, query=query)
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      row: The row resulting from the query.
+      query: Optional query string.
+    """
+    if row['expires'] is not None:
+      expires_event = WebViewCacheURLExpirationEvent(
+          row['expires'], row['url'], row['contentlength'])
+      parser_mediator.ProduceEvent(expires_event, query=query)
 
-      if row['lastmodify'] is not None:
-        modification_event = WebViewCacheURLModificationEvent(
-            row['lastmodify'], row['url'], row['contentlength'])
-        parser_mediator.ProduceEvent(modification_event, query=query)
+    if row['lastmodify'] is not None:
+      modification_event = WebViewCacheURLModificationEvent(
+          row['lastmodify'], row['url'], row['contentlength'])
+      parser_mediator.ProduceEvent(modification_event, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(WebViewCachePlugin)
