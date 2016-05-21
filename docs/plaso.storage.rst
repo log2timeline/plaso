@@ -36,14 +36,6 @@ plaso.storage.time_range module
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.writer module
----------------------------
-
-.. automodule:: plaso.storage.writer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.storage.zip_file module
 -----------------------------
 
