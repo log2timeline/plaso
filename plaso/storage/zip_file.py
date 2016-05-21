@@ -2666,7 +2666,12 @@ class ZIPStorageFileReader(interface.StorageReader):
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
-  """Class that implements the ZIP-based storage file writer."""
+  """Class that implements the ZIP-based storage file writer.
+
+  Attributes:
+    reports_counter: a counter containing the number of reports (instance of
+                     collections.Counter).
+  """
 
   def __init__(self, output_file, preprocess_object, buffer_size=0):
     """Initializes a storage writer object.
@@ -2679,6 +2684,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """
     super(ZIPStorageFileWriter, self).__init__()
     self._buffer_size = buffer_size
+    self._event_tags = []
     self._output_file = output_file
     # Counter containing the number of events per parser.
     self._parsers_counter = collections.Counter()
@@ -2686,6 +2692,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._parser_plugins_counter = collections.Counter()
     self._preprocess_object = preprocess_object
     self._storage_file = None
+    # Counter containing the number of tags per label.
+    self._tags_counter = collections.Counter()
+
+    # Counter containing the number of reports.
+    self.reports_counter = collections.Counter()
 
   def _UpdateCounters(self, event_object):
     """Updates the counters.
@@ -2702,6 +2713,28 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if hasattr(event_object, u'plugin'):
       plugin_name = getattr(event_object, u'plugin', u'N/A')
       self._parser_plugins_counter[plugin_name] += 1
+
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report to the storage.
+
+    Args:
+      analysis_report: an analysis report object (instance of AnalysisReport).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    for event_tag in analysis_report.GetTags():
+      self.AddEventTag(event_tag)
+
+    self._storage_file.StoreReport(analysis_report)
+
+    report_identifier = u'Report: {0:s}'.format(analysis_report.plugin_name)
+
+    self.reports_counter[u'Total Reports'] += 1
+    self.reports_counter[report_identifier] += 1
 
   def AddEvent(self, event_object):
     """Adds an event object to the storage.
@@ -2733,6 +2766,24 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.AddEventSource(event_source)
     self.number_of_event_sources += 1
 
+  def AddEventTag(self, event_tag):
+    """Adds an event tag to the storage.
+
+    Args:
+      event_tag: an event tag object (instance of EventTag).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._event_tags.append(event_tag)
+
+    self._tags_counter[u'Total Tags'] += 1
+    for label in event_tag.labels:
+      self._tags_counter[label] += 1
+
   def Close(self):
     """Closes the storage writer.
 
@@ -2741,6 +2792,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
+
+    # TODO: write the tags incrementally instead of buffering them
+    # into a list.
+    if self._event_tags:
+      self._storage_file.StoreTagging(self._event_tags)
+      # TODO: move the counters out of preprocessing object.
+      # Kept for backwards compatibility for now.
+      self._preprocess_object.counter = self._tags_counter
 
     # TODO: refactor this currently create a preprocessing object
     # for every sync in single processing.

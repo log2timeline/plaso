@@ -23,7 +23,6 @@ from plaso.multi_processing import multi_process
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
-from plaso.storage import interface as storage_interface
 from plaso.storage import time_range as storage_time_range
 from plaso.storage import zip_file as storage_zip_file
 
@@ -125,13 +124,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     logging.info(u'All analysis plugins are now completed.')
 
-    storage_file_writer = PsortAnalysisReportZIPStorageFileWriter(
-        analysis_report_incoming_queue, storage_file, self._filter_expression,
-        pre_obj, preferred_encoding=preferred_encoding)
+    storage_writer = storage_zip_file.ZIPStorageFileWriter(
+        storage_file, pre_obj)
+    analysis_report_consumer = PsortAnalysisReportQueueConsumer(
+        analysis_report_incoming_queue, storage_writer,
+        self._filter_expression, preferred_encoding=preferred_encoding)
 
-    storage_file_writer.ConsumeItems()
-
-    for item, value in storage_file_writer.reports_counter.iteritems():
+    analysis_report_consumer.ConsumeItems()
+    for item, value in iter(analysis_report_consumer.reports_counter.items()):
       counter[item] = value
 
   def _StartAnalysisPlugins(
@@ -578,10 +578,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._use_zeromq = use_zeromq
 
 
-# TODO: remove the need for a psort specific storage writer.
-# merge with ZIPStorageFileWriter.
-class PsortAnalysisReportZIPStorageFileWriter(storage_interface.StorageWriter):
-  """Class that implements the analysis report ZIP-based storage file writer.
+class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
+  """Class that implements an analysis report queue consumer.
+
+  The consumer subscribes to updates on the queue and writes the analysis
+  reports to the storage.
 
   Attributes:
     reports_counter: a counter containing the number of reports (instance of
@@ -589,25 +590,20 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_interface.StorageWriter):
   """
 
   def __init__(
-      self, queue_object, storage_file, filter_string, preprocess_object,
-      preferred_encoding=u'utf-8'):
-    """Initializes an analysis report ZIP-based storage file writer.
+      self, queue, storage_writer, filter_string, preferred_encoding=u'utf-8'):
+    """Initializes the item queue consumer.
 
     Args:
-      queue_object: the queue object (instance of Queue).
-      storage_file: the storage file (instance of StorageFile).
+      queue_object: a queue object (instance of Queue).
+      storage_writer: a storage writer (instance of StorageWriter).
       filter_string: a string containing the filter expression.
-      preprocess_object: a preprocess object (instance of PreprocessObject).
       preferred_encoding: optional string containing the preferred encoding.
     """
-    super(PsortAnalysisReportZIPStorageFileWriter, self).__init__(queue_object)
+    super(PsortAnalysisReportQueueConsumer, self).__init__(queue)
     self._filter_string = filter_string
     self._preferred_encoding = preferred_encoding
-    self._preprocess_object = preprocess_object
-    self._storage_file = storage_file
+    self._storage_writer = storage_writer
     self._tags = []
-    # Counter containing the number of tags per label.
-    self._tags_counter = collections.Counter()
 
     # Counter containing the number of reports.
     self.reports_counter = collections.Counter()
@@ -618,19 +614,6 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_interface.StorageWriter):
     Args:
       analysis_report: an analysis report (instance of AnalysisReport).
     """
-    tags = analysis_report.GetTags()
-    if tags:
-      self._tags.extend(tags)
-
-      for tag in tags:
-        self._tags_counter[u'Total Tags'] += 1
-        for tag_entry in tag.labels:
-          self._tags_counter[tag_entry] += 1
-
-    plugin_name = analysis_report.plugin_name
-    self.reports_counter[u'Total Reports'] += 1
-    self.reports_counter[u'Report: {0:s}'.format(plugin_name)] += 1
-
     if self._filter_string:
       analysis_report.filter_string = self._filter_string
 
@@ -638,7 +621,7 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_interface.StorageWriter):
     # TODO: Have the option of saving to a separate file and
     # do something more here, for instance saving into a HTML
     # file, or something else (including potential images).
-    self._storage_file.StoreReport(analysis_report)
+    self._storage_writer.AddAnalysisReport(analysis_report)
 
     report_string = analysis_report.GetString()
     try:
@@ -650,69 +633,6 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_interface.StorageWriter):
           u'The report is stored inside the storage file and can be '
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')
-
-  def AddEvent(self, unused_event_object):
-    """Adds an event object to the storage.
-
-    Args:
-      event_object: an event object (instance of EventObject).
-    """
-    return
-
-  def AddEventSource(self, unused_event_source):
-    """Adds an event source to the storage.
-
-    Args:
-      event_source: an event source object (instance of EventSource).
-    """
-    return
-
-  def Close(self):
-    """Closes the storage writer."""
-    # TODO: write the tags incrementally instead of buffering them
-    # into a list.
-    self._storage_file.StoreTagging(self._tags)
-
-    # TODO: move the counters out of preprocessing object.
-    # Kept for backwards compatibility for now.
-    self._preprocess_object.counter = self._tags_counter
-
-    self._storage_file.WritePreprocessObject(self._preprocess_object)
-
-  # TODO: remove during phased processing refactor.
-  def ForceClose(self):
-    """Forces the storage writer to close."""
-    return
-
-  # TODO: remove during phased processing refactor.
-  def ForceFlush(self):
-    """Forces the storage writer to flush."""
-    return
-
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Yields:
-      An event source object (instance of EventSource).
-    """
-    return
-
-  def Open(self):
-    """Opens the storage writer."""
-    self._storage_file.SetEnableProfiling(
-        self._enable_profiling, profiling_type=self._profiling_type)
-
-  def WriteSessionCompletion(self):
-    """Writes session completion information."""
-    return
-
-  def WriteSessionStart(self, unused_session_start):
-    """Writes session start information.
-
-    Args:
-      session_start: the session start information (instance of SessionStart).
-    """
-    return
 
 
 class PsortAnalysisProcess(object):
