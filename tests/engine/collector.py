@@ -15,50 +15,9 @@ from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import collector
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 
 from tests import test_lib as shared_test_lib
-
-
-class TestCollectorQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements a test collector queue consumer."""
-
-  def __init__(self, queue_object):
-    """Initializes the queue consumer.
-
-    Args:
-      queue_object: the queue object (instance of Queue).
-    """
-    super(TestCollectorQueueConsumer, self).__init__(queue_object)
-    self.path_specs = []
-
-  def _ConsumeItem(self, path_spec, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      path_spec: a path specification (instance of dfvfs.PathSpec).
-    """
-    self.path_specs.append(path_spec)
-
-  @property
-  def number_of_path_specs(self):
-    """The number of path specifications."""
-    return len(self.path_specs)
-
-  def GetFilePaths(self):
-    """Retrieves a list of file paths from the path specifications."""
-    file_paths = []
-    for path_spec in self.path_specs:
-      data_stream = getattr(path_spec, u'data_stream', None)
-      location = getattr(path_spec, u'location', None)
-      if location is not None:
-        if data_stream:
-          location = u'{0:s}:{1:s}'.format(location, data_stream)
-        file_paths.append(location)
-
-    return file_paths
 
 
 class CollectorTestCase(unittest.TestCase):
@@ -84,8 +43,26 @@ class CollectorTestCase(unittest.TestCase):
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
 
-class CollectorQueueProducerTest(CollectorTestCase):
-  """Tests for the collector queue producer."""
+class CollectorTest(CollectorTestCase):
+  """Tests for the collector."""
+
+  def _GetFilePaths(self, path_specs):
+    """Retrieves a list of file paths from path specifications.
+
+    Args:
+      path_specs: a list of path specification objects (instances of
+                  dfvfs.PathSpec).
+    """
+    file_paths = []
+    for path_spec in path_specs:
+      data_stream = getattr(path_spec, u'data_stream', None)
+      location = getattr(path_spec, u'location', None)
+      if location is not None:
+        if data_stream:
+          location = u'{0:s}:{1:s}'.format(location, data_stream)
+        file_paths.append(location)
+
+    return file_paths
 
   def testFileSystemCollection(self):
     """Test collection on the file system."""
@@ -99,24 +76,18 @@ class CollectorQueueProducerTest(CollectorTestCase):
       for a_file in test_files:
         shutil.copy(a_file, temp_directory)
 
-      path_spec = path_spec_factory.Factory.NewPathSpec(
+      source_path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_OS, location=temp_directory)
 
-      test_path_spec_queue = single_process.SingleProcessQueue()
       resolver_context = context.Context()
-      test_collector = collector.CollectorQueueProducer(
-          test_path_spec_queue, resolver_context=resolver_context)
-      test_collector.Collect([path_spec])
+      test_collector = collector.Collector(resolver_context=resolver_context)
+      path_specs = list(test_collector.CollectPathSpecs(source_path_spec))
 
-      test_collector_queue_consumer = TestCollectorQueueConsumer(
-          test_path_spec_queue)
-      test_collector_queue_consumer.ConsumeItems()
-
-      self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 4)
+      self.assertEqual(len(path_specs), 4)
 
   def testFileSystemWithFilterCollection(self):
     """Test collection on the file system with a filter."""
-    path_spec = path_spec_factory.Factory.NewPathSpec(
+    source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
 
     filter_name = ''
@@ -127,19 +98,12 @@ class CollectorQueueProducerTest(CollectorTestCase):
       temp_file.write('/AUTHORS\n')
       temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
 
-    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.CollectorQueueProducer(
-        test_path_spec_queue, resolver_context=resolver_context)
+    test_collector = collector.Collector(resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
-    test_collector.SetFilter(find_specs)
-
-    test_collector.Collect([path_spec])
-
-    test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_path_spec_queue)
-    test_collector_queue_consumer.ConsumeItems()
+    path_specs = list(test_collector.CollectPathSpecs(
+        source_path_spec, find_specs=find_specs))
 
     try:
       os.remove(filter_name)
@@ -150,9 +114,9 @@ class CollectorQueueProducerTest(CollectorTestCase):
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
     # and test_data/System.evtx.
-    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 4)
+    self.assertEqual(len(path_specs), 4)
 
-    paths = test_collector_queue_consumer.GetFilePaths()
+    paths = self._GetFilePaths(path_specs)
 
     current_directory = os.getcwd()
 
@@ -196,21 +160,15 @@ class CollectorQueueProducerTest(CollectorTestCase):
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
+    source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.CollectorQueueProducer(
-        test_path_spec_queue, resolver_context=resolver_context)
-    test_collector.Collect([path_spec])
+    test_collector = collector.Collector(resolver_context=resolver_context)
+    path_specs = list(test_collector.CollectPathSpecs(source_path_spec))
 
-    test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_path_spec_queue)
-    test_collector_queue_consumer.ConsumeItems()
-
-    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 3)
+    self.assertEqual(len(path_specs), 3)
 
   def testImageWithFilterCollection(self):
     """Test collection on a storage media image file with a filter."""
@@ -218,7 +176,7 @@ class CollectorQueueProducerTest(CollectorTestCase):
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
+    source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
@@ -229,19 +187,12 @@ class CollectorQueueProducerTest(CollectorTestCase):
       temp_file.write('/a_directory/another.+\n')
       temp_file.write('/passwords.txt\n')
 
-    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.CollectorQueueProducer(
-        test_path_spec_queue, resolver_context=resolver_context)
+    test_collector = collector.Collector(resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
-    test_collector.SetFilter(find_specs)
-
-    test_collector.Collect([path_spec])
-
-    test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_path_spec_queue)
-    test_collector_queue_consumer.ConsumeItems()
+    path_specs = list(test_collector.CollectPathSpecs(
+        source_path_spec, find_specs=find_specs))
 
     try:
       os.remove(filter_name)
@@ -250,9 +201,9 @@ class CollectorQueueProducerTest(CollectorTestCase):
           u'Unable to remove temporary file: {0:s} with error: {1:s}').format(
               filter_name, exception))
 
-    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 2)
+    self.assertEqual(len(path_specs), 2)
 
-    paths = test_collector_queue_consumer.GetFilePaths()
+    paths = self._GetFilePaths(path_specs)
 
     # path_specs[0]
     # type: TSK
@@ -297,19 +248,14 @@ class CollectorQueueProducerTest(CollectorTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=p2_path_spec)
 
-    test_path_spec_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
-    test_collector = collector.CollectorQueueProducer(
-        test_path_spec_queue, resolver_context=resolver_context)
+    test_collector = collector.Collector(resolver_context=resolver_context)
     test_collector.SetCollectDirectoryMetadata(collect_directory_metadata)
 
-    test_collector.Collect([p1_file_system_path_spec, p2_file_system_path_spec])
-
-    test_collector_queue_consumer = TestCollectorQueueConsumer(
-        test_path_spec_queue)
-    test_collector_queue_consumer.ConsumeItems()
-
-    paths = test_collector_queue_consumer.GetFilePaths()
+    p1_path_specs = list(test_collector.CollectPathSpecs(
+        p1_file_system_path_spec))
+    p2_path_specs = list(test_collector.CollectPathSpecs(
+        p2_file_system_path_spec))
 
     expected_paths_p1 = [
         u'/$AttrDef',
@@ -367,17 +313,19 @@ class CollectorQueueProducerTest(CollectorTestCase):
           u'/$Extend/$RmMetadata/$TxfLog',
       ]
 
-    expected_paths = []
-    expected_paths.extend(expected_paths_p1)
+    path_specs = p1_path_specs
+    path_specs.extend(p2_path_specs)
+
+    paths = self._GetFilePaths(path_specs)
+
+    expected_paths = expected_paths_p1
     expected_paths.extend(expected_paths_p2)
 
     if collect_directory_metadata:
       expected_paths.extend(expected_directory_metadata_paths_p1)
       expected_paths.extend(expected_directory_metadata_paths_p2)
 
-    self.assertEqual(
-        test_collector_queue_consumer.number_of_path_specs, len(expected_paths))
-
+    self.assertEqual(len(path_specs), len(expected_paths))
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
   def testImageWithPartitionsCollections(self):

@@ -20,10 +20,10 @@ plaso.storage.factory module
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.reader module
----------------------------
+plaso.storage.interface module
+------------------------------
 
-.. automodule:: plaso.storage.reader
+.. automodule:: plaso.storage.interface
     :members:
     :undoc-members:
     :show-inheritance:

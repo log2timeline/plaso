@@ -400,14 +400,15 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Returns:
       A string containing the formatted reports.
     """
-    if not storage_file.HasReports():
-      return u'No reports stored.'
+    if not storage_file.HasAnalysisReports():
+      return u'No analysis reports stored.'
 
     if not self._verbose:
       return u'Reporting information omitted (to see use: --verbose).'
 
-    return u'\n'.join([
-        report.GetString() for report in storage_file.GetReports()])
+    report_strings = [
+        report.GetString() for report in storage_file.GetAnalysisReports()]
+    return u'\n'.join(report_strings)
 
   def _FormatStorageInformation(
       self, storage_information, storage_file, last_entry=False):

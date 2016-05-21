@@ -20,9 +20,8 @@ import textwrap
 import IPython
 import pysmdev  # pylint: disable=wrong-import-order
 
-from dfvfs.helpers import source_scanner
 from dfvfs.helpers import windows_path_resolver
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver
 from dfvfs.volume import tsk_volume_system
 
@@ -608,7 +607,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
       if not path_spec:
         continue
 
-      if path_spec.TYPE_INDICATOR != definitions.TYPE_INDICATOR_TSK_PARTITION:
+      type_indicator = path_spec.TYPE_INDICATOR
+      if type_indicator != dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
         continue
 
       location = getattr(path_spec, u'location', u'')
@@ -1537,7 +1537,7 @@ class PregConsole(object):
   def Run(self):
     """Runs the interactive console."""
     source_type = self.preg_tool.source_type
-    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
+    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       registry_file_types = []
     elif self.preg_tool.registry_file:
       registry_file_types = [self.preg_tool.registry_file]

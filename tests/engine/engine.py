@@ -18,8 +18,50 @@ from dfvfs.resolver import context
 from dfvfs.vfs import file_system
 
 from plaso.engine import engine
+from plaso.engine import plaso_queue
+from plaso.engine import single_process
+from plaso.storage import zip_file as storage_zip_file
 
 from tests.engine import test_lib
+
+
+class TestPathSpecQueueConsumer(plaso_queue.ItemQueueConsumer):
+  """Class that implements a test path specification queue consumer."""
+
+  def __init__(self, queue_object):
+    """Initializes the queue consumer.
+
+    Args:
+      queue_object: the queue object (instance of Queue).
+    """
+    super(TestPathSpecQueueConsumer, self).__init__(queue_object)
+    self.path_specs = []
+
+  def _ConsumeItem(self, path_spec_object, **unused_kwargs):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      path_spec_object: a path specification (instance of dfvfs.PathSpec).
+    """
+    self.path_specs.append(path_spec_object)
+
+  @property
+  def number_of_path_specs(self):
+    """The number of path specifications."""
+    return len(self.path_specs)
+
+  def GetFilePaths(self):
+    """Retrieves a list of file paths from the path specifications."""
+    file_paths = []
+    for path_spec_object in self.path_specs:
+      data_stream = getattr(path_spec_object, u'data_stream', None)
+      location = getattr(path_spec_object, u'location', None)
+      if location is not None:
+        if data_stream:
+          location = u'{0:s}:{1:s}'.format(location, data_stream)
+        file_paths.append(location)
+
+    return file_paths
 
 
 class TestEngine(engine.BaseEngine):
@@ -143,6 +185,37 @@ class BaseEngineTest(test_lib.EngineTestCase):
     expected_result = hpy is not None
     result = test_engine.SupportsMemoryProfiling()
     self.assertEqual(result, expected_result)
+
+
+class PathSpecQueueProducerTest(test_lib.EngineTestCase):
+  """Tests for the path specification producer object."""
+
+  def testRun(self):
+    """Tests the Run function."""
+    test_file = self._GetTestFilePath([u'storage.json.plaso'])
+    storage_object = storage_zip_file.StorageFile(
+        test_file, read_only=True)
+
+    test_path_spec_queue = single_process.SingleProcessQueue()
+    test_collector = engine.PathSpecQueueProducer(
+        test_path_spec_queue, storage_object)
+    test_collector.Run()
+
+    test_collector_queue_consumer = TestPathSpecQueueConsumer(
+        test_path_spec_queue)
+    test_collector_queue_consumer.ConsumeItems()
+
+    self.assertEqual(test_collector_queue_consumer.number_of_path_specs, 2)
+
+    expected_path_specs = [
+        u'type: OS, location: /tmp/test/test_data/syslog\n',
+        u'type: OS, location: /tmp/test/test_data/syslog\n']
+
+    path_specs = []
+    for path_spec_object in test_collector_queue_consumer.path_specs:
+      path_specs.append(path_spec_object.comparable)
+
+    self.assertEqual(sorted(path_specs), sorted(expected_path_specs))
 
 
 if __name__ == '__main__':
