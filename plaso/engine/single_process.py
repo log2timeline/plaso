@@ -238,7 +238,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def _ExtractEventSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
-      include_directory_stat=True, resolver_context=None):
+      resolver_context=None):
     """Processes the sources and extract event sources.
 
     Args:
@@ -295,9 +295,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     # TODO: pass status update callback.
     self._ExtractEventSources(
-        source_path_specs, storage_writer,
-        filter_find_specs=filter_find_specs,
-        include_directory_stat=include_directory_stat,
+        source_path_specs, storage_writer, filter_find_specs=filter_find_specs,
         resolver_context=resolver_context)
 
     # TODO: flushing the storage writer here for now to make sure the event
