@@ -43,8 +43,7 @@ class SingleProcessEngineTest(test_lib.EngineTestCase):
 
     self._test_engine.PreprocessSources([source_path_spec])
 
-    storage_writer = test_lib.TestStorageWriter(
-        self._test_engine.event_object_queue)
+    storage_writer = test_lib.TestStorageWriter()
     self._test_engine.ProcessSources(
         [source_path_spec], storage_writer,
         parser_filter_expression=u'filestat')

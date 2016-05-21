@@ -9,13 +9,11 @@ import zipfile
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
-from plaso.engine import plaso_queue
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
-from plaso.multi_processing import multi_process
 from plaso.storage import time_range
 from plaso.storage import zip_file
 
@@ -776,32 +774,20 @@ class ZIPStorageFileWriterTest(unittest.TestCase):
   def testStorageWriter(self):
     """Test the storage writer."""
     event_objects = test_lib.CreateTestEventObjects()
-
-    # The storage writer is normally run in a separate thread.
-    # For the purpose of this test it has to be run in sequence,
-    # hence the call to WriteEventObjects after all the event objects
-    # have been queued up.
-
-    # TODO: add upper queue limit.
-    # A timeout is used to prevent the multi processing queue to close and
-    # stop blocking the current process.
-    test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
-    test_queue_producer = plaso_queue.ItemQueueProducer(test_queue)
-    test_queue_producer.ProduceItems(event_objects)
-
-    test_queue_producer.SignalAbort()
-
     session_start = sessions.SessionStart()
     preprocessing_object = event.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
-          test_queue, temp_file, preprocessing_object)
+          temp_file, preprocessing_object)
 
       storage_writer.Open()
       storage_writer.WriteSessionStart(session_start)
-      storage_writer.WriteEventObjects()
+
+      for event_object in event_objects:
+        storage_writer.AddEvent(event_object)
+
       storage_writer.WriteSessionCompletion()
       storage_writer.Close()
 

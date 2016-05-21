@@ -23,8 +23,8 @@ from plaso.multi_processing import multi_process
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
+from plaso.storage import interface as storage_interface
 from plaso.storage import time_range as storage_time_range
-from plaso.storage import writer as storage_writer
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
@@ -577,7 +577,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
 
 # TODO: remove the need for a psort specific storage writer.
-class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
+# merge with ZIPStorageFileWriter.
+class PsortAnalysisReportZIPStorageFileWriter(storage_interface.StorageWriter):
   """Class that implements the analysis report ZIP-based storage file writer.
 
   Attributes:
@@ -648,7 +649,15 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')
 
-  def AddEventSource(self, event_source):
+  def AddEvent(self, unused_event_object):
+    """Adds an event object to the storage.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+    return
+
+  def AddEventSource(self, unused_event_source):
     """Adds an event source to the storage.
 
     Args:
@@ -691,15 +700,11 @@ class PsortAnalysisReportZIPStorageFileWriter(storage_writer.StorageWriter):
     self._storage_file.SetEnableProfiling(
         self._enable_profiling, profiling_type=self._profiling_type)
 
-  def WriteEventObjects(self):
-    """Writes event objects."""
-    return
-
   def WriteSessionCompletion(self):
     """Writes session completion information."""
     return
 
-  def WriteSessionStart(self, session_start):
+  def WriteSessionStart(self, unused_session_start):
     """Writes session start information.
 
     Args:

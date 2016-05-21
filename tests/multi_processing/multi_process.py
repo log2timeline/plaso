@@ -30,8 +30,7 @@ class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
 
     test_engine.PreprocessSources([source_path_spec])
 
-    storage_writer = engine_test_lib.TestStorageWriter(
-        test_engine.event_object_queue)
+    storage_writer = engine_test_lib.TestStorageWriter()
     test_engine.ProcessSources(
         [source_path_spec], storage_writer,
         parser_filter_expression=u'filestat')

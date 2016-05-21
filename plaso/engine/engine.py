@@ -21,7 +21,6 @@ class BaseEngine(object):
   """Class that defines the processing engine base.
 
   Attributes:
-    event_object_queue: the event object queue (instance of Queue).
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
   """
 
@@ -35,13 +34,12 @@ class BaseEngine(object):
     """
     self._enable_debug_output = False
     self._enable_profiling = False
+    self._event_object_queue = event_object_queue
     self._path_spec_queue = path_spec_queue
     self._parse_error_queue = parse_error_queue
     self._processing_status = processing_status.ProcessingStatus()
     self._profiling_sample_rate = 1000
     self._profiling_type = u'all'
-
-    self.event_object_queue = event_object_queue
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
@@ -147,10 +145,50 @@ class BaseEngine(object):
     return profiler.GuppyMemoryProfiler.IsSupported()
 
 
+# TODO: remove this class further in the phased processing refactor.
+class EventObjectQueueConsumer(plaso_queue.ItemQueueConsumer):
+  """Class that implements an event object queue consumer.
+
+  The consumer subscribes to updates on the queue.
+  """
+
+  def __init__(self, queue_object, storage_writer):
+    """Initializes the item queue consumer.
+
+    Args:
+      queue_object: a queue object (instance of Queue).
+      storage_writer: a storage writer (instance of StorageWriter).
+    """
+    super(EventObjectQueueConsumer, self).__init__(queue_object)
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._storage_writer = storage_writer
+
+  def _ConsumeItem(self, event_object, **kwargs):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+    """
+    self._storage_writer.AddEvent(event_object)
+
+  def GetStatus(self):
+    """Returns a dictionary containing the status."""
+    return {
+        u'number_of_events': self.number_of_consumed_items,
+        u'processing_status': self._status,
+        u'type': definitions.PROCESS_TYPE_STORAGE_WRITER}
+
+  def Run(self):
+    """Consumes event object from the queue."""
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self.ConsumeItems()
+    self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+
 class PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
   """Class that implements a path specification queue producer."""
 
-  def __init__(self, path_spec_queue, storage_object):
+  def __init__(self, path_spec_queue, storage_writer):
     """Initializes a queue producer object.
 
     Args:
@@ -158,11 +196,11 @@ class PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
                        This queue contains path specifications (instances
                        of dfvfs.PathSpec) of the file entries that need
                        to be processed.
-      storage_object: a storage object (instance of StorageWriter).
+      storage_writer: a storage object (instance of StorageWriter).
     """
     super(PathSpecQueueProducer, self).__init__(path_spec_queue)
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._storage_object = storage_object
+    self._storage_writer = storage_writer
 
   def GetStatus(self):
     """Returns a dictionary containing the status."""
@@ -175,7 +213,7 @@ class PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
   def Run(self):
     """Produces path specifications onto the queue."""
     self._status = definitions.PROCESSING_STATUS_RUNNING
-    for event_source in self._storage_object.GetEventSources():
+    for event_source in self._storage_writer.GetEventSources():
       if self._abort:
         break
 
