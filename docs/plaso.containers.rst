@@ -60,6 +60,14 @@ plaso.containers.reports module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.sessions module
+--------------------------------
+
+.. automodule:: plaso.containers.sessions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.shell_item_events module
 -----------------------------------------
 

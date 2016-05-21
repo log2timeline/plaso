@@ -219,7 +219,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     output_writer = cli_test_lib.TestOutputWriter()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.db')
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
 
       storage_file = storage_zip_file.StorageFile(temp_file)
       for event_object in event_objects:
