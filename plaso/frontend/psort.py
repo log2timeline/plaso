@@ -517,8 +517,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           time_slice=time_slice)
 
     for information in storage_file.GetStorageInformation():
-      if hasattr(information, u'counter'):
-        counter[u'Stored Events'] += information.counter[u'total']
+      if getattr(information, u'counter', None):
+        total = information.counter.get(u'total')
+        if total:
+          counter[u'Stored Events'] += total
 
     # Get all reports and tags from analysis plugins.
     self._ProcessAnalysisPlugins(
