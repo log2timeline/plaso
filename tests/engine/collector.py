@@ -47,7 +47,7 @@ class CollectorTest(CollectorTestCase):
   """Tests for the collector."""
 
   def _GetFilePaths(self, path_specs):
-    """Retrieves a list of file paths from the path specifications.
+    """Retrieves a list of file paths from path specifications.
 
     Args:
       path_specs: a list of path specification objects (instances of
