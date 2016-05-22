@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""The unit tests for the generic collector object."""
+"""Tests for the extractor classes."""
 
 import logging
 import os
@@ -8,43 +8,21 @@ import shutil
 import tempfile
 import unittest
 
-from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
-from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import collector
+from plaso.engine import extractors
 from plaso.engine import utils as engine_utils
 
 from tests import test_lib as shared_test_lib
 
 
-class CollectorTestCase(unittest.TestCase):
-  """The collector test case."""
-
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+# TODO: add EventExtractorTest
 
 
-class CollectorTest(CollectorTestCase):
-  """Tests for the collector."""
+class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
+  """Tests for the path specification extractor."""
 
   def _GetFilePaths(self, path_specs):
     """Retrieves a list of file paths from path specifications.
@@ -64,8 +42,8 @@ class CollectorTest(CollectorTestCase):
 
     return file_paths
 
-  def testFileSystemCollection(self):
-    """Test collection on the file system."""
+  def testExtractPathSpecsFileSystem(self):
+    """Tests the ExtractPathSpecs function on the file system."""
     test_files = [
         self._GetTestFilePath([u'syslog.tgz']),
         self._GetTestFilePath([u'syslog.zip']),
@@ -80,13 +58,13 @@ class CollectorTest(CollectorTestCase):
           dfvfs_definitions.TYPE_INDICATOR_OS, location=temp_directory)
 
       resolver_context = context.Context()
-      test_collector = collector.Collector(resolver_context=resolver_context)
-      path_specs = list(test_collector.CollectPathSpecs(source_path_spec))
+      test_extractor = extractors.PathSpecExtractor(resolver_context)
+      path_specs = list(test_extractor.ExtractPathSpecs([source_path_spec]))
 
       self.assertEqual(len(path_specs), 4)
 
-  def testFileSystemWithFilterCollection(self):
-    """Test collection on the file system with a filter."""
+  def testExtractPathSpecsFileSystemWithFilter(self):
+    """Tests the ExtractPathSpecs function on the file system with a filter."""
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
 
@@ -99,11 +77,11 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
 
     resolver_context = context.Context()
-    test_collector = collector.Collector(resolver_context=resolver_context)
+    test_extractor = extractors.PathSpecExtractor(resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
-    path_specs = list(test_collector.CollectPathSpecs(
-        source_path_spec, find_specs=find_specs))
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        [source_path_spec], find_specs=find_specs))
 
     try:
       os.remove(filter_name)
@@ -136,10 +114,10 @@ class CollectorTest(CollectorTestCase):
         current_directory, u'AUTHORS')
     self.assertTrue(expected_path in paths)
 
-  def testImageCollection(self):
-    """Test collection on a storage media image file.
+  def testExtractPathSpecsStorageMediaImage(self):
+    """Tests the ExtractPathSpecs function an image file.
 
-    This images has two files:
+    The image file contains the following files:
       + logs/hidden.zip
       + logs/sys.tgz
 
@@ -165,13 +143,13 @@ class CollectorTest(CollectorTestCase):
         parent=volume_path_spec)
 
     resolver_context = context.Context()
-    test_collector = collector.Collector(resolver_context=resolver_context)
-    path_specs = list(test_collector.CollectPathSpecs(source_path_spec))
+    test_extractor = extractors.PathSpecExtractor(resolver_context)
+    path_specs = list(test_extractor.ExtractPathSpecs([source_path_spec]))
 
     self.assertEqual(len(path_specs), 3)
 
-  def testImageWithFilterCollection(self):
-    """Test collection on a storage media image file with a filter."""
+  def testExtractPathSpecsStorageMediaImageWithFilter(self):
+    """Tests the ExtractPathSpecs function on an image file with a filter."""
     test_file = self._GetTestFilePath([u'ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -188,11 +166,11 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/passwords.txt\n')
 
     resolver_context = context.Context()
-    test_collector = collector.Collector(resolver_context=resolver_context)
+    test_extractor = extractors.PathSpecExtractor(resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
-    path_specs = list(test_collector.CollectPathSpecs(
-        source_path_spec, find_specs=find_specs))
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        [source_path_spec], find_specs=find_specs))
 
     try:
       os.remove(filter_name)
@@ -219,14 +197,11 @@ class CollectorTest(CollectorTestCase):
     # image_offset: 0
     self.assertEqual(paths[1], u'/passwords.txt')
 
-  def _TestImageWithPartitionsCollections(self, collect_directory_metadata):
-    """Test collection on a storage media image with multiple partitions.
+  def testExtractPathSpecsStorageMediaImageWithPartitions(self):
+    """Tests the ExtractPathSpecs function an image file with partitions.
 
-    The image contains 2 partitions (p1 and p2) with NFTS file systems.
-
-    Args:
-      collect_directory_metadata: boolean value to indicate to collect
-                                  directory metadata.
+    The image file contains 2 partitions, p1 and p2, both with a NFTS
+    file systems.
     """
     # Note that the source file is a RAW (VMDK flat) image.
     test_file = self._GetTestFilePath([u'multi_partition_image.vmdk'])
@@ -249,13 +224,10 @@ class CollectorTest(CollectorTestCase):
         parent=p2_path_spec)
 
     resolver_context = context.Context()
-    test_collector = collector.Collector(resolver_context=resolver_context)
-    test_collector.SetCollectDirectoryMetadata(collect_directory_metadata)
+    test_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    p1_path_specs = list(test_collector.CollectPathSpecs(
-        p1_file_system_path_spec))
-    p2_path_specs = list(test_collector.CollectPathSpecs(
-        p2_file_system_path_spec))
+    path_specs = list(test_extractor.ExtractPathSpecs([
+        p1_file_system_path_spec, p2_file_system_path_spec]))
 
     expected_paths_p1 = [
         u'/$AttrDef',
@@ -263,11 +235,14 @@ class CollectorTest(CollectorTestCase):
         u'/$BadClus:$Bad',
         u'/$Bitmap',
         u'/$Boot',
+        u'/$Extend',
         u'/$Extend/$ObjId',
         u'/$Extend/$Quota',
         u'/$Extend/$Reparse',
+        u'/$Extend/$RmMetadata',
         u'/$Extend/$RmMetadata/$Repair',
         u'/$Extend/$RmMetadata/$Repair:$Config',
+        u'/$Extend/$RmMetadata/$TxfLog',
         u'/$LogFile',
         u'/$MFT',
         u'/$MFTMirr',
@@ -278,24 +253,20 @@ class CollectorTest(CollectorTestCase):
         u'/file1.txt',
         u'/file2.txt']
 
-    if collect_directory_metadata:
-      expected_directory_metadata_paths_p1 = [
-          u'/$Extend',
-          u'/$Extend/$RmMetadata',
-          u'/$Extend/$RmMetadata/$TxfLog',
-      ]
-
     expected_paths_p2 = [
         u'/$AttrDef',
         u'/$BadClus',
         u'/$BadClus:$Bad',
         u'/$Bitmap',
         u'/$Boot',
+        u'/$Extend',
         u'/$Extend/$ObjId',
         u'/$Extend/$Quota',
         u'/$Extend/$Reparse',
+        u'/$Extend/$RmMetadata',
         u'/$Extend/$RmMetadata/$Repair',
         u'/$Extend/$RmMetadata/$Repair:$Config',
+        u'/$Extend/$RmMetadata/$TxfLog',
         u'/$LogFile',
         u'/$MFT',
         u'/$MFTMirr',
@@ -306,82 +277,12 @@ class CollectorTest(CollectorTestCase):
         u'/file1_on_part_2.txt',
         u'/file2_on_part_2.txt']
 
-    if collect_directory_metadata:
-      expected_directory_metadata_paths_p2 = [
-          u'/$Extend',
-          u'/$Extend/$RmMetadata',
-          u'/$Extend/$RmMetadata/$TxfLog',
-      ]
-
-    path_specs = p1_path_specs
-    path_specs.extend(p2_path_specs)
-
     paths = self._GetFilePaths(path_specs)
-
     expected_paths = expected_paths_p1
     expected_paths.extend(expected_paths_p2)
 
-    if collect_directory_metadata:
-      expected_paths.extend(expected_directory_metadata_paths_p1)
-      expected_paths.extend(expected_directory_metadata_paths_p2)
-
     self.assertEqual(len(path_specs), len(expected_paths))
     self.assertEqual(sorted(paths), sorted(expected_paths))
-
-  def testImageWithPartitionsCollections(self):
-    """Test collection on a storage media image with multiple partitions."""
-    self._TestImageWithPartitionsCollections(True)
-    self._TestImageWithPartitionsCollections(False)
-
-
-class BuildFindSpecsFromFileTest(unittest.TestCase):
-  """Tests for the BuildFindSpecsFromFile function."""
-
-  def testBuildFindSpecsFromFile(self):
-    """Tests the BuildFindSpecsFromFile function."""
-    filter_name = ''
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-      filter_name = temp_file.name
-      # 2 hits.
-      temp_file.write('/test_data/testdir/filter_.+.txt\n')
-      # A single hit.
-      temp_file.write('/test_data/.+evtx\n')
-      # A single hit.
-      temp_file.write('/AUTHORS\n')
-      temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
-      # This should not compile properly, missing file information.
-      temp_file.write('failing/\n')
-      # This should not fail during initial loading, but fail later on.
-      temp_file.write('bad re (no close on that parenthesis/file\n')
-
-    find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
-
-    try:
-      os.remove(filter_name)
-    except (OSError, IOError) as exception:
-      logging.warning(
-          u'Unable to remove temporary file: {0:s} with error: {1:s}'.format(
-              filter_name, exception))
-
-    self.assertEqual(len(find_specs), 4)
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
-    searcher = file_system_searcher.FileSystemSearcher(
-        file_system, path_spec)
-
-    path_spec_generator = searcher.Find(find_specs=find_specs)
-    self.assertIsNotNone(path_spec_generator)
-
-    path_specs = list(path_spec_generator)
-    # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
-    self.assertEqual(len(path_specs), 4)
-
-    with self.assertRaises(IOError):
-      _ = engine_utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
-
-    file_system.Close()
 
 
 if __name__ == '__main__':

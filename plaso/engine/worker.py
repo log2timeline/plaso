@@ -11,7 +11,6 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import collector
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import profiler
@@ -339,11 +338,11 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
           # TODO: change this to pass the archive file path spec to
           # the collector process and have the collector implement a maximum
           # path spec "depth" to prevent ZIP bombs and equiv.
-          collector_object = collector.Collector(
-              resolver_context=self._resolver_context)
+          path_spec_extractor = extractors.PathSpecExtractor(
+              self._resolver_context)
 
-          for path_spec in collector_object.CollectPathSpecs(
-              archive_path_spec):
+          for path_spec in path_spec_extractor.ExtractPathSpecs(
+              [archive_path_spec]):
             # TODO: produce event sources to process.
             self._queue.PushItem(path_spec)
             self._produced_number_of_path_specs += 1

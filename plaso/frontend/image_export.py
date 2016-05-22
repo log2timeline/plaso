@@ -13,7 +13,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import collector
+from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
@@ -573,13 +573,11 @@ class ImageExportFrontend(frontend.Frontend):
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
-    image_collector = collector.Collector(
-        resolver_context=self._resolver_context)
+    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
     file_saver = FileSaver(skip_duplicates=remove_duplicates)
 
-    for source_path_spec in source_path_specs:
-      for path_spec in image_collector.CollectPathSpecs(source_path_spec):
-        self._ExtractFile(file_saver, path_spec, destination_path)
+    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
+      self._ExtractFile(file_saver, path_spec, destination_path)
 
   def _ExtractFile(self, file_saver, path_spec, destination_path):
     """Extracts a file.

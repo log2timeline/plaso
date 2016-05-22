@@ -10,8 +10,8 @@ import time
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
-from plaso.engine import collector
 from plaso.engine import engine
+from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import worker
 from plaso.lib import definitions
@@ -238,40 +238,32 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def _ExtractEventSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
-      include_directory_stat=True, resolver_context=None):
+      resolver_context=None):
     """Processes the sources and extract event sources.
 
     Args:
       source_path_specs: a list of path specifications (instances of
                          dfvfs.PathSpec) of the sources to process.
+      resolver_context: resolver context (instance of dfvfs.Context).
       storage_writer: a storage writer object (instance of StorageWriter).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
-      include_directory_stat: optional boolean value to indicate whether
-                              directory stat information should be collected.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
     """
-    collector_object = collector.Collector(resolver_context=resolver_context)
+    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
+    for path_spec in path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, find_specs=filter_find_specs):
 
-    if filter_find_specs:
-      collector_object.SetFilter(filter_find_specs)
-
-    for source_path_spec in source_path_specs:
-      for path_spec in collector_object.CollectPathSpecs(source_path_spec):
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(
-            path_spec=path_spec)
-        storage_writer.AddEventSource(event_source)
+      # TODO: determine if event sources should be DataStream or FileEntry
+      # or both.
+      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+      storage_writer.AddEventSource(event_source)
 
   def ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None,
-      filter_object=None, hasher_names_string=None, include_directory_stat=True,
-      mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, resolver_context=None,
-      status_update_callback=None, text_prepend=None):
+      filter_object=None, hasher_names_string=None, mount_path=None,
+      parser_filter_expression=None, process_archive_files=False,
+      resolver_context=None, status_update_callback=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -283,8 +275,6 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_object: optional filter object (instance of objectfilter.Filter).
       hasher_names_string: optional comma separated string of names of
                            hashers to enable.
-      include_directory_stat: optional boolean value to indicate whether
-                              directory stat information should be collected.
       mount_path: optional string containing the mount path.
       parser_filter_expression: optional string containing the parser filter
                                 expression, where None represents all parsers
@@ -305,9 +295,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     # TODO: pass status update callback.
     self._ExtractEventSources(
-        source_path_specs, storage_writer,
-        filter_find_specs=filter_find_specs,
-        include_directory_stat=include_directory_stat,
+        source_path_specs, storage_writer, filter_find_specs=filter_find_specs,
         resolver_context=resolver_context)
 
     # TODO: flushing the storage writer here for now to make sure the event
