@@ -443,11 +443,6 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression):
       self._parser_names.append(parser_class.NAME)
 
-    if u'filestat' in self._parser_names:
-      include_directory_stat = True
-    else:
-      include_directory_stat = False
-
     self._hasher_names = []
     hasher_manager = hashers_manager.HashersManager
     for hasher_name in hasher_manager.GetHasherNamesFromString(
@@ -489,7 +484,6 @@ class ExtractionFrontend(frontend.Frontend):
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
-            include_directory_stat=include_directory_stat,
             mount_path=self._mount_path,
             parser_filter_expression=parser_filter_expression,
             process_archive_files=self._process_archive_files,
@@ -507,7 +501,6 @@ class ExtractionFrontend(frontend.Frontend):
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
-            include_directory_stat=include_directory_stat,
             mount_path=self._mount_path,
             number_of_extraction_workers=number_of_extraction_workers,
             parser_filter_expression=parser_filter_expression,

@@ -4,14 +4,6 @@ plaso.engine package
 Submodules
 ----------
 
-plaso.engine.collector module
------------------------------
-
-.. automodule:: plaso.engine.collector
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.engine.engine module
 --------------------------
 
