@@ -1048,9 +1048,9 @@ class MultiProcessEngine(engine.BaseEngine):
           status_indicator, process_information.status)
 
   def ProcessSources(
-      self, source_path_specs, storage_writer, enable_sigsegv_handler=False,
-      filter_find_specs=None, filter_object=None, hasher_names_string=None,
-      mount_path=None, number_of_extraction_workers=0,
+      self, source_path_specs, storage_writer, preprocess_object,
+      enable_sigsegv_handler=False, filter_find_specs=None, filter_object=None,
+      hasher_names_string=None, mount_path=None, number_of_extraction_workers=0,
       parser_filter_expression=None, process_archive_files=False,
       status_update_callback=None, show_memory_usage=False, text_prepend=None):
     """Processes the sources and extract event objects.
@@ -1058,29 +1058,30 @@ class MultiProcessEngine(engine.BaseEngine):
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
-      storage_writer: A storage writer object (instance of BaseStorageWriter).
+      storage_writer: a storage writer object (instance of BaseStorageWriter).
+      preprocess_object: a preprocess object (instance of PreprocessObject).
       enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
                               handler should be enabled.
-      filter_find_specs: Optional list of filter find specifications (instances
+      filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
-      filter_object: Optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: Optional comma separated string of names of
+      filter_object: optional filter object (instance of objectfilter.Filter).
+      hasher_names_string: optional comma separated string of names of
                            hashers to enable enable.
-      mount_path: Optional string containing the mount path. The default
+      mount_path: optional string containing the mount path. The default
                   is None.
-      number_of_extraction_workers: Optional number of extraction worker
+      number_of_extraction_workers: optional number of extraction worker
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
       parser_filter_expression: optional string containing the parser filter
                                 expression, where None represents all parsers
                                 and plugins.
-      process_archive_files: Optional boolean value to indicate if the worker
+      process_archive_files: optional boolean value to indicate if the worker
                              should scan for file entries inside files.
-      status_update_callback: Optional callback function for status updates.
-      show_memory_usage: Optional boolean value to indicate memory information
+      status_update_callback: optional callback function for status updates.
+      show_memory_usage: optional boolean value to indicate memory information
                          should be included in logging.
-      text_prepend: Optional string that contains the text to prepend to every
+      text_prepend: optional string that contains the text to prepend to every
                     event object.
 
     Returns:
@@ -1147,7 +1148,8 @@ class MultiProcessEngine(engine.BaseEngine):
     storage_writer_process = MultiProcessStorageWriterProcess(
         self._event_object_queue, self._extraction_complete_event,
         self._storage_writer_complete_event, parse_error_queue,
-        storage_writer, enable_sigsegv_handler=self._enable_sigsegv_handler,
+        storage_writer, preprocess_object,
+        enable_sigsegv_handler=self._enable_sigsegv_handler,
         name=u'StorageWriter')
     storage_writer_process.start()
     self._RegisterProcess(storage_writer_process)
@@ -1403,7 +1405,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
   def __init__(
       self, event_object_queue, extraction_complete_event,
       storage_writer_complete_event, parse_error_queue, storage_writer,
-      **kwargs):
+      preprocess_object, **kwargs):
     """Initializes the process object.
 
     Args:
@@ -1418,6 +1420,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
                                      complete.
       parse_error_queue: the parser error queue object (instance of Queue).
       storage_writer: a storage writer object (instance of BaseStorageWriter).
+      preprocess_object: a preprocess object (instance of PreprocessObject).
     """
     super(MultiProcessStorageWriterProcess, self).__init__(
         definitions.PROCESS_TYPE_STORAGE_WRITER, **kwargs)
@@ -1428,6 +1431,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
     self._event_object_queue_port = None
     self._parse_error_queue = parse_error_queue
     self._parse_error_queue_port = None
+    self._preprocess_object = preprocess_object
     self._storage_writer = storage_writer
     self._storage_writer_complete_event = storage_writer_complete_event
 
@@ -1476,6 +1480,7 @@ class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
 
     self._event_object_consumer = None
 
+    self._storage_writer.WritePreprocessObject(self._preprocess_object)
     self._storage_writer.WriteSessionCompletion()
     self._storage_writer.Close()
 

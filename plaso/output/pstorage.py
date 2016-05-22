@@ -74,7 +74,7 @@ class PlasoStorageOutputModule(interface.OutputModule):
 
       event_object.inode = new_inode
 
-    self._storage_file.AddEventObject(event_object)
+    self._storage_file.AddEvent(event_object)
 
 
 manager.OutputManager.RegisterOutput(PlasoStorageOutputModule)

@@ -260,16 +260,18 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.AddEventSource(event_source)
 
   def ProcessSources(
-      self, source_path_specs, storage_writer, filter_find_specs=None,
-      filter_object=None, hasher_names_string=None, mount_path=None,
-      parser_filter_expression=None, process_archive_files=False,
-      resolver_context=None, status_update_callback=None, text_prepend=None):
+      self, source_path_specs, storage_writer, preprocess_object,
+      filter_find_specs=None, filter_object=None, hasher_names_string=None,
+      mount_path=None, parser_filter_expression=None,
+      process_archive_files=False, resolver_context=None,
+      status_update_callback=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
       source_path_specs: a list of path specifications (instances of
                          dfvfs.PathSpec) of the sources to process.
       storage_writer: a storage writer object (instance of StorageWriter).
+      preprocess_object: a preprocess object (instance of PreprocessObject).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
       filter_object: optional filter object (instance of objectfilter.Filter).
@@ -343,6 +345,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._UpdateStatus(processing_completed=True)
 
+    storage_writer.WritePreprocessObject(preprocess_object)
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()
 
