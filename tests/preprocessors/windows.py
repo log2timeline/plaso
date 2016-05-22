@@ -14,10 +14,10 @@ from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
 from plaso.preprocessors import windows
 
-from tests.preprocessors import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
+class WindowsSoftwareRegistryTest(shared_test_lib.BaseTestCase):
   """Base class for tests that use the SOFTWARE Registry file."""
 
   def setUp(self):
@@ -38,7 +38,7 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
         registry_file_reader=registry_file_reader)
 
 
-class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
+class WindowsSystemRegistryTest(shared_test_lib.BaseTestCase):
   """Base class for tests that use the SYSTEM Registry file."""
 
   def setUp(self):
@@ -115,7 +115,7 @@ class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):
     self.assertIsNone(path)
 
 
-class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
+class WindowsSystemRegistryPathTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows system Registry path preprocess plug-in object."""
 
   _FILE_DATA = b'regf'
@@ -142,7 +142,7 @@ class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
     self.assertEqual(path, u'\\Windows\\System32\\config')
 
 
-class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
+class WindowsSystemRootPathTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows system Root path preprocess plug-in object."""
 
   _FILE_DATA = b'regf'

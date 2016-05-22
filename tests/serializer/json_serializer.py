@@ -4,7 +4,6 @@
 
 import collections
 import json
-import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -18,30 +17,13 @@ from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
 
+from tests import test_lib as shared_test_lib
+
 import pytz  # pylint: disable=wrong-import-order
 
 
-class JSONSerializerTestCase(unittest.TestCase):
+class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
   """Tests for a JSON serializer object."""
-
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def _TestReadSerialized(self, serializer_object, json_dict):
     """Tests the ReadSerialized function.

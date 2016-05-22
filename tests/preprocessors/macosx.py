@@ -11,10 +11,10 @@ from dfvfs.path import fake_path_spec
 from plaso.engine import knowledge_base
 from plaso.preprocessors import macosx
 
-from tests.preprocessors import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class MacOSXBuildTest(test_lib.PreprocessPluginTest):
+class MacOSXBuildTest(shared_test_lib.BaseTestCase):
   """Tests for the Mac OS X build information preprocess plug-in object."""
 
   _FILE_DATA = (
@@ -58,7 +58,7 @@ class MacOSXBuildTest(test_lib.PreprocessPluginTest):
     self.assertEqual(build, u'10.9.2')
 
 
-class MacOSXHostname(test_lib.PreprocessPluginTest):
+class MacOSXHostname(shared_test_lib.BaseTestCase):
   """Tests for the Mac OS X hostname preprocess plug-in object."""
 
   # Note that is only part of the normal preferences.plist file data.
@@ -110,7 +110,7 @@ class MacOSXHostname(test_lib.PreprocessPluginTest):
     self.assertEqual(knowledge_base_object.hostname, u'Plaso\'s Mac mini')
 
 
-class MacOSXKeyboard(test_lib.PreprocessPluginTest):
+class MacOSXKeyboard(shared_test_lib.BaseTestCase):
   """Tests for the Mac OS X keyboard layout preprocess plug-in object."""
 
   def setUp(self):
@@ -135,7 +135,7 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
     self.assertEqual(keyboard_layout, u'US')
 
 
-class MacOSXTimezone(test_lib.PreprocessPluginTest):
+class MacOSXTimezone(shared_test_lib.BaseTestCase):
   """Tests for the Mac OS X timezone preprocess plug-in object."""
 
   def setUp(self):
@@ -159,7 +159,7 @@ class MacOSXTimezone(test_lib.PreprocessPluginTest):
     self.assertEqual(time_zone_str, u'Europe/Amsterdam')
 
 
-class MacOSXUsersTest(test_lib.PreprocessPluginTest):
+class MacOSXUsersTest(shared_test_lib.BaseTestCase):
   """Tests for the Mac OS X usernames preprocess plug-in object."""
 
   def setUp(self):

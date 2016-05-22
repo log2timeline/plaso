@@ -11,10 +11,10 @@ from dfvfs.path import fake_path_spec
 from plaso.engine import knowledge_base
 from plaso.preprocessors import linux
 
-from tests.preprocessors import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class LinuxHostnameTest(test_lib.PreprocessPluginTest):
+class LinuxHostnameTest(shared_test_lib.BaseTestCase):
   """Tests for the Linux hostname preprocess plug-in object."""
 
   _FILE_DATA = 'plaso.kiddaland.net\n'
@@ -38,7 +38,7 @@ class LinuxHostnameTest(test_lib.PreprocessPluginTest):
     self.assertEqual(knowledge_base_object.hostname, u'plaso.kiddaland.net')
 
 
-class LinuxTimezoneTest(test_lib.PreprocessPluginTest):
+class LinuxTimezoneTest(shared_test_lib.BaseTestCase):
   """Test for the Linux timezone preprocess plug-in object."""
 
   _FILE_DATA = 'Europe/Zurich\n'
@@ -63,7 +63,7 @@ class LinuxTimezoneTest(test_lib.PreprocessPluginTest):
     self.assertEqual(time_zone_str, u'Europe/Zurich')
 
 
-class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
+class LinuxUsernamesTest(shared_test_lib.BaseTestCase):
   """Tests for the Linux usernames preprocess plug-in object."""
 
   _FILE_DATA = (

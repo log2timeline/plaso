@@ -7,10 +7,10 @@ import unittest
 from plaso.frontend import analysis_frontend
 from plaso.storage import zip_file as storage_zip_file
 
-from tests.frontend import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class AnalysisFrontendTests(test_lib.FrontendTestCase):
+class AnalysisFrontendTests(shared_test_lib.BaseTestCase):
   """Tests for the analysis front-end object."""
 
   def testOpenStorage(self):
