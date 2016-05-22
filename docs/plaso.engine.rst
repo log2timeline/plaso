@@ -20,6 +20,14 @@ plaso.engine.engine module
     :undoc-members:
     :show-inheritance:
 
+plaso.engine.extractors module
+------------------------------
+
+.. automodule:: plaso.engine.extractors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.knowledge_base module
 ----------------------------------
 
