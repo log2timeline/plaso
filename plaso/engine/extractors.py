@@ -59,12 +59,12 @@ class EventExtractor(object):
     """Determines if a parser can process a file entry.
 
     Args:
-      file_entry: the file entry relating to the data to be hashed (instance of
-                  dfvfs.FileEntry)
+      file_entry: a file entry (instance of dfvfs.FileEntry).
       parser_object: a parser object (instance of BaseParser).
 
     Returns:
-      A boolean value that indicates a match.
+      A boolean value that indicates the file entry can be processed by
+      the parser object.
     """
     for filter_object in parser_object.FILTERS:
       if filter_object.Match(file_entry):
@@ -80,8 +80,8 @@ class EventExtractor(object):
                    for known signatures.
 
     Returns:
-      A list of parser names for which the file entry matches their
-      known signatures.
+      A list of parser names for which the contents of the file-like object
+      matches their known signatures.
     """
     parser_name_list = []
     scan_state = pysigscan.scan_state()
