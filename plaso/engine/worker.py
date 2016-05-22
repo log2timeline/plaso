@@ -5,8 +5,6 @@ import logging
 import os
 import re
 
-import pysigscan
-
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
@@ -14,13 +12,11 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import collector
+from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import profiler
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.hashers import manager as hashers_manager
-from plaso.parsers import interface as parsers_interface
-from plaso.parsers import manager as parsers_manager
 
 
 class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
@@ -97,21 +93,16 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     self._current_display_name = u''
     self._current_file_entry = None
     self._enable_debug_mode = False
+    self._enable_parsers_profiling = False
+    self._event_extractor = None
     self._identifier = identifier
     self._identifier_string = u'Worker_{0:d}'.format(identifier)
-    self._file_scanner = None
-    self._filestat_parser_object = None
     self._hasher_names = None
-    self._mft_parser_object = None
-    self._non_sigscan_parser_names = None
     self._open_files = False
     self._parser_mediator = parser_mediator
-    self._parser_objects = None
     self._process_archive_files = False
     self._produced_number_of_path_specs = 0
     self._resolver_context = resolver_context
-    self._specification_store = None
-    self._usnjrnl_parser_object = None
 
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer = parse_error_queue_producer
@@ -125,23 +116,6 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     self._parsers_profiler = None
     self._profiling_sample = 0
     self._profiling_sample_rate = 1000
-
-  def _CanProcessFileEntryWithParser(self, file_entry, parser_object):
-    """Determines if a parser can process a file entry.
-
-    Args:
-      file_entry: the file entry relating to the data to be hashed (instance of
-                  dfvfs.FileEntry)
-      parser_object: a parser object (instance of BaseParser).
-
-    Returns:
-      A boolean value that indicates a match.
-    """
-    for filter_object in parser_object.FILTERS:
-      if filter_object.Match(file_entry):
-        return True
-
-    return False
 
   def _CanSkipContentExtraction(self, file_entry):
     """Determines if content extraction of a file entry can be skipped.
@@ -236,31 +210,6 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     """Callback for debugging path specification processing failures."""
     return
 
-  def _GetSignatureMatchParserNames(self, file_object):
-    """Determines if a file-like object matches one of the known signatures.
-
-    Args:
-      file_object: the file-like object whose contents will be checked
-                   for known signatures.
-
-    Returns:
-      A list of parser names for which the file entry matches their
-      known signatures.
-    """
-    parser_name_list = []
-    scan_state = pysigscan.scan_state()
-    self._file_scanner.scan_file_object(scan_state, file_object)
-
-    for scan_result in scan_state.scan_results:
-      format_specification = (
-          self._specification_store.GetSpecificationBySignature(
-              scan_result.identifier))
-
-      if format_specification.identifier not in parser_name_list:
-        parser_name_list.append(format_specification.identifier)
-
-    return parser_name_list
-
   def _HashDataStream(self, file_entry, data_stream_name=u''):
     """Hashes the contents of a specific data stream of a file entry.
 
@@ -331,56 +280,6 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
       return True
 
     return False
-
-  def _ParseFileEntryWithParser(
-      self, parser_object, file_entry, file_object=None):
-    """Parses a file entry with a specific parser.
-
-    Args:
-      parser_object: a parser object (instance of BaseParser).
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
-      file_object: optional file-like object to parse. If not set the parser
-                   will use the parser mediator to open the file entry's
-                   default data stream as a file-like object
-    """
-    self._parser_mediator.ClearParserChain()
-
-    reference_count = self._resolver_context.GetFileObjectReferenceCount(
-        file_entry.path_spec)
-
-    if self._parsers_profiler:
-      self._parsers_profiler.StartTiming(parser_object.NAME)
-
-    try:
-      if isinstance(parser_object, parsers_interface.FileEntryParser):
-        parser_object.Parse(self._parser_mediator)
-      elif isinstance(parser_object, parsers_interface.FileObjectParser):
-        parser_object.Parse(self._parser_mediator, file_object)
-      else:
-        logging.warning(
-            u'{0:s} unsupported parser type.'.format(parser_object.NAME))
-
-    # We catch the IOError so we can determine the parser that generated
-    # the error.
-    except (dfvfs_errors.BackEndError, IOError) as exception:
-      logging.warning(
-          u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
-              parser_object.NAME, self._current_display_name, exception))
-
-    except errors.UnableToParseFile as exception:
-      logging.debug(
-          u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
-              parser_object.NAME, self._current_display_name, exception))
-
-    finally:
-      if self._parsers_profiler:
-        self._parsers_profiler.StopTiming(parser_object.NAME)
-
-      if reference_count != self._resolver_context.GetFileObjectReferenceCount(
-          file_entry.path_spec):
-        logging.warning((
-            u'[{0:s}] did not explicitly close file-object for file: '
-            u'{1:s}.').format(parser_object.NAME, self._current_display_name))
 
   def _ProcessArchiveFile(self, file_entry):
     """Processes an archive file (file that contains file entries).
@@ -520,86 +419,6 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
 
     return True
 
-  def _ProcessDataStream(self, file_entry, data_stream_name=u''):
-    """Processes a specific data stream of a file entry.
-
-    Args:
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      data_stream_name: optional data stream name. The default is
-                        an empty string which represents the default
-                        data stream.
-
-    Raises:
-      RuntimeError: if the file-like object is missing.
-    """
-    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
-    if not file_object:
-      raise RuntimeError(
-          u'Unable to retrieve file-like object from file entry.')
-
-    try:
-      parser_name_list = self._GetSignatureMatchParserNames(file_object)
-      if not parser_name_list:
-        parser_name_list = self._non_sigscan_parser_names
-
-      self._status = definitions.PROCESSING_STATUS_PARSING
-      for parser_name in parser_name_list:
-        parser_object = self._parser_objects.get(parser_name, None)
-        if not parser_object:
-          logging.warning(u'No such parser: {0:s}'.format(parser_name))
-          continue
-
-        if parser_object.FILTERS:
-          if not self._CanProcessFileEntryWithParser(file_entry, parser_object):
-            continue
-
-        logging.debug((
-            u'[ProcessDataStream] parsing file: {0:s} with parser: '
-            u'{1:s}').format(self._current_display_name, parser_name))
-
-        self._ParseFileEntryWithParser(
-            parser_object, file_entry, file_object=file_object)
-
-    finally:
-      file_object.close()
-
-      # Make sure frame.f_locals does not keep a reference to file_entry.
-      file_entry = None
-
-  def _ProcessDataStreamWithParser(
-      self, parser_object, file_entry, data_stream_name=u''):
-    """Processes a specific data stream of a file entry with a specific parser.
-
-    Args:
-      parser_object: a parser object (instance of BaseParser).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      data_stream_name: optional data stream name. The default is
-                        an empty string which represents the default
-                        data stream.
-
-    Raises:
-      RuntimeError: if the file-like object is missing.
-    """
-    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
-    if not file_object:
-      raise RuntimeError(
-          u'Unable to retrieve file-like object from file entry.')
-
-    try:
-      self._status = definitions.PROCESSING_STATUS_PARSING
-      logging.debug((
-          u'[ProcessDataStreamWithParser] parsing file: {0:s} with parser: '
-          u'{1:s}').format(self._current_display_name, parser_object.NAME))
-
-      self._ParseFileEntryWithParser(
-          parser_object, file_entry, file_object=file_object)
-
-    finally:
-      file_object.close()
-
-      # Make sure frame.f_locals does not keep a reference to file_entry.
-      file_entry = None
-
   def _ProcessFileEntry(self, file_entry, data_stream_name=u''):
     """Processes a specific data stream of a file entry.
 
@@ -626,27 +445,12 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
 
     try:
       if self._IsMetadataFile(file_entry):
-        parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
-        filename_upper = file_entry.name.upper()
-        if (self._mft_parser_object and parent_path_spec and
-            filename_upper in (u'$MFT', u'$MFTMIRR') and not data_stream_name):
-          self._ProcessDataStreamWithParser(
-              self._mft_parser_object, file_entry)
+        self._event_extractor.ParseFileEntryMetadata(
+            self._parser_mediator, file_entry)
 
-        elif (self._usnjrnl_parser_object and parent_path_spec and
-              filename_upper == u'$USNJRNL' and data_stream_name == u'$J'):
-
-          # To be able to ignore the sparse data ranges the UsnJrnl parser
-          # needs to read directly from the volume.
-          volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
-              parent_path_spec, resolver_context=self._resolver_context)
-
-          try:
-            self._ParseFileEntryWithParser(
-                self._usnjrnl_parser_object, file_entry,
-                file_object=volume_file_object)
-          finally:
-            volume_file_object.close()
+        self._event_extractor.ParseMetadataFile(
+            self._parser_mediator, file_entry,
+            data_stream_name=data_stream_name)
 
       else:
         # Not every file entry has a data stream. In such cases we want to
@@ -656,12 +460,12 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
         if has_data_stream:
           self._HashDataStream(file_entry, data_stream_name=data_stream_name)
 
-        # We always want to use the filestat parser if set but we only want
-        # to invoke it once per file entry, so we only use it if we are
+        # We always want to extract the file entry metadata but we only want
+        # to parse it once per file entry, so we only use it if we are
         # processing the default (nameless) data stream.
-        if not data_stream_name and self._filestat_parser_object:
-          self._ParseFileEntryWithParser(
-              self._filestat_parser_object, file_entry)
+        if not data_stream_name:
+          self._event_extractor.ParseFileEntryMetadata(
+              self._parser_mediator, file_entry)
 
         # Determine if the content of the file entry should not be extracted.
         skip_content_extraction = self._CanSkipContentExtraction(file_entry)
@@ -678,8 +482,9 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
               is_archive = self._ProcessArchiveFile(file_entry)
 
           if has_data_stream and not is_archive and not is_compressed_stream:
-            self._ProcessDataStream(
-                file_entry, data_stream_name=data_stream_name)
+            self._event_extractor.ParseDataStream(
+                self._parser_mediator, file_entry,
+                data_stream_name=data_stream_name)
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
@@ -773,13 +578,16 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     if self._memory_profiler:
       self._memory_profiler.Start()
 
+    if self._enable_parsers_profiling:
+      self._event_extractor.ProfilingStart(self._identifier)
+
   def _ProfilingStop(self):
     """Stops the profiling."""
     if self._memory_profiler:
       self._memory_profiler.Sample()
 
-    if self._parsers_profiler:
-      self._parsers_profiler.Write()
+    if self._enable_parsers_profiling:
+      self._event_extractor.ProfilingStop()
 
   @property
   def current_path_spec(self):
@@ -816,31 +624,9 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
                                 expression, where None represents all parsers
                                 and plugins.
     """
-    self._specification_store, non_sigscan_parser_names = (
-        parsers_manager.ParsersManager.GetSpecificationStore(
-            parser_filter_expression=parser_filter_expression))
-
-    self._non_sigscan_parser_names = []
-    for parser_name in non_sigscan_parser_names:
-      if parser_name in [u'filestat', u'usnjrnl']:
-        continue
-      self._non_sigscan_parser_names.append(parser_name)
-
-    self._file_scanner = parsers_manager.ParsersManager.GetScanner(
-        self._specification_store)
-
-    self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
+    self._event_extractor = extractors.EventExtractor(
+        self._resolver_context,
         parser_filter_expression=parser_filter_expression)
-
-    self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
-    if u'filestat' in self._parser_objects:
-      del self._parser_objects[u'filestat']
-
-    self._mft_parser_object = self._parser_objects.get(u'mft', None)
-
-    self._usnjrnl_parser_object = self._parser_objects.get(u'usnjrnl', None)
-    if u'usnjrnl' in self._parser_objects:
-      del self._parser_objects[u'usnjrnl']
 
   def Run(self):
     """Extracts event objects from file entries."""
@@ -893,11 +679,11 @@ class BaseEventExtractionWorker(plaso_queue.ItemQueueConsumer):
     self._profiling_sample_rate = profiling_sample_rate
 
     if self._enable_profiling:
-      if profiling_type in [u'all', u'memory'] and not self._memory_profiler:
+      if profiling_type in (u'all', u'memory') and not self._memory_profiler:
         self._memory_profiler = profiler.GuppyMemoryProfiler(self._identifier)
 
-      if profiling_type in [u'all', u'parsers'] and not self._parsers_profiler:
-        self._parsers_profiler = profiler.ParsersProfiler(self._identifier)
+      if profiling_type in (u'all', u'parsers'):
+        self._enable_parsers_profiling = True
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.
