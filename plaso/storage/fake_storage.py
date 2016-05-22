@@ -20,8 +20,6 @@ class FakeStorageWriter(interface.StorageWriter):
     session_start: session start information (instance of SessionStart).
   """
 
-  # pylint: disable=abstract-method
-
   def __init__(self):
     """Initializes a storage writer object."""
     super(FakeStorageWriter, self).__init__()
