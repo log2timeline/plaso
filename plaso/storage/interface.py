@@ -144,8 +144,10 @@ class StorageWriter(object):
   """Class that defines the storage writer interface.
 
   Attributes:
+    number_of_errors: an integer containing the number of errors written.
     number_of_event_sources: an integer containing the number of event
                              sources written.
+    number_of_events: an integer containing the number of events written.
   """
 
   def __init__(self):
@@ -153,7 +155,17 @@ class StorageWriter(object):
     super(StorageWriter, self).__init__()
     self._enable_profiling = False
     self._profiling_type = u'all'
+    self.number_of_errors = 0
     self.number_of_event_sources = 0
+    self.number_of_events = 0
+
+  @abc.abstractmethod
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error object (instance of AnalysisError or ExtractionError).
+    """
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
@@ -165,7 +177,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddEvent(self, event_object):
-    """Adds an event object to the storage.
+    """Adds an event to the storage.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -225,6 +237,17 @@ class StorageWriter(object):
   @abc.abstractmethod
   def Open(self):
     """Opens the storage writer."""
+
+  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
+    """Enables or disables profiling.
+
+    Args:
+      enable_profiling: boolean value to indicate if profiling should
+                        be enabled.
+      profiling_type: optional profiling type.
+    """
+    self._enable_profiling = enable_profiling
+    self._profiling_type = profiling_type
 
   @abc.abstractmethod
   def WriteSessionCompletion(self):
