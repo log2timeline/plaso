@@ -134,6 +134,14 @@ class StorageWriter(object):
     self.number_of_event_sources = 0
 
   @abc.abstractmethod
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report to the storage.
+
+    Args:
+      analysis_report: an analysis report object (instance of AnalysisReport).
+    """
+
+  @abc.abstractmethod
   def AddEvent(self, event_object):
     """Adds an event object to the storage.
 
@@ -147,6 +155,14 @@ class StorageWriter(object):
 
     Args:
       event_source: an event source object (instance of EventSource).
+    """
+
+  @abc.abstractmethod
+  def AddEventTag(self, event_tag):
+    """Adds an event tag to the storage.
+
+    Args:
+      event_tag: an event tag object (instance of EventTag).
     """
 
   @abc.abstractmethod
