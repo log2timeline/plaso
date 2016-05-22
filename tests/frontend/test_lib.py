@@ -2,8 +2,6 @@
 """Front-end related functions and classes for testing."""
 
 import io
-import os
-import unittest
 
 from plaso.analysis import interface as analysis_interface
 
@@ -71,27 +69,3 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
       event_object: An event object (instance of EventObject).
     """
     return
-
-
-class FrontendTestCase(unittest.TestCase):
-  """The unit test case for a front-end."""
-
-  _DATA_PATH = os.path.join(os.getcwd(), u'data')
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)

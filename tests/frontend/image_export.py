@@ -13,10 +13,11 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.frontend import image_export
 
+from tests import test_lib as shared_test_lib
 from tests.frontend import test_lib
 
 
-class DateTimeFileEntryFilter(test_lib.FrontendTestCase):
+class DateTimeFileEntryFilter(shared_test_lib.BaseTestCase):
   """Tests for the date time file entry filter."""
 
   def testAddDateTimeRange(self):
@@ -110,7 +111,7 @@ class DateTimeFileEntryFilter(test_lib.FrontendTestCase):
     self.assertEqual(len(date_filter._date_time_ranges), 3)
 
 
-class ImageExportFrontendTest(test_lib.FrontendTestCase):
+class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
   """Tests for the image export front-end."""
 
   def _RecursiveList(self, path):

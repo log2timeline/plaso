@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
-import os
-import unittest
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -16,6 +13,8 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator
+
+from tests import test_lib as shared_test_lib
 
 
 class TestItemQueueConsumer(plaso_queue.ItemQueueConsumer):
@@ -35,15 +34,8 @@ class TestItemQueueConsumer(plaso_queue.ItemQueueConsumer):
     self.events.append(event_object)
 
 
-class ParserTestCase(unittest.TestCase):
+class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
-
-  _DATA_PATH = os.path.join(os.getcwd(), u'data')
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
 
   def _GetEventObjects(self, event_generator):
     """Retrieves the event objects from the event generator.
@@ -138,19 +130,6 @@ class ParserTestCase(unittest.TestCase):
       return u'{0:s}...'.format(message_string[0:77])
 
     return message_string
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def _GetTestFileEntryFromPath(self, path_segments):
     """Creates a file entry that references a file in the test dir.

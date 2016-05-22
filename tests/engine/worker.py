@@ -13,10 +13,11 @@ from plaso.engine import single_process
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
 
+from tests import test_lib as shared_test_lib
 from tests.engine import test_lib
 
 
-class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
+class BaseEventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   """Tests for the worker object."""
 
   def testExtractionWorker(self):

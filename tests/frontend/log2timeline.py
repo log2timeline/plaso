@@ -6,10 +6,10 @@ import unittest
 
 from plaso.frontend import log2timeline
 
-from tests.frontend import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
+class Log2TimelineFrontendTest(shared_test_lib.BaseTestCase):
   """Tests for the log2timeline front-end."""
 
   # pylint: disable=protected-access

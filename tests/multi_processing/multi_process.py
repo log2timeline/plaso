@@ -8,12 +8,15 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import sessions
 from plaso.multi_processing import multi_process
+from plaso.storage import fake_storage
 
+from tests import test_lib as shared_test_lib
 from tests.engine import test_lib as engine_test_lib
 
 
-class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
+class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the multi-process engine object."""
 
   def testProcessSources(self):
@@ -30,7 +33,12 @@ class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
 
     test_engine.PreprocessSources([source_path_spec])
 
-    storage_writer = engine_test_lib.TestStorageWriter()
+    session_start = sessions.SessionStart()
+
+    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer.Open()
+    storage_writer.WriteSessionStart(session_start)
+
     test_engine.ProcessSources(
         [source_path_spec], storage_writer,
         parser_filter_expression=u'filestat')
@@ -40,7 +48,7 @@ class MultiProcessEngineTest(engine_test_lib.EngineTestCase):
     # self.assertEqual(len(storage_writer.event_objects), 15)
 
 
-class MultiProcessingQueueTest(unittest.TestCase):
+class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):
   """Tests the multi-processing queue object."""
 
   _ITEMS = frozenset([u'item1', u'item2', u'item3', u'item4'])

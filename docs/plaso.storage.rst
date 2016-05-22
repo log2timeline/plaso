@@ -20,6 +20,14 @@ plaso.storage.factory module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.fake_storage module
+---------------------------------
+
+.. automodule:: plaso.storage.fake_storage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.storage.interface module
 ------------------------------
 

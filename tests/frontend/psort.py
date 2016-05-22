@@ -127,7 +127,7 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
     self._events_per_key = {}
 
 
-class PsortFrontendTest(test_lib.FrontendTestCase):
+class PsortFrontendTest(shared_test_lib.BaseTestCase):
   """Tests for the psort front-end."""
 
   # pylint: disable=protected-access
