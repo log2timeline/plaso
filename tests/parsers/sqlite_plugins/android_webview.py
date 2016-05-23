@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for the Android WebView plugin."""
+
 import unittest
 
 from plaso.lib import timelib
@@ -8,11 +9,12 @@ from plaso.parsers.sqlite_plugins import android_webview
 
 from tests.parsers.sqlite_plugins import test_lib
 
+
 class AndroidWebView(test_lib.SQLitePluginTestCase):
   """Tests for the AndroidWebView database plugin."""
 
   def testProcess(self):
-    """Test the Process function on a Kik messenger kik.sqlite file."""
+    """Test the Process function on a WebView SQLite file."""
     test_file = self._GetTestFilePath([u'webview.db'])
     plugin = android_webview.WebViewPlugin()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
