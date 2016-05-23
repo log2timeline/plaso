@@ -73,6 +73,17 @@ An event data stream consists of an array of 64-bit integers:
 
 + The event tag index stream
 
+The event tag index streams contain information about the event object
+the tag applies to.
+
+An event data stream consists of an array of event tag index values.
++--------+--------+-...-+
+| struct | struct | ... |
++--------+--------+-...-+
+
+See the _SerializedEventTagIndexTable class for more information about
+the actual structure of an event tag index value.
+
 + Version information
 
 Deprecated in version 20160501:
