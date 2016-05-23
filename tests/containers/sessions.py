@@ -5,6 +5,7 @@
 import unittest
 import uuid
 
+import plaso
 from plaso.containers import sessions
 
 from tests.containers import test_lib
@@ -47,7 +48,7 @@ class SessionStartTest(test_lib.AttributeContainerTestCase):
         u'parser_filter_expression': u'',
         u'preferred_encoding': u'utf-8',
         u'product_name': u'plaso',
-        u'product_version': u'1.4.1_20160521',
+        u'product_version': plaso.GetVersion(),
         u'timestamp': session_start.timestamp}
 
     test_dict = session_start.CopyToDict()
