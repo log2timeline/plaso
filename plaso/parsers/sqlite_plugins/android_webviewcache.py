@@ -36,7 +36,7 @@ class WebViewCacheURLModificationEvent(WebViewCacheEvent):
   DATA_TYPE = u'android:webviewcache:url_modification'
 
 
-class WebViewCacheURLExpirationEvent(time_events.JavaTimeEvent):
+class WebViewCacheURLExpirationEvent(WebViewCacheEvent):
   """Convenience class for WebView cache expiry event."""
   DATA_TYPE = u'android:webviewcache:url_expiry'
 

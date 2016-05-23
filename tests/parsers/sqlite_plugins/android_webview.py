@@ -22,7 +22,7 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     test_event = event_objects[0]
-    self.assertEqual(test_event.host, u'skype.com')
+    self.assertEqual(test_event.host, u'.skype.com')
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-03-05 15:04:44')
     self.assertEqual(test_event.timestamp, expected_timestamp)
