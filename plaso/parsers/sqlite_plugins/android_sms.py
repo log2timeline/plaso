@@ -10,7 +10,7 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class AndroidSmsEvent(time_events.JavaTimeEvent):
+class AndroidSMSEvent(time_events.JavaTimeEvent):
   """Convenience class for an Android SMS event."""
 
   DATA_TYPE = u'android:messaging:sms'
@@ -20,13 +20,16 @@ class AndroidSmsEvent(time_events.JavaTimeEvent):
 
     Args:
       java_time: The Java time value.
-      identifier: The row identifier.
-      address: The phone number associated to the sender/receiver.
-      sms_read:  Read or Unread.
-      sms_type: Sent or Received.
-      body: Content of the SMS text message.
+      identifier: a numeric type containing the identifier of the row containing
+                the event information.
+      address: a string containing the phone number associated to the
+              sender/receiver.
+      sms_read: a string containing the message read status, either
+                Read or Unread.
+      sms_type: a string containing the message type, either Sent or Received.
+      body: a string containing the content of the SMS text message.
     """
-    super(AndroidSmsEvent, self).__init__(
+    super(AndroidSMSEvent, self).__init__(
         java_time, eventdata.EventTimestamp.CREATION_TIME)
     self.offset = identifier
     self.address = address
@@ -49,6 +52,7 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset([u'sms'])
 
+  # TODO: Move this functionality to the formatter.
   SMS_TYPE = {
       1: u'RECEIVED',
       2: u'SENT'}
@@ -70,7 +74,7 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
     sms_type = self.SMS_TYPE.get(row['type'], u'UNKNOWN')
     sms_read = self.SMS_READ.get(row['read'], u'UNKNOWN')
 
-    event_object = AndroidSmsEvent(
+    event_object = AndroidSMSEvent(
         row['date'], row['id'], row['address'], sms_read, sms_type,
         row['body'])
     parser_mediator.ProduceEvent(event_object, query=query)

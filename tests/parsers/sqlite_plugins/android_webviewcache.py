@@ -1,12 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for the Android WebViewCache plugin."""
+
 import unittest
 
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_webviewcache
 
 from tests.parsers.sqlite_plugins import test_lib
+
 
 class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
   """Tests for the Android WebViewCache database plugin."""
@@ -27,7 +29,6 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-28 09:48:18')
     self.assertEqual(test_event.timestamp, expected_timestamp)
-
 
     self.assertEqual(10, len(event_objects))
 

@@ -6,27 +6,40 @@ from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
+class WebViewCacheEvent(time_events.JavaTimeEvent):
+  """Parent class for WebViewCache events.
 
-class WebViewCacheURLModificationEvent(time_events.JavaTimeEvent):
-  """Convenience class for a WebViewCache modification event"""
-  DATA_TYPE = u'android:webviewcache:url_modification'
+  Attributes:
+    content_length: an integer type containing the number of bytes in the cached
+                    content.
+    url: a string containing the URL the content was cached from.
+  """
 
   def __init__(self, timestamp, url, content_length):
-    """Convenience class for a WebViewCache modification event"""
-    super(WebViewCacheURLModificationEvent, self).__init__(
+    """Initalizes a WebViewCache event.
+
+    Args:
+      timestamp: the Java timestamp which is an integer containing the number
+                 of milliseconds since January 1, 1970, 00:00:00 UTC.
+      content_length: a integer type containing the number of bytes in the
+                      cached content.
+      url: a string containing the URL the content was cached from.
+    """
+    super(WebViewCacheEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.content_length = content_length
     self.url = url
 
+
+class WebViewCacheURLModificationEvent(WebViewCacheEvent):
+  """Convenience class for a WebViewCache modification event."""
+  DATA_TYPE = u'android:webviewcache:url_modification'
+
+
 class WebViewCacheURLExpirationEvent(time_events.JavaTimeEvent):
-  """Convenience class for WebView cache expiry event"""
+  """Convenience class for WebView cache expiry event."""
   DATA_TYPE = u'android:webviewcache:url_expiry'
 
-  def __init__(self, timestamp, url, content_length):
-    super(WebViewCacheURLExpirationEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.EXPIRATION_TIME)
-    self.content_length = content_length
-    self.url = url
 
 class WebViewCachePlugin(interface.SQLitePlugin):
   """Parser for WebViewCache databases."""
