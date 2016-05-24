@@ -25,6 +25,8 @@ class TaskCompletion(interface.AttributeContainer):
 
     Args:
       identifier: a string containing the identifier of the task.
+                  The identifier should match that of the corresponding
+                  task start information.
       session_identifier: a string containing the identifier of the session
                           the task is part of.
     """

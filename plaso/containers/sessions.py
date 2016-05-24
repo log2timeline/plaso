@@ -28,6 +28,8 @@ class SessionCompletion(interface.AttributeContainer):
 
     Args:
       identifier: a string containing the identifier of the session.
+                  The identifier should match that of the corresponding
+                  session start information.
     """
     super(SessionCompletion, self).__init__()
     self.identifier = identifier

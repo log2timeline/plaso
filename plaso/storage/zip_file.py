@@ -227,7 +227,7 @@ class _SerializedEventsHeap(object):
 class _EventTagIndexValue(object):
   """Class that defines the event tag index value.
 
-  Arrtibutes:
+  Attributes:
     event_uuid: a string containing the event identifier (UUID) or None.
     offset: an integer containing the serialized event tag data offset.
     store_number: optional integer containing the store number.
@@ -862,7 +862,7 @@ class ZIPStorageFile(interface.BaseStorage):
   """
 
   # TODO: remove after merge of ZIPStorageFile and StorageFile.
-  # pytlint: disable=abstract-method
+  # pylint: disable=abstract-method
 
   # The format version.
   _FORMAT_VERSION = 20160511
@@ -875,13 +875,14 @@ class ZIPStorageFile(interface.BaseStorage):
   # a format version.
   _LEGACY_FORMAT_VERSION = 20160431
 
-  # The maximum buffer size to 196 MiB.
+  # The maximum buffer size of serialized data before triggering
+  # a flush to disk (196 MiB).
   _MAXIMUM_BUFFER_SIZE = 196 * 1024 * 1024
 
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 5
 
-  # The maximum serialized report size to 24 MiB.
+  # The maximum serialized report size (24 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
   def __init__(self):

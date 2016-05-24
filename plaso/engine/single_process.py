@@ -265,7 +265,7 @@ class SingleProcessEngine(engine.BaseEngine):
       mount_path=None, parser_filter_expression=None,
       process_archive_files=False, resolver_context=None,
       status_update_callback=None, text_prepend=None):
-    """Processes the sources and extract event objects.
+    """Processes the sources and extracts event objects.
 
     Args:
       source_path_specs: a list of path specifications (instances of

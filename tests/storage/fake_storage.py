@@ -42,6 +42,7 @@ class FakeStorageWriterTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(storage_writer.analysis_reports), 0)
     self.assertEqual(len(storage_writer.event_sources), 0)
     self.assertEqual(len(storage_writer.event_tags), 0)
+    # TODO: do not use test_lib.CreateTestEventObjects() here.
     self.assertEqual(len(storage_writer.events), 4)
 
     self.assertIsNotNone(storage_writer.session_start)
