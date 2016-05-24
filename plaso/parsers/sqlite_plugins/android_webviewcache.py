@@ -61,6 +61,9 @@ class WebViewCachePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
       query: Optional query string.
     """
+    # Note that pysqlite does not accept a Unicode string in row['string']
+    # and will raise "IndexError: Index must be int or string". All indexes are
+    # thus raw strings.
     if row['expires'] is not None:
       expires_event = WebViewCacheURLExpirationEvent(
           row['expires'], row['url'], row['contentlength'])
