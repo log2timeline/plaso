@@ -700,6 +700,14 @@ plaso.formatters.zeitgeist module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.zsh_extended_history module
+--------------------------------------------
+
+.. automodule:: plaso.formatters.zsh_extended_history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
