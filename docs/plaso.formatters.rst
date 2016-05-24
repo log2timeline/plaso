@@ -28,6 +28,22 @@ plaso.formatters.android_sms module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.android_webview module
+---------------------------------------
+
+.. automodule:: plaso.formatters.android_webview
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.android_webviewcache module
+--------------------------------------------
+
+.. automodule:: plaso.formatters.android_webviewcache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.appcompatcache module
 --------------------------------------
 

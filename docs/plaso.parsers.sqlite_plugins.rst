@@ -20,6 +20,22 @@ plaso.parsers.sqlite_plugins.android_sms module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sqlite_plugins.android_webview module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_webview
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.sqlite_plugins.android_webviewcache module
+--------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_webviewcache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.sqlite_plugins.appusage module
 --------------------------------------------
 
