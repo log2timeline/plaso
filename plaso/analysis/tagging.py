@@ -2,13 +2,124 @@
 """A plugin to tag events according to rules in a tag file."""
 
 import logging
+import re
 import os
+
+from efilter import ast as efilter_ast
+from efilter import api as efilter_api
+from efilter import syntax as efilter_syntax
+from efilter import query as efilter_query
 
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.filters import manager as filters_manager
+
+
+class TagFile(efilter_syntax.Syntax):
+  """Parses the Plaso tag file format."""
+  # A line with no indent is a tag name.
+  TAG_DECL_LINE = re.compile(r'^(\w+)')
+  # A line with leading indent is one of the rules for the preceding tag.
+  TAG_RULE_LINE = re.compile(r'^\s+(.+)')
+  # If any of these words are in the query then it's probably objectfilter.
+  OBJECTFILTER_WORDS = re.compile(
+      r'\s(is|isnot|equals|notequals|inset|notinset|contains|notcontains)\s')
+
+  _root = None
+
+  def __init__(self, path=None, original=None, **kwargs):
+    """Initializes a parser for the Plaso tag file format.
+
+    Args:
+      path: TODO
+      original: TODO
+    """
+    if original is None:
+      if path is not None:
+        original = open(path, u'r')
+      else:
+        raise ValueError(
+            u'Either a path to a tag file or a file-like object must be '
+            u'provided as path or original.')
+    elif path is not None:
+      raise ValueError(u'Cannot provide both a path and an original.')
+    elif not callable(getattr(original, u'__iter__', None)):
+      raise TypeError(
+          u'The "original" argument to TagFile must be an iterable of lines '
+          u'(like a file object).')
+
+    super(TagFile, self).__init__(original=original, **kwargs)
+
+
+  @property
+  def root(self):
+    if not self._root:
+      self._root = self.parse()
+
+    return self._root
+
+
+  def __del__(self):
+    if not self.original.closed:
+      self.original.close()
+
+
+  def _parse_query(self, source):
+    """Parse one of the rules as either objectfilter or dottysql.
+
+    Example:
+        _parse_query('5 + 5')
+        # Returns Sum(Literal(5), Literal(5))
+
+    Arguments:
+        source: A rule in either objectfilter or dottysql syntax.
+
+    Returns:
+        The AST to represent the rule.
+    """
+    if self.OBJECTFILTER_WORDS.search(source):
+      syntax_ = u'objectfilter'
+    else:
+      syntax_ = None  # Default it is.
+
+    return efilter_query.Query(source, syntax=syntax_)
+
+
+  def _parse_tagfile(self):
+    """Parse the tagfile and yield tuples of tag_name, list of rule ASTs."""
+    rules = None
+    tag = None
+    for line in self.original:
+      match = self.TAG_DECL_LINE.match(line)
+      if match:
+        if tag and rules:
+          yield tag, rules
+        rules = []
+        tag = match.group(1)
+        continue
+
+      match = self.TAG_RULE_LINE.match(line)
+      if match:
+        source = match.group(1)
+        rules.append(self._parse_query(source))
+
+  def parse(self):
+    tags = []
+    for tag_name, rules in self._parse_tagfile():
+      tag = efilter_ast.IfElse(
+          # Union will be true if any of the 'rules' match.
+          efilter_ast.Union(*[rule.root for rule in rules]),
+          # If so then evaluate to a string with the name of the tag.
+          efilter_ast.Literal(tag_name),
+          # Otherwise don't return anything.
+          efilter_ast.Literal(None))
+      tags.append(tag)
+
+    self.original.close()
+    # Generate a repeated value with all the tags (None will be skipped).
+    return efilter_ast.Repeat(*tags)
 
 
 class TaggingPlugin(interface.AnalysisPlugin):
