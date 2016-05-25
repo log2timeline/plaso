@@ -57,29 +57,29 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
       setattr(event_object, key, value)
     return event_object
 
-  def testParseTagFile(self):
-    """Test that the tagging plugin can parse a tag definition file."""
-    event_queue = single_process.SingleProcessQueue()
-    analysis_plugin = tagging.TaggingPlugin(event_queue)
-    # pylint: disable=protected-access
-    tags = analysis_plugin._ParseTaggingFile(
-        self._GetTestFilePath([self._TEST_TAG_FILE_NAME]))
-    self.assertEqual(len(tags), 2)
-    self.assertIn(u'application_execution', tags.keys())
-    self.assertIn(u'file_downloaded', tags.keys())
-
-  def testInvalidTagParsing(self):
-    """Test parsing of definition files that contain invalid directives."""
-    event_queue = single_process.SingleProcessQueue()
-    analysis_plugin = tagging.TaggingPlugin(event_queue)
-    # pylint: disable=protected-access
-    tags = analysis_plugin._ParseTaggingFile(
-        self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME]))
-    self.assertEqual(len(tags), 3)
-    self.assertTrue(u'Invalid Tag' in tags)
-    self.assertEqual(len(tags[u'Invalid Tag']), 0)
-    self.assertTrue(u'Partially Valid Tag' in tags)
-    self.assertEqual(len(tags[u'Partially Valid Tag']), 1)
+  # def testParseTagFile(self):
+  #   """Test that the tagging plugin can parse a tag definition file."""
+  #   event_queue = single_process.SingleProcessQueue()
+  #   analysis_plugin = tagging.TaggingPlugin(event_queue)
+  #   # pylint: disable=protected-access
+  #   tags = analysis_plugin._ParseTaggingFile(
+  #       self._GetTestFilePath([self._TEST_TAG_FILE_NAME]))
+  #   self.assertEqual(len(tags), 2)
+  #   self.assertIn(u'application_execution', tags.keys())
+  #   self.assertIn(u'file_downloaded', tags.keys())
+  #
+  # def testInvalidTagParsing(self):
+  #   """Test parsing of definition files that contain invalid directives."""
+  #   event_queue = single_process.SingleProcessQueue()
+  #   analysis_plugin = tagging.TaggingPlugin(event_queue)
+  #   # pylint: disable=protected-access
+  #   tags = analysis_plugin._ParseTaggingFile(
+  #       self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME]))
+  #   self.assertEqual(len(tags), 3)
+  #   self.assertTrue(u'Invalid Tag' in tags)
+  #   self.assertEqual(len(tags[u'Invalid Tag']), 0)
+  #   self.assertTrue(u'Partially Valid Tag' in tags)
+  #   self.assertEqual(len(tags[u'Partially Valid Tag']), 1)
 
   def testTag(self):
     """Test that the tagging plugin successfully tags events."""
