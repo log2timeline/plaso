@@ -11,7 +11,7 @@ class ExtractionError(interface.AttributeContainer):
   """Class to represent an extraction error attribute container.
 
   Attributes:
-    message: a string containing the error messge.
+    message: a string containing the error message.
     parser_chain: a string containing the parser chain or None.
     path_spec: a path specification of the file entry (instance of
                dfvfs.PathSpec) or None.

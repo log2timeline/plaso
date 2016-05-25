@@ -16,14 +16,19 @@ class BaseStorage(object):
     self._serializers_profiler = None
 
   @abc.abstractmethod
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error (instance of AnalysisError or ExtractionError).
+    """
+
+  @abc.abstractmethod
   def AddEvent(self, event_object):
     """Adds an event to the storage.
 
     Args:
       event_object: an event object (instance of EventObject).
-
-    Raises:
-      IOError: when the event object cannot be added.
     """
 
   @abc.abstractmethod
@@ -32,9 +37,6 @@ class BaseStorage(object):
 
     Args:
       event_source: an event source (instance of EventSource).
-
-    Raises:
-      IOError: when the event source cannot be added.
     """
 
   @abc.abstractmethod
@@ -61,9 +63,6 @@ class BaseStorage(object):
 
     Yields:
       Analysis reports (instances of AnalysisReport).
-
-    Raises:
-      IOError: if the analysis reports cannot be retrieved.
     """
 
   @abc.abstractmethod
@@ -72,9 +71,6 @@ class BaseStorage(object):
 
     Yields:
       An event source object (instance of EventSource).
-
-    Raises:
-      IOError: if the event sources cannot be retrieved.
     """
 
   @abc.abstractmethod
@@ -83,9 +79,6 @@ class BaseStorage(object):
 
     Yields:
       An event tag object (instance of EventTag).
-
-    Raises:
-      IOError: if the event tags cannot be retrieved.
     """
 
   @abc.abstractmethod

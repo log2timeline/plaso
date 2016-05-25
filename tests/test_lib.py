@@ -18,14 +18,14 @@ class BaseTestCase(unittest.TestCase):
   maxDiff = None
 
   def _GetTestFilePath(self, path_segments):
-    """Retrieves a path of a test file in the test data directory.
+    """Retrieves the path of a test file in the test data directory.
 
     Args:
-      path_segments: a list of strings containinge the path segments inside
+      path_segments: a list of strings containing the path segments inside
                      the test data directory.
 
     Returns:
-      A path of the test file.
+      A string containing the path of the test file.
     """
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.

@@ -2116,7 +2116,7 @@ class ZIPStorageFile(interface.BaseStorage):
     """Adds an error to the storage.
 
     Args:
-      error an error (instance of AnalysisError or ExtractionError).
+      error: an error (instance of AnalysisError or ExtractionError).
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -2221,13 +2221,6 @@ class ZIPStorageFile(interface.BaseStorage):
 
   def AddEventTags(self, event_tags):
     """Adds event tags to the storage.
-
-    Each EventObject can be tagged either manually or automatically
-    to make analysis simpler, by providing more context to certain
-    events or to highlight events for later viewing.
-
-    The object passed in needs to be a list (or otherwise an iterator)
-    that contains event tag objects.
 
     Args:
       event_tags: a list of event tags (instances of EventTag).
