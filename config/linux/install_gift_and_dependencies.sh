@@ -30,6 +30,7 @@ PLASO_DEPENDENCIES="ipython
                    python-dfvfs
                    python-dfwinreg
                    python-dpkt
+                   python-efilter
                    python-hachoir-core
                    python-hachoir-metadata
                    python-hachoir-parser

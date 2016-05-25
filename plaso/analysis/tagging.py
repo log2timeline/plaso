@@ -7,20 +7,23 @@ import os
 
 from efilter import ast as efilter_ast
 from efilter import api as efilter_api
+from efilter import errors as efilter_errors
 from efilter import syntax as efilter_syntax
 from efilter import query as efilter_query
+
+# pylint: disable=unused-import
+from efilter.transforms import asdottysql
 
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import events
 from plaso.containers import reports
-from plaso.filters import manager as filters_manager
 
 
 class TagFile(efilter_syntax.Syntax):
-  """Parses the Plaso tag file format."""
+  """Syntax definition for the Plaso tag file format."""
   # A line with no indent is a tag name.
-  TAG_DECL_LINE = re.compile(r'^(\w+)')
+  TAG_LABEL_LINE = re.compile(r'^(\w+)')
   # A line with leading indent is one of the rules for the preceding tag.
   TAG_RULE_LINE = re.compile(r'^\s+(.+)')
   # If any of these words are in the query then it's probably objectfilter.
@@ -33,8 +36,9 @@ class TagFile(efilter_syntax.Syntax):
     """Initializes a parser for the Plaso tag file format.
 
     Args:
-      path: TODO
-      original: TODO
+      original: optional iterable of strings containing definitions for Plaso
+                label names and tagging rules.
+      path: optional string containing a path to a Plaso tag file.
     """
     if original is None:
       if path is not None:
@@ -55,64 +59,91 @@ class TagFile(efilter_syntax.Syntax):
 
   @property
   def root(self):
+    """Root of the tag file syntax abstract syntax tree (AST)."""
     if not self._root:
-      self._root = self.parse()
+      self._root = self.Parse()
 
     return self._root
 
 
   def __del__(self):
+    """Cleans up the syntax object, closing the source file if required."""
     if not self.original.closed:
       self.original.close()
 
 
-  def _parse_query(self, source):
+  def _ParseRule(self, source):
     """Parse one of the rules as either objectfilter or dottysql.
 
     Example:
-        _parse_query('5 + 5')
+        _ParseRule('5 + 5')
         # Returns Sum(Literal(5), Literal(5))
 
-    Arguments:
-        source: A rule in either objectfilter or dottysql syntax.
+    Args:
+        source: a string containing a rule in either objectfilter or
+                dottysql syntax.
 
     Returns:
         The AST to represent the rule.
     """
     if self.OBJECTFILTER_WORDS.search(source):
-      syntax_ = u'objectfilter'
+      syntax = u'objectfilter'
     else:
-      syntax_ = None  # Default it is.
+      syntax = None  # Default it is.
 
-    return efilter_query.Query(source, syntax=syntax_)
+    try:
+      rule = efilter_query.Query(source, syntax=syntax)
+      return rule
+    except efilter_errors.EfilterParseError:
+      logging.warning(u'Invalid tag rule definition "{0:s}"'.format(source))
+      return
 
 
-  def _parse_tagfile(self):
-    """Parse the tagfile and yield tuples of tag_name, list of rule ASTs."""
+  def _ParseTagfile(self):
+    """Parses the tag file and yields tuples of label name, list of rule ASTs.
+
+    Yields:
+      Tuples of label name, list of rule ASTs.
+    """
     rules = None
     tag = None
     for line in self.original:
-      match = self.TAG_DECL_LINE.match(line)
-      if match:
+      label_match = self.TAG_LABEL_LINE.match(line)
+      if label_match:
         if tag and rules:
           yield tag, rules
         rules = []
-        tag = match.group(1)
+        tag = label_match.group(1)
         continue
 
-      match = self.TAG_RULE_LINE.match(line)
-      if match:
-        source = match.group(1)
-        rules.append(self._parse_query(source))
+      rule_match = self.TAG_RULE_LINE.match(line)
+      if rule_match:
+        source = rule_match.group(1)
+        rule = self._ParseRule(source)
+        if rule:
+          rules.append(rule)
 
-  def parse(self):
+    # Yield any remaining tags once we reach the end of the file.
+    if tag and rules:
+      yield tag, rules
+
+  def Parse(self):
+    """Parses tag definition from the source.
+
+    Returns:
+      An EFILTER AST containing the tagging rules.
+    """
     tags = []
-    for tag_name, rules in self._parse_tagfile():
+    for label_name, rules in self._ParseTagfile():
+      if not rules:
+        logging.warning(u'All rules for label "{0:s}" are invalid.'.format(
+            label_name))
+        continue
       tag = efilter_ast.IfElse(
           # Union will be true if any of the 'rules' match.
           efilter_ast.Union(*[rule.root for rule in rules]),
           # If so then evaluate to a string with the name of the tag.
-          efilter_ast.Literal(tag_name),
+          efilter_ast.Literal(label_name),
           # Otherwise don't return anything.
           efilter_ast.Literal(None))
       tags.append(tag)
@@ -135,10 +166,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     """Initializes the tagging engine object.
 
     Args:
-      target_filename: filename for a Plaso storage file to be tagged.
-      tag_input: filesystem path to the tagging input file.
-      quiet: Optional boolean value to indicate the progress output should
-             be suppressed.
+      incoming_queue: A queue that is used to listen to incoming events.
     """
     super(TaggingPlugin, self).__init__(incoming_queue)
     self._autodetect_tag_file_attempt = False
@@ -196,6 +224,18 @@ class TaggingPlugin(interface.AnalysisPlugin):
             u'autoselect a tagging file. As no definitions were specified, '
             u'no events will be tagged.')
         return
+    matched_tags = efilter_api.apply(self._tag_rules, vars=event_object)
+    if not matched_tags:
+      return
+
+    event_uuid = getattr(event_object, u'uuid')
+    event_tag = events.EventTag(
+        comment=u'Tag applied by tagging analysis plugin.',
+        event_uuid=event_uuid)
+    event_tag.AddLabel(matched_tags)
+
+    logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
+    self._tags.append(event_tag)
 
     matched_tags = []
     for tag, my_filters in iter(self._tag_rules.items()):
@@ -217,44 +257,17 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tags.append(event_tag)
 
   def _ParseTaggingFile(self, input_path):
-    """Parses tagging input file.
-
-    Parses a tagging input file and returns a dictionary of tags, where each
-    key represents a tag and each entry is a list of plaso filters.
+    """Parses tagging definitions from a file.
 
     Args:
-      input_path: filesystem path to the tagging input file.
+      input_path: string containing the path to the tagging input file.
 
     Returns:
-      A dictionary whose keys are tags and values are EventObjectFilter objects.
+      TODO
     """
-    with open(input_path, 'rb') as tag_input_file:
-      tags = {}
-      current_tag = u''
-      for line in tag_input_file:
-        line_rstrip = line.rstrip()
-        line_strip = line_rstrip.lstrip()
-        if not line_strip or line_strip.startswith(u'#'):
-          continue
-
-        if not line_rstrip[0].isspace():
-          current_tag = line_rstrip
-          tags[current_tag] = []
-        else:
-          if not current_tag:
-            continue
-
-          compiled_filter = filters_manager.FiltersManager.GetFilterObject(
-              line_strip)
-          if not compiled_filter:
-            logging.warning(
-                u'Tag "{0:s}" contains invalid filter: {1:s}'.format(
-                    current_tag, line_strip))
-
-          elif compiled_filter not in tags[current_tag]:
-            tags[current_tag].append(compiled_filter)
-
-    return tags
+    tag_file = TagFile(path=input_path)
+    tagging_rules = tag_file.Parse()
+    return tagging_rules
 
   def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
