@@ -53,6 +53,7 @@ PYTHON_DEPENDENCIES = [
     (u'dfvfs', u'__version__', u'20160510', None),
     (u'dfwinreg', u'__version__', u'20160320', None),
     (u'dpkt', u'__version__', u'1.8', None),
+    # TODO: determine the version of efilter.
     (u'efilter', u'', u'1.2', None),
     (u'hachoir_core', u'__version__', u'1.3.3', None),
     (u'hachoir_parser', u'__version__', u'1.3.4', None),
