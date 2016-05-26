@@ -4,3 +4,6 @@ application_execution
 file_downloaded
   data_type is 'chrome:history:file_downloaded'
   timestamp_desc is 'File Downloaded'
+
+login_attempt
+  data_type == 'windows:evt:record' and source_name == 'Security' and event_identifier == 538
