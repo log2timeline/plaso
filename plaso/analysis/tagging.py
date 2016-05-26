@@ -133,8 +133,10 @@ class TaggingPlugin(interface.AnalysisPlugin):
     try:
       rule = efilter_query.Query(source, syntax=syntax)
       return rule
-    except efilter_errors.EfilterParseError:
-      logging.warning(u'Invalid tag rule definition "{0:s}"'.format(source))
+    except efilter_errors.EfilterParseError as e:
+      logging.warning(
+          u'Invalid tag rule definition "{0:s}". '
+          u'Parsing error was: {1:s}'.format(source, e.message))
       return
 
   def _ParseDefinitions(self, tag_file_path):
