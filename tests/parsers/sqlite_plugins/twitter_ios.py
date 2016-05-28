@@ -44,7 +44,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.followers_cnt, 19466932)
     self.assertEqual(test_event.following_cnt, 3)
     self.assertEqual(test_event.url, u'http://www.bbc.co.uk/news')
-    
+ 
     expected_description = (
         u'Breaking news alerts and updates from the BBC. For news, features, '
         u'analysis follow @BBCWorld (international) or @BBCNews (UK). Latest '
@@ -90,7 +90,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.followers_cnt, 19466932)
     self.assertEqual(test_event.following_cnt, 3)
     self.assertEqual(test_event.url, u'http://www.bbc.co.uk/news')
-    
+
     expected_description = (
         u'Breaking news alerts and updates from the BBC. For news, features, '
         u'analysis follow @BBCWorld (international) or @BBCNews (UK). Latest '

@@ -28,8 +28,8 @@ class TwitterIOSContactEvent(time_events.PosixTimeEvent):
   """
 
   def __init__(
-    self, posix_time, posix_time_description, screen_name, name, profile_url,
-    location, url, description, following, following_cnt, followers_cnt):
+      self, posix_time, posix_time_description, screen_name, name, profile_url,
+      location, url, description, following, following_cnt, followers_cnt):
     """Initalizes a TwitterIOSContacts event.
 
     Args:
@@ -46,7 +46,7 @@ class TwitterIOSContactEvent(time_events.PosixTimeEvent):
       followers_cnt: The number of followers.
     """
     super(TwitterIOSContactEvent, self).__init__(
-      posix_time, posix_time_description)
+        posix_time, posix_time_description)
     self.screen_name = screen_name
     self.name = name
     self.profile_url = profile_url
@@ -76,14 +76,14 @@ class TwitterIOSStatusEvent(time_events.PosixTimeEvent):
     text: The content of the status messsage.
     user_id: User unique identifier.
     name: User's profile name.
-    retweet_cnt: Number of times the status has been retweeted. 
+    retweet_cnt: Number of times the status has been retweeted.
     favorite_cnt: Number of times the status has been favorited.
     favorited: Variable to mark status as favorite by the account.
   """
 
   def __init__(
-    self, posix_time, posix_time_description, text, user_id, name, retweet_cnt,
-    favorite_cnt, favorited):
+      self, posix_time, posix_time_description, text, user_id, name,
+      retweet_cnt, favorite_cnt, favorited):
     """Initalizes a TwitterIOSStatuses event.
 
     Args:
@@ -92,12 +92,12 @@ class TwitterIOSStatusEvent(time_events.PosixTimeEvent):
       text: The content of the status messsage.
       user_id: User unique identifier.
       name: User's profile name.
-      retweet_cnt: Number of times the status has been retweeted. 
+      retweet_cnt: Number of times the status has been retweeted.
       favorite_cnt: Number of times the status has been favorited.
       favorited: Variable to mark status as favorite by the account.
     """
     super(TwitterIOSStatusEvent, self).__init__(
-      posix_time, posix_time_description)
+        posix_time, posix_time_description)
     self.text = text
     self.user_id = user_id
     self.name = name
@@ -125,10 +125,10 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
 
   # frozenset?
   QUERIES = [
-    ((u'SELECT createdDate, updatedAt, screenName, name, profileImageUrl,'
+      ((u'SELECT createdDate, updatedAt, screenName, name, profileImageUrl,'
       u'location, description, url, following, followersCount, followingCount '
       u'FROM Users ORDER BY createdDate'), u'ParseContactRow'),
-    ((u'SELECT Statuses.date AS date, Statuses.text AS text, Statuses.userId '
+      ((u'SELECT Statuses.date AS date, Statuses.text AS text, Statuses.userId '
       u'AS user_id, Users.name AS name, Statuses.retweetCount AS retweetCount, '
       u'Statuses.favoriteCount AS favoriteCount, Statuses.favorited AS '
       u'favorited, Statuses.updatedAt AS updatedAt FROM Statuses LEFT join '
@@ -139,7 +139,7 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
 
   def ParseContactRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a contact row from the database.
-    
+
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
@@ -148,23 +148,23 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
 
     if row['createdDate'] is not None:
       event_object = TwitterIOSContactCreationEvent(
-        row['createdDate'], eventdata.EventTimestamp.CREATION_TIME,
-        row['screenName'], row['name'], row['profileImageUrl'], row['location'],
-        row['url'], row['description'], row['following'], row['followingCount'],
-        row['followersCount'])
-      parser_mediator.ProduceEvent(event_object, query=query) 
+          row['createdDate'], eventdata.EventTimestamp.CREATION_TIME,
+          row['screenName'], row['name'], row['profileImageUrl'],
+          row['location'], row['url'], row['description'], row['following'],
+          row['followingCount'], row['followersCount'])
+      parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['updatedAt'] is not None:
       event_object = TwitterIOSContactUpdateEvent(
-        row['updatedAt'], eventdata.EventTimestamp.UPDATE_TIME,
-        row['screenName'], row['name'], row['profileImageUrl'], row['location'],
-        row['url'], row['description'], row['following'], row['followingCount'],
-        row['followersCount'])
-      parser_mediator.ProduceEvent(event_object, query=query) 
+          row['updatedAt'], eventdata.EventTimestamp.UPDATE_TIME,
+          row['screenName'], row['name'], row['profileImageUrl'],
+          row['location'], row['url'], row['description'], row['following'],
+          row['followingCount'], row['followersCount'])
+      parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParseStatusRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a contact row from the database.
-    
+
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
@@ -173,16 +173,16 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
 
     if row['date'] is not None:
       event_object = TwitterIOSStatusCreationEvent(
-        row['date'], eventdata.EventTimestamp.CREATION_TIME, row['text'],
-        row['user_id'], row['name'], row['retweetCount'], row['favoriteCount'],
-        row['favorited'])
+          row['date'], eventdata.EventTimestamp.CREATION_TIME, row['text'],
+          row['user_id'], row['name'], row['retweetCount'],
+          row['favoriteCount'], row['favorited'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['updatedAt'] is not None:
       event_object = TwitterIOSStatusUpdateEvent(
-        row['updatedAt'], eventdata.EventTimestamp.UPDATE_TIME, row['text'],
-        row['user_id'], row['name'], row['retweetCount'], row['favoriteCount'],
-        row['favorited'])
+          row['updatedAt'], eventdata.EventTimestamp.UPDATE_TIME, row['text'],
+          row['user_id'], row['name'], row['retweetCount'],
+          row['favoriteCount'], row['favorited'])
       parser_mediator.ProduceEvent(event_object, query=query)
 
 
