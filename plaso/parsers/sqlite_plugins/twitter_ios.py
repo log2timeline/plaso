@@ -133,7 +133,7 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
         u'Statuses.favoriteCount AS favoriteCount, Statuses.favorited AS '
         u'favorited, Statuses.updatedAt AS updatedAt FROM Statuses LEFT join '
         u'Users ON Statuses.userId = Users.id ORDER BY date'),
-        u'ParseStatusRow')]
+       u'ParseStatusRow')]
 
   REQUIRED_TABLES = frozenset([u'Lists', u'MyRetweets', u'StatusesShadow',
                                u'UsersShadow', u'ListsShadow', u'Statuses',
