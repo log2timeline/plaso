@@ -126,16 +126,18 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
   # frozenset?
   QUERIES = [
       ((u'SELECT createdDate, updatedAt, screenName, name, profileImageUrl,'
-      u'location, description, url, following, followersCount, followingCount '
-      u'FROM Users ORDER BY createdDate'), u'ParseContactRow'),
+        u'location, description, url, following, followersCount, followingCount'
+        u' FROM Users ORDER BY createdDate'), u'ParseContactRow'),
       ((u'SELECT Statuses.date AS date, Statuses.text AS text, Statuses.userId '
-      u'AS user_id, Users.name AS name, Statuses.retweetCount AS retweetCount, '
-      u'Statuses.favoriteCount AS favoriteCount, Statuses.favorited AS '
-      u'favorited, Statuses.updatedAt AS updatedAt FROM Statuses LEFT join '
-      u'Users ON Statuses.userId = Users.id ORDER BY date'), u'ParseStatusRow')]
+        u'AS user_id, Users.name AS name, Statuses.retweetCount AS retweetCount,'
+        u'Statuses.favoriteCount AS favoriteCount, Statuses.favorited AS '
+        u'favorited, Statuses.updatedAt AS updatedAt FROM Statuses LEFT join '
+        u'Users ON Statuses.userId = Users.id ORDER BY date'),
+        u'ParseStatusRow')]
 
   REQUIRED_TABLES = frozenset([u'Lists', u'MyRetweets', u'StatusesShadow',
-    u'UsersShadow', u'ListsShadow', u'Statuses', u'Users'])
+                               u'UsersShadow', u'ListsShadow', u'Statuses',
+                               u'Users'])
 
   def ParseContactRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a contact row from the database.
