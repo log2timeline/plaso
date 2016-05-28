@@ -38,8 +38,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         test_event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     self.assertEqual(test_event.screen_name, u'BBCBreaking')
-    self.assertEqual(test_event.name, 'BBC Breaking News')
-    self.assertEqual(test_event.location,'London, UK')
+    self.assertEqual(test_event.name, u'BBC Breaking News')
+    self.assertEqual(test_event.location, u'London, UK')
     self.assertEqual(test_event.following, 0)
     self.assertEqual(test_event.followers_cnt, 19466932)
     self.assertEqual(test_event.following_cnt, 3)
@@ -84,8 +84,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         test_event.timestamp_desc, eventdata.EventTimestamp.UPDATE_TIME)
 
     self.assertEqual(test_event.screen_name, u'BBCBreaking')
-    self.assertEqual(test_event.name, 'BBC Breaking News')
-    self.assertEqual(test_event.location,'London, UK')
+    self.assertEqual(test_event.name, u'BBC Breaking News')
+    self.assertEqual(test_event.location, u'London, UK')
     self.assertEqual(test_event.following, 0)
     self.assertEqual(test_event.followers_cnt, 19466932)
     self.assertEqual(test_event.following_cnt, 3)
@@ -133,7 +133,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.user_id, 475222380)
     self.assertEqual(test_event.name, u'Heather Mahalik')
     self.assertEqual(test_event.retweet_cnt, 2)
-    self.assertEqual(test_event.favorite_cnt,3)
+    self.assertEqual(test_event.favorite_cnt, 3)
     self.assertEqual(test_event.favorited, 0)
 
     expected_msg = (
@@ -159,7 +159,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.user_id, 475222380)
     self.assertEqual(test_event.name, u'Heather Mahalik')
     self.assertEqual(test_event.retweet_cnt, 2)
-    self.assertEqual(test_event.favorite_cnt,3)
+    self.assertEqual(test_event.favorite_cnt, 3)
     self.assertEqual(test_event.favorited, 0)
 
     expected_msg = (

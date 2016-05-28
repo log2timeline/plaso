@@ -9,29 +9,29 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
   """Parent class for Twitter on iOS 8+ contacts formatters."""
 
   FORMAT_STRING_PIECES = [
-    u'Screen name: {screen_name}',
-    u'Profile picture Url: {profile_url}',
-    u'Name: {name}',
-    u'Location: {location}',
-    u'Description: {description}',
-    u'Url: {url}',
-    u'Following: {following}',
-    u'Number of followers: {followers_cnt}',
-    u'Number of following: {following_cnt}',
+      u'Screen name: {screen_name}',
+      u'Profile picture Url: {profile_url}',
+      u'Name: {name}',
+      u'Location: {location}',
+      u'Description: {description}',
+      u'Url: {url}',
+      u'Following: {following}',
+      u'Number of followers: {followers_cnt}',
+      u'Number of following: {following_cnt}',
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
-    u'Screen name: {screen_name}',
-    u'Description: {description}',
-    u'Url: {url}',
+      u'Screen name: {screen_name}',
+      u'Description: {description}',
+      u'Url: {url}',
   ]
 
   SOURCE_LONG = u'Twitter iOS Contacts'
   SOURCE_SHORT = u'Twitter iOS'
 
   _FOLLOWING = {
-    0: u'No',
-    1: u'Yes',
+      0: u'No',
+      1: u'Yes',
   }
 
   def GetMessages(self, unused_formatter_mediator, event_object):
@@ -74,25 +74,25 @@ class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
   """Parent class for Twitter on iOS 8+ status formatters."""
 
   FORMAT_STRING_PIECES = [
-    u'Name: {name}',
-    u'User Id: {user_id}',
-    u'Message: {text}',
-    u'Favorite: {favorited}',
-    u'Retweet Count: {retweet_cnt}',
-    u'Favorite Count: {favorite_cnt}',
+      u'Name: {name}',
+      u'User Id: {user_id}',
+      u'Message: {text}',
+      u'Favorite: {favorited}',
+      u'Retweet Count: {retweet_cnt}',
+      u'Favorite Count: {favorite_cnt}',
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
-    u'Name: {name}',
-    u'Message: {text}',
+      u'Name: {name}',
+      u'Message: {text}',
   ]
 
   SOURCE_LONG = u'Twitter iOS Status'
   SOURCE_SHORT = u'Twitter iOS'
 
   _FAVORITED = {
-    0: u'No',
-    1: u'Yes',
+      0: u'No',
+      1: u'Yes',
   }
 
   def GetMessages(self, unused_formatter_mediator, event_object):
