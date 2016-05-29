@@ -7,6 +7,7 @@ import unittest
 from plaso.formatters import twitter_ios
 from tests.formatters import test_lib
 
+
 class TwitterContactCreationFormatterTest(test_lib.EventFormatterTestCase):
   """Test for the Twitter contacts creation event formatter."""
 

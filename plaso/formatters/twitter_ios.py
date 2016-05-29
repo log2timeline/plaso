@@ -5,6 +5,7 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
 
+
 class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
   """Parent class for Twitter on iOS 8+ contacts formatters."""
 
@@ -36,16 +37,18 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
+
     Args:
       formatter_mediator: the formatter mediator object (instance of
                           FormatterMediator).
       event_object: the event object (instance of EventObject).
+
     Returns:
       A tuple containing the formatted message string and short message string.
+
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
@@ -97,16 +100,18 @@ class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
+
     Args:
       formatter_mediator: the formatter mediator object (instance of
                           FormatterMediator).
       event_object: the event object (instance of EventObject).
+
     Returns:
       A tuple containing the formatted message string and short message string.
+
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
