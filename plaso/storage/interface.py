@@ -3,13 +3,21 @@
 
 import abc
 
+from plaso.engine import profiler
 
-class StorageObject(object):
-  """Class that defines the storage object."""
+
+class BaseStorage(object):
+  """Class that defines the storage interface."""
+
+  def __init__(self):
+    """Initializes a storage object."""
+    super(BaseStorage, self).__init__()
+    self._profiling_sample = 0
+    self._serializers_profiler = None
 
   @abc.abstractmethod
-  def AddEventObject(self, event_object):
-    """Adds an event object to the storage.
+  def AddEvent(self, event_object):
+    """Adds an event to the storage.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -32,6 +40,20 @@ class StorageObject(object):
   @abc.abstractmethod
   def Close(self):
     """Closes the storage."""
+
+  def DisableProfiling(self):
+    """Disables profiling."""
+    self._serializers_profiler = None
+
+  def EnableProfiling(self, profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_type: optional profiling type.
+    """
+    if (profiling_type in (u'all', u'serializers') and
+        not self._serializers_profiler):
+      self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
   @abc.abstractmethod
   def GetAnalysisReports(self):
@@ -83,7 +105,7 @@ class StorageObject(object):
     """
 
   @abc.abstractmethod
-  def Open(self):
+  def Open(self, **kwargs):
     """Opens the storage."""
 
 
@@ -169,6 +191,19 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
+  def DisableProfiling(self):
+    """Disables profiling."""
+    self._enable_profiling = False
+
+  def EnableProfiling(self, profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_type: optional profiling type.
+    """
+    self._enable_profiling = True
+    self._profiling_type = profiling_type
+
   # TODO: remove during phased processing refactor.
   @abc.abstractmethod
   def ForceClose(self):
@@ -190,17 +225,6 @@ class StorageWriter(object):
   @abc.abstractmethod
   def Open(self):
     """Opens the storage writer."""
-
-  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if profiling should
-                        be enabled.
-      profiling_type: optional profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_type = profiling_type
 
   @abc.abstractmethod
   def WriteSessionCompletion(self):

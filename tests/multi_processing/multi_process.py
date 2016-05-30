@@ -9,6 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
+from plaso.lib import event
 from plaso.multi_processing import multi_process
 from plaso.storage import fake_storage
 
@@ -39,13 +40,14 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
     storage_writer.WriteSessionStart(session_start)
 
+    preprocess_object = event.PreprocessObject()
     test_engine.ProcessSources(
-        [source_path_spec], storage_writer,
+        [source_path_spec], storage_writer, preprocess_object,
         parser_filter_expression=u'filestat')
 
     # TODO: implement a way to obtain the resuls without relying
     # on multi-process primitives e.g. by writing to a file.
-    # self.assertEqual(len(storage_writer.event_objects), 15)
+    # self.assertEqual(len(storage_writer.events), 15)
 
 
 class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):

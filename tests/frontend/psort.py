@@ -223,7 +223,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
 
       storage_file = storage_zip_file.StorageFile(temp_file)
       for event_object in event_objects:
-        storage_file.AddEventObject(event_object)
+        storage_file.AddEvent(event_object)
       storage_file.Close()
 
       storage_file = storage_zip_file.StorageFile(

@@ -14,7 +14,7 @@ class AnalysisReportTest(test_lib.AttributeContainerTestCase):
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    event_tag = reports.AnalysisReport(
+    analysis_report = reports.AnalysisReport(
         plugin_name=u'test', text=u'This is a test analysis report')
 
     expected_dict = {
@@ -22,7 +22,7 @@ class AnalysisReportTest(test_lib.AttributeContainerTestCase):
         u'plugin_name': u'test',
         u'text': u'This is a test analysis report'}
 
-    test_dict = event_tag.CopyToDict()
+    test_dict = analysis_report.CopyToDict()
 
     self.assertEqual(test_dict, expected_dict)
 
