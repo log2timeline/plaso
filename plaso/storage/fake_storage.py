@@ -10,15 +10,15 @@ class FakeStorageWriter(interface.StorageWriter):
 
   Attributes:
     analysis_reports: a list of analysis reports (instances of AnalysisReport).
-    events: a list of event objects (instances of EventObject).
+    errors: a list of error objects (instances of AnalysisError or
+            ExtractionError).
     event_sources: a list of event sources (instances of EventSource).
     event_tags: a list of event tags (instances of EventTag).
+    events: a list of event objects (instances of EventObject).
     session_completion: session completion information (instance of
                         SessionCompletion).
     session_start: session start information (instance of SessionStart).
   """
-
-  # pylint: disable=abstract-method
 
   def __init__(self):
     """Initializes a storage writer object."""
@@ -26,6 +26,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._is_open = False
     self._session_identifier = None
     self.analysis_reports = []
+    self.errors = []
     self.event_sources = []
     self.event_tags = []
     self.events = []
@@ -46,6 +47,21 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.analysis_reports.append(analysis_report)
 
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error object (instance of AnalysisError or ExtractionError).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self.errors.append(error)
+    self.number_of_errors += 1
+
   def AddEvent(self, event_object):
     """Adds an event object to the storage.
 
@@ -59,6 +75,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError(u'Unable to write to closed storage writer.')
 
     self.events.append(event_object)
+    self.number_of_events += 1
 
   def AddEventSource(self, event_source):
     """Adds an event source to the storage.
@@ -73,6 +90,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError(u'Unable to write to closed storage writer.')
 
     self.event_sources.append(event_source)
+    self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
     """Adds an event tag to the storage.

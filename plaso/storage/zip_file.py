@@ -5,6 +5,11 @@ The ZIP-based storage can be described as a collection of storage files
 (named streams) bundled in a single ZIP archive file.
 
 There are multiple types of streams:
+* error_data.#
+  The error data streams contain the serialized error objects.
+* error_index.#
+  The error index streams contain the stream offset to the serialized
+  error objects.
 * event_data.#
   The event data streams contain the serialized event objects.
 * event_index.#
@@ -865,7 +870,7 @@ class ZIPStorageFile(interface.BaseStorage):
   # pylint: disable=abstract-method
 
   # The format version.
-  _FORMAT_VERSION = 20160511
+  _FORMAT_VERSION = 20160516
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -888,6 +893,7 @@ class ZIPStorageFile(interface.BaseStorage):
   def __init__(self):
     """Initializes a ZIP-based storage file object."""
     super(ZIPStorageFile, self).__init__()
+    self._error_stream_number = 1
     self._event_offset_tables = {}
     self._event_offset_tables_lfu = []
     self._event_stream_number = 1
@@ -906,6 +912,8 @@ class ZIPStorageFile(interface.BaseStorage):
     self._last_session = 0
     self._maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
     self._read_only = True
+    self._serialized_errors = []
+    self._serialized_errors_size = 0
     self._serialized_event_sources = []
     self._serialized_event_sources_size = 0
     self._serialized_event_tags = []
@@ -1482,7 +1490,8 @@ class ZIPStorageFile(interface.BaseStorage):
     if not has_storage_metadata:
       # TODO: remove serializer.txt stream support in favor
       # of storage metatdata.
-      logging.warning(u'Storage file does not contain a metadata stream.')
+      if self._read_only:
+        logging.warning(u'Storage file does not contain a metadata stream.')
 
       stored_serializer_format = self._ReadSerializerStream()
       if stored_serializer_format:
@@ -1501,6 +1510,7 @@ class ZIPStorageFile(interface.BaseStorage):
     else:
       stream_name_prefix = u'event_data.'
 
+    self._error_stream_number = self._GetLastStreamNumber(u'error_data.')
     self._event_stream_number = self._GetLastStreamNumber(stream_name_prefix)
     self._event_source_stream_number = self._GetLastStreamNumber(
         u'event_source_data.')
@@ -1785,6 +1795,44 @@ class ZIPStorageFile(interface.BaseStorage):
 
     return attribute_container_data
 
+  def _WriteSerializedErrors(self):
+    """Writes the buffered serialized errors to the storage file."""
+    if not self._serialized_errors_size:
+      return
+
+    stream_name = u'error_index.{0:06d}'.format(self._error_stream_number)
+    offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'write')
+
+    stream_name = u'error_data.{0:06d}'.format(self._error_stream_number)
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    entry_data_offset = data_stream.WriteInitialize()
+
+    try:
+      for entry_data in self._serialized_errors:
+        offset_table.AddOffset(entry_data_offset)
+        entry_data_offset = data_stream.WriteEntry(entry_data)
+
+    except:
+      data_stream.WriteAbort()
+
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(u'write')
+
+      raise
+
+    offset_table.Write()
+    data_stream.WriteFinalize()
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'write')
+
+    self._error_stream_number += 1
+    self._serialized_errors = []
+    self._serialized_errors_size = 0
+
   def _WriteSerializedEvents(self):
     """Writes the serialized events to the storage file."""
     if not self._serialized_events.data_size:
@@ -2064,8 +2112,30 @@ class ZIPStorageFile(interface.BaseStorage):
       data_stream.WriteEntry(serialized_report)
       data_stream.WriteFinalize()
 
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error (instance of AnalysisError or ExtractionError).
+
+    Raises:
+      IOError: when the storage file is closed or read-only or
+               if the error cannot be serialized.
+    """
+    error.storage_session = self._last_session
+
+    # We try to serialize the error first, so we can skip some
+    # processing if it is invalid.
+    error_data = self._WriteAttributeContainer(error)
+
+    self._serialized_errors.append(error_data)
+    self._serialized_errors_size += len(error_data)
+
+    if self._serialized_errors_size > self._max_buffer_size:
+      self._WriteSerializedErrors()
+
   def AddEvent(self, event_object):
-    """Adds an event object to the storage.
+    """Adds an event to the storage.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -2151,13 +2221,6 @@ class ZIPStorageFile(interface.BaseStorage):
 
   def AddEventTags(self, event_tags):
     """Adds event tags to the storage.
-
-    Each EventObject can be tagged either manually or automatically
-    to make analysis simpler, by providing more context to certain
-    events or to highlight events for later viewing.
-
-    The object passed in needs to be a list (or otherwise an iterator)
-    that contains event tag objects.
 
     Args:
       event_tags: a list of event tags (instances of EventTag).
@@ -2262,6 +2325,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEventSources()
       self._WriteSerializedEvents()
       self._WriteSerializedEventTags()
+      self._WriteSerializedErrors()
 
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
@@ -2759,6 +2823,21 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.reports_counter[u'Total Reports'] += 1
     self.reports_counter[report_identifier] += 1
 
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error object (instance of AnalysisError or ExtractionError).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddError(error)
+    self.number_of_errors += 1
+
   def AddEvent(self, event_object):
     """Adds an event to the storage.
 
@@ -2772,6 +2851,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Unable to write to closed storage writer.')
 
     self._storage_file.AddEvent(event_object)
+    self.number_of_events += 1
+
     self._UpdateCounters(event_object)
 
   def AddEventSource(self, event_source):
