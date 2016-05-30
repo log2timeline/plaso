@@ -160,7 +160,7 @@ class ExtractionFrontend(frontend.Frontend):
     Returns:
       The preprocessing object (instance of PreprocessObject).
     """
-    pre_obj = None
+    preprocess_object = None
 
     if self._use_old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
@@ -172,7 +172,7 @@ class ExtractionFrontend(frontend.Frontend):
         storage_information = storage_file.GetStorageInformation()
         if storage_information:
           logging.info(u'Using preprocessing information from a prior run.')
-          pre_obj = storage_information[-1]
+          preprocess_object = storage_information[-1]
           self._enable_preprocessing = False
 
       except IOError:
@@ -200,14 +200,14 @@ class ExtractionFrontend(frontend.Frontend):
 
     logging.debug(u'Preprocessing done.')
 
-    # TODO: Remove the need for direct access to the pre_obj in favor
+    # TODO: Remove the need for direct access to the preprocess_object in favor
     # of the knowledge base.
-    pre_obj = getattr(self._engine.knowledge_base, u'_pre_obj', None)
+    preprocess_object = getattr(self._engine.knowledge_base, u'_pre_obj', None)
 
-    if not pre_obj:
-      pre_obj = event.PreprocessObject()
+    if not preprocess_object:
+      preprocess_object = event.PreprocessObject()
 
-    return pre_obj
+    return preprocess_object
 
   # TODO: have the frontend fill collection information gradually
   # and set it as the last step of preprocessing?
@@ -248,17 +248,17 @@ class ExtractionFrontend(frontend.Frontend):
 
     return session_start
 
-  def _PreprocessSetCollectionInformation(self, pre_obj):
+  def _PreprocessSetCollectionInformation(self, preprocess_object):
     """Sets the collection information as part of the preprocessing.
 
     Args:
-      pre_obj: the preprocess object (instance of PreprocessObject).
+      preprocess_object: a preprocess object (instance of PreprocessObject).
       engine: the engine object (instance of BaseEngine).
     """
     collection_information = {}
 
     # TODO: extraction info:
-    collection_information[u'configured_zone'] = pre_obj.zone
+    collection_information[u'configured_zone'] = preprocess_object.zone
     collection_information[u'parsers'] = self._parser_names
     collection_information[u'preprocess'] = self._enable_preprocessing
 
@@ -267,24 +267,24 @@ class ExtractionFrontend(frontend.Frontend):
     else:
       collection_information[u'os_detected'] = u'N/A'
 
-    pre_obj.collection_information = collection_information
+    preprocess_object.collection_information = collection_information
 
-  def _PreprocessSetTimezone(self, pre_obj, timezone=pytz.UTC):
+  def _PreprocessSetTimezone(self, preprocess_object, timezone=pytz.UTC):
     """Sets the timezone as part of the preprocessing.
 
     Args:
-      pre_obj: the previously created preprocessing object (instance of
-               PreprocessObject) or None.
+      preprocess_object: a preprocess object (instance of PreprocessObject).
       timezone: optional preferred timezone.
     """
     if not timezone:
       timezone = pytz.UTC
 
-    if hasattr(pre_obj, u'time_zone_str'):
-      logging.info(u'Setting timezone to: {0:s}'.format(pre_obj.time_zone_str))
+    if hasattr(preprocess_object, u'time_zone_str'):
+      logging.info(u'Setting timezone to: {0:s}'.format(
+          preprocess_object.time_zone_str))
 
       try:
-        pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
+        preprocess_object.zone = pytz.timezone(preprocess_object.time_zone_str)
 
       except pytz.UnknownTimeZoneError:
         if not timezone:
@@ -294,15 +294,15 @@ class ExtractionFrontend(frontend.Frontend):
           logging.warning((
               u'Unable to automatically configure timezone falling back '
               u'to preferred timezone value: {0:s}').format(timezone))
-        pre_obj.zone = timezone
+        preprocess_object.zone = timezone
 
     else:
       # TODO: shouldn't the user to be able to always override the timezone
       # detection? Or do we need an input sanitization function.
-      pre_obj.zone = timezone
+      preprocess_object.zone = timezone
 
-    if not getattr(pre_obj, u'zone', None):
-      pre_obj.zone = timezone
+    if not getattr(preprocess_object, u'zone', None):
+      preprocess_object.zone = timezone
 
   def GetHashersInformation(self):
     """Retrieves the hashers information.
@@ -424,13 +424,13 @@ class ExtractionFrontend(frontend.Frontend):
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type)
 
-    pre_obj = self._PreprocessSources(source_path_specs, source_type)
+    preprocess_object = self._PreprocessSources(source_path_specs, source_type)
 
-    self._operating_system = getattr(pre_obj, u'guessed_os', None)
+    self._operating_system = getattr(preprocess_object, u'guessed_os', None)
 
     if not parser_filter_expression:
       guessed_os = self._operating_system
-      os_version = getattr(pre_obj, u'osversion', u'')
+      os_version = getattr(preprocess_object, u'osversion', u'')
       parser_filter_expression = self._GetParserFilterPreset(
           os_guess=guessed_os, os_version=os_version)
 
@@ -449,16 +449,16 @@ class ExtractionFrontend(frontend.Frontend):
         hasher_names_string=hasher_names_string):
       self._hasher_names.append(hasher_name)
 
-    self._PreprocessSetTimezone(pre_obj, timezone=timezone)
+    self._PreprocessSetTimezone(preprocess_object, timezone=timezone)
 
     if filter_file:
       filter_find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file, pre_obj=pre_obj)
+          filter_file, pre_obj=preprocess_object)
     else:
       filter_find_specs = None
 
     # TODO: deprecate the need for this function.
-    self._PreprocessSetCollectionInformation(pre_obj)
+    self._PreprocessSetCollectionInformation(preprocess_object)
 
     session_start = self._CreateSessionStart(
         command_line_arguments=command_line_arguments, filter_file=filter_file,
@@ -466,10 +466,10 @@ class ExtractionFrontend(frontend.Frontend):
         preferred_encoding=preferred_encoding)
 
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        self._storage_file_path, pre_obj, buffer_size=self._buffer_size)
+        self._storage_file_path, buffer_size=self._buffer_size)
 
-    storage_writer.SetEnableProfiling(
-        self._enable_profiling, profiling_type=self._profiling_type)
+    if self._enable_profiling:
+      storage_writer.EnableProfiling(profiling_type=self._profiling_type)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart(session_start)
@@ -480,7 +480,7 @@ class ExtractionFrontend(frontend.Frontend):
         logging.debug(u'Starting extraction in single process mode.')
 
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer,
+            source_path_specs, storage_writer, preprocess_object,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
@@ -496,7 +496,7 @@ class ExtractionFrontend(frontend.Frontend):
 
         # TODO: pass number_of_extraction_workers.
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer,
+            source_path_specs, storage_writer, preprocess_object,
             enable_sigsegv_handler=enable_sigsegv_handler,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
@@ -525,6 +525,10 @@ class ExtractionFrontend(frontend.Frontend):
           exception, traceback.format_exc()))
       if self._debug_mode:
         pdb.post_mortem()
+
+    finally:
+      if self._enable_profiling:
+        storage_writer.DisableProfiling()
 
     return processing_status
 

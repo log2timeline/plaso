@@ -2,6 +2,7 @@
 """Session related attribute container object definitions."""
 
 import time
+import uuid
 
 import plaso
 from plaso.containers import interface
@@ -11,17 +12,27 @@ class SessionCompletion(interface.AttributeContainer):
   """Class to represent a session completion attribute container.
 
   Attributes:
-    parsers_counter: TODO
-    parser_plugins_counter: TODO
+    identifier: a string containing the identifier of the session.
+    parsers_counter: a counter (instance of collections.Counter) containing
+                     the number of events per parser.
+    parser_plugins_counter: a counter (instance of collections.Counter)
+                            containing the number of events per parser plugin.
     timestamp: an integer containing a timestamp of the completion of the
                session. The integer represents the number of micro seconds
                since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'session_completion'
 
-  def __init__(self):
-    """Initializes a session completion attribute container."""
+  def __init__(self, identifier):
+    """Initializes a session completion attribute container.
+
+    Args:
+      identifier: a string containing the identifier of the session.
+                  The identifier should match that of the corresponding
+                  session start information.
+    """
     super(SessionCompletion, self).__init__()
+    self.identifier = identifier
     self.parsers_counter = None
     self.parser_plugins_counter = None
     self.timestamp = int(time.time() * 100000)
@@ -34,6 +45,7 @@ class SessionStart(interface.AttributeContainer):
     command_line_arguments: string containing the command line arguments.
     filter_expression: string containing the filter expression.
     filter_file: string containing the path to a file with find specifications.
+    identifier: a string containing the identifier of the session.
     debug_mode: a boolean value to indicate the debug mode was enabled.
     parser_filter_expression: string containining the parser filter expression.
     preferred_encoding: string containing the preferred encoding.
@@ -54,6 +66,7 @@ class SessionStart(interface.AttributeContainer):
     self.debug_mode = False
     self.filter_expression = u''
     self.filter_file = u''
+    self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.parser_filter_expression = u''
     self.preferred_encoding = u'utf-8'
     self.product_name = u'plaso'

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The fake storage intended for testing."""
 
+from plaso.containers import sessions
 from plaso.storage import interface
 
 
@@ -8,8 +9,10 @@ class FakeStorageWriter(interface.StorageWriter):
   """Class that implements a fake storage writer object.
 
   Attributes:
-    event_objects: a list of event objects (instances of EventObject).
+    analysis_reports: a list of analysis reports (instances of AnalysisReport).
+    events: a list of event objects (instances of EventObject).
     event_sources: a list of event sources (instances of EventSource).
+    event_tags: a list of event tags (instances of EventTag).
     session_completion: session completion information (instance of
                         SessionCompletion).
     session_start: session start information (instance of SessionStart).
@@ -21,10 +24,27 @@ class FakeStorageWriter(interface.StorageWriter):
     """Initializes a storage writer object."""
     super(FakeStorageWriter, self).__init__()
     self._is_open = False
-    self.event_objects = []
+    self._session_identifier = None
+    self.analysis_reports = []
     self.event_sources = []
+    self.event_tags = []
+    self.events = []
     self.session_completion = None
     self.session_start = None
+
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report to the storage.
+
+    Args:
+      analysis_report: an analysis report object (instance of AnalysisReport).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self.analysis_reports.append(analysis_report)
 
   def AddEvent(self, event_object):
     """Adds an event object to the storage.
@@ -38,7 +58,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    self.event_objects.append(event_object)
+    self.events.append(event_object)
 
   def AddEventSource(self, event_source):
     """Adds an event source to the storage.
@@ -53,6 +73,20 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError(u'Unable to write to closed storage writer.')
 
     self.event_sources.append(event_source)
+
+  def AddEventTag(self, event_tag):
+    """Adds an event tag to the storage.
+
+    Args:
+      event_tag: an event tag object (instance of EventTag).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self.event_tags.append(event_tag)
 
   def Close(self):
     """Closes the storage writer.
@@ -113,6 +147,19 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
+  # TODO: remove during phased processing refactor.
+  def WritePreprocessObject(self, unused_preprocess_object):
+    """Writes a preprocessing object.
+
+    Args:
+      preprocess_object: a preprocess object (instance of PreprocessObject).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
   def WriteSessionCompletion(self):
     """Writes session completion information.
 
@@ -122,7 +169,8 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    self.session_completion = None
+    self.session_completion = sessions.SessionCompletion(
+        self._session_identifier)
 
   def WriteSessionStart(self, session_start):
     """Writes session start information.
@@ -137,3 +185,4 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError(u'Unable to write to closed storage writer.')
 
     self.session_start = session_start
+    self._session_identifier = session_start.identifier
