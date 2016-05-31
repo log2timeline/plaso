@@ -62,8 +62,8 @@ class IMessagePlugin(interface.SQLitePlugin):
        u'maj.attachment_id = a.ROWID', u'ParseMessageRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([u'message', u'handle', u'attachment',
-                               u'message_attachment_join'])
+  REQUIRED_TABLES = frozenset(
+      [u'message', u'handle', u'attachment', u'message_attachment_join'])
 
   def ParseMessageRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a message row.
@@ -80,5 +80,6 @@ class IMessagePlugin(interface.SQLitePlugin):
         row['message_type'], row['service'], row['attachment_location'],
         row['text'])
     parser_mediator.ProduceEvent(event_object, query=query)
+
 
 sqlite.SQLiteParser.RegisterPlugin(IMessagePlugin)

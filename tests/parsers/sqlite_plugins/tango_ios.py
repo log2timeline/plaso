@@ -21,6 +21,10 @@ class TangoIOSTest(test_lib.SQLitePluginTestCase):
     test_event = event_objects[0]
     self.assertIsInstance(test_event, tango_ios.TangoIOSMessageSentEvent)
 
+    for event in event_objects:
+      if isinstance(event, tango_ios.TangoIOSMessageCreationEvent):
+        print '{0:d}: {1:s}'.format(event.message_type, event.content)
+
 
 if __name__ == '__main__':
   unittest.main()

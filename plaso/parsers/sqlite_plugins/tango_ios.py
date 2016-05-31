@@ -6,19 +6,20 @@ from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
-
 from plaso.containers import time_events
+
 
 class TangoIOSMessageEvent(time_events.JavaTimeEvent):
   DATA_TYPE = u''
 
-  def __init__(self, timestamp, identifer, content, message_type, direction):
+  def __init__(self, timestamp, identifier, content, message_type, direction):
     """Initializes a Tango IOS message creation event.
 
     Args:
       timestamp: the Java timestamp which is an integer containing the number
                  of milliseconds since January 1, 1970, 00:00:00 UTC.
-      identifer: TODO
+      identifier: a numeric type containing the identifier for the database
+                  row that contained the message.
       content: a string containing the message content.
       message_type: a numeric type containing the type of the message.
       direction: a numeric type containing the direction of the message.
@@ -27,14 +28,13 @@ class TangoIOSMessageEvent(time_events.JavaTimeEvent):
         timestamp, eventdata.EventTimestamp.CREATION_TIME)
     self.content = content
     self.message_type = message_type
-    self.identifier = identifer
+    self.identifier = identifier
     self.direction = direction
 
 
 class TangoIOSMessageCreationEvent(TangoIOSMessageEvent):
   """Convenience class for a Tango IOS message sent event."""
   DATA_TYPE = u'tango:ios:message_created'
-
 
 
 class TangoIOSMessageSentEvent(TangoIOSMessageEvent):
@@ -51,7 +51,7 @@ class TangoIOSPlugin(interface.SQLitePlugin):
   QUERIES = frozenset([
     (u'SELECT messages.msg_id, messages.payload, messages.type, '
      u'messages.create_time, messages.send_time, messages.direction, '
-     u'likes.msg_id, messages.del_status FROM messages '
+     u'likes.msg_id, messages.del_status, messages.conv_id FROM messages '
      u'left join likes on messages.msg_id = likes.msg_id',
      u'ParseMessage'),
   ])
@@ -70,16 +70,20 @@ class TangoIOSPlugin(interface.SQLitePlugin):
     # and will raise "IndexError: Index must be int or string". All indexes are
     # thus raw strings.
     message_content = base64.b64decode(row['payload'])
+    conv_id = row['conv_id']
+    message_content = message_content.split(row['conv_id'])[1]
 
-    event = TangoIOSMessageSentEvent(
-        row['send_time'], row['msg_id'], message_content, row['type'],
-        row['direction'])
-    parser_mediator.ProduceEvent(event, query=query)
+    if row['send_time']:
+      event = TangoIOSMessageSentEvent(
+          row['send_time'], row['msg_id'], message_content, row['type'],
+          row['direction'])
+      parser_mediator.ProduceEvent(event, query=query)
 
-    event = TangoIOSMessageCreationEvent(
-        row['create_time'],row['msg_id'], message_content, row['type'],
-        row['direction'])
-    parser_mediator.ProduceEvent(event, query=query)
+    if row['create_time']:
+      event = TangoIOSMessageCreationEvent(
+          row['create_time'],row['msg_id'], message_content, row['type'],
+          row['direction'])
+      parser_mediator.ProduceEvent(event, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(TangoIOSPlugin)
