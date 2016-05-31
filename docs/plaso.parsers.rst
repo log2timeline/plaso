@@ -467,6 +467,14 @@ plaso.parsers.xchatscrollback module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.zsh_extended_history module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.zsh_extended_history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

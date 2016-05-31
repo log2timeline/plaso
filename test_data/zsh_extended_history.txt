@@ -1,0 +1,5 @@
+: 1457771210:0;cd plaso
+: 1457771212:0;ls
+: 1458993293:0;echo dfgdfg \\
+& touch /tmp/afile
+: 1458993297:0;PYTHONPATH=. ./runtests.py
