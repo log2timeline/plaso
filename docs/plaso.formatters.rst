@@ -236,6 +236,14 @@ plaso.formatters.iis module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.imessage module
+--------------------------------
+
+.. automodule:: plaso.formatters.imessage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.interface module
 ---------------------------------
 
