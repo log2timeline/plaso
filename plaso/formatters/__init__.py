@@ -27,6 +27,7 @@ from plaso.formatters import ganalytics
 from plaso.formatters import gdrive
 from plaso.formatters import hachoir
 from plaso.formatters import iis
+from plaso.formatters import imessage
 from plaso.formatters import ipod
 from plaso.formatters import java_idx
 from plaso.formatters import kik_ios

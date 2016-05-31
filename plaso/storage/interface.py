@@ -3,19 +3,32 @@
 
 import abc
 
+from plaso.engine import profiler
 
-class StorageObject(object):
-  """Class that defines the storage object."""
+
+class BaseStorage(object):
+  """Class that defines the storage interface."""
+
+  def __init__(self):
+    """Initializes a storage object."""
+    super(BaseStorage, self).__init__()
+    self._profiling_sample = 0
+    self._serializers_profiler = None
 
   @abc.abstractmethod
-  def AddEventObject(self, event_object):
-    """Adds an event object to the storage.
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error (instance of AnalysisError or ExtractionError).
+    """
+
+  @abc.abstractmethod
+  def AddEvent(self, event_object):
+    """Adds an event to the storage.
 
     Args:
       event_object: an event object (instance of EventObject).
-
-    Raises:
-      IOError: when the event object cannot be added.
     """
 
   @abc.abstractmethod
@@ -24,14 +37,25 @@ class StorageObject(object):
 
     Args:
       event_source: an event source (instance of EventSource).
-
-    Raises:
-      IOError: when the event source cannot be added.
     """
 
   @abc.abstractmethod
   def Close(self):
     """Closes the storage."""
+
+  def DisableProfiling(self):
+    """Disables profiling."""
+    self._serializers_profiler = None
+
+  def EnableProfiling(self, profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_type: optional profiling type.
+    """
+    if (profiling_type in (u'all', u'serializers') and
+        not self._serializers_profiler):
+      self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
   @abc.abstractmethod
   def GetAnalysisReports(self):
@@ -39,9 +63,6 @@ class StorageObject(object):
 
     Yields:
       Analysis reports (instances of AnalysisReport).
-
-    Raises:
-      IOError: if the analysis reports cannot be retrieved.
     """
 
   @abc.abstractmethod
@@ -50,9 +71,6 @@ class StorageObject(object):
 
     Yields:
       An event source object (instance of EventSource).
-
-    Raises:
-      IOError: if the event sources cannot be retrieved.
     """
 
   @abc.abstractmethod
@@ -61,9 +79,6 @@ class StorageObject(object):
 
     Yields:
       An event tag object (instance of EventTag).
-
-    Raises:
-      IOError: if the event tags cannot be retrieved.
     """
 
   @abc.abstractmethod
@@ -83,7 +98,7 @@ class StorageObject(object):
     """
 
   @abc.abstractmethod
-  def Open(self):
+  def Open(self, **kwargs):
     """Opens the storage."""
 
 
@@ -122,8 +137,10 @@ class StorageWriter(object):
   """Class that defines the storage writer interface.
 
   Attributes:
+    number_of_errors: an integer containing the number of errors written.
     number_of_event_sources: an integer containing the number of event
                              sources written.
+    number_of_events: an integer containing the number of events written.
   """
 
   def __init__(self):
@@ -131,7 +148,17 @@ class StorageWriter(object):
     super(StorageWriter, self).__init__()
     self._enable_profiling = False
     self._profiling_type = u'all'
+    self.number_of_errors = 0
     self.number_of_event_sources = 0
+    self.number_of_events = 0
+
+  @abc.abstractmethod
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error object (instance of AnalysisError or ExtractionError).
+    """
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
@@ -143,7 +170,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddEvent(self, event_object):
-    """Adds an event object to the storage.
+    """Adds an event to the storage.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -168,6 +195,19 @@ class StorageWriter(object):
   @abc.abstractmethod
   def Close(self):
     """Closes the storage writer."""
+
+  def DisableProfiling(self):
+    """Disables profiling."""
+    self._enable_profiling = False
+
+  def EnableProfiling(self, profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_type: optional profiling type.
+    """
+    self._enable_profiling = True
+    self._profiling_type = profiling_type
 
   # TODO: remove during phased processing refactor.
   @abc.abstractmethod
