@@ -148,6 +148,14 @@ plaso.parsers.sqlite_plugins.skype module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sqlite_plugins.twitter_ios module
+-----------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.twitter_ios
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.sqlite_plugins.zeitgeist module
 ---------------------------------------------
 

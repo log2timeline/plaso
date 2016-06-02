@@ -572,6 +572,14 @@ plaso.formatters.text module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.twitter_ios module
+-----------------------------------
+
+.. automodule:: plaso.formatters.twitter_ios
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.userassist module
 ----------------------------------
 
