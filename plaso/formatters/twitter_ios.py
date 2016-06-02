@@ -15,7 +15,7 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
       u'Name: {name}',
       u'Location: {location}',
       u'Description: {description}',
-      u'Url: {url}',
+      u'URL: {url}',
       u'Following: {following}',
       u'Number of followers: {followers_cnt}',
       u'Number of following: {following_cnt}',
@@ -24,7 +24,7 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Screen name: {screen_name}',
       u'Description: {description}',
-      u'Url: {url}',
+      u'URL: {url}',
   ]
 
   SOURCE_LONG = u'Twitter iOS Contacts'

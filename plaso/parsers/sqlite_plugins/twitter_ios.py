@@ -18,14 +18,14 @@ class TwitterIOSContactEvent(time_events.PosixTimeEvent):
   Attributes:
     description: A string containing the contact's profile description.
     followers_cnt: An integer containing the number of followers.
-    following: An interger value to describe if the contact is following the
+    following: An integer value to describe if the contact is following the
                user's account, represented by 0 or 1.
     following_cnt: An integer containing the number of following.
     location: A string containing the contact's profile location.
     name: A string containing the contact's profile name.
-    profile_url: A string containing the contact's  profile picture url.
+    profile_url: A string containing the contact's  profile picture URL.
     screen_name: A string containing the contact's screen name.
-    url: A string containing the contact's profile url.
+    url: A string containing the contact's profile URL.
   """
 
   def __init__(
@@ -39,9 +39,9 @@ class TwitterIOSContactEvent(time_events.PosixTimeEvent):
       posix_time_description: The description of the usage of the timestamp.
       screen_name: A string containing the contact's screen name.
       name: A string containing the contact's profile name.
-      profile_url: A string containing the contact's  profile picture url.
+      profile_url: A string containing the contact's  profile picture URL.
       location: A string containing the contact's profile location.
-      url: A string containing the contact's profile url.
+      url: A string containing the contact's profile URL.
       description: A string containing the contact's profile description.
       following: An interger value to describe if the contact is following the
                  user's account, represented by 0 or 1.
