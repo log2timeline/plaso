@@ -105,12 +105,12 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.profile_url, expected_profile_url)
 
     expected_msg = (
-        u'Screen name: BBCBreaking Profile picture Url: '
+        u'Screen name: BBCBreaking Profile picture URL: '
         u'https://pbs.twimg.com/profile_images/460740982498013184/'
         u'wIPwMwru_normal.png Name: BBC Breaking News Location: London, UK '
         u'Description: Breaking news alerts and updates from the BBC. For '
         u'news, features, analysis follow @BBCWorld (international) or '
-        u'@BBCNews (UK). Latest sport news @BBCSport. Url: '
+        u'@BBCNews (UK). Latest sport news @BBCSport. URL: '
         u'http://www.bbc.co.uk/news Following: No Number of followers: '
         u'19466932 Number of following: 3')
 

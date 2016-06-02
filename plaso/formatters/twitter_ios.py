@@ -11,7 +11,7 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'Screen name: {screen_name}',
-      u'Profile picture Url: {profile_url}',
+      u'Profile picture URL: {profile_url}',
       u'Name: {name}',
       u'Location: {location}',
       u'Description: {description}',
