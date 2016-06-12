@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """The storage object reader."""
 
-from plaso.storage import interface
 
-
-class StorageObjectReader(interface.StorageReader):
+# TODO: deprecate this class.
+class StorageObjectReader(object):
   """Class that implements a storage object reader."""
 
   def __init__(self, storage_object):
