@@ -7,6 +7,7 @@ import unittest
 
 from plaso.output import event_buffer
 from plaso.output import pstorage
+from plaso.storage import reader
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -24,8 +25,7 @@ class PstorageTest(test_lib.OutputModuleTestCase):
       temp_file = os.path.join(temp_directory, u'pstorage.plaso')
 
       storage_file = storage_zip_file.StorageFile(test_filename, read_only=True)
-      with storage_zip_file.ZIPStorageFileReader(
-          storage_file) as storage_reader:
+      with reader.StorageObjectReader(storage_file) as storage_reader:
 
         output_mediator = self._CreateOutputMediator(storage_file=storage_file)
         output_module = pstorage.PlasoStorageOutputModule(output_mediator)

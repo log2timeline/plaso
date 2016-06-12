@@ -136,6 +136,7 @@ except ImportError:
 import construct
 
 from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
@@ -2890,18 +2891,19 @@ class StorageFile(ZIPStorageFile):
 class ZIPStorageFileReader(interface.StorageReader):
   """Class that implements the ZIP-based storage file reader."""
 
-  def __init__(self, zip_storage_file):
+  def __init__(self, input_file):
     """Initializes a storage reader object.
 
     Args:
-      zip_storage_file: a ZIP-based storage file (instance of ZIPStorageFile).
+      input_file: a string containing the path to the output file.
     """
     super(ZIPStorageFileReader, self).__init__()
-    self._zip_storage_file = zip_storage_file
+    self._storage_file = ZIPStorageFile()
+    self._storage_file.Open(input_file)
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
-    self._zip_storage_file.Close()
+    self._storage_file.Close()
 
   def GetEvents(self, time_range=None):
     """Retrieves events.
@@ -2912,12 +2914,12 @@ class ZIPStorageFileReader(interface.StorageReader):
     Yields:
       Event objects (instances of EventObject).
     """
-    event_object = self._zip_storage_file.GetSortedEntry(
+    event_object = self._storage_file.GetSortedEntry(
         time_range=time_range)
 
     while event_object:
       yield event_object
-      event_object = self._zip_storage_file.GetSortedEntry(
+      event_object = self._storage_file.GetSortedEntry(
           time_range=time_range)
 
   def GetEventSources(self):
@@ -2926,7 +2928,7 @@ class ZIPStorageFileReader(interface.StorageReader):
     Returns:
       A generator of event source objects (instances of EventSourceObject).
     """
-    return self._zip_storage_file.GetEventSources()
+    return self._storage_file.GetEventSources()
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
@@ -2937,13 +2939,16 @@ class ZIPStorageFileWriter(interface.StorageWriter):
                      collections.Counter).
   """
 
-  def __init__(self, output_file, buffer_size=0):
+  def __init__(
+      self, output_file, buffer_size=0,
+      storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer object.
 
     Args:
       output_file: a string containing the path to the output file.
       buffer_size: optional integer containing the estimated size of
                    a protobuf file.
+      storage_type: optional string containing the storage type.
     """
     super(ZIPStorageFileWriter, self).__init__()
     self._buffer_size = buffer_size
@@ -2955,6 +2960,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._parser_plugins_counter = collections.Counter()
     self._session_identifier = None
     self._storage_file = None
+    self._storage_type = storage_type
+    self._task_identifier = None
     # Counter containing the number of tags per label.
     self._tags_counter = collections.Counter()
 
@@ -3115,6 +3122,15 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     return self._storage_file.GetEventSourcesCurrentSession()
 
+  def MergeTaskStorage(self, task_storage_reader):
+    """Merges data from a task storage.
+
+    Args:
+      task_storage_reader: a storage reader object (StorageReader) of
+                           the task storage.
+    """
+    # TODO: implement.
+
   def Open(self):
     """Opens the storage writer.
 
@@ -3125,7 +3141,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Storage writer already opened.')
 
     self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size)
+        self._output_file, buffer_size=self._buffer_size,
+        storage_type=self._storage_type)
 
     if self._enable_profiling:
       self._storage_file.EnableProfiling(profiling_type=self._profiling_type)
@@ -3184,3 +3201,35 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._storage_file.WriteSessionStart(session_start)
     self._session_identifier = session_start.identifier
+
+  def WriteTaskCompletion(self):
+    """Writes task completion information.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    task_completion = tasks.TaskCompletion(
+        self._session_identifier, self._task_identifier)
+    task_completion.parsers_counter = self._parsers_counter
+    task_completion.parser_plugins_counter = self._parser_plugins_counter
+
+    self._storage_file.WriteTaskCompletion(task_completion)
+
+  def WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start: the task start information (instance of TaskStart).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.WriteTaskStart(task_start)
+    self._session_identifier = task_start.session_identifier
+    self._task_identifier = task_start.identifier

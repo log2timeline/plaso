@@ -16,6 +16,7 @@ from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
 from plaso.storage import time_range as storage_time_range
+from plaso.storage import reader
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -147,13 +148,12 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within time bounds."""
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = storage_zip_file.StorageFile(
-        storage_file_path, read_only=True)
     time_range = storage_time_range.TimeRange(
         self._start_timestamp, self._end_timestamp)
 
     timestamp_list = []
-    with storage_zip_file.ZIPStorageFileReader(storage_file) as storage_reader:
+    with storage_zip_file.ZIPStorageFileReader(
+        storage_file_path) as storage_reader:
       for event_object in storage_reader.GetEvents(time_range=time_range):
         timestamp_list.append(event_object.timestamp)
 
@@ -229,8 +229,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
       storage_file = storage_zip_file.StorageFile(
           temp_file, read_only=True)
 
-      with storage_zip_file.ZIPStorageFileReader(
-          storage_file) as storage_reader:
+      with reader.StorageObjectReader(storage_file) as storage_reader:
         output_mediator_object = output_mediator.OutputMediator(
             self._formatter_mediator)
         output_mediator_object.SetStorageFile(storage_file)

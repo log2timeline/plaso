@@ -2,6 +2,8 @@
 """The fake storage intended for testing."""
 
 from plaso.containers import sessions
+from plaso.containers import tasks
+from plaso.lib import definitions
 from plaso.storage import interface
 
 
@@ -20,11 +22,17 @@ class FakeStorageWriter(interface.StorageWriter):
     session_start: session start information (instance of SessionStart).
   """
 
-  def __init__(self):
-    """Initializes a storage writer object."""
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
+    """Initializes a storage writer object.
+
+    Args:
+      storage_type: optional string containing the storage type.
+    """
     super(FakeStorageWriter, self).__init__()
     self._is_open = False
     self._session_identifier = None
+    self._storage_type = storage_type
+    self._task_identifier = None
     self.analysis_reports = []
     self.errors = []
     self.event_sources = []
@@ -32,6 +40,8 @@ class FakeStorageWriter(interface.StorageWriter):
     self.events = []
     self.session_completion = None
     self.session_start = None
+    self.task_completion = None
+    self.task_start = None
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report to the storage.
@@ -154,6 +164,15 @@ class FakeStorageWriter(interface.StorageWriter):
     for event_source in self.event_sources:
       yield event_source
 
+  def MergeTaskStorage(self, task_storage_reader):
+    """Merges data from a task storage.
+
+    Args:
+      task_storage_reader: a storage reader object (StorageReader) of
+                           the task storage.
+    """
+    # TODO: implement.
+
   def Open(self):
     """Opens the storage writer.
 
@@ -182,10 +201,14 @@ class FakeStorageWriter(interface.StorageWriter):
     """Writes session completion information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type does not support writing a session
+               completion or when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Session completion not supported by storage type.')
 
     self.session_completion = sessions.SessionCompletion(
         self._session_identifier)
@@ -197,10 +220,50 @@ class FakeStorageWriter(interface.StorageWriter):
       session_start: the session start information (instance of SessionStart).
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type does not support writing a session
+               start or when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
 
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Session start not supported by storage type.')
+
     self.session_start = session_start
     self._session_identifier = session_start.identifier
+
+  def WriteTaskCompletion(self):
+    """Writes task completion information.
+
+    Raises:
+      IOError: if the storage type does not support writing a task
+               completion or when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Task completion not supported by storage type.')
+
+    self.task_completion = tasks.TaskCompletion(
+        self._session_identifier, self._task_identifier)
+
+  def WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start: the task start information (instance of TaskStart).
+
+    Raises:
+      IOError: if the storage type does not support writing a task
+               start or when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Task start not supported by storage type.')
+
+    self.task_start = task_start
+    self._session_identifier = task_start.identifier
+    self._task_identifier = task_start.identifier

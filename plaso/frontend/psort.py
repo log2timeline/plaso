@@ -24,6 +24,7 @@ from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.storage import time_range as storage_time_range
+from plaso.storage import reader
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
@@ -510,7 +511,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     output_buffer = output_event_buffer.EventBuffer(
         output_module, deduplicate_events)
     with output_buffer:
-      storage_reader = storage_zip_file.ZIPStorageFileReader(storage_file)
+      storage_reader = reader.StorageObjectReader(storage_file)
       counter = self.ProcessEventsFromStorage(
           storage_reader, output_buffer, analysis_queues=event_queue_producers,
           filter_buffer=self._filter_buffer, my_filter=self._filter_object,

@@ -228,6 +228,15 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
+  def MergeTaskStorage(self, task_storage_reader):
+    """Merges data from a task storage.
+
+    Args:
+      task_storage_reader: a storage reader object (StorageReader) of
+                           the task storage.
+    """
+
+  @abc.abstractmethod
   def Open(self):
     """Opens the storage writer."""
 
@@ -252,4 +261,16 @@ class StorageWriter(object):
 
     Args:
       session_start: the session start information (instance of SessionStart).
+    """
+
+  @abc.abstractmethod
+  def WriteTaskCompletion(self):
+    """Writes task completion information."""
+
+  @abc.abstractmethod
+  def WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start: the task start information (instance of TaskStart).
     """
