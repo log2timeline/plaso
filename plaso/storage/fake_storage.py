@@ -166,6 +166,15 @@ class FakeStorageWriter(interface.StorageWriter):
     for event_source in self.event_sources:
       yield event_source
 
+  def MergeTaskStorage(self, task_storage_reader):
+    """Merges data from a task storage.
+
+    Args:
+      task_storage_reader: a storage reader object (StorageReader) of
+                           the task storage.
+    """
+    # TODO: implement.
+
   def Open(self):
     """Opens the storage writer.
 
