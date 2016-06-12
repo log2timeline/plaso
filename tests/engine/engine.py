@@ -27,16 +27,9 @@ class TestEngine(engine.BaseEngine):
 
   _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
-  def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
-    """Initialize the engine object.
-
-    Args:
-      path_spec_queue: the path specification queue object (instance of Queue).
-      event_object_queue: the event object queue object (instance of Queue).
-      parse_error_queue: the parser error queue object (instance of Queue).
-    """
-    super(TestEngine, self).__init__(
-        path_spec_queue, event_object_queue, parse_error_queue)
+  def __init__(self):
+    """Initialize the engine object."""
+    super(TestEngine, self).__init__()
 
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath([u'SOFTWARE'])
@@ -91,7 +84,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""
-    test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine()
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -114,7 +107,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
-    test_engine = TestEngine(None, None, None)
+    test_engine = TestEngine()
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
@@ -125,20 +118,20 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   def testSetEnableDebugOutput(self):
     """Tests the SetDebugMode function."""
-    test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine()
 
     test_engine.SetEnableDebugOutput(True)
 
   def testSetEnableProfiling(self):
     """Tests the SetEnableProfiling function."""
-    test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine()
 
     test_engine.SetEnableProfiling(
         True, profiling_sample_rate=5000, profiling_type=u'all')
 
   def testSupportsMemoryProfiling(self):
     """Tests the SupportsMemoryProfiling function."""
-    test_engine = engine.BaseEngine(None, None, None)
+    test_engine = engine.BaseEngine()
 
     expected_result = hpy is not None
     result = test_engine.SupportsMemoryProfiling()

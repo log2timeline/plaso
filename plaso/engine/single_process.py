@@ -25,9 +25,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def __init__(self):
     """Initialize the single process engine object."""
-    # TODO: remove queues from BaseEngine.
-    super(SingleProcessEngine, self).__init__(None, None, None)
-    self._abort = False
+    super(SingleProcessEngine, self).__init__()
     self._last_status_update_timestamp = 0.0
     self._status_update_callback = None
 
@@ -339,10 +337,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._status_update_callback = None
 
     return self._processing_status
-
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    self._abort = True
 
 
 class SingleProcessQueue(plaso_queue.Queue):

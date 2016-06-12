@@ -22,19 +22,11 @@ class BaseEngine(object):
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
   """
 
-  def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
-    """Initialize the engine object.
-
-    Args:
-      path_spec_queue: the path specification queue object (instance of Queue).
-      event_object_queue: the event object queue object (instance of Queue).
-      parse_error_queue: the parser error queue object (instance of Queue).
-    """
+  def __init__(self):
+    """Initialize the engine object."""
+    self._abort = False
     self._enable_debug_output = False
     self._enable_profiling = False
-    self._event_object_queue = event_object_queue
-    self._path_spec_queue = path_spec_queue
-    self._parse_error_queue = parse_error_queue
     self._processing_status = processing_status.ProcessingStatus()
     self._profiling_sample_rate = 1000
     self._profiling_type = u'all'
@@ -136,6 +128,10 @@ class BaseEngine(object):
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate
     self._profiling_type = profiling_type
+
+  def SignalAbort(self):
+    """Signals the engine to abort."""
+    self._abort = True
 
   @classmethod
   def SupportsMemoryProfiling(cls):

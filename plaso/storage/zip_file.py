@@ -1676,6 +1676,9 @@ class ZIPStorageFile(interface.BaseStorage):
       directory_name = tempfile.mkdtemp(dir=directory_name)
       zipfile_path = os.path.join(directory_name, basename)
 
+      if os.path.exists(path):
+        os.rename(path, zipfile_path)
+
     try:
       self._zipfile = zipfile.ZipFile(
           zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
@@ -2487,7 +2490,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._zipfile = None
     self._is_open = False
 
-    if self._path != self._zipfile_path:
+    if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
       os.rename(self._zipfile_path, self._path)
       directory_name = os.path.dirname(self._zipfile_path)
       os.rmdir(directory_name)
@@ -2582,25 +2585,6 @@ class ZIPStorageFile(interface.BaseStorage):
 
   def GetEventSources(self):
     """Retrieves the event sources.
-
-    Yields:
-      Event sources (instances of EventSource).
-    """
-    stream_name_prefix = u'event_source_data.'
-
-    for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(stream_name_prefix):
-        continue
-
-      data_stream = _SerializedDataStream(
-          self._zipfile, self._zipfile_path, stream_name)
-
-      for event_source in self._ReadAttributeContainersFromStream(
-          data_stream, u'event_source'):
-        yield event_source
-
-  def GetEventSourcesCurrentSession(self):
-    """Retrieves the event sources of the current session.
 
     Yields:
       Event sources (instances of EventSource).
@@ -3021,6 +3005,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """
     super(ZIPStorageFileWriter, self).__init__()
     self._buffer_size = buffer_size
+    self._event_source_index = 0
     self._event_tags = []
     self._output_file = output_file
     # Counter containing the number of events per parser.
@@ -3194,8 +3179,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
   def GetEventSources(self):
     """Retrieves the event sources.
 
-    Returns:
-      A generator of event source objects (instances of EventSourceObject).
+    Yields:
+      Event source objects (instances of EventSourceObject).
 
     Raises:
       IOError: when the storage writer is closed.
@@ -3203,7 +3188,13 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    return self._storage_file.GetEventSourcesCurrentSession()
+    event_source_index = 0
+    for event_source in self._storage_file.GetEventSources():
+      if event_source_index >= self._event_source_index:
+        yield event_source
+        self._event_source_index += 1
+
+      event_source_index += 1
 
   def Open(self):
     """Opens the storage writer.
@@ -3220,6 +3211,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     if self._enable_profiling:
       self._storage_file.EnableProfiling(profiling_type=self._profiling_type)
+
+    self._event_source_index = 0
+    for _ in self._storage_file.GetEventSources():
+      self._event_source_index += 1
 
     if (not self._task_storage_path and
         self._storage_type == definitions.STORAGE_TYPE_SESSION):

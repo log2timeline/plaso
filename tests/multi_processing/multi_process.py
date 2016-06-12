@@ -11,50 +11,10 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import sessions
 from plaso.lib import event
 from plaso.multi_processing import multi_process
-from plaso.engine import plaso_queue
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.engine import test_lib as engine_test_lib
-
-
-class TestPathSpecQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements a test path specification queue consumer."""
-
-  def __init__(self, queue_object):
-    """Initializes the queue consumer.
-
-    Args:
-      queue_object: the queue object (instance of Queue).
-    """
-    super(TestPathSpecQueueConsumer, self).__init__(queue_object)
-    self.path_specs = []
-
-  def _ConsumeItem(self, path_spec_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      path_spec_object: a path specification (instance of dfvfs.PathSpec).
-    """
-    self.path_specs.append(path_spec_object)
-
-  @property
-  def number_of_path_specs(self):
-    """The number of path specifications."""
-    return len(self.path_specs)
-
-  def GetFilePaths(self):
-    """Retrieves a list of file paths from the path specifications."""
-    file_paths = []
-    for path_spec_object in self.path_specs:
-      data_stream = getattr(path_spec_object, u'data_stream', None)
-      location = getattr(path_spec_object, u'location', None)
-      if location is not None:
-        if data_stream:
-          location = u'{0:s}:{1:s}'.format(location, data_stream)
-        file_paths.append(location)
-
-    return file_paths
 
 
 class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
