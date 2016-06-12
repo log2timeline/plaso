@@ -1086,7 +1086,8 @@ class MultiProcessEngine(engine.BaseEngine):
     try:
       storage_writer.WriteSessionStart(session_start)
 
-      status = self._ProcessSources(
+      # TODO: change in phased processing refactor.
+      _ = self._ProcessSources(
           source_path_specs, resolver_context, storage_writer,
           filter_find_specs=filter_find_specs)
 
