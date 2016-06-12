@@ -12,6 +12,7 @@ from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage import fake_storage
+from plaso.storage import zip_file
 
 from tests.storage import test_lib
 
@@ -100,14 +101,19 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
   # TODO: add test for GetEventSources.
 
-  def testMergeTaskStorage(self):
-    """Tests the MergeTaskStorage function."""
-    storage_reader = None
-
-    # TODO: add test for MergeTaskStorage.
+  def testMergeFromStorage(self):
+    """Tests the MergeFromStorage function."""
     storage_writer = fake_storage.FakeStorageWriter()
     storage_writer.Open()
-    storage_writer.MergeTaskStorage(storage_reader)
+
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_reader = zip_file.ZIPStorageFileReader(test_file)
+    storage_writer.MergeFromStorage(storage_reader)
+
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    storage_reader = zip_file.ZIPStorageFileReader(test_file)
+    storage_writer.MergeFromStorage(storage_reader)
+
     storage_writer.Close()
 
   def testWriteSessionStartAndCompletion(self):

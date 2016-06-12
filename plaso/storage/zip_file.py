@@ -1505,6 +1505,47 @@ class ZIPStorageFile(interface.BaseStorage):
       for stream_name in self._zipfile.namelist():
         yield stream_name
 
+  def _GetSortedEvent(self, time_range=None):
+    """Retrieves a sorted event.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Returns:
+      An event object (instance of EventObject).
+    """
+    if not self._event_heap:
+      self._InitializeMergeBuffer(time_range=time_range)
+      if not self._event_heap:
+        return
+
+    event_object, stream_number = self._event_heap.PopEvent()
+    if not event_object:
+      return
+
+    # Stop as soon as we hit the upper bound.
+    if time_range and event_object.timestamp > time_range.end_timestamp:
+      return
+
+    next_event_object = self._GetEventObject(stream_number)
+    if next_event_object:
+      self._event_heap.PushEvent(
+          next_event_object, stream_number, event_object.store_index)
+
+      reference_timestamp = next_event_object.timestamp
+      while next_event_object.timestamp == reference_timestamp:
+        next_event_object = self._GetEventObject(stream_number)
+        if not next_event_object:
+          break
+
+        self._event_heap.PushEvent(
+            next_event_object, stream_number, event_object.store_index)
+
+    event_object.tag = self._ReadEventTagByIdentifier(
+        event_object.store_number, event_object.store_index, event_object.uuid)
+
+    return event_object
+
   def _HasStream(self, stream_name):
     """Determines if the ZIP file contains a specific stream.
 
@@ -2492,6 +2533,20 @@ class ZIPStorageFile(interface.BaseStorage):
           data_stream, u'error'):
         yield error
 
+  def GetEvents(self, time_range=None):
+    """Retrieves the events.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Yields:
+      Event objects (instances of EventObject).
+    """
+    event_object = self._GetSortedEvent(time_range=time_range)
+    while event_object:
+      yield event_object
+      event_object = self._GetSortedEvent(time_range=time_range)
+
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -2584,47 +2639,6 @@ class ZIPStorageFile(interface.BaseStorage):
             data_stream, u'session_completion')
 
         yield session_start, session_completion
-
-  def GetSortedEntry(self, time_range=None):
-    """Retrieves a sorted entry.
-
-    Args:
-      time_range: an optional time range object (instance of TimeRange).
-
-    Returns:
-      An event object (instance of EventObject).
-    """
-    if not self._event_heap:
-      self._InitializeMergeBuffer(time_range=time_range)
-      if not self._event_heap:
-        return
-
-    event_object, stream_number = self._event_heap.PopEvent()
-    if not event_object:
-      return
-
-    # Stop as soon as we hit the upper bound.
-    if time_range and event_object.timestamp > time_range.end_timestamp:
-      return
-
-    next_event_object = self._GetEventObject(stream_number)
-    if next_event_object:
-      self._event_heap.PushEvent(
-          next_event_object, stream_number, event_object.store_index)
-
-      reference_timestamp = next_event_object.timestamp
-      while next_event_object.timestamp == reference_timestamp:
-        next_event_object = self._GetEventObject(stream_number)
-        if not next_event_object:
-          break
-
-        self._event_heap.PushEvent(
-            next_event_object, stream_number, event_object.store_index)
-
-    event_object.tag = self._ReadEventTagByIdentifier(
-        event_object.store_number, event_object.store_index, event_object.uuid)
-
-    return event_object
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
@@ -2905,30 +2919,49 @@ class ZIPStorageFileReader(interface.StorageReader):
     """Make usable with "with" statement."""
     self._storage_file.Close()
 
+  def GetAnalysisReports(self):
+    """Retrieves the analysis reports.
+
+    Returns:
+      A generator of analysis report objects (instances of AnalysisReport).
+    """
+    return self._storage_file.GetAnalysisReports()
+
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Returns:
+      A generator of error objects (instances of AnalysisError or
+      ExtractionError).
+    """
+    return self._storage_file.GetErrors()
+
   def GetEvents(self, time_range=None):
     """Retrieves events.
 
     Args:
       time_range: an optional time range object (instance of TimeRange).
 
-    Yields:
-      Event objects (instances of EventObject).
+    Returns:
+      A generator of event objects (instances of EventObject).
     """
-    event_object = self._storage_file.GetSortedEntry(
-        time_range=time_range)
-
-    while event_object:
-      yield event_object
-      event_object = self._storage_file.GetSortedEntry(
-          time_range=time_range)
+    return self._storage_file.GetEvents(time_range=time_range)
 
   def GetEventSources(self):
-    """Retrieves event sources.
+    """Retrieves the event sources.
 
     Returns:
       A generator of event source objects (instances of EventSourceObject).
     """
     return self._storage_file.GetEventSources()
+
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Returns:
+      A generator of event tag objects (instances of EventTagObject).
+    """
+    return self._storage_file.GetEventTags()
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
@@ -3118,18 +3151,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+      raise IOError(u'Unable to read from closed storage writer.')
 
     return self._storage_file.GetEventSourcesCurrentSession()
-
-  def MergeTaskStorage(self, task_storage_reader):
-    """Merges data from a task storage.
-
-    Args:
-      task_storage_reader: a storage reader object (StorageReader) of
-                           the task storage.
-    """
-    # TODO: implement.
 
   def Open(self):
     """Opens the storage writer.

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """The storage object reader."""
 
-from plaso.storage import interface
 
-
-class StorageObjectReader(interface.StorageReader):
+# TODO: deprecate this class.
+class StorageObjectReader(object):
   """Class that implements a storage object reader."""
 
   def __init__(self, storage_object):
@@ -16,6 +15,10 @@ class StorageObjectReader(interface.StorageReader):
     super(StorageObjectReader, self).__init__()
     self._storage_object = storage_object
 
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
     self._storage_object.Close()
@@ -26,16 +29,10 @@ class StorageObjectReader(interface.StorageReader):
     Args:
       time_range: an optional time range object (instance of TimeRange).
 
-    Yields:
-      Event objects (instances of EventObject).
+    Returns:
+      A generator of event objects (instances of EventObject).
     """
-    event_object = self._storage_object.GetSortedEntry(
-        time_range=time_range)
-
-    while event_object:
-      yield event_object
-      event_object = self._storage_object.GetSortedEntry(
-          time_range=time_range)
+    return self._storage_object.GetEvents(time_range=time_range)
 
   def GetEventSources(self):
     """Retrieves event sources.

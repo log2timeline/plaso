@@ -368,6 +368,49 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  def testGetSortedEvent(self):
+    """Tests the _GetSortedEvent function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(test_file)
+
+    expected_timestamp = 1453449153000000
+
+    event_object = storage_file._GetSortedEvent()
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    # Test lower bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'),
+        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
+
+    storage_file.Close()
+
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(test_file)
+
+    expected_timestamp = 1462105168000000
+
+    event_object = storage_file._GetSortedEvent(time_range=test_time_range)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    # Test upper bound time range filter.
+    test_time_range = time_range.TimeRange(
+        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
+        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'))
+
+    storage_file.Close()
+
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(test_file)
+
+    expected_timestamp = 1453449153000000
+
+    event_object = storage_file._GetSortedEvent(time_range=test_time_range)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    storage_file.Close()
+
   def testHasStream(self):
     """Tests the _HasStream function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -615,6 +658,26 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  def testGetEvents(self):
+    """Tests the GetEvents function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(test_file)
+
+    test_event_sources = list(storage_file.GetEvents())
+    self.assertEqual(len(test_event_sources), 32)
+
+    storage_file.Close()
+
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(test_file)
+
+    test_event_sources = list(storage_file.GetEvents())
+    self.assertEqual(len(test_event_sources), 3)
+
+    storage_file.Close()
+
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -690,49 +753,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.tag.labels[1], u'Malware')
 
   # TODO: add test for GetSessions.
-
-  def testGetSortedEntry(self):
-    """Tests the GetSortedEntry function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(test_file)
-
-    expected_timestamp = 1453449153000000
-
-    event_object = storage_file.GetSortedEntry()
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-
-    # Test lower bound time range filter.
-    test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'),
-        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
-
-    storage_file.Close()
-
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(test_file)
-
-    expected_timestamp = 1462105168000000
-
-    event_object = storage_file.GetSortedEntry(time_range=test_time_range)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-
-    # Test upper bound time range filter.
-    test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'))
-
-    storage_file.Close()
-
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(test_file)
-
-    expected_timestamp = 1453449153000000
-
-    event_object = storage_file.GetSortedEntry(time_range=test_time_range)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-
-    storage_file.Close()
 
   def testHasAnalysisReports(self):
     """Tests the HasAnalysisReports function."""
@@ -1063,16 +1083,21 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
   # TODO: add test for GetEventSources.
 
-  def testMergeTaskStorage(self):
-    """Tests the MergeTaskStorage function."""
-    storage_reader = None
-
-    # TODO: add test for MergeTaskStorage.
+  def testMergeFromStorage(self):
+    """Tests the MergeFromStorage function."""
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(temp_file)
       storage_writer.Open()
-      storage_writer.MergeTaskStorage(storage_reader)
+
+      test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+      storage_reader = zip_file.ZIPStorageFileReader(test_file)
+      storage_writer.MergeFromStorage(storage_reader)
+
+      test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+      storage_reader = zip_file.ZIPStorageFileReader(test_file)
+      storage_writer.MergeFromStorage(storage_reader)
+
       storage_writer.Close()
 
   def testWriteSessionStartAndCompletion(self):

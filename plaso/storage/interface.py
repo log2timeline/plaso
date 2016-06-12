@@ -66,6 +66,17 @@ class BaseStorage(object):
     """
 
   @abc.abstractmethod
+  def GetEvents(self, time_range=None):
+    """Retrieves the events.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Yields:
+      Event objects (instances of EventObject).
+    """
+
+  @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -114,6 +125,22 @@ class StorageReader(object):
     return
 
   @abc.abstractmethod
+  def GetAnalysisReports(self):
+    """Retrieves the analysis reports.
+
+    Yields:
+      Analysis reports (instances of AnalysisReport).
+    """
+
+  @abc.abstractmethod
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Yields:
+      Errors (instances of AnalysisError or ExtractionError).
+    """
+
+  @abc.abstractmethod
   def GetEvents(self, time_range=None):
     """Retrieves events.
 
@@ -130,6 +157,14 @@ class StorageReader(object):
 
     Yields:
       Event source objects (instance of EventSourceObject).
+    """
+
+  @abc.abstractmethod
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Yields:
+      An event tag object (instance of EventTag).
     """
 
 
@@ -153,19 +188,19 @@ class StorageWriter(object):
     self.number_of_events = 0
 
   @abc.abstractmethod
-  def AddError(self, error):
-    """Adds an error to the storage.
-
-    Args:
-      error: an error object (instance of AnalysisError or ExtractionError).
-    """
-
-  @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report to the storage.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
+    """
+
+  @abc.abstractmethod
+  def AddError(self, error):
+    """Adds an error to the storage.
+
+    Args:
+      error: an error object (instance of AnalysisError or ExtractionError).
     """
 
   @abc.abstractmethod
@@ -227,14 +262,26 @@ class StorageWriter(object):
       An event source object (instance of EventSource).
     """
 
-  @abc.abstractmethod
-  def MergeTaskStorage(self, task_storage_reader):
-    """Merges data from a task storage.
+  def MergeFromStorage(self, storage_reader):
+    """Merges data from a storage.
 
     Args:
-      task_storage_reader: a storage reader object (StorageReader) of
-                           the task storage.
+      storage_reader: a storage reader object (StorageReader) of the storage.
     """
+    for event_source in storage_reader.GetEventSources():
+      self.AddEventSource(event_source)
+
+    for event in storage_reader.GetEvents():
+      self.AddEvent(event)
+
+    for event_tag in storage_reader.GetEventTags():
+      self.AddEventTag(event_tag)
+
+    for error in storage_reader.GetErrors():
+      self.AddError(error)
+
+    for analysis_report in storage_reader.GetAnalysisReports():
+      self.AddAnalysisReport(analysis_report)
 
   @abc.abstractmethod
   def Open(self):
