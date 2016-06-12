@@ -34,14 +34,16 @@ There are multiple types of streams:
   Stream that contains the storage metadata.
 * session_completion.#
   Stream that contains information about the completion of a session.
+  Only applies to session-based storage.
 * session_start.#
   Stream that contains information about the start of a session.
+  Only applies to session-based storage.
 * task_completion.#
   Stream that contains information about the completion of a task.
-  Only applies to task specific storage.
+  Only applies to task-based storage.
 * task_start.#
   Stream that contains information about the start of a task.
-  Only applies to task specific storage.
+  Only applies to task-based storage.
 
 The # in a stream name is referred to as the "store number". Streams with
 the same prefix e.g. "event_" and "store number" are related.
@@ -2722,7 +2724,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._WriteSessionStart(session_start)
 
   def WriteTaskCompletion(self, session_completion):
-    """Writes session completion information.
+    """Writes task completion information.
 
     Args:
       session_completion: the session completion information (instance of
@@ -2745,7 +2747,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._WriteTaskCompletion(session_completion)
 
   def WriteTaskStart(self, session_start):
-    """Writes session start information.
+    """Writes task start information.
 
     Args:
       session_start: the session start information (instance of TaskStart).
