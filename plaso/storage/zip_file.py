@@ -3196,15 +3196,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
       event_source_index += 1
 
-  def MergeTaskStorage(self, task_storage_reader):
-    """Merges data from a task storage.
-
-    Args:
-      task_storage_reader: a storage reader object (StorageReader) of
-                           the task storage.
-    """
-    # TODO: implement.
-
   def Open(self):
     """Opens the storage writer.
 
