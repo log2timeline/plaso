@@ -284,6 +284,15 @@ class StorageWriter(object):
       self.AddAnalysisReport(analysis_report)
 
   @abc.abstractmethod
+  def MergeTaskStorage(self, task_storage_reader):
+    """Merges data from a task storage.
+
+    Args:
+      task_storage_reader: a storage reader object (StorageReader) of
+                           the task storage.
+    """
+
+  @abc.abstractmethod
   def Open(self):
     """Opens the storage writer."""
 
