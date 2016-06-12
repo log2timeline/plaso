@@ -66,7 +66,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       data: Optional bencode data in dictionary form.
     """
     # Walk through one of the torrent keys to ensure it's from a valid file.
-    for key, value in data.iteritems():
+    for key, value in iter(data.items()):
       if not u'.torrent' in key:
         continue
 
@@ -76,7 +76,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not caption or not path or seedtime < 0:
         raise errors.WrongBencodePlugin(self.NAME)
 
-    for torrent, value in data.iteritems():
+    for torrent, value in iter(data.items()):
       if not u'.torrent' in torrent:
         continue
 
@@ -85,7 +85,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       seedtime = value.get(u'seedtime', None)
 
       # Create timeline events based on extracted values.
-      for event_key, event_value in value.iteritems():
+      for event_key, event_value in iter(value.items()):
         if event_key == u'added_on':
           event_object = UTorrentEvent(
               event_value, eventdata.EventTimestamp.ADDED_TIME,

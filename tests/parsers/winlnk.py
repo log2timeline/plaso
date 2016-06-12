@@ -18,10 +18,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winlnk.WinLnkParser()
-
-    test_file = self._GetTestFilePath([u'example.lnk'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'example.lnk'], parser_object)
 
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
@@ -33,10 +31,10 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
     # A shortcut event object.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
     self.assertEqual(event_object.description, expected_string)
@@ -59,7 +57,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:29:02.849131')
@@ -68,7 +66,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 01:39:18.220000')
@@ -91,7 +89,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # A distributed link tracking event object.
-    event_object = event_objects[4]
+    event_object = storage_writer.events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 05:45:20.500012')
@@ -106,15 +104,13 @@ class WinLnkParserTest(test_lib.ParserTestCase):
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     parser_object = winlnk.WinLnkParser()
+    storage_writer = self._ParseFile(
+        [u'NeroInfoTool.lnk'], parser_object)
 
-    test_file = self._GetTestFilePath([u'NeroInfoTool.lnk'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-    self.assertEqual(len(event_objects), 20)
+    self.assertEqual(len(storage_writer.events), 20)
 
     # A shortcut event object.
-    event_object = event_objects[16]
+    event_object = storage_writer.events[16]
 
     expected_msg = (
         u'[Nero InfoTool provides you with information about the most '
@@ -144,7 +140,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # A shell item event object.
-    event_object = event_objects[12]
+    event_object = storage_writer.events[12]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-06-05 20:13:20')

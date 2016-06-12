@@ -6,6 +6,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
+from plaso.lib import timelib
 from plaso.parsers import xchatscrollback
 
 from tests.parsers import test_lib
@@ -20,51 +21,93 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = xchatscrollback.XChatScrollbackParser()
+    storage_writer = self._ParseFile(
+        [u'xchatscrollback.log'], parser_object)
 
-    test_file = self._GetTestFilePath([u'xchatscrollback.log'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 10)
 
-    self.assertEqual(len(event_objects), 10)
+    event_object = storage_writer.events[0]
 
-    # TODO: refactor this to use timelib.
-    self.assertEqual(event_objects[0].timestamp, 1232074579000000)
-    self.assertEqual(event_objects[1].timestamp, 1232074587000000)
-    self.assertEqual(event_objects[2].timestamp, 1232315916000000)
-    self.assertEqual(event_objects[3].timestamp, 1232315916000000)
-    self.assertEqual(event_objects[4].timestamp, 1232959856000000)
-    self.assertEqual(event_objects[5].timestamp, 0)
-    self.assertEqual(event_objects[7].timestamp, 1232959862000000)
-    self.assertEqual(event_objects[8].timestamp, 1232959932000000)
-    self.assertEqual(event_objects[9].timestamp, 1232959993000000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-16 02:56:19')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = u'[] * Speaking now on ##plaso##'
+    expected_message = u'[] * Speaking now on ##plaso##'
     self._TestGetMessageStrings(
-        event_objects[0], expected_string, expected_string)
+        event_object, expected_message, expected_message)
 
-    expected_string = u'[] * Joachim \xe8 uscito (Client exited)'
-    self._TestGetMessageStrings(
-        event_objects[1], expected_string, expected_string)
+    event_object = storage_writer.events[1]
 
-    expected_string = u'[] Tcl interface unloaded'
-    self._TestGetMessageStrings(
-        event_objects[2], expected_string, expected_string)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-16 02:56:27')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = u'[] Python interface unloaded'
+    expected_message = u'[] * Joachim \xe8 uscito (Client exited)'
     self._TestGetMessageStrings(
-        event_objects[3], expected_string, expected_string)
+        event_object, expected_message, expected_message)
 
-    expected_string = u'[] * Topic of #plasify \xe8: .'
-    self._TestGetMessageStrings(
-        event_objects[6], expected_string, expected_string)
+    event_object = storage_writer.events[2]
 
-    expected_string = u'[nickname: fpi] Hi Kristinn!'
-    self._TestGetMessageStrings(
-        event_objects[8], expected_string, expected_string)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-18 21:58:36')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_string = u'[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o'
+    expected_message = u'[] Tcl interface unloaded'
     self._TestGetMessageStrings(
-        event_objects[9], expected_string, expected_string)
+        event_object, expected_message, expected_message)
+
+    event_object = storage_writer.events[3]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-18 21:58:36')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_message = u'[] Python interface unloaded'
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
+
+    event_object = storage_writer.events[5]
+    self.assertEqual(event_object.timestamp, 0)
+
+    expected_message = u'[nickname: fpi] 0 is a good timestamp'
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
+
+    event_object = storage_writer.events[6]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-26 08:50:56')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_message = u'[] * Topic of #plasify \xe8: .'
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
+
+    event_object = storage_writer.events[7]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-26 08:51:02')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    event_object = storage_writer.events[8]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-26 08:52:12')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_message = u'[nickname: fpi] Hi Kristinn!'
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
+
+    event_object = storage_writer.events[9]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-01-26 08:53:13')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
+    expected_message = u'[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o'
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message)
 
 
 if __name__ == '__main__':

@@ -15,22 +15,17 @@ from tests.parsers.sqlite_plugins import test_lib
 class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android Call History database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = android_calls.AndroidCallPlugin()
-
   def testProcess(self):
     """Test the Process function on an Android contacts2.db file."""
-    test_file = self._GetTestFilePath([u'contacts2.db'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = android_calls.AndroidCallPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'contacts2.db'], plugin_object)
 
     # The contacts2 database file contains 5 events (MISSED/OUTGOING/INCOMING).
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
     # Check the first event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.timestamp_desc, u'Call Started')
 
@@ -56,8 +51,8 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event_object, expected_call, expected_short)
 
     # Run some tests on the last 2 events.
-    event_object_3 = event_objects[3]
-    event_object_4 = event_objects[4]
+    event_object_3 = storage_writer.events[3]
+    event_object_4 = storage_writer.events[4]
 
     # Check the timestamp_desc of the last event.
     self.assertEqual(event_object_4.timestamp_desc, u'Call Ended')

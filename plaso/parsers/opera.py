@@ -107,13 +107,13 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
       entry_type = history_item.get(u'type', u'')
 
       if last_typed_time is None:
-        parser_mediator.ProduceParseError(u'missing last typed time.')
+        parser_mediator.ProduceExtractionError(u'missing last typed time.')
         continue
 
       try:
         timestamp = timelib.Timestamp.FromTimeString(last_typed_time)
       except errors.TimestampError:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unsupported last typed time: {0:s}.'.format(last_typed_time))
         continue
 

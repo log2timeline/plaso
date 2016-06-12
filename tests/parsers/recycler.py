@@ -18,14 +18,12 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = recycler.WinRecycleBinParser()
+    storage_writer = self._ParseFile(
+        [u'$II3DF3L.zip'], parser_object)
 
-    test_file = self._GetTestFilePath([u'$II3DF3L.zip'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    self.assertEqual(len(event_objects), 1)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.orig_filename, (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip'))
@@ -51,14 +49,12 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
     parser_object = recycler.WinRecyclerInfo2Parser()
+    storage_writer = self._ParseFile(
+        [u'INFO2'], parser_object)
 
-    test_file = self._GetTestFilePath([u'INFO2'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 4)
 
-    self.assertEqual(len(event_objects), 4)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2004-08-25 16:18:25.237')
@@ -70,7 +66,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.orig_filename, (
         u'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe'))
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_msg = (
         u'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
@@ -81,7 +77,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     self._TestGetSourceStrings(event_object, u'Recycle Bin', u'RECBIN')
 

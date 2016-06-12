@@ -185,7 +185,7 @@ class JavaIDXParser(interface.FileObjectParser):
               value.string, gmt_as_timezone=False)
         except errors.TimestampError:
           download_date = None
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time value: {0:s}'.format(value.string))
 
     if not url or not ip_address:

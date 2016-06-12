@@ -18,10 +18,8 @@ class WinEvtParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winevt.WinEvtParser()
-
-    test_file = self._GetTestFilePath([u'SysEvent.Evt'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'SysEvent.Evt'], parser_object)
 
     # Windows Event Log (EVT) information:
     #	Version                     : 1.1
@@ -29,7 +27,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 437
     #	Log type                    : System
 
-    self.assertEqual(len(event_objects), (6063 + 437) * 2)
+    self.assertEqual(len(storage_writer.events), (6063 + 437) * 2)
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC
@@ -44,7 +42,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     # String: 2         : "The system detected a possible attempt to compromise
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.record_number, 1392)
     self.assertEqual(event_object.event_type, 2)
     self.assertEqual(event_object.computer_name, u'WKS-WINXP32BIT')
@@ -60,7 +58,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.strings[1], expected_string)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-07-27 06:41:47')
@@ -68,7 +66,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-07-27 06:41:47')

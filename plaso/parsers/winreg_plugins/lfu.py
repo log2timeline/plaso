@@ -86,7 +86,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
               u'{2:s}.').format(
                   registry_key.path, value_name,
                   registry_value.data_type_string)
-          parser_mediator.ProduceParseError(error_string)
+          parser_mediator.ProduceExtractionError(error_string)
 
         # TODO: why does this have a separate event object? Remove this.
         value_dict = {u'BootExecute': value_string}

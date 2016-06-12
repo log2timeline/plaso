@@ -103,7 +103,7 @@ class WinEvtxParser(interface.FileObjectParser):
     try:
       record_number = evtx_record.identifier
     except OverflowError as exception:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'unable to read record identifier from event record: {0:d} '
           u'with error: {1:s}').format(record_index, exception))
 
@@ -112,7 +112,7 @@ class WinEvtxParser(interface.FileObjectParser):
     try:
       event_identifier = evtx_record.event_identifier
     except OverflowError as exception:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'unable to read event identifier from event record: {0:d} '
           u'with error: {1:s}').format(record_index, exception))
 
@@ -121,7 +121,7 @@ class WinEvtxParser(interface.FileObjectParser):
     try:
       event_identifier_qualifiers = evtx_record.event_identifier_qualifiers
     except OverflowError as exception:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'unable to read event identifier qualifiers from event record: '
           u'{0:d} with error: {1:s}').format(record_index, exception))
 
@@ -130,7 +130,7 @@ class WinEvtxParser(interface.FileObjectParser):
     try:
       written_time = evtx_record.get_written_time_as_integer()
     except OverflowError as exception:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'unable to read written time from event record: {0:d} '
           u'with error: {1:s}').format(record_index, exception))
 
@@ -157,7 +157,7 @@ class WinEvtxParser(interface.FileObjectParser):
     try:
       evtx_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to open file with error: {0:s}'.format(exception))
       return
 
@@ -165,7 +165,7 @@ class WinEvtxParser(interface.FileObjectParser):
       try:
         self._ParseRecord(parser_mediator, record_index, evtx_record)
       except IOError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to parse event record: {0:d} with error: {1:s}'.format(
                 record_index, exception))
 
@@ -174,7 +174,7 @@ class WinEvtxParser(interface.FileObjectParser):
         self._ParseRecord(
             parser_mediator, record_index, evtx_record, recovered=True)
       except IOError as exception:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to parse recovered event record: {0:d} with error: '
             u'{1:s}').format(record_index, exception))
 

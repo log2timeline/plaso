@@ -17,10 +17,6 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class USBPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the USB Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = usb.USBPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
@@ -28,18 +24,19 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 7)
+    plugin_object = usb.USBPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[3]
+    self.assertEqual(len(storage_writer.events), 7)
+
+    event_object = storage_writer.events[3]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_value = u'VID_0E0F&PID_0002'
     self._TestRegvalue(event_object, u'subkey_name', expected_value)

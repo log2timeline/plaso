@@ -6,7 +6,6 @@ import unittest
 
 from plaso.formatters import plist as _  # pylint: disable=unused-import
 from plaso.lib import timelib
-from plaso.parsers import plist
 from plaso.parsers.plist_plugins import macuser
 
 from tests.parsers.plist_plugins import test_lib
@@ -15,21 +14,17 @@ from tests.parsers.plist_plugins import test_lib
 class MacUserPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Mac OS X local user plist plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = macuser.MacUserPlugin()
-    self._parser = plist.PlistParser()
-
   def testProcess(self):
     """Tests the Process function."""
     plist_name = u'user.plist'
-    event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, [plist_name], plist_name)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = macuser.MacUserPlugin()
+    storage_writer = self._ParsePlistFileWithPlugin(
+        plugin_object, [plist_name], plist_name)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-28 04:35:47')

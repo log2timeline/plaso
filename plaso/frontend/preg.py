@@ -11,7 +11,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.frontend import extraction_frontend
 from plaso.lib import py2to3
 from plaso.parsers import mediator as parsers_mediator
@@ -19,6 +18,7 @@ from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 from plaso.preprocessors import manager as preprocess_manager
+from plaso.storage import fake_storage
 
 
 # The Registry (file) types.
@@ -464,27 +464,6 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
     return file_system, mount_point
 
-  def CreateParserMediator(self, event_queue=None):
-    """Create a parser mediator object.
-
-    Args:
-      event_queue: an optional event queue object (instance of Queue).
-
-    Returns:
-      A parser mediator object (instance of parsers_mediator.ParserMediator).
-    """
-    if event_queue is None:
-      event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-
-    parse_error_queue = single_process.SingleProcessQueue()
-    parse_error_queue_producer = plaso_queue.ItemQueueProducer(
-        parse_error_queue)
-
-    return parsers_mediator.ParserMediator(
-        event_queue_producer, parse_error_queue_producer,
-        self.knowledge_base_object)
-
   def ExpandKeysRedirect(self, keys):
     """Expands a list of Registry key paths with their redirect equivalents.
 
@@ -760,10 +739,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not registry_key:
       return {}
 
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = PregItemQueueConsumer(event_queue)
+    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer.Open()
 
-    parser_mediator = self.CreateParserMediator(event_queue)
+    parser_mediator = parsers_mediator.ParserMediator(
+        storage_writer, self.knowledge_base_object)
+
     parser_mediator.SetFileEntry(registry_helper.file_entry)
 
     return_dict = {}
@@ -785,11 +766,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
       found_matching_plugin = True
       plugin_object.Process(parser_mediator, registry_key)
-      event_queue_consumer.ConsumeItems()
-      event_objects = [
-          event_object for event_object in event_queue_consumer.GetItems()]
-      if event_objects:
-        return_dict[plugin_object] = event_objects
+      if storage_writer.events:
+        return_dict[plugin_object] = storage_writer.events
 
     if not found_matching_plugin:
       winreg_parser = parsers_manager.ParsersManager.GetParserObjectByName(
@@ -800,11 +778,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
           u'winreg_default')
 
       default_plugin_object.Process(parser_mediator, registry_key)
-      event_queue_consumer.ConsumeItems()
-      event_objects = [
-          event_object for event_object in event_queue_consumer.GetItems()]
-      if event_objects:
-        return_dict[default_plugin_object] = event_objects
+      if storage_writer.events:
+        return_dict[default_plugin_object] = storage_writer.events
 
     return return_dict
 

@@ -187,7 +187,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       timestamp = self._ConvertToTimestamp(structure, parser_mediator.timezone)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return
@@ -222,7 +222,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = self._ConvertToTimestamp(
           structure, parser_mediator.timezone, year=self._xchat_year)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return

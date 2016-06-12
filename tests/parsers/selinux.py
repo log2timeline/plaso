@@ -20,17 +20,15 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = selinux.SELinuxParser()
-
     knowledge_base_values = {u'year': 2013}
-    test_file = self._GetTestFilePath([u'selinux.log'])
-    event_queue_consumer = self._ParseFile(
-        parser_object, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'selinux.log'], parser_object,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
     # Test case: normal entry.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.timestamp, 1337845201174000)
 
@@ -44,7 +42,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # Test case: short date.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.timestamp, 1337845201000000)
 
@@ -53,7 +51,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Test case: no msg.
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     self.assertEqual(event_object.timestamp, 1337845222174000)
 
@@ -62,7 +60,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Test case: under score.
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
     self.assertEqual(event_object.timestamp, 1337845666174000)
 

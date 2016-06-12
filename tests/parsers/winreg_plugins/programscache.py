@@ -15,10 +15,6 @@ from tests.parsers.winreg_plugins import test_lib
 class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Explorer ProgramsCache Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = programscache.ExplorerProgramsCachePlugin()
-
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
@@ -28,14 +24,15 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 77)
+    plugin_object = programscache.ExplorerProgramsCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
+
+    self.assertEqual(len(storage_writer.events), 77)
 
     # The ProgramsCache entry shell item event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_parser = u'explorer_programscache/shell_items'
     self.assertEqual(event_object.parser, expected_parser)
@@ -64,7 +61,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         event_object, expected_message, expected_short_message)
 
     # The ProgramsCache list event.
-    event_object = event_objects[75]
+    event_object = storage_writer.events[75]
 
     expected_parser = u'explorer_programscache'
     self.assertEqual(event_object.parser, expected_parser)
@@ -108,7 +105,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         event_object, expected_message, expected_short_message)
 
     # The Windows Registry key event.
-    event_object = event_objects[76]
+    event_object = storage_writer.events[76]
 
     expected_parser = u'explorer_programscache'
     self.assertEqual(event_object.parser, expected_parser)
@@ -131,13 +128,14 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 118)
+    plugin_object = programscache.ExplorerProgramsCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 118)
+
+    event_object = storage_writer.events[0]
 
     expected_parser = u'explorer_programscache/shell_items'
     self.assertEqual(event_object.parser, expected_parser)

@@ -38,7 +38,6 @@ class ExtractionFrontend(frontend.Frontend):
   def __init__(self):
     """Initializes the front-end object."""
     super(ExtractionFrontend, self).__init__()
-    self._buffer_size = 0
     self._collection_process = None
     self._debug_mode = False
     self._enable_preprocessing = False
@@ -66,7 +65,7 @@ class ExtractionFrontend(frontend.Frontend):
     """Checks if the storage file path is valid.
 
     Args:
-      storage_file_path: The path of the storage file.
+      storage_file_path: a string containing path of the storage file.
 
     Raises:
       BadConfigOption: if the storage file path is invalid.
@@ -412,7 +411,7 @@ class ExtractionFrontend(frontend.Frontend):
       self._single_process_mode = True
 
     if self._single_process_mode:
-      self._engine = single_process.SingleProcessEngine(self._queue_size)
+      self._engine = single_process.SingleProcessEngine()
     else:
       self._engine = multi_process.MultiProcessEngine(
           maximum_number_of_queued_items=self._queue_size,
@@ -465,14 +464,9 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
+    # TODO: in storage rewrite come up with a more generic solution.
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        self._storage_file_path, buffer_size=self._buffer_size)
-
-    if self._enable_profiling:
-      storage_writer.EnableProfiling(profiling_type=self._profiling_type)
-
-    storage_writer.Open()
-    storage_writer.WriteSessionStart(session_start)
+        self._storage_file_path)
 
     processing_status = None
     try:
@@ -480,14 +474,14 @@ class ExtractionFrontend(frontend.Frontend):
         logging.debug(u'Starting extraction in single process mode.')
 
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer, preprocess_object,
+            source_path_specs, session_start, preprocess_object,
+            storage_writer, self._resolver_context,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
             mount_path=self._mount_path,
             parser_filter_expression=parser_filter_expression,
             process_archive_files=self._process_archive_files,
-            resolver_context=self._resolver_context,
             status_update_callback=status_update_callback,
             text_prepend=self._text_prepend)
 
@@ -496,8 +490,8 @@ class ExtractionFrontend(frontend.Frontend):
 
         # TODO: pass number_of_extraction_workers.
         processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer, preprocess_object,
-            enable_sigsegv_handler=enable_sigsegv_handler,
+            source_path_specs, session_start, preprocess_object,
+            storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
@@ -525,10 +519,6 @@ class ExtractionFrontend(frontend.Frontend):
           exception, traceback.format_exc()))
       if self._debug_mode:
         pdb.post_mortem()
-
-    finally:
-      if self._enable_profiling:
-        storage_writer.DisableProfiling()
 
     return processing_status
 
@@ -562,7 +552,7 @@ class ExtractionFrontend(frontend.Frontend):
       profiling_sample_rate: optional integer indicating the profiling sample
                              rate. The value contains the number of files
                              processed. The default value is 1000.
-      profiling_type: optional profiling type.
+      profiling_type: optional string containing the profiling type.
     """
     self._enable_profiling = enable_profiling
     self._profiling_sample_rate = profiling_sample_rate

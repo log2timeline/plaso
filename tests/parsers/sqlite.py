@@ -30,11 +30,10 @@ class SQLiteParserTest(test_lib.ParserTestCase):
   def testFileParserChainMaintenance(self):
     """Tests that the parser chain is correctly maintained by the parser."""
     parser_object = sqlite.SQLiteParser()
-    test_file = self._GetTestFilePath([u'contacts2.db'])
+    storage_writer = self._ParseFile(
+        [u'contacts2.db'], parser_object)
 
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-    for event in event_objects:
+    for event in storage_writer.events:
       chain = event.parser
       self.assertEqual(1, chain.count(u'/'))
 

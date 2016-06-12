@@ -125,7 +125,7 @@ class RestorePointLogParser(interface.FileObjectParser):
       description = b''.join(file_header.description).decode(u'utf16')[:-1]
     except UnicodeDecodeError as exception:
       description = u''
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'unable to decode description UTF-16 stream with error: '
           u'{0:s}').format(exception))
 
@@ -134,7 +134,7 @@ class RestorePointLogParser(interface.FileObjectParser):
 
     timestamp = file_footer.get(u'creation_time', None)
     if timestamp is None:
-      parser_mediator.ProduceParseError(u'Timestamp not set.')
+      parser_mediator.ProduceExtractionError(u'Timestamp not set.')
     else:
       event_object = RestorePointInfoEvent(
           timestamp, file_header.event_type, file_header.restore_point_type,

@@ -59,12 +59,12 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     path_segment = u'N/A'
     value_string = u''
     if value is None:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, key.path))
 
     elif not value.DataIsBinaryData():
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, key.path))
 
@@ -107,7 +107,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       _, remainder = divmod(data_size, 4)
 
       if remainder != 0:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'MRUListEx value data size is not a multitude of 4 '
             u'in MRU key: {0:s}').format(key.path))
         data_size -= remainder
@@ -120,7 +120,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
               mrulistex_data[data_offset:])
           yield entry_index, entry_number
         except construct.FieldError:
-          parser_mediator.ProduceParseError((
+          parser_mediator.ProduceExtractionError((
               u'Unable to parse MRUListEx value data at offset: {0:d} '
               u'in MRU key: {1:s}').format(data_offset, key.path))
 
@@ -148,7 +148,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
         continue
 
       if found_terminator:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'Found additional MRUListEx entries after terminator '
             u'in key: {0:s}.').format(key.path))
 
@@ -169,7 +169,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     for entry_number, path_segment in entry_numbers.iteritems():
       sub_key = key.GetSubkeyByName(u'{0:d}'.format(entry_number))
       if not sub_key:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(
                 entry_number, key.path))
         continue

@@ -15,21 +15,19 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Test the Process function on a Twitter iOS file."""
-    test_file = self._GetTestFilePath([u'twitter_ios.db'])
-    plugin = twitter_ios.TwitterIOSPlugin()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = twitter_ios.TwitterIOSPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'twitter_ios.db'], plugin_object)
 
     # We should have 184 events in total.
     #  - 25 Contacts creation events.
     #  - 25 Contacts update events.
     #  - 67 Status creation events.
     #  - 67 Status update events.
-    self.assertEqual(184, len(event_objects))
+    self.assertEqual(184, len(storage_writer.events))
 
     # Test the first contact creation event.
-    test_event = event_objects[0]
+    test_event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2007-04-22 14:42:37')
     self.assertEqual(test_event.timestamp, expected_timestamp)
@@ -75,7 +73,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(test_event, expected_msg, expected_msg_short)
 
     # Test first contact modification event.
-    test_event = event_objects[1]
+    test_event = storage_writer.events[1]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-12-02 15:35:44')
     self.assertEqual(test_event.timestamp, expected_timestamp)
@@ -121,7 +119,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(test_event, expected_msg, expected_msg_short)
 
     # Test first status creation event.
-    test_event = event_objects[50]
+    test_event = storage_writer.events[50]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-09-11 11:46:16')
     self.assertEqual(test_event.timestamp, expected_timestamp)
@@ -147,7 +145,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(test_event, expected_msg, expected_msg_short)
 
     # Test first status update event.
-    test_event = event_objects[51]
+    test_event = storage_writer.events[51]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-12-02 15:39:37')
     self.assertEqual(test_event.timestamp, expected_timestamp)

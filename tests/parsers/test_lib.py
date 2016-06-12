@@ -7,31 +7,13 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
 from plaso.engine import knowledge_base
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator
+from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
-
-
-class TestItemQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements a list event object queue consumer."""
-
-  def __init__(self, event_queue):
-    """Initializes the list event object queue consumer.
-
-    Args:
-      event_queue: the event object queue (instance of Queue).
-    """
-    super(TestItemQueueConsumer, self).__init__(event_queue)
-    self.events = []
-
-  def _ConsumeItem(self, event_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems."""
-    self.events.append(event_object)
 
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
@@ -60,61 +42,38 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return test_events
 
-  def _GetEventObjectsFromQueue(self, event_queue_consumer):
-    """Retrieves the event objects from the queue consumer.
-
-    Args:
-      event_queue_consumer: the event object queue consumer object (instance of
-                            TestItemQueueConsumer).
-
-    Returns:
-      A list of event objects (instances of EventObject).
-    """
-    event_queue_consumer.ConsumeItems()
-
-    test_events = []
-    for event_object in event_queue_consumer.events:
-      self.assertIsInstance(event_object, events.EventObject)
-      test_events.append(event_object)
-
-    return test_events
-
   def _GetParserMediator(
-      self, event_queue, parse_error_queue, knowledge_base_values=None,
-      file_entry=None, parser_chain=None):
+      self, storage_writer, file_entry=None, knowledge_base_values=None,
+      parser_chain=None):
     """Retrieves a parser mediator object.
 
     Args:
-      event_queue: the event queue (instance of Queue).
-      parse_error_queue: the parse error queue (instance of Queue).
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
+      storage_writer: a storage writer object (instance of StorageWriter).
       file_entry: optional dfVFS file_entry object (instance of dfvfs.FileEntry)
                   being parsed.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values.
       parser_chain: Optional string containing the parsing chain up to this
                     point.
 
     Returns:
       A parser mediator object (instance of ParserMediator).
     """
-    event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    parse_error_queue_producer = plaso_queue.ItemQueueProducer(
-        parse_error_queue)
-
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
-    new_mediator = mediator.ParserMediator(
-        event_queue_producer, parse_error_queue_producer,
-        knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
+
     if file_entry:
-      new_mediator.SetFileEntry(file_entry)
+      parser_mediator.SetFileEntry(file_entry)
 
     if parser_chain:
-      new_mediator.parser_chain = parser_chain
-    return new_mediator
+      parser_mediator.parser_chain = parser_chain
+
+    return parser_mediator
 
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
@@ -145,48 +104,46 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def _ParseFile(self, parser_object, path, knowledge_base_values=None):
+  def _ParseFile(
+      self, path_segments, parser_object, knowledge_base_values=None):
     """Parses a file using the parser object.
 
     Args:
-      parser_object: the parser object.
-      path: the path of the file to parse.
+      path_segments: a list of strings containinge the path segments inside
+                     the test data directory.
+      parser_object: a parser object (instance of BaseParser).
       knowledge_base_values: optional dict containing the knowledge base
                              values.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      A storage writer object (instance of FakeStorageWriter).
     """
+    path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
-        parser_object, path_spec, knowledge_base_values=knowledge_base_values)
+        path_spec, parser_object, knowledge_base_values=knowledge_base_values)
 
   def _ParseFileByPathSpec(
-      self, parser_object, path_spec, knowledge_base_values=None):
+      self, path_spec, parser_object, knowledge_base_values=None):
     """Parses a file using the parser object.
 
     Args:
-      parser_object: the parser object.
-      path_spec: the path specification of the file to parse.
-      knowledge_base_values: optional dict containing the knowledge base
+      path_spec: a path specification (instance of dfvfs.PathSpec).
+      parser_object: a parser object (instance of BaseParser).
+      knowledge_base_values: optional dictionary containing the knowledge base
                              values.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      A storage writer object (instance of FakeStorageWriter).
     """
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = TestItemQueueConsumer(event_queue)
+    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer.Open()
 
-    parse_error_queue = single_process.SingleProcessQueue()
-
-    parser_mediator = self._GetParserMediator(
-        event_queue, parse_error_queue,
-        knowledge_base_values=knowledge_base_values)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    parser_mediator.SetFileEntry(file_entry)
+    parser_mediator = self._GetParserMediator(
+        storage_writer, file_entry=file_entry,
+        knowledge_base_values=knowledge_base_values)
 
     if isinstance(parser_object, interface.FileEntryParser):
       parser_object.Parse(parser_mediator)
@@ -199,10 +156,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail(
-          u'Got unexpected parser type: {0:s}'.format(type(parser_object)))
+      self.fail(u'Got unsupported parser type: {0:s}'.format(
+          type(parser_object)))
 
-    return event_queue_consumer
+    return storage_writer
 
   def _TestGetMessageStrings(
       self, event_object, expected_message, expected_message_short):

@@ -136,7 +136,7 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       plugin_object.UpdateChainAndProcess(parser_mediator, registry_key)
     except (IOError, dfwinreg_errors.WinRegistryValueError) as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'in key: {0:s} {1:s}'.format(registry_key.path, exception))
 
   def _NormalizeKeyPath(self, key_path):
@@ -203,7 +203,7 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       registry_file = win_registry_reader.Open(file_object)
     except IOError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to open Windows Registry file with error: {0:s}'.format(
               exception))
       return
@@ -218,7 +218,7 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       self._ParseRecurseKeys(parser_mediator, root_key)
     except IOError as exception:
-      parser_mediator.ProduceParseError(u'{0:s}'.format(exception))
+      parser_mediator.ProduceExtractionError(u'{0:s}'.format(exception))
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)

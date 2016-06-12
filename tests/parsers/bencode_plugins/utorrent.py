@@ -20,22 +20,19 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     """Tests the Process function."""
     parser_object = bencode_parser.BencodeParser()
 
-    test_file = self._GetTestFilePath([u'bencode_utorrent'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'bencode_utorrent'], parser_object)
 
-    self.assertEqual(len(event_objects), 4)
+    self.assertEqual(len(storage_writer.events), 4)
 
     expected_caption = u'plaso test'
     expected_path = u'e:\\torrent\\files\\plaso test'
 
     # First test on when the torrent was added to the client.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[3]
 
     self.assertEqual(event_object.caption, expected_caption)
-
     self.assertEqual(event_object.path, expected_path)
-
     self.assertEqual(event_object.seedtime, 511)
 
     expected_description = eventdata.EventTimestamp.ADDED_TIME
@@ -46,7 +43,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Second test on when the torrent file was completely downloaded.
-    event_object = event_objects[3]
+    event_object = storage_writer.events[2]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)
@@ -60,7 +57,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Third test on when the torrent was first modified.
-    event_object = event_objects[2]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)
@@ -74,7 +71,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Fourth test on when the torrent was again modified.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)

@@ -469,7 +469,7 @@ class SkypePlugin(interface.SQLitePlugin):
       # TODO: add a conversion base.
       file_size = int(row['filesize'])
     except ValueError:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to convert file size: {0!s} of file: {1:s}'.format(
               row['filesize'], row['filename']))
       file_size = 0

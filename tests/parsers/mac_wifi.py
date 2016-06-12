@@ -17,16 +17,14 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = mac_wifi.MacWifiLogParser()
-
     knowledge_base_values = {u'year': 2013}
-    test_file = self._GetTestFilePath([u'wifi.log'])
-    event_queue_consumer = self._ParseFile(
-        parser_object, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'wifi.log'], parser_object,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 9)
+    self.assertEqual(len(storage_writer.events), 9)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-14 20:36:37.222')
@@ -46,7 +44,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-14 20:36:43.818')
@@ -60,7 +58,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         u'Already associated to \u201cCampusNet\u201d. Bailing on auto-join.')
     self.assertEqual(event_object.text, expected_text)
 
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-14 21:50:52.395')
@@ -76,7 +74,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.action, expected_string)
     self.assertEqual(event_object.text, expected_string)
 
-    event_object = event_objects[5]
+    event_object = storage_writer.events[5]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-14 21:52:09.883')
@@ -100,13 +98,13 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.text, expected_text)
 
-    event_object = event_objects[7]
+    event_object = storage_writer.events[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-31 23:59:38.165')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    event_object = event_objects[8]
+    event_object = storage_writer.events[8]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-01 01:12:17.311')
