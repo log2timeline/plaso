@@ -135,7 +135,8 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       return
 
     if not version_value.DataIsInteger():
-      parser_mediator.ProduceExtractionError(u'Unsupported version value data type')
+      parser_mediator.ProduceExtractionError(
+          u'Unsupported version value data type')
       return
 
     format_version = version_value.GetDataAsObject()

@@ -52,10 +52,8 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
   def testProcessWithWAL(self):
     """Tests the Process function on a database with WAL file."""
     plugin_object = TestSQLitePlugin()
-    database_file = self._GetTestFilePath([u'wal_database.db'])
-    wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
-
     cache = sqlite.SQLiteCache()
+    wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
     self._ParseDatabaseFileWithPlugin(
         [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
 
