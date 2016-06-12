@@ -10,6 +10,7 @@ from plaso.containers import reports
 from plaso.engine import knowledge_base
 from plaso.engine import plaso_queue
 from plaso.engine import single_process
+from plaso.parsers import interface as parsers_interface
 from plaso.parsers import mediator as parsers_mediator
 
 from tests import test_lib as shared_test_lib
@@ -88,11 +89,19 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
-    file_object = file_entry.GetFileObject()
-    try:
-      parser_object.Parse(parser_mediator, file_object)
-    finally:
-      file_object.close()
+    if isinstance(parser_object, parsers_interface.FileEntryParser):
+      parser_object.Parse(parser_mediator)
+
+    elif isinstance(parser_object, parsers_interface.FileObjectParser):
+      file_object = file_entry.GetFileObject()
+      try:
+        parser_object.Parse(parser_mediator, file_object)
+      finally:
+        file_object.close()
+
+    else:
+      self.fail(
+          u'Got unexpected parser type: {0:s}'.format(type(parser_object)))
 
     return event_queue
 

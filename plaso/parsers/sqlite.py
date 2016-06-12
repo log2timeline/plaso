@@ -11,6 +11,8 @@ try:
 except ImportError:
   import sqlite3
 
+from dfvfs.path import factory as dfvfs_factory
+
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -97,7 +99,30 @@ class SQLiteDatabase(object):
     self._filename = filename
     self._is_open = False
     self._table_names = []
-    self._temp_file_name = u''
+    self._temp_db_file_path = u''
+    self._temp_wal_file_path = u''
+
+  def _OpenWALFileObject(self, wal_file_object):
+    """Opens the Write-Ahead Log (WAL) file object.
+
+    Args:
+      wal_file_object: file-like object for the Write-Ahead Log (WAL) file.
+
+    Raises:
+      IOError: if the file-like object cannot be read.
+    """
+    # Create WAL file using same filename so it is available for
+    # sqlite3.connect()
+    self._temp_wal_file_path = u'{0:s}-wal'.format(self._temp_db_file_path)
+    with open(self._temp_wal_file_path, u'wb') as wal_file:
+      try:
+        data = wal_file_object.read(self._READ_BUFFER_SIZE)
+        while data:
+          wal_file.write(data)
+          data = wal_file_object.read(self._READ_BUFFER_SIZE)
+      except IOError:
+        self.Close()
+        raise
 
   @property
   def tables(self):
@@ -112,20 +137,31 @@ class SQLiteDatabase(object):
       self._database.close()
     self._database = None
 
-    if os.path.exists(self._temp_file_name):
+    if os.path.exists(self._temp_db_file_path):
       try:
-        os.remove(self._temp_file_name)
+        os.remove(self._temp_db_file_path)
       except (OSError, IOError) as exception:
         logging.warning((
             u'Unable to remove temporary copy: {0:s} of SQLite database: '
             u'{1:s} with error: {2:s}').format(
-                self._temp_file_name, self._filename, exception))
+                self._temp_db_file_path, self._filename, exception))
 
-    self._temp_file_name = u''
+    self._temp_db_file_path = u''
+
+    if os.path.exists(self._temp_wal_file_path):
+      try:
+        os.remove(self._temp_wal_file_path)
+      except (OSError, IOError) as exception:
+        logging.warning((
+            u'Unable to remove temporary copy: {0:s} of SQLite database: '
+            u'{1:s} with error: {2:s}').format(
+                self._temp_wal_file_path, self._filename, exception))
+
+    self._temp_wal_file_path = u''
 
     self._is_open = False
 
-  def Open(self, file_object):
+  def Open(self, file_object, wal_file_object=None):
     """Opens a SQLite database file.
 
     Since pysqlite cannot read directly from a file-like object a temporary
@@ -135,11 +171,13 @@ class SQLiteDatabase(object):
 
     Args:
       file_object: the file-like object.
+      wal_file_object: optional file-like object for the Write-Ahead Log (WAL)
+                       file.
 
     Raises:
       IOError: if the file-like object cannot be read.
       sqlite3.DatabaseError: if the database cannot be parsed.
-      ValueErorr: if the file-like object is missing.
+      ValueError: if the file-like object is missing.
     """
     if not file_object:
       raise ValueError(u'Missing file object.')
@@ -161,7 +199,7 @@ class SQLiteDatabase(object):
     # that with will explicitly close the temporary files and thus
     # making sure it is available for sqlite3.connect().
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-      self._temp_file_name = temp_file.name
+      self._temp_db_file_path = temp_file.name
 
       try:
         data = file_object.read(self._READ_BUFFER_SIZE)
@@ -169,11 +207,14 @@ class SQLiteDatabase(object):
           temp_file.write(data)
           data = file_object.read(self._READ_BUFFER_SIZE)
       except IOError:
-        os.remove(self._temp_file_name)
-        self._temp_file_name = u''
+        os.remove(self._temp_db_file_path)
+        self._temp_db_file_path = u''
         raise
 
-    self._database = sqlite3.connect(self._temp_file_name)
+    if wal_file_object:
+      self._OpenWALFileObject(wal_file_object)
+
+    self._database = sqlite3.connect(self._temp_db_file_path)
     try:
       self._database.row_factory = sqlite3.Row
       cursor = self._database.cursor()
@@ -187,8 +228,11 @@ class SQLiteDatabase(object):
       self._database.close()
       self._database = None
 
-      os.remove(self._temp_file_name)
-      self._temp_file_name = u''
+      os.remove(self._temp_db_file_path)
+      self._temp_db_file_path = u''
+      if self._temp_wal_file_path:
+        os.remove(self._temp_wal_file_path)
+        self._temp_wal_file_path = u''
 
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
@@ -211,13 +255,66 @@ class SQLiteDatabase(object):
     return cursor
 
 
-class SQLiteParser(interface.FileObjectParser):
+class SQLiteParser(interface.FileEntryParser):
   """Parses SQLite database files."""
 
   NAME = u'sqlite'
   DESCRIPTION = u'Parser for SQLite database files.'
 
   _plugin_classes = {}
+
+  @staticmethod
+  def _GetDatabaseWithWAL(database_file_entry, database_file_object, filename):
+    """Gets the database object with Write-Ahead Log (WAL) file committed.
+
+    Args:
+      database_file_entry: a file entry object for the database
+                           (instance of dfvfs.FileEntry)
+      database_file_object: a file-like object for the database.
+      filename: string containing the name of the database file entry.
+
+    Returns:
+      tuple containing:
+        - a database object with WAL file committed (instance of SQLiteDatabase)
+        - a file entry object of WAL file (instance of dfvfs.FileEntry)
+      or (None, None) if WAL file doesn't exist.
+    """
+    database_wal = None
+    wal_file_entry = None
+    path_spec = database_file_entry.path_spec
+    if path_spec and hasattr(path_spec, u'location'):
+      file_system = database_file_entry.GetFileSystem()
+      wal_path_spec = dfvfs_factory.Factory.NewPathSpec(
+          file_system.type_indicator, parent=path_spec.parent,
+          location=path_spec.location + u'-wal')
+      wal_file_entry = file_system.GetFileEntryByPathSpec(wal_path_spec)
+
+      if wal_file_entry:
+        wal_file_object = wal_file_entry.GetFileObject()
+        if wal_file_object:
+          try:
+            database_wal = SQLiteDatabase(filename)
+            database_wal.Open(
+                database_file_object, wal_file_object=wal_file_object)
+
+          except (IOError, ValueError) as exception:
+            logging.warning(
+                u'Unable to open database with WAL file with error: '
+                u'{0:s}'.format(exception))
+            database_wal = None
+            wal_file_entry = None
+
+          except sqlite3.DatabaseError as exception:
+            logging.warning(
+                u'Unable to parse SQLite database with WAL file with error: '
+                u'{0:s}.'.format(exception))
+            database_wal = None
+            wal_file_entry = None
+
+          finally:
+            wal_file_object.close()
+
+    return database_wal, wal_file_entry
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -226,20 +323,29 @@ class SQLiteParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'SQLite format 3', offset=0)
     return format_specification
 
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a SQLite database file-like object.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_object = file_entry.GetFileObject()
     filename = parser_mediator.GetFilename()
     database = SQLiteDatabase(filename)
     try:
       database.Open(file_object)
+
+      # Reset file_object offset to 0 so we can re-open the database with the
+      # WAL file.
+      file_object.seek(0)
+
+      # Open second database with WAL file if available.
+      database_wal, wal_file_entry = self._GetDatabaseWithWAL(
+          file_entry, file_object, filename)
 
     except (IOError, ValueError) as exception:
       raise errors.UnableToParseFile(
@@ -251,6 +357,9 @@ class SQLiteParser(interface.FileObjectParser):
           u'Unable to parse SQLite database with error: {0:s}.'.format(
               exception))
 
+    finally:
+      file_object.close()
+
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
@@ -258,7 +367,8 @@ class SQLiteParser(interface.FileObjectParser):
       for plugin_object in self._plugin_objects:
         try:
           plugin_object.UpdateChainAndProcess(
-              parser_mediator, cache=cache, database=database)
+              parser_mediator, cache=cache, database=database,
+              database_wal=database_wal, wal_file_entry=wal_file_entry)
 
         except errors.WrongPlugin:
           logging.debug(
