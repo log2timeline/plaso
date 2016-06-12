@@ -198,6 +198,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       finally:
         file_object.close()
 
+    else:
+      self.fail(
+          u'Got unexpected parser type: {0:s}'.format(type(parser_object)))
+
     return event_queue_consumer
 
   def _TestGetMessageStrings(

@@ -6,6 +6,8 @@ import logging
 from plaso.lib import py2to3
 
 
+# TODO: remove this function
+# Do not use this function
 def GetUnicodeString(string):
   """Converts the string to Unicode if necessary."""
   if not isinstance(string, py2to3.UNICODE_TYPE):
