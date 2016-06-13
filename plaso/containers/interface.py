@@ -51,7 +51,7 @@ class AttributeContainer(object):
     Returns:
       A list containing the attribute container attribute names.
     """
-    return [name for value, name in list(self.GetAttributes())]
+    return [name for name, _ in list(self.GetAttributes())]
 
 # Efilter protocol definition to enable filtering of containers.
 structured.IStructured.implement(
