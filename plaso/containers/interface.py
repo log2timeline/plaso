@@ -44,7 +44,7 @@ class AttributeContainer(object):
         yield attribute_name, attribute_value
 
   def GetAttributeNames(self):
-    """Retrieves the names of attributes.
+    """Retrieves the names of all attributes.
 
     Attributes that are set to None are ignored.
 

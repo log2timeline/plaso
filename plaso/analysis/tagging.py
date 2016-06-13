@@ -113,34 +113,35 @@ class TaggingPlugin(interface.AnalysisPlugin):
     logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
     self._tags.append(event_tag)
 
-  def _ParseRule(self, source):
+  def _ParseRule(self, rule):
     """Parses a single tagging rule.
 
     This method attempts to detect whether the rule is written with objectfilter
     or dottysql syntax - either is acceptable.
 
     Example:
-        _ParseRule('5 + 5')
-        # Returns Sum(Literal(5), Literal(5))
+      _ParseRule('5 + 5')
+      # Returns Sum(Literal(5), Literal(5))
 
     Args:
-        source: a string containing a rule in either objectfilter or
+      rule: a string containing a rule in either objectfilter or
                 dottysql syntax.
 
     Returns:
-        The AST to represent the rule (instances of efilter.Query).
+      An efilter query that implements the rule (instance of
+      efilter.query.Query).
     """
-    if self._OBJECTFILTER_WORDS.search(source):
+    if self._OBJECTFILTER_WORDS.search(rule):
       syntax = u'objectfilter'
     else:
       syntax = u'dottysql'
 
     try:
-      return efilter_query.Query(source, syntax=syntax)
+      return efilter_query.Query(rule, syntax=syntax)
     except efilter_errors.EfilterParseError as exception:
       logging.warning(
           u'Invalid tag rule definition "{0:s}". '
-          u'Parsing error was: {1:s}'.format(source, exception.message))
+          u'Parsing error was: {1:s}'.format(rule, exception.message))
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
@@ -149,30 +150,31 @@ class TaggingPlugin(interface.AnalysisPlugin):
       tag_file_path: string containing the path to the tag file.
 
     Yields:
-      Tuples of label name, list of rule ASTs (instances of efilter.Query).
+      Tuples of label name, list of efilter queries (instances of
+      efilter.query.Query).
     """
-    rules = None
+    queries = None
     tag = None
     with open(tag_file_path, u'r') as tag_file:
       for line in tag_file.readlines():
         label_match = self._TAG_LABEL_LINE.match(line)
         if label_match:
-          if tag and rules:
-            yield tag, rules
-          rules = []
+          if tag and queries:
+            yield tag, queries
+          queries = []
           tag = label_match.group(1)
           continue
 
         rule_match = self._TAG_RULE_LINE.match(line)
         if rule_match:
-          source = rule_match.group(1)
-          rule = self._ParseRule(source)
-          if rule:
-            rules.append(rule)
+          rule = rule_match.group(1)
+          query = self._ParseRule(rule)
+          if query:
+            queries.append(query)
 
       # Yield any remaining tags once we reach the end of the file.
-      if tag and rules:
-        yield tag, rules
+      if tag and queries:
+        yield tag, queries
 
   def _ParseTaggingFile(self, tag_file_path):
     """Parses tag definitions from the source.
@@ -181,7 +183,8 @@ class TaggingPlugin(interface.AnalysisPlugin):
       tag_file_path: string containing the path to the tag file.
 
     Returns:
-      An EFILTER AST containing the tagging rules (instance of efilter.Query).
+      An EFILTER AST containing the tagging rules(instance of
+      efilter.ast.Expression).
     """
     tags = []
     for label_name, rules in self._ParseDefinitions(tag_file_path):
