@@ -44,7 +44,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self.task_start = None
 
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -58,7 +58,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self.analysis_reports.append(analysis_report)
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error object (instance of AnalysisError or ExtractionError).
@@ -73,7 +73,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self.number_of_errors += 1
 
   def AddEvent(self, event_object):
-    """Adds an event object to the storage.
+    """Adds an event object.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -88,7 +88,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self.number_of_events += 1
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source object (instance of EventSource).
@@ -103,7 +103,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag object (instance of EventTag).

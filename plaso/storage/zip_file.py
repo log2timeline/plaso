@@ -1506,7 +1506,9 @@ class ZIPStorageFile(interface.BaseStorage):
         yield stream_name
 
   def _GetSortedEvent(self, time_range=None):
-    """Retrieves a sorted event.
+    """Retrieves the events in increasing chronological order.
+
+    The time range is used to filter events that fall in a specific period.
 
     Args:
       time_range: an optional time range object (instance of TimeRange).
@@ -1888,7 +1890,7 @@ class ZIPStorageFile(interface.BaseStorage):
     return attribute_container_data
 
   def _WriteSerializedErrors(self):
-    """Writes the buffered serialized errors to the storage file."""
+    """Writes the buffered serialized errors."""
     if not self._serialized_errors_size:
       return
 
@@ -1926,7 +1928,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_errors_size = 0
 
   def _WriteSerializedEvents(self):
-    """Writes the serialized events to the storage file."""
+    """Writes the serialized events."""
     if not self._serialized_events.data_size:
       return
 
@@ -1971,7 +1973,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_events.Empty()
 
   def _WriteSerializedEventSources(self):
-    """Writes the serialized event sources to the storage file."""
+    """Writes the serialized event sources."""
     if not self._serialized_event_sources_size:
       return
 
@@ -2014,7 +2016,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_event_sources = []
 
   def _WriteSerializedEventTags(self):
-    """Writes the serialized event tags to the storage file."""
+    """Writes the serialized event tags."""
     if not self._serialized_event_tags_size:
       return
 
@@ -2209,7 +2211,7 @@ class ZIPStorageFile(interface.BaseStorage):
     data_stream.WriteFinalize()
 
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -2266,7 +2268,7 @@ class ZIPStorageFile(interface.BaseStorage):
       data_stream.WriteFinalize()
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error (instance of AnalysisError or ExtractionError).
@@ -2288,7 +2290,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedErrors()
 
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -2314,7 +2316,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEvents()
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source (instance of EventSource).
@@ -2342,7 +2344,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEventSources()
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag (instance of EventTag).
@@ -2373,7 +2375,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEventSources()
 
   def AddEventTags(self, event_tags):
-    """Adds event tags to the storage.
+    """Adds event tags.
 
     Args:
       event_tags: a list of event tags (instances of EventTag).
@@ -2534,7 +2536,9 @@ class ZIPStorageFile(interface.BaseStorage):
         yield error
 
   def GetEvents(self, time_range=None):
-    """Retrieves the events.
+    """Retrieves the events in increasing chronological order.
+
+    The time range is used to filter events that fall in a specific period.
 
     Args:
       time_range: an optional time range object (instance of TimeRange).
@@ -2862,7 +2866,7 @@ class StorageFile(ZIPStorageFile):
     return information
 
   def WritePreprocessObject(self, preprocess_object):
-    """Writes a preprocess object to the storage file.
+    """Writes a preprocess object.
 
     Args:
       preprocess_object: the preprocess object (instance of PreprocessObject).
@@ -3018,7 +3022,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       self._parser_plugins_counter[plugin_name] += 1
 
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -3040,7 +3044,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.reports_counter[report_identifier] += 1
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error object (instance of AnalysisError or ExtractionError).
@@ -3055,7 +3059,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.number_of_errors += 1
 
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -3072,7 +3076,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._UpdateCounters(event_object)
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source object (instance of EventSource).
@@ -3087,7 +3091,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag object (instance of EventTag).

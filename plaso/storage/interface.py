@@ -17,7 +17,7 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error (instance of AnalysisError or ExtractionError).
@@ -25,7 +25,7 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -33,7 +33,7 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source (instance of EventSource).
@@ -189,7 +189,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -197,7 +197,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error object (instance of AnalysisError or ExtractionError).
@@ -205,7 +205,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -213,7 +213,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source object (instance of EventSource).
@@ -221,7 +221,7 @@ class StorageWriter(object):
 
   @abc.abstractmethod
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag object (instance of EventTag).
@@ -263,10 +263,10 @@ class StorageWriter(object):
     """
 
   def MergeFromStorage(self, storage_reader):
-    """Merges data from a storage.
+    """Merges data from a storage reader.
 
     Args:
-      storage_reader: a storage reader object (StorageReader) of the storage.
+      storage_reader: a storage reader object (instance of StorageReader).
     """
     for event_source in storage_reader.GetEventSources():
       self.AddEventSource(event_source)
