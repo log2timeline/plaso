@@ -49,7 +49,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tags = []
 
   def SetAndLoadTagFile(self, tagging_file_path):
-    """Set the tag file to be used by the plugin.
+    """Sets the tag file to be used by the plugin.
 
     Args:
       tagging_file_path: The path to the tagging file to use.
@@ -58,7 +58,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tag_rules = self._ParseTaggingFile(self._tagging_file_name)
 
   def _AttemptAutoDetectTagFile(self, analysis_mediator):
-    """Detect which tag file is most appropriate.
+    """Detects which tag file is most appropriate.
 
     Args:
       analysis_mediator: The analysis mediator (Instance of
@@ -112,7 +112,10 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tags.append(event_tag)
 
   def _ParseRule(self, source):
-    """Parse one of the rules as either objectfilter or dottysql.
+    """Parses a single tagging rule.
+
+    This method attempts to detect whether the rule is written with objectfilter
+    or dottysql syntax - either is acceptable.
 
     Example:
         _ParseRule('5 + 5')
@@ -123,21 +126,19 @@ class TaggingPlugin(interface.AnalysisPlugin):
                 dottysql syntax.
 
     Returns:
-        The AST to represent the rule.
+        The AST to represent the rule (instances of efilter.Query).
     """
     if self._OBJECTFILTER_WORDS.search(source):
       syntax = u'objectfilter'
     else:
-      syntax = None  # Default it is.
+      syntax = u'dottysql'
 
     try:
-      rule = efilter_query.Query(source, syntax=syntax)
-      return rule
-    except efilter_errors.EfilterParseError as e:
+      return efilter_query.Query(source, syntax=syntax)
+    except efilter_errors.EfilterParseError as exception:
       logging.warning(
           u'Invalid tag rule definition "{0:s}". '
-          u'Parsing error was: {1:s}'.format(source, e.message))
-      return
+          u'Parsing error was: {1:s}'.format(source, exception.message))
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
@@ -146,7 +147,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
       tag_file_path: string containing the path to the tag file.
 
     Yields:
-      Tuples of label name, list of rule ASTs.
+      Tuples of label name, list of rule ASTs (instances of efilter.Query).
     """
     rules = None
     tag = None
@@ -172,13 +173,13 @@ class TaggingPlugin(interface.AnalysisPlugin):
         yield tag, rules
 
   def _ParseTaggingFile(self, tag_file_path):
-    """Parses tag definition from the source.
+    """Parses tag definitions from the source.
 
     Args:
       tag_file_path: string containing the path to the tag file.
 
     Returns:
-      An EFILTER AST containing the tagging rules.
+      An EFILTER AST containing the tagging rules (instance of efilter.Query).
     """
     tags = []
     for label_name, rules in self._ParseDefinitions(tag_file_path):
