@@ -497,7 +497,7 @@ class ExtractionFrontend(frontend.Frontend):
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
             mount_path=self._mount_path,
-            number_of_extraction_workers=number_of_extraction_workers,
+            number_of_worker_processes=number_of_extraction_workers,
             parser_filter_expression=parser_filter_expression,
             process_archive_files=self._process_archive_files,
             status_update_callback=status_update_callback,

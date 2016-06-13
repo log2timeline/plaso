@@ -11,6 +11,7 @@ import Queue
 import random
 import signal
 import sys
+import threading
 import time
 
 from dfvfs.resolver import context
@@ -230,97 +231,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """Signals the process to abort."""
 
 
-class MultiProcessCollectorProcess(MultiProcessBaseProcess):
-  """Class that defines a multi-processing collector process."""
-
-  def __init__(
-      self, stop_collector_event, storage_writer, task_queue, **kwargs):
-    """Initializes the process object.
-
-    Args:
-      stop_collector_event: the stop process event (instance of
-                            multiprocessing.Event). The collector
-                            should exit after this event is set.
-      storage_writer: a storage writer object (instance of StorageWriter).
-      task_queue: the task queue object (instance of MultiProcessingQueue).
-      kwargs: keyword arguments to pass to multiprocessing.Process.
-    """
-    super(MultiProcessCollectorProcess, self).__init__(
-        definitions.PROCESS_TYPE_COLLECTOR, **kwargs)
-    self._abort = False
-    self._number_of_produced_items = 0
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._stop_collector_event = stop_collector_event
-    self._storage_writer = storage_writer
-    self._task_queue = task_queue
-    self._task_queue_port = None
-
-  def _GetStatus(self):
-    """Returns a status dictionary."""
-    status = {
-        u'processing_status': self._status,
-        u'produced_number_of_path_specs': self._number_of_produced_items,
-        u'task_queue_port': self._task_queue_port,
-        u'type': definitions.PROCESS_TYPE_COLLECTOR}
-
-    self._status_is_running = status.get(u'is_running', False)
-    return status
-
-  def _Main(self):
-    """The main loop."""
-    logging.debug(u'Collector (PID: {0:d}) started'.format(self._pid))
-
-    # The ZeroMQ backed queue must be started first, so we can save its port.
-    if isinstance(self._task_queue, zeromq_queue.ZeroMQQueue):
-      self._task_queue.name = u'Collector task queue'
-      self._task_queue.Open()
-      self._task_queue_port = self._task_queue.port
-
-    try:
-      logging.debug(u'Collector starting collection.')
-
-      self._status = definitions.PROCESSING_STATUS_RUNNING
-      for event_source in self._storage_writer.GetEventSources():
-        if self._abort:
-          break
-
-        self._task_queue.PushItem(event_source.path_spec)
-        self._number_of_produced_items += 1
-
-    except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception in collector (PID: {0:d}).'.format(self._pid))
-      logging.exception(exception)
-      self._abort = True
-
-    if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-    self._task_queue.Close()
-
-    logging.debug(u'Collector (PID: {0:d}) stopped'.format(self._pid))
-
-    # The collector will typically collect the path specifications and
-    # exit. However multiprocessing.Queue will start a separate thread
-    # that blocks on close until every item is read from the queue. This
-    # is necessary since the queue uses a pipe under the hood. However
-    # this behavior causes unwanted side effect for the abort code paths
-    # hence we have the process wait for the stop process event and then
-    # close the queue without the separate blocking thread.
-
-    if not self._abort:
-      logging.debug(u'Collector waiting for stop event.')
-      self._stop_collector_event.wait()
-
-    self._task_queue.Close(abort=True)
-
-  def SignalAbort(self):
-    """Signals the process to abort."""
-    self._abort = True
-
-
 class MultiProcessEngine(engine.BaseEngine):
   """Class that defines the multi-process engine.
 
@@ -358,36 +268,31 @@ class MultiProcessEngine(engine.BaseEngine):
       use_zeromq: optional boolean to indicate whether to use ZeroMQ for
                   queuing. If False, the multiprocessing queue will be used.
     """
-    self._use_zeromq = use_zeromq
-    if self._use_zeromq:
-      path_spec_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-          delay_open=True, name=u'Pathspec inbound', buffer_timeout_seconds=300)
-      task_queue = path_spec_outbound_queue
-    else:
-      task_queue = MultiProcessingQueue(
-          maximum_number_of_queued_items=maximum_number_of_queued_items)
-
     super(MultiProcessEngine, self).__init__()
+    self._collector_thread = None
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
     self._last_worker_number = 0
+    self._maximum_number_of_queued_items = maximum_number_of_queued_items
     self._mount_path = None
-    self._number_of_extraction_workers = 0
+    self._new_event_sources = False
+    self._number_of_worker_processes = 0
     self._parser_filter_expression = None
     self._process_archive_files = False
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
+    self._resolver_context = context.Context()
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
     self._session_identifier = None
     self._show_memory_usage = False
-    self._stop_collector_event = None
     self._storage_writer = None
-    self._task_queue = task_queue
+    self._task_queue = None
     self._task_queue_port = None
     self._text_prepend = None
+    self._use_zeromq = use_zeromq
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.
@@ -528,12 +433,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
       self._processing_status.error_detected = True
 
-      if process.type == definitions.PROCESS_TYPE_COLLECTOR:
-        raise errors.EngineAbort(u'Collector unexpectedly terminated')
-
-      if process.type == definitions.PROCESS_TYPE_STORAGE_WRITER:
-        raise errors.EngineAbort(u'Storage writer unexpectedly terminated')
-
       self._TerminateProcess(pid)
 
       logging.info(u'Starting replacement worker process for {0:s}'.format(
@@ -550,52 +449,30 @@ class MultiProcessEngine(engine.BaseEngine):
             u'Process {0:s} (PID: {1:d}) has completed its processing. '
             u'Total of {2:d} events extracted from {3:d} pathspecs').format(
                 process.name, pid, number_of_events, number_of_pathspecs))
-      elif process.type == definitions.PROCESS_TYPE_COLLECTOR:
-        number_of_pathspecs = process_status.get(
-            u'produced_number_of_path_specs', 0)
-        logging.debug((
-            u'Process {0:s} (PID: {1:d}) has completed its processing. '
-            u'Total of {2:d} pathspecs extracted').format(
-                process.name, pid, number_of_pathspecs))
-      elif process.type == definitions.PROCESS_TYPE_STORAGE_WRITER:
-        logging.debug((
-            u'Process {0:s} (PID: {1:d}) has completed its processing. '
-            u'Total of {2:d} events written').format(
-                process.name, pid, process_status.get(u'number_of_events', 0)))
 
       self._StopMonitoringProcess(pid)
 
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
 
-  def _GetPathSpecQueuePort(self, collector_process):
-    """Retrieves the path specification queue port number.
+  def _CollectPathSpecs(self):
+    """Collects path specifications."""
+    logging.debug(u'Collector started')
 
-    Args:
-      collector_process: the collector process object (instance of
-                         MultiProcessCollectorProcess).
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    for event_source in self._storage_writer.GetEventSources():
+      self._new_event_sources = True
+      if self._abort:
+        break
 
-    Returns:
-      An integer containing the path specification queue port number.
+      self._task_queue.PushItem(event_source.path_spec)
 
-    Raises:
-      RuntimeError: if the collector is not able to start its queue before the
-                    the timeout is reached.
-    """
-    task_queue_port = None
-    queue_start_wait_attempts = 0
-    while (task_queue_port is None and
-           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
-      status = self._GetProcessStatus(collector_process)
-      task_queue_port = status.get(u'task_queue_port', None)
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-      queue_start_wait_attempts += 1
-      time.sleep(self._QUEUE_START_WAIT)
-
-    if task_queue_port is None:
-      raise RuntimeError(u'Collector queue did not bind in time.')
-
-    return task_queue_port
+    logging.debug(u'Collector stopped.')
 
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
@@ -658,14 +535,12 @@ class MultiProcessEngine(engine.BaseEngine):
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
 
   def _ProcessSources(
-      self, source_path_specs, resolver_context, storage_writer,
-      filter_find_specs=None):
+      self, source_path_specs, storage_writer, filter_find_specs=None):
     """Processes the sources and extracts event objects.
 
     Args:
       source_path_specs: a list of path specifications (instances of
                          dfvfs.PathSpec) of the sources to process.
-      resolver_context: a resolver context (instance of dfvfs.Context).
       storage_writer: a storage writer object (instance of StorageWriter).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
@@ -674,10 +549,11 @@ class MultiProcessEngine(engine.BaseEngine):
       A string containing the processing status.
     """
     # TODO: pass status update callback.
-    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
+    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
 
     for path_spec in path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs):
+        source_path_specs, find_specs=filter_find_specs,
+        recurse_file_system=False):
       if self._abort:
         break
 
@@ -746,6 +622,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processes_per_pid[process.pid] = process
 
+  def _StartCollectorThread(self):
+    """Starts the collector thread."""
+    self._collector_thread = threading.Thread(
+        name=u'Collector', target=self._CollectPathSpecs)
+    self._collector_thread.start()
+
   def _StartExtractionWorkerProcess(self, storage_writer):
     """Creates, starts and registers an extraction worker process.
 
@@ -785,84 +667,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._RegisterProcess(worker_process)
 
     return worker_process
-
-  def _StopExtractionProcesses(self, abort=False):
-    """Stops the extraction processes.
-
-    Args:
-      abort: optional boolean to indicate the stop is issued on abort.
-    """
-    logging.debug(u'Stopping extraction processes.')
-    self._StopProcessMonitoring()
-    # We can stop the collector now.
-    self._stop_collector_event.set()
-
-    # Note that multiprocessing.Queue is very sensitive regarding
-    # blocking on either a get or a put. So we try to prevent using
-    # any blocking behavior.
-
-    if abort:
-      # Signal all the processes to abort.
-      self._AbortTerminate()
-
-    # Wake the processes to make sure that they are not blocking
-    # waiting for the queue not to be full.
-    if self._use_zeromq:
-      logging.debug(u'Closing ZeroMQ storage queues.')
-    else:
-      logging.debug(u'Emptying queues.')
-      self._task_queue.Empty()
-
-      # Wake the processes to make sure that they are not blocking
-      # waiting for new items.
-      for _ in range(self._number_of_extraction_workers):
-        self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-
-    # Try waiting for the processes to exit normally.
-    self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    if not abort:
-      # Check if the processes are still alive and terminate them if necessary.
-      self._AbortTerminate()
-      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    # For Multiprocessing queues, set abort to True to stop queue.join_thread()
-    # from blocking.
-    if isinstance(self._task_queue, MultiProcessingQueue):
-      self._task_queue.Close(abort=True)
-
-    if abort:
-      # Kill any remaining processes, which can be necessary if
-      # the collector dies.
-      self._AbortKill()
-
-  def _StopMonitoringProcess(self, pid):
-    """Stops monitoring a process.
-
-    Args:
-      pid: The process identifier.
-
-    Raises:
-      KeyError: if the process is not registered with the engine or
-                if the process is registered, but not monitored.
-    """
-    self._RaiseIfNotRegistered(pid)
-    self._RaiseIfNotMonitored(pid)
-
-    process = self._processes_per_pid[pid]
-    del self._process_information_per_pid[pid]
-
-    rpc_client = self._rpc_clients_per_pid.get(pid, None)
-    if rpc_client:
-      rpc_client.Close()
-      del self._rpc_clients_per_pid[pid]
-
-    if pid in self._rpc_errors_per_pid:
-      del self._rpc_errors_per_pid[pid]
-
-    logging.debug((
-        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
-        u'list.').format(process.name, pid))
 
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
@@ -912,6 +716,88 @@ class MultiProcessEngine(engine.BaseEngine):
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
+  def _StopCollectorThread(self):
+    """Stops the collector thread."""
+    if self._collector_thread.isAlive():
+      self._collector_thread.join()
+    self._collector_thread = None
+
+  def _StopExtractionProcesses(self, abort=False):
+    """Stops the extraction processes.
+
+    Args:
+      abort: optional boolean to indicate the stop is issued on abort.
+    """
+    logging.debug(u'Stopping extraction processes.')
+    self._StopProcessMonitoring()
+
+    # Note that multiprocessing.Queue is very sensitive regarding
+    # blocking on either a get or a put. So we try to prevent using
+    # any blocking behavior.
+
+    if abort:
+      # Signal all the processes to abort.
+      self._AbortTerminate()
+
+    # Wake the processes to make sure that they are not blocking
+    # waiting for the queue not to be full.
+    if self._use_zeromq:
+      logging.debug(u'Closing ZeroMQ storage queues.')
+    else:
+      logging.debug(u'Emptying queues.')
+      self._task_queue.Empty()
+
+      # Wake the processes to make sure that they are not blocking
+      # waiting for new items.
+      for _ in range(self._number_of_worker_processes):
+        self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+
+    # Try waiting for the processes to exit normally.
+    self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+    if not abort:
+      # Check if the processes are still alive and terminate them if necessary.
+      self._AbortTerminate()
+      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+    # For Multiprocessing queues, set abort to True to stop queue.join_thread()
+    # from blocking.
+    if isinstance(self._task_queue, MultiProcessingQueue):
+      self._task_queue.Close(abort=True)
+
+    if abort:
+      # Kill any remaining processes, which can be necessary if
+      # the collector dies.
+      self._AbortKill()
+
+  def _StopMonitoringProcess(self, pid):
+    """Stops monitoring a process.
+
+    Args:
+      pid: The process identifier.
+
+    Raises:
+      KeyError: if the process is not registered with the engine or
+                if the process is registered, but not monitored.
+    """
+    self._RaiseIfNotRegistered(pid)
+    self._RaiseIfNotMonitored(pid)
+
+    process = self._processes_per_pid[pid]
+    del self._process_information_per_pid[pid]
+
+    rpc_client = self._rpc_clients_per_pid.get(pid, None)
+    if rpc_client:
+      rpc_client.Close()
+      del self._rpc_clients_per_pid[pid]
+
+    if pid in self._rpc_errors_per_pid:
+      del self._rpc_errors_per_pid[pid]
+
+    logging.debug((
+        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
+        u'list.').format(process.name, pid))
+
   def _StopProcessMonitoring(self):
     """Stops monitoring processes."""
     for pid in iter(self._process_information_per_pid.keys()):
@@ -960,22 +846,7 @@ class MultiProcessEngine(engine.BaseEngine):
     process_type = process_status.get(u'type', None)
     status_indicator = process_status.get(u'processing_status', None)
 
-    if process_type == definitions.PROCESS_TYPE_COLLECTOR:
-      produced_number_of_path_specs = process_status.get(
-          u'produced_number_of_path_specs', 0)
-
-      self._processing_status.UpdateCollectorStatus(
-          process.name, pid, produced_number_of_path_specs, status_indicator,
-          process_information.status)
-
-    elif process_type == definitions.PROCESS_TYPE_STORAGE_WRITER:
-      number_of_events = process_status.get(u'number_of_events', 0)
-
-      self._processing_status.UpdateStorageWriterStatus(
-          process.name, pid, number_of_events, status_indicator,
-          process_information.status)
-
-    elif process_type == definitions.PROCESS_TYPE_WORKER:
+    if process_type == definitions.PROCESS_TYPE_WORKER:
       self._RaiseIfNotMonitored(pid)
 
       consumed_number_of_path_specs = process_status.get(
@@ -994,7 +865,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self, source_path_specs, session_start, preprocess_object,
       storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
-      number_of_extraction_workers=0, parser_filter_expression=None,
+      number_of_worker_processes=0, parser_filter_expression=None,
       process_archive_files=False, profiling_type=u'all',
       status_update_callback=None, show_memory_usage=False, text_prepend=None):
     """Processes the sources and extract event objects.
@@ -1014,10 +885,10 @@ class MultiProcessEngine(engine.BaseEngine):
       hasher_names_string: optional comma separated string of names of
                            hashers to enable enable.
       mount_path: optional string containing the mount path.
-      number_of_extraction_workers: optional number of extraction worker
-                                    processes. The default is 0 which means
-                                    the function will determine the suitable
-                                    number.
+      number_of_worker_processes: optional integer containing the number of
+                                  worker processes. The default is 0 which
+                                  means the function will determine the
+                                  suitable number.
       parser_filter_expression: optional string containing the parser filter
                                 expression, where None represents all parsers
                                 and plugins.
@@ -1033,7 +904,7 @@ class MultiProcessEngine(engine.BaseEngine):
     Returns:
       The processing status (instance of ProcessingStatus).
     """
-    if number_of_extraction_workers < 1:
+    if number_of_worker_processes < 1:
       # One worker for each "available" CPU (minus other processes).
       # The number here is derived from the fact that the engine starts up:
       # * A collector process.
@@ -1050,10 +921,10 @@ class MultiProcessEngine(engine.BaseEngine):
       elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
         cpu_count = self._WORKER_PROCESSES_MAXIMUM
 
-      number_of_extraction_workers = cpu_count
+      number_of_worker_processes = cpu_count
 
     self._enable_sigsegv_handler = enable_sigsegv_handler
-    self._number_of_extraction_workers = number_of_extraction_workers
+    self._number_of_worker_processes = number_of_worker_processes
     self._show_memory_usage = show_memory_usage
 
     # Keep track of certain values so we can spawn new extraction workers.
@@ -1063,58 +934,62 @@ class MultiProcessEngine(engine.BaseEngine):
     self._mount_path = mount_path
     self._parser_filter_expression = parser_filter_expression
     self._process_archive_files = process_archive_files
+    self._session_identifier = session_start.identifier
+    self._storage_writer = storage_writer
     self._text_prepend = text_prepend
 
-    self._session_identifier = session_start.identifier
+    # Set up the storage writer before the worker processes.
+    self._storage_writer.StartTaskStorage()
 
-    resolver_context = context.Context()
+    # Set up the task queue.
+    if not self._use_zeromq:
+      self._task_queue = MultiProcessingQueue(
+          maximum_number_of_queued_items=self._maximum_number_of_queued_items)
 
-    # Store a copy of the storage writer for _CheckProcessStatus.
-    self._storage_writer = storage_writer
+    else:
+      task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+          delay_open=True, name=u'Task queue', buffer_timeout_seconds=300)
+      self._task_queue = task_outbound_queue
 
-    if self._enable_profiling:
-      storage_writer.EnableProfiling(profiling_type=profiling_type)
+      # The ZeroMQ backed queue must be started first, so we can save its port.
+      self._task_queue.name = u'Task queue'
+      self._task_queue.Open()
+      self._task_queue_port = self._task_queue.port
 
+    # Start the worker processes.
     logging.debug(u'Starting processes.')
 
-    storage_writer.Open()
+    for _ in range(0, number_of_worker_processes):
+      extraction_process = self._StartExtractionWorkerProcess(
+          self._storage_writer)
+      self._StartMonitoringProcess(extraction_process.pid)
 
-    try:
-      storage_writer.WriteSessionStart(session_start)
+    logging.debug(u'Processing started.')
 
-      # TODO: change in phased processing refactor.
-      _ = self._ProcessSources(
-          source_path_specs, resolver_context, storage_writer,
-          filter_find_specs=filter_find_specs)
+    self._storage_writer.Open()
 
-    finally:
-      pass
+    if self._enable_profiling:
+      self._storage_writer.EnableProfiling(profiling_type=profiling_type)
+
+    self._storage_writer.WriteSessionStart(session_start)
+
+    # TODO: change in phased processing refactor.
+    _ = self._ProcessSources(
+        source_path_specs, self._storage_writer,
+        filter_find_specs=filter_find_specs)
 
     if self._abort:
       return
 
-    # Next start the collector, as we needs its port number for the workers as
-    # well.
-    self._stop_collector_event = multiprocessing.Event()
-    collector_process = MultiProcessCollectorProcess(
-        self._stop_collector_event, storage_writer, self._task_queue,
-        enable_sigsegv_handler=self._enable_sigsegv_handler, name=u'Collector')
-    collector_process.start()
-    self._RegisterProcess(collector_process)
-    self._StartMonitoringProcess(collector_process.pid)
+    self._new_event_sources = True
+    while self._new_event_sources:
+      if self._abort:
+        return
 
-    if self._use_zeromq:
-      self._task_queue_port = self._GetPathSpecQueuePort(collector_process)
+      self._new_event_sources = False
+      self._StartCollectorThread()
 
-    # Finally, start the workers.
-    for _ in range(0, number_of_extraction_workers):
-      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
-      self._StartMonitoringProcess(extraction_process.pid)
-
-    try:
-      logging.debug(u'Processing started.')
-
-      time.sleep(self._STATUS_CHECK_SLEEP)
+      # TODO: change status check.
       extraction_completed, _ = self._CheckStatus()
       while not extraction_completed:
         if status_update_callback:
@@ -1123,39 +998,35 @@ class MultiProcessEngine(engine.BaseEngine):
         time.sleep(self._STATUS_CHECK_SLEEP)
         extraction_completed, _ = self._CheckStatus()
 
-      logging.debug(u'Processing stopped.')
+      self._StopCollectorThread()
 
-    except errors.EngineAbort as exception:
-      logging.warning(
-          u'Processing aborted with engine error: {0:s}.'.format(exception))
+      # TODO: move task storage merge into separate thread.
+      # pylint: disable=protected-access
+      for task_storage_file in glob.glob(
+          os.path.join(self._storage_writer._task_storage_path, u'*.plaso')):
+        storage_reader = storage_zip_file.ZIPStorageFileReader(task_storage_file)
+        self._storage_writer.MergeFromStorage(storage_reader)
 
-    except Exception as exception:  # pylint: disable=broad-except
-      logging.error(
-          u'Processing aborted with error: {0:s}.'.format(exception))
-      self._processing_status.error_detected = True
+        # Force close the storage reader so we can remove the file.
+        storage_reader.Close()
+        os.remove(task_storage_file)
 
     self._StopExtractionProcesses(abort=self._processing_status.error_detected)
 
-    # TODO: move task storage merge into separate thread.
-    # pylint: disable=protected-access
-    for task_storage_file in glob.glob(
-        os.path.join(storage_writer._task_storage_path, u'*.plaso')):
-      storage_reader = storage_zip_file.ZIPStorageFileReader(task_storage_file)
-      storage_writer.MergeFromStorage(storage_reader)
-
-      # Force close the storage reader so we can remove the file.
-      storage_reader.Close()
-      os.remove(task_storage_file)
+    logging.debug(u'Processing stopped.')
 
     # TODO: refactor the use of preprocess_object.
-    storage_writer.WritePreprocessObject(preprocess_object)
-    storage_writer.WriteSessionCompletion()
-    storage_writer.Close()
+    self._storage_writer.WritePreprocessObject(preprocess_object)
+    self._storage_writer.WriteSessionCompletion()
+    self._storage_writer.Close()
 
     if self._enable_profiling:
-      storage_writer.DisableProfiling()
+      self._storage_writer.DisableProfiling()
 
-    # TODO: remove temp file and directory.
+    self._storage_writer.StopTaskStorage()
+    self._storage_writer = None
+
+    self._task_queue.Close(abort=self._abort)
 
     return self._processing_status
 

@@ -59,7 +59,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
       resolver_context = context.Context()
       test_extractor = extractors.PathSpecExtractor(resolver_context)
-      path_specs = list(test_extractor.ExtractPathSpecs([source_path_spec]))
+      path_specs = list(test_extractor.ExtractPathSpecs(
+          [source_path_spec]))
 
       self.assertEqual(len(path_specs), 4)
 
@@ -144,7 +145,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
-    path_specs = list(test_extractor.ExtractPathSpecs([source_path_spec]))
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        [source_path_spec]))
 
     self.assertEqual(len(path_specs), 3)
 
@@ -226,8 +228,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    path_specs = list(test_extractor.ExtractPathSpecs([
-        p1_file_system_path_spec, p2_file_system_path_spec]))
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        [p1_file_system_path_spec, p2_file_system_path_spec]))
 
     expected_paths_p1 = [
         u'/$AttrDef',

@@ -134,6 +134,8 @@ class EventExtractionWorker(object):
     file_system = file_entry.GetFileSystem()
 
     path_segments = file_system.SplitPath(location)
+    if not path_segments:
+      return False
 
     if self._CHROME_CACHE_DATA_FILE_RE.match(path_segments[-1]):
       location_segments = path_segments[:-1]
@@ -183,7 +185,7 @@ class EventExtractionWorker(object):
 
     return False
 
-  def _HashDataStream(self, parser_mediator, file_entry, data_stream_name=u''):
+  def _HashDataStream(self, parser_mediator, file_entry, data_stream_name):
     """Hashes the contents of a specific data stream of a file entry.
 
     The resulting digest hashes are set in the parser mediator as attributes
@@ -194,9 +196,7 @@ class EventExtractionWorker(object):
       parser_mediator: a parser mediator object (instance of ParserMediator).
       file_entry: the file entry relating to the data to be hashed (instance of
                   dfvfs.FileEntry)
-      data_stream_name: optional data stream name. The default is
-                        an empty string which represents the default
-                        data stream.
+      data_stream_name: a string containing the data stream name.
 
     Raises:
       RuntimeError: if the file-like object is missing.
@@ -316,7 +316,9 @@ class EventExtractionWorker(object):
 
           for path_spec in path_spec_extractor.ExtractPathSpecs(
               [archive_path_spec]):
-            parser_mediator.ProduceEventSource(path_spec)
+            event_source = event_sources.FileEntryEventSource(
+                path_spec=path_spec)
+            parser_mediator.ProduceEventSource(event_source)
             self.number_of_produced_path_specs += 1
 
         except IOError:
@@ -381,16 +383,44 @@ class EventExtractionWorker(object):
         compressed_stream_path_spec = None
 
       if compressed_stream_path_spec:
-        event_source = event_sources.EventSource(
+        event_source = event_sources.FileEntryEventSource(
             path_spec=compressed_stream_path_spec)
         parser_mediator.ProduceEventSource(event_source)
         self.number_of_produced_path_specs += 1
 
     return True
 
-  def _ProcessFileEntry(
-      self, parser_mediator, file_entry, data_stream_name=u''):
-    """Processes a specific data stream of a file entry.
+  def _ProcessDirectory(self, parser_mediator, file_entry):
+    """Processes a directory file entry.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+    """
+    for sub_file_entry in file_entry.sub_file_entries:
+      try:
+        if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
+          continue
+
+      except dfvfs_errors.BackEndError as exception:
+        logging.warning(
+            u'Unable to process file: {0:s} with error: {1:s}'.format(
+                sub_file_entry.path_spec.comparable.replace(
+                    u'\n', u';'), exception))
+        continue
+
+      # For TSK-based file entries only, ignore the virtual /$OrphanFiles
+      # directory.
+      if sub_file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
+        if file_entry.IsRoot() and sub_file_entry.name == u'$OrphanFiles':
+          continue
+
+      event_source = event_sources.FileEntryEventSource(
+          path_spec=sub_file_entry.path_spec)
+      parser_mediator.ProduceEventSource(event_source)
+
+  def _ProcessFileEntry(self, parser_mediator, file_entry):
+    """Processes a specific file entry.
 
     Args:
       parser_mediator: a parser mediator object (instance of ParserMediator).
@@ -398,9 +428,6 @@ class EventExtractionWorker(object):
       data_stream_name: optional data stream name. The default is
                         an empty string which represents the default
                         data stream.
-
-    Raises:
-      RuntimeError: if the parser object is missing.
     """
     self._current_file_entry = file_entry
     self._current_display_name = parser_mediator.GetDisplayName(file_entry)
@@ -422,39 +449,14 @@ class EventExtractionWorker(object):
             parser_mediator, file_entry, data_stream_name=data_stream_name)
 
       else:
-        # Not every file entry has a data stream. In such cases we want to
-        # extract the metadata only.
-        has_data_stream = file_entry.HasDataStream(data_stream_name)
+        file_entry_processed = False
+        for data_stream in file_entry.data_streams:
+          file_entry_processed = True
+          self._ProcessFileEntryDataStream(
+              parser_mediator, file_entry, data_stream.name)
 
-        if has_data_stream:
-          self._HashDataStream(
-              parser_mediator, file_entry, data_stream_name=data_stream_name)
-
-        # We always want to extract the file entry metadata but we only want
-        # to parse it once per file entry, so we only use it if we are
-        # processing the default (nameless) data stream.
-        if not data_stream_name:
-          self._event_extractor.ParseFileEntryMetadata(
-              parser_mediator, file_entry)
-
-        # Determine if the content of the file entry should not be extracted.
-        skip_content_extraction = self._CanSkipContentExtraction(file_entry)
-        if skip_content_extraction:
-          logging.info(u'Skipping content extraction of: {0:s}'.format(
-              self._current_display_name))
-        else:
-          is_archive = False
-          is_compressed_stream = False
-
-          if file_entry.IsFile():
-            is_compressed_stream = self._ProcessCompressedStreamFile(
-                parser_mediator, file_entry)
-            if not is_compressed_stream:
-              is_archive = self._ProcessArchiveFile(parser_mediator, file_entry)
-
-          if has_data_stream and not is_archive and not is_compressed_stream:
-            self._event_extractor.ParseDataStream(
-                parser_mediator, file_entry, data_stream_name=data_stream_name)
+        if not file_entry_processed:
+          self._ProcessFileEntryDataStream(parser_mediator, file_entry, u'')
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
@@ -479,6 +481,49 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[ProcessFileEntry] done processing file entry: {0:s}'.format(
             self._current_display_name))
+
+  def _ProcessFileEntryDataStream(
+      self, parser_mediator, file_entry, data_stream_name):
+    """Processes a specific data stream of a file entry.
+
+    Args:
+      parser_mediator: a parser mediator object (instance of ParserMediator).
+      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      data_stream_name: a string containing the data stream name.
+    """
+    # Not every file entry has a data stream. In such cases we want to
+    # extract the metadata only.
+    has_data_stream = file_entry.HasDataStream(data_stream_name)
+    if has_data_stream:
+      self._HashDataStream(parser_mediator, file_entry, data_stream_name)
+
+    # We always want to extract the file entry metadata but we only want
+    # to parse it once per file entry, so we only use it if we are
+    # processing the default (nameless) data stream.
+    if not data_stream_name and not file_entry.IsRoot():
+      self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
+
+    # Determine if the content of the file entry should not be extracted.
+    skip_content_extraction = self._CanSkipContentExtraction(file_entry)
+    if skip_content_extraction:
+      logging.info(u'Skipping content extraction of: {0:s}'.format(
+          self._current_display_name))
+      return
+
+    if file_entry.IsDirectory() and not data_stream_name:
+      self._ProcessDirectory(parser_mediator, file_entry)
+
+    is_archive = False
+    is_compressed_stream = False
+    if has_data_stream:
+      is_compressed_stream = self._ProcessCompressedStreamFile(
+          parser_mediator, file_entry)
+      if not is_compressed_stream:
+        is_archive = self._ProcessArchiveFile(parser_mediator, file_entry)
+
+    if has_data_stream and not is_archive and not is_compressed_stream:
+      self._event_extractor.ParseDataStream(
+          parser_mediator, file_entry, data_stream_name=data_stream_name)
 
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""
@@ -557,14 +602,7 @@ class EventExtractionWorker(object):
                 path_spec.comparable))
         return
 
-      # Note that data stream can be set but contain None, we'll set it
-      # to an empty string here.
-      data_stream_name = getattr(path_spec, u'data_stream', None)
-      if not data_stream_name:
-        data_stream_name = u''
-
-      self._ProcessFileEntry(
-          self._parser_mediator, file_entry, data_stream_name=data_stream_name)
+      self._ProcessFileEntry(self._parser_mediator, file_entry)
 
     except IOError as exception:
       logging.warning(

@@ -98,8 +98,6 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       A string containing the processing status.
     """
-    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
-
     # TODO: refactor status indication.
     self._SetCollectorStatus(definitions.PROCESSING_STATUS_RUNNING, 0)
     self._SetExtractionWorkerStatus(
@@ -107,9 +105,12 @@ class SingleProcessEngine(engine.BaseEngine):
     self._SetStorageWriterStatus(definitions.PROCESSING_STATUS_WAITING, 0)
     self._UpdateStatus()
 
+    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
+
     number_of_produced_path_specs = 0
     for path_spec in path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs):
+        source_path_specs, find_specs=filter_find_specs,
+        recurse_file_system=False):
       if self._abort:
         break
 
@@ -124,42 +125,49 @@ class SingleProcessEngine(engine.BaseEngine):
       self._UpdateCollectorStatus(
           definitions.PROCESSING_STATUS_RUNNING, number_of_produced_path_specs)
 
-    # TODO: flushing the storage writer here for now to make sure the event
-    # sources are written to disk. Remove this during phased processing
-    # refactor.
-    storage_writer.ForceFlush()
-
-    if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
-
-    # TODO: refactor status indication.
-    self._SetCollectorStatus(status, number_of_produced_path_specs)
-    self._UpdateStatus()
-
-    if self._abort:
-      return definitions.PROCESSING_STATUS_ABORTED
-
+    new_event_sources = True
     number_of_consumed_path_specs = 0
-    for event_source in storage_writer.GetEventSources():
+    while new_event_sources:
       if self._abort:
         break
 
-      extraction_worker.ProcessPathSpec(event_source.path_spec)
-      number_of_consumed_path_specs += 1
+      # TODO: flushing the storage writer here for now to make sure the event
+      # sources are written to disk. Remove this during phased processing
+      # refactor.
+      storage_writer.ForceFlush()
+
+      if self._abort:
+        status = definitions.PROCESSING_STATUS_ABORTED
+      else:
+        status = definitions.PROCESSING_STATUS_COMPLETED
 
       # TODO: refactor status indication.
-      self._SetExtractionWorkerStatus(
-          definitions.PROCESSING_STATUS_RUNNING,
-          extraction_worker.current_display_name,
-          number_of_consumed_path_specs,
-          extraction_worker.number_of_produced_events,
-          extraction_worker.number_of_produced_path_specs)
-      self._SetStorageWriterStatus(
-          definitions.PROCESSING_STATUS_RUNNING,
-          storage_writer.number_of_events)
+      self._SetCollectorStatus(status, number_of_produced_path_specs)
       self._UpdateStatus()
+
+      if self._abort:
+        break
+
+      new_event_sources = False
+      for event_source in storage_writer.GetEventSources():
+        new_event_sources = True
+        if self._abort:
+          break
+
+        extraction_worker.ProcessPathSpec(event_source.path_spec)
+        number_of_consumed_path_specs += 1
+
+        # TODO: refactor status indication.
+        self._SetExtractionWorkerStatus(
+            definitions.PROCESSING_STATUS_RUNNING,
+            extraction_worker.current_display_name,
+            number_of_consumed_path_specs,
+            extraction_worker.number_of_produced_events,
+            extraction_worker.number_of_produced_path_specs)
+        self._SetStorageWriterStatus(
+            definitions.PROCESSING_STATUS_RUNNING,
+            storage_writer.number_of_events)
+        self._UpdateStatus()
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED

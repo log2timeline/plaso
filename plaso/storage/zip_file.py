@@ -3138,10 +3138,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.Close()
     self._storage_file = None
 
-    if (self._storage_type == definitions.STORAGE_TYPE_SESSION and
-        self._task_storage_path and os.path.isdir(self._task_storage_path)):
-      os.rmdir(self._task_storage_path)
-
   def CreateTaskStorageWriter(self, task_name):
     """Creates a task storage writer.
 
@@ -3152,10 +3148,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       A storage writer object (instance of StorageWriter).
 
     Raises:
-      RuntimeError: if the task storage path is missing.
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does no exist.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unupported storage type.')
+
     if not self._task_storage_path:
-      raise RuntimeError(u'Missing task storage path.')
+      raise IOError(u'Missing task storage path.')
 
     storage_file_path = os.path.join(
         self._task_storage_path, u'{0:s}.plaso'.format(task_name))
@@ -3216,10 +3216,39 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     for _ in self._storage_file.GetEventSources():
       self._event_source_index += 1
 
-    if (not self._task_storage_path and
-        self._storage_type == definitions.STORAGE_TYPE_SESSION):
-      output_directory = os.path.dirname(self._output_file)
-      self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
+  def StartTaskStorage(self):
+    """Creates a temporary path for the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage already exists.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unupported storage type.')
+
+    if self._task_storage_path:
+      raise IOError(u'Task storage path already exists.')
+
+    output_directory = os.path.dirname(self._output_file)
+    self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
+
+  def StopTaskStorage(self):
+    """Removes the temporary path for the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does no exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    if os.path.isdir(self._task_storage_path):
+      os.rmdir(self._task_storage_path)
+
+    self._task_storage_path = None
 
   # TODO: remove during phased processing refactor.
   def WritePreprocessObject(self, preprocess_object):
