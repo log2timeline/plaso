@@ -76,6 +76,14 @@ plaso.containers.shell_item_events module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.tasks module
+-----------------------------
+
+.. automodule:: plaso.containers.tasks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.text_events module
 -----------------------------------
 

@@ -6,6 +6,7 @@ import os
 import unittest
 import zipfile
 
+from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
@@ -179,10 +180,106 @@ class SerializedDataTimestampTable(shared_test_lib.BaseTestCase):
       offset_table.Read()
 
 
-class ZIPStorageFile(shared_test_lib.BaseTestCase):
+class ZIPStorageFileTest(shared_test_lib.BaseTestCase):
   """Tests for the ZIP-based storage file object."""
 
   # pylint: disable=protected-access
+
+  def _CreateTestEventTags(self):
+    """Creates the event tags for testing.
+
+    Returns:
+      A list of event tags (instances of EventTag).
+    """
+    event_tags = []
+
+    event_tag = events.EventTag()
+    event_tag.store_index = 0
+    event_tag.store_number = 1
+    event_tag.comment = u'My comment'
+    event_tags.append(event_tag)
+
+    event_tag = events.EventTag()
+    event_tag.store_index = 1
+    event_tag.store_number = 1
+    event_tag.AddLabel(u'Malware')
+    event_tags.append(event_tag)
+
+    event_tag = events.EventTag()
+    event_tag.store_number = 1
+    event_tag.store_index = 2
+    event_tag.comment = u'This is interesting'
+    event_tag.AddLabels([u'Malware', u'Benign'])
+    event_tags.append(event_tag)
+
+    event_tag = events.EventTag()
+    event_tag.store_index = 1
+    event_tag.store_number = 1
+    event_tag.AddLabel(u'Interesting')
+    event_tags.append(event_tag)
+
+    return event_tags
+
+  def _CreateTestStorageFileWithTags(self, path):
+    """Creates a storage file with event tags for testing.
+
+    Args:
+      path: a string containing the path of the storage file.
+
+    Returns:
+      A storage file object (instance of StorageFile).
+    """
+    event_objects = test_lib.CreateTestEventObjects()
+    event_tags = self._CreateTestEventTags()
+
+    storage_file = zip_file.StorageFile(path)
+    for event_object in event_objects:
+      storage_file.AddEvent(event_object)
+
+    storage_file.AddEventTags(event_tags[:-1])
+    storage_file.AddEventTags(event_tags[-1:])
+
+    preprocess_object = event.PreprocessObject()
+    storage_file.WritePreprocessObject(preprocess_object)
+
+    storage_file.Close()
+
+  def _GetEventsFromGroup(self, storage_file, event_group):
+    """Return a generator with all EventObjects from a group.
+
+    Args:
+      storage_file: a storage file (instance of StorageFile).
+      event_group: an event group (instance of plaso_storage_pb2.EventGroup).
+
+    Returns:
+      A list of event objects (instance of EventObjects).
+    """
+    event_objects = []
+    for group_event in event_group.events:
+      event_object = storage_file._GetEventObject(
+          group_event.store_number, entry_index=group_event.store_index)
+      event_objects.append(event_object)
+
+    return event_objects
+
+  def _GetTaggedEvent(self, storage_file, event_tag):
+    """Retrieves the event object for a specific event tag.
+
+    Args:
+      storage_file: a storage file (instance of StorageFile).
+      event_tag: an event tag object (instance of EventTag).
+
+    Returns:
+      An event object (instance of EventObject) or None if no corresponding
+      event was found.
+    """
+    event_object = storage_file._GetEventObject(
+        event_tag.store_number, entry_index=event_tag.store_index)
+    if not event_object:
+      return
+
+    event_object.tag = event_tag
+    return event_object
 
   # The _GetSerializedDataStream function is tested by the
   # _GetSerializedEventOffsetTable and _GetSerializedEventSourceOffsetTable
@@ -338,113 +435,24 @@ class ZIPStorageFile(shared_test_lib.BaseTestCase):
 
       storage_file.Close()
 
-
-class StorageFileTest(shared_test_lib.BaseTestCase):
-  """Tests for the ZIP storage file object."""
-
-  # pylint: disable=protected-access
-
-  def _CreateTestEventTags(self):
-    """Creates the event tags for testing.
-
-    Returns:
-      A list of event tags (instances of EventTag).
-    """
-    event_tags = []
-
-    event_tag = events.EventTag()
-    event_tag.store_index = 0
-    event_tag.store_number = 1
-    event_tag.comment = u'My comment'
-    event_tags.append(event_tag)
-
-    event_tag = events.EventTag()
-    event_tag.store_index = 1
-    event_tag.store_number = 1
-    event_tag.AddLabel(u'Malware')
-    event_tags.append(event_tag)
-
-    event_tag = events.EventTag()
-    event_tag.store_number = 1
-    event_tag.store_index = 2
-    event_tag.comment = u'This is interesting'
-    event_tag.AddLabels([u'Malware', u'Benign'])
-    event_tags.append(event_tag)
-
-    event_tag = events.EventTag()
-    event_tag.store_index = 1
-    event_tag.store_number = 1
-    event_tag.AddLabel(u'Interesting')
-    event_tags.append(event_tag)
-
-    return event_tags
-
-  def _CreateTestStorageFileWithTags(self, path):
-    """Creates a storage file with event tags for testing.
-
-    Args:
-      path: a string containing the path of the storage file.
-
-    Returns:
-      A storage file object (instance of StorageFile).
-    """
-    event_objects = test_lib.CreateTestEventObjects()
-    event_tags = self._CreateTestEventTags()
-
-    storage_file = zip_file.StorageFile(path)
-    for event_object in event_objects:
-      storage_file.AddEventObject(event_object)
-
-    storage_file.StoreTagging(event_tags[:-1])
-    storage_file.StoreTagging(event_tags[-1:])
-
-    preprocessing_object = event.PreprocessObject()
-    storage_file.WritePreprocessObject(preprocessing_object)
-
-    storage_file.Close()
-
-  def _GetEventsFromGroup(self, storage_file, event_group):
-    """Return a generator with all EventObjects from a group.
-
-    Args:
-      storage_file: a storage file (instance of StorageFile).
-      event_group: an event group (instance of plaso_storage_pb2.EventGroup).
-
-    Returns:
-      A list of event objects (instance of EventObjects).
-    """
-    event_objects = []
-    for group_event in event_group.events:
-      event_object = storage_file._GetEventObject(
-          group_event.store_number, entry_index=group_event.store_index)
-      event_objects.append(event_object)
-
-    return event_objects
-
-  def _GetTaggedEvent(self, storage_file, event_tag):
-    """Retrieves the event object for a specific event tag.
-
-    Args:
-      storage_file: a storage file (instance of StorageFile).
-      event_tag: an event tag object (instance of EventTag).
-
-    Returns:
-      An event object (instance of EventObject) or None if no corresponding
-      event was found.
-    """
-    event_object = storage_file._GetEventObject(
-        event_tag.store_number, entry_index=event_tag.store_index)
-    if not event_object:
-      return
-
-    event_object.tag = event_tag
-    return event_object
-
   # TODO: add test for _ReadEventTag
   # TODO: add test for _ReadEventTagByIdentifier
 
-  def testAddEventObject(self):
-    """Tests the AddEventObject function."""
+  def testAddAnalysisReport(self):
+    """Tests the AddAnalysisReport function."""
+    analysis_report = reports.AnalysisReport(
+        plugin_name=u'test', text=u'test report')
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.AddAnalysisReport(analysis_report)
+
+      storage_file.Close()
+
+  def testAddEvent(self):
+    """Tests the AddEvent function."""
     event_objects = test_lib.CreateTestEventObjects()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -452,14 +460,75 @@ class StorageFileTest(shared_test_lib.BaseTestCase):
       storage_file = zip_file.StorageFile(temp_file)
 
       for event_object in event_objects:
-        storage_file.AddEventObject(event_object)
+        storage_file.AddEvent(event_object)
 
       storage_file.Close()
 
-    # TODO: add test for exceeding buffer limit in AddEventObject.
+    # TODO: add test for exceeding buffer limit in AddEvent.
 
-  # TODO: add test for AddEventSource.
-  # TODO: add test for exceeding buffer limit in AddEventSource.
+  def testAddEventSource(self):
+    """Tests the AddEventSource function."""
+    event_source = event_sources.EventSource()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.AddEventSource(event_source)
+
+      storage_file.Close()
+
+    # TODO: add test for exceeding buffer limit in AddEventSource.
+
+  def testAddEventTag(self):
+    """Tests the AddEventTag function."""
+    event_objects = test_lib.CreateTestEventObjects()
+    event_tags = self._CreateTestEventTags()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      for event_object in event_objects:
+        storage_file.AddEvent(event_object)
+
+      for event_tag in event_tags:
+        storage_file.AddEventTag(event_tag)
+
+      storage_file.Close()
+
+    # TODO: add test for exceeding buffer limit in AddEventTag.
+
+  def testAddEventTags(self):
+    """Tests the AddEventTags function."""
+    event_objects = test_lib.CreateTestEventObjects()
+    event_tags = self._CreateTestEventTags()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      for event_object in event_objects:
+        storage_file.AddEvent(event_object)
+
+      storage_file.AddEventTags(event_tags[:-1])
+      storage_file.AddEventTags(event_tags[-1:])
+
+      storage_file.Close()
+
+  def testEnableAndDisableProfiling(self):
+    """Tests the EnableProfiling and DisableProfiling function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.StorageFile(temp_file)
+
+      storage_file.EnableProfiling()
+      storage_file.Close()
+      storage_file.DisableProfiling()
+
+      profiling_data_file = u'serializers-Storage.csv'
+      if os.path.exists(profiling_data_file):
+        os.remove(profiling_data_file)
 
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
@@ -487,8 +556,8 @@ class StorageFileTest(shared_test_lib.BaseTestCase):
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    event_sources = list(storage_file.GetEventSources())
-    self.assertEqual(len(event_sources), 0)
+    test_event_sources = list(storage_file.GetEventSources())
+    self.assertEqual(len(test_event_sources), 0)
 
     storage_file.Close()
 
@@ -496,8 +565,8 @@ class StorageFileTest(shared_test_lib.BaseTestCase):
 
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-    event_sources = list(storage_file.GetEventSources())
-    self.assertEqual(len(event_sources), 0)
+    test_event_sources = list(storage_file.GetEventSources())
+    self.assertEqual(len(test_event_sources), 0)
 
     storage_file.Close()
 
@@ -593,16 +662,6 @@ class StorageFileTest(shared_test_lib.BaseTestCase):
 
     storage_file.Close()
 
-  def testGetStorageInformation(self):
-    """Tests the GetStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    storage_information = storage_file.GetStorageInformation()
-    self.assertEqual(len(storage_information), 2)
-
-    storage_file.Close()
-
   def testHasAnalysisReports(self):
     """Tests the HasAnalysisReports function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -640,59 +699,32 @@ class StorageFileTest(shared_test_lib.BaseTestCase):
 
       storage_file.Close()
 
-  def testSetEnableProfiling(self):
-    """Tests the SetEnableProfiling function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.StorageFile(temp_file)
 
-      storage_file.SetEnableProfiling(True)
+# TODO: remove StorageFile.
+class StorageFileTest(shared_test_lib.BaseTestCase):
+  """Tests for the ZIP storage file object."""
 
-      storage_file.Close()
+  # pylint: disable=protected-access
 
-      profiling_data_file = u'serializers-Storage.csv'
-      if os.path.exists(profiling_data_file):
-        os.remove(profiling_data_file)
+  def testGetStorageInformation(self):
+    """Tests the GetStorageInformation function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.StorageFile(test_file, read_only=True)
 
-  def testStoreReport(self):
-    """Tests the StoreReport function."""
-    analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+    storage_information = storage_file.GetStorageInformation()
+    self.assertEqual(len(storage_information), 2)
 
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.StorageFile(temp_file)
-
-      storage_file.StoreReport(analysis_report)
-
-      storage_file.Close()
-
-  def testStoreTagging(self):
-    """Tests the StoreTagging function."""
-    event_objects = test_lib.CreateTestEventObjects()
-    event_tags = self._CreateTestEventTags()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.StorageFile(temp_file)
-
-      for event_object in event_objects:
-        storage_file.AddEventObject(event_object)
-
-      storage_file.StoreTagging(event_tags[:-1])
-      storage_file.StoreTagging(event_tags[-1:])
-
-      storage_file.Close()
+    storage_file.Close()
 
   def testWritePreprocessObject(self):
     """Tests the WritePreprocessObject function."""
-    preprocessing_object = event.PreprocessObject()
+    preprocess_object = event.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.StorageFile(temp_file)
 
-      storage_file.WritePreprocessObject(preprocessing_object)
+      storage_file.WritePreprocessObject(preprocess_object)
 
       storage_file.Close()
 
@@ -768,25 +800,36 @@ class ZIPStorageFileReaderTest(shared_test_lib.BaseTestCase):
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
 
-class ZIPStorageFileWriterTest(unittest.TestCase):
+class ZIPStorageFileWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the ZIP-based storage file writer object."""
+
+  # TODO: add test for AddAnalysisReport.
+  # TODO: add test for AddEvent.
+  # TODO: add test for AddEventSource.
+  # TODO: add test for AddEventTag.
+  # TODO: add test for Open/Close.
+  # TODO: add test for GetEventSources.
+  # TODO: add test for WriteSessionCompletion.
+  # TODO: add test for WriteSessionStart.
 
   def testStorageWriter(self):
     """Test the storage writer."""
     event_objects = test_lib.CreateTestEventObjects()
-    session_start = sessions.SessionStart()
-    preprocessing_object = event.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_writer = zip_file.ZIPStorageFileWriter(
-          temp_file, preprocessing_object)
+      storage_writer = zip_file.ZIPStorageFileWriter(temp_file)
 
       storage_writer.Open()
+
+      session_start = sessions.SessionStart()
       storage_writer.WriteSessionStart(session_start)
 
       for event_object in event_objects:
         storage_writer.AddEvent(event_object)
+
+      preprocess_object = event.PreprocessObject()
+      storage_writer.WritePreprocessObject(preprocess_object)
 
       storage_writer.WriteSessionCompletion()
       storage_writer.Close()

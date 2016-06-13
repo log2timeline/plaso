@@ -139,6 +139,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(analysis_report_dict.items()),
         sorted(expected_analysis_report_dict.items()))
 
+  # TODO: add ExtractionError tests.
+
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
     test_file = self._GetTestFilePath([u'ímynd.dd'])

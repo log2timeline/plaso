@@ -8,6 +8,7 @@ import json
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
+from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import interface as containers_interface
@@ -288,6 +289,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       u'event': events.EventObject,
       u'event_source': event_sources.EventSource,
       u'event_tag': events.EventTag,
+      u'extraction_error': errors.ExtractionError,
       u'session_completion': sessions.SessionCompletion,
       u'session_start': sessions.SessionStart,
   }
