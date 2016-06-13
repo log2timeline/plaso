@@ -53,11 +53,11 @@ SERIALIZER_FORMAT_JSON = u'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
 
-# The sessions-based storage contains the results of a session.
+# The session storage contains the results of one or more sessions.
 # A typical session is e.g. a single run of a tool (log2timeline.py).
-# The task-based storage contains the results of a task. Tasks
-# are used to split work. A typical task is e.g. a single run of
-# a worker process.
+# The task storage contains the results of one or more tasks. Tasks
+# are used to split work within a session. A typical task is e.g.
+# a single run of a worker process.
 STORAGE_TYPE_SESSION = u'session'
 STORAGE_TYPE_TASK = u'task'
 
