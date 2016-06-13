@@ -52,3 +52,13 @@ RESERVED_VARIABLE_NAMES = frozenset([
 SERIALIZER_FORMAT_JSON = u'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
+
+# The session storage contains the results of one or more sessions.
+# A typical session is e.g. a single run of a tool (log2timeline.py).
+# The task storage contains the results of one or more tasks. Tasks
+# are used to split work within a session. A typical task is e.g.
+# a single run of a worker process.
+STORAGE_TYPE_SESSION = u'session'
+STORAGE_TYPE_TASK = u'task'
+
+STORAGE_TYPES = frozenset([STORAGE_TYPE_SESSION, STORAGE_TYPE_TASK])

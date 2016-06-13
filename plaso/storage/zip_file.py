@@ -34,8 +34,16 @@ There are multiple types of streams:
   Stream that contains the storage metadata.
 * session_completion.#
   Stream that contains information about the completion of a session.
+  Only applies to session-based storage.
 * session_start.#
   Stream that contains information about the start of a session.
+  Only applies to session-based storage.
+* task_completion.#
+  Stream that contains information about the completion of a task.
+  Only applies to task-based storage.
+* task_start.#
+  Stream that contains information about the start of a task.
+  Only applies to task-based storage.
 
 The # in a stream name is referred to as the "store number". Streams with
 the same prefix e.g. "event_" and "store number" are related.
@@ -794,6 +802,7 @@ class _StorageMetadata(object):
   Attributes:
     format_version: an integer containing the storage format version.
     serialization_format: a string containing the serialization format.
+    storage_type: a string containing the storage type.
   """
 
   def __init__(self):
@@ -801,6 +810,7 @@ class _StorageMetadata(object):
     super(_StorageMetadata, self).__init__()
     self.format_version = None
     self.serialization_format = None
+    self.storage_type = None
 
 
 class _StorageMetadataReader(object):
@@ -849,6 +859,12 @@ class _StorageMetadataReader(object):
     storage_metadata.serialization_format = self._GetConfigValue(
         config_parser, section_name, u'serialization_format')
 
+    storage_metadata.storage_type = self._GetConfigValue(
+        config_parser, section_name, u'storage_type')
+
+    if not storage_metadata.storage_type:
+      storage_metadata.storage_type = definitions.STORAGE_TYPE_SESSION
+
     return storage_metadata
 
 
@@ -870,7 +886,7 @@ class ZIPStorageFile(interface.BaseStorage):
   # pylint: disable=abstract-method
 
   # The format version.
-  _FORMAT_VERSION = 20160516
+  _FORMAT_VERSION = 20160525
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -890,8 +906,27 @@ class ZIPStorageFile(interface.BaseStorage):
   # The maximum serialized report size (24 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
-  def __init__(self):
-    """Initializes a ZIP-based storage file object."""
+  def __init__(
+      self, maximum_buffer_size=0,
+      storage_type=definitions.STORAGE_TYPE_SESSION):
+    """Initializes a ZIP-based storage file object.
+
+    Args:
+      maximum_buffer_size: optional integer containing the maximum size of
+                           a single storage stream. A value of 0 indicates
+                           the limit is _MAXIMUM_BUFFER_SIZE.
+      storage_type: optional string containing the storage type.
+
+    Raises:
+      ValueError: if the maximum buffer size value is out of bounds.
+    """
+    if (maximum_buffer_size < 0 or
+        maximum_buffer_size > self._MAXIMUM_BUFFER_SIZE):
+      raise ValueError(u'Maximum buffer size value out of bounds.')
+
+    if not maximum_buffer_size:
+      maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
+
     super(ZIPStorageFile, self).__init__()
     self._error_stream_number = 1
     self._event_offset_tables = {}
@@ -910,7 +945,8 @@ class ZIPStorageFile(interface.BaseStorage):
     self._format_version = self._FORMAT_VERSION
     self._is_open = False
     self._last_session = 0
-    self._maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
+    self._last_task = 0
+    self._maximum_buffer_size = maximum_buffer_size
     self._read_only = True
     self._serialized_errors = []
     self._serialized_errors_size = 0
@@ -921,6 +957,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_events = _SerializedEventsHeap()
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializer_format = definitions.SERIALIZER_FORMAT_JSON
+    self._storage_type = storage_type
     self._path = None
     self._zipfile = None
 
@@ -1532,6 +1569,15 @@ class ZIPStorageFile(interface.BaseStorage):
 
     self._last_session = last_session_completion
 
+    last_task_start = self._GetLastStreamNumber(u'task_start.')
+    last_task_completion = self._GetLastStreamNumber(u'task_completion.')
+
+    # TODO: handle open tasks.
+    if last_task_start != last_task_completion:
+      logging.warning(u'Detected unclosed task.')
+
+    self._last_task = last_task_completion
+
   def _OpenStream(self, stream_name, access_mode='r'):
     """Opens a stream.
 
@@ -1734,12 +1780,16 @@ class ZIPStorageFile(interface.BaseStorage):
 
     serialization_format = storage_metadata.serialization_format
     if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError(
-          u'Unsupported serialization format: {0:s}'.format(
-              serialization_format))
+      raise IOError(u'Unsupported serialization format: {0:s}'.format(
+          serialization_format))
+
+    if storage_metadata.storage_type not in definitions.STORAGE_TYPES:
+      raise IOError(u'Unsupported storage type: {0:s}'.format(
+          storage_metadata.storage_type))
 
     self._format_version = storage_metadata.format_version
     self._serializer_format = serialization_format
+    self._storage_type = storage_metadata.storage_type
 
     return True
 
@@ -1983,20 +2033,6 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_event_tags_size = 0
     self._serialized_event_tags = []
 
-  def _WriteStorageMetadata(self):
-    """Writes the storage metadata."""
-    stream_name = u'metadata.txt'
-    if self._HasStream(stream_name):
-      return
-
-    stream_data = (
-        b'[plaso_storage_file]\n'
-        b'format_version: {0:d}\n'
-        b'serialization_format: {1:s}\n'
-        b'\n').format(self._FORMAT_VERSION, self._serializer_format)
-
-    self._WriteStream(stream_name, stream_data)
-
   def _WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
 
@@ -2005,8 +2041,12 @@ class ZIPStorageFile(interface.BaseStorage):
                           SessionCompletion).
 
     Raises:
-      IOError: if the session completion already exists.
+      IOError: if the storage type does not support writing a session
+               completion or the session completion already exists.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Session completion not supported by storage type.')
+
     stream_name = u'session_completion.{0:06d}'.format(self._last_session)
     if self._HasStream(stream_name):
       raise IOError(u'Session completion: {0:06d} already exists.'.format(
@@ -2026,8 +2066,12 @@ class ZIPStorageFile(interface.BaseStorage):
       session_start: the session start information (instance of SessionStart).
 
     Raises:
-      IOError: if the session start already exists.
+      IOError: if the storage type does not support writing a session
+               start or the session start already exists.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Session completion not supported by storage type.')
+
     stream_name = u'session_start.{0:06d}'.format(self._last_session)
     if self._HasStream(stream_name):
       raise IOError(u'Session start: {0:06d} already exists.'.format(
@@ -2039,6 +2083,22 @@ class ZIPStorageFile(interface.BaseStorage):
     data_stream.WriteInitialize()
     data_stream.WriteEntry(session_start_data)
     data_stream.WriteFinalize()
+
+  def _WriteStorageMetadata(self):
+    """Writes the storage metadata."""
+    stream_name = u'metadata.txt'
+    if self._HasStream(stream_name):
+      return
+
+    stream_data = (
+        b'[plaso_storage_file]\n'
+        b'format_version: {0:d}\n'
+        b'serialization_format: {1:s}\n'
+        b'storage_type: {2:s}\n'
+        b'\n').format(
+            self._FORMAT_VERSION, self._serializer_format, self._storage_type)
+
+    self._WriteStream(stream_name, stream_data)
 
   def _WriteStream(self, stream_name, stream_data):
     """Writes data to a stream.
@@ -2054,6 +2114,57 @@ class ZIPStorageFile(interface.BaseStorage):
     with warnings.catch_warnings():
       warnings.simplefilter(u'ignore')
       self._zipfile.writestr(stream_name, stream_data)
+
+  def _WriteTaskCompletion(self, task_completion):
+    """Writes task completion information.
+
+    Args:
+      task_completion: the task completion information (instance of
+                       TaskCompletion).
+
+    Raises:
+      IOError: if the storage type does not support writing a task
+               completion or the task completion already exists.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Task completion not supported by storage type.')
+
+    stream_name = u'task_completion.{0:06d}'.format(self._last_task)
+    if self._HasStream(stream_name):
+      raise IOError(u'Task completion: {0:06d} already exists.'.format(
+          self._last_task))
+
+    task_completion_data = self._WriteAttributeContainer(task_completion)
+
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(task_completion_data)
+    data_stream.WriteFinalize()
+
+  def _WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start: the task start information (instance of TaskStart).
+
+    Raises:
+      IOError: if the storage type does not support writing a task start
+               or the task start already exists.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Task start not supported by storage type.')
+
+    stream_name = u'task_start.{0:06d}'.format(self._last_task)
+    if self._HasStream(stream_name):
+      raise IOError(u'Task start: {0:06d} already exists.'.format(
+          self._last_task))
+
+    task_start_data = self._WriteAttributeContainer(task_start)
+
+    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(task_start_data)
+    data_stream.WriteFinalize()
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report to the storage.
@@ -2131,7 +2242,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_errors.append(error_data)
     self._serialized_errors_size += len(error_data)
 
-    if self._serialized_errors_size > self._max_buffer_size:
+    if self._serialized_errors_size > self._maximum_buffer_size:
       self._WriteSerializedErrors()
 
   def AddEvent(self, event_object):
@@ -2360,6 +2471,25 @@ class ZIPStorageFile(interface.BaseStorage):
         for analysis_report in self._ReadAttributeContainersFromStream(
             data_stream, u'analysis_report'):
           yield analysis_report
+
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Yields:
+      Errors (instances of AnalysisError or ExtractionError).
+    """
+    stream_name_prefix = u'error_data.'
+
+    for stream_name in self._GetStreamNames():
+      if not stream_name.startswith(stream_name_prefix):
+        continue
+
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._path, stream_name)
+
+      for error in self._ReadAttributeContainersFromStream(
+          data_stream, u'error'):
+        yield error
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -2593,28 +2723,74 @@ class ZIPStorageFile(interface.BaseStorage):
 
     self._WriteSessionStart(session_start)
 
+  def WriteTaskCompletion(self, session_completion):
+    """Writes task completion information.
+
+    Args:
+      session_completion: the session completion information (instance of
+                          TaskCompletion).
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
+
+    if self._format_version < 20160525:
+      return
+
+    self.Flush()
+
+    self._WriteTaskCompletion(session_completion)
+
+  def WriteTaskStart(self, session_start):
+    """Writes task start information.
+
+    Args:
+      session_start: the session start information (instance of TaskStart).
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
+
+    if self._format_version < 20160525:
+      return
+
+    self._WriteTaskStart(session_start)
+
 
 # TODO: remove StorageFile.
 class StorageFile(ZIPStorageFile):
   """Class that defines the ZIP-based storage file."""
 
-  def __init__(self, output_file, buffer_size=0, read_only=False):
+  def __init__(
+      self, output_file, buffer_size=0, read_only=False,
+      storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes the storage file.
 
     Args:
       output_file: a string containing the name of the output file.
-      buffer_size: optional maximum size of a single storage file.
-                   The default is 0, which indicates the limit is
-                   _MAXIMUM_BUFFER_SIZE.
+      buffer_size: optional integer containing the maximum size of
+                   a single storage stream. A value of 0 indicates
+                   the limit is _MAXIMUM_BUFFER_SIZE.
       read_only: optional boolean to indicate we are opening the storage file
                  for reading only.
+      storage_type: optional string containing the storage type.
 
     Raises:
       IOError: if we open the file in read only mode and the file does
                not exist.
     """
-    super(StorageFile, self).__init__()
-    self._maximum_buffer_size = buffer_size or self._MAXIMUM_BUFFER_SIZE
+    super(StorageFile, self).__init__(
+        maximum_buffer_size=buffer_size, storage_type=storage_type)
     self._preprocess_object_serializer = (
         json_serializer.JSONPreprocessObjectSerializer)
 
