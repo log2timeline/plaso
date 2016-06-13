@@ -27,6 +27,7 @@ from plaso.formatters import ganalytics
 from plaso.formatters import gdrive
 from plaso.formatters import hachoir
 from plaso.formatters import iis
+from plaso.formatters import imessage
 from plaso.formatters import ipod
 from plaso.formatters import java_idx
 from plaso.formatters import kik_ios
@@ -65,6 +66,7 @@ from plaso.formatters import syslog
 from plaso.formatters import ssh
 from plaso.formatters import task_scheduler
 from plaso.formatters import text
+from plaso.formatters import twitter_ios
 from plaso.formatters import userassist
 from plaso.formatters import utmp
 from plaso.formatters import utmpx

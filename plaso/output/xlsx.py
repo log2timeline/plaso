@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
+import datetime
 import os
 import re
 
@@ -177,7 +178,8 @@ class XLSXOutputModule(interface.OutputModule):
       self._sheet.set_column(
           column_index, column_index, self._column_widths[column_index])
 
-      if field_name == u'datetime':
+      if (field_name == u'datetime'
+          and isinstance(output_value, datetime.datetime)):
         self._sheet.write_datetime(
             self._current_row, column_index, output_value)
       else:

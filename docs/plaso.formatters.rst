@@ -236,6 +236,14 @@ plaso.formatters.iis module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.imessage module
+--------------------------------
+
+.. automodule:: plaso.formatters.imessage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.interface module
 ---------------------------------
 
@@ -560,6 +568,14 @@ plaso.formatters.text module
 ----------------------------
 
 .. automodule:: plaso.formatters.text
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.twitter_ios module
+-----------------------------------
+
+.. automodule:: plaso.formatters.twitter_ios
     :members:
     :undoc-members:
     :show-inheritance:

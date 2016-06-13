@@ -92,6 +92,14 @@ plaso.parsers.sqlite_plugins.gdrive module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sqlite_plugins.imessage module
+--------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.imessage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.sqlite_plugins.interface module
 ---------------------------------------------
 
@@ -136,6 +144,14 @@ plaso.parsers.sqlite_plugins.skype module
 -----------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.skype
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.sqlite_plugins.twitter_ios module
+-----------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.twitter_ios
     :members:
     :undoc-members:
     :show-inheritance:
