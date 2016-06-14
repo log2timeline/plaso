@@ -192,7 +192,7 @@ class StorageWriter(object):
     """Adds an analysis report.
 
     Args:
-      analysis_report: an analysis report object (instance of AnalysisReport).
+      analysis_report (AnalysisReport): a report.
     """
 
   @abc.abstractmethod
@@ -200,7 +200,7 @@ class StorageWriter(object):
     """Adds an error.
 
     Args:
-      error: an error object (instance of AnalysisError or ExtractionError).
+      error (ExtractionError): an error.
     """
 
   @abc.abstractmethod
@@ -208,7 +208,7 @@ class StorageWriter(object):
     """Adds an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event_object (EventObject): an event.
     """
 
   @abc.abstractmethod
@@ -216,7 +216,7 @@ class StorageWriter(object):
     """Adds an event source.
 
     Args:
-      event_source: an event source object (instance of EventSource).
+      event_source (EventSource): an event source.
     """
 
   @abc.abstractmethod
@@ -224,7 +224,7 @@ class StorageWriter(object):
     """Adds an event tag.
 
     Args:
-      event_tag: an event tag object (instance of EventTag).
+      event_tag (EventTag): an event tag.
     """
 
   @abc.abstractmethod
@@ -239,7 +239,7 @@ class StorageWriter(object):
     """Enables profiling.
 
     Args:
-      profiling_type: optional profiling type.
+      profiling_type (Optional[str]): type of profiling to enable.
     """
     self._enable_profiling = True
     self._profiling_type = profiling_type
@@ -263,10 +263,10 @@ class StorageWriter(object):
     """
 
   def MergeFromStorage(self, storage_reader):
-    """Merges data from a storage reader.
+    """Merges data from a storage reader into the writer.
 
     Args:
-      storage_reader: a storage reader object (instance of StorageReader).
+      storage_reader (StorageReader): a storage reader.
     """
     for event_source in storage_reader.GetEventSources():
       self.AddEventSource(event_source)
