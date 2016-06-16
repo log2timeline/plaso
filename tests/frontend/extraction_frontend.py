@@ -119,8 +119,10 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
         self.fail(u'Unable to open storage file after processing.')
 
       # Make sure we can read events from the storage.
-      event_object = storage_file.GetSortedEntry()
-      self.assertIsNotNone(event_object)
+      event_objects = list(storage_file.GetEvents())
+      self.assertNotEqual(len(event_objects), 0)
+
+      event_object = event_objects[0]
 
       self.assertGreaterEqual(event_object.data_type, u'fs:stat')
       self.assertGreaterEqual(event_object.filename, u'/lost+found')

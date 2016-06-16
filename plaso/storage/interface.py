@@ -17,7 +17,7 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error (instance of AnalysisError or ExtractionError).
@@ -25,7 +25,7 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -33,7 +33,7 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source (instance of EventSource).
@@ -63,6 +63,17 @@ class BaseStorage(object):
 
     Yields:
       Analysis reports (instances of AnalysisReport).
+    """
+
+  @abc.abstractmethod
+  def GetEvents(self, time_range=None):
+    """Retrieves the events.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Yields:
+      Event objects (instances of EventObject).
     """
 
   @abc.abstractmethod
@@ -114,6 +125,22 @@ class StorageReader(object):
     return
 
   @abc.abstractmethod
+  def GetAnalysisReports(self):
+    """Retrieves the analysis reports.
+
+    Yields:
+      Analysis reports (instances of AnalysisReport).
+    """
+
+  @abc.abstractmethod
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Yields:
+      Errors (instances of AnalysisError or ExtractionError).
+    """
+
+  @abc.abstractmethod
   def GetEvents(self, time_range=None):
     """Retrieves events.
 
@@ -130,6 +157,14 @@ class StorageReader(object):
 
     Yields:
       Event source objects (instance of EventSourceObject).
+    """
+
+  @abc.abstractmethod
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Yields:
+      An event tag object (instance of EventTag).
     """
 
 
@@ -153,43 +188,43 @@ class StorageWriter(object):
     self.number_of_events = 0
 
   @abc.abstractmethod
-  def AddError(self, error):
-    """Adds an error to the storage.
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report.
 
     Args:
-      error: an error object (instance of AnalysisError or ExtractionError).
+      analysis_report (AnalysisReport): a report.
     """
 
   @abc.abstractmethod
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+  def AddError(self, error):
+    """Adds an error.
 
     Args:
-      analysis_report: an analysis report object (instance of AnalysisReport).
+      error (ExtractionError): an error.
     """
 
   @abc.abstractmethod
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event_object (EventObject): an event.
     """
 
   @abc.abstractmethod
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
-      event_source: an event source object (instance of EventSource).
+      event_source (EventSource): an event source.
     """
 
   @abc.abstractmethod
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
-      event_tag: an event tag object (instance of EventTag).
+      event_tag (EventTag): an event tag.
     """
 
   @abc.abstractmethod
@@ -204,7 +239,7 @@ class StorageWriter(object):
     """Enables profiling.
 
     Args:
-      profiling_type: optional profiling type.
+      profiling_type (Optional[str]): type of profiling to enable.
     """
     self._enable_profiling = True
     self._profiling_type = profiling_type
@@ -226,6 +261,27 @@ class StorageWriter(object):
     Yields:
       An event source object (instance of EventSource).
     """
+
+  def MergeFromStorage(self, storage_reader):
+    """Merges data from a storage reader into the writer.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    for event_source in storage_reader.GetEventSources():
+      self.AddEventSource(event_source)
+
+    for event in storage_reader.GetEvents():
+      self.AddEvent(event)
+
+    for event_tag in storage_reader.GetEventTags():
+      self.AddEventTag(event_tag)
+
+    for error in storage_reader.GetErrors():
+      self.AddError(error)
+
+    for analysis_report in storage_reader.GetAnalysisReports():
+      self.AddAnalysisReport(analysis_report)
 
   @abc.abstractmethod
   def Open(self):
@@ -252,4 +308,16 @@ class StorageWriter(object):
 
     Args:
       session_start: the session start information (instance of SessionStart).
+    """
+
+  @abc.abstractmethod
+  def WriteTaskCompletion(self):
+    """Writes task completion information."""
+
+  @abc.abstractmethod
+  def WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start: the task start information (instance of TaskStart).
     """
