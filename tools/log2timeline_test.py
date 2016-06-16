@@ -167,13 +167,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
             u'Unable to open storage file after processing with error: '
             u'{0:s}.').format(exception))
 
-      event_objects = []
-      event_object = storage_file.GetSortedEntry()
-      while event_object:
-        event_objects.append(event_objects)
-        event_object = storage_file.GetSortedEntry()
-
       # There should be 3 filestat and 3 pe parser generated events.
+      event_objects = list(storage_file.GetEvents())
       self.assertEquals(len(event_objects), 6)
 
   def testShowInfo(self):

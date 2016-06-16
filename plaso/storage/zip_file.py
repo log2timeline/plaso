@@ -136,6 +136,7 @@ except ImportError:
 import construct
 
 from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
@@ -1504,6 +1505,49 @@ class ZIPStorageFile(interface.BaseStorage):
       for stream_name in self._zipfile.namelist():
         yield stream_name
 
+  def _GetSortedEvent(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    The time range is used to filter events that fall in a specific period.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Returns:
+      An event object (instance of EventObject).
+    """
+    if not self._event_heap:
+      self._InitializeMergeBuffer(time_range=time_range)
+      if not self._event_heap:
+        return
+
+    event_object, stream_number = self._event_heap.PopEvent()
+    if not event_object:
+      return
+
+    # Stop as soon as we hit the upper bound.
+    if time_range and event_object.timestamp > time_range.end_timestamp:
+      return
+
+    next_event_object = self._GetEventObject(stream_number)
+    if next_event_object:
+      self._event_heap.PushEvent(
+          next_event_object, stream_number, event_object.store_index)
+
+      reference_timestamp = next_event_object.timestamp
+      while next_event_object.timestamp == reference_timestamp:
+        next_event_object = self._GetEventObject(stream_number)
+        if not next_event_object:
+          break
+
+        self._event_heap.PushEvent(
+            next_event_object, stream_number, event_object.store_index)
+
+    event_object.tag = self._ReadEventTagByIdentifier(
+        event_object.store_number, event_object.store_index, event_object.uuid)
+
+    return event_object
+
   def _HasStream(self, stream_name):
     """Determines if the ZIP file contains a specific stream.
 
@@ -1846,7 +1890,7 @@ class ZIPStorageFile(interface.BaseStorage):
     return attribute_container_data
 
   def _WriteSerializedErrors(self):
-    """Writes the buffered serialized errors to the storage file."""
+    """Writes the buffered serialized errors."""
     if not self._serialized_errors_size:
       return
 
@@ -1884,7 +1928,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_errors_size = 0
 
   def _WriteSerializedEvents(self):
-    """Writes the serialized events to the storage file."""
+    """Writes the serialized events."""
     if not self._serialized_events.data_size:
       return
 
@@ -1929,7 +1973,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_events.Empty()
 
   def _WriteSerializedEventSources(self):
-    """Writes the serialized event sources to the storage file."""
+    """Writes the serialized event sources."""
     if not self._serialized_event_sources_size:
       return
 
@@ -1972,7 +2016,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_event_sources = []
 
   def _WriteSerializedEventTags(self):
-    """Writes the serialized event tags to the storage file."""
+    """Writes the serialized event tags."""
     if not self._serialized_event_tags_size:
       return
 
@@ -2167,7 +2211,7 @@ class ZIPStorageFile(interface.BaseStorage):
     data_stream.WriteFinalize()
 
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -2224,7 +2268,7 @@ class ZIPStorageFile(interface.BaseStorage):
       data_stream.WriteFinalize()
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error (instance of AnalysisError or ExtractionError).
@@ -2246,7 +2290,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedErrors()
 
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -2272,7 +2316,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEvents()
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source (instance of EventSource).
@@ -2300,7 +2344,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEventSources()
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag (instance of EventTag).
@@ -2331,7 +2375,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEventSources()
 
   def AddEventTags(self, event_tags):
-    """Adds event tags to the storage.
+    """Adds event tags.
 
     Args:
       event_tags: a list of event tags (instances of EventTag).
@@ -2491,6 +2535,22 @@ class ZIPStorageFile(interface.BaseStorage):
           data_stream, u'error'):
         yield error
 
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    The time range is used to filter events that fall in a specific period.
+
+    Args:
+      time_range: an optional time range object (instance of TimeRange).
+
+    Yields:
+      Event objects (instances of EventObject).
+    """
+    event_object = self._GetSortedEvent(time_range=time_range)
+    while event_object:
+      yield event_object
+      event_object = self._GetSortedEvent(time_range=time_range)
+
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -2583,47 +2643,6 @@ class ZIPStorageFile(interface.BaseStorage):
             data_stream, u'session_completion')
 
         yield session_start, session_completion
-
-  def GetSortedEntry(self, time_range=None):
-    """Retrieves a sorted entry.
-
-    Args:
-      time_range: an optional time range object (instance of TimeRange).
-
-    Returns:
-      An event object (instance of EventObject).
-    """
-    if not self._event_heap:
-      self._InitializeMergeBuffer(time_range=time_range)
-      if not self._event_heap:
-        return
-
-    event_object, stream_number = self._event_heap.PopEvent()
-    if not event_object:
-      return
-
-    # Stop as soon as we hit the upper bound.
-    if time_range and event_object.timestamp > time_range.end_timestamp:
-      return
-
-    next_event_object = self._GetEventObject(stream_number)
-    if next_event_object:
-      self._event_heap.PushEvent(
-          next_event_object, stream_number, event_object.store_index)
-
-      reference_timestamp = next_event_object.timestamp
-      while next_event_object.timestamp == reference_timestamp:
-        next_event_object = self._GetEventObject(stream_number)
-        if not next_event_object:
-          break
-
-        self._event_heap.PushEvent(
-            next_event_object, stream_number, event_object.store_index)
-
-    event_object.tag = self._ReadEventTagByIdentifier(
-        event_object.store_number, event_object.store_index, event_object.uuid)
-
-    return event_object
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
@@ -2847,7 +2866,7 @@ class StorageFile(ZIPStorageFile):
     return information
 
   def WritePreprocessObject(self, preprocess_object):
-    """Writes a preprocess object to the storage file.
+    """Writes a preprocess object.
 
     Args:
       preprocess_object: the preprocess object (instance of PreprocessObject).
@@ -2890,18 +2909,36 @@ class StorageFile(ZIPStorageFile):
 class ZIPStorageFileReader(interface.StorageReader):
   """Class that implements the ZIP-based storage file reader."""
 
-  def __init__(self, zip_storage_file):
+  def __init__(self, input_file):
     """Initializes a storage reader object.
 
     Args:
-      zip_storage_file: a ZIP-based storage file (instance of ZIPStorageFile).
+      input_file: a string containing the path to the output file.
     """
     super(ZIPStorageFileReader, self).__init__()
-    self._zip_storage_file = zip_storage_file
+    self._storage_file = ZIPStorageFile()
+    self._storage_file.Open(input_file)
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
-    self._zip_storage_file.Close()
+    self._storage_file.Close()
+
+  def GetAnalysisReports(self):
+    """Retrieves the analysis reports.
+
+    Returns:
+      A generator of analysis report objects (instances of AnalysisReport).
+    """
+    return self._storage_file.GetAnalysisReports()
+
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Returns:
+      A generator of error objects (instances of AnalysisError or
+      ExtractionError).
+    """
+    return self._storage_file.GetErrors()
 
   def GetEvents(self, time_range=None):
     """Retrieves events.
@@ -2909,24 +2946,26 @@ class ZIPStorageFileReader(interface.StorageReader):
     Args:
       time_range: an optional time range object (instance of TimeRange).
 
-    Yields:
-      Event objects (instances of EventObject).
+    Returns:
+      A generator of event objects (instances of EventObject).
     """
-    event_object = self._zip_storage_file.GetSortedEntry(
-        time_range=time_range)
-
-    while event_object:
-      yield event_object
-      event_object = self._zip_storage_file.GetSortedEntry(
-          time_range=time_range)
+    return self._storage_file.GetEvents(time_range=time_range)
 
   def GetEventSources(self):
-    """Retrieves event sources.
+    """Retrieves the event sources.
 
     Returns:
       A generator of event source objects (instances of EventSourceObject).
     """
-    return self._zip_storage_file.GetEventSources()
+    return self._storage_file.GetEventSources()
+
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Returns:
+      A generator of event tag objects (instances of EventTagObject).
+    """
+    return self._storage_file.GetEventTags()
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
@@ -2937,13 +2976,16 @@ class ZIPStorageFileWriter(interface.StorageWriter):
                      collections.Counter).
   """
 
-  def __init__(self, output_file, buffer_size=0):
+  def __init__(
+      self, output_file, buffer_size=0,
+      storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer object.
 
     Args:
       output_file: a string containing the path to the output file.
       buffer_size: optional integer containing the estimated size of
                    a protobuf file.
+      storage_type: optional string containing the storage type.
     """
     super(ZIPStorageFileWriter, self).__init__()
     self._buffer_size = buffer_size
@@ -2955,6 +2997,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._parser_plugins_counter = collections.Counter()
     self._session_identifier = None
     self._storage_file = None
+    self._storage_type = storage_type
+    self._task_identifier = None
     # Counter containing the number of tags per label.
     self._tags_counter = collections.Counter()
 
@@ -2978,7 +3022,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       self._parser_plugins_counter[plugin_name] += 1
 
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -3000,7 +3044,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.reports_counter[report_identifier] += 1
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error object (instance of AnalysisError or ExtractionError).
@@ -3015,7 +3059,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.number_of_errors += 1
 
   def AddEvent(self, event_object):
-    """Adds an event to the storage.
+    """Adds an event.
 
     Args:
       event_object: an event object (instance of EventObject).
@@ -3032,7 +3076,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._UpdateCounters(event_object)
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source object (instance of EventSource).
@@ -3047,7 +3091,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag object (instance of EventTag).
@@ -3111,7 +3155,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+      raise IOError(u'Unable to read from closed storage writer.')
 
     return self._storage_file.GetEventSourcesCurrentSession()
 
@@ -3125,7 +3169,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Storage writer already opened.')
 
     self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size)
+        self._output_file, buffer_size=self._buffer_size,
+        storage_type=self._storage_type)
 
     if self._enable_profiling:
       self._storage_file.EnableProfiling(profiling_type=self._profiling_type)
@@ -3184,3 +3229,35 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._storage_file.WriteSessionStart(session_start)
     self._session_identifier = session_start.identifier
+
+  def WriteTaskCompletion(self):
+    """Writes task completion information.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    task_completion = tasks.TaskCompletion(
+        self._session_identifier, self._task_identifier)
+    task_completion.parsers_counter = self._parsers_counter
+    task_completion.parser_plugins_counter = self._parser_plugins_counter
+
+    self._storage_file.WriteTaskCompletion(task_completion)
+
+  def WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start: the task start information (instance of TaskStart).
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.WriteTaskStart(task_start)
+    self._session_identifier = task_start.session_identifier
+    self._task_identifier = task_start.identifier
