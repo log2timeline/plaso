@@ -266,7 +266,7 @@ class StorageWriter(object):
     """Merges data from a storage reader into the writer.
 
     Args:
-      storage_reader (StorageReader): a storage reader.
+      storage_reader (StorageReader): storage reader.
     """
     for event_source in storage_reader.GetEventSources():
       self.AddEventSource(event_source)
