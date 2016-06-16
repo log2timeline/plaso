@@ -18,6 +18,7 @@ from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 from plaso.preprocessors import manager as preprocess_manager
+# TODO: refactor usage of fake storage.
 from plaso.storage import fake_storage
 
 
@@ -739,6 +740,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not registry_key:
       return {}
 
+    # TODO: refactor usage of fake storage.
     storage_writer = fake_storage.FakeStorageWriter()
     storage_writer.Open()
 

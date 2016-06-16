@@ -464,7 +464,8 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
-    # TODO: in storage rewrite come up with a more generic solution.
+    # TODO: we are directly invoking ZIP file storage here. In storage rewrite
+    # come up with a more generic solution.
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
         self._storage_file_path)
 

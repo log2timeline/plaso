@@ -16,11 +16,9 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
   def testAnalyzeFile(self):
     """Read a storage file that contains URL data and analyze it."""
-    parser_object = sqlite.SQLiteParser()
+    parser = sqlite.SQLiteParser()
     knowledge_base = self._SetUpKnowledgeBase()
-
-    storage_writer = self._ParseFile(
-        ['History'], parser_object, knowledge_base)
+    storage_writer = self._ParseFile(['History'], parser, knowledge_base)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_producer = test_lib.TestEventObjectProducer(

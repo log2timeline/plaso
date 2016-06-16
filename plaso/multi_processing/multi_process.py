@@ -272,7 +272,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
 
     # The ZeroMQ backed queue must be started first, so we can save its port.
     if isinstance(self._task_queue, zeromq_queue.ZeroMQQueue):
-      self._task_queue.name = u'Collector pathspec'
+      self._task_queue.name = u'Collector task queue'
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
@@ -568,10 +568,6 @@ class MultiProcessEngine(engine.BaseEngine):
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
 
-  def _CloseStorageZeroMQQueues(self):
-    """Closes all ZeroMQ queues being used by the storage writer."""
-    logging.debug(u'Closing ZeroMQ storage queues.')
-
   def _GetPathSpecQueuePort(self, collector_process):
     """Retrieves the path specification queue port number.
 
@@ -812,7 +808,7 @@ class MultiProcessEngine(engine.BaseEngine):
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue not to be full.
     if self._use_zeromq:
-      self._CloseStorageZeroMQQueues()
+      logging.debug(u'Closing ZeroMQ storage queues.')
     else:
       logging.debug(u'Emptying queues.')
       self._task_queue.Empty()
@@ -1251,25 +1247,23 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       self, resolver_context, parser_mediator, filter_object=None,
       hasher_names_string=None, mount_path=None, parser_filter_expression=None,
       process_archive_files=False, text_prepend=None):
-    """Creates an extraction worker object.
+    """Creates an extraction worker.
 
     Args:
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      mount_path: optional string containing the mount path.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
+      resolver_context (dfvfs.Context): resolver context.
+      parser_mediator (ParserMediator): parser mediator.
+      filter_object (Optional[objectfilter.Filter]): filter object.
+      hasher_names_string (Optional[str]):
+          comma separated names of hashers to enable.
+      mount_path (Optional[str]): optional string containing the mount path.
+      parser_filter_expression (Optional[str]): parser filter expression.
+          None represents all parsers and plugins.
+      process_archive_files (Optional[bool]):
+          True if the worker should process file entries inside archive files.
+      text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
-      An extraction worker (instance of worker.ExtractionWorker).
+      ExtractionWorker: extraction worker.
     """
     extraction_worker = worker.EventExtractionWorker(
         resolver_context, parser_mediator,
@@ -1410,10 +1404,10 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if not isinstance(self._task_queue, MultiProcessingQueue):
-      self._task_queue.Close()
-    else:
+    if isinstance(self._task_queue, MultiProcessingQueue):
       self._task_queue.Close(abort=True)
+    else:
+      self._task_queue.Close()
 
   def SignalAbort(self):
     """Signals the process to abort."""

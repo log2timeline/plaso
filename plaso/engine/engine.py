@@ -23,7 +23,8 @@ class BaseEngine(object):
   """
 
   def __init__(self):
-    """Initialize the engine object."""
+    """Initializes the engine object."""
+    super(BaseEngine, self).__init__()
     self._abort = False
     self._enable_debug_output = False
     self._enable_profiling = False

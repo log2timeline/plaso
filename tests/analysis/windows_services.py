@@ -97,10 +97,9 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser_object = winreg.WinRegistryParser()
+    parser = winreg.WinRegistryParser()
     knowledge_base = self._SetUpKnowledgeBase()
-    storage_writer = self._ParseFile(
-        [u'SYSTEM'], parser_object, knowledge_base)
+    storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_producer = test_lib.TestEventObjectProducer(
@@ -135,10 +134,9 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser_object = winreg.WinRegistryParser()
+    parser = winreg.WinRegistryParser()
     knowledge_base = self._SetUpKnowledgeBase()
-    storage_writer = self._ParseFile(
-        [u'SYSTEM'], parser_object, knowledge_base)
+    storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_producer = test_lib.TestEventObjectProducer(

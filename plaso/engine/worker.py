@@ -72,23 +72,23 @@ class EventExtractionWorker(object):
       process_archive_files=False):
     """Initializes the event extraction worker object.
 
-    The parser filter expression is a comma separated value string that
-    denotes a list of parser names to include and/or exclude. Each entry
-    can have the value of:
-
-    * An exact match of a list of parsers, or a preset (see
-      plaso/frontend/presets.py for a full list of available presets).
-    * A name of a single parser (case insensitive), e.g. msiecf.
-    * A glob name for a single parser, e.g. '*msie*' (case insensitive).
-
     Args:
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
+      resolver_context (dfvfs.Context): resolver context.
+      parser_mediator (ParserMediator): parser mediator.
+      parser_filter_expression (Optional[str]): parser filter expression.
+          None represents all parsers and plugins.
+
+          The parser filter expression is a comma separated value string that
+          denotes a list of parser names to include and/or exclude. Each entry
+          can have the value of:
+
+          * An exact match of a list of parsers, or a preset (see
+            plaso/frontend/presets.py for a full list of available presets).
+          * A name of a single parser (case insensitive), e.g. msiecf.
+          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+
+      process_archive_files (Optional[bool]):
+          True if the worker should scan for file entries inside archive files.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
@@ -522,10 +522,13 @@ class EventExtractionWorker(object):
     """Enables profiling.
 
     Args:
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers.
     """
     self._profiling_sample_rate = profiling_sample_rate
 
@@ -587,10 +590,10 @@ class EventExtractionWorker(object):
     file_entry = None
 
   def ProfilingStart(self, identifier):
-    """Starts the profiling.
+    """Starts profiling.
 
     Args:
-      identifier: a string containg the profiling identifier.
+      identifier (str): profiling identifier.
 
     Raises:
       ValueError: if the memory profiler is already set.
@@ -608,10 +611,10 @@ class EventExtractionWorker(object):
       self._event_extractor.ProfilingStart(identifier)
 
   def ProfilingStop(self):
-    """Stops the profiling.
+    """Stops profiling.
 
     Raises:
-      ValueError: if the memory profiler is already set.
+      ValueError: if the memory profiler is not set.
     """
     if self._enable_memory_profiling:
       if not self._memory_profiler:

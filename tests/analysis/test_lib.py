@@ -85,13 +85,13 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     return analysis_reports
 
-  def _ParseFile(self, path_segments, parser_object, knowledge_base_object):
+  def _ParseFile(self, path_segments, parser, knowledge_base_object):
     """Parses a file using the parser object.
 
     Args:
-      path_segments: a list of strings containinge the path segments inside
+      path_segments: a list of strings containing the path segments inside
                      the test data directory.
-      parser_object: a parser object (instance of BaseParser).
+      parser: a parser object (instance of BaseParser).
       knowledge_base_object: the knowledge base object (instance of
                              KnowledgeBase).
 
@@ -111,19 +111,19 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
-    if isinstance(parser_object, parsers_interface.FileEntryParser):
-      parser_object.Parse(parser_mediator)
+    if isinstance(parser, parsers_interface.FileEntryParser):
+      parser.Parse(parser_mediator)
 
-    elif isinstance(parser_object, parsers_interface.FileObjectParser):
+    elif isinstance(parser, parsers_interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
       try:
-        parser_object.Parse(parser_mediator, file_object)
+        parser.Parse(parser_mediator, file_object)
       finally:
         file_object.close()
 
     else:
       self.fail(
-          u'Got unexpected parser type: {0:s}'.format(type(parser_object)))
+          u'Got unexpected parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
 

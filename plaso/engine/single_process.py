@@ -24,7 +24,7 @@ class SingleProcessEngine(engine.BaseEngine):
   _STATUS_CHECK_SLEEP = 1.5
 
   def __init__(self):
-    """Initialize the single process engine object."""
+    """Initializes the single process engine object."""
     super(SingleProcessEngine, self).__init__()
     self._last_status_update_timestamp = 0.0
     self._status_update_callback = None
