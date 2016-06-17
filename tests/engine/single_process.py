@@ -7,11 +7,15 @@ import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
 
 from plaso.containers import sessions
+from plaso.engine import knowledge_base
 from plaso.engine import single_process
+from plaso.engine import worker
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
@@ -23,21 +27,27 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._test_engine = single_process.SingleProcessEngine(
-        maximum_number_of_queued_items=100)
-
   def testCreateExtractionWorker(self):
     """Tests the _CreateExtractionWorker function."""
-    test_extraction_worker = self._test_engine._CreateExtractionWorker(0)
-    self.assertIsNotNone(test_extraction_worker)
-    self.assertIsInstance(
-        test_extraction_worker,
-        single_process.SingleProcessEventExtractionWorker)
+    test_engine = single_process.SingleProcessEngine()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    resolver_context = context.Context()
+    storage_writer = fake_storage.FakeStorageWriter()
+
+    parser_mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
+
+    extraction_worker = test_engine._CreateExtractionWorker(
+        resolver_context, parser_mediator)
+    self.assertIsNotNone(extraction_worker)
+    self.assertIsInstance(extraction_worker, worker.EventExtractionWorker)
 
   def testProcessSources(self):
     """Tests the ProcessSources function."""
+    test_engine = single_process.SingleProcessEngine()
+    resolver_context = context.Context()
+    session_start = sessions.SessionStart()
+
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
@@ -45,18 +55,14 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    self._test_engine.PreprocessSources([source_path_spec])
-
-    session_start = sessions.SessionStart()
+    test_engine.PreprocessSources([source_path_spec])
 
     storage_writer = fake_storage.FakeStorageWriter()
-    storage_writer.Open()
-    storage_writer.WriteSessionStart(session_start)
 
     preprocess_object = event.PreprocessObject()
-    self._test_engine.ProcessSources(
-        [source_path_spec], storage_writer, preprocess_object,
-        parser_filter_expression=u'filestat')
+    test_engine.ProcessSources(
+        [source_path_spec], session_start, preprocess_object, storage_writer,
+        resolver_context, parser_filter_expression=u'filestat')
 
     self.assertEqual(len(storage_writer.events), 15)
 

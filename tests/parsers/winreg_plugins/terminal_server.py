@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Terminal Server Client Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = terminal_server.TerminalServerClientPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -59,16 +55,16 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = terminal_server.TerminalServerClientPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -81,7 +77,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_message = (
         u'[{0:s}] '
@@ -94,10 +90,6 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
 class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Terminal Server Client MRU Windows Registry plugin."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = terminal_server.TerminalServerClientMRUPlugin()
 
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
@@ -137,16 +129,16 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = terminal_server.TerminalServerClientMRUPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)

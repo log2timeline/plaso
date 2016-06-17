@@ -15,22 +15,17 @@ from tests.parsers.sqlite_plugins import test_lib
 class IMessageTest(test_lib.SQLitePluginTestCase):
   """Tests for the iMessage database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = imessage.IMessagePlugin()
-
   def testProcess(self):
     """Test the Process function on a iMessage chat.db file."""
-    test_file = self._GetTestFilePath([u'imessage_chat.db'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = imessage.IMessagePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'imessage_chat.db'], plugin_object)
 
     # The iMessage database file contains 10 events.
-    self.assertEqual(len(event_objects), 10)
+    self.assertEqual(len(storage_writer.events), 10)
 
     # Check the eighth message sent.
-    event_object = event_objects[7]
+    event_object = storage_writer.events[7]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
@@ -49,8 +44,8 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.message_type, expected_message_type)
 
     expected_attachment_location = None
-    self.assertEqual(event_object.attachment_location,
-                     expected_attachment_location)
+    self.assertEqual(
+        event_object.attachment_location, expected_attachment_location)
 
     expected_text = u'Did you try to send me a message?'
     self.assertEqual(event_object.text, expected_text)

@@ -16,21 +16,16 @@ from tests.parsers.sqlite_plugins import test_lib
 class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mac OS X Document Versions plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = mac_document_versions.MacDocumentVersionsPlugin()
-
   def testProcess(self):
     """Tests the Process function on a Mac OS X Document Versions file."""
-    test_file = self._GetTestFilePath([u'document_versions.sql'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = mac_document_versions.MacDocumentVersionsPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'document_versions.sql'], plugin_object)
 
-    self.assertEqual(len(event_objects), 4)
+    self.assertEqual(len(storage_writer.events), 4)
 
     # Check the first page visited entry.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)

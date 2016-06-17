@@ -274,7 +274,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         ascii_value = value.encode(u'ascii')
       except UnicodeEncodeError:
         ascii_value = value.encode(u'ascii', errors=u'ignore')
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Cookie contains non 7-bit ASCII characters. The characters have '
             u'been removed')
 
@@ -284,7 +284,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         value_line = utf_stream.decode(u'utf-8')
       except UnicodeDecodeError:
         value_line = utf_stream.decode(u'utf-8', errors=u'replace')
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Cookie value did not decode to Unicode string. Non UTF-8 '
             u'characters have been replaced.')
 

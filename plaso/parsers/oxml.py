@@ -87,7 +87,7 @@ class OpenXMLParser(interface.FileObjectParser):
       return timelib.Timestamp.FromTimeString(time_string)
 
     except errors.TimestampError:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Unable to parse time string: {0:s}'.format(time_string))
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -127,7 +127,7 @@ class OpenXMLParser(interface.FileObjectParser):
     try:
       rels_xml = zip_container.read(u'_rels/.rels')
     except zipfile.BadZipfile as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Unable to parse file with error: {0:s}'.format(exception))
       return
 

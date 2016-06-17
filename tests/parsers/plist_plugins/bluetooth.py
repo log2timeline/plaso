@@ -6,7 +6,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.parsers import plist
 from plaso.parsers.plist_plugins import bluetooth
 
 from tests.parsers.plist_plugins import test_lib
@@ -15,24 +14,20 @@ from tests.parsers.plist_plugins import test_lib
 class TestBtPlugin(test_lib.PlistPluginTestCase):
   """Tests for the Bluetooth plist plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = bluetooth.BluetoothPlugin()
-    self._parser = plist.PlistParser()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_name = u'plist_binary'
     plist_name = u'com.apple.bluetooth.plist'
-    event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, [test_file_name], plist_name)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 14)
+    plugin_object = bluetooth.BluetoothPlugin()
+    storage_writer = self._ParsePlistFileWithPlugin(
+        plugin_object, [test_file_name], plist_name)
+
+    self.assertEqual(len(storage_writer.events), 14)
 
     paired_event_objects = []
     timestamps = []
-    for event_object in event_objects:
+    for event_object in storage_writer.events:
       timestamps.append(event_object.timestamp)
       if event_object.desc.startswith(u'Paired'):
         paired_event_objects.append(event_object)

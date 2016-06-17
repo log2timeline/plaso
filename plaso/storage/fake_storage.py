@@ -127,17 +127,19 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  # TODO: remove during phased processing refactor.
-  def ForceClose(self):
-    """Forces the storage writer to close.
+  def CreateTaskStorageWriter(self, unused_task_name):
+    """Creates a task storage writer.
+
+    Args:
+      task_name: a string containing a unique name of the task.
+
+    Returns:
+      A storage writer object (instance of StorageWriter).
 
     Raises:
-      IOError: when the storage writer is closed.
+      NotImplementedError: since there is no implementation.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage writer.')
-
-    self._is_open = False
+    raise NotImplementedError()
 
   # TODO: remove during phased processing refactor.
   def ForceFlush(self):

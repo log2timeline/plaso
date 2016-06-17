@@ -98,7 +98,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     time = log_dict.get(u'time', None)
 
     if not date and not time:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to extract timestamp from logline.')
       return
 
@@ -111,7 +111,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = timelib.Timestamp.FromTimeParts(
           date[0], date[1], date[2], time[0], time[1], time[2], timezone=zone)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return

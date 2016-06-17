@@ -18,10 +18,6 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests the SAM Users Account information plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = sam_users.SAMUsersWindowsRegistryPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SAM'])
@@ -29,13 +25,14 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 7)
+    plugin_object = sam_users.SAMUsersWindowsRegistryPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 7)
+
+    event_object = storage_writer.events[0]
 
     self._TestRegvalue(event_object, u'account_rid', 500)
     self._TestRegvalue(event_object, u'login_count', 6)
@@ -59,7 +56,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         event_object, expected_message, expected_short_message)
 
     # Test SAMUsersWindowsRegistryEvent.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.account_rid, 500)
     self.assertEqual(event_object.login_count, 6)

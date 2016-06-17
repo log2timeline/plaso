@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the WinRAR ArcHistory Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = winrar.WinRarHistoryPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates WinRAR ArcHistory Registry keys and values for testing.
 
@@ -59,16 +55,16 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = winrar.WinRarHistoryPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)

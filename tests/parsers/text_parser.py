@@ -91,10 +91,9 @@ class TextParserTest(test_lib.ParserTestCase):
     """Test a text parser that will not match against content."""
     parser_object = TestTextParser()
 
-    test_file = self._GetTestFilePath([u'text_parser', u'test1.txt'])
-
     with self.assertRaises(errors.UnableToParseFile):
-      _ = self._ParseFile(parser_object, test_file)
+      self._ParseFile(
+          [u'text_parser', u'test1.txt'], parser_object)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
@@ -105,11 +104,10 @@ class TextParserTest(test_lib.ParserTestCase):
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
-    test_file = self._GetTestFilePath([u'text_parser', u'test2.txt'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'text_parser', u'test2.txt'], parser_object)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     msg1, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
@@ -122,7 +120,7 @@ class TextParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.hostname, u'myhost')
     self.assertEqual(event_object.username, u'myuser')
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     msg2, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)

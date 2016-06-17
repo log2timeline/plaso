@@ -18,10 +18,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winevtx.WinEvtxParser()
-
-    test_file = self._GetTestFilePath([u'System.evtx'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'System.evtx'], parser_object)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
@@ -29,7 +27,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Number of recovered records : 0
     #   Log type                    : System
 
-    self.assertEqual(len(event_objects), 1601)
+    self.assertEqual(len(storage_writer.events), 1601)
 
     # Event number        : 12049
     # Written time        : Mar 14, 2012 04:17:43.354562700 UTC
@@ -43,7 +41,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # String: 2           : C:\Windows\System32\Winevt\Logs\
     #                     : Archive-System-2012-03-14-04-17-39-932.evtx
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.record_number, 12049)
     expected_computer_name = u'WKS-WIN764BITB.shieldbase.local'
@@ -60,7 +58,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.strings[1], expected_string)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-14 04:17:38.276340')

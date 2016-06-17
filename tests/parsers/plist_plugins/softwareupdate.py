@@ -6,7 +6,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.parsers import plist
 from plaso.parsers.plist_plugins import softwareupdate
 
 from tests.parsers.plist_plugins import test_lib
@@ -15,20 +14,16 @@ from tests.parsers.plist_plugins import test_lib
 class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
   """Tests for the SoftwareUpdate plist plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = softwareupdate.SoftwareUpdatePlugin()
-    self._parser = plist.PlistParser()
-
   def testProcess(self):
     """Tests the Process function."""
     plist_name = u'com.apple.SoftwareUpdate.plist'
-    event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, [plist_name], plist_name)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 2)
-    event_object = event_objects[0]
+    plugin_object = softwareupdate.SoftwareUpdatePlugin()
+    storage_writer = self._ParsePlistFileWithPlugin(
+        plugin_object, [plist_name], plist_name)
+
+    self.assertEqual(len(storage_writer.events), 2)
+    event_object = storage_writer.events[0]
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/')
     expected_desc = u'Last Mac OS X 10.9.1 (13B42) full update.'
@@ -37,7 +32,7 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_string)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/')
     expected_desc = (

@@ -1298,8 +1298,6 @@ class PregConsole(object):
     self.preg_tool = preg_tool
     self.preg_front_end = getattr(preg_tool, u'_front_end', None)
 
-    self.parser_mediator = self.preg_front_end.CreateParserMediator()
-
   def _CommandGetCurrentKey(self):
     """Command function to retrieve the currently loaded Registry key.
 

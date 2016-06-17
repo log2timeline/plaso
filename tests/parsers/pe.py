@@ -16,47 +16,44 @@ class PECOFFTest(test_lib.ParserTestCase):
 
   def testParseFileObjectOnExecutable(self):
     """Tests the ParseFileObject on a PE executable (EXE) file."""
-    test_path = self._GetTestFilePath([u'test_pe.exe'])
-    parser = pe.PEParser()
+    parser_object = pe.PEParser()
+    storage_writer = self._ParseFile(
+        [u'test_pe.exe'], parser_object)
 
-    event_queue_consumer = self._ParseFile(parser, test_path)
-    events = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 3)
 
-    self.assertEqual(len(events), 3)
-
-    first_event = events[0]
+    event_object = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-04-21 14:53:56')
-    self.assertEqual(first_event.pe_type, u'Executable (EXE)')
-    self.assertEqual(first_event.timestamp, expected_timestamp)
-    self.assertEqual(first_event.data_type, u'pe:compilation:compilation_time')
+    self.assertEqual(event_object.pe_type, u'Executable (EXE)')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, u'pe:compilation:compilation_time')
 
-    second_event = events[1]
-    expected_timestamp2 = timelib.Timestamp.CopyFromString(
+    event_object = storage_writer.events[1]
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-04-21 14:53:55')
-    self.assertEqual(second_event.timestamp, expected_timestamp2)
-    self.assertEqual(second_event.data_type, u'pe:import:import_time')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, u'pe:import:import_time')
 
-    third_event = events[2]
-    expected_timestamp3 = timelib.Timestamp.CopyFromString(
+    event_object = storage_writer.events[2]
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-04-21 14:53:54')
-    self.assertEqual(third_event.timestamp, expected_timestamp3)
-    self.assertEqual(third_event.data_type, u'pe:delay_import:import_time')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.data_type, u'pe:delay_import:import_time')
 
   def testParseFileObjectOnDriver(self):
     """Tests the ParseFileObject on a PE driver (SYS) file."""
-    test_path = self._GetTestFilePath([u'test_driver.sys'])
-    parser = pe.PEParser()
+    parser_object = pe.PEParser()
+    storage_writer = self._ParseFile(
+        [u'test_driver.sys'], parser_object)
 
-    event_queue_consumer = self._ParseFile(parser, test_path)
-    events = self._GetEventObjectsFromQueue(event_queue_consumer)
-    self.assertEqual(len(events), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    first_event = events[0]
+    event_object = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-04-21 14:53:54')
-    self.assertEqual(first_event.pe_type, u'Driver (SYS)')
-    self.assertEqual(first_event.timestamp, expected_timestamp)
+    self.assertEqual(event_object.pe_type, u'Driver (SYS)')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

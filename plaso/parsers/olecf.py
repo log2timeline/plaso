@@ -53,7 +53,7 @@ class OleCfParser(interface.FileObjectParser):
     try:
       olecf_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to open file with error: {0:s}'.format(exception))
       return
 

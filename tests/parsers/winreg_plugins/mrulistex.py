@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUListEx plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = mrulistex.MRUListExStringPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -73,17 +69,17 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = mrulistex.MRUListExStringPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
     # A MRUListEx event object.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -102,10 +98,6 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUListEx plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = mrulistex.MRUListExShellItemListPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
@@ -115,19 +107,20 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 65)
+    plugin_object = mrulistex.MRUListExShellItemListPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
+
+    self.assertEqual(len(storage_writer.events), 65)
 
     # A MRUListEx event object.
-    event_object = event_objects[40]
+    event_object = storage_writer.events[40]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-08-28 22:48:28.159308')
@@ -146,7 +139,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         event_object, expected_message, expected_short_message)
 
     # A shell item event object.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-08 22:16:02')
@@ -171,10 +164,6 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item MRUListEx plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = mrulistex.MRUListExStringAndShellItemPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
@@ -184,19 +173,20 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 6)
+    plugin_object = mrulistex.MRUListExStringAndShellItemPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
+
+    self.assertEqual(len(storage_writer.events), 6)
 
     # A MRUListEx event object.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-01 13:52:39.113741')
@@ -254,10 +244,6 @@ class TestMRUListExStringAndShellItemListPlugin(
     test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item list MRUListEx plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = mrulistex.MRUListExStringAndShellItemListPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
@@ -267,19 +253,20 @@ class TestMRUListExStringAndShellItemListPlugin(
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 31)
+    plugin_object = mrulistex.MRUListExStringAndShellItemListPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
+
+    self.assertEqual(len(storage_writer.events), 31)
 
     # A MRUListEx event object.
-    event_object = event_objects[30]
+    event_object = storage_writer.events[30]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-01 13:52:38.966290')

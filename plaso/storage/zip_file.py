@@ -125,6 +125,7 @@ import heapq
 import io
 import logging
 import os
+import tempfile
 import warnings
 import zipfile
 
@@ -961,6 +962,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._storage_type = storage_type
     self._path = None
     self._zipfile = None
+    self._zipfile_path = None
 
   @property
   def serialization_format(self):
@@ -1290,7 +1292,7 @@ class ZIPStorageFile(interface.BaseStorage):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
       streams_cache[stream_number] = data_stream
 
     return data_stream
@@ -1662,17 +1664,30 @@ class ZIPStorageFile(interface.BaseStorage):
 
     if read_only:
       access_mode = 'r'
+
+      zipfile_path = path
     else:
       access_mode = 'a'
 
+      # Create a temporary directory to prevent multiple ZIP storage
+      # files in the same directory conflicting with eachother.
+      directory_name = os.path.dirname(path)
+      basename = os.path.basename(path)
+      directory_name = tempfile.mkdtemp(dir=directory_name)
+      zipfile_path = os.path.join(directory_name, basename)
+
+      if os.path.exists(path):
+        os.rename(path, zipfile_path)
+
     try:
       self._zipfile = zipfile.ZipFile(
-          path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
+          zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
+      self._zipfile_path = zipfile_path
 
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to open ZIP file: {0:s} with error: {1:s}'.format(
-          path, exception))
+          zipfile_path, exception))
 
     self._is_open = True
     self._path = path
@@ -1763,7 +1778,8 @@ class ZIPStorageFile(interface.BaseStorage):
     if not self._HasStream(stream_name):
       raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_index)
 
     return self._ReadAttributeContainerFromStreamEntry(data_stream, u'event')
@@ -1901,7 +1917,8 @@ class ZIPStorageFile(interface.BaseStorage):
       self._serializers_profiler.StartTiming(u'write')
 
     stream_name = u'error_data.{0:06d}'.format(self._error_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
@@ -1942,7 +1959,8 @@ class ZIPStorageFile(interface.BaseStorage):
       self._serializers_profiler.StartTiming(u'write')
 
     stream_name = u'event_data.{0:06d}'.format(self._event_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
@@ -1986,7 +2004,8 @@ class ZIPStorageFile(interface.BaseStorage):
 
     stream_name = u'event_source_data.{0:06d}'.format(
         self._event_source_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
@@ -2040,7 +2059,8 @@ class ZIPStorageFile(interface.BaseStorage):
 
     stream_name = u'{0:s}.{1:06d}'.format(
         stream_name_prefix, self._event_tag_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
@@ -2098,7 +2118,8 @@ class ZIPStorageFile(interface.BaseStorage):
 
     session_completion_data = self._WriteAttributeContainer(session_completion)
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     data_stream.WriteInitialize()
     data_stream.WriteEntry(session_completion_data)
     data_stream.WriteFinalize()
@@ -2123,7 +2144,8 @@ class ZIPStorageFile(interface.BaseStorage):
 
     session_start_data = self._WriteAttributeContainer(session_start)
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     data_stream.WriteInitialize()
     data_stream.WriteEntry(session_start_data)
     data_stream.WriteFinalize()
@@ -2180,7 +2202,8 @@ class ZIPStorageFile(interface.BaseStorage):
 
     task_completion_data = self._WriteAttributeContainer(task_completion)
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     data_stream.WriteInitialize()
     data_stream.WriteEntry(task_completion_data)
     data_stream.WriteFinalize()
@@ -2205,7 +2228,8 @@ class ZIPStorageFile(interface.BaseStorage):
 
     task_start_data = self._WriteAttributeContainer(task_start)
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     data_stream.WriteInitialize()
     data_stream.WriteEntry(task_start_data)
     data_stream.WriteFinalize()
@@ -2262,7 +2286,7 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteStream(stream_name, serialized_report)
     else:
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
       data_stream.WriteInitialize()
       data_stream.WriteEntry(serialized_report)
       data_stream.WriteFinalize()
@@ -2411,7 +2435,7 @@ class ZIPStorageFile(interface.BaseStorage):
           raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
         data_stream = _SerializedDataStream(
-            self._zipfile, self._path, stream_name)
+            self._zipfile, self._zipfile_path, stream_name)
         # TODO: replace 0 by the actual event tag entry index.
         # This is for code consistency rather then a functional purpose.
         data_stream.SeekEntryAtOffset(0, tag_index_value.offset)
@@ -2466,6 +2490,14 @@ class ZIPStorageFile(interface.BaseStorage):
     self._zipfile = None
     self._is_open = False
 
+    if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
+      os.rename(self._zipfile_path, self._path)
+      directory_name = os.path.dirname(self._zipfile_path)
+      os.rmdir(directory_name)
+
+    self._path = None
+    self._zipfile_path = None
+
   def Flush(self):
     """Forces the serialized attribute containers to be written to file.
 
@@ -2510,7 +2542,7 @@ class ZIPStorageFile(interface.BaseStorage):
 
       else:
         data_stream = _SerializedDataStream(
-            self._zipfile, self._path, stream_name)
+            self._zipfile, self._zipfile_path, stream_name)
 
         for analysis_report in self._ReadAttributeContainersFromStream(
             data_stream, u'analysis_report'):
@@ -2529,7 +2561,7 @@ class ZIPStorageFile(interface.BaseStorage):
         continue
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       for error in self._ReadAttributeContainersFromStream(
           data_stream, u'error'):
@@ -2564,26 +2596,7 @@ class ZIPStorageFile(interface.BaseStorage):
         continue
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
-
-      for event_source in self._ReadAttributeContainersFromStream(
-          data_stream, u'event_source'):
-        yield event_source
-
-  def GetEventSourcesCurrentSession(self):
-    """Retrieves the event sources of the current session.
-
-    Yields:
-      Event sources (instances of EventSource).
-    """
-    stream_name_prefix = u'event_source_data.'
-
-    for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(stream_name_prefix):
-        continue
-
-      data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       for event_source in self._ReadAttributeContainersFromStream(
           data_stream, u'event_source'):
@@ -2605,7 +2618,7 @@ class ZIPStorageFile(interface.BaseStorage):
         continue
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       for event_tag in self._ReadAttributeContainersFromStream(
           data_stream, u'event_tag'):
@@ -2628,7 +2641,7 @@ class ZIPStorageFile(interface.BaseStorage):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       session_start = self._ReadAttributeContainerFromStreamEntry(
           data_stream, u'session_start')
@@ -2637,7 +2650,7 @@ class ZIPStorageFile(interface.BaseStorage):
       stream_name = u'session_completion.{0:06d}'.format(stream_number)
       if self._HasStream(stream_name):
         data_stream = _SerializedDataStream(
-            self._zipfile, self._path, stream_name)
+            self._zipfile, self._zipfile_path, stream_name)
 
         session_completion = self._ReadAttributeContainerFromStreamEntry(
             data_stream, u'session_completion')
@@ -2855,7 +2868,8 @@ class StorageFile(ZIPStorageFile):
     if not self._HasStream(stream_name):
       return []
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
 
     information = []
     preprocess_object = self._ReadPreprocessObject(data_stream)
@@ -2919,9 +2933,11 @@ class ZIPStorageFileReader(interface.StorageReader):
     self._storage_file = ZIPStorageFile()
     self._storage_file.Open(input_file)
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self._storage_file.Close()
+  def Close(self):
+    """Closes the storage reader."""
+    if self._storage_file:
+      self._storage_file.Close()
+      self._storage_file = None
 
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
@@ -2989,6 +3005,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """
     super(ZIPStorageFileWriter, self).__init__()
     self._buffer_size = buffer_size
+    self._event_source_index = 0
     self._event_tags = []
     self._output_file = output_file
     # Counter containing the number of events per parser.
@@ -2999,6 +3016,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file = None
     self._storage_type = storage_type
     self._task_identifier = None
+    self._task_storage_path = None
     # Counter containing the number of tags per label.
     self._tags_counter = collections.Counter()
 
@@ -3120,18 +3138,31 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.Close()
     self._storage_file = None
 
-  # TODO: remove during phased processing refactor.
-  def ForceClose(self):
-    """Forces the storage writer to close.
+    if (self._storage_type == definitions.STORAGE_TYPE_SESSION and
+        self._task_storage_path and os.path.isdir(self._task_storage_path)):
+      os.rmdir(self._task_storage_path)
+
+  def CreateTaskStorageWriter(self, task_name):
+    """Creates a task storage writer.
+
+    Args:
+      task_name: a string containing a unique name of the task.
+
+    Returns:
+      A storage writer object (instance of StorageWriter).
 
     Raises:
-      IOError: when the storage writer is closed.
+      RuntimeError: if the task storage path is missing.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    if not self._task_storage_path:
+      raise RuntimeError(u'Missing task storage path.')
 
-    self._storage_file.Close()
-    self._storage_file = None
+    storage_file_path = os.path.join(
+        self._task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    return ZIPStorageFileWriter(
+        storage_file_path, buffer_size=self._buffer_size,
+        storage_type=definitions.STORAGE_TYPE_TASK)
 
   # TODO: remove during phased processing refactor.
   def ForceFlush(self):
@@ -3148,8 +3179,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
   def GetEventSources(self):
     """Retrieves the event sources.
 
-    Returns:
-      A generator of event source objects (instances of EventSourceObject).
+    Yields:
+      Event source objects (instances of EventSourceObject).
 
     Raises:
       IOError: when the storage writer is closed.
@@ -3157,7 +3188,13 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    return self._storage_file.GetEventSourcesCurrentSession()
+    event_source_index = 0
+    for event_source in self._storage_file.GetEventSources():
+      if event_source_index >= self._event_source_index:
+        yield event_source
+        self._event_source_index += 1
+
+      event_source_index += 1
 
   def Open(self):
     """Opens the storage writer.
@@ -3174,6 +3211,15 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     if self._enable_profiling:
       self._storage_file.EnableProfiling(profiling_type=self._profiling_type)
+
+    self._event_source_index = 0
+    for _ in self._storage_file.GetEventSources():
+      self._event_source_index += 1
+
+    if (not self._task_storage_path and
+        self._storage_type == definitions.STORAGE_TYPE_SESSION):
+      output_directory = os.path.dirname(self._output_file)
+      self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
 
   # TODO: remove during phased processing refactor.
   def WritePreprocessObject(self, preprocess_object):

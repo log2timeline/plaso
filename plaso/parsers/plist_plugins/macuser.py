@@ -105,7 +105,7 @@ class MacUserPlugin(interface.PlistPlugin):
         try:
           timestamp = timelib.Timestamp.FromTimeString(time_string)
         except errors.TimestampError:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time string: {0:s}'.format(time_string))
           timestamp = 0
 
@@ -154,7 +154,7 @@ class MacUserPlugin(interface.PlistPlugin):
         try:
           timestamp = timelib.Timestamp.FromTimeString(time_string)
         except errors.TimestampError:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time string: {0:s}'.format(time_string))
           timestamp = 0
 
@@ -169,7 +169,7 @@ class MacUserPlugin(interface.PlistPlugin):
         try:
           timestamp = timelib.Timestamp.FromTimeString(time_string)
         except errors.TimestampError:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time string: {0:s}'.format(time_string))
           timestamp = 0
 

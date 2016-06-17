@@ -17,14 +17,12 @@ class ASLParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = asl.ASLParser()
+    storage_writer = self._ParseFile(
+        [u'applesystemlog.asl'], parser_object)
 
-    test_file = self._GetTestFilePath([u'applesystemlog.asl'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    self.assertEqual(len(event_objects), 2)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-25 09:45:35.705481')
