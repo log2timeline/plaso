@@ -17,28 +17,23 @@ from tests.parsers.sqlite_plugins import test_lib
 class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mozilla Firefox history database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = firefox.FirefoxHistoryPlugin()
-
   def testProcessPriorTo24(self):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
-    test_file = self._GetTestFilePath([u'places.sqlite'])
+    plugin_object = firefox.FirefoxHistoryPlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'places.sqlite'], plugin_object, cache=cache)
 
     # The places.sqlite file contains 205 events (1 page visit,
     # 2 x 91 bookmark records, 2 x 3 bookmark annotations,
     # 2 x 8 bookmark folders).
     # However there are three events that do not have a timestamp
     # so the test file will show 202 extracted events.
-    self.assertEqual(len(event_objects), 202)
+    self.assertEqual(len(storage_writer.events), 202)
 
     # Check the first page visited event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.data_type, u'firefox:places:page_visited')
 
@@ -64,7 +59,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
     # Check the first bookmark event.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.data_type, u'firefox:places:bookmark')
 
@@ -76,7 +71,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Check the second bookmark event.
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     self.assertEqual(event_object.data_type, u'firefox:places:bookmark')
 
@@ -109,7 +104,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
     # Check the first bookmark annotation event.
-    event_object = event_objects[183]
+    event_object = storage_writer.events[183]
 
     self.assertEqual(
         event_object.data_type, u'firefox:places:bookmark_annotation')
@@ -122,7 +117,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Check another bookmark annotation event.
-    event_object = event_objects[184]
+    event_object = storage_writer.events[184]
 
     self.assertEqual(
         event_object.data_type, u'firefox:places:bookmark_annotation')
@@ -148,7 +143,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
     # Check the second last bookmark folder event.
-    event_object = event_objects[200]
+    event_object = storage_writer.events[200]
 
     self.assertEqual(event_object.data_type, u'firefox:places:bookmark_folder')
 
@@ -159,7 +154,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         u'2011-03-21 10:05:01.553774')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     # Check the last bookmark folder event.
-    event_object = event_objects[201]
+    event_object = storage_writer.events[201]
 
     self.assertEqual(
         event_object.data_type, u'firefox:places:bookmark_folder')
@@ -181,20 +176,19 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
-    test_file = self._GetTestFilePath([u'places_new.sqlite'])
+    plugin_object = firefox.FirefoxHistoryPlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'places_new.sqlite'], plugin_object, cache=cache)
 
     # The places.sqlite file contains 84 events:
     #     34 page visits.
     #     28 bookmarks
     #     14 bookmark folders
     #     8 annotations
-    self.assertEqual(len(event_objects), 84)
+    self.assertEqual(len(storage_writer.events), 84)
     counter = collections.Counter()
-    for event_object in event_objects:
+    for event_object in storage_writer.events:
       counter[event_object.data_type] += 1
 
     self.assertEqual(counter[u'firefox:places:bookmark'], 28)
@@ -202,7 +196,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(counter[u'firefox:places:bookmark_folder'], 14)
     self.assertEqual(counter[u'firefox:places:bookmark_annotation'], 8)
 
-    random_event = event_objects[10]
+    random_event = storage_writer.events[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-30 21:57:11.281942')
@@ -219,23 +213,18 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mozilla Firefox downloads database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = firefox.FirefoxDownloadsPlugin()
-
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
-    test_file = self._GetTestFilePath([u'downloads.sqlite'])
+    plugin_object = firefox.FirefoxDownloadsPlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'downloads.sqlite'], plugin_object, cache=cache)
 
     # The downloads.sqlite file contains 2 events (1 download).
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
     # Check the first page visited event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.data_type, u'firefox:downloads:download')
 

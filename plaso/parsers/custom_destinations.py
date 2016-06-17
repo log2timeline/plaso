@@ -84,7 +84,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
       message = (
           u'Unable to open LNK file: {0:s} with error {1:s}').format(
               display_name, exception)
-      parser_mediator.ProduceParseError(message)
+      parser_mediator.ProduceExtractionError(message)
       return 0
 
     self._WINLNK_PARSER.Parse(

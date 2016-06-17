@@ -29,15 +29,13 @@ class PlistParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = plist.PlistParser()
+    storage_writer = self._ParseFile(
+        [u'plist_binary'], parser_object)
 
-    test_file = self._GetTestFilePath([u'plist_binary'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-    self.assertEqual(len(event_objects), 12)
+    self.assertEqual(len(storage_writer.events), 12)
 
     timestamps, roots, keys = zip(
-        *[(evt.timestamp, evt.root, evt.key) for evt in event_objects])
+        *[(evt.timestamp, evt.root, evt.key) for evt in storage_writer.events])
 
     expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,

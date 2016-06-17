@@ -15,20 +15,15 @@ from tests.parsers.esedb_plugins import test_lib
 class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
   """Tests for the File History ESE database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = file_history.FileHistoryEseDbPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = u'Catalog1.edb'
-    event_queue_consumer = self._ParseEseDbFileWithPlugin(
-        [test_file_name], self._plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = file_history.FileHistoryEseDbPlugin()
+    storage_writer = self._ParseEseDbFileWithPlugin(
+        [u'Catalog1.edb'], plugin_object)
 
-    self.assertEqual(len(event_objects), 2680)
+    self.assertEqual(len(storage_writer.events), 2680)
 
-    event_object = event_objects[693]
+    event_object = storage_writer.events[693]
 
     self.assertEqual(event_object.usn_number, 9251162904)
     self.assertEqual(event_object.identifier, 356)

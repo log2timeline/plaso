@@ -15,15 +15,11 @@ from tests.parsers.sqlite_plugins import test_lib
 class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Firefox cookie database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = firefox_cookies.FirefoxCookiePlugin()
-
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
-    test_file = self._GetTestFilePath([u'firefox_cookies.sqlite'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
+    plugin_object = firefox_cookies.FirefoxCookiePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'firefox_cookies.sqlite'], plugin_object)
 
     event_objects = []
     extra_objects = []
@@ -43,7 +39,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #   5 Analytics Creation Time
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
-    for event_object in self._GetEventObjectsFromQueue(event_queue_consumer):
+    for event_object in storage_writer.events:
       if isinstance(event_object, firefox_cookies.FirefoxCookieEvent):
         event_objects.append(event_object)
       else:

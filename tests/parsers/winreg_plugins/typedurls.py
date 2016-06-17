@@ -17,10 +17,6 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MSIE typed URLs Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = typedurls.TypedURLsPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
@@ -30,18 +26,19 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = typedurls.TypedURLsPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-12 21:23:53.307749')
@@ -75,10 +72,6 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the typed paths Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = typedurls.TypedURLsPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
@@ -88,18 +81,19 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = typedurls.TypedURLsPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:58:15.811625')

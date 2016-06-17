@@ -14,22 +14,17 @@ from tests.parsers.sqlite_plugins import test_lib
 class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Zeitgeist activity database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = zeitgeist.ZeitgeistPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath([u'activity.sqlite'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = zeitgeist.ZeitgeistPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'activity.sqlite'], plugin_object)
 
     # The sqlite database contains 44 events.
-    self.assertEqual(len(event_objects), 44)
+    self.assertEqual(len(storage_writer.events), 44)
 
     # Check the first event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_subject_uri = u'application://rhythmbox.desktop'
     self.assertEqual(event_object.subject_uri, expected_subject_uri)

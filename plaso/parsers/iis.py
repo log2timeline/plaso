@@ -211,7 +211,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = self._ConvertToTimestamp(date, time)
     except errors.TimestampError as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
 

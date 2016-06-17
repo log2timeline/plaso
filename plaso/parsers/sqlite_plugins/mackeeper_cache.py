@@ -208,7 +208,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       try:
         timestamp = timelib.Timestamp.FromTimeString(time_value)
       except errors.TimestampError:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to parse time string: {0:s}'.format(time_value))
         return
 

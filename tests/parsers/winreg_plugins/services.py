@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """The unit test for Services Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = services.ServicesPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -90,16 +86,16 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = services.ServicesPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -133,19 +129,18 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     mc_task_manager_event_objects = None
     rdp_video_miniport_event_objects = None
 
+    plugin_object = services.ServicesPlugin()
     for winreg_subkey in registry_key.GetSubkeys():
-      event_queue_consumer = self._ParseKeyWithPlugin(
-          self._plugin, winreg_subkey, file_entry=test_file_entry)
-      sub_event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-      event_objects.extend(sub_event_objects)
+      storage_writer = self._ParseKeyWithPlugin(
+          winreg_subkey, plugin_object, file_entry=test_file_entry)
+      event_objects.extend(storage_writer.events)
 
       if winreg_subkey.name == u'BITS':
-        bits_event_objects = sub_event_objects
+        bits_event_objects = storage_writer.events
       elif winreg_subkey.name == u'McTaskManager':
-        mc_task_manager_event_objects = sub_event_objects
+        mc_task_manager_event_objects = storage_writer.events
       elif winreg_subkey.name == u'RdpVideoMiniport':
-        rdp_video_miniport_event_objects = sub_event_objects
+        rdp_video_miniport_event_objects = storage_writer.events
 
     self.assertEqual(len(event_objects), 416)
 
@@ -157,7 +152,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-06 20:43:27.639075')

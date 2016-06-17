@@ -42,10 +42,6 @@ class TestFileEntry(object):
 class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the AppCompatCache Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = appcompatcache.AppCompatCachePlugin()
-
   def _CreateTestKey(self, time_string, binary_data):
     """Creates Registry keys and values for testing.
 
@@ -69,22 +65,6 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     registry_key.AddValue(registry_value)
 
     return registry_key
-
-  def _ParseAppCompatCacheKey(self, file_entry, registry_key):
-    """Parses the AppCompatCacheKey.
-
-    Args:
-      file_entry: the file entry object (instance of dfvfs.FileEntry).
-      registry_key: the Windows Registry key object (instance of
-                    dfwinreg.WinRegistryKey).
-
-    Returns:
-      A list of event objects (instances of EventObjects).
-    """
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=file_entry,
-        parser_chain=self._plugin.plugin_name)
-    return self._GetEventObjectsFromQueue(event_queue_consumer)
 
   def testProcessWindowsXP(self):
     """Tests the Process function for Windows XP AppCompatCache data."""
@@ -174,12 +154,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry(u'SYSTEM-XP')
     registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
     event_object_index = 0
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_path = u'\\??\\C:\\WINDOWS\\system32\\hticons.dll'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
@@ -210,12 +193,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry(u'SYSTEM-Windows2003')
     registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
     event_object_index = 0
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_path = (
         u'\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')
@@ -245,12 +231,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry(u'SYSTEM-Vista')
     registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
     event_object_index = 0
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_path = u'\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
@@ -271,12 +260,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 330)
+    self.assertEqual(len(storage_writer.events), 330)
 
     event_object_index = 9
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-04 01:46:37.932964')
@@ -285,7 +277,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_path = u'\\??\\C:\\Windows\\PSEXESVC.EXE'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
@@ -326,12 +318,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry(u'SYSTEM-Windows8.0')
     registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
     event_object_index = 0
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_path = u'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
@@ -369,12 +364,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry(u'SYSTEM-Windows8.1')
     registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
     event_object_index = 0
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_path = u'SYSVOL\\Windows\\System32\\dllhost.exe'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
@@ -414,12 +412,15 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry(u'SYSTEM-Windows10')
     registry_key = self._CreateTestKey(
         u'2015-06-15 11:53:37.043061', binary_data)
-    event_objects = self._ParseAppCompatCacheKey(test_file_entry, registry_key)
+    plugin_object = appcompatcache.AppCompatCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry,
+        parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
     event_object_index = 0
-    event_object = event_objects[event_object_index]
+    event_object = storage_writer.events[event_object_index]
 
     expected_path = u'C:\\Windows\\system32\\MpSigStub.exe'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(

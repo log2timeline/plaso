@@ -18,10 +18,8 @@ class MsiecfParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = msiecf.MsiecfParser()
-
-    test_file = self._GetTestFilePath([u'index.dat'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'index.dat'], parser_object)
 
     # MSIE Cache File information:
     #   Version                         : 5.2
@@ -30,7 +28,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     #   Number of recovered items       : 11
 
     # 7 + 11 records, each with 4 records.
-    self.assertEqual(len(event_objects), (7 + 11) * 4)
+    self.assertEqual(len(storage_writer.events), (7 + 11) * 4)
 
     # Record type             : URL
     # Offset range            : 21376 - 21632 (256)
@@ -42,7 +40,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     # Last checked time       : Jun 23, 2011 18:02:12
     # Cache directory index   : -2 (0xfe)
 
-    event_object = event_objects[8]
+    event_object = storage_writer.events[8]
     expected_url = (
         u'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
         u'/funnycats.exe')
@@ -58,7 +56,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
-    event_object = event_objects[9]
+    event_object = storage_writer.events[9]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-23 18:02:10.066')
@@ -66,7 +64,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
-    event_object = event_objects[10]
+    event_object = storage_writer.events[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-29 17:55:02')
@@ -74,7 +72,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
-    event_object = event_objects[11]
+    event_object = storage_writer.events[11]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-23 18:02:12')
@@ -94,9 +92,8 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # Test file with leak and redirected records.
-    test_file = self._GetTestFilePath([u'nfury_index.dat'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'nfury_index.dat'], parser_object)
 
     # MSIE Cache File information:
     #   Version                         : 5.2
@@ -104,9 +101,9 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 1027
     #   Number of recovered items       : 8
 
-    self.assertEqual(len(event_objects), 2898)
+    self.assertEqual(len(storage_writer.events), 2898)
 
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
     # Test cached file path.
     self.assertEqual(event_object.data_type, u'msiecf:url')
@@ -129,12 +126,12 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[21]
+    event_object = storage_writer.events[21]
     expected_url = (
         u'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;sz=1x1;'
         u'pc=[TPAS_ID];ord=2642102')
 
-    event_object = event_objects[16]
+    event_object = storage_writer.events[16]
 
     self.assertEqual(event_object.data_type, u'msiecf:leak')
     self.assertEqual(event_object.timestamp, 0)
@@ -154,7 +151,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[21]
+    event_object = storage_writer.events[21]
     expected_url = (
         u'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;sz=1x1;'
         u'pc=[TPAS_ID];ord=2642102')

@@ -48,12 +48,10 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
     parser_object = winreg.WinRegistryParser()
+    storage_writer = self._ParseFile(
+        [u'NTUSER.DAT'], parser_object)
 
-    test_file = self._GetTestFilePath([u'NTUSER.DAT'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-    parser_chains = self._GetParserChains(event_objects)
+    parser_chains = self._GetParserChains(storage_writer.events)
 
     expected_parser_chain = self._PluginNameToParserChain(u'userassist')
     self.assertTrue(expected_parser_chain in parser_chains)
@@ -63,22 +61,18 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
     parser_object = winreg.WinRegistryParser()
+    storage_writer = self._ParseFile(
+        [u'ntuser.dat.LOG'], parser_object)
 
-    test_file = self._GetTestFilePath([u'ntuser.dat.LOG'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-    self.assertEqual(len(event_objects), 0)
+    self.assertEqual(len(storage_writer.events), 0)
 
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
     parser_object = winreg.WinRegistryParser()
+    storage_writer = self._ParseFile(
+        [u'SYSTEM'], parser_object)
 
-    test_file = self._GetTestFilePath([u'SYSTEM'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
-
-    parser_chains = self._GetParserChains(event_objects)
+    parser_chains = self._GetParserChains(storage_writer.events)
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.

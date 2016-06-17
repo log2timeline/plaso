@@ -225,7 +225,7 @@ class SlowLexicalTextParser(
 
     file_offset = file_object.get_offset()
     if file_offset < file_object.get_size():
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'{0:s} prematurely terminated parsing: {1:s} at offset: '
           u'0x{2:08x}.').format(
               self.NAME, path_spec_printable, file_offset))
@@ -291,7 +291,7 @@ class SlowLexicalTextParser(
     if not year_string:
       if not self._file_verified:
         raise errors.UnableToParseFile()
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'year missing in log line: {0:s}'.format(self.PrintLine()))
       return
 
@@ -299,7 +299,7 @@ class SlowLexicalTextParser(
     if not time_string:
       if not self._file_verified:
         raise errors.UnableToParseFile()
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'time values missing in log line: {0:s}'.format(self.PrintLine()))
       return
 
@@ -307,7 +307,7 @@ class SlowLexicalTextParser(
     if len(time_values) < 3:
       if not self._file_verified:
         raise errors.UnableToParseFile()
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unsupported time format in log line: {0:s}'.format(
               self.PrintLine()))
       return
@@ -331,7 +331,7 @@ class SlowLexicalTextParser(
     except ValueError as exception:
       if not self._file_verified:
         raise errors.UnableToParseFile()
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to parse log line: {0:s} with error: {1:s}'.format(
               self.PrintLine(), exception))
       return
@@ -348,7 +348,7 @@ class SlowLexicalTextParser(
           timezone=timezone)
     except errors.TimestampError as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
 
@@ -458,7 +458,7 @@ class TextCSVParser(interface.FileObjectParser):
         row[key] = value.decode(self.encoding)
       except UnicodeDecodeError:
         replaced_value = value.decode(self.encoding, errors=u'replace')
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Error decoding string as {0:s}, characters have been '
             u'replaced in {1:s}'.format(self.encoding, replaced_value))
         row[key] = replaced_value
@@ -851,7 +851,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       else:
         if len(line) > 80:
           line = u'{0:s}...'.format(line[0:77])
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to parse log line: {0:s} at offset {1:d}'.format(
                 repr(line), self._current_offset))
 
@@ -1101,12 +1101,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         if odd_line:
           if len(odd_line) > 80:
             odd_line = u'{0:s}...'.format(odd_line[0:77])
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse log line: {0:s}'.format(repr(odd_line)))
 
       try:
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to read lines from file with error: {0:s}'.format(
                 exception))

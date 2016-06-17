@@ -15,22 +15,16 @@ from tests.parsers.olecf_plugins import test_lib
 class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the .automaticDestinations-ms OLECF parser plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = automatic_destinations.AutomaticDestinationsOlecfPlugin()
-
   def testProcessVersion1(self):
     """Tests the Process function on version 1 .automaticDestinations-ms."""
-    test_file = self._GetTestFilePath([
-        u'1b4dd67f29cb1962.automaticDestinations-ms'])
-    event_queue_consumer = self._ParseOleCfFileWithPlugin(
-        test_file, self._plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = automatic_destinations.AutomaticDestinationsOlecfPlugin()
+    storage_writer = self._ParseOleCfFileWithPlugin(
+        [u'1b4dd67f29cb1962.automaticDestinations-ms'], plugin_object)
 
-    self.assertEqual(len(event_objects), 88)
+    self.assertEqual(len(storage_writer.events), 88)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
-    event_object = event_objects[7]
+    event_object = storage_writer.events[7]
 
     self.assertEqual(event_object.offset, 32)
     self.assertEqual(event_object.data_type, u'olecf:dest_list:entry')
@@ -62,7 +56,7 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         event_object, expected_message, expected_message_short)
 
     # Check a WinLnkLinkEvent.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.data_type, u'windows:lnk:link')
 
@@ -88,7 +82,7 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         event_object, expected_message, expected_message_short)
 
     # Check a WindowsDistributedLinkTrackingCreationEvent.
-    event_object = event_objects[5]
+    event_object = storage_writer.events[5]
 
     self.assertEqual(
         event_object.data_type, u'windows:distributed_link_tracking:creation')
@@ -111,18 +105,16 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
 
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
-    test_file = self._GetTestFilePath([
-        u'9d1f905ce5044aee.automaticDestinations-ms'])
-    event_queue_consumer = self._ParseOleCfFileWithPlugin(
-        test_file, self._plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = automatic_destinations.AutomaticDestinationsOlecfPlugin()
+    storage_writer = self._ParseOleCfFileWithPlugin(
+        [u'9d1f905ce5044aee.automaticDestinations-ms'], plugin_object)
 
-    self.assertEqual(len(event_objects), 4)
+    self.assertEqual(len(storage_writer.events), 4)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
 
     # Check a WinLnkLinkEvent.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.offset, 32)
     self.assertEqual(event_object.data_type, u'olecf:dest_list:entry')
@@ -153,7 +145,7 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         event_object, expected_message, expected_message_short)
 
     # Check a WinLnkLinkEvent.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.data_type, u'windows:lnk:link')
     self.assertEqual(

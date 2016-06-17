@@ -122,7 +122,11 @@ class StorageReader(object):
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
-    return
+    self.Close()
+
+  @abc.abstractmethod
+  def Close(self):
+    """Closes the storage reader."""
 
   @abc.abstractmethod
   def GetAnalysisReports(self):
@@ -243,11 +247,6 @@ class StorageWriter(object):
     """
     self._enable_profiling = True
     self._profiling_type = profiling_type
-
-  # TODO: remove during phased processing refactor.
-  @abc.abstractmethod
-  def ForceClose(self):
-    """Forces the storage writer to close."""
 
   # TODO: remove during phased processing refactor.
   @abc.abstractmethod

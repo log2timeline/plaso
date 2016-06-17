@@ -3,6 +3,7 @@
 
 import abc
 import ctypes
+import glob
 import logging
 import multiprocessing
 import os
@@ -15,6 +16,7 @@ import time
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
+from plaso.containers import tasks
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
@@ -25,6 +27,7 @@ from plaso.lib import errors
 from plaso.multi_processing import process_info
 from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
+from plaso.storage import zip_file as storage_zip_file
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
@@ -231,7 +234,7 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
   """Class that defines a multi-processing collector process."""
 
   def __init__(
-      self, stop_collector_event, storage_writer, path_spec_queue, **kwargs):
+      self, stop_collector_event, storage_writer, task_queue, **kwargs):
     """Initializes the process object.
 
     Args:
@@ -239,23 +242,27 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
                             multiprocessing.Event). The collector
                             should exit after this event is set.
       storage_writer: a storage writer object (instance of StorageWriter).
-      path_spec_queue: the path specification queue object (instance of
-                       MultiProcessingQueue).
+      task_queue: the task queue object (instance of MultiProcessingQueue).
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessCollectorProcess, self).__init__(
         definitions.PROCESS_TYPE_COLLECTOR, **kwargs)
-    self._path_spec_queue = path_spec_queue
-    self._path_spec_queue_port = None
-    self._path_spec_producer = engine.PathSpecQueueProducer(
-        path_spec_queue, storage_writer)
+    self._abort = False
+    self._number_of_produced_items = 0
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._stop_collector_event = stop_collector_event
     self._storage_writer = storage_writer
+    self._task_queue = task_queue
+    self._task_queue_port = None
 
   def _GetStatus(self):
     """Returns a status dictionary."""
-    status = self._path_spec_producer.GetStatus()
-    status[u'path_spec_queue_port'] = self._path_spec_queue_port
+    status = {
+        u'processing_status': self._status,
+        u'produced_number_of_path_specs': self._number_of_produced_items,
+        u'task_queue_port': self._task_queue_port,
+        u'type': definitions.PROCESS_TYPE_COLLECTOR}
+
     self._status_is_running = status.get(u'is_running', False)
     return status
 
@@ -264,30 +271,34 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     logging.debug(u'Collector (PID: {0:d}) started'.format(self._pid))
 
     # The ZeroMQ backed queue must be started first, so we can save its port.
-    if isinstance(self._path_spec_queue, zeromq_queue.ZeroMQQueue):
-      self._path_spec_queue.name = u'Collector pathspec'
-      self._path_spec_queue.Open()
-      self._path_spec_queue_port = self._path_spec_queue.port
+    if isinstance(self._task_queue, zeromq_queue.ZeroMQQueue):
+      self._task_queue.name = u'Collector task queue'
+      self._task_queue.Open()
+      self._task_queue_port = self._task_queue.port
 
-    # Remove this during phased processing refactor.
-    self._storage_writer.Open()
-
-    abort = False
     try:
       logging.debug(u'Collector starting collection.')
-      self._path_spec_producer.Run()
+
+      self._status = definitions.PROCESSING_STATUS_RUNNING
+      for event_source in self._storage_writer.GetEventSources():
+        if self._abort:
+          break
+
+        self._task_queue.PushItem(event_source.path_spec)
+        self._number_of_produced_items += 1
 
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception in collector (PID: {0:d}).'.format(self._pid))
       logging.exception(exception)
-      abort = True
+      self._abort = True
 
-    finally:
-      # Remove this during phased processing refactor.
-      self._storage_writer.ForceClose()
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    self._path_spec_queue.Close()
+    self._task_queue.Close()
 
     logging.debug(u'Collector (PID: {0:d}) stopped'.format(self._pid))
 
@@ -299,15 +310,15 @@ class MultiProcessCollectorProcess(MultiProcessBaseProcess):
     # hence we have the process wait for the stop process event and then
     # close the queue without the separate blocking thread.
 
-    if not abort:
+    if not self._abort:
       logging.debug(u'Collector waiting for stop event.')
       self._stop_collector_event.wait()
 
-    self._path_spec_queue.Close(abort=True)
+    self._task_queue.Close(abort=True)
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    self._path_spec_producer.SignalAbort()
+    self._abort = True
 
 
 class MultiProcessEngine(engine.BaseEngine):
@@ -341,56 +352,41 @@ class MultiProcessEngine(engine.BaseEngine):
     """Initialize the multi-process engine object.
 
     Args:
-      maximum_number_of_queued_items: Optional maximum number of queued items.
-                                      The default is 0, which represents
-                                      no limit.
-      use_zeromq: Optional boolean to indicate whether to use ZeroMQ for
+      maximum_number_of_queued_items: optional integer containing the maximum
+                                      number of queued items. The default is 0,
+                                      which represents no limit.
+      use_zeromq: optional boolean to indicate whether to use ZeroMQ for
                   queuing. If False, the multiprocessing queue will be used.
     """
     self._use_zeromq = use_zeromq
     if self._use_zeromq:
       path_spec_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
           delay_open=True, name=u'Pathspec inbound', buffer_timeout_seconds=300)
-      path_spec_queue = path_spec_outbound_queue
-      event_object_inbound_queue = zeromq_queue.ZeroMQBufferedPullBindQueue(
-          delay_open=True, name=u'Event object inbound', timeout_seconds=60,
-          buffer_max_size=10000, linger_seconds=0)
-      event_object_queue = event_object_inbound_queue
-      parse_error_inbound_queue = zeromq_queue.ZeroMQBufferedPullBindQueue(
-          delay_open=True, name=u'Parse error inbound', timeout_seconds=60,
-          buffer_max_size=10000, linger_seconds=0)
-      parse_error_queue = parse_error_inbound_queue
+      task_queue = path_spec_outbound_queue
     else:
-      path_spec_queue = MultiProcessingQueue(
-          maximum_number_of_queued_items=maximum_number_of_queued_items)
-      event_object_queue = MultiProcessingQueue(
-          maximum_number_of_queued_items=maximum_number_of_queued_items)
-      parse_error_queue = MultiProcessingQueue(
+      task_queue = MultiProcessingQueue(
           maximum_number_of_queued_items=maximum_number_of_queued_items)
 
-    super(MultiProcessEngine, self).__init__(
-        path_spec_queue, event_object_queue, parse_error_queue)
-
+    super(MultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
-    self._event_object_queue_port = None
-    self._extraction_complete_event = None
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
     self._last_worker_number = 0
     self._mount_path = None
     self._number_of_extraction_workers = 0
-    self._parse_error_queue_port = None
     self._parser_filter_expression = None
-    self._path_spec_queue_port = None
     self._process_archive_files = False
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
+    self._session_identifier = None
     self._show_memory_usage = False
-    self._storage_writer_complete_event = None
     self._stop_collector_event = None
+    self._storage_writer = None
+    self._task_queue = task_queue
+    self._task_queue_port = None
     self._text_prepend = None
 
   def _AbortJoin(self, timeout=None):
@@ -431,7 +427,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Checks status of the monitored processes.
 
     Returns:
-      A boolean indicating whether processing is complete.
+      A tuple of 2 booleans indicating whether processing is complete.
 
     Raises:
       EngineAbort: when all the worker are idle.
@@ -542,7 +538,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
       logging.info(u'Starting replacement worker process for {0:s}'.format(
           process.name))
-      worker_process = self._StartExtractionWorkerProcess()
+      worker_process = self._StartExtractionWorkerProcess(self._storage_writer)
       self._StartMonitoringProcess(worker_process.pid)
 
     elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
@@ -572,38 +568,6 @@ class MultiProcessEngine(engine.BaseEngine):
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
 
-  def _CloseStorageZeroMQQueues(self):
-    """Closes all ZeroMQ queues being used by the storage writer."""
-    logging.debug(u'Closing ZeroMQ storage queues.')
-    for port in (self._event_object_queue_port, self._parse_error_queue_port):
-      terminate_queue = zeromq_queue.ZeroMQPushConnectQueue(
-          linger_seconds=0, port=port, timeout_seconds=0, name=u'Termination')
-      terminate_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-      terminate_queue.Close()
-
-  def _ExtractEventSources(
-      self, source_path_specs, storage_writer, filter_find_specs=None,
-      resolver_context=None):
-    """Processes the sources and extract event sources.
-
-    Args:
-      source_path_specs: a list of path specifications (instances of
-                         dfvfs.PathSpec) of the sources to process.
-      resolver_context: resolver context (instance of dfvfs.Context).
-      storage_writer: a storage writer object (instance of StorageWriter).
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-    """
-    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
-
-    for path_spec in path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs):
-
-      # TODO: determine if event sources should be DataStream or FileEntry
-      # or both.
-      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      storage_writer.AddEventSource(event_source)
-
   def _GetPathSpecQueuePort(self, collector_process):
     """Retrieves the path specification queue port number.
 
@@ -618,20 +582,20 @@ class MultiProcessEngine(engine.BaseEngine):
       RuntimeError: if the collector is not able to start its queue before the
                     the timeout is reached.
     """
-    path_spec_queue_port = None
+    task_queue_port = None
     queue_start_wait_attempts = 0
-    while (path_spec_queue_port is None and
+    while (task_queue_port is None and
            queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
       status = self._GetProcessStatus(collector_process)
-      path_spec_queue_port = status.get(u'path_spec_queue_port', None)
+      task_queue_port = status.get(u'task_queue_port', None)
 
       queue_start_wait_attempts += 1
       time.sleep(self._QUEUE_START_WAIT)
 
-    if path_spec_queue_port is None:
+    if task_queue_port is None:
       raise RuntimeError(u'Collector queue did not bind in time.')
 
-    return path_spec_queue_port
+    return task_queue_port
 
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
@@ -650,28 +614,6 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       process_status = None
     return process_status
-
-  def _GetStorageQueuePorts(self, storage_writer_process):
-    """Ensures that port numbers for the storage writer queues are captured.
-
-    Args:
-      storage_writer_process: the storage writer process object (instance of
-                              MultiProcessStorageWriterProcess).
-
-    Raises:
-      RuntimeError: if the storage writer process is not able to starts its
-                    queues before the timeout is reached.
-    """
-    queue_start_wait_attempts = 0
-    while (not self._StorageQueuesBound() and
-           queue_start_wait_attempts < self._QUEUE_START_WAIT_ATTEMPTS_MAXIMUM):
-      status = self._GetProcessStatus(storage_writer_process)
-      self._event_object_queue_port = status[u'event_object_queue_port']
-      self._parse_error_queue_port = status[u'parse_error_queue_port']
-      queue_start_wait_attempts += 1
-      time.sleep(self._QUEUE_START_WAIT)
-    if not self._StorageQueuesBound():
-      raise RuntimeError(u'Storage queues did not bind in time.')
 
   def _KillProcess(self, pid):
     """Issues a SIGKILL or equivalent to the process.
@@ -714,6 +656,49 @@ class MultiProcessEngine(engine.BaseEngine):
             process.name, memory_info.rss, memory_info.vms,
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
+
+  def _ProcessSources(
+      self, source_path_specs, resolver_context, storage_writer,
+      filter_find_specs=None):
+    """Processes the sources and extracts event objects.
+
+    Args:
+      source_path_specs: a list of path specifications (instances of
+                         dfvfs.PathSpec) of the sources to process.
+      resolver_context: a resolver context (instance of dfvfs.Context).
+      storage_writer: a storage writer object (instance of StorageWriter).
+      filter_find_specs: optional list of filter find specifications (instances
+                         of dfvfs.FindSpec).
+
+    Returns:
+      A string containing the processing status.
+    """
+    # TODO: pass status update callback.
+    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
+
+    for path_spec in path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, find_specs=filter_find_specs):
+      if self._abort:
+        break
+
+      # TODO: determine if event sources should be DataStream or FileEntry
+      # or both.
+      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+      storage_writer.AddEventSource(event_source)
+
+      # TODO: refactor status indication.
+
+    # TODO: flushing the storage writer here for now to make sure the event
+    # sources are written to disk. Remove this during phased processing
+    # refactor.
+    storage_writer.ForceFlush()
+
+    # TODO: refactor status indication.
+
+    if self._abort:
+      return definitions.PROCESSING_STATUS_ABORTED
+
+    return definitions.PROCESSING_STATUS_COMPLETED
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.
@@ -761,40 +746,28 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processes_per_pid[process.pid] = process
 
-  def _StartExtractionWorkerProcess(self):
+  def _StartExtractionWorkerProcess(self, storage_writer):
     """Creates, starts and registers an extraction worker process.
 
+    Args:
+      storage_writer: a storage writer object (instance of StorageWriter).
+
     Returns:
-      An extraction worker process (instance of
-      MultiProcessEventExtractionWorkerProcess).
+      An extraction worker process (instance of MultiProcessWorkerProcess).
     """
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
 
     if self._use_zeromq:
-      path_spec_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, port=self._path_spec_queue_port,
-          timeout_seconds=2,
-          name=u'{0:s} pathspec'.format(process_name),
-          linger_seconds=0)
-      # The high water mark is set to 2 for these queues so that data
-      # doesn't build up in the workers, to prevent data loss in the case
-      # that they crash.
-      parse_error_queue = zeromq_queue.ZeroMQPushConnectQueue(
-          delay_open=True, port=self._parse_error_queue_port,
-          name=u'{0:s} parse error'.format(process_name),
-          timeout_seconds=20, maximum_items=2)
-      event_object_queue = zeromq_queue.ZeroMQPushConnectQueue(
-          delay_open=True, port=self._event_object_queue_port,
-          name=u'{0:s} event object'.format(process_name),
-          timeout_seconds=20, maximum_items=2)
+      task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
+          delay_open=True, name=u'{0:s} pathspec'.format(process_name),
+          linger_seconds=0, port=self._task_queue_port,
+          timeout_seconds=2)
     else:
-      parse_error_queue = self._parse_error_queue
-      path_spec_queue = self._path_spec_queue
-      event_object_queue = self._event_object_queue
+      task_queue = self._task_queue
 
-    worker_process = MultiProcessEventExtractionWorkerProcess(
-        path_spec_queue, event_object_queue,
-        parse_error_queue, self.knowledge_base, self._last_worker_number,
+    worker_process = MultiProcessWorkerProcess(
+        task_queue, storage_writer, self.knowledge_base,
+        self._session_identifier, self._last_worker_number,
         enable_debug_output=self._enable_debug_output,
         enable_profiling=self._enable_profiling,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
@@ -821,9 +794,8 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     logging.debug(u'Stopping extraction processes.')
     self._StopProcessMonitoring()
-    # We can stop the collector and storage writer now.
+    # We can stop the collector now.
     self._stop_collector_event.set()
-    self._extraction_complete_event.set()
 
     # Note that multiprocessing.Queue is very sensitive regarding
     # blocking on either a get or a put. So we try to prevent using
@@ -836,33 +808,18 @@ class MultiProcessEngine(engine.BaseEngine):
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue not to be full.
     if self._use_zeromq:
-      self._CloseStorageZeroMQQueues()
+      logging.debug(u'Closing ZeroMQ storage queues.')
     else:
       logging.debug(u'Emptying queues.')
-      self._path_spec_queue.Empty()
-      self._event_object_queue.Empty()
-      self._parse_error_queue.Empty()
+      self._task_queue.Empty()
 
       # Wake the processes to make sure that they are not blocking
       # waiting for new items.
       for _ in range(self._number_of_extraction_workers):
-        self._path_spec_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-      self._event_object_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-
-      # TODO: The following line is commented out as a work around for
-      # infinite blocking wait in storage writer process. Fix this by
-      # using a phased processing approach. For now we remove the parse
-      # error queue from the storage writer.
-      # self._parse_error_queue.PushItem(queue.QueueAbort(), block=False)
+        self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    # The storage writer process sometimes needs some additional time to
-    # close the storage file.
-    while not abort and not self._storage_writer_complete_event.is_set():
-      logging.info(u'Waiting for storage writer to close storage file.')
-      time.sleep(self._STATUS_CHECK_SLEEP)
 
     if not abort:
       # Check if the processes are still alive and terminate them if necessary.
@@ -871,12 +828,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # For Multiprocessing queues, set abort to True to stop queue.join_thread()
     # from blocking.
-    extraction_queues = [
-        self._path_spec_queue, self._event_object_queue,
-        self._parse_error_queue]
-    for extraction_queue in extraction_queues:
-      if isinstance(extraction_queue, MultiProcessingQueue):
-        extraction_queue.Close(abort=True)
+    if isinstance(self._task_queue, MultiProcessingQueue):
+      self._task_queue.Close(abort=True)
 
     if abort:
       # Kill any remaining processes, which can be necessary if
@@ -964,16 +917,6 @@ class MultiProcessEngine(engine.BaseEngine):
     for pid in iter(self._process_information_per_pid.keys()):
       self._StopMonitoringProcess(pid)
 
-  def _StorageQueuesBound(self):
-    """Checks if the storage queues are bound to ports.
-
-    Returns:
-      True if both the event_object queue and the parse_error queues are bound
-      to ports. False otherwise.
-    """
-    return (self._event_object_queue_port is not None and
-            self._parse_error_queue_port is not None)
-
   def _TerminateProcess(self, pid):
     """Terminate a process.
 
@@ -1048,18 +991,21 @@ class MultiProcessEngine(engine.BaseEngine):
           status_indicator, process_information.status)
 
   def ProcessSources(
-      self, source_path_specs, storage_writer, preprocess_object,
-      enable_sigsegv_handler=False, filter_find_specs=None, filter_object=None,
-      hasher_names_string=None, mount_path=None, number_of_extraction_workers=0,
-      parser_filter_expression=None, process_archive_files=False,
+      self, source_path_specs, session_start, preprocess_object,
+      storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
+      filter_object=None, hasher_names_string=None, mount_path=None,
+      number_of_extraction_workers=0, parser_filter_expression=None,
+      process_archive_files=False, profiling_type=u'all',
       status_update_callback=None, show_memory_usage=False, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
       source_path_specs: list of path specifications (instances of
                          dfvfs.PathSpec) to process.
-      storage_writer: a storage writer object (instance of BaseStorageWriter).
+      session_start: a session start attribute container (instance of
+                     SessionStart).
       preprocess_object: a preprocess object (instance of PreprocessObject).
+      storage_writer: a storage writer object (instance of StorageWriter).
       enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
                               handler should be enabled.
       filter_find_specs: optional list of filter find specifications (instances
@@ -1067,8 +1013,7 @@ class MultiProcessEngine(engine.BaseEngine):
       filter_object: optional filter object (instance of objectfilter.Filter).
       hasher_names_string: optional comma separated string of names of
                            hashers to enable enable.
-      mount_path: optional string containing the mount path. The default
-                  is None.
+      mount_path: optional string containing the mount path.
       number_of_extraction_workers: optional number of extraction worker
                                     processes. The default is 0 which means
                                     the function will determine the suitable
@@ -1078,6 +1023,7 @@ class MultiProcessEngine(engine.BaseEngine):
                                 and plugins.
       process_archive_files: optional boolean value to indicate if the worker
                              should scan for file entries inside files.
+      profiling_type: optional string containing the profiling type.
       status_update_callback: optional callback function for status updates.
       show_memory_usage: optional boolean value to indicate memory information
                          should be included in logging.
@@ -1119,83 +1065,63 @@ class MultiProcessEngine(engine.BaseEngine):
     self._process_archive_files = process_archive_files
     self._text_prepend = text_prepend
 
+    self._session_identifier = session_start.identifier
+
     resolver_context = context.Context()
+
+    # Store a copy of the storage writer for _CheckProcessStatus.
+    self._storage_writer = storage_writer
+
+    if self._enable_profiling:
+      storage_writer.EnableProfiling(profiling_type=profiling_type)
 
     logging.debug(u'Starting processes.')
 
-    # TODO: pass status update callback.
-    self._ExtractEventSources(
-        source_path_specs, storage_writer, filter_find_specs=filter_find_specs,
-        resolver_context=resolver_context)
+    storage_writer.Open()
 
-    # TODO: closing the storage writer here for now to make sure it re-opens
-    # in another process. Remove this during phased processing refactor.
-    storage_writer.ForceClose()
+    try:
+      storage_writer.WriteSessionStart(session_start)
 
-    # Start the storage writer first, as we need it to start up and bind its
-    # queues to ports before we can start the workers.
-    self._extraction_complete_event = multiprocessing.Event()
-    self._storage_writer_complete_event = multiprocessing.Event()
+      # TODO: change in phased processing refactor.
+      _ = self._ProcessSources(
+          source_path_specs, resolver_context, storage_writer,
+          filter_find_specs=filter_find_specs)
 
-    if self._use_zeromq:
-      parse_error_queue = self._parse_error_queue
-    else:
-      # TODO: This is a work around for infinite blocking wait in storage
-      # writer process. Fix this by using a phased processing approach.
-      # For now we remove the parse error queue from the storage writer.
-      parse_error_queue = None
+    finally:
+      pass
 
-    storage_writer_process = MultiProcessStorageWriterProcess(
-        self._event_object_queue, self._extraction_complete_event,
-        self._storage_writer_complete_event, parse_error_queue,
-        storage_writer, preprocess_object,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
-        name=u'StorageWriter')
-    storage_writer_process.start()
-    self._RegisterProcess(storage_writer_process)
-    self._StartMonitoringProcess(storage_writer_process.pid)
-
-    if self._use_zeromq:
-      self._GetStorageQueuePorts(storage_writer_process)
+    if self._abort:
+      return
 
     # Next start the collector, as we needs its port number for the workers as
     # well.
     self._stop_collector_event = multiprocessing.Event()
     collector_process = MultiProcessCollectorProcess(
-        self._stop_collector_event, storage_writer, self._path_spec_queue,
+        self._stop_collector_event, storage_writer, self._task_queue,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=u'Collector')
     collector_process.start()
     self._RegisterProcess(collector_process)
     self._StartMonitoringProcess(collector_process.pid)
 
     if self._use_zeromq:
-      self._path_spec_queue_port = self._GetPathSpecQueuePort(
-          collector_process)
+      self._task_queue_port = self._GetPathSpecQueuePort(collector_process)
 
     # Finally, start the workers.
     for _ in range(0, number_of_extraction_workers):
-      extraction_process = self._StartExtractionWorkerProcess()
+      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
       self._StartMonitoringProcess(extraction_process.pid)
 
     try:
       logging.debug(u'Processing started.')
 
       time.sleep(self._STATUS_CHECK_SLEEP)
-      extraction_completed, processing_completed = self._CheckStatus()
-      while not processing_completed:
+      extraction_completed, _ = self._CheckStatus()
+      while not extraction_completed:
         if status_update_callback:
           status_update_callback(self._processing_status)
 
-        if extraction_completed:
-          self._extraction_complete_event.set()
-
         time.sleep(self._STATUS_CHECK_SLEEP)
-        extraction_completed, processing_completed = self._CheckStatus()
-
-      # If the storage writer finishes writing very soon after the workers,
-      # we may not set the event before the storage writer finishes, so set it
-      # explicitly here.
-      self._extraction_complete_event.set()
+        extraction_completed, _ = self._CheckStatus()
 
       logging.debug(u'Processing stopped.')
 
@@ -1209,6 +1135,27 @@ class MultiProcessEngine(engine.BaseEngine):
       self._processing_status.error_detected = True
 
     self._StopExtractionProcesses(abort=self._processing_status.error_detected)
+
+    # TODO: move task storage merge into separate thread.
+    # pylint: disable=protected-access
+    for task_storage_file in glob.glob(
+        os.path.join(storage_writer._task_storage_path, u'*.plaso')):
+      storage_reader = storage_zip_file.ZIPStorageFileReader(task_storage_file)
+      storage_writer.MergeFromStorage(storage_reader)
+
+      # Force close the storage reader so we can remove the file.
+      storage_reader.Close()
+      os.remove(task_storage_file)
+
+    # TODO: refactor the use of preprocess_object.
+    storage_writer.WritePreprocessObject(preprocess_object)
+    storage_writer.WriteSessionCompletion()
+    storage_writer.Close()
+
+    if self._enable_profiling:
+      storage_writer.DisableProfiling()
+
+    # TODO: remove temp file and directory.
 
     return self._processing_status
 
@@ -1225,28 +1172,25 @@ class MultiProcessEngine(engine.BaseEngine):
       self._KillProcess(os.getpid())
 
 
-class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
-  """Class that defines a multi-processing event extraction worker process."""
+class MultiProcessWorkerProcess(MultiProcessBaseProcess):
+  """Class that defines a multi-processing worker process."""
 
   def __init__(
-      self, path_spec_queue, event_object_queue, parse_error_queue,
-      knowledge_base, worker_number, enable_debug_output=False,
-      enable_profiling=False, filter_object=None, hasher_names_string=None,
-      mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, profiling_sample_rate=1000,
-      profiling_type=u'all', text_prepend=None, **kwargs):
+      self, task_queue, storage_writer, knowledge_base, session_identifier,
+      worker_number, enable_debug_output=False, enable_profiling=False,
+      filter_object=None, hasher_names_string=None, mount_path=None,
+      parser_filter_expression=None, process_archive_files=False,
+      profiling_sample_rate=1000, profiling_type=u'all', text_prepend=None,
+      **kwargs):
     """Initializes the process object.
 
     Args:
-      path_spec_queue: the path specification queue object (instance of
-                       MultiProcessingQueue).
-      event_object_queue: the event object queue object (instance of
-                          MultiProcessingQueue).
-      parse_error_queue: the parser error queue object (instance of
-                         MultiProcessingQueue).
+      task_queue: the task queue object (instance of MultiProcessingQueue).
+      storage_writer: a storage writer object (instance of StorageWriter).
       knowledge_base: a knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
+      session_identifier: a string containing the identifier of the session.
       worker_number: a number that identifies the worker.
       enable_debug_output: optional boolean value to indicate if the debug
                            output should be enabled.
@@ -1270,17 +1214,19 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
                     event object.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(MultiProcessEventExtractionWorkerProcess, self).__init__(
+    super(MultiProcessWorkerProcess, self).__init__(
         definitions.PROCESS_TYPE_WORKER, **kwargs)
+    self._abort = False
+    self._buffer_size = 0
     self._critical_error = False
     self._enable_debug_output = enable_debug_output
-    self._event_object_queue = event_object_queue
-    self._event_queue_producer = None
     self._extraction_worker = None
     self._knowledge_base = knowledge_base
-    self._parse_error_queue = parse_error_queue
-    self._path_spec_queue = path_spec_queue
-    self._parse_error_queue_producer = None
+    self._number_of_consumed_path_specs = 0
+    self._session_identifier = session_identifier
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._storage_writer = storage_writer
+    self._task_queue = task_queue
     self._worker_number = worker_number
 
     # Attributes for profiling.
@@ -1293,16 +1239,70 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
     self._filter_object = filter_object
     self._hasher_names_string = hasher_names_string
     self._mount_path = mount_path
-    self._process_archive_files = process_archive_files
     self._parser_filter_expression = parser_filter_expression
+    self._process_archive_files = process_archive_files
     self._text_prepend = text_prepend
+
+  def _CreateExtractionWorker(
+      self, resolver_context, parser_mediator, filter_object=None,
+      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
+      process_archive_files=False, text_prepend=None):
+    """Creates an extraction worker.
+
+    Args:
+      resolver_context (dfvfs.Context): resolver context.
+      parser_mediator (ParserMediator): parser mediator.
+      filter_object (Optional[objectfilter.Filter]): filter object.
+      hasher_names_string (Optional[str]):
+          comma separated names of hashers to enable.
+      mount_path (Optional[str]): optional string containing the mount path.
+      parser_filter_expression (Optional[str]): parser filter expression.
+          None represents all parsers and plugins.
+      process_archive_files (Optional[bool]):
+          True if the worker should process file entries inside archive files.
+      text_prepend (Optional[str]): text to prepend to every event.
+
+    Returns:
+      ExtractionWorker: extraction worker.
+    """
+    extraction_worker = worker.EventExtractionWorker(
+        resolver_context, parser_mediator,
+        parser_filter_expression=parser_filter_expression,
+        process_archive_files=process_archive_files)
+
+    # TODO: differentiate between debug output and debug mode.
+    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
+
+    if filter_object:
+      extraction_worker.SetFilterObject(filter_object)
+
+    if hasher_names_string:
+      extraction_worker.SetHashers(hasher_names_string)
+
+    if mount_path:
+      extraction_worker.SetMountPath(mount_path)
+
+    if text_prepend:
+      extraction_worker.SetTextPrepend(text_prepend)
+
+    if self._enable_profiling:
+      extraction_worker.EnableProfiling(
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
+
+    return extraction_worker
 
   def _GetStatus(self):
     """Returns a status dictionary."""
-    if not self._extraction_worker:
-      status = {}
-    else:
-      status = self._extraction_worker.GetStatus()
+    status = {
+        u'consumed_number_of_path_specs': self._number_of_consumed_path_specs,
+        u'display_name': self._extraction_worker.current_display_name,
+        u'identifier': self._name,
+        u'number_of_events': self._extraction_worker.number_of_produced_events,
+        u'processing_status': self._status,
+        u'produced_number_of_path_specs': (
+            self._extraction_worker.number_of_produced_path_specs),
+        u'type': definitions.PROCESS_TYPE_WORKER}
 
     if self._critical_error:
       # Note seem unable to pass objects here.
@@ -1315,54 +1315,67 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    self._event_queue_producer = plaso_queue.ItemQueueProducer(
-        self._event_object_queue)
-    self._parse_error_queue_producer = plaso_queue.ItemQueueProducer(
-        self._parse_error_queue)
+    storage_writer = self._storage_writer.CreateTaskStorageWriter(
+        u'{0:d}'.format(self._pid))
 
     parser_mediator = parsers_mediator.ParserMediator(
-        self._event_queue_producer, self._parse_error_queue_producer,
-        self._knowledge_base)
+        storage_writer, self._knowledge_base)
 
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
     resolver_context = context.Context()
 
-    self._extraction_worker = worker.BaseEventExtractionWorker(
-        self._worker_number, self._path_spec_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_mediator,
-        resolver_context=resolver_context)
-
-    self._extraction_worker.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
-
-    self._extraction_worker.SetProcessArchiveFiles(self._process_archive_files)
-
-    if self._filter_object:
-      self._extraction_worker.SetFilterObject(self._filter_object)
-
-    if self._mount_path:
-      self._extraction_worker.SetMountPath(self._mount_path)
-
-    if self._text_prepend:
-      self._extraction_worker.SetTextPrepend(self._text_prepend)
-
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
-    self._extraction_worker.InitializeParserObjects(
-        parser_filter_expression=self._parser_filter_expression)
+    self._extraction_worker = self._CreateExtractionWorker(
+        resolver_context, parser_mediator,
+        filter_object=self._filter_object,
+        hasher_names_string=self._hasher_names_string,
+        mount_path=self._mount_path,
+        parser_filter_expression=self._parser_filter_expression,
+        process_archive_files=self._process_archive_files,
+        text_prepend=self._text_prepend)
 
-    if self._hasher_names_string:
-      self._extraction_worker.SetHashers(self._hasher_names_string)
+    self._extraction_worker.ProfilingStart(self._name)
 
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+
+    task_start = tasks.TaskStart(self._session_identifier)
+
+    if self._enable_profiling:
+      storage_writer.EnableProfiling(profiling_type=self._profiling_type)
+
+    storage_writer.Open()
+
     try:
-      self._extraction_worker.Run()
+      storage_writer.WriteTaskStart(task_start)
+
+      logging.debug(
+          u'{0!s} (PID: {1:d}) started monitoring process queue.'.format(
+              self._name, self._pid))
+
+      while not self._abort:
+        try:
+          path_spec = self._task_queue.PopItem()
+        except (errors.QueueClose, errors.QueueEmpty) as exception:
+          logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
+              type(exception)))
+          break
+
+        if isinstance(path_spec, plaso_queue.QueueAbort):
+          logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
+          break
+
+        self._number_of_consumed_path_specs += 1
+        self._extraction_worker.ProcessPathSpec(path_spec)
+
+      logging.debug(
+          u'{0!s} (PID: {1:d}) stopped monitoring process queue.'.format(
+              self._name, self._pid))
 
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning((
@@ -1370,139 +1383,35 @@ class MultiProcessEventExtractionWorkerProcess(MultiProcessBaseProcess):
           u'(PID: {1:d}).').format(self._name, self._pid))
       logging.exception(exception)
 
+      self._abort = True
+
+    finally:
+      # TODO: on abort use WriteTaskAborted instead of completion?
+      storage_writer.WriteTaskCompletion()
+      storage_writer.Close()
+
+      if self._enable_profiling:
+        storage_writer.DisableProfiling()
+
+    self._extraction_worker.ProfilingStop()
+    self._extraction_worker = None
+
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
+
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    worker_queues = (
-        self._path_spec_queue, self._event_object_queue,
-        self._parse_error_queue)
-    for worker_queue in worker_queues:
-      if not isinstance(worker_queue, MultiProcessingQueue):
-        worker_queue.Close()
-      else:
-        worker_queue.Close(abort=True)
-
-  def _OnCriticalError(self):
-    """The process on critical error handler."""
-    self._critical_error = True
-    self._WaitForStatusNotRunning()
+    if isinstance(self._task_queue, MultiProcessingQueue):
+      self._task_queue.Close(abort=True)
+    else:
+      self._task_queue.Close()
 
   def SignalAbort(self):
     """Signals the process to abort."""
-    if self._event_queue_producer:
-      self._event_queue_producer.SignalAbort()
-
-    if self._parse_error_queue_producer:
-      self._parse_error_queue_producer.SignalAbort()
-
-    if self._extraction_worker:
-      self._extraction_worker.SignalAbort()
-
-
-class MultiProcessStorageWriterProcess(MultiProcessBaseProcess):
-  """Class that defines a multi-processing storage writer process."""
-
-  def __init__(
-      self, event_object_queue, extraction_complete_event,
-      storage_writer_complete_event, parse_error_queue, storage_writer,
-      preprocess_object, **kwargs):
-    """Initializes the process object.
-
-    Args:
-      event_object_queue: the event object queue object (instance of
-                          MultiProcessingQueue).
-      extraction_complete_event: a multi processing event (instance of
-                                 multiprocessing.Event) that, when set,
-                                 indicates that extraction is complete.
-      storage_writer_complete_event: a multi processing event (instance of
-                                     multiprocessing.Event) that, when set,
-                                     indicates that the storage writer is
-                                     complete.
-      parse_error_queue: the parser error queue object (instance of Queue).
-      storage_writer: a storage writer object (instance of BaseStorageWriter).
-      preprocess_object: a preprocess object (instance of PreprocessObject).
-    """
-    super(MultiProcessStorageWriterProcess, self).__init__(
-        definitions.PROCESS_TYPE_STORAGE_WRITER, **kwargs)
-    self._extraction_complete_event = extraction_complete_event
-    self._event_object_consumer = engine.EventObjectQueueConsumer(
-        event_object_queue, storage_writer)
-    self._event_object_queue = event_object_queue
-    self._event_object_queue_port = None
-    self._parse_error_queue = parse_error_queue
-    self._parse_error_queue_port = None
-    self._preprocess_object = preprocess_object
-    self._storage_writer = storage_writer
-    self._storage_writer_complete_event = storage_writer_complete_event
-
-  def _GetStatus(self):
-    """Returns a status dictionary."""
-    status = self._event_object_consumer.GetStatus()
-    status[u'event_object_queue_port'] = self._event_object_queue_port
-    status[u'parse_error_queue_port'] = self._parse_error_queue_port
-    self._status_is_running = status.get(u'is_running', False)
-    return status
-
-  def _Main(self):
-    """The main loop."""
-    logging.debug(u'Storage writer (PID: {0:d}) started.'.format(self._pid))
-
-    event_queue_is_zeromq = isinstance(
-        self._event_object_queue, zeromq_queue.ZeroMQQueue)
-    error_queue_is_zeromq = isinstance(
-        self._parse_error_queue, zeromq_queue.ZeroMQQueue)
-
-    if event_queue_is_zeromq:
-      self._event_object_queue.name = u'Storage writer event'
-      self._event_object_queue.Open()
-      self._event_object_queue_port = self._event_object_queue.port
-
-    if error_queue_is_zeromq:
-      self._parse_error_queue.name = u'Storage writer error'
-      self._parse_error_queue.Open()
-      self._parse_error_queue_port = self._parse_error_queue.port
-
-    try:
-      self._storage_writer.Open()
-      self._event_object_consumer.Run()
-      while (event_queue_is_zeromq and
-             not self._extraction_complete_event.is_set()):
-        logging.debug(
-            u'Storage writer event queue stalled - restarting and waiting for '
-            u'extraction to complete.')
-        self._event_object_consumer.Run()
-
-    except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception in storage writer (PID: {0:d}).'.format(
-              self._pid))
-      logging.exception(exception)
-
-    self._event_object_consumer = None
-
-    self._storage_writer.WritePreprocessObject(self._preprocess_object)
-    self._storage_writer.WriteSessionCompletion()
-    self._storage_writer.Close()
-
-    self._storage_writer = None
-
-    # Set the storage writer completion event to indicate that it is complete
-    # and the process can be terminated.
-    self._storage_writer_complete_event.set()
-
-    self._event_object_queue.Close()
-
-    # TODO: This is a work around for infinite blocking wait in storage
-    # writer process. Fix this by using a phased processing approach.
-    # For now we remove the parse error queue from the storage writer.
-    if self._parse_error_queue:
-      self._parse_error_queue.Close()
-
-    logging.debug(u'Storage writer (PID: {0:d}) stopped.'.format(self._pid))
-
-  def SignalAbort(self):
-    """Signals the process to abort."""
-    self._event_object_consumer.SignalAbort()
+    self._abort = True
 
 
 class MultiProcessingQueue(plaso_queue.Queue):

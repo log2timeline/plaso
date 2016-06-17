@@ -380,7 +380,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       timestamp = self._ConvertToTimestamp(structure.sdol_timestamp)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return

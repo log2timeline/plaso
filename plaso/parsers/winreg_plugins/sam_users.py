@@ -96,7 +96,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
     """
     names_key = registry_key.GetSubkeyByName(u'Names')
     if not names_key:
-      parser_mediator.ProduceParseError(u'missing subkey: "Names".')
+      parser_mediator.ProduceExtractionError(u'missing subkey: "Names".')
       return
 
     values = [(v.name, v.last_written_time) for v in names_key.GetSubkeys()]
@@ -109,14 +109,14 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
 
       f_value = subkey.GetValueByName(u'F')
       if not f_value:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'missing Registry value: "F" in subkey: {0:s}.'.format(
                 subkey.name))
         continue
 
       v_value = subkey.GetValueByName(u'V')
       if not v_value:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'missing Registry value: "V" in subkey: {0:s}.'.format(
                 subkey.name))
         continue
@@ -124,7 +124,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       try:
         f_data_struct = self._F_VALUE_STRUCT.parse(f_value.data)
       except construct.FieldError as exception:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to parse Registry value: "F" in subkey: {0:s} '
             u'with error: {1:s}.').format(subkey.name, exception))
         continue
@@ -132,7 +132,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       try:
         v_data_struct = self._V_VALUE_HEADER.parse(v_value.data)
       except construct.FieldError as exception:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to parse Registry value: "V" in subkey: {0:s} '
             u'with error: {1:s}.').format(subkey.name, exception))
         continue
@@ -147,7 +147,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         username = utf16_stream.decode(u'utf-16-le')
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         username = utf16_stream.decode(u'utf-16-le', errors=u'replace')
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to decode username string with error: {0:s}. Characters '
             u'that cannot be decoded will be replaced with "?" or '
             u'"\\ufffd".').format(exception))
@@ -160,7 +160,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         fullname = utf16_stream.decode(u'utf-16-le')
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         fullname = utf16_stream.decode(u'utf-16-le', errors=u'replace')
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to decode fullname string with error: {0:s}. Characters '
             u'that cannot be decoded will be replaced with "?" or '
             u'"\\ufffd".').format(exception))
@@ -173,7 +173,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         comments = utf16_stream.decode(u'utf-16-le')
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         comments = utf16_stream.decode(u'utf-16-le', errors=u'replace')
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to decode comments string with error: {0:s}. Characters '
             u'that cannot be decoded will be replaced with "?" or '
             u'"\\ufffd".').format(exception))

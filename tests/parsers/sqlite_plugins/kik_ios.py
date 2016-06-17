@@ -15,22 +15,17 @@ from tests.parsers.sqlite_plugins import test_lib
 class KikMessageTest(test_lib.SQLitePluginTestCase):
   """Tests for the Kik message database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = kik_ios.KikIOSPlugin()
-
   def testProcess(self):
     """Test the Process function on a Kik messenger kik.sqlite file."""
-    test_file = self._GetTestFilePath([u'kik_ios.sqlite'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = kik_ios.KikIOSPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'kik_ios.sqlite'], plugin_object)
 
     # The Kik database file contains 60 events.
-    self.assertEqual(len(event_objects), 60)
+    self.assertEqual(len(storage_writer.events), 60)
 
     # Check the second message sent.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)

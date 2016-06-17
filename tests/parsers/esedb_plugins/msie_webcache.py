@@ -15,20 +15,15 @@ from tests.parsers.esedb_plugins import test_lib
 class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
   """Tests for the MSIE WebCache ESE database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = msie_webcache.MsieWebCacheEseDbPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = u'WebCacheV01.dat'
-    event_queue_consumer = self._ParseEseDbFileWithPlugin(
-        [test_file_name], self._plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = msie_webcache.MsieWebCacheEseDbPlugin()
+    storage_writer = self._ParseEseDbFileWithPlugin(
+        [u'WebCacheV01.dat'], plugin_object)
 
-    self.assertEqual(len(event_objects), 1354)
+    self.assertEqual(len(storage_writer.events), 1354)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.container_identifier, 1)
 

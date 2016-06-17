@@ -137,7 +137,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = self._ConvertToTimestamp(
           structure.day, month, self._year_use, structure.time)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return

@@ -29,14 +29,12 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_TSK, inode=15, location=u'/passwords.txt',
         parent=os_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, tsk_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser_object)
 
     # The TSK file entry has 3 event objects.
-    self.assertEqual(len(event_objects), 3)
+    self.assertEqual(len(storage_writer.events), 3)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_message = (
         u'TSK:/passwords.txt '
@@ -56,14 +54,12 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_ZIP, location=u'/syslog',
         parent=os_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, zip_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser_object)
 
     # The ZIP file has 1 event object.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_message = (
         u'ZIP:/syslog '
@@ -82,14 +78,12 @@ class FileStatTest(test_lib.ParserTestCase):
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, gzip_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser_object)
 
     # The gzip file has 1 event object.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.gz')
     expected_message = (
@@ -110,14 +104,12 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=os_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, tar_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser_object)
 
     # The tar file has 1 event object.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_message = (
         u'TAR:/syslog '
@@ -139,14 +131,12 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=gzip_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, tar_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser_object)
 
     # The tar file has 1 event object.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_message = (
         u'TAR:/syslog '
@@ -161,14 +151,12 @@ class FileStatTest(test_lib.ParserTestCase):
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, gzip_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser_object)
 
     # The gzip file has 1 event object.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.tgz')
     expected_message = (
@@ -192,14 +180,12 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_ZIP, location=u'/syslog',
         parent=tsk_path_spec)
 
-    event_queue_consumer = self._ParseFileByPathSpec(
-        parser_object, zip_path_spec)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser_object)
 
     # The ZIP file has 1 event objects.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_message = (
         u'ZIP:/syslog '

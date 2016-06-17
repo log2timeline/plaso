@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Outlook Search MRU Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = outlook.OutlookSearchMRUPlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -57,16 +53,16 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = outlook.OutlookSearchMRUPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -89,10 +85,6 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 # class MSOutlook2013SearchCatalogMRUPluginTest(unittest.TestCase):
 #   """Tests for the Outlook Search Catalog MRU Windows Registry plugin."""
 #
-#   def setUp(self):
-#     """Makes preparations before running an individual test."""
-#     self._plugin = outlook.MSOutlook2013SearchCatalogMRUPlugin()
-#
 #   def testProcess(self):
 #     """Tests the Process function."""
 #     key_path = (
@@ -114,6 +106,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #         value_name, data=value_data,
 #         data_type=dfwinreg_definitions.REG_BINARY, offset=827)
 #     registry_key.AddValue(registry_value)
+#
+#     plugin_object = outlook.MSOutlook2013SearchCatalogMRUPlugin()
 #
 #     # TODO: add test for Catalog key.
 

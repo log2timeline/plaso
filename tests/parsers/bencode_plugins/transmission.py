@@ -20,13 +20,12 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     """Tests the Process function."""
     parser_object = bencode_parser.BencodeParser()
 
-    test_file = self._GetTestFilePath([u'bencode_transmission'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'bencode_transmission'], parser_object)
 
-    self.assertEqual(len(event_objects), 3)
+    self.assertEqual(len(storage_writer.events), 3)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_destination = u'/Users/brian/Downloads'
     self.assertEqual(event_object.destination, expected_destination)
@@ -41,7 +40,7 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Test on second event of first torrent.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.destination, expected_destination)
     self.assertEqual(event_object.seedtime, 4)
 

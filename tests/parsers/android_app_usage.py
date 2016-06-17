@@ -19,14 +19,12 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = android_app_usage.AndroidAppUsageParser()
+    storage_writer = self._ParseFile(
+        [u'usage-history.xml'], parser_object)
 
-    test_file = self._GetTestFilePath([u'usage-history.xml'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 28)
 
-    self.assertEqual(len(event_objects), 28)
-
-    event_object = event_objects[22]
+    event_object = storage_writer.events[22]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-09 19:28:33.047000')
@@ -46,7 +44,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[17]
+    event_object = storage_writer.events[17]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-09-27 19:45:55.675000')

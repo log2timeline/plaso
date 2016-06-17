@@ -18,14 +18,12 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winrestore.RestorePointLogParser()
+    storage_writer = self._ParseFile(
+        [u'rp.log'], parser_object)
 
-    test_file = self._GetTestFilePath([u'rp.log'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    self.assertEqual(len(event_objects), 1)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-03-23 18:38:14.246954')

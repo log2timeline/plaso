@@ -6,8 +6,7 @@ import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-# TODO: disabled as long nothing is listening on the parse error queue.
-# from plaso.lib import event
+from plaso.containers import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 
@@ -15,33 +14,27 @@ from plaso.lib import timelib
 class ParserMediator(object):
   """Class that implements the parser mediator."""
 
-  def __init__(
-      self, event_queue_producer, parse_error_queue_producer, knowledge_base):
+  def __init__(self, storage_writer, knowledge_base):
     """Initializes a parser mediator object.
 
     Args:
-      event_queue_producer: the event object queue producer (instance of
-                            ItemQueueProducer).
-      parse_error_queue_producer: the parse error queue producer (instance of
-                                  ItemQueueProducer).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+      storage_writer: a storage writer object (instance of StorageWriter).
+      knowledge_base: a knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
-    self._event_queue_producer = event_queue_producer
     self._extra_event_attributes = {}
     self._file_entry = None
     self._filter_object = None
     self._knowledge_base = knowledge_base
     self._mount_path = None
-    self._parse_error_queue_producer = parse_error_queue_producer
+    # TODO: refactor status indication.
+    self._number_of_events = 0
     self._parser_chain_components = []
+    self._storage_writer = storage_writer
     self._text_prepend = None
-
-    self.number_of_events = 0
-    self.number_of_parse_errors = 0
 
   @property
   def abort(self):
@@ -62,6 +55,11 @@ class ParserMediator(object):
   def knowledge_base(self):
     """The knowledge base."""
     return self._knowledge_base
+
+  @property
+  def number_of_produced_events(self):
+    """The number of produced events."""
+    return self._number_of_events
 
   @property
   def platform(self):
@@ -369,7 +367,7 @@ class ParserMediator(object):
 
   def ProcessEvent(
       self, event_object, parser_chain=None, file_entry=None, query=None):
-    """Processes an event before it is emitted to the event queue.
+    """Processes an event before it written to the storage.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -431,11 +429,11 @@ class ParserMediator(object):
       setattr(event_object, attribute, value)
 
   def ProduceEvent(self, event_object, query=None):
-    """Produces an event onto the queue.
+    """Produces an event.
 
     Args:
-      event_object: the event object (instance of EventObject).
-      query: Optional query string.
+      event_object: an event object (instance of EventObject).
+      query: optional string containing the query.
     """
     self.ProcessEvent(
         event_object, parser_chain=self.GetParserChain(),
@@ -444,11 +442,12 @@ class ParserMediator(object):
     if self.MatchesFilter(event_object):
       return
 
-    self._event_queue_producer.ProduceItem(event_object)
-    self.number_of_events += 1
+    self._storage_writer.AddEvent(event_object)
+    # TODO: refactor status indication.
+    self._number_of_events += 1
 
   def ProduceEvents(self, event_objects, query=None):
-    """Produces events onto the queue.
+    """Produces events.
 
     Args:
       event_objects: a list or generator of event objects (instances of
@@ -458,31 +457,25 @@ class ParserMediator(object):
     for event_object in event_objects:
       self.ProduceEvent(event_object, query=query)
 
-  def ProduceParseError(self, message):
-    """Produces a parse error.
+  def ProduceEventSource(self, event_source):
+    """Produces an event source.
+
+    Args:
+      event_source: an event source (instance of EventSource).
+    """
+    self._storage_writer.AddEventSource(event_source)
+
+  def ProduceExtractionError(self, message):
+    """Produces an extraction error.
 
     Args:
       message: The message of the error.
     """
-    self.number_of_parse_errors += 1
-    # TODO: Remove call to logging when parser error queue is fully functional.
-    logging.error(
-        u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-            self.GetParserChain(), self.GetDisplayName(), message))
-
-    # TODO: disabled as long nothing is listening on the parse error queue.
-    # if self._parse_error_queue_producer:
-    #   path_spec = self._file_entry.path_spec
-    #   parser_chain = self.GetParserChain()
-    #   parse_error = event.ExtractionError(
-    #       parser_chain, message, path_spec=path_spec)
-    #   self._parse_error_queue_producer.ProduceItem(parse_error)
-    #   self.number_of_parse_errors += 1
-
-  def ResetCounters(self):
-    """Resets the counters."""
-    self.number_of_events = 0
-    self.number_of_parse_errors = 0
+    path_spec = self._file_entry.path_spec
+    parser_chain = self.GetParserChain()
+    extraction_error = errors.ExtractionError(
+        message, parser_chain=parser_chain, path_spec=path_spec)
+    self._storage_writer.AddError(extraction_error)
 
   def ResetFileEntry(self):
     """Resets the active file entry."""

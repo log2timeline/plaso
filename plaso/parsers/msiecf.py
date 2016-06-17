@@ -233,7 +233,7 @@ class MsiecfParser(interface.FileObjectParser):
           try:
             http_headers = msiecf_item.data[:-1].decode(u'ascii')
           except UnicodeDecodeError:
-            parser_mediator.ProduceParseError((
+            parser_mediator.ProduceExtractionError((
                 u'unable to decode HTTP headers of URL record at offset: '
                 u'0x{0:08x}. Characters that cannot be decoded will be '
                 u'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
@@ -303,7 +303,7 @@ class MsiecfParser(interface.FileObjectParser):
     try:
       msiecf_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to open file with error: {0:s}'.format(exception))
       return
 
@@ -326,7 +326,7 @@ class MsiecfParser(interface.FileObjectParser):
               parser_mediator, format_version, cache_directories, msiecf_item)
 
       except IOError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to parse item: {0:d} with error: {1:s}'.format(
                 item_index, exception))
 
@@ -346,7 +346,7 @@ class MsiecfParser(interface.FileObjectParser):
               recovered=True)
 
       except IOError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to parse recovered item: {0:d} with error: {1:s}'.format(
                 item_index, exception))
 
