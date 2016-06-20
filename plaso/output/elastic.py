@@ -25,7 +25,17 @@ class ElasticSearchHelper(object):
   def __init__(
       self, output_mediator, host, port, flush_interval, index_name, mapping,
       doc_type):
-    """Create a Elasticsearch client."""
+    """Create a Elasticsearch client.
+
+    Args:
+      output_mediator: The output mediator object (instance of OutputMediator).
+      host: IP address or hostname for the server.
+      port: Port number for the server.
+      flush_interval: How many events to queue before being indexed.
+      index_name: Name of the Elasticsearch index.
+      mapping: Elasticsearch index configuration.
+      doc_type: Elasticsearch document type name.
+    """
     super(ElasticSearchHelper, self).__init__()
     self.client = Elasticsearch([{u'host': host, u'port': port}])
     self._output_mediator = output_mediator
@@ -36,6 +46,12 @@ class ElasticSearchHelper(object):
     self._counter = Counter()
 
   def AddEvent(self, event_object, force_flush=False):
+    """Index event in Elasticsearch.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+      force_flush: Force bulk insert of events in the queue.
+    """
     if event_object:
       self._events.append(
           {u'index': {u'_index': self._index, u'_type': self._doc_type}})
@@ -151,6 +167,12 @@ class ElasticSearchOutputModule(interface.OutputModule):
     self._elastic.AddEvent(event_object=None, force_flush=True)
 
   def SetServerInformation(self, server, port):
+    """Set the Elasticsearch server information.
+
+    Args:
+      server: IP address or hostname of the server.
+      port: Port number of the server.
+    """
     self._host = server
     self._port = port
     logging.info(u'Server address: {0:s}'.format(self._host))
