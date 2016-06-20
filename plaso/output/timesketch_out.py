@@ -203,12 +203,11 @@ class TimesketchOutputModule(interface.OutputModule):
     # arguments.
     _document_mapping = {
         self._doc_type: {
-            u'_timestamp': {
-                u'enabled': True,
-                u'path': u'datetime',
-                u'format': u'date_time_no_millis'
-            },
-            u'properties': {u'timesketch_label': {u'type': u'nested'}}
+            u'properties': {
+                u'timesketch_label': {
+                    u'type': u'nested'
+                }
+            }
         }
     }
 
