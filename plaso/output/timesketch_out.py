@@ -4,10 +4,8 @@
 import logging
 
 try:
-  from elasticsearch import exceptions as elastic_exceptions
   from flask import current_app
   import timesketch
-  from timesketch.lib.datastores.elastic import ElasticSearchDataStore
   from timesketch.models import db_session
   from timesketch.models.sketch import SearchIndex
 except ImportError:
@@ -15,7 +13,6 @@ except ImportError:
 
 from plaso.output import interface
 from plaso.output import manager
-
 from plaso.output.elastic import ElasticSearchHelper
 
 # Configure Elasticsearch logger
@@ -85,6 +82,7 @@ class TimesketchOutputModule(interface.OutputModule):
       flush_interval: the flush interval.
     """
     self._flush_interval = flush_interval
+    logging.info(u'Flush interval: {0:d}'.format(self._flush_interval))
 
   def SetIndexName(self, index_name):
     """Set the index name.
