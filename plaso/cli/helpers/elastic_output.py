@@ -71,8 +71,9 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
           u'Output module is not an instance of ElasticSearchOutputModule')
 
     output_format = getattr(options, u'output_format', None)
-    if output_format != u'elastic':
-      raise errors.BadConfigOption(u'Only works on Elastic output module.')
+    if output_format not in [u'elastic', u'timesketch']:
+      raise errors.BadConfigOption(
+          u'Only works on Elastic or Timesketch output module.')
 
     index_name = cls._ParseStringOption(
         options, u'index_name', default_value=cls._DEFAULT_INDEX_NAME)

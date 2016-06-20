@@ -18,7 +18,7 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
 
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_NAME = u''
-  _DEFAULT_UUID = uuid.uuid4().hex
+  _DEFAULT_UUID = u'{0:s}'.format(uuid.uuid4().hex)
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -78,11 +78,11 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
 
     index = cls._ParseStringOption(
         options, u'index', default_value=cls._DEFAULT_UUID)
-    output_module.SetIndex(index)
+    output_module.SetIndexName(index)
 
     name = cls._ParseStringOption(
         options, u'timeline_name', default_value=cls._DEFAULT_NAME)
-    output_module.SetName(name)
+    output_module.SetTimelineName(name)
 
 
 manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputHelper)
