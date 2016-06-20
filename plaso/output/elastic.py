@@ -6,7 +6,6 @@ import logging
 
 try:
   from elasticsearch import Elasticsearch
-  from elasticsearch.exceptions import NotFoundError
   from elasticsearch.exceptions import ConnectionError
 except ImportError:
   Elasticsearch = None
@@ -22,6 +21,7 @@ elastic_logger.setLevel(logging.WARNING)
 
 
 class ElasticSearchHelper(object):
+  """Elasticsearch helper class."""
   def __init__(
       self, output_mediator, host, port, flush_interval, index_name, mapping,
       doc_type):

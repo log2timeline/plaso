@@ -7,9 +7,6 @@ import unittest
 from mock import Mock
 from mock import MagicMock
 
-from plaso.containers import events
-from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.output import timesketch_out
 
 from tests.output import test_lib
