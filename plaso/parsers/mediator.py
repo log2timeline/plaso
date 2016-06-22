@@ -31,6 +31,7 @@ class ParserMediator(object):
     self._knowledge_base = knowledge_base
     self._mount_path = None
     # TODO: refactor status indication.
+    self._number_of_event_sources = 0
     self._number_of_events = 0
     self._parser_chain_components = []
     self._storage_writer = storage_writer
@@ -55,6 +56,11 @@ class ParserMediator(object):
   def knowledge_base(self):
     """The knowledge base."""
     return self._knowledge_base
+
+  @property
+  def number_of_produced_event_sources(self):
+    """The number of produced event sources."""
+    return self._number_of_event_sources
 
   @property
   def number_of_produced_events(self):
@@ -432,8 +438,8 @@ class ParserMediator(object):
     """Produces an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
-      query: optional string containing the query.
+      event_object (EventObject): an event.
+      query (Optional[str]): query that was used to obtain the event.
     """
     self.ProcessEvent(
         event_object, parser_chain=self.GetParserChain(),
@@ -461,9 +467,11 @@ class ParserMediator(object):
     """Produces an event source.
 
     Args:
-      event_source: an event source (instance of EventSource).
+      event_source (EventSource): an event source.
     """
     self._storage_writer.AddEventSource(event_source)
+    # TODO: refactor status indication.
+    self._number_of_event_sources += 1
 
   def ProduceExtractionError(self, message):
     """Produces an extraction error.

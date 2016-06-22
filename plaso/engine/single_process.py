@@ -27,6 +27,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """Initializes the single process engine object."""
     super(SingleProcessEngine, self).__init__()
     self._last_status_update_timestamp = 0.0
+    self._pid = os.getpid()
     self._status_update_callback = None
 
   def _CreateExtractionWorker(
@@ -98,16 +99,14 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       A string containing the processing status.
     """
-    # TODO: refactor status indication.
-    self._SetCollectorStatus(definitions.PROCESSING_STATUS_RUNNING, 0)
-    self._SetExtractionWorkerStatus(
-        definitions.PROCESSING_STATUS_WAITING, u'', 0, 0, 0)
-    self._SetStorageWriterStatus(definitions.PROCESSING_STATUS_WAITING, 0)
+    self._processing_status.UpdateForemanStatus(
+        u'Main', u'Initializing', self._pid,
+        definitions.PROCESSING_STATUS_RUNNING, u'', 0, 0, 0, 0)
     self._UpdateStatus()
 
     path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    number_of_produced_path_specs = 0
+    produced_number_of_sources = 0
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
@@ -119,14 +118,16 @@ class SingleProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      number_of_produced_path_specs += 1
+      produced_number_of_sources += 1
 
-      # TODO: refactor status indication.
-      self._UpdateCollectorStatus(
-          definitions.PROCESSING_STATUS_RUNNING, number_of_produced_path_specs)
+      self._processing_status.UpdateForemanStatus(
+          u'Main', u'Collecting', self._pid,
+          definitions.PROCESSING_STATUS_RUNNING, u'', 0,
+          produced_number_of_sources, 0, 0)
+      self._UpdateStatus()
 
     new_event_sources = True
-    number_of_consumed_path_specs = 0
+    number_of_consumed_sources = 0
     while new_event_sources:
       if self._abort:
         break
@@ -136,18 +137,6 @@ class SingleProcessEngine(engine.BaseEngine):
       # refactor.
       storage_writer.ForceFlush()
 
-      if self._abort:
-        status = definitions.PROCESSING_STATUS_ABORTED
-      else:
-        status = definitions.PROCESSING_STATUS_COMPLETED
-
-      # TODO: refactor status indication.
-      self._SetCollectorStatus(status, number_of_produced_path_specs)
-      self._UpdateStatus()
-
-      if self._abort:
-        break
-
       new_event_sources = False
       for event_source in storage_writer.GetEventSources():
         new_event_sources = True
@@ -155,104 +144,40 @@ class SingleProcessEngine(engine.BaseEngine):
           break
 
         extraction_worker.ProcessPathSpec(event_source.path_spec)
-        number_of_consumed_path_specs += 1
+        number_of_consumed_sources += 1
 
-        # TODO: refactor status indication.
-        self._SetExtractionWorkerStatus(
+        number_of_produced_sources = (
+            produced_number_of_sources +
+            extraction_worker.number_of_produced_sources)
+
+        self._processing_status.UpdateForemanStatus(
+            u'Main', u'Extracting', self._pid,
             definitions.PROCESSING_STATUS_RUNNING,
             extraction_worker.current_display_name,
-            number_of_consumed_path_specs,
-            extraction_worker.number_of_produced_events,
-            extraction_worker.number_of_produced_path_specs)
-        self._SetStorageWriterStatus(
-            definitions.PROCESSING_STATUS_RUNNING,
-            storage_writer.number_of_events)
+            number_of_consumed_sources, number_of_produced_sources,
+            storage_writer.number_of_events,
+            extraction_worker.number_of_produced_events)
         self._UpdateStatus()
 
     if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
+      status = u'Aborted'
+      process_status = definitions.PROCESSING_STATUS_ABORTED
     else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
+      status = u'Completed'
+      process_status = definitions.PROCESSING_STATUS_COMPLETED
 
-    # TODO: refactor status indication.
-    self._SetExtractionWorkerStatus(
-        status, extraction_worker.current_display_name,
-        number_of_consumed_path_specs,
-        extraction_worker.number_of_produced_events,
-        extraction_worker.number_of_produced_path_specs)
-    self._SetStorageWriterStatus(
-        definitions.PROCESSING_STATUS_RUNNING, storage_writer.number_of_events)
+    number_of_produced_sources = (
+        produced_number_of_sources +
+        extraction_worker.number_of_produced_sources)
+
+    self._processing_status.UpdateForemanStatus(
+        u'Main', status, self._pid, process_status, u'',
+        number_of_consumed_sources, number_of_produced_sources,
+        storage_writer.number_of_events,
+        extraction_worker.number_of_produced_events)
     self._UpdateStatus()
 
-    # TODO: refactor status indication.
-    self._SetStorageWriterStatus(status, storage_writer.number_of_events)
-    self._UpdateStatus()
-
-    return status
-
-  def _SetCollectorStatus(self, status, number_of_produced_path_specs):
-    """Sets the collector status.
-
-    Args:
-      status: a string containing the status.
-      number_of_produced_path_specs: an integer containing the number of
-                                     produced path specifications.
-    """
-    self._processing_status.UpdateCollectorStatus(
-        u'Collector', os.getpid(), number_of_produced_path_specs, status, None)
-
-  def _SetExtractionWorkerStatus(
-      self, status, display_name, number_of_consumed_path_specs,
-      number_of_produced_events, number_of_produced_path_specs):
-    """Sets the extraction worker status.
-
-    Args:
-      status: a string containing the status.
-      display_name: a string containing the display name of the file entry.
-      number_of_consumed_path_specs: an integer containing the number of
-                                     consumed path specifications.
-      number_of_produced_events: an integer containing the number of
-                                 produced events.
-      number_of_produced_path_specs: an integer containing the number of
-                                     produced path specifications.
-    """
-    self._processing_status.UpdateExtractionWorkerStatus(
-        u'Worker', os.getpid(), display_name, number_of_produced_events,
-        number_of_consumed_path_specs, number_of_produced_path_specs, status,
-        None)
-
-  def _SetStorageWriterStatus(self, status, number_of_events):
-    """Sets the storage writer status.
-
-    Args:
-      status: a string containing the status.
-      number_of_events: an integer containing the number of events written
-                        to the storage.
-    """
-    self._processing_status.UpdateStorageWriterStatus(
-        u'StorageWriter', os.getpid(), number_of_events, status, None)
-
-  def _UpdateCollectorStatus(self, status, number_of_produced_path_specs):
-    """Updates the collector status.
-
-    Args:
-      status: a string containing the status.
-      number_of_produced_path_specs: an integer containing the number of
-                                     produced path specifications.
-    """
-    current_timestamp = time.time()
-    if current_timestamp < (
-        self._last_status_update_timestamp + self._STATUS_CHECK_SLEEP):
-      return
-
-    self._processing_status.UpdateCollectorStatus(
-        u'Collector', os.getpid(), number_of_produced_path_specs,
-        status, None)
-
-    if self._status_update_callback:
-      self._status_update_callback(self._processing_status)
-
-    self._last_status_update_timestamp = current_timestamp
+    return process_status
 
   def _UpdateStatus(self):
     """Updates the processing status."""
