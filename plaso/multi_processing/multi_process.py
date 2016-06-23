@@ -3,7 +3,6 @@
 
 import abc
 import ctypes
-import glob
 import logging
 import multiprocessing
 import os
@@ -29,7 +28,6 @@ from plaso.lib import errors
 from plaso.multi_processing import process_info
 from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
-from plaso.storage import zip_file as storage_zip_file
 
 
 class MultiProcessTask(object):
@@ -584,9 +582,6 @@ class MultiProcessEngine(engine.BaseEngine):
           produced_number_of_sources, 0, 0)
       self._UpdateStatus()
 
-    task_storage_glob = os.path.join(
-        self._storage_writer._task_storage_path, u'*.plaso')
-
     self._new_event_sources = True
     self._number_of_consumed_sources = 0
     while self._new_event_sources:
@@ -917,7 +912,6 @@ class MultiProcessEngine(engine.BaseEngine):
       return
 
     process = self._processes_per_pid[pid]
-    process_information = self._process_information_per_pid[pid]
 
     process_type = process_status.get(u'type', None)
     processing_status = process_status.get(u'processing_status', None)
@@ -1037,7 +1031,8 @@ class MultiProcessEngine(engine.BaseEngine):
       self._task_queue = task_outbound_queue
 
       # The ZeroMQ backed queue must be started first, so we can save its port.
-      self._task_queue.name = u'Task queue'
+      # TODO: raises: attribute-defined-outside-init
+      # self._task_queue.name = u'Task queue'
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
@@ -1164,6 +1159,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     self._extraction_worker = None
     self._knowledge_base = knowledge_base
     self._number_of_consumed_path_specs = 0
+    self._parser_mediator = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer

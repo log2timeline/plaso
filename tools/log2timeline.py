@@ -147,7 +147,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if (worker_status.produced_number_of_sources is not None and
         worker_status.produced_number_of_sources_delta is not None):
       sources = u'{0:d} ({1:d})'.format(
-          worker_status.produced_number_of_sources, 
+          worker_status.produced_number_of_sources,
           worker_status.produced_number_of_sources_delta)
 
     # This check makes sure the columns are tab aligned.
@@ -158,7 +158,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if (worker_status.produced_number_of_events is not None and
         worker_status.produced_number_of_events_delta is not None):
       events = u'{0:d} ({1:d})'.format(
-          worker_status.produced_number_of_events, 
+          worker_status.produced_number_of_events,
           worker_status.produced_number_of_events_delta)
 
     # This check makes sure the columns are tab aligned.
