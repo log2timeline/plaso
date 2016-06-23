@@ -30,74 +30,23 @@ class SingleProcessEngine(engine.BaseEngine):
     self._pid = os.getpid()
     self._status_update_callback = None
 
-  def _CreateExtractionWorker(
-      self, resolver_context, parser_mediator, filter_object=None,
-      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, text_prepend=None):
-    """Creates an extraction worker object.
-
-    Args:
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      mount_path: optional string containing the mount path.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
-
-    Returns:
-      An extraction worker (instance of worker.ExtractionWorker).
-    """
-    extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_mediator,
-        parser_filter_expression=parser_filter_expression,
-        process_archive_files=process_archive_files)
-
-    # TODO: differentiate between debug output and debug mode.
-    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
-
-    if filter_object:
-      extraction_worker.SetFilterObject(filter_object)
-
-    if hasher_names_string:
-      extraction_worker.SetHashers(hasher_names_string)
-
-    if mount_path:
-      extraction_worker.SetMountPath(mount_path)
-
-    if text_prepend:
-      extraction_worker.SetTextPrepend(text_prepend)
-
-    if self._enable_profiling:
-      extraction_worker.EnableProfiling(
-          profiling_sample_rate=self._profiling_sample_rate,
-          profiling_type=self._profiling_type)
-
-    return extraction_worker
-
   def _ProcessSources(
       self, source_path_specs, resolver_context, extraction_worker,
-      storage_writer, filter_find_specs=None):
+      parser_mediator, storage_writer, filter_find_specs=None):
     """Processes the sources and extracts event objects.
 
     Args:
-      source_path_specs: a list of path specifications (instances of
-                         dfvfs.PathSpec) of the sources to process.
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      extraction_worker: an extraction worker (instance of
-                         worker.ExtractionWorker).
-      storage_writer: a storage writer object (instance of StorageWriter).
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
+      source_path_specs (list[dfvfs.PathSpec]):
+          path specifications of the sources to process.
+      resolver_context (dfvfs.Context): resolver context.
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+      parser_mediator (ParserMediator): parser mediator.
+      storage_writer (StorageWriter): storage writer.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]):
+          filter find specifications.
 
     Returns:
-      A string containing the processing status.
+      str: processing status.
     """
     self._processing_status.UpdateForemanStatus(
         u'Main', u'Initializing', self._pid,
@@ -143,12 +92,13 @@ class SingleProcessEngine(engine.BaseEngine):
         if self._abort:
           break
 
-        extraction_worker.ProcessPathSpec(event_source.path_spec)
+        extraction_worker.ProcessPathSpec(
+            parser_mediator, event_source.path_spec)
         number_of_consumed_sources += 1
 
         number_of_produced_sources = (
             produced_number_of_sources +
-            extraction_worker.number_of_produced_sources)
+            parser_mediator.number_of_produced_event_sources)
 
         self._processing_status.UpdateForemanStatus(
             u'Main', u'Extracting', self._pid,
@@ -156,7 +106,7 @@ class SingleProcessEngine(engine.BaseEngine):
             extraction_worker.current_display_name,
             number_of_consumed_sources, number_of_produced_sources,
             storage_writer.number_of_events,
-            extraction_worker.number_of_produced_events)
+            parser_mediator.number_of_produced_events)
         self._UpdateStatus()
 
     if self._abort:
@@ -229,11 +179,29 @@ class SingleProcessEngine(engine.BaseEngine):
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base)
 
-    extraction_worker = self._CreateExtractionWorker(
-        resolver_context, parser_mediator, filter_object=filter_object,
-        hasher_names_string=hasher_names_string, mount_path=mount_path,
-        parser_filter_expression=parser_filter_expression,
-        process_archive_files=process_archive_files, text_prepend=text_prepend)
+    if filter_object:
+      parser_mediator.SetFilterObject(filter_object)
+
+    if mount_path:
+      parser_mediator.SetMountPath(mount_path)
+
+    if text_prepend:
+      parser_mediator.SetTextPrepend(text_prepend)
+
+    extraction_worker = worker.EventExtractionWorker(
+        resolver_context, parser_filter_expression=parser_filter_expression,
+        process_archive_files=process_archive_files)
+
+    # TODO: differentiate between debug output and debug mode.
+    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
+
+    if hasher_names_string:
+      extraction_worker.SetHashers(hasher_names_string)
+
+    if self._enable_profiling:
+      extraction_worker.EnableProfiling(
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
 
     self._status_update_callback = status_update_callback
 
@@ -249,7 +217,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
       status = self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
-          storage_writer, filter_find_specs=filter_find_specs)
+          parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
 
       # TODO: refactor the use of preprocess_object.
       storage_writer.WritePreprocessObject(preprocess_object)

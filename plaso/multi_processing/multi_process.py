@@ -618,17 +618,13 @@ class MultiProcessEngine(engine.BaseEngine):
         self._CheckStatusWorkerProcesses()
         self._UpdateStatus()
 
-        # TODO: check if task is done.
-
         # TODO: move task storage merge into separate thread.
-        # pylint: disable=protected-access
-        for task_storage_file in glob.glob(task_storage_glob):
-          storage_reader = storage_zip_file.ZIPStorageFileReader(task_storage_file)
-          self._storage_writer.MergeFromStorage(storage_reader)
 
-          # Force close the storage reader so we can remove the file.
-          storage_reader.Close()
-          os.remove(task_storage_file)
+        # Make a copy of the keys since we are changing the dictionary
+        # inside the loop.
+        for task_identifier in list(self._tasks.keys()):
+          if self._storage_writer.MergeTaskStorage(task_identifier):
+            del self._tasks[task_identifier]
 
         time.sleep(self._STATUS_CHECK_SLEEP)
 
@@ -1227,17 +1223,18 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     Args:
       task (MultiProcessTask): task.
     """
-    storage_writer = self._storage_writer.CreateTaskStorageWriter(
-        task.identifier)
+    storage_writer = self._storage_writer.CreateTaskStorage(task.identifier)
 
     if self._enable_profiling:
       storage_writer.EnableProfiling(profiling_type=self._profiling_type)
 
     storage_writer.Open()
 
-    task_start = tasks.TaskStart(self._session_identifier)
-
     try:
+      self._parser_mediator.SetStorageWriter(storage_writer)
+
+      task_start = tasks.TaskStart(self._session_identifier)
+      task_start.identifier = task.identifier
       storage_writer.WriteTaskStart(task_start)
 
       # TODO: add support for more task types.
@@ -1245,21 +1242,23 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
           self._parser_mediator, task.path_spec)
       self._number_of_consumed_path_specs += 1
 
-    finally:
       # TODO: on abort use WriteTaskAborted instead of completion?
       storage_writer.WriteTaskCompletion()
+
+    finally:
+      self._parser_mediator.SetStorageWriter(None)
+
       storage_writer.Close()
 
       if self._enable_profiling:
         storage_writer.DisableProfiling()
 
+    self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+
   def _Main(self):
     """The main loop."""
-    # We need to initialize the parser and hasher objects after the process
-    # has forked otherwise on Windows the "fork" will fail with
-    # a PickleError for Python modules that cannot be pickled.
     self._parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, self._knowledge_base)
+        None, self._knowledge_base)
 
     if self._filter_object:
       self._parser_mediator.SetFilterObject(self._filter_object)
@@ -1274,6 +1273,9 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     # issues with file objects stored in images.
     resolver_context = context.Context()
 
+    # We need to initialize the parser and hasher objects after the process
+    # has forked otherwise on Windows the "fork" will fail with
+    # a PickleError for Python modules that cannot be pickled.
     self._extraction_worker = worker.EventExtractionWorker(
         resolver_context,
         parser_filter_expression=self._parser_filter_expression,

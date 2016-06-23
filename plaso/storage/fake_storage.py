@@ -127,20 +127,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  def CreateTaskStorageWriter(self, unused_task_name):
-    """Creates a task storage writer.
-
-    Args:
-      task_name: a string containing a unique name of the task.
-
-    Returns:
-      A storage writer object (instance of StorageWriter).
-
-    Raises:
-      NotImplementedError: since there is no implementation.
-    """
-    raise NotImplementedError()
-
   # TODO: remove during phased processing refactor.
   def ForceFlush(self):
     """Forces the storage writer to flush.

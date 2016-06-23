@@ -235,6 +235,20 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
+  def CreateTaskStorage(self, unused_task_name):
+    """Creates a task storage.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Returns:
+      StorageWriter: storage writer.
+
+    Raises:
+      NotImplementedError: since there is no implementation.
+    """
+    raise NotImplementedError()
+
   def DisableProfiling(self):
     """Disables profiling."""
     self._enable_profiling = False
@@ -285,6 +299,18 @@ class StorageWriter(object):
   @abc.abstractmethod
   def Open(self):
     """Opens the storage writer."""
+
+  def PrepareMergeTaskStorage(self, unsused_task_name):
+    """Prepares a task storage for merging.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does no exist.
+    """
+    raise NotImplementedError()
 
   def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
     """Enables or disables profiling.

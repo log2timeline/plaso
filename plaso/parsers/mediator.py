@@ -440,7 +440,13 @@ class ParserMediator(object):
     Args:
       event_object (EventObject): an event.
       query (Optional[str]): query that was used to obtain the event.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
     """
+    if not self._storage_writer:
+      raise RuntimeError(u'Storage writer not set.')
+
     self.ProcessEvent(
         event_object, parser_chain=self.GetParserChain(),
         file_entry=self._file_entry, query=query)
@@ -468,7 +474,13 @@ class ParserMediator(object):
 
     Args:
       event_source (EventSource): an event source.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
     """
+    if not self._storage_writer:
+      raise RuntimeError(u'Storage writer not set.')
+
     self._storage_writer.AddEventSource(event_source)
     # TODO: refactor status indication.
     self._number_of_event_sources += 1
@@ -478,7 +490,13 @@ class ParserMediator(object):
 
     Args:
       message: The message of the error.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
     """
+    if not self._storage_writer:
+      raise RuntimeError(u'Storage writer not set.')
+
     path_spec = self._file_entry.path_spec
     parser_chain = self.GetParserChain()
     extraction_error = errors.ExtractionError(
@@ -517,6 +535,14 @@ class ParserMediator(object):
       mount_path = mount_path[:-1]
 
     self._mount_path = mount_path
+
+  def SetStorageWriter(self, storage_writer):
+    """Sets the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+    """
+    self._storage_writer = storage_writer
 
   def SetTextPrepend(self, text_prepend):
     """Sets the text prepend.
