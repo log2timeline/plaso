@@ -32,13 +32,12 @@ from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import zip_file as storage_zip_file
 
 
-class MultiProcessTask(multiprocessing.Process):
+class MultiProcessTask(object):
   """Class that defines the multi-processing task.
 
   Attributes:
-    identifier: a string containing the identifier of the task.
-    session_identifier: a string containing the identifier of the session
-                        the task is part of.
+    identifier (str): identifier of the task.
+    session_identifier (str): identifier of the session the task is part of.
     path_spec (dfvfs.PathSpec): path specification.
   """
 
@@ -46,10 +45,9 @@ class MultiProcessTask(multiprocessing.Process):
     """Initializes the task.
 
     Args:
-      session_identifier: a string containing the identifier of the session
-                          the task is part of.
+      session_identifier (str): identifier of the session the task is part of.
     """
-    super(MultiProcessTask, self).__init__(**kwargs)
+    super(MultiProcessTask, self).__init__()
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.path_spec = None
     self.session_identifier = session_identifier
@@ -609,7 +607,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
       # TODO: start thread that monitors for new task files.
 
-      while self._collector_active and len(self._tasks):
+      while self._collector_active or len(self._tasks):
         self._processing_status.UpdateForemanStatus(
             u'Main', u'Storage', self._pid,
             definitions.PROCESSING_STATUS_RUNNING, u'',
@@ -1192,7 +1190,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       number_of_produced_events = (
           self._parser_mediator.number_of_produced_events)
       number_of_produced_sources = (
-          self._parser_mediator.number_of_produced_sources)
+          self._parser_mediator.number_of_produced_event_sources)
     else:
       number_of_produced_events = 0
       number_of_produced_sources = 0
@@ -1284,8 +1282,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     # TODO: differentiate between debug output and debug mode.
     self._extraction_worker.SetEnableDebugMode(self._enable_debug_output)
 
-    if hasher_names_string:
-      self._extraction_worker.SetHashers(hasher_names_string)
+    if self._hasher_names_string:
+      self._extraction_worker.SetHashers(self._hasher_names_string)
 
     if self._enable_profiling:
       self._extraction_worker.EnableProfiling(

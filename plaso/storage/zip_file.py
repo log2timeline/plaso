@@ -3271,7 +3271,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     storage_file_path = os.path.join(
         self._task_storage_path, u'{0:s}.plaso'.format(task_name))
 
-    os.rename(self._task_storage_path, self._merge_task_storage_path)
+    merge_storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    os.rename(storage_file_path, merge_storage_file_path)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
