@@ -26,7 +26,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Retrieves a path specification of a test file in the test data directory.
 
     Args:
-      path_segments: a list of strings containinge the path segments inside
+      path_segments: a list of strings containing the path segments inside
                      the test data directory.
 
     Returns:
