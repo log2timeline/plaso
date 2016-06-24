@@ -10,6 +10,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import event_sources
 from plaso.engine import extractors
 from plaso.engine import profiler
 from plaso.hashers import manager as hashers_manager
@@ -380,7 +381,9 @@ class EventExtractionWorker(object):
         compressed_stream_path_spec = None
 
       if compressed_stream_path_spec:
-        parser_mediator.ProduceEventSource(compressed_stream_path_spec)
+        event_source = event_sources.EventSource(
+            path_spec=compressed_stream_path_spec)
+        parser_mediator.ProduceEventSource(event_source)
         self.number_of_produced_path_specs += 1
 
     return True
