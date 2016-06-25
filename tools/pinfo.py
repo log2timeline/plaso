@@ -15,6 +15,7 @@ from plaso.cli import analysis_tool
 from plaso.frontend import analysis_frontend
 from plaso.lib import errors
 from plaso.lib import timelib
+from plaso.storage import zip_file as storage_zip_file
 
 
 class PinfoTool(analysis_tool.AnalysisTool):
@@ -511,7 +512,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
       identical or not.
     """
     try:
-      storage_file = self._front_end.OpenStorage(self._storage_file_path)
+      storage_file = storage_zip_file.StorageFile(
+          self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
           u'Unable to open storage file: {0:s} with error: {1:s}'.format(
@@ -519,8 +521,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
       return
 
     try:
-      compare_storage_file = self._front_end.OpenStorage(
-          self._compare_storage_file_path)
+      compare_storage_file = storage_zip_file.StorageFile(
+          self._compare_storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
           u'Unable to open storage file: {0:s} with error: {1:s}'.format(
@@ -615,7 +617,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
   def PrintStorageInformation(self):
     """Prints the storage information."""
     try:
-      storage_file = self._front_end.OpenStorage(self._storage_file_path)
+      storage_file = storage_zip_file.StorageFile(
+          self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
           u'Unable to open storage file: {0:s} with error: {1:s}'.format(

@@ -170,7 +170,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     test_front_end.SetQuietMode(True)
 
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
+    storage_file = storage_zip_file.StorageFile(
+        storage_file_path, read_only=True)
 
     try:
       output_writer = test_lib.StringIOOutputWriter()
@@ -269,7 +270,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     """Tests the last good preprocess method."""
     test_front_end = psort.PsortFrontend()
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = test_front_end.OpenStorage(storage_file_path, read_only=True)
+    storage_file = storage_zip_file.StorageFile(
+        storage_file_path, read_only=True)
     preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
     self.assertIsNotNone(preprocessor_object)
     timezone = getattr(preprocessor_object, u'zone')
