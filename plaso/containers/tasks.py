@@ -20,20 +20,20 @@ class TaskCompletion(interface.AttributeContainer):
   """
   CONTAINER_TYPE = u'task_completion'
 
-  def __init__(self, identifier, session_identifier):
+  def __init__(self, identifier=None, session_identifier=None):
     """Initializes a task completion attribute container.
 
     Args:
-      identifier: a string containing the identifier of the task.
-                  The identifier should match that of the corresponding
-                  task start information.
-      session_identifier: a string containing the identifier of the session
-                          the task is part of.
+      identifier (Optional[str]): identifier of the task.
+          The identifier should match that of the corresponding
+          task start information.
+      session_identifier (Optional[str]): identifier of the session the task
+                                          is part of.
     """
     super(TaskCompletion, self).__init__()
     self.identifier = identifier
     self.session_identifier = session_identifier
-    self.timestamp = int(time.time() * 100000)
+    self.timestamp = int(time.time() * 1000000)
 
 
 class TaskStart(interface.AttributeContainer):
@@ -49,14 +49,14 @@ class TaskStart(interface.AttributeContainer):
   """
   CONTAINER_TYPE = u'task_start'
 
-  def __init__(self, session_identifier):
+  def __init__(self, session_identifier=None):
     """Initializes a task start attribute container.
 
     Args:
-      session_identifier: a string containing the identifier of the session
-                          the task is part of.
+      session_identifier (Optional[str]): identifier of the session the task
+                                          is part of.
     """
     super(TaskStart, self).__init__()
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.session_identifier = session_identifier
-    self.timestamp = int(time.time() * 100000)
+    self.timestamp = int(time.time() * 1000000)

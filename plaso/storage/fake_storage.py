@@ -234,7 +234,8 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError(u'Task completion not supported by storage type.')
 
     self.task_completion = tasks.TaskCompletion(
-        self._session_identifier, self._task_identifier)
+        identifier=self._task_identifier,
+        session_identifier=self._session_identifier)
 
   def WriteTaskStart(self, task_start):
     """Writes task start information.

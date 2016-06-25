@@ -17,7 +17,8 @@ class SessionCompletionTest(test_lib.AttributeContainerTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    session_completion = sessions.SessionCompletion(session_identifier)
+    session_completion = sessions.SessionCompletion(
+        identifier=session_identifier)
 
     expected_dict = {
         u'identifier': session_completion.identifier,

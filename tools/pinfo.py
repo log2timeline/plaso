@@ -10,9 +10,12 @@ import logging
 import os
 import pprint
 import sys
+import uuid
 
 from plaso.cli import analysis_tool
+from plaso.cli import views as cli_views
 from plaso.frontend import analysis_frontend
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.storage import zip_file as storage_zip_file
@@ -239,13 +242,11 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     return result
 
-  def _FormatCollectionInformation(
-      self, lines_of_text, storage_file, storage_information):
+  def _FormatCollectionInformation(self, lines_of_text, storage_information):
     """Formats the collection information.
 
     Args:
       lines_of_text: A list containing the lines of text.
-      storage_file: The storage file (instance of StorageFile).
       storage_information: The storage information object (instance of
                             PreprocessObject).
     """
@@ -255,16 +256,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
       lines_of_text.append(u'Missing collection information.')
       return
 
-    self._FormatHeader(lines_of_text)
-
     filename = collection_information.get(u'file_processed', u'N/A')
     time_of_run = collection_information.get(u'time_of_run', 0)
     time_of_run = timelib.Timestamp.CopyToIsoFormat(time_of_run)
 
-    lines_of_text.append(u'Storage file:\t\t{0:s}'.format(
-        self._storage_file_path))
-    lines_of_text.append(u'Serialization format:\t{0:s}'.format(
-        storage_file.serialization_format))
     lines_of_text.append(u'Source processed:\t{0:s}'.format(filename))
     lines_of_text.append(u'Time of processing:\t{0:s}'.format(time_of_run))
 
@@ -272,7 +267,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     lines_of_text.append(u'Collection information:')
 
     for key, value in collection_information.iteritems():
-      if key in [u'file_processed', u'time_of_run']:
+      if key in (u'file_processed', u'time_of_run'):
         continue
       if key == u'parsers':
         value = u', '.join(sorted(value))
@@ -304,16 +299,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     if total_value is not None:
       lines_of_text.append(u'\tTotal = {0:d}'.format(total_value))
-
-  def _FormatHeader(self, lines_of_text):
-    """Formats a header.
-
-    Args:
-      lines_of_text: A list containing the lines of text.
-    """
-    lines_of_text.append(u'-' * self._LINE_LENGTH)
-    lines_of_text.append(u'\t\tPlaso Storage Information')
-    lines_of_text.append(u'-' * self._LINE_LENGTH)
 
   def _FormatPreprocessingInformationValue(self, key, value):
     """Formats a processing information value.
@@ -354,13 +339,13 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     lines_of_text.append(u'Preprocessing information:')
 
-    for key in [u'osversion', u'hostname', u'time_zone_str', u'codepage']:
+    for key in (u'osversion', u'hostname', u'time_zone_str', u'codepage'):
       value = getattr(storage_information, key, None)
       if value:
         text = self._FormatPreprocessingInformationValue(key, value)
         lines_of_text.append(text)
 
-    for key in [u'programfiles', u'systemroot', u'windir']:
+    for key in (u'programfiles', u'systemroot', u'windir'):
       value = getattr(storage_information, key, None)
       if value:
         text = self._FormatPreprocessingInformationValue(key, value)
@@ -372,7 +357,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
       lines_of_text.append(u'    {0:s}:'.format(description))
       for user_dict in users_list:
-        for key in [u'name', u'sid', u'path']:
+        for key in (u'name', u'sid', u'path'):
           value = user_dict.get(key, None)
           if value:
             text = self._FormatPreprocessingInformationValue(key, value)
@@ -412,24 +397,18 @@ class PinfoTool(analysis_tool.AnalysisTool):
     return u'\n'.join(report_strings)
 
   def _FormatStorageInformation(
-      self, storage_information, storage_file, last_entry=False):
+      self, lines_of_text, storage_information, storage_file, last_entry=False):
     """Formats the storage information.
 
     Args:
+      lines_of_text: A list containing the lines of text.
       storage_information: The storage information object (instance of
                            PreprocessObject).
       storage_file: The storage file (instance of StorageFile).
       last_entry: Optional boolean value to indicate this is the last
                   information entry.
-
-    Returns:
-      A string containing the formatted storage information.
     """
-    printer_object = pprint.PrettyPrinter(indent=self._INDENTATION_LEVEL)
-    lines_of_text = []
-
-    self._FormatCollectionInformation(
-        lines_of_text, storage_file, storage_information)
+    self._FormatCollectionInformation(lines_of_text, storage_information)
 
     counter_information = getattr(storage_information, u'counter', None)
     self._FormatCounterInformation(
@@ -439,20 +418,19 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._FormatCounterInformation(
         lines_of_text, u'Plugin counter information', counter_information)
 
+    printer_object = pprint.PrettyPrinter(indent=self._INDENTATION_LEVEL)
     self._FormatStoreInformation(
         printer_object, lines_of_text, storage_information)
 
     self._FormatPreprocessingInformation(lines_of_text, storage_information)
 
+    lines_of_text.append(u'')
     if last_entry:
-      lines_of_text.append(u'')
       reports = self._FormatReports(storage_file)
-    else:
-      reports = u''
+      lines_of_text.append(reports)
 
-    information = u'\n'.join(lines_of_text)
-
-    return u'\n'.join([information, reports, u'-+' * 40, u''])
+    lines_of_text.append(u'-+' * 40)
+    lines_of_text.append(u'')
 
   def _FormatStoreInformation(
       self, printer_object, lines_of_text, storage_information):
@@ -481,28 +459,99 @@ class PinfoTool(analysis_tool.AnalysisTool):
       return
 
     for key, value in store_information.iteritems():
-      if key not in [u'Number']:
+      if key != u'Number':
         lines_of_text.append(
             u'\t{0:s} =\n{1!s}'.format(key, printer_object.pformat(value)))
 
-  def _PrintStorageInformation(self, storage_file):
-    """Prints the storage information.
+  def _PrintSessionsDetails(self, storage):
+    """Prints the details of the sessions.
 
     Args:
-      storage_file: The storage file (instance of StorageFile).
+      storage (BaseStorage): storage.
     """
-    storage_information_list = storage_file.GetStorageInformation()
+    for session_start, session_completion in storage.GetSessions():
+      session_identifier = uuid.UUID(hex=session_start.identifier)
+      title = u'Session: {0!s}'.format(session_identifier)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
 
-    if not storage_information_list:
-      self._output_writer.Write(u'No storage information found.\n')
-      return
+      start_time = timelib.Timestamp.CopyToIsoFormat(
+          session_start.timestamp)
+      table_view.AddRow([u'Start time', start_time])
 
-    for index, storage_information in enumerate(storage_information_list):
-      last_entry = index + 1 == len(storage_information_list)
-      storage_information = self._FormatStorageInformation(
-          storage_information, storage_file, last_entry=last_entry)
+      completion_time = timelib.Timestamp.CopyToIsoFormat(
+          session_completion.timestamp)
+      table_view.AddRow([u'Completion time', completion_time])
 
-      self._output_writer.Write(storage_information)
+      table_view.AddRow([u'Product name', session_start.product_name])
+      table_view.AddRow([u'Product version', session_start.product_version])
+      table_view.AddRow([
+          u'Command line arguments', session_start.command_line_arguments])
+      table_view.AddRow([
+          u'Parser filter expression', session_start.parser_filter_expression])
+      table_view.AddRow([
+          u'Preferred encoding', session_start.preferred_encoding])
+      table_view.AddRow([u'Debug mode', session_start.debug_mode])
+      table_view.AddRow([u'Filter file', session_start.filter_file])
+      table_view.AddRow([u'Filter expression', session_start.filter_expression])
+
+      table_view.Write(self._output_writer)
+
+  def _PrintSessionsOverview(self, storage):
+    """Prints a sessions overview.
+
+    Args:
+      storage (BaseStorage): storage.
+    """
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Sessions')
+
+    for session_start, _ in storage.GetSessions():
+      start_time = timelib.Timestamp.CopyToIsoFormat(
+          session_start.timestamp)
+      session_identifier = uuid.UUID(hex=session_start.identifier)
+      table_view.AddRow([str(session_identifier), start_time])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintStorageInformation(self, storage):
+    """Prints information about the storage.
+
+    Args:
+      storage (BaseStorage): storage.
+    """
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Plaso Storage Information')
+    table_view.AddRow([u'Path', self._storage_file_path])
+    table_view.AddRow([u'Format version', storage.format_version])
+    table_view.AddRow([u'Serialization format', storage.serialization_format])
+    table_view.Write(self._output_writer)
+
+    if storage.storage_type == definitions.STORAGE_TYPE_SESSION:
+      self._PrintSessionsOverview(storage)
+      self._PrintSessionsDetails(storage)
+
+    elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
+      self._PrintTasksInformation(storage)
+
+    return
+
+  def _PrintTasksInformation(self, storage):
+    """Prints information about the tasks.
+
+    Args:
+      storage (BaseStorage): storage.
+    """
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Tasks')
+
+    for task_start, _ in storage.GetSessions():
+      start_time = timelib.Timestamp.CopyToIsoFormat(
+          task_start.timestamp)
+      task_identifier = uuid.UUID(hex=task_start.identifier)
+      table_view.AddRow([str(task_identifier), start_time])
+
+    table_view.Write(self._output_writer)
 
   def CompareStorageInformation(self):
     """Compares the storage information.
