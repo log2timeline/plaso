@@ -522,7 +522,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """
     table_view = cli_views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Plaso Storage Information')
-    table_view.AddRow([u'Path', self._storage_file_path])
+    table_view.AddRow([u'Filename', os.path.basename(self._storage_file_path)])
     table_view.AddRow([u'Format version', storage.format_version])
     table_view.AddRow([u'Serialization format', storage.serialization_format])
     table_view.Write(self._output_writer)
