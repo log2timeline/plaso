@@ -3181,7 +3181,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """Retrieves the event sources.
 
     Yields:
-      Event source objects (instances of EventSourceObject).
+      EventSource: event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -3189,13 +3189,13 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    event_source_index = 0
-    for event_source in self._storage_file.GetEventSources():
-      if event_source_index >= self._event_source_index:
-        yield event_source
-        self._event_source_index += 1
+    for event_source_index, event_source in enumerate(
+        self._storage_file.GetEventSources()):
+      if event_source_index < self._event_source_index:
+        continue
 
-      event_source_index += 1
+      yield event_source
+      self._event_source_index += 1
 
   def MergeTaskStorage(self, task_name):
     """Merges a task storage with the session storage.

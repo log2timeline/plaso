@@ -118,13 +118,13 @@ class SingleProcessEngine(engine.BaseEngine):
 
     number_of_produced_sources = (
         produced_number_of_sources +
-        extraction_worker.number_of_produced_sources)
+        parser_mediator.number_of_produced_event_sources)
 
     self._processing_status.UpdateForemanStatus(
         u'Main', status, self._pid, process_status, u'',
         number_of_consumed_sources, number_of_produced_sources,
         storage_writer.number_of_events,
-        extraction_worker.number_of_produced_events)
+        parser_mediator.number_of_produced_events)
     self._UpdateStatus()
 
     return process_status

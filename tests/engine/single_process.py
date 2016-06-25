@@ -10,12 +10,9 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
 from plaso.containers import sessions
-from plaso.engine import knowledge_base
 from plaso.engine import single_process
-from plaso.engine import worker
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
@@ -26,21 +23,6 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the single process engine object."""
 
   # pylint: disable=protected-access
-
-  def testCreateExtractionWorker(self):
-    """Tests the _CreateExtractionWorker function."""
-    test_engine = single_process.SingleProcessEngine()
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    resolver_context = context.Context()
-    storage_writer = fake_storage.FakeStorageWriter()
-
-    parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
-
-    extraction_worker = test_engine._CreateExtractionWorker(
-        resolver_context, parser_mediator)
-    self.assertIsNotNone(extraction_worker)
-    self.assertIsInstance(extraction_worker, worker.EventExtractionWorker)
 
   def testProcessSources(self):
     """Tests the ProcessSources function."""

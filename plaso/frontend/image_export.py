@@ -576,8 +576,7 @@ class ImageExportFrontend(frontend.Frontend):
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
     file_saver = FileSaver(skip_duplicates=remove_duplicates)
 
-    for path_spec in path_spec_extractor.ExtractPathSpecsRecursive(
-        source_path_specs):
+    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
       self._ExtractFile(file_saver, path_spec, destination_path)
 
   def _ExtractFile(self, file_saver, path_spec, destination_path):
