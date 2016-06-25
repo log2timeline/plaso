@@ -25,7 +25,6 @@ from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.storage import time_range as storage_time_range
 from plaso.storage import reader
-from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
 
@@ -125,10 +124,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     logging.info(u'All analysis plugins are now completed.')
 
-    storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        storage_file, pre_obj)
     analysis_report_consumer = PsortAnalysisReportQueueConsumer(
-        analysis_report_incoming_queue, storage_writer,
+        analysis_report_incoming_queue, storage_file,
         self._filter_expression, preferred_encoding=preferred_encoding)
 
     analysis_report_consumer.ConsumeItems()
@@ -592,19 +589,19 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
   """
 
   def __init__(
-      self, queue, storage_writer, filter_string, preferred_encoding=u'utf-8'):
+      self, queue, storage_file, filter_string, preferred_encoding=u'utf-8'):
     """Initializes the item queue consumer.
 
     Args:
       queue_object: a queue object (instance of Queue).
-      storage_writer: a storage writer (instance of StorageWriter).
+      storage_file: a storage file (instance of BaseStorage).
       filter_string: a string containing the filter expression.
       preferred_encoding: optional string containing the preferred encoding.
     """
     super(PsortAnalysisReportQueueConsumer, self).__init__(queue)
     self._filter_string = filter_string
     self._preferred_encoding = preferred_encoding
-    self._storage_writer = storage_writer
+    self._storage_file = storage_file
     self._tags = []
 
     # Counter containing the number of reports.
@@ -623,7 +620,7 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
     # TODO: Have the option of saving to a separate file and
     # do something more here, for instance saving into a HTML
     # file, or something else (including potential images).
-    self._storage_writer.AddAnalysisReport(analysis_report)
+    self._storage_file.AddAnalysisReport(analysis_report)
 
     report_string = analysis_report.GetString()
     try:

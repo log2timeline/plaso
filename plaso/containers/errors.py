@@ -11,21 +11,21 @@ class ExtractionError(interface.AttributeContainer):
   """Class to represent an extraction error attribute container.
 
   Attributes:
-    message: a string containing the error message.
-    parser_chain: a string containing the parser chain or None.
-    path_spec: a path specification of the file entry (instance of
-               dfvfs.PathSpec) or None.
+    message (str): error message.
+    parser_chain (str): parser chain to which the error applies.
+    path_spec (dfvfs.PathSpec):
+        path specification of the file entry to which the error applies.
   """
   CONTAINER_TYPE = u'extraction_error'
 
-  def __init__(self, message, parser_chain=None, path_spec=None):
+  def __init__(self, message=None, parser_chain=None, path_spec=None):
     """Initializes a parse error.
 
     Args:
-      message: a string containing the error message.
-      parser_chain: optional string containing the parser chain.
-      path_spec: optional path specification of the file entry (instance of
-                 dfvfs.PathSpec).
+      message (Optional[str]): error message.
+      parser_chain (Optional[str]): parser chain to which the error applies.
+      path_spec (Optional[dfvfs.PathSpec]):
+          path specification of the file entry to which the error applies.
     """
     super(ExtractionError, self).__init__()
     self.message = message
