@@ -2624,8 +2624,8 @@ class ZIPStorageFile(interface.BaseStorage):
     if self.format_version <= 20160501:
       return
 
-    for stream_number in range(self._last_session):
-      stream_name = u'session_start.{0:06d}'.format(stream_number + 1)
+    for stream_number in range(1, self._last_session):
+      stream_name = u'session_start.{0:06d}'.format(stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
