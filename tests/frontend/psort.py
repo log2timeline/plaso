@@ -6,6 +6,7 @@ import os
 import unittest
 
 from plaso.containers import events
+from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -173,7 +174,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
 
     try:
       output_writer = test_lib.StringIOOutputWriter()
-      output_module = test_front_end.GetOutputModule(storage_file)
+      output_module = test_front_end.CreateOutputModule(storage_file)
       output_module.SetOutputWriter(output_writer)
 
       counter = test_front_end.ProcessStorage(
@@ -230,9 +231,11 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
           temp_file, read_only=True)
 
       with reader.StorageObjectReader(storage_file) as storage_reader:
+        knowledge_base_object = knowledge_base.KnowledgeBase()
+        knowledge_base_object.InitializeLookupDictionaries(storage_file)
+
         output_mediator_object = output_mediator.OutputMediator(
-            self._formatter_mediator)
-        output_mediator_object.SetStorageFile(storage_file)
+            knowledge_base_object, self._formatter_mediator)
 
         output_module = TestOutputModule(output_mediator_object)
         output_module.SetOutputWriter(output_writer)

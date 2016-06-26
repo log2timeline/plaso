@@ -36,6 +36,8 @@ class KnowledgeBase(object):
 
     self._default_codepage = u'cp1252'
     self._default_timezone = pytz.timezone(u'UTC')
+    self._hostnames = {}
+    self._preprocess_objects = {}
 
   @property
   def pre_obj(self):
@@ -94,18 +96,114 @@ class KnowledgeBase(object):
   def GetValue(self, identifier, default_value=None):
     """Retrieves a value by identifier.
 
-    If the identifier is a string it is case insensitive.
-
     Args:
-      identifier: the value identifier.
-      default_value: optional default value.
+      identifier (str): case insensitive unique identifier for the value.
+      default_value (object): default value.
 
     Returns:
-      The value or None if not available.
+      object: value or default value if not available.
+
+    Raises:
+      TypeError: if the identifier is not a string type.
     """
-    if isinstance(identifier, py2to3.STRING_TYPES):
-      identifier = identifier.lower()
+    if not isinstance(identifier, py2to3.STRING_TYPES):
+      raise TypeError(u'Identifier not a string type.')
+
+    identifier = identifier.lower()
     return getattr(self._pre_obj, identifier, default_value)
+
+  # TODO: refactor.
+  def GetHostname(self, store_number, default_hostname=u'-'):
+    """Retrieves the hostname related to the event.
+
+    If the hostname is not stored in the event it is determined based
+    on the preprocessing information that is stored inside the storage file.
+
+    Args:
+      store_number (int): store number.
+      default_hostname (Optional[str]): default hostname.
+
+    Returns:
+      str: hostname.
+    """
+    return self._hostnames.get(store_number, default_hostname)
+
+  # TODO: remove this function it is incorrect.
+  def GetStoredHostname(self):
+    """Retrieves the stored hostname.
+
+    The hostname is determined based on the preprocessing information
+    that is stored inside the storage file.
+
+    Returns:
+      str: hostname.
+    """
+    store_number = len(self._hostnames)
+    return self._hostnames.get(store_number, None)
+
+  # TODO: refactor.
+  def GetUsername(self, user_identifier, store_number, default_username=u'-'):
+    """Retrieves the username related to the event.
+
+    Args:
+      user_identifier (str): user identifier.
+      store_number (int): store number.
+      default_username (Optional[str]): default username.
+
+    Returns:
+      str: username.
+    """
+    if not store_number:
+      return default_username
+
+    pre_obj = self._preprocess_objects.get(store_number, None)
+    if not pre_obj:
+      return default_username
+
+    preprocess_username = pre_obj.GetUsernameById(user_identifier)
+    if preprocess_username and preprocess_username != u'-':
+      return preprocess_username
+
+    if not user_identifier:
+      return default_username
+
+    preprocess_username = pre_obj.GetUsernameById(user_identifier)
+    if preprocess_username and preprocess_username != u'-':
+      return preprocess_username
+
+    return default_username
+
+  # TODO: refactor.
+  def InitializeLookupDictionaries(self, storage_file):
+    """Initializes the lookup dictionaries.
+
+    Args:
+      storage_file (BaseStorage): storage file.
+
+    Builds a dictionary of hostnames and usernames from the preprocess
+    objects stored inside the storage file.
+    """
+    self._hostnames = {}
+    self._preprocess_objects = {}
+
+    if not storage_file or not hasattr(storage_file, u'GetStorageInformation'):
+      return
+
+    for info in storage_file.GetStorageInformation():
+      store_range = getattr(info, u'store_range', None)
+      if not store_range:
+        continue
+
+      # TODO: should this be store_range[1] + 1 with or without + 1?
+      # This is inconsistent in the current version of the codebase.
+      for store_number in range(store_range[0], store_range[1]):
+        self._preprocess_objects[store_number] = info
+
+        hostname = getattr(info, u'hostname', None)
+        if hostname:
+          # TODO: A bit wasteful, if the range is large we are wasting keys.
+          # Rewrite this logic into a more optimal one.
+          self._hostnames[store_number] = hostname
 
   def SetDefaultCodepage(self, codepage):
     """Sets the default codepage.
@@ -128,12 +226,15 @@ class KnowledgeBase(object):
   def SetValue(self, identifier, value):
     """Sets a value by identifier.
 
-    If the identifier is a string it is case insensitive.
-
     Args:
-      identifier: the value identifier.
-      value: the value.
+      identifier (str): case insensitive unique identifier for the value.
+      value (object): value.
+
+    Raises:
+      TypeError: if the identifier is not a string type.
     """
-    if isinstance(identifier, py2to3.STRING_TYPES):
-      identifier = identifier.lower()
+    if not isinstance(identifier, py2to3.STRING_TYPES):
+      raise TypeError(u'Identifier not a string type.')
+
+    identifier = identifier.lower()
     setattr(self._pre_obj, identifier, value)
