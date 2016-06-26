@@ -34,8 +34,11 @@ class MultiProcessTask(object):
   """Class that defines the multi-processing task.
 
   Attributes:
-    identifier (str): identifier of the task.
+    identifier (str): identifier of the task. The identifier is formatted as
+        a hexadecimal string of a random (version 4) UUID.
     session_identifier (str): identifier of the session the task is part of.
+        The identifier is formatted as a hexadecimal string of a random
+        (version 4) UUID.
     path_spec (dfvfs.PathSpec): path specification.
   """
 
@@ -44,6 +47,8 @@ class MultiProcessTask(object):
 
     Args:
       session_identifier (str): identifier of the session the task is part of.
+          The identifier is formatted as a hexadecimal string of a random
+          (version 4) UUID.
     """
     super(MultiProcessTask, self).__init__()
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
@@ -61,11 +66,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
   _PROCESS_JOIN_TIMEOUT = 5.0
 
-  def __init__(self, process_type, enable_sigsegv_handler=False, **kwargs):
+  def __init__(self, enable_sigsegv_handler=False, **kwargs):
     """Initializes the process object.
 
     Args:
-      process_type (str): process type.
       enable_sigsegv_handler (bool): True if the SIGSEGV handler should
                                      be enabled.
       kwargs: keyword arguments to pass to multiprocessing.Process.
@@ -78,7 +82,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._pid = None
     self._rpc_server = None
     self._status_is_running = False
-    self._type = process_type
 
     # We need to share the RPC port number with the engine process.
     self.rpc_port = multiprocessing.Value(u'I', 0)
@@ -200,11 +203,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   def name(self):
     """The process name."""
     return self._name
-
-  @property
-  def type(self):
-    """The process type."""
-    return self._type
 
   # This method is part of the multiprocessing.Process interface hence
   # its name does not follow the style guide.
@@ -360,7 +358,7 @@ class MultiProcessEngine(engine.BaseEngine):
     a replacement process is started.
 
     Args:
-      pid (int): a process ID (PID).
+      pid (int): process ID (PID) of a registered worker process.
 
     Raises:
       EngineAbort: when the collector or storage worker process
@@ -405,7 +403,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
       process_status = {
           u'processing_status': processing_status_string,
-          u'type': process.type,
       }
 
     if status_indicator == definitions.PROCESSING_STATUS_ERROR:
@@ -437,14 +434,12 @@ class MultiProcessEngine(engine.BaseEngine):
       self._StartMonitoringProcess(worker_process.pid)
 
     elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
-      if process.type == definitions.PROCESS_TYPE_WORKER:
-        number_of_events = process_status.get(u'number_of_events', 0)
-        number_of_pathspecs = process_status.get(
-            u'consumed_number_of_path_specs', 0)
-        logging.debug((
-            u'Process {0:s} (PID: {1:d}) has completed its processing. '
-            u'Total of {2:d} events extracted from {3:d} pathspecs').format(
-                process.name, pid, number_of_events, number_of_pathspecs))
+      number_of_events = process_status.get(u'number_of_events', 0)
+      number_of_sources = process_status.get(u'number_of_consumed_sources', 0)
+      logging.debug((
+          u'Process {0:s} (PID: {1:d}) has completed its processing. '
+          u'Total of {2:d} events extracted from {3:d} sources').format(
+              process.name, pid, number_of_events, number_of_sources))
 
       self._StopMonitoringProcess(pid)
 
@@ -452,11 +447,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._LogMemoryUsage(pid)
 
   def _CheckStatusWorkerProcesses(self):
-    """Checks status of the worker processes.
-
-    Raises:
-      EngineAbort: when all the worker are idle.
-    """
+    """Checks status of the worker processes."""
     for pid in iter(self._process_information_per_pid.keys()):
       self._CheckStatusWorkerProcess(pid)
 
@@ -543,7 +534,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
-    """Processes the sources and extracts event objects.
+    """Processes the sources.
 
     Args:
       source_path_specs: a list of path specifications (instances of
@@ -597,6 +588,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._new_event_sources = False
       self._StartCollectorThread()
 
+      # TODO: re-implement abort path on workers idle (raise EngineAbort).
       # TODO: change status check.
       self._CheckStatusWorkerProcesses()
 
@@ -812,9 +804,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue not to be full.
-    if self._use_zeromq:
-      logging.debug(u'Closing ZeroMQ storage queues.')
-    else:
+    if not self._use_zeromq:
       logging.debug(u'Emptying queues.')
       self._task_queue.Empty()
 
@@ -900,8 +890,8 @@ class MultiProcessEngine(engine.BaseEngine):
     """Updates the processing status.
 
     Args:
-      pid (int): process identifier (PID).
-      process_status (dict): process status values.
+      pid (int): process identifier (PID) of the worker process.
+      process_status (dict): status values received from the worker process.
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -913,26 +903,24 @@ class MultiProcessEngine(engine.BaseEngine):
 
     process = self._processes_per_pid[pid]
 
-    process_type = process_status.get(u'type', None)
     processing_status = process_status.get(u'processing_status', None)
 
-    if process_type == definitions.PROCESS_TYPE_WORKER:
-      self._RaiseIfNotMonitored(pid)
+    self._RaiseIfNotMonitored(pid)
 
-      consumed_number_of_events = process_status.get(
-          u'consumed_number_of_events', 0)
-      consumed_number_of_sources = process_status.get(
-          u'consumed_number_of_sources', 0)
-      display_name = process_status.get(u'display_name', u'')
-      produced_number_of_events = process_status.get(
-          u'produced_number_of_events', 0)
-      produced_number_of_sources = process_status.get(
-          u'produced_number_of_sources', 0)
+    number_of_consumed_events = process_status.get(
+        u'number_of_consumed_events', 0)
+    number_of_consumed_sources = process_status.get(
+        u'number_of_consumed_sources', 0)
+    display_name = process_status.get(u'display_name', u'')
+    produced_number_of_events = process_status.get(
+        u'produced_number_of_events', 0)
+    produced_number_of_sources = process_status.get(
+        u'produced_number_of_sources', 0)
 
-      self._processing_status.UpdateWorkerStatus(
-          process.name, u'Extracting', pid, processing_status, display_name,
-          consumed_number_of_sources, produced_number_of_sources,
-          consumed_number_of_events, produced_number_of_events)
+    self._processing_status.UpdateWorkerStatus(
+        process.name, u'Extracting', pid, processing_status, display_name,
+        number_of_consumed_sources, produced_number_of_sources,
+        number_of_consumed_events, produced_number_of_events)
 
   def _UpdateStatus(self):
     """Updates the processing status."""
@@ -1158,7 +1146,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     self._enable_debug_output = enable_debug_output
     self._extraction_worker = None
     self._knowledge_base = knowledge_base
-    self._number_of_consumed_path_specs = 0
+    self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
@@ -1193,8 +1181,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
 
     # TODO: add number of consumed events.
     status = {
-        u'consumed_number_of_events': 0,
-        u'consumed_number_of_sources': self._number_of_consumed_path_specs,
+        u'number_of_consumed_events': 0,
+        u'number_of_consumed_sources': self._number_of_consumed_sources,
         u'display_name': self._extraction_worker.current_display_name,
         u'identifier': self._name,
         u'processing_status': self._status,
@@ -1234,7 +1222,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       # TODO: add support for more task types.
       self._extraction_worker.ProcessPathSpec(
           self._parser_mediator, task.path_spec)
-      self._number_of_consumed_path_specs += 1
+      self._number_of_consumed_sources += 1
 
       # TODO: on abort use WriteTaskAborted instead of completion?
       storage_writer.WriteTaskCompletion()

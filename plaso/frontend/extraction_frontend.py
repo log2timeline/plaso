@@ -489,7 +489,6 @@ class ExtractionFrontend(frontend.Frontend):
       else:
         logging.debug(u'Starting extraction in multi process mode.')
 
-        # TODO: pass number_of_extraction_workers.
         processing_status = self._engine.ProcessSources(
             source_path_specs, session_start, preprocess_object,
             storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,

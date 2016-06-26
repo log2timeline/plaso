@@ -243,12 +243,16 @@ class EventExtractionWorker(object):
 
     return False
 
-  def _ProcessArchiveFile(self, parser_mediator, file_entry):
+  def _ProcessArchiveFile(
+      self, parser_mediator, file_entry, data_stream_name=u''):
     """Processes an archive file (file that contains file entries).
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry of the archive file.
+      data_stream_name (str): data stream name of the archive file.
+          The default is an empty string which represents the default
+          data stream.
 
     Returns:
       A boolean indicating if the file is an archive file.
@@ -320,12 +324,16 @@ class EventExtractionWorker(object):
 
     return True
 
-  def _ProcessCompressedStreamFile(self, parser_mediator, file_entry):
+  def _ProcessCompressedStreamFile(
+      self, parser_mediator, file_entry, data_stream_name=u''):
     """Processes an compressed stream file (file that contains file entries).
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry of the compressed stream file.
+      data_stream_name (str): data stream name of the archive file.
+          The default is an empty string which represents the default
+          data stream.
 
     Returns:
       A boolean indicating if the file is a compressed stream file.
@@ -392,10 +400,9 @@ class EventExtractionWorker(object):
           continue
 
       except dfvfs_errors.BackEndError as exception:
-        logging.warning(
-            u'Unable to process file: {0:s} with error: {1:s}'.format(
-                sub_file_entry.path_spec.comparable.replace(
-                    u'\n', u';'), exception))
+        logging.warning((
+            u'Unable to process directory entry: {0:s} with error: '
+            u'{1:s}').format(self._current_display_name, exception))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
@@ -503,9 +510,10 @@ class EventExtractionWorker(object):
     is_compressed_stream = False
     if has_data_stream:
       is_compressed_stream = self._ProcessCompressedStreamFile(
-          parser_mediator, file_entry)
+          parser_mediator, file_entry, data_stream_name=data_stream_name)
       if not is_compressed_stream:
-        is_archive = self._ProcessArchiveFile(parser_mediator, file_entry)
+        is_archive = self._ProcessArchiveFile(
+            parser_mediator, file_entry, data_stream_name=data_stream_name)
 
     if has_data_stream and not is_archive and not is_compressed_stream:
       self._event_extractor.ParseDataStream(
@@ -580,7 +588,7 @@ class EventExtractionWorker(object):
       if file_entry is None:
         logging.warning(
             u'Unable to open file entry with path spec: {0:s}'.format(
-                path_spec.comparable))
+                self._current_display_name))
         return
 
       self._ProcessFileEntry(parser_mediator, file_entry)
@@ -588,21 +596,21 @@ class EventExtractionWorker(object):
     except IOError as exception:
       logging.warning(
           u'Unable to process path spec: {0:s} with error: {1:s}'.format(
-              path_spec.comparable, exception))
+              self._current_display_name, exception))
 
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
       logging.error((
           u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(path_spec.comparable))
+          u'path spec: {0:s}').format(self._current_display_name))
 
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception while processing path spec: {0:s}.'.format(
-              path_spec.comparable))
+              self._current_display_name))
       logging.exception(exception)
 
       if self._enable_debug_mode:

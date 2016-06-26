@@ -33,17 +33,17 @@ class SingleProcessEngine(engine.BaseEngine):
   def _ProcessSources(
       self, source_path_specs, resolver_context, extraction_worker,
       parser_mediator, storage_writer, filter_find_specs=None):
-    """Processes the sources and extracts event objects.
+    """Processes the sources.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]):
-          path specifications of the sources to process.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
       resolver_context (dfvfs.Context): resolver context.
       extraction_worker (worker.ExtractionWorker): extraction worker.
       parser_mediator (ParserMediator): parser mediator.
-      storage_writer (StorageWriter): storage writer.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]):
-          filter find specifications.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
 
     Returns:
       str: processing status.
@@ -55,7 +55,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    produced_number_of_sources = 0
+    number_of_collected_sources = 0
+    number_of_consumed_sources = 0
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
@@ -67,16 +68,15 @@ class SingleProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      produced_number_of_sources += 1
+      number_of_collected_sources += 1
 
       self._processing_status.UpdateForemanStatus(
           u'Main', u'Collecting', self._pid,
-          definitions.PROCESSING_STATUS_RUNNING, u'', 0,
-          produced_number_of_sources, 0, 0)
+          definitions.PROCESSING_STATUS_RUNNING, u'',
+          number_of_consumed_sources, number_of_collected_sources, 0, 0)
       self._UpdateStatus()
 
     new_event_sources = True
-    number_of_consumed_sources = 0
     while new_event_sources:
       if self._abort:
         break
@@ -97,7 +97,7 @@ class SingleProcessEngine(engine.BaseEngine):
         number_of_consumed_sources += 1
 
         number_of_produced_sources = (
-            produced_number_of_sources +
+            number_of_collected_sources +
             parser_mediator.number_of_produced_event_sources)
 
         self._processing_status.UpdateForemanStatus(
@@ -117,7 +117,7 @@ class SingleProcessEngine(engine.BaseEngine):
       process_status = definitions.PROCESSING_STATUS_COMPLETED
 
     number_of_produced_sources = (
-        produced_number_of_sources +
+        number_of_collected_sources +
         parser_mediator.number_of_produced_event_sources)
 
     self._processing_status.UpdateForemanStatus(
@@ -147,7 +147,7 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_object=None, hasher_names_string=None, mount_path=None,
       parser_filter_expression=None, process_archive_files=False,
       profiling_type=u'all', status_update_callback=None, text_prepend=None):
-    """Processes the sources and extracts event objects.
+    """Processes the sources.
 
     Args:
       source_path_specs: a list of path specifications (instances of

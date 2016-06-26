@@ -3142,6 +3142,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
   def CreateTaskStorage(self, task_name):
     """Creates a task storage.
 
+    The task storage is used to store attributes created by the task.
+
     Args:
       task_name (str): unique name of the task.
 
@@ -3150,10 +3152,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does no exist.
+               if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unupported storage type.')
+      raise IOError(u'Unsupported storage type.')
 
     if not self._task_storage_path:
       raise IOError(u'Missing task storage path.')
@@ -3208,10 +3210,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does no exist.
+               if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unupported storage type.')
+      raise IOError(u'Unsupported storage type.')
 
     if not self._task_storage_path:
       raise IOError(u'Missing task storage path.')
@@ -3260,10 +3262,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does no exist.
+               if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unupported storage type.')
+      raise IOError(u'Unsupported storage type.')
 
     if not self._task_storage_path:
       raise IOError(u'Missing task storage path.')
@@ -3284,7 +3286,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
                if the temporary path for the task storage already exists.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unupported storage type.')
+      raise IOError(u'Unsupported storage type.')
 
     if self._task_storage_path:
       raise IOError(u'Task storage path already exists.')
@@ -3301,10 +3303,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does no exist.
+               if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unupported storage type.')
+      raise IOError(u'Unsupported storage type.')
 
     if not self._task_storage_path:
       raise IOError(u'Missing task storage path.')
