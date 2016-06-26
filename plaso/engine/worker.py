@@ -243,21 +243,18 @@ class EventExtractionWorker(object):
 
     return False
 
-  def _ProcessArchiveFile(
-      self, parser_mediator, file_entry, data_stream_name=u''):
+  def _ProcessArchiveFile(self, parser_mediator, file_entry):
     """Processes an archive file (file that contains file entries).
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry of the archive file.
-      data_stream_name (str): data stream name of the archive file.
-          The default is an empty string which represents the default
-          data stream.
 
     Returns:
       A boolean indicating if the file is an archive file.
     """
     try:
+      # TODO: pass data stream name.
       type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
           file_entry.path_spec, resolver_context=self._resolver_context)
     except IOError as exception:
@@ -324,21 +321,18 @@ class EventExtractionWorker(object):
 
     return True
 
-  def _ProcessCompressedStreamFile(
-      self, parser_mediator, file_entry, data_stream_name=u''):
+  def _ProcessCompressedStreamFile(self, parser_mediator, file_entry):
     """Processes an compressed stream file (file that contains file entries).
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry of the compressed stream file.
-      data_stream_name (str): data stream name of the archive file.
-          The default is an empty string which represents the default
-          data stream.
 
     Returns:
       A boolean indicating if the file is a compressed stream file.
     """
     try:
+      # TODO: pass data stream name.
       type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
           file_entry.path_spec, resolver_context=self._resolver_context)
     except IOError as exception:
@@ -509,11 +503,12 @@ class EventExtractionWorker(object):
     is_archive = False
     is_compressed_stream = False
     if has_data_stream:
+      # TODO: pass data stream name.
       is_compressed_stream = self._ProcessCompressedStreamFile(
-          parser_mediator, file_entry, data_stream_name=data_stream_name)
+          parser_mediator, file_entry)
       if not is_compressed_stream:
-        is_archive = self._ProcessArchiveFile(
-            parser_mediator, file_entry, data_stream_name=data_stream_name)
+        # TODO: pass data stream name.
+        is_archive = self._ProcessArchiveFile(parser_mediator, file_entry)
 
     if has_data_stream and not is_archive and not is_compressed_stream:
       self._event_extractor.ParseDataStream(
