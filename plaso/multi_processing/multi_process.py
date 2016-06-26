@@ -1138,8 +1138,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
                     event object.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(MultiProcessWorkerProcess, self).__init__(
-        definitions.PROCESS_TYPE_WORKER, **kwargs)
+    super(MultiProcessWorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
     self._critical_error = False
@@ -1187,8 +1186,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
         u'identifier': self._name,
         u'processing_status': self._status,
         u'produced_number_of_events': number_of_produced_events,
-        u'produced_number_of_sources': number_of_produced_sources,
-        u'type': definitions.PROCESS_TYPE_WORKER}
+        u'produced_number_of_sources': number_of_produced_sources}
 
     if self._critical_error:
       # Note seem unable to pass objects here.
