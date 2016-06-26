@@ -120,46 +120,38 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
-  def _FormatStatusTableRow(self, worker_status):
+  def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
 
     Args:
-      worker_status: a worker status object (instance of WorkerStatus).
+      process_status (ProcessStatus): processing status.
     """
     # This check makes sure the columns are tab aligned.
-    identifier = worker_status.identifier
+    identifier = process_status.identifier
     if len(identifier) < 8:
       identifier = u'{0:s}\t'.format(identifier)
 
-    status = worker_status.status
-    if (worker_status.process_status and
-        worker_status.number_of_produced_events_delta == 0 and
-        status in (
-            definitions.PROCESSING_STATUS_RUNNING,
-            definitions.PROCESSING_STATUS_HASHING,
-            definitions.PROCESSING_STATUS_PARSING)):
-      status = worker_status.process_status
-
+    status = process_status.status
     if len(status) < 8:
       status = u'{0:s}\t'.format(status)
 
     sources = u''
-    if (worker_status.number_of_produced_sources is not None and
-        worker_status.number_of_produced_sources_delta is not None):
+    if (process_status.number_of_produced_sources is not None and
+        process_status.number_of_produced_sources_delta is not None):
       sources = u'{0:d} ({1:d})'.format(
-          worker_status.number_of_produced_sources,
-          worker_status.number_of_produced_sources_delta)
+          process_status.number_of_produced_sources,
+          process_status.number_of_produced_sources_delta)
 
     # This check makes sure the columns are tab aligned.
     if len(sources) < 8:
       sources = u'{0:s}\t'.format(sources)
 
     events = u''
-    if (worker_status.number_of_produced_events is not None and
-        worker_status.number_of_produced_events_delta is not None):
+    if (process_status.number_of_produced_events is not None and
+        process_status.number_of_produced_events_delta is not None):
       events = u'{0:d} ({1:d})'.format(
-          worker_status.number_of_produced_events,
-          worker_status.number_of_produced_events_delta)
+          process_status.number_of_produced_events,
+          process_status.number_of_produced_events_delta)
 
     # This check makes sure the columns are tab aligned.
     if len(events) < 8:
@@ -167,8 +159,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # TODO: shorten display name to fit in 80 chars and show the filename.
     return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
-        identifier, worker_status.pid, status, sources, events,
-        worker_status.display_name)
+        identifier, process_status.pid, status, sources, events,
+        process_status.display_name)
 
   def _GetMatcher(self, filter_expression):
     """Retrieves a filter object for a specific filter expression.
@@ -249,7 +241,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Prints the processing status.
 
     Args:
-      processing_status: the processing status (instance of ProcessingStatus).
+      processing_status (ProcessingStatus): processing status.
     """
     if self._stdout_output_writer:
       self._ClearScreen()
@@ -280,11 +272,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write(u'\n'.join(status_table))
     self._output_writer.Write(u'\n')
 
-    if processing_status.GetExtractionCompleted():
-      self._output_writer.Write(
-          u'All extraction workers completed - waiting for storage.\n')
-      self._output_writer.Write(u'\n')
-
     # TODO: remove update flicker. For win32console we could set the cursor
     # top left, write the table, clean the remainder of the screen buffer
     # and set the cursor at the end of the table.
@@ -298,24 +285,19 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Args:
       processing_status: the processing status (instance of ProcessingStatus).
     """
-    if processing_status.GetExtractionCompleted():
-      self._output_writer.Write(
-          u'All extraction workers completed - waiting for storage.\n')
-
-    else:
-      for worker_status in processing_status.workers_status:
-        status = worker_status.status
-        self._output_writer.Write((
-            u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
-            u'- running: {4!s} <{5:s}>\n').format(
-                worker_status.identifier,
-                worker_status.pid,
-                worker_status.number_of_produced_events,
-                worker_status.display_name,
-                status in [definitions.PROCESSING_STATUS_RUNNING,
-                           definitions.PROCESSING_STATUS_HASHING,
-                           definitions.PROCESSING_STATUS_PARSING],
-                worker_status.process_status))
+    for worker_status in processing_status.workers_status:
+      status = worker_status.status
+      status_line = (
+          u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
+          u'- running: {4!s}\n').format(
+              worker_status.identifier, worker_status.pid,
+              worker_status.number_of_produced_events,
+              worker_status.display_name,
+              worker_status.status in (
+                  definitions.PROCESSING_STATUS_ANALYZING,
+                  definitions.PROCESSING_STATUS_EXTRACTING,
+                  definitions.PROCESSING_STATUS_HASHING))
+      self._output_writer.Write(status_line)
 
   def AddExperimentalOptions(self, argument_group):
     """Adds experimental options to the argument group

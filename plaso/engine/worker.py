@@ -14,6 +14,7 @@ from plaso.containers import event_sources
 from plaso.engine import extractors
 from plaso.engine import profiler
 from plaso.hashers import manager as hashers_manager
+from plaso.lib import definitions
 
 
 class EventExtractionWorker(object):
@@ -26,6 +27,10 @@ class EventExtractionWorker(object):
   The event extraction worker needs to determine if a parser suitable
   for parsing a particular file entry or data stream is available. All
   extracted event objects are pushed on a storage queue for further processing.
+
+  Attributes:
+    processing_status (str): human readable status indication e.g. 'Hashing',
+                             'Extracting'.
   """
 
   _DEFAULT_HASH_READ_SIZE = 4096
@@ -102,6 +107,8 @@ class EventExtractionWorker(object):
     self._profiling_sample = 0
     self._profiling_sample_rate = 1000
     self._resolver_context = resolver_context
+
+    self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
   def _CanSkipContentExtraction(self, file_entry):
     """Determines if content extraction of a file entry can be skipped.
@@ -195,6 +202,8 @@ class EventExtractionWorker(object):
     if not self._hasher_names:
       return
 
+    self.processing_status = definitions.PROCESSING_STATUS_HASHING
+
     logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
 
@@ -227,6 +236,8 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[HashDataStream] completed hashing file: {0:s}'.format(
             self._current_display_name))
+
+    self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
   def _IsMetadataFile(self, file_entry):
     """Determines if the file entry is a metadata file.
@@ -497,7 +508,11 @@ class EventExtractionWorker(object):
           self._current_display_name))
       return
 
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
     if file_entry.IsDirectory() and not data_stream_name:
+      self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
+
       self._ProcessDirectory(parser_mediator, file_entry)
 
     is_archive = False
@@ -511,8 +526,12 @@ class EventExtractionWorker(object):
         is_archive = self._ProcessArchiveFile(parser_mediator, file_entry)
 
     if has_data_stream and not is_archive and not is_compressed_stream:
+      self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
       self._event_extractor.ParseDataStream(
           parser_mediator, file_entry, data_stream_name=data_stream_name)
+
+    self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""

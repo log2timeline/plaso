@@ -49,8 +49,8 @@ class SingleProcessEngine(engine.BaseEngine):
       str: processing status.
     """
     self._processing_status.UpdateForemanStatus(
-        u'Main', u'Initializing', self._pid,
-        definitions.PROCESSING_STATUS_RUNNING, u'', 0, 0, 0, 0)
+        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
+        0, 0, 0, 0)
     self._UpdateStatus()
 
     path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
@@ -71,8 +71,7 @@ class SingleProcessEngine(engine.BaseEngine):
       number_of_collected_sources += 1
 
       self._processing_status.UpdateForemanStatus(
-          u'Main', u'Collecting', self._pid,
-          definitions.PROCESSING_STATUS_RUNNING, u'',
+          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
           number_of_consumed_sources, number_of_collected_sources, 0, 0)
       self._UpdateStatus()
 
@@ -101,8 +100,7 @@ class SingleProcessEngine(engine.BaseEngine):
             parser_mediator.number_of_produced_event_sources)
 
         self._processing_status.UpdateForemanStatus(
-            u'Main', u'Extracting', self._pid,
-            definitions.PROCESSING_STATUS_RUNNING,
+            u'Main', definitions.PROCESSING_STATUS_EXTRACTING, self._pid,
             extraction_worker.current_display_name,
             number_of_consumed_sources, number_of_produced_sources,
             storage_writer.number_of_events,
@@ -110,18 +108,16 @@ class SingleProcessEngine(engine.BaseEngine):
         self._UpdateStatus()
 
     if self._abort:
-      status = u'Aborted'
-      process_status = definitions.PROCESSING_STATUS_ABORTED
+      status = definitions.PROCESSING_STATUS_ABORTED
     else:
-      status = u'Completed'
-      process_status = definitions.PROCESSING_STATUS_COMPLETED
+      status = definitions.PROCESSING_STATUS_COMPLETED
 
     number_of_produced_sources = (
         number_of_collected_sources +
         parser_mediator.number_of_produced_event_sources)
 
     self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, process_status, u'',
+        u'Main', status, self._pid, u'',
         number_of_consumed_sources, number_of_produced_sources,
         storage_writer.number_of_events,
         parser_mediator.number_of_produced_events)

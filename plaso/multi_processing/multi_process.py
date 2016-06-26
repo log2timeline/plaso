@@ -412,13 +412,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateProcessingStatus(pid, process_status)
 
-    if status_indicator not in (
-        definitions.PROCESSING_STATUS_COMPLETED,
-        definitions.PROCESSING_STATUS_INITIALIZED,
-        definitions.PROCESSING_STATUS_RUNNING,
-        definitions.PROCESSING_STATUS_PARSING,
-        definitions.PROCESSING_STATUS_HASHING):
-
+    if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error(
           (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
            u'Status code {2!s}.').format(
@@ -542,18 +536,18 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer: a storage writer object (instance of StorageWriter).
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
-
-    Returns:
-      A string containing the processing status.
     """
+    self._number_of_consumed_sources = 0
+    number_of_produced_sources = 0
+
     self._processing_status.UpdateForemanStatus(
-        u'Main', u'Initializing', self._pid,
-        definitions.PROCESSING_STATUS_RUNNING, u'', 0, 0, 0, 0)
+        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
+        self._number_of_consumed_sources, number_of_produced_sources,
+        storage_writer.number_of_events, storage_writer.number_of_event_sources)
     self._UpdateStatus()
 
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
 
-    produced_number_of_sources = 0
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
@@ -565,16 +559,16 @@ class MultiProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      produced_number_of_sources += 1
+      number_of_produced_sources += 1
 
       self._processing_status.UpdateForemanStatus(
-          u'Main', u'Collecting', self._pid,
-          definitions.PROCESSING_STATUS_RUNNING, u'', 0,
-          produced_number_of_sources, 0, 0)
+          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
+          self._number_of_consumed_sources, number_of_produced_sources,
+          storage_writer.number_of_events,
+          storage_writer.number_of_event_sources)
       self._UpdateStatus()
 
     self._new_event_sources = True
-    self._number_of_consumed_sources = 0
     while self._new_event_sources:
       if self._abort:
         return
@@ -601,10 +595,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
       while self._collector_active or len(self._tasks):
         self._processing_status.UpdateForemanStatus(
-            u'Main', u'Storage', self._pid,
-            definitions.PROCESSING_STATUS_RUNNING, u'',
-            self._number_of_consumed_sources, produced_number_of_sources,
-            0, 0)
+            u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
+            self._number_of_consumed_sources, number_of_produced_sources,
+            storage_writer.number_of_events,
+            storage_writer.number_of_event_sources)
         self._CheckStatusWorkerProcesses()
         self._UpdateStatus()
 
@@ -621,28 +615,23 @@ class MultiProcessEngine(engine.BaseEngine):
       self._StopCollectorThread()
 
       self._processing_status.UpdateForemanStatus(
-          u'Main', u'Idle', self._pid,
-          definitions.PROCESSING_STATUS_RUNNING,
-          u'',
-          self._number_of_consumed_sources, produced_number_of_sources,
-          0, 0)
+          u'Main', definitions.PROCESSING_STATUS_IDLE, self._pid, u'',
+          self._number_of_consumed_sources, number_of_produced_sources,
+          storage_writer.number_of_events,
+          storage_writer.number_of_event_sources)
       self._CheckStatusWorkerProcesses()
       self._UpdateStatus()
 
     if self._abort:
-      status = u'Aborted'
-      process_status = definitions.PROCESSING_STATUS_ABORTED
+      status = definitions.PROCESSING_STATUS_ABORTED
     else:
-      status = u'Completed'
-      process_status = definitions.PROCESSING_STATUS_COMPLETED
+      status = definitions.PROCESSING_STATUS_COMPLETED
 
     self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, process_status, u'',
-        self._number_of_consumed_sources, produced_number_of_sources,
-        0, 0)
+        u'Main', status, self._pid, u'',
+        self._number_of_consumed_sources, number_of_produced_sources,
+        storage_writer.number_of_events, storage_writer.number_of_event_sources)
     self._UpdateStatus()
-
-    return process_status
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.
@@ -917,15 +906,15 @@ class MultiProcessEngine(engine.BaseEngine):
     number_of_consumed_sources = process_status.get(
         u'number_of_consumed_sources', 0)
     display_name = process_status.get(u'display_name', u'')
-    produced_number_of_events = process_status.get(
-        u'produced_number_of_events', 0)
-    produced_number_of_sources = process_status.get(
-        u'produced_number_of_sources', 0)
+    number_of_produced_events = process_status.get(
+        u'number_of_produced_events', 0)
+    number_of_produced_sources = process_status.get(
+        u'number_of_produced_sources', 0)
 
     self._processing_status.UpdateWorkerStatus(
-        process.name, u'Extracting', pid, processing_status, display_name,
-        number_of_consumed_sources, produced_number_of_sources,
-        number_of_consumed_events, produced_number_of_events)
+        process.name, processing_status, pid, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events)
 
   def _UpdateStatus(self):
     """Updates the processing status."""
@@ -1047,7 +1036,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._storage_writer.WriteSessionStart(session_start)
 
     # TODO: change in phased processing refactor.
-    _ = self._ProcessSources(
+    self._ProcessSources(
         source_path_specs, self._storage_writer,
         filter_find_specs=filter_find_specs)
 
@@ -1183,15 +1172,19 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       number_of_produced_events = 0
       number_of_produced_sources = 0
 
+    processing_status = self._extraction_worker.processing_status
+    if processing_status == definitions.PROCESSING_STATUS_IDLE:
+      processing_status = self._status
+
     # TODO: add number of consumed events.
     status = {
         u'number_of_consumed_events': 0,
         u'number_of_consumed_sources': self._number_of_consumed_sources,
         u'display_name': self._extraction_worker.current_display_name,
         u'identifier': self._name,
-        u'processing_status': self._status,
-        u'produced_number_of_events': number_of_produced_events,
-        u'produced_number_of_sources': number_of_produced_sources}
+        u'processing_status': processing_status,
+        u'number_of_produced_events': number_of_produced_events,
+        u'number_of_produced_sources': number_of_produced_sources}
 
     if self._critical_error:
       # Note seem unable to pass objects here.
