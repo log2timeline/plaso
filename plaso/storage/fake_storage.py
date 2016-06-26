@@ -199,7 +199,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError(u'Session completion not supported by storage type.')
 
     self.session_completion = sessions.SessionCompletion(
-        self._session_identifier)
+        identifier=self._session_identifier)
 
   def WriteSessionStart(self, session_start):
     """Writes session start information.
