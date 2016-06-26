@@ -228,8 +228,8 @@ class _SerializedEventsHeap(object):
     """Pushes a serialized event onto the heap.
 
     Args:
-      timestamp (int): number of micro seconds since January 1, 1970,
-                       00:00:00 UTC.
+      timestamp (int): event timestamp. Contains the number of micro seconds
+                       since January 1, 1970, 00:00:00 UTC.
       event_data (bytes): serialized event data.
     """
     heap_values = (timestamp, event_data)
@@ -1200,7 +1200,8 @@ class ZIPStorageFile(interface.BaseStorage):
     from each stream.
 
     Args:
-      time_range: an optional time range object (instance of TimeRange).
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
     """
     if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_timestamps'
@@ -1497,10 +1498,9 @@ class ZIPStorageFile(interface.BaseStorage):
   def _GetSortedEvent(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
-    The time range is used to filter events that fall in a specific period.
-
     Args:
-      time_range (Optional[TimeRange]): time range.
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
     Returns:
       EventObject: event.
@@ -2556,10 +2556,9 @@ class ZIPStorageFile(interface.BaseStorage):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
-    The time range is used to filter events that fall in a specific period.
-
     Args:
-      time_range (Optional[TimeRange]): time range.
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
     Returns:
       EventObject: event.
@@ -2948,10 +2947,9 @@ class ZIPStorageFileReader(interface.StorageReader):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
-    The time range is used to filter events that fall in a specific period.
-
     Args:
-      time_range (Optional[TimeRange]): time range.
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
     Returns:
       EventObject: event.

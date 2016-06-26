@@ -30,19 +30,19 @@ class EventExtractor(object):
   def __init__(self, resolver_context, parser_filter_expression=None):
     """Initializes an event extractor object.
 
-    The parser filter expression is a comma separated value string that
-    denotes a list of parser names to include and/or exclude. Each entry
-    can have the value of:
-
-    * An exact match of a list of parsers, or a preset (see
-      plaso/frontend/presets.py for a full list of available presets).
-    * A name of a single parser (case insensitive), e.g. msiecf.
-    * A glob name for a single parser, e.g. '*msie*' (case insensitive).
-
     Args:
       resolver_context (dfvfs.Context): resolver context.
       parser_filter_expression (Optional[str]): the parser filter expression.
           None represents all parsers and plugins.
+
+          The parser filter expression is a comma separated value string that
+          denotes a list of parser names to include and/or exclude. Each entry
+          can have the value of:
+
+          * An exact match of a list of parsers, or a preset (see
+            plaso/frontend/presets.py for a full list of available presets).
+          * A name of a single parser (case insensitive), e.g. msiecf.
+          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """
     super(EventExtractor, self).__init__()
     self._file_scanner = None
@@ -300,7 +300,8 @@ class EventExtractor(object):
     """Starts the profiling.
 
     Args:
-      identifier (str): profiling identifier.
+      identifier (str): identifier of the profiling session e.g.
+                        the name of the worker process.
 
     Raises:
       ValueError: if the parsers profiler is already set.
@@ -339,7 +340,7 @@ class PathSpecExtractor(object):
     Args:
       resolver_context (dfvfs.Context): resolver context.
       duplicate_file_check (Optional[bool]):
-          True if duplicate files shoudl be ignored.
+          True if duplicate files should be ignored.
     """
     super(PathSpecExtractor, self).__init__()
     self._duplicate_file_check = duplicate_file_check
@@ -390,9 +391,10 @@ class PathSpecExtractor(object):
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
-      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications.
-      recurse_file_system (Optional[bool]):
-          True if extraction should recurse into a file system.
+      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
+      recurse_file_system (Optional[bool]): True if extraction should
+          recurse into a file system.
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the source.

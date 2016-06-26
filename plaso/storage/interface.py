@@ -51,7 +51,7 @@ class BaseStorage(object):
     """Enables profiling.
 
     Args:
-      profiling_type (str): type of profiling to enable.
+      profiling_type (Optional[str]): type of profiling to enable.
     """
     if (profiling_type in (u'all', u'serializers') and
         not self._serializers_profiler):
@@ -69,10 +69,9 @@ class BaseStorage(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
-    The time range is used to filter events that fall in a specific period.
-
     Args:
-      time_range (Optional[TimeRange]): time range.
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
     Returns:
       EventObject: event.
@@ -150,10 +149,9 @@ class StorageReader(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
-    The time range is used to filter events that fall in a specific period.
-
     Args:
-      time_range (Optional[TimeRange]): time range.
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
     Returns:
       EventObject: event.

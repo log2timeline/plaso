@@ -11,12 +11,11 @@ class TaskCompletion(interface.AttributeContainer):
   """Class to represent a task completion attribute container.
 
   Attributes:
-    identifier: a string containing the identifier of the task.
-    session_identifier: a string containing the identifier of the session
-                        the task is part of.
-    timestamp: an integer containing a timestamp of the start of the
-               task. The integer represents the number of micro seconds
-               since January 1, 1970, 00:00:00 UTC.
+    identifier (str): unique identifier of the task.
+    session_identifier (str): the identifier of the session the task
+                              is part of.
+    timestamp (int): time that the task was completed. Contains the number
+                     of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'task_completion'
 
@@ -24,7 +23,7 @@ class TaskCompletion(interface.AttributeContainer):
     """Initializes a task completion attribute container.
 
     Args:
-      identifier (Optional[str]): identifier of the task.
+      identifier (Optional[str]): unique identifier of the task.
           The identifier should match that of the corresponding
           task start information.
       session_identifier (Optional[str]): identifier of the session the task
@@ -40,12 +39,11 @@ class TaskStart(interface.AttributeContainer):
   """Class to represent a task start attribute container.
 
   Attributes:
-    identifier: a string containing the identifier of the task.
-    session_identifier: a string containing the identifier of the session
-                        the task is part of.
-    timestamp: an integer containing a timestamp of the start of the
-               task. The integer represents the number of micro seconds
-               since January 1, 1970, 00:00:00 UTC.
+    identifier (str): unique identifier of the task.
+    session_identifier (str): the identifier of the session the task
+                              is part of.
+    timestamp (int): time that the task was started. Contains the number
+                     of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'task_start'
 

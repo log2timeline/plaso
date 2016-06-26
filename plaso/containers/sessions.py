@@ -12,12 +12,12 @@ class SessionCompletion(interface.AttributeContainer):
   """Class to represent a session completion attribute container.
 
   Attributes:
-    identifier (str): identifier of the session.
+    identifier (str): unique identifier of the session.
     parsers_counter (collections.Counter): number of events per parser.
     parser_plugins_counter (collections.Counter): number of events per parser
                                                   plugin.
-    timestamp (int): number of micro seconds since January 1, 1970,
-                     00:00:00 UTC.
+    timestamp (int): time that the session was completed. Contains the number
+                     of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'session_completion'
 
@@ -25,7 +25,7 @@ class SessionCompletion(interface.AttributeContainer):
     """Initializes a session completion attribute container.
 
     Args:
-      identifier (Optional[str]): identifier of the session.
+      identifier (Optional[str]): unique identifier of the session.
           The identifier should match that of the corresponding
           session start information.
     """
@@ -44,13 +44,14 @@ class SessionStart(interface.AttributeContainer):
     debug_mode (bool): True if debug mode was enabled.
     filter_expression (str): filter expression.
     filter_file (str): path to a file with find specifications.
-    identifier (str): identifier of the session.
+    identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
     preferred_encoding (str): preferred encoding.
-    product_name (str): name of the product that created the session.
+    product_name (str): name of the product that created the session
+                        e.g. 'log2timeline'.
     product_version (str): version of the product that created the session.
-    timestamp (int): number of micro seconds since January 1, 1970,
-                     00:00:00 UTC.
+    timestamp (int): time that the session was started. Contains the number
+                     of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'session_start'
 
