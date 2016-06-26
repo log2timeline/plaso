@@ -155,11 +155,11 @@ class PreprocessObjectSerializer(object):
     """
 
   @abc.abstractmethod
-  def WriteSerialized(cls, pre_obj):
+  def WriteSerialized(cls, preprocess_object):
     """Writes a preprocessing object to serialized form.
 
     Args:
-      pro_obj: a preprocessing object (instance of PreprocessObject).
+      preprocess_object: a preprocessing object (instance of PreprocessObject).
 
     Returns:
       An object containing the serialized form.
