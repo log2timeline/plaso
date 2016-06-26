@@ -133,7 +133,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     status = worker_status.status
     if (worker_status.process_status and
-        worker_status.number_of_events_delta == 0 and
+        worker_status.number_of_produced_events_delta == 0 and
         status in (
             definitions.PROCESSING_STATUS_RUNNING,
             definitions.PROCESSING_STATUS_HASHING,
@@ -144,22 +144,22 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       status = u'{0:s}\t'.format(status)
 
     sources = u''
-    if (worker_status.produced_number_of_sources is not None and
-        worker_status.produced_number_of_sources_delta is not None):
+    if (worker_status.number_of_produced_sources is not None and
+        worker_status.number_of_produced_sources_delta is not None):
       sources = u'{0:d} ({1:d})'.format(
-          worker_status.produced_number_of_sources,
-          worker_status.produced_number_of_sources_delta)
+          worker_status.number_of_produced_sources,
+          worker_status.number_of_produced_sources_delta)
 
     # This check makes sure the columns are tab aligned.
     if len(sources) < 8:
       sources = u'{0:s}\t'.format(sources)
 
     events = u''
-    if (worker_status.produced_number_of_events is not None and
-        worker_status.produced_number_of_events_delta is not None):
+    if (worker_status.number_of_produced_events is not None and
+        worker_status.number_of_produced_events_delta is not None):
       events = u'{0:d} ({1:d})'.format(
-          worker_status.produced_number_of_events,
-          worker_status.produced_number_of_events_delta)
+          worker_status.number_of_produced_events,
+          worker_status.number_of_produced_events_delta)
 
     # This check makes sure the columns are tab aligned.
     if len(events) < 8:
@@ -310,7 +310,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'- running: {4!s} <{5:s}>\n').format(
                 worker_status.identifier,
                 worker_status.pid,
-                worker_status.produced_number_of_events,
+                worker_status.number_of_produced_events,
                 worker_status.display_name,
                 status in [definitions.PROCESSING_STATUS_RUNNING,
                            definitions.PROCESSING_STATUS_HASHING,

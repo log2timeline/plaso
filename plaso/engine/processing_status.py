@@ -290,7 +290,8 @@ class ProcessingStatus(object):
         continue
       logging.debug(u'{0:s} is {1:s}.'.format(
           worker_name, worker_status.status))
-      if (worker_status.number_of_events_delta > 0 or
+      if (worker_status.number_of_consumed_events_delta > 0 or
+          worker_status.number_of_produced_events_delta > 0 or
           worker_status.number_of_consumed_sources_delta > 0 or
           worker_status.number_of_produced_sources_delta > 0 or
           worker_status.status == definitions.PROCESSING_STATUS_HASHING):
