@@ -594,7 +594,7 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
 
     Args:
       queue_object: a queue object (instance of Queue).
-      storage_file: a storage file (instance of BaseStorage).
+      storage_file: a session-based storage file (instance of BaseStorage).
       filter_string: a string containing the filter expression.
       preferred_encoding: optional string containing the preferred encoding.
     """
