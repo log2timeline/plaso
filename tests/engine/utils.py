@@ -66,6 +66,8 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
 
     file_system.Close()
 
+    # TODO: add test with path_attributes.
+
 
 if __name__ == '__main__':
   unittest.main()

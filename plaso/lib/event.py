@@ -28,6 +28,16 @@ class PreprocessObject(object):
     self.plugin_counter = None
     self.zone = pytz.UTC
 
+  def GetPathAttributes(self):
+    """Retrieves the path attributes.
+
+    Returns:
+      dict[str, str]: path attributes, typically environment variables
+                      that are expanded e.g. $HOME or %SystemRoot%.
+    """
+    # TODO: improve this only return known enviroment variables.
+    return self.__dict__
+
   def GetUserMappings(self):
     """Returns a dictionary objects mapping SIDs or UIDs to usernames."""
     if self._user_ids_to_names is None:

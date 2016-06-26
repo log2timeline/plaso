@@ -451,8 +451,9 @@ class ExtractionFrontend(frontend.Frontend):
     self._PreprocessSetTimezone(preprocess_object, timezone=timezone)
 
     if filter_file:
+      path_attributes = self._engine.knowledge_base.GetPathAttributes()
       filter_find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file, pre_obj=preprocess_object)
+          filter_file, path_attributes=path_attributes)
     else:
       filter_find_specs = None
 

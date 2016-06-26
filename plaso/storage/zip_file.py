@@ -2861,7 +2861,7 @@ class StorageFile(ZIPStorageFile):
     """Retrieves storage (preprocessing) information stored in the storage file.
 
     Returns:
-      A list of preprocessing objects (instances of PreprocessingObject)
+      A list of preprocessing objects (instances of PreprocessObject)
       that contain the storage information.
     """
     stream_name = u'information.dump'
