@@ -52,14 +52,6 @@ plaso.cli.helpers.mysql_4n6time_output module
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.pstorage module
----------------------------------
-
-.. automodule:: plaso.cli.helpers.pstorage
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.cli.helpers.server_config module
 --------------------------------------
 
