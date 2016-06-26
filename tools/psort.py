@@ -203,7 +203,9 @@ class PsortTool(analysis_tool.AnalysisTool):
           u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
               self._storage_file_path, exception))
 
-    output_module = self._front_end.GetOutputModule(
+    # TODO: initialize knowledge base from storage_file
+
+    output_module = self._front_end.CreateOutputModule(
         storage_file, preferred_encoding=self.preferred_encoding,
         timezone=self._timezone)
 

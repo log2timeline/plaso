@@ -282,6 +282,50 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return analysis_plugins, event_producers
 
+  def CreateOutputModule(
+      self, storage_file, preferred_encoding=u'utf-8', timezone=pytz.UTC):
+    """Create an output module.
+
+    Args:
+      storage_file (BaseStorage): storage file.
+      preferred_encoding (Optional[str]): preferred encoding to output.
+      timezone (Optional[datetime.tzinfo]): timezone to output.
+
+    Returns:
+      OutputModule: output module.
+
+    Raises:
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    formatter_mediator = self.GetFormatterMediator()
+
+    try:
+      formatter_mediator.SetPreferredLanguageIdentifier(
+          self._preferred_language)
+    except (KeyError, TypeError) as exception:
+      raise RuntimeError(exception)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    knowledge_base_object.InitializeLookupDictionaries(storage_file)
+
+    output_mediator_object = output_mediator.OutputMediator(
+        knowledge_base_object, formatter_mediator,
+        preferred_encoding=preferred_encoding, timezone=timezone)
+
+    try:
+      output_module = output_manager.OutputManager.NewOutputModule(
+          self._output_format, output_mediator_object)
+
+    except IOError as exception:
+      raise RuntimeError(
+          u'Unable to create output module with error: {0:s}'.format(
+              exception))
+
+    if not output_module:
+      raise RuntimeError(u'Missing output module.')
+
+    return output_module
+
   def GetAnalysisPluginInfo(self):
     """Retrieves information about the registered analysis plugins.
 
@@ -308,49 +352,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       and type object.
     """
     return output_manager.OutputManager.GetOutputClasses()
-
-  def GetOutputModule(
-      self, storage_file, preferred_encoding=u'utf-8', timezone=pytz.UTC):
-    """Return an output module.
-
-    Args:
-      storage_file: a storage file object (instance of StorageFile).
-      preferred_encoding: optional preferred encoding.
-      timezone: optional timezone.
-
-    Returns:
-      an output module object (instance of OutputModule) or None if not able to
-      open one up.
-
-    Raises:
-      RuntimeError: if a non-recoverable situation is encountered.
-    """
-    formatter_mediator = self.GetFormatterMediator()
-
-    try:
-      formatter_mediator.SetPreferredLanguageIdentifier(
-          self._preferred_language)
-    except (KeyError, TypeError) as exception:
-      raise RuntimeError(exception)
-
-    output_mediator_object = output_mediator.OutputMediator(
-        formatter_mediator, preferred_encoding=preferred_encoding,
-        timezone=timezone)
-    output_mediator_object.SetStorageFile(storage_file)
-
-    try:
-      output_module = output_manager.OutputManager.NewOutputModule(
-          self._output_format, output_mediator_object)
-
-    except IOError as exception:
-      raise RuntimeError(
-          u'Unable to create output module with error: {0:s}'.format(
-              exception))
-
-    if not output_module:
-      raise RuntimeError(u'Missing output module.')
-
-    return output_module
 
   def HasOutputClass(self, name):
     """Determines if a specific output class is registered with the manager.
