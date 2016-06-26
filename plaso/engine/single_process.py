@@ -123,7 +123,7 @@ class SingleProcessEngine(engine.BaseEngine):
         parser_mediator.number_of_produced_events)
     self._UpdateStatus()
 
-    return process_status
+    return status
 
   def _UpdateStatus(self):
     """Updates the processing status."""

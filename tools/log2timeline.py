@@ -286,17 +286,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       processing_status: the processing status (instance of ProcessingStatus).
     """
     for worker_status in processing_status.workers_status:
-      status = worker_status.status
       status_line = (
           u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
           u'- running: {4!s}\n').format(
               worker_status.identifier, worker_status.pid,
               worker_status.number_of_produced_events,
               worker_status.display_name,
-              worker_status.status in (
-                  definitions.PROCESSING_STATUS_ANALYZING,
-                  definitions.PROCESSING_STATUS_EXTRACTING,
-                  definitions.PROCESSING_STATUS_HASHING))
+              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
       self._output_writer.Write(status_line)
 
   def AddExperimentalOptions(self, argument_group):

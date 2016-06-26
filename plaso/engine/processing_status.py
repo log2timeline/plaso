@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """The processing status classes."""
 
-import logging
 import time
-
-from plaso.lib import definitions
 
 
 class ProcessStatus(object):
