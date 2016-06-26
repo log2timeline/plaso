@@ -7,6 +7,7 @@ import time
 from plaso.lib import definitions
 
 
+# TODO: merge process_status and status.
 class WorkerStatus(object):
   """The worker status.
 

@@ -585,6 +585,11 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer.ForceFlush()
 
       self._collector_active = True
+
+      # Set new event sources to false so the collector thread can set
+      # it to true when there are new event sources. Since the collector
+      # thread is joined before this value is checked again there is
+      # no need for a synchronization primitive.
       self._new_event_sources = False
       self._StartCollectorThread()
 
