@@ -348,8 +348,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Yields:
       A Registry helper object (instance of PregRegistryHelper).
     """
-    # TODO: deprecate usage of pre_obj.
-    path_attributes = self.knowledge_base_object.pre_obj.__dict__
+    path_attributes = self.knowledge_base_object.GetPathAttributes()
 
     for source_path_spec in self._source_path_specs:
       if source_path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
