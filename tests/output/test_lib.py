@@ -8,6 +8,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
+from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import timelib
@@ -103,10 +104,13 @@ class OutputModuleTestCase(unittest.TestCase):
     Returns:
       An output mediator (instance of OutputMediator).
     """
-    formatter_mediator = formatters_mediator.FormatterMediator()
-    output_mediator = mediator.OutputMediator(formatter_mediator)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     if storage_file:
-      output_mediator.SetStorageFile(storage_file)
+      knowledge_base_object.InitializeLookupDictionaries(storage_file)
+
+    formatter_mediator = formatters_mediator.FormatterMediator()
+    output_mediator = mediator.OutputMediator(
+        knowledge_base_object, formatter_mediator)
 
     return output_mediator
