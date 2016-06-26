@@ -11,24 +11,26 @@ from plaso.lib import py2to3
 # libraries.
 
 # Taken from: https://code.google.com/p/grr/source/browse/lib/artifact_lib.py
-def ExpandWindowsEnvironmentVariables(data_string, pre_obj):
+def ExpandWindowsEnvironmentVariables(data_string, path_attributes):
   """Take a string and expand any windows environment variables.
 
   Args:
     data_string: A string, e.g. "%SystemRoot%\\LogFiles"
-    pre_obj: A pre-process object.
+    path_attributes: dictionary of path attributes.
 
   Returns:
     A string with available environment variables expanded.
   """
+  if path_attributes is None:
+    path_attributes = {}
+
   win_environ_regex = re.compile(r'%([^%]+?)%')
   components = []
   offset = 0
   for match in win_environ_regex.finditer(data_string):
     components.append(data_string[offset:match.start()])
 
-    kb_value = getattr(
-        pre_obj, match.group(1).lower(), None)
+    kb_value = path_attributes.get(match.group(1).lower(), None)
     if isinstance(kb_value, py2to3.STRING_TYPES) and kb_value:
       components.append(kb_value)
     else:
