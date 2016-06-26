@@ -100,14 +100,6 @@ plaso.output.null module
     :undoc-members:
     :show-inheritance:
 
-plaso.output.pstorage module
-----------------------------
-
-.. automodule:: plaso.output.pstorage
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.output.rawpy module
 -------------------------
 
