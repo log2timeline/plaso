@@ -391,13 +391,16 @@ class PathSpecExtractor(object):
 
     return ret_hash.hexdigest()
 
-  def _ExtractPathSpecs(self, path_spec, find_specs=None):
+  def _ExtractPathSpecs(
+      self, path_spec, find_specs=None, recurse_file_system=True):
     """Extracts path specification from a specific source.
 
     Args:
       path_spec: a path specification (instance of dfvfs.path.PathSpec).
       find_specs: optional list of find specifications (instances of
                   dfvfs.FindSpec).
+      recurse_file_system: optional boolean value to indicate to recurse
+                           into a file system.
 
     Yields:
       Path specifications (instances of dfvfs.PathSpec) of file entries
@@ -429,7 +432,8 @@ class PathSpecExtractor(object):
 
     else:
       for path_spec in self._ExtractPathSpecsFromFileSystem(
-          path_spec, find_specs=find_specs):
+          path_spec, find_specs=find_specs,
+          recurse_file_system=recurse_file_system):
         yield path_spec
 
   def _ExtractPathSpecsFromDirectory(self, file_entry):
@@ -521,7 +525,8 @@ class PathSpecExtractor(object):
     if not produced_main_path_spec:
       yield file_entry.path_spec
 
-  def _ExtractPathSpecsFromFileSystem(self, path_spec, find_specs=None):
+  def _ExtractPathSpecsFromFileSystem(
+      self, path_spec, find_specs=None, recurse_file_system=True):
     """Extracts path specification from a file system within a specific source.
 
     Args:
@@ -529,6 +534,8 @@ class PathSpecExtractor(object):
                  of the root of the file system.
       find_specs: optional list of find specifications (instances of
                   dfvfs.FindSpec).
+      recurse_file_system: optional boolean value to indicate to recurse
+                           into a file system.
 
     Yields:
       Path specifications (instances of dfvfs.PathSpec) of file entries
@@ -551,11 +558,14 @@ class PathSpecExtractor(object):
         for path_spec in searcher.Find(find_specs=find_specs):
           yield path_spec
 
-      else:
+      elif recurse_file_system:
         file_entry = file_system.GetFileEntryByPathSpec(path_spec)
         if file_entry:
           for path_spec in self._ExtractPathSpecsFromDirectory(file_entry):
             yield path_spec
+
+      else:
+        yield path_spec
 
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
@@ -565,7 +575,8 @@ class PathSpecExtractor(object):
     finally:
       file_system.Close()
 
-  def ExtractPathSpecs(self, path_specs, find_specs=None):
+  def ExtractPathSpecs(
+      self, path_specs, find_specs=None, recurse_file_system=True):
     """Extracts path specification from a specific source.
 
     Args:
@@ -573,6 +584,8 @@ class PathSpecExtractor(object):
                  dfvfs.path.PathSpec).
       find_specs: optional list of find specifications (instances of
                   dfvfs.FindSpec).
+      recurse_file_system: optional boolean value to indicate to recurse
+                           into a file system.
 
     Yields:
       Path specifications (instances of dfvfs.PathSpec) of file entries
@@ -580,5 +593,6 @@ class PathSpecExtractor(object):
     """
     for path_spec in path_specs:
       for extracted_path_spec in self._ExtractPathSpecs(
-          path_spec, find_specs=find_specs):
+          path_spec, find_specs=find_specs,
+          recurse_file_system=recurse_file_system):
         yield extracted_path_spec

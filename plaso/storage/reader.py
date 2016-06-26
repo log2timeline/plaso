@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The storage object reader."""
 
-
 # TODO: deprecate this class.
 class StorageObjectReader(object):
   """Class that implements a storage object reader."""

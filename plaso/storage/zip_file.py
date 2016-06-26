@@ -3007,6 +3007,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._buffer_size = buffer_size
     self._event_source_index = 0
     self._event_tags = []
+    self._merge_task_storage_path = u''
     self._output_file = output_file
     # Counter containing the number of events per parser.
     self._parsers_counter = collections.Counter()
@@ -3138,24 +3139,26 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.Close()
     self._storage_file = None
 
-    if (self._storage_type == definitions.STORAGE_TYPE_SESSION and
-        self._task_storage_path and os.path.isdir(self._task_storage_path)):
-      os.rmdir(self._task_storage_path)
+  def CreateTaskStorage(self, task_name):
+    """Creates a task storage.
 
-  def CreateTaskStorageWriter(self, task_name):
-    """Creates a task storage writer.
+    The task storage is used to store attributes created by the task.
 
     Args:
-      task_name: a string containing a unique name of the task.
+      task_name (str): unique name of the task.
 
     Returns:
-      A storage writer object (instance of StorageWriter).
+      StorageWriter: storage writer.
 
     Raises:
-      RuntimeError: if the task storage path is missing.
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._task_storage_path:
-      raise RuntimeError(u'Missing task storage path.')
+      raise IOError(u'Missing task storage path.')
 
     storage_file_path = os.path.join(
         self._task_storage_path, u'{0:s}.plaso'.format(task_name))
@@ -3180,7 +3183,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """Retrieves the event sources.
 
     Yields:
-      Event source objects (instances of EventSourceObject).
+      EventSource: event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -3188,13 +3191,48 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    event_source_index = 0
-    for event_source in self._storage_file.GetEventSources():
-      if event_source_index >= self._event_source_index:
-        yield event_source
-        self._event_source_index += 1
+    for event_source_index, event_source in enumerate(
+        self._storage_file.GetEventSources()):
+      if event_source_index < self._event_source_index:
+        continue
 
-      event_source_index += 1
+      yield event_source
+      self._event_source_index += 1
+
+  def MergeTaskStorage(self, task_name):
+    """Merges a task storage with the session storage.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Returns:
+      bool: True if the task storage was merged.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    if not os.path.isfile(storage_file_path):
+      return False
+
+    storage_reader = ZIPStorageFileReader(storage_file_path)
+    self.MergeFromStorage(storage_reader)
+
+    # Force close the storage reader so we can remove the file.
+    storage_reader.Close()
+
+    os.remove(storage_file_path)
+
+    return True
 
   def Open(self):
     """Opens the storage writer.
@@ -3216,10 +3254,71 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     for _ in self._storage_file.GetEventSources():
       self._event_source_index += 1
 
-    if (not self._task_storage_path and
-        self._storage_type == definitions.STORAGE_TYPE_SESSION):
-      output_directory = os.path.dirname(self._output_file)
-      self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
+  def PrepareMergeTaskStorage(self, task_name):
+    """Prepares a task storage for merging.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    storage_file_path = os.path.join(
+        self._task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    merge_storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    os.rename(storage_file_path, merge_storage_file_path)
+
+  def StartTaskStorage(self):
+    """Creates a temporary path for the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage already exists.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if self._task_storage_path:
+      raise IOError(u'Task storage path already exists.')
+
+    output_directory = os.path.dirname(self._output_file)
+    self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
+
+    self._merge_task_storage_path = os.path.join(
+        self._task_storage_path, u'merge')
+    os.mkdir(self._merge_task_storage_path)
+
+  def StopTaskStorage(self):
+    """Removes the temporary path for the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    if os.path.isdir(self._merge_task_storage_path):
+      os.rmdir(self._merge_task_storage_path)
+
+    if os.path.isdir(self._task_storage_path):
+      os.rmdir(self._task_storage_path)
+
+    self._merge_task_storage_path = None
+    self._task_storage_path = None
 
   # TODO: remove during phased processing refactor.
   def WritePreprocessObject(self, preprocess_object):

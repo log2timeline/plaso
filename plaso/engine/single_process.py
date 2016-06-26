@@ -27,89 +27,39 @@ class SingleProcessEngine(engine.BaseEngine):
     """Initializes the single process engine object."""
     super(SingleProcessEngine, self).__init__()
     self._last_status_update_timestamp = 0.0
+    self._pid = os.getpid()
     self._status_update_callback = None
-
-  def _CreateExtractionWorker(
-      self, resolver_context, parser_mediator, filter_object=None,
-      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, text_prepend=None):
-    """Creates an extraction worker object.
-
-    Args:
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      mount_path: optional string containing the mount path.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
-
-    Returns:
-      An extraction worker (instance of worker.ExtractionWorker).
-    """
-    extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_mediator,
-        parser_filter_expression=parser_filter_expression,
-        process_archive_files=process_archive_files)
-
-    # TODO: differentiate between debug output and debug mode.
-    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
-
-    if filter_object:
-      extraction_worker.SetFilterObject(filter_object)
-
-    if hasher_names_string:
-      extraction_worker.SetHashers(hasher_names_string)
-
-    if mount_path:
-      extraction_worker.SetMountPath(mount_path)
-
-    if text_prepend:
-      extraction_worker.SetTextPrepend(text_prepend)
-
-    if self._enable_profiling:
-      extraction_worker.EnableProfiling(
-          profiling_sample_rate=self._profiling_sample_rate,
-          profiling_type=self._profiling_type)
-
-    return extraction_worker
 
   def _ProcessSources(
       self, source_path_specs, resolver_context, extraction_worker,
-      storage_writer, filter_find_specs=None):
-    """Processes the sources and extracts event objects.
+      parser_mediator, storage_writer, filter_find_specs=None):
+    """Processes the sources.
 
     Args:
-      source_path_specs: a list of path specifications (instances of
-                         dfvfs.PathSpec) of the sources to process.
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      extraction_worker: an extraction worker (instance of
-                         worker.ExtractionWorker).
-      storage_writer: a storage writer object (instance of StorageWriter).
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      resolver_context (dfvfs.Context): resolver context.
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+      parser_mediator (ParserMediator): parser mediator.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
 
     Returns:
-      A string containing the processing status.
+      str: processing status.
     """
-    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
-
-    # TODO: refactor status indication.
-    self._SetCollectorStatus(definitions.PROCESSING_STATUS_RUNNING, 0)
-    self._SetExtractionWorkerStatus(
-        definitions.PROCESSING_STATUS_WAITING, u'', 0, 0, 0)
-    self._SetStorageWriterStatus(definitions.PROCESSING_STATUS_WAITING, 0)
+    self._processing_status.UpdateForemanStatus(
+        u'Main', u'Initializing', self._pid,
+        definitions.PROCESSING_STATUS_RUNNING, u'', 0, 0, 0, 0)
     self._UpdateStatus()
 
-    number_of_produced_path_specs = 0
+    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
+
+    number_of_collected_sources = 0
+    number_of_consumed_sources = 0
     for path_spec in path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs):
+        source_path_specs, find_specs=filter_find_specs,
+        recurse_file_system=False):
       if self._abort:
         break
 
@@ -118,133 +68,66 @@ class SingleProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      number_of_produced_path_specs += 1
+      number_of_collected_sources += 1
 
-      # TODO: refactor status indication.
-      self._UpdateCollectorStatus(
-          definitions.PROCESSING_STATUS_RUNNING, number_of_produced_path_specs)
+      self._processing_status.UpdateForemanStatus(
+          u'Main', u'Collecting', self._pid,
+          definitions.PROCESSING_STATUS_RUNNING, u'',
+          number_of_consumed_sources, number_of_collected_sources, 0, 0)
+      self._UpdateStatus()
 
-    # TODO: flushing the storage writer here for now to make sure the event
-    # sources are written to disk. Remove this during phased processing
-    # refactor.
-    storage_writer.ForceFlush()
-
-    if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
-
-    # TODO: refactor status indication.
-    self._SetCollectorStatus(status, number_of_produced_path_specs)
-    self._UpdateStatus()
-
-    if self._abort:
-      return definitions.PROCESSING_STATUS_ABORTED
-
-    number_of_consumed_path_specs = 0
-    for event_source in storage_writer.GetEventSources():
+    new_event_sources = True
+    while new_event_sources:
       if self._abort:
         break
 
-      extraction_worker.ProcessPathSpec(event_source.path_spec)
-      number_of_consumed_path_specs += 1
+      # TODO: flushing the storage writer here for now to make sure the event
+      # sources are written to disk. Remove this during phased processing
+      # refactor.
+      storage_writer.ForceFlush()
 
-      # TODO: refactor status indication.
-      self._SetExtractionWorkerStatus(
-          definitions.PROCESSING_STATUS_RUNNING,
-          extraction_worker.current_display_name,
-          number_of_consumed_path_specs,
-          extraction_worker.number_of_produced_events,
-          extraction_worker.number_of_produced_path_specs)
-      self._SetStorageWriterStatus(
-          definitions.PROCESSING_STATUS_RUNNING,
-          storage_writer.number_of_events)
-      self._UpdateStatus()
+      new_event_sources = False
+      for event_source in storage_writer.GetEventSources():
+        new_event_sources = True
+        if self._abort:
+          break
+
+        extraction_worker.ProcessPathSpec(
+            parser_mediator, event_source.path_spec)
+        number_of_consumed_sources += 1
+
+        number_of_produced_sources = (
+            number_of_collected_sources +
+            parser_mediator.number_of_produced_event_sources)
+
+        self._processing_status.UpdateForemanStatus(
+            u'Main', u'Extracting', self._pid,
+            definitions.PROCESSING_STATUS_RUNNING,
+            extraction_worker.current_display_name,
+            number_of_consumed_sources, number_of_produced_sources,
+            storage_writer.number_of_events,
+            parser_mediator.number_of_produced_events)
+        self._UpdateStatus()
 
     if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
+      status = u'Aborted'
+      process_status = definitions.PROCESSING_STATUS_ABORTED
     else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
+      status = u'Completed'
+      process_status = definitions.PROCESSING_STATUS_COMPLETED
 
-    # TODO: refactor status indication.
-    self._SetExtractionWorkerStatus(
-        status, extraction_worker.current_display_name,
-        number_of_consumed_path_specs,
-        extraction_worker.number_of_produced_events,
-        extraction_worker.number_of_produced_path_specs)
-    self._SetStorageWriterStatus(
-        definitions.PROCESSING_STATUS_RUNNING, storage_writer.number_of_events)
+    number_of_produced_sources = (
+        number_of_collected_sources +
+        parser_mediator.number_of_produced_event_sources)
+
+    self._processing_status.UpdateForemanStatus(
+        u'Main', status, self._pid, process_status, u'',
+        number_of_consumed_sources, number_of_produced_sources,
+        storage_writer.number_of_events,
+        parser_mediator.number_of_produced_events)
     self._UpdateStatus()
 
-    # TODO: refactor status indication.
-    self._SetStorageWriterStatus(status, storage_writer.number_of_events)
-    self._UpdateStatus()
-
-    return status
-
-  def _SetCollectorStatus(self, status, number_of_produced_path_specs):
-    """Sets the collector status.
-
-    Args:
-      status: a string containing the status.
-      number_of_produced_path_specs: an integer containing the number of
-                                     produced path specifications.
-    """
-    self._processing_status.UpdateCollectorStatus(
-        u'Collector', os.getpid(), number_of_produced_path_specs, status, None)
-
-  def _SetExtractionWorkerStatus(
-      self, status, display_name, number_of_consumed_path_specs,
-      number_of_produced_events, number_of_produced_path_specs):
-    """Sets the extraction worker status.
-
-    Args:
-      status: a string containing the status.
-      display_name: a string containing the display name of the file entry.
-      number_of_consumed_path_specs: an integer containing the number of
-                                     consumed path specifications.
-      number_of_produced_events: an integer containing the number of
-                                 produced events.
-      number_of_produced_path_specs: an integer containing the number of
-                                     produced path specifications.
-    """
-    self._processing_status.UpdateExtractionWorkerStatus(
-        u'Worker', os.getpid(), display_name, number_of_produced_events,
-        number_of_consumed_path_specs, number_of_produced_path_specs, status,
-        None)
-
-  def _SetStorageWriterStatus(self, status, number_of_events):
-    """Sets the storage writer status.
-
-    Args:
-      status: a string containing the status.
-      number_of_events: an integer containing the number of events written
-                        to the storage.
-    """
-    self._processing_status.UpdateStorageWriterStatus(
-        u'StorageWriter', os.getpid(), number_of_events, status, None)
-
-  def _UpdateCollectorStatus(self, status, number_of_produced_path_specs):
-    """Updates the collector status.
-
-    Args:
-      status: a string containing the status.
-      number_of_produced_path_specs: an integer containing the number of
-                                     produced path specifications.
-    """
-    current_timestamp = time.time()
-    if current_timestamp < (
-        self._last_status_update_timestamp + self._STATUS_CHECK_SLEEP):
-      return
-
-    self._processing_status.UpdateCollectorStatus(
-        u'Collector', os.getpid(), number_of_produced_path_specs,
-        status, None)
-
-    if self._status_update_callback:
-      self._status_update_callback(self._processing_status)
-
-    self._last_status_update_timestamp = current_timestamp
+    return process_status
 
   def _UpdateStatus(self):
     """Updates the processing status."""
@@ -264,7 +147,7 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_object=None, hasher_names_string=None, mount_path=None,
       parser_filter_expression=None, process_archive_files=False,
       profiling_type=u'all', status_update_callback=None, text_prepend=None):
-    """Processes the sources and extracts event objects.
+    """Processes the sources.
 
     Args:
       source_path_specs: a list of path specifications (instances of
@@ -296,11 +179,29 @@ class SingleProcessEngine(engine.BaseEngine):
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base)
 
-    extraction_worker = self._CreateExtractionWorker(
-        resolver_context, parser_mediator, filter_object=filter_object,
-        hasher_names_string=hasher_names_string, mount_path=mount_path,
-        parser_filter_expression=parser_filter_expression,
-        process_archive_files=process_archive_files, text_prepend=text_prepend)
+    if filter_object:
+      parser_mediator.SetFilterObject(filter_object)
+
+    if mount_path:
+      parser_mediator.SetMountPath(mount_path)
+
+    if text_prepend:
+      parser_mediator.SetTextPrepend(text_prepend)
+
+    extraction_worker = worker.EventExtractionWorker(
+        resolver_context, parser_filter_expression=parser_filter_expression,
+        process_archive_files=process_archive_files)
+
+    # TODO: differentiate between debug output and debug mode.
+    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
+
+    if hasher_names_string:
+      extraction_worker.SetHashers(hasher_names_string)
+
+    if self._enable_profiling:
+      extraction_worker.EnableProfiling(
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
 
     self._status_update_callback = status_update_callback
 
@@ -316,7 +217,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
       status = self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
-          storage_writer, filter_find_specs=filter_find_specs)
+          parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
 
       # TODO: refactor the use of preprocess_object.
       storage_writer.WritePreprocessObject(preprocess_object)

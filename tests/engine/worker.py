@@ -54,12 +54,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer, knowledge_base_object)
 
     extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_mediator,
-        process_archive_files=process_archive_files)
+        resolver_context, process_archive_files=process_archive_files)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart(session_start)
-    extraction_worker.ProcessPathSpec(path_spec)
+    extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()
 
@@ -146,15 +145,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
     resolver_context = context.Context()
-    storage_writer = fake_storage.FakeStorageWriter()
-
-    parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
-
-    extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_mediator)
+    extraction_worker = worker.EventExtractionWorker(resolver_context)
 
     extraction_worker.SetHashers(hasher_names_string=u'md5')
     self.assertEqual(1, len(extraction_worker._hasher_names))
