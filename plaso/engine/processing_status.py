@@ -213,20 +213,20 @@ class ProcessingStatus(object):
     """Updates the status of the foreman.
 
     Args:
-      identifier (str): foremane identifier.
-      status (str): human readable status of the foremane e.g. 'Idle'.
+      identifier (str): foreman identifier.
+      status (str): human readable status of the foreman e.g. 'Idle'.
       pid (int): process identifier (PID).
       process_status (str): status of the process.
       display_name (str): display name of the file entry currently being
-                          processed by the foremane.
+                          processed by the foreman.
       number_of_consumed_sources (int): total number of event sources consumed
-                                        by the foremane.
+                                        by the foreman.
       number_of_produced_sources (int): total number of event sources produced
-                                        by the foremane.
+                                        by the foreman.
       number_of_consumed_events (int): total number of events consumed by
-                                       the foremane.
+                                       the foreman.
       number_of_produced_events (int): total number of events produced by
-                                       the foremane.
+                                       the foreman.
     """
     if not self.foreman_status:
       self.foreman_status = WorkerStatus()
