@@ -500,7 +500,7 @@ class ParserMediator(object):
     path_spec = self._file_entry.path_spec
     parser_chain = self.GetParserChain()
     extraction_error = errors.ExtractionError(
-        message, parser_chain=parser_chain, path_spec=path_spec)
+        message=message, parser_chain=parser_chain, path_spec=path_spec)
     self._storage_writer.AddError(extraction_error)
 
   def ResetFileEntry(self):
