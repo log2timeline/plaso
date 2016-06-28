@@ -90,7 +90,7 @@ class ExtractionFrontend(frontend.Frontend):
 
   # Note that this function is not called by the normal termination.
   def _CleanUpAfterAbort(self):
-    """Signals the tool to stop running nicely after an abort."""
+    """Signals the front-end to stop running nicely after an abort."""
     if self._single_process_mode and self._debug_mode:
       logging.warning(u'Running in debug mode, set up debugger.')
       pdb.post_mortem()
@@ -225,16 +225,13 @@ class ExtractionFrontend(frontend.Frontend):
     """Creates the session start information.
 
     Args:
-      command_line_arguments: optional string containing the command line
-                              arguments.
-      filter_file: optional string containing the path to a file with find
-                   specifications.
-      parser_filter_expression: optional string containining the parser filter
-                                expression.
-      preferred_encoding: optional string containing the preferred encoding.
+      command_line_arguments (Optional[str]): the command line arguments.
+      filter_file (Optional[str]): path to a file with find specifications.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
 
     Returns:
-      A session start attribute container (instance of SessionStart).
+      SessionStart: session start attribute container.
     """
     session_start = sessions.SessionStart()
 

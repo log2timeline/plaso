@@ -178,8 +178,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
       output_module = test_front_end.CreateOutputModule(storage_file)
       output_module.SetOutputWriter(output_writer)
 
-      counter = test_front_end.ProcessStorage(
-          output_module, storage_file, storage_file_path, [], [])
+      test_front_end.SetStorageFile(storage_file_path)
+      counter = test_front_end.ProcessStorage(output_module, [], [])
 
     finally:
       storage_file.Close()
@@ -286,7 +286,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     preprocess_object = event.PreprocessObject()
     preprocess_object.SetCollectionInformationValues({})
     test_front_end._SetAnalysisPluginProcessInformation(
-        u'', analysis_plugins, preprocess_object)
+        analysis_plugins, preprocess_object)
     self.assertIsNotNone(preprocess_object)
     plugin_names = preprocess_object.collection_information[u'plugins']
     time_of_run = preprocess_object.collection_information[u'time_of_run']
