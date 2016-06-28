@@ -5,7 +5,7 @@ import time
 
 
 class ProcessStatus(object):
-  """The process status.
+  """The status of an individual process.
 
   Attributes:
     display_name (str): display name of the file entry currently being
@@ -56,7 +56,7 @@ class ProcessStatus(object):
 
 
 class ProcessingStatus(object):
-  """The processing status.
+  """The status of the overall extraction process (processing).
 
   Attributes:
     error_detected (bool): True if an error was detected during processing.
