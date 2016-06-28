@@ -32,8 +32,7 @@ class PreprocessObject(object):
     """Retrieves the path attributes.
 
     Returns:
-      dict[str, str]: path attributes, typically environment variables
-                      that are expanded e.g. $HOME or %SystemRoot%.
+      dict[str, str]]: path attributes e.g. {'SystemRoot': 'C:\\Windows'}
     """
     # TODO: improve this only return known enviroment variables.
     return self.__dict__

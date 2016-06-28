@@ -11,15 +11,16 @@ from plaso.lib import py2to3
 # libraries.
 
 # Taken from: https://code.google.com/p/grr/source/browse/lib/artifact_lib.py
-def ExpandWindowsEnvironmentVariables(data_string, path_attributes):
-  """Take a string and expand any windows environment variables.
+def ExpandWindowsEnvironmentVariables(path, path_attributes):
+  """Expands a path based on Windows environment variables.
 
   Args:
-    data_string: A string, e.g. "%SystemRoot%\\LogFiles"
-    path_attributes: dictionary of path attributes.
+    path (str): path before being expanded.
+    path_attributes (dict[str, str]): path attributes e.g.
+                                      {'SystemRoot': 'C:\\Windows'}
 
   Returns:
-    A string with available environment variables expanded.
+    str: path expanded based on path attributes.
   """
   if path_attributes is None:
     path_attributes = {}
@@ -27,8 +28,8 @@ def ExpandWindowsEnvironmentVariables(data_string, path_attributes):
   win_environ_regex = re.compile(r'%([^%]+?)%')
   components = []
   offset = 0
-  for match in win_environ_regex.finditer(data_string):
-    components.append(data_string[offset:match.start()])
+  for match in win_environ_regex.finditer(path):
+    components.append(path[offset:match.start()])
 
     kb_value = path_attributes.get(match.group(1).lower(), None)
     if isinstance(kb_value, py2to3.STRING_TYPES) and kb_value:
@@ -36,5 +37,5 @@ def ExpandWindowsEnvironmentVariables(data_string, path_attributes):
     else:
       components.append(u'%%{0:s}%%'.format(match.group(1)))
     offset = match.end()
-  components.append(data_string[offset:])    # Append the final chunk.
+  components.append(path[offset:])
   return u''.join(components)
