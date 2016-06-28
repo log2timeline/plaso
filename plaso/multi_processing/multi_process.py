@@ -1211,7 +1211,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     try:
       self._parser_mediator.SetStorageWriter(storage_writer)
 
-      task_start = tasks.TaskStart(self._session_identifier)
+      task_start = tasks.TaskStart(session_identifier=self._session_identifier)
       task_start.identifier = task.identifier
       storage_writer.WriteTaskStart(task_start)
 

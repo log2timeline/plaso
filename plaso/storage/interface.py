@@ -20,15 +20,15 @@ class BaseStorage(object):
     """Adds an error.
 
     Args:
-      error: an error (instance of AnalysisError or ExtractionError).
+      error (ExtractionError): error.
     """
 
   @abc.abstractmethod
-  def AddEvent(self, event_object):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
     """
 
   @abc.abstractmethod
@@ -36,7 +36,7 @@ class BaseStorage(object):
     """Adds an event source.
 
     Args:
-      event_source: an event source (instance of EventSource).
+      event_source (EventSource): event source.
     """
 
   @abc.abstractmethod
@@ -51,7 +51,7 @@ class BaseStorage(object):
     """Enables profiling.
 
     Args:
-      profiling_type: optional profiling type.
+      profiling_type (Optional[str]): type of profiling to enable.
     """
     if (profiling_type in (u'all', u'serializers') and
         not self._serializers_profiler):
@@ -62,18 +62,19 @@ class BaseStorage(object):
     """Retrieves the analysis reports.
 
     Yields:
-      Analysis reports (instances of AnalysisReport).
+      AnalysisReport: analysis report.
     """
 
   @abc.abstractmethod
   def GetEvents(self, time_range=None):
-    """Retrieves the events.
+    """Retrieves the events in increasing chronological order.
 
     Args:
-      time_range: an optional time range object (instance of TimeRange).
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
-    Yields:
-      Event objects (instances of EventObject).
+    Returns:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -81,7 +82,7 @@ class BaseStorage(object):
     """Retrieves the event sources.
 
     Yields:
-      An event source object (instance of EventSource).
+      EventSource: event source.
     """
 
   @abc.abstractmethod
@@ -89,7 +90,7 @@ class BaseStorage(object):
     """Retrieves the event tags.
 
     Yields:
-      An event tag object (instance of EventTag).
+      EventTag: event tag.
     """
 
   @abc.abstractmethod
@@ -97,7 +98,7 @@ class BaseStorage(object):
     """Determines if a storage contains analysis reports.
 
     Returns:
-      A boolean value indicating if the storage contains analysis reports.
+      bool: True if the storage contains analysis reports.
     """
 
   @abc.abstractmethod
@@ -105,7 +106,7 @@ class BaseStorage(object):
     """Determines if a storage contains event tags.
 
     Returns:
-      A boolean value indicating if the storage contains event tags.
+      bool: True if the storage contains event tags.
     """
 
   @abc.abstractmethod
@@ -133,7 +134,7 @@ class StorageReader(object):
     """Retrieves the analysis reports.
 
     Yields:
-      Analysis reports (instances of AnalysisReport).
+      AnalysisReport: analysis report.
     """
 
   @abc.abstractmethod
@@ -141,18 +142,19 @@ class StorageReader(object):
     """Retrieves the errors.
 
     Yields:
-      Errors (instances of AnalysisError or ExtractionError).
+      ExtractionError: error.
     """
 
   @abc.abstractmethod
   def GetEvents(self, time_range=None):
-    """Retrieves events.
+    """Retrieves the events in increasing chronological order.
 
     Args:
-      time_range: an optional time range object (instance of TimeRange).
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
-    Yields:
-      Event objects (instance of EventObject).
+    Returns:
+      EventObject: event.
     """
 
   @abc.abstractmethod

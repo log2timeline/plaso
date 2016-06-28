@@ -28,6 +28,7 @@ from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.lib import errors
 from plaso.lib import timelib
+from plaso.storage import zip_file as storage_zip_file
 from plaso.winnt import language_ids
 
 
@@ -196,7 +197,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       read_only = True
 
     try:
-      storage_file = self._front_end.OpenStorage(
+      storage_file = storage_zip_file.StorageFile(
           self._storage_file_path, read_only=read_only)
     except IOError as exception:
       raise RuntimeError(

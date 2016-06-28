@@ -17,7 +17,8 @@ class TaskCompletionTest(test_lib.AttributeContainerTestCase):
     """Tests the CopyToDict function."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     task_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    task_completion = tasks.TaskCompletion(task_identifier, session_identifier)
+    task_completion = tasks.TaskCompletion(
+        identifier=task_identifier, session_identifier=session_identifier)
 
     expected_dict = {
         u'identifier': task_completion.identifier,
@@ -37,7 +38,7 @@ class TaskStartTest(test_lib.AttributeContainerTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    task_start = tasks.TaskStart(session_identifier)
+    task_start = tasks.TaskStart(session_identifier=session_identifier)
 
     self.assertIsNotNone(task_start.identifier)
 

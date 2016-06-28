@@ -831,7 +831,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""
     session_start = sessions.SessionStart()
-    session_completion = sessions.SessionCompletion(session_start.identifier)
+    session_completion = sessions.SessionCompletion(
+        identifier=session_start.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
@@ -860,9 +861,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testWriteTaskStartAndCompletion(self):
     """Tests the WriteTaskStart and WriteTaskCompletion functions."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    task_start = tasks.TaskStart(session_identifier)
+    task_start = tasks.TaskStart(session_identifier=session_identifier)
     task_completion = tasks.TaskCompletion(
-        task_start.identifier, session_identifier)
+        identifier=task_start.identifier,
+        session_identifier=session_identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
@@ -1129,7 +1131,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
   def testWriteTaskStartAndCompletion(self):
     """Tests the WriteTaskStart and WriteTaskCompletion functions."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    task_start = tasks.TaskStart(session_identifier)
+    task_start = tasks.TaskStart(session_identifier=session_identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
