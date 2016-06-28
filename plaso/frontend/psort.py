@@ -84,6 +84,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
   def _CleanUpAfterAbort(self):
     """Signals the front-end to stop running nicely after an abort."""
+    # TODO: implement clean up logic.
     return
 
   def _CreateSessionStart(
