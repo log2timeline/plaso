@@ -79,6 +79,16 @@ class KnowledgeBase(object):
     """The year."""
     return getattr(self._pre_obj, u'year', 0)
 
+  def GetPathAttributes(self):
+    """Retrieves the path attributes.
+
+    Returns:
+      dict[str, str]: path attributes, typically environment variables
+                      that are expanded e.g. $HOME or %SystemRoot%.
+    """
+    # TODO: improve this only return known enviroment variables.
+    return self.pre_obj.__dict__
+
   def GetUsernameByIdentifier(self, identifier):
     """Retrieves the username based on an identifier.
 
