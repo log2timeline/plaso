@@ -143,7 +143,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testWriteTaskStartAndCompletion(self):
     """Tests the WriteTaskStart and WriteTaskCompletion functions."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    task_start = tasks.TaskStart(session_identifier)
+    task_start = tasks.TaskStart(session_identifier=session_identifier)
 
     storage_writer = fake_storage.FakeStorageWriter(
         storage_type=definitions.STORAGE_TYPE_TASK)

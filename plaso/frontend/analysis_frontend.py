@@ -3,7 +3,6 @@
 
 from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import frontend
-from plaso.storage import zip_file as storage_zip_file
 
 
 class AnalysisFrontend(frontend.Frontend):
@@ -22,19 +21,6 @@ class AnalysisFrontend(frontend.Frontend):
     """
     return formatters_mediator.FormatterMediator(
         data_location=self._data_location)
-
-  def OpenStorage(self, storage_file_path, read_only=True):
-    """Opens the storage.
-
-    Args:
-      storage_file_path: the path of the storage file.
-      read_only: optional boolean value to indicate the storage file should
-                 be opened in read-only mode.
-
-    Returns:
-      The storage file object (instance of StorageFile).
-    """
-    return storage_zip_file.StorageFile(storage_file_path, read_only=read_only)
 
   def SetDataLocation(self, data_location):
     """Set the data location.
