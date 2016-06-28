@@ -184,9 +184,9 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
         value_name = u'\\'.join(path_segments)
         # Check if we might need to substitute values.
         if u'%' in value_name:
-          # TODO: deprecate direct use of pre_obj.
+          path_attributes = parser_mediator.knowledge_base.GetPathAttributes()
           value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-              value_name, parser_mediator.knowledge_base.pre_obj)
+              value_name, path_attributes)
 
       value_data_size = len(registry_value.data)
       if not registry_value.DataIsBinaryData():

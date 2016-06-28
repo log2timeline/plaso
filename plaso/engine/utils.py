@@ -12,29 +12,27 @@ class PathExpander(object):
   def ExpandPath(self, path, path_attributes=None):
     """Expands a path based on attributes in pre calculated values.
 
-       A path may contain paths that are attributes, based on calculations
-       from preprocessing.
+    A path may contain paths that are attributes. A path attribute is
+    defined as anything within a curly bracket, e.g.
+    "\\System\\{my_attribute}\\Path\\Keyname". If the path attribute
+    my_attribute is defined its value will be replaced with the attribute
+    name, e.g. "\\System\\MyValue\\Path\\Keyname".
 
-       A path attribute is defined as anything within a curly bracket, e.g.
-       "\\System\\{my_attribute}\\Path\\Keyname". If the path attribute
-       my_attribute is defined its value will be replaced with the attribute
-       name, e.g. "\\System\\MyValue\\Path\\Keyname".
-
-       If the path needs to have curly brackets in the path then they need
-       to be escaped with another curly bracket, e.g.
-       "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
-       case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
+    If the path needs to have curly brackets in the path then they need
+    to be escaped with another curly bracket, e.g.
+    "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
+    case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
 
     Args:
-      path: the path before being expanded.
-      path_attributes: optional dictionary of path attributes.
+      path (str): path before being expanded.
+      path_attributes (Optional[dict[str, str]]): path attributes.
 
     Returns:
-      A Registry key path that's expanded based on attribute values.
+      str: path expanded based on path attributes.
 
     Raises:
       KeyError: If an attribute name is in the key path not set in
-                the preprocessing object a KeyError will be raised.
+                the path attributes.
     """
     if not path_attributes:
       return path
@@ -48,17 +46,17 @@ class PathExpander(object):
     return expanded_path
 
 
-def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
+def BuildFindSpecsFromFile(filter_file_path, path_attributes=None):
   """Returns a list of find specification from a filter file.
 
   Args:
-    filter_file_path: A path to a file that contains find specifications.
-    pre_obj: A preprocessing object (instance of PreprocessObject). This is
-             optional but when provided takes care of expanding each segment.
+    filter_file_path (str): path to a file that contains find specifications.
+    path_attributes (Optional[dict[str, str]]): path attributes e.g.
+        {'SystemRoot': 'C:\\Windows'}
   """
   find_specs = []
 
-  if pre_obj:
+  if path_attributes:
     path_expander = PathExpander()
 
   with open(filter_file_path, 'rb') as file_object:
@@ -67,8 +65,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
       if line.startswith(u'#'):
         continue
 
-      if pre_obj:
-        path_attributes = pre_obj.__dict__
+      if path_attributes:
         try:
           line = path_expander.ExpandPath(line, path_attributes=path_attributes)
         except KeyError as exception:

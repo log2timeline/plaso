@@ -241,12 +241,9 @@ class PreprocessPluginsManager(object):
     # Run the Registry plugins separately so we do not have to open
     # Registry files in every plugin.
 
+    path_attributes = None
     if knowledge_base:
-      pre_obj = knowledge_base.pre_obj
-      path_attributes = pre_obj.__dict__
-    else:
-      pre_obj = None
-      path_attributes = None
+      path_attributes = knowledge_base.GetPathAttributes()
 
     registry_file_reader = FileSystemWinRegistryFileReader(
         file_system, mount_point, path_attributes=path_attributes)
