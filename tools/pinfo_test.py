@@ -43,7 +43,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file
@@ -56,14 +56,34 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'\n'
         b'************************** Plaso Storage Information ****************'
         b'***********\n'
-        b'            Filename : psort_test.json.plaso\n'
-        b'      Format version : 20160431\n'
+        b'            Filename : pinfo_test.json.plaso\n'
+        b'      Format version : 20160525\n'
         b'Serialization format : json\n'
         b'---------------------------------------------------------------------'
         b'-----------\n'
         b'\n'
         b'*********************************** Sessions ************************'
         b'***********\n'
+        b'de1ccbe8-558f-43ea-a97e-e034cd329a13 : '
+        b'2016-06-25T09:22:04.011015+00:00\n'
+        b'---------------------------------------------------------------------'
+        b'-----------\n'
+        b'\n'
+        b'**************** Session: de1ccbe8-558f-43ea-a97e-e034cd329a13 ******'
+        b'***********\n'
+        b'              Start time : 2016-06-25T09:22:04.011015+00:00\n'
+        b'         Completion time : 2016-06-25T09:22:10.268912+00:00\n'
+        b'            Product name : plaso\n'
+        b'         Product version : 1.4.1_20160617\n'
+        b'  Command line arguments : ./tools/log2timeline.py --partition=all '
+        b'--quiet\n'
+        b'                           pinfo_test.json.plaso\n'
+        b'                           test_data/tsk_volume_system.raw\n'
+        b'Parser filter expression : \n'
+        b'      Preferred encoding : UTF-8\n'
+        b'              Debug mode : False\n'
+        b'             Filter file : \n'
+        b'       Filter expression : \n'
         b'---------------------------------------------------------------------'
         b'-----------\n')
 

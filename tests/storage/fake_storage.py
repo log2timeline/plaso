@@ -34,7 +34,8 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
   def testAddError(self):
     """Tests the AddError function."""
-    extraction_error = errors.ExtractionError(u'Test extraction error')
+    extraction_error = errors.ExtractionError(
+        message=u'Test extraction error')
 
     storage_writer = fake_storage.FakeStorageWriter()
     storage_writer.Open()

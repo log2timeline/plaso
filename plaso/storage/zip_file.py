@@ -2814,7 +2814,7 @@ class StorageFile(ZIPStorageFile):
     self._preprocess_object_serializer = (
         json_serializer.JSONPreprocessObjectSerializer)
 
-    self.Open(output_file, read_only=read_only)
+    self.Open(path=output_file, read_only=read_only)
 
   def _ReadPreprocessObject(self, data_stream):
     """Reads a preprocessing object.
@@ -2919,7 +2919,7 @@ class ZIPStorageFileReader(interface.StorageReader):
     """
     super(ZIPStorageFileReader, self).__init__()
     self._storage_file = ZIPStorageFile()
-    self._storage_file.Open(input_file)
+    self._storage_file.Open(path=input_file)
 
   def Close(self):
     """Closes the storage reader."""
