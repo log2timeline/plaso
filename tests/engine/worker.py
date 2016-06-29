@@ -48,7 +48,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     resolver_context = context.Context()
-    session_start = sessions.SessionStart()
 
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object)
@@ -57,36 +56,44 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         resolver_context, process_archive_files=process_archive_files)
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session_start)
+    storage_writer.WriteSessionStart()
+
     extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+    new_event_sources = True
+    while new_event_sources:
+      new_event_sources = False
+      for event_source in storage_writer.GetEventSources():
+        extraction_worker.ProcessPathSpec(
+            parser_mediator, event_source.path_spec)
+        new_event_sources = True
+
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()
 
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function."""
+    session = sessions.Session()
+
     # Process a file.
     path_spec = self._GetTestFilePathSpec([u'syslog'])
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
     self.assertEqual(storage_writer.number_of_events, 16)
 
     # Process a compressed file.
     path_spec = self._GetTestFilePathSpec([u'syslog.gz'])
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
-    # TODO: fix in phased processing refactor.
-    # self.assertEqual(storage_writer.number_of_events, 16)
-    self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_events, 16)
 
     path_spec = self._GetTestFilePathSpec([u'syslog.bz2'])
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
-    # TODO: fix in phased processing refactor.
-    # self.assertEqual(storage_writer.number_of_events, 15)
-    self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_events, 15)
 
     # Process a file in an archive.
     source_path = self._GetTestFilePath([u'syslog.tar'])
@@ -96,27 +103,25 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=path_spec)
 
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
     self.assertEqual(storage_writer.number_of_events, 13)
 
     # Process an archive file without "process archive files" mode.
     path_spec = self._GetTestFilePathSpec([u'syslog.tar'])
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec([u'syslog.tar'])
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, process_archive_files=True)
 
-    # TODO: fix in phased processing refactor.
-    # self.assertEqual(storage_writer.number_of_events, 16)
-    self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_events, 16)
 
     # Process a file in a compressed archive.
     source_path = self._GetTestFilePath([u'syslog.tgz'])
@@ -128,20 +133,18 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=path_spec)
 
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
     self.assertEqual(storage_writer.number_of_events, 13)
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec([u'syslog.tgz'])
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, process_archive_files=True)
 
-    # TODO: fix in phased processing refactor.
-    # self.assertEqual(storage_writer.number_of_events, 17)
-    self.assertEqual(storage_writer.number_of_events, 3)
+    self.assertEqual(storage_writer.number_of_events, 17)
 
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""

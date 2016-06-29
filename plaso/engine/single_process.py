@@ -121,14 +121,22 @@ class SingleProcessEngine(engine.BaseEngine):
         number_of_consumed_sources, number_of_produced_sources,
         storage_writer.number_of_events,
         parser_mediator.number_of_produced_events)
-    self._UpdateStatus()
+
+    # Force the status update here to make sure the status is up to date
+    # on exit.
+    self._UpdateStatus(force=True)
 
     return status
 
-  def _UpdateStatus(self):
-    """Updates the processing status."""
+  def _UpdateStatus(self, force=False):
+    """Updates the processing status.
+
+    Args:
+      force (Optional[bool]): True if the update should be forced ignoring
+                              the last status update time.
+    """
     current_timestamp = time.time()
-    if current_timestamp < (
+    if not force and current_timestamp < (
         self._last_status_update_timestamp + self._STATUS_CHECK_SLEEP):
       return
 
@@ -138,39 +146,35 @@ class SingleProcessEngine(engine.BaseEngine):
     self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
-      self, source_path_specs, session_start, preprocess_object,
-      storage_writer, resolver_context, filter_find_specs=None,
-      filter_object=None, hasher_names_string=None, mount_path=None,
-      parser_filter_expression=None, process_archive_files=False,
-      profiling_type=u'all', status_update_callback=None, text_prepend=None):
+      self, source_path_specs, preprocess_object, storage_writer,
+      resolver_context, filter_find_specs=None, filter_object=None,
+      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
+      process_archive_files=False, profiling_type=u'all',
+      status_update_callback=None, text_prepend=None):
     """Processes the sources.
 
     Args:
-      source_path_specs: a list of path specifications (instances of
-                         dfvfs.PathSpec) of the sources to process.
-      session_start: a session start attribute container (instance of
-                     SessionStart).
-      preprocess_object: a preprocess object (instance of PreprocessObject).
-      storage_writer: a storage writer object (instance of StorageWriter).
-      resolver_context: a resolver context (instance of dfvfs.Context).
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      mount_path: optional string containing the mount path.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      profiling_type: optional string containing the profiling type.
-      status_update_callback: optional callback function for status updates.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      preprocess_object (PreprocessObject): preprocess object.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      resolver_context (dfvfs.Context): resolver context.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
+      filter_object (Optional[objectfilter.Filter]): filter object.
+      hasher_names_string (Optional[str]): comma separated string of names
+                                           of hashers to use during processing.
+      mount_path (Optional[str]): mount path.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      process_archive_files (Optional[bool]): True if archive files should be
+                                              scanned for file entries.
+      profiling_type (Optional[str]): profiling type.
+      status_update_callback (Optional[function]): callback function for status
+                                                   updates.
+      text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
-      The processing status (instance of ProcessingStatus).
+      ProcessingStatus: processing status.
     """
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base)
@@ -201,15 +205,15 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._status_update_callback = status_update_callback
 
+    logging.debug(u'Processing started.')
+
     if self._enable_profiling:
       storage_writer.EnableProfiling(profiling_type=profiling_type)
-
-    logging.debug(u'Processing started.')
 
     storage_writer.Open()
 
     try:
-      storage_writer.WriteSessionStart(session_start)
+      storage_writer.WriteSessionStart()
 
       status = self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
@@ -218,11 +222,10 @@ class SingleProcessEngine(engine.BaseEngine):
       # TODO: refactor the use of preprocess_object.
       storage_writer.WritePreprocessObject(preprocess_object)
 
-    finally:
       # TODO: on abort use WriteSessionAborted instead of completion?
       storage_writer.WriteSessionCompletion()
-      storage_writer.Close()
 
+    finally:
       if self._enable_profiling:
         storage_writer.DisableProfiling()
 

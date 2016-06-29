@@ -287,8 +287,6 @@ class MultiProcessEngine(engine.BaseEngine):
                   queuing. If False, the multiprocessing queue will be used.
     """
     super(MultiProcessEngine, self).__init__()
-    self._collector_active = False
-    self._collector_thread = None
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
     self._filter_object = None
@@ -310,10 +308,13 @@ class MultiProcessEngine(engine.BaseEngine):
     self._session_identifier = None
     self._show_memory_usage = False
     self._status_update_callback = None
+    self._storage_merge_thread = None
     self._storage_writer = None
     self._tasks = {}
     self._task_queue = None
     self._task_queue_port = None
+    self._task_scheduler_active = False
+    self._task_scheduler_thread = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
 
@@ -361,8 +362,7 @@ class MultiProcessEngine(engine.BaseEngine):
       pid (int): process ID (PID) of a registered worker process.
 
     Raises:
-      EngineAbort: when the collector or storage worker process
-                   unexpectedly terminates.
+      EngineAbort: when the worker process unexpectedly terminates.
       KeyError: if the process is not registered with the engine.
     """
     # TODO: Refactor this method, simplify and separate concerns (monitoring
@@ -445,27 +445,6 @@ class MultiProcessEngine(engine.BaseEngine):
     for pid in iter(self._process_information_per_pid.keys()):
       self._CheckStatusWorkerProcess(pid)
 
-  def _CollectPathSpecs(self):
-    """Collects path specifications."""
-    logging.debug(u'Collector thread started')
-
-    for event_source in self._storage_writer.GetEventSources():
-      self._new_event_sources = True
-      if self._abort:
-        break
-
-      # TODO: add support for more task types.
-      task = MultiProcessTask(self._session_identifier)
-      task.path_spec = event_source.path_spec
-
-      # TODO: register task with scheduler.
-      self._tasks[task.identifier] = task
-
-      self._task_queue.PushItem(task)
-
-    self._collector_active = False
-    logging.debug(u'Collector thread stopped.')
-
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
 
@@ -526,6 +505,19 @@ class MultiProcessEngine(engine.BaseEngine):
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
 
+  def _MergeTaskStorage(self):
+    """Merges task-based storage with the session-based storage."""
+    logging.debug(u'Storage merge started')
+
+    while len(self._tasks):
+      # Make a copy of the keys since we are changing the dictionary
+      # inside the loop.
+      for task_identifier in list(self._tasks.keys()):
+        if self._storage_writer.MergeTaskStorage(task_identifier):
+          del self._tasks[task_identifier]
+
+    logging.debug(u'Storage merge stopped')
+
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
     """Processes the sources.
@@ -578,14 +570,15 @@ class MultiProcessEngine(engine.BaseEngine):
       # refactor.
       storage_writer.ForceFlush()
 
-      self._collector_active = True
-
-      # Set new event sources to false so the collector thread can set
-      # it to true when there are new event sources. Since the collector
+      # Set new event sources to false so the task scheduler thread can set
+      # it to true when there are new event sources. Since the task scheduler
       # thread is joined before this value is checked again there is
       # no need for a synchronization primitive.
       self._new_event_sources = False
-      self._StartCollectorThread()
+
+      self._task_scheduler_active = True
+      self._StartTaskSchedulerThread()
+      # self._StartStorageMergeThread()
 
       # TODO: re-implement abort path on workers idle (raise EngineAbort).
       # TODO: change status check.
@@ -593,7 +586,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
       # TODO: start thread that monitors for new task files.
 
-      while self._collector_active or len(self._tasks):
+      while self._task_scheduler_active or len(self._tasks):
         self._processing_status.UpdateForemanStatus(
             u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
             self._number_of_consumed_sources, number_of_produced_sources,
@@ -601,8 +594,6 @@ class MultiProcessEngine(engine.BaseEngine):
             storage_writer.number_of_event_sources)
         self._CheckStatusWorkerProcesses()
         self._UpdateStatus()
-
-        # TODO: move task storage merge into separate thread.
 
         # Make a copy of the keys since we are changing the dictionary
         # inside the loop.
@@ -612,7 +603,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
         time.sleep(self._STATUS_CHECK_SLEEP)
 
-      self._StopCollectorThread()
+      self._StopTaskSchedulerThread()
+      # self._StopStorageMergeThread()
 
       self._processing_status.UpdateForemanStatus(
           u'Main', definitions.PROCESSING_STATUS_IDLE, self._pid, u'',
@@ -679,11 +671,37 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processes_per_pid[process.pid] = process
 
-  def _StartCollectorThread(self):
-    """Starts the collector thread."""
-    self._collector_thread = threading.Thread(
-        name=u'Collector', target=self._CollectPathSpecs)
-    self._collector_thread.start()
+  def _ScheduleTasks(self):
+    """Schedules tasks."""
+    logging.debug(u'Task scheduler started')
+    for event_source in self._storage_writer.GetEventSources():
+      self._new_event_sources = True
+      if self._abort:
+        break
+
+      # TODO: add support for more task types.
+      task = MultiProcessTask(self._session_identifier)
+      task.path_spec = event_source.path_spec
+
+      # TODO: register task with scheduler.
+      self._tasks[task.identifier] = task
+
+      self._task_queue.PushItem(task)
+
+    self._task_scheduler_active = False
+    logging.debug(u'Task scheduler stopped')
+
+  def _StartStorageMergeThread(self):
+    """Starts the storage merge thread."""
+    self._storage_merge_thread = threading.Thread(
+        name=u'Storage Merge', target=self._MergeTaskStorage)
+    self._storage_merge_thread.start()
+
+  def _StartTaskSchedulerThread(self):
+    """Starts the task scheduler thread."""
+    self._task_scheduler_thread = threading.Thread(
+        name=u'Task Scheduler', target=self._ScheduleTasks)
+    self._task_scheduler_thread.start()
 
   def _StartExtractionWorkerProcess(self, storage_writer):
     """Creates, starts and registers an extraction worker process.
@@ -773,11 +791,17 @@ class MultiProcessEngine(engine.BaseEngine):
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
-  def _StopCollectorThread(self):
-    """Stops the collector thread."""
-    if self._collector_thread.isAlive():
-      self._collector_thread.join()
-    self._collector_thread = None
+  def _StopStorageMergeThread(self):
+    """Stops the task scheduler thread."""
+    if self._storage_merge_thread.isAlive():
+      self._storage_merge_thread.join()
+    self._storage_merge_thread = None
+
+  def _StopTaskSchedulerThread(self):
+    """Stops the task scheduler thread."""
+    if self._task_scheduler_thread.isAlive():
+      self._task_scheduler_thread.join()
+    self._task_scheduler_thread = None
 
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
@@ -821,8 +845,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._task_queue.Close(abort=True)
 
     if abort:
-      # Kill any remaining processes, which can be necessary if
-      # the collector dies.
+      # Kill any remaining processes.
       self._AbortKill()
 
   def _StopMonitoringProcess(self, pid):
@@ -922,7 +945,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._status_update_callback(self._processing_status)
 
   def ProcessSources(
-      self, source_path_specs, session_start, preprocess_object,
+      self, session_identifier, source_path_specs, preprocess_object,
       storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
@@ -931,49 +954,42 @@ class MultiProcessEngine(engine.BaseEngine):
     """Processes the sources and extract event objects.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      session_start: a session start attribute container (instance of
-                     SessionStart).
-      preprocess_object: a preprocess object (instance of PreprocessObject).
-      storage_writer: a storage writer object (instance of StorageWriter).
-      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled.
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable enable.
-      mount_path: optional string containing the mount path.
-      number_of_worker_processes: optional integer containing the number of
-                                  worker processes. The default is 0 which
-                                  means the function will determine the
-                                  suitable number.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      profiling_type: optional string containing the profiling type.
-      status_update_callback: optional callback function for status updates.
-      show_memory_usage: optional boolean value to indicate memory information
-                         should be included in logging.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
+      session_identifier (str): identifier of the session.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      preprocess_object (PreprocessObject): preprocess object.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
+                                               should be enabled.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
+      filter_object (Optional[objectfilter.Filter]): filter object.
+      hasher_names_string (Optional[str]): comma separated string of names
+                                           of hashers to use during processing.
+      mount_path (Optional[str]): mount path.
+      number_of_worker_processes (Optional[int]): number of worker processes.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      process_archive_files (Optional[bool]): True if archive files should be
+                                              scanned for file entries.
+      profiling_type (Optional[str]): profiling type.
+      show_memory_usage (Optional[bool]): True if memory information should be
+                                          included in status updates.
+      status_update_callback (Optional[function]): callback function for status
+                                                   updates.
+      text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
-      The processing status (instance of ProcessingStatus).
+      ProcessingStatus: processing status.
     """
     if number_of_worker_processes < 1:
       # One worker for each "available" CPU (minus other processes).
       # The number here is derived from the fact that the engine starts up:
-      # * A collector process.
-      # * A storage process.
+      # * A main process.
       #
       # If we want to utilize all CPUs on the system we therefore need to start
       # up workers that amounts to the total number of CPUs - the other
       # processes.
-      cpu_count = multiprocessing.cpu_count() - 2
+      cpu_count = multiprocessing.cpu_count() - 1
 
       if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
         cpu_count = self._WORKER_PROCESSES_MINIMUM
@@ -994,7 +1010,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._mount_path = mount_path
     self._parser_filter_expression = parser_filter_expression
     self._process_archive_files = process_archive_files
-    self._session_identifier = session_start.identifier
+    self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
     self._text_prepend = text_prepend
@@ -1033,7 +1049,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._enable_profiling:
       self._storage_writer.EnableProfiling(profiling_type=profiling_type)
 
-    self._storage_writer.WriteSessionStart(session_start)
+    self._storage_writer.WriteSessionStart()
 
     # TODO: change in phased processing refactor.
     self._ProcessSources(
@@ -1050,7 +1066,6 @@ class MultiProcessEngine(engine.BaseEngine):
     # TODO: refactor the use of preprocess_object.
     self._storage_writer.WritePreprocessObject(preprocess_object)
     self._storage_writer.WriteSessionCompletion()
-    self._storage_writer.Close()
 
     if self._enable_profiling:
       self._storage_writer.DisableProfiling()

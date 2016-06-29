@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Syslog plugin related functions and classes for testing."""
 
+from plaso.containers import sessions
 from plaso.parsers import syslog
 from plaso.storage import fake_storage
 
@@ -24,7 +25,8 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A storage writer object (instance of FakeStorageWriter).
     """
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
     file_entry = self._GetTestFileEntryFromPath(path_segments)

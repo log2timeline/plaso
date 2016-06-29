@@ -120,7 +120,6 @@ Deprecated in version 20160511:
   events.
 """
 
-import collections
 import heapq
 import io
 import logging
@@ -136,7 +135,6 @@ except ImportError:
 
 import construct
 
-from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -2974,44 +2972,29 @@ class ZIPStorageFileReader(interface.StorageReader):
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
-  """Class that implements the ZIP-based storage file writer.
-
-  Attributes:
-    reports_counter: a counter containing the number of reports (instance of
-                     collections.Counter).
-  """
+  """Class that implements the ZIP-based storage file writer."""
 
   def __init__(
-      self, output_file, buffer_size=0,
+      self, session, output_file, buffer_size=0,
       storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer object.
 
     Args:
-      output_file: a string containing the path to the output file.
-      buffer_size: optional integer containing the estimated size of
-                   a protobuf file.
-      storage_type: optional string containing the storage type.
+      session (Session): session the storage changes are part of.
+      output_file (str): path to the output file.
+      buffer_size (Optional[int]): estimated size of a protobuf file.
+      storage_type (str): storage type.
     """
-    super(ZIPStorageFileWriter, self).__init__()
+    super(ZIPStorageFileWriter, self).__init__(session)
     self._buffer_size = buffer_size
     self._event_source_index = 0
     self._event_tags = []
     self._merge_task_storage_path = u''
     self._output_file = output_file
-    # Counter containing the number of events per parser.
-    self._parsers_counter = collections.Counter()
-    # Counter containing the number of events per parser plugin.
-    self._parser_plugins_counter = collections.Counter()
-    self._session_identifier = None
     self._storage_file = None
     self._storage_type = storage_type
     self._task_identifier = None
     self._task_storage_path = None
-    # Counter containing the number of tags per label.
-    self._tags_counter = collections.Counter()
-
-    # Counter containing the number of reports.
-    self.reports_counter = collections.Counter()
 
   def _UpdateCounters(self, event):
     """Updates the counters.
@@ -3019,15 +3002,15 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     Args:
       event: an event (instance of EventObject).
     """
-    self._parsers_counter[u'total'] += 1
+    self._session.parsers_counter[u'total'] += 1
 
     parser_name = getattr(event, u'parser', u'N/A')
-    self._parsers_counter[parser_name] += 1
+    self._session.parsers_counter[parser_name] += 1
 
     # TODO: remove plugin, add parser chain.
     if hasattr(event, u'plugin'):
       plugin_name = getattr(event, u'plugin', u'N/A')
-      self._parser_plugins_counter[plugin_name] += 1
+      self._session.parser_plugins_counter[plugin_name] += 1
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -3048,8 +3031,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     report_identifier = u'Report: {0:s}'.format(analysis_report.plugin_name)
 
-    self.reports_counter[u'Total Reports'] += 1
-    self.reports_counter[report_identifier] += 1
+    self._session.analysis_reports_counter[u'Total Reports'] += 1
+    self._session.analysis_reports_counter[report_identifier] += 1
 
   def AddError(self, error):
     """Adds an error.
@@ -3112,9 +3095,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._event_tags.append(event_tag)
 
-    self._tags_counter[u'Total Tags'] += 1
+    self._session.event_tags_counter[u'Total Tags'] += 1
     for label in event_tag.labels:
-      self._tags_counter[label] += 1
+      self._session.event_tags_counter[label] += 1
 
   def Close(self):
     """Closes the storage writer.
@@ -3153,7 +3136,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._task_storage_path, u'{0:s}.plaso'.format(task_name))
 
     return ZIPStorageFileWriter(
-        storage_file_path, buffer_size=self._buffer_size,
+        self._session, storage_file_path, buffer_size=self._buffer_size,
         storage_type=definitions.STORAGE_TYPE_TASK)
 
   # TODO: remove during phased processing refactor.
@@ -3338,48 +3321,50 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """Writes session completion information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    session_completion = sessions.SessionCompletion(
-        identifier=self._session_identifier)
-    session_completion.parsers_counter = self._parsers_counter
-    session_completion.parser_plugins_counter = self._parser_plugins_counter
-
+    session_completion = self._session.CreateSessionCompletion()
     self._storage_file.WriteSessionCompletion(session_completion)
 
-  def WriteSessionStart(self, session_start):
+  def WriteSessionStart(self):
     """Writes session start information.
 
-    Args:
-      session_start: the session start information (instance of SessionStart).
-
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
+    session_start = self._session.CreateSessionStart()
     self._storage_file.WriteSessionStart(session_start)
-    self._session_identifier = session_start.identifier
 
   def WriteTaskCompletion(self):
     """Writes task completion information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
     task_completion = tasks.TaskCompletion(
         identifier=self._task_identifier,
-        session_identifier=self._session_identifier)
-    task_completion.parsers_counter = self._parsers_counter
-    task_completion.parser_plugins_counter = self._parser_plugins_counter
-
+        session_identifier=self._session.identifier)
     self._storage_file.WriteTaskCompletion(task_completion)
 
   def WriteTaskStart(self, task_start):
@@ -3389,11 +3374,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       task_start: the task start information (instance of TaskStart).
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
     self._storage_file.WriteTaskStart(task_start)
-    self._session_identifier = task_start.session_identifier
     self._task_identifier = task_start.identifier

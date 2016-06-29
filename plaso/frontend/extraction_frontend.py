@@ -219,7 +219,7 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _CreateSessionStart(
+  def _CreateSession(
       self, command_line_arguments=None, filter_file=None,
       parser_filter_expression=None, preferred_encoding=u'utf-8'):
     """Creates the session start information.
@@ -231,18 +231,18 @@ class ExtractionFrontend(frontend.Frontend):
       preferred_encoding (Optional[str]): preferred encoding.
 
     Returns:
-      SessionStart: session start attribute container.
+      Session: session attribute container.
     """
-    session_start = sessions.SessionStart()
+    session = sessions.Session()
 
-    session_start.command_line_arguments = command_line_arguments
-    session_start.filter_expression = self._filter_expression
-    session_start.filter_file = filter_file
-    session_start.debug_mode = self._debug_mode
-    session_start.parser_filter_expression = parser_filter_expression
-    session_start.preferred_encoding = preferred_encoding
+    session.command_line_arguments = command_line_arguments
+    session.filter_expression = self._filter_expression
+    session.filter_file = filter_file
+    session.debug_mode = self._debug_mode
+    session.parser_filter_expression = parser_filter_expression
+    session.preferred_encoding = preferred_encoding
 
-    return session_start
+    return session
 
   def _PreprocessSetCollectionInformation(self, preprocess_object):
     """Sets the collection information as part of the preprocessing.
@@ -457,7 +457,7 @@ class ExtractionFrontend(frontend.Frontend):
     # TODO: deprecate the need for this function.
     self._PreprocessSetCollectionInformation(preprocess_object)
 
-    session_start = self._CreateSessionStart(
+    session = self._CreateSession(
         command_line_arguments=command_line_arguments, filter_file=filter_file,
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
@@ -465,7 +465,7 @@ class ExtractionFrontend(frontend.Frontend):
     # TODO: we are directly invoking ZIP file storage here. In storage rewrite
     # come up with a more generic solution.
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        self._storage_file_path)
+        session, self._storage_file_path)
 
     processing_status = None
     try:
@@ -473,9 +473,8 @@ class ExtractionFrontend(frontend.Frontend):
         logging.debug(u'Starting extraction in single process mode.')
 
         processing_status = self._engine.ProcessSources(
-            source_path_specs, session_start, preprocess_object,
-            storage_writer, self._resolver_context,
-            filter_find_specs=filter_find_specs,
+            source_path_specs, preprocess_object, storage_writer,
+            self._resolver_context, filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
             hasher_names_string=hasher_names_string,
             mount_path=self._mount_path,
@@ -488,7 +487,7 @@ class ExtractionFrontend(frontend.Frontend):
         logging.debug(u'Starting extraction in multi process mode.')
 
         processing_status = self._engine.ProcessSources(
-            source_path_specs, session_start, preprocess_object,
+            session.identifier, source_path_specs, preprocess_object,
             storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,
             filter_find_specs=filter_find_specs,
             filter_object=self._filter_object,
@@ -517,6 +516,9 @@ class ExtractionFrontend(frontend.Frontend):
           exception, traceback.format_exc()))
       if self._debug_mode:
         pdb.post_mortem()
+
+    finally:
+      storage_writer.Close()
 
     return processing_status
 
