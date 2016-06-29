@@ -32,6 +32,7 @@ class FakeStorageWriter(interface.StorageWriter):
     super(FakeStorageWriter, self).__init__(session)
     self._event_source_index = 0
     self._is_open = False
+    self._storage_type = storage_type
     self._task_identifier = None
     self.analysis_reports = []
     self.errors = []
@@ -40,7 +41,6 @@ class FakeStorageWriter(interface.StorageWriter):
     self.events = []
     self.session_completion = None
     self.session_start = None
-    self._storage_type = storage_type
     self.task_completion = None
     self.task_start = None
 
