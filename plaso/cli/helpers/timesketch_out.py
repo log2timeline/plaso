@@ -19,6 +19,7 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
   _DEFAULT_DOC_TYPE = u'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_NAME = u''
+  _DEFAULT_USERNAME = None
   _DEFAULT_UUID = u'{0:s}'.format(uuid.uuid4().hex)
 
   @classmethod
@@ -58,6 +59,11 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
         action=u'store', default=cls._DEFAULT_DOC_TYPE, help=(
             u'Name of the document type that will be used in ElasticSearch.'))
 
+    argument_group.add_argument(
+        u'--username', dest=u'username', type=str,
+        action=u'store', default=cls._DEFAULT_USERNAME, help=(
+            u'Username of a Timesketch user that will own the timeline.'))
+
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
@@ -93,5 +99,9 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
     name = cls._ParseStringOption(
         options, u'timeline_name', default_value=cls._DEFAULT_NAME)
     output_module.SetTimelineName(name)
+
+    username = cls._ParseStringOption(
+        options, u'username', default_value=cls._DEFAULT_USERNAME)
+    output_module.SetUserName(username)
 
 manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputHelper)

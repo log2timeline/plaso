@@ -2,12 +2,14 @@
 """An output module that saves events to Timesketch."""
 
 import logging
+import sys
 
 try:
   from flask import current_app
   import timesketch
   from timesketch.models import db_session
   from timesketch.models.sketch import SearchIndex
+  from timesketch.models.user import User
 except ImportError:
   timesketch = None
 
@@ -40,6 +42,7 @@ class TimesketchOutputModule(interface.OutputModule):
     self._flush_interval = None
     self._index_name = None
     self._doc_type = None
+    self._username = None
     self._mapping = None
     self._elastic = None
     self._timesketch = timesketch.create_app()
@@ -111,6 +114,15 @@ class TimesketchOutputModule(interface.OutputModule):
     self._timeline_name = timeline_name
     logging.info(u'Timeline name: {0:s}'.format(self._timeline_name))
 
+  def SetUserName(self, username):
+    """Set the username of the user that should own the timeline.
+
+    Args:
+      username: the username of the user.
+    """
+    self._username = username
+    logging.info(u'Owner of the timeline: {0:s}'.format(self._username))
+
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -146,13 +158,32 @@ class TimesketchOutputModule(interface.OutputModule):
         self._output_mediator, _host, _port, self._flush_interval,
         self._index_name, _document_mapping, self._doc_type)
 
+    user = None
+    if self._username:
+      user = User.query.filter_by(username=self._username).first()
+      if not user:
+        raise RuntimeError(
+          u'Unknown Timesketch user: {0:s}'.format(self._username))
+    else:
+      logging.warning(u'Timeline will be visible to all Timesketch users')
+
     with self._timesketch.app_context():
       search_index = SearchIndex.get_or_create(
-          name=self._timeline_name, description=self._timeline_name, user=None,
+          name=self._timeline_name, description=self._timeline_name, user=user,
           index_name=self._index_name)
-      # Grant all users read permission on the mapping object and set status.
-      search_index.grant_permission(None, u'read')
+
+      # Grant the user read permission on the mapping object and set status.
+      # If user is None the timeline becomes visible to all users.
+      search_index.grant_permission(user=user, permission=u'read')
+
+      # In case we have a user grant additional permissions.
+      if user:
+        search_index.grant_permission(user=user, permission=u'write')
+        search_index.grant_permission(user=user, permission=u'delete')
+
+      # Let the Timesketch UI know that the timeline is processing.
       search_index.set_status(u'processing')
+
       # Save the mapping object to the Timesketch database.
       db_session.add(search_index)
       db_session.commit()
