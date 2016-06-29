@@ -237,7 +237,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         counter, preferred_encoding=preferred_encoding)
 
     if analysis_plugins:
-      session_completion = self._CreateSessionCompletions(
+      session_completion = self._CreateSessionCompletion(
           identifier=session_start.identifier)
 
       storage_file.WriteSessionCompletion(session_completion)
