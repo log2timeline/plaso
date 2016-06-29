@@ -2,7 +2,6 @@
 """An output module that saves events to Timesketch."""
 
 import logging
-import sys
 
 try:
   from flask import current_app
