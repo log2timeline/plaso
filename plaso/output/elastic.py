@@ -121,7 +121,8 @@ class ElasticSearchHelper(object):
       labels = []
     event_values[u'tag'] = labels
 
-    source_short, source = self._output_mediator.GetFormattedSources(event_object)
+    source_short, source = self._output_mediator.GetFormattedSources(
+        event_object)
     if source is None or source_short is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
