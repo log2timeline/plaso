@@ -123,9 +123,6 @@ class OutputMediator(object):
   def GetHostname(self, event, default_hostname=u'-'):
     """Retrieves the hostname related to the event.
 
-    If the hostname is not stored in the event it is determined based
-    on the preprocessing information that is stored inside the storage file.
-
     Args:
       event (EventObject): event.
       default_hostname (Optional[str]): default hostname.
@@ -218,9 +215,6 @@ class OutputMediator(object):
   def GetStoredHostname(self):
     """Retrieves the stored hostname.
 
-    The hostname is determined based on the preprocessing information
-    that is stored inside the storage file.
-
     Returns:
       str: hostname.
     """
@@ -228,10 +222,6 @@ class OutputMediator(object):
 
   def GetUsername(self, event, default_username=u'-'):
     """Retrieves the username related to the event.
-
-    If the username in the event is a user identifier like a SID
-    or UID the identifier is resolved to a name based on the preprocessing
-    information that is stored inside the storage file.
 
     Args:
       event (EventObject): event.

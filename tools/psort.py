@@ -28,7 +28,6 @@ from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.storage import zip_file as storage_zip_file
 from plaso.winnt import language_ids
 
 
@@ -191,24 +190,8 @@ class PsortTool(analysis_tool.AnalysisTool):
       BadConfigOption: when a configuration parameter fails validation.
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    if self._analysis_plugins:
-      read_only = False
-    else:
-      read_only = True
-
-    try:
-      storage_file = storage_zip_file.StorageFile(
-          self._storage_file_path, read_only=read_only)
-    except IOError as exception:
-      raise RuntimeError(
-          u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
-              self._storage_file_path, exception))
-
-    # TODO: initialize knowledge base from storage_file
-
     output_module = self._front_end.CreateOutputModule(
-        storage_file, preferred_encoding=self.preferred_encoding,
-        timezone=self._timezone)
+        preferred_encoding=self.preferred_encoding, timezone=self._timezone)
 
     if isinstance(output_module, output_interface.LinearOutputModule):
       if self._output_filename:
@@ -254,17 +237,14 @@ class PsortTool(analysis_tool.AnalysisTool):
       helpers_manager.ArgumentHelperManager.ParseOptions(
           self._options, analysis_plugin)
 
-    try:
-      counter = self._front_end.ProcessStorage(
-          output_module, storage_file, self._storage_file_path,
-          analysis_plugins, event_queue_producers,
-          command_line_arguments=self._command_line_arguments,
-          deduplicate_events=self._deduplicate_events,
-          preferred_encoding=self.preferred_encoding,
-          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+    self._front_end.SetStorageFile(self._storage_file_path)
 
-    finally:
-      storage_file.Close()
+    counter = self._front_end.ProcessStorage(
+        output_module, analysis_plugins, event_queue_producers,
+        command_line_arguments=self._command_line_arguments,
+        deduplicate_events=self._deduplicate_events,
+        preferred_encoding=self.preferred_encoding,
+        time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
     if not self._quiet_mode:
       self._output_writer.Write(u'Processing completed.\n')
