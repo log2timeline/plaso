@@ -75,6 +75,15 @@ class TimesketchOutputModule(interface.OutputModule):
       return [u'timeline_name']
     return []
 
+  def SetDocType(self, doc_type):
+    """Set the Elasticsearch document type.
+
+    Args:
+      doc_type: the document type.
+    """
+    self._doc_type = doc_type
+    logging.info(u'Document type: {0:s}'.format(self._doc_type))
+
   def SetFlushInterval(self, flush_interval):
     """Set the flush interval.
 
@@ -127,7 +136,6 @@ class TimesketchOutputModule(interface.OutputModule):
             }
         }
     }
-    _doc_type = u'plaso_event'
 
     # Get Elasticsearch host and port from Timesketch configuration.
     with self._timesketch.app_context():
@@ -136,7 +144,7 @@ class TimesketchOutputModule(interface.OutputModule):
 
     self._elastic = ElasticSearchHelper(
         self._output_mediator, _host, _port, self._flush_interval,
-        self._index_name, _document_mapping, _doc_type)
+        self._index_name, _document_mapping, self._doc_type)
 
     with self._timesketch.app_context():
       search_index = SearchIndex.get_or_create(
