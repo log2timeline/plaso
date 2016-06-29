@@ -163,7 +163,7 @@ class TimesketchOutputModule(interface.OutputModule):
       user = User.query.filter_by(username=self._username).first()
       if not user:
         raise RuntimeError(
-          u'Unknown Timesketch user: {0:s}'.format(self._username))
+            u'Unknown Timesketch user: {0:s}'.format(self._username))
     else:
       logging.warning(u'Timeline will be visible to all Timesketch users')
 
