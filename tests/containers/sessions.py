@@ -23,6 +23,8 @@ class SessionCompletionTest(test_lib.AttributeContainerTestCase):
         identifier=session_identifier)
     session_completion.timestamp = timestamp
 
+    self.assertEquals(session_completion.identifier, session_identifier)
+
     expected_dict = {
         u'identifier': session_completion.identifier,
         u'timestamp': timestamp}
@@ -40,10 +42,13 @@ class SessionStartTest(test_lib.AttributeContainerTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     timestamp = int(time.time() * 1000000)
-    session_start = sessions.SessionStart()
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    session_start = sessions.SessionStart(identifier=session_identifier)
     session_start.timestamp = timestamp
+    session_start.product_name = u'plaso'
+    session_start.product_version = plaso.GetVersion()
 
-    self.assertIsNotNone(session_start.identifier)
+    self.assertEquals(session_start.identifier, session_identifier)
 
     expected_dict = {
         u'command_line_arguments': u'',

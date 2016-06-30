@@ -32,7 +32,7 @@ class Session(interface.AttributeContainer):
                         e.g. 'log2timeline'.
     product_version (str): version of the product that created the session.
     start_time (int): time that the session was started. Contains the number
-                     of micro seconds since January 1, 1970, 00:00:00 UTC.
+                      of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'session'
 
@@ -143,16 +143,22 @@ class SessionStart(interface.AttributeContainer):
   """
   CONTAINER_TYPE = u'session_start'
 
-  def __init__(self):
-    """Initializes a session start attribute container."""
+  def __init__(self, identifier=None):
+    """Initializes a session start attribute container.
+
+    Args:
+      identifier (Optional[str]): unique identifier of the session.
+          The identifier should match that of the corresponding
+          session completion information.
+    """
     super(SessionStart, self).__init__()
     self.command_line_arguments = u''
     self.debug_mode = False
     self.filter_expression = u''
     self.filter_file = u''
-    self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    self.identifier = identifier
     self.parser_filter_expression = u''
     self.preferred_encoding = u'utf-8'
-    self.product_name = u'plaso'
-    self.product_version = plaso.GetVersion()
+    self.product_name = None
+    self.product_version = None
     self.timestamp = None

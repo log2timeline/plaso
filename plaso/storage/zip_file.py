@@ -135,7 +135,6 @@ except ImportError:
 
 import construct
 
-from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
@@ -2976,24 +2975,24 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
   def __init__(
       self, session, output_file, buffer_size=0,
-      storage_type=definitions.STORAGE_TYPE_SESSION):
+      storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer object.
 
     Args:
       session (Session): session the storage changes are part of.
       output_file (str): path to the output file.
       buffer_size (Optional[int]): estimated size of a protobuf file.
-      storage_type (str): storage type.
+      storage_type (Optional[str]): storage type.
+      task(Optional[Task]): task.
     """
-    super(ZIPStorageFileWriter, self).__init__(session)
+    super(ZIPStorageFileWriter, self).__init__(
+        session, storage_type=storage_type, task=task)
     self._buffer_size = buffer_size
     self._event_source_index = 0
     self._event_tags = []
     self._merge_task_storage_path = u''
     self._output_file = output_file
     self._storage_file = None
-    self._storage_type = storage_type
-    self._task_identifier = None
     self._task_storage_path = None
 
   def _UpdateCounters(self, event):
@@ -3111,13 +3110,13 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.Close()
     self._storage_file = None
 
-  def CreateTaskStorage(self, task_name):
+  def CreateTaskStorage(self, task):
     """Creates a task storage.
 
     The task storage is used to store attributes created by the task.
 
     Args:
-      task_name (str): unique name of the task.
+      task(Task): task.
 
     Returns:
       StorageWriter: storage writer.
@@ -3133,11 +3132,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Missing task storage path.')
 
     storage_file_path = os.path.join(
-        self._task_storage_path, u'{0:s}.plaso'.format(task_name))
+        self._task_storage_path, u'{0:s}.plaso'.format(task.identifier))
 
     return ZIPStorageFileWriter(
         self._session, storage_file_path, buffer_size=self._buffer_size,
-        storage_type=definitions.STORAGE_TYPE_TASK)
+        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
   # TODO: remove during phased processing refactor.
   def ForceFlush(self):
@@ -3362,16 +3361,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    task_completion = tasks.TaskCompletion(
-        identifier=self._task_identifier,
-        session_identifier=self._session.identifier)
+    task_completion = self._task.CreateTaskCompletion()
     self._storage_file.WriteTaskCompletion(task_completion)
 
-  def WriteTaskStart(self, task_start):
+  def WriteTaskStart(self):
     """Writes task start information.
-
-    Args:
-      task_start: the task start information (instance of TaskStart).
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3383,5 +3377,5 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
+    task_start = self._task.CreateTaskStart()
     self._storage_file.WriteTaskStart(task_start)
-    self._task_identifier = task_start.identifier

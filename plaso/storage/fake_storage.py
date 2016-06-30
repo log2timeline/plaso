@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The fake storage intended for testing."""
 
-from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage import interface
 
@@ -22,18 +21,19 @@ class FakeStorageWriter(interface.StorageWriter):
 
   # pylint: disable=abstract-method
 
-  def __init__(self, session, storage_type=definitions.STORAGE_TYPE_SESSION):
+  def __init__(
+      self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer object.
 
     Args:
       session (Session): session the storage changes are part of.
       storage_type (Optional[str]): storage type.
+      task(Optional[Task]): task.
     """
-    super(FakeStorageWriter, self).__init__(session)
+    super(FakeStorageWriter, self).__init__(
+        session, storage_type=storage_type, task=task)
     self._event_source_index = 0
     self._is_open = False
-    self._storage_type = storage_type
-    self._task_identifier = None
     self.analysis_reports = []
     self.errors = []
     self.event_sources = []
@@ -226,15 +226,10 @@ class FakeStorageWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Task completion not supported by storage type.')
 
-    self.task_completion = tasks.TaskCompletion(
-        identifier=self._task_identifier,
-        session_identifier=self._session.identifier)
+    self.task_completion = self._task.CreateTaskCompletion()
 
-  def WriteTaskStart(self, task_start):
+  def WriteTaskStart(self):
     """Writes task start information.
-
-    Args:
-      task_start (TaskStart): task start attribute container.
 
     Raises:
       IOError: if the storage type does not support writing a task
@@ -246,5 +241,4 @@ class FakeStorageWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Task start not supported by storage type.')
 
-    self.task_start = task_start
-    self._task_identifier = task_start.identifier
+    self.task_start = self._task.CreateTaskStart()
