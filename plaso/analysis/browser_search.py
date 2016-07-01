@@ -8,6 +8,7 @@ import urllib
 
 from plaso.analysis import interface
 from plaso.analysis import manager
+from plaso.containers import events
 from plaso.containers import reports
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import py2to3
@@ -58,6 +59,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     # Store a list of search terms in a timeline format.
     # The format is key = timestamp, value = (source, engine, search term).
     self._search_term_timeline = []
+    self._tags = []
 
   def _DecodeURL(self, url):
     """Decodes the URL, replaces %XX to their corresponding characters.
@@ -241,6 +243,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     report_text = u'\n'.join(lines_of_text)
     analysis_report = reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
+    analysis_report.SetTags(self._tags)
     analysis_report.report_array = self._search_term_timeline
     analysis_report.report_dict = results
     return analysis_report
@@ -279,17 +282,24 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         logging.warning(u'Missing search query for URL: {0:s}'.format(url))
         continue
 
-      decoded_url = self._DecodeURL(search_query)
-      if not decoded_url:
+      search_query = self._DecodeURL(search_query)
+      if not search_query:
         continue
-      self._counter[u'{0:s}:{1:s}'.format(engine, decoded_url)] += 1
+
+      event_uuid = getattr(event, u'uuid', None)
+      event_tag = events.EventTag(
+          comment=u'Browser Search', event_uuid=event_uuid)
+      event_tag.AddLabels([u'browser_search'])
+      self._tags.append(event_tag)
+
+      self._counter[u'{0:s}:{1:s}'.format(engine, search_query)] += 1
 
       # Add the timeline format for each search term.
       timestamp = getattr(event, u'timestamp', 0)
       source = getattr(event, u'parser', u'N/A')
       source = getattr(event, u'plugin', source)
       self._search_term_timeline.append(
-          SEARCH_OBJECT(timestamp, source, engine, decoded_url))
+          SEARCH_OBJECT(timestamp, source, engine, search_query))
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)
