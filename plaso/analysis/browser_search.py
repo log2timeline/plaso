@@ -32,14 +32,19 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   # Here we define filters and callback methods for all hits on each filter.
   _URL_FILTERS = frozenset([
-      (u'BingSearch', re.compile(u'bing.com/search'),
-       u'_ExtractBingSearchQuery'),
+      (u'Bing', re.compile(u'bing.com/search'), u'_ExtractSearchQueryFromURL'),
       (u'DuckDuckGo', re.compile(r'duckduckgo\.com'),
        u'_ExtractDuckDuckGoSearchQuery'),
       (u'GMail', re.compile(r'mail\.google\.com'),
        u'_ExtractGMailSearchQuery'),
-      (u'GoogleSearch', re.compile(
-          r'(www\.|encrypted\.|/)google\.[^/]*/search'),
+      (u'Google Docs', re.compile(r'docs.google.com'),
+       u'_ExtractGoogleDocsSearchQuery'),
+      (u'Google Drive', re.compile(r'drive\.google\.com/drive/search'),
+       u'_ExtractGoogleSearchQuery'),
+      (u'Google Search',
+       re.compile(r'(www\.|encrypted\.|/)google\.[^/]*/search'),
+       u'_ExtractGoogleSearchQuery'),
+      (u'Google Sites', re.compile(r'sites.google.com/site'),
        u'_ExtractGoogleSearchQuery'),
       (u'Yandex', re.compile(r'yandex\.com/search'),
        u'_ExtractYandexSearchQuery'),
@@ -85,19 +90,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
     return decoded_url
 
-  def _ExtractBingSearchQuery(self, url):
-    """Extracts a search query from a Bing search URL.
-
-    Args:
-      url (str): URL.
-
-    Returns:
-      str: search query.
-    """
-    return self._ExtractSearchQueryFromURL(url)
-
   def _ExtractDuckDuckGoSearchQuery(self, url):
     """Extracts a search query from a DuckDuckGo search URL.
+
+    DuckDuckGo: https://duckduckgo.com/?q=query
 
     Args:
       url (str): URL.
@@ -113,6 +109,8 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   def _ExtractGMailSearchQuery(self, url):
     """Extracts a search query from a GMail search URL.
 
+    GMail: https://mail.google.com/mail/u/0/#search/query[/?]
+
     Args:
       url (str): URL.
 
@@ -123,13 +121,15 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       return
 
     _, _, line = url.partition(u'search/')
-    first, _, _ = line.partition(u'/')
-    second, _, _ = first.partition(u'?compose')
+    line, _, _ = line.partition(u'/')
+    line, _, _ = line.partition(u'?')
 
-    return second.replace(u'+', u' ')
+    return line.replace(u'+', u' ')
 
-  def _ExtractGoogleSearchQuery(self, url):
-    """Extracts a search query from a Google search URL.
+  def _ExtractGoogleDocsSearchQuery(self, url):
+    """Extracts a search query from a Google docs URL.
+
+    Google Docs: https://docs.google.com/.*/u/0/?q=query
 
     Args:
       url (str): URL.
@@ -137,7 +137,30 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     Returns:
       str: search query.
     """
-    if not self._SearchAndQInLine(url):
+    if u'q=' not in url:
+      return
+
+    line = self._GetBetweenQEqualsAndAmbersand(url)
+    if not line:
+      return
+
+    return line.replace(u'+', u' ')
+
+  def _ExtractGoogleSearchQuery(self, url):
+    """Extracts a search query from a Google URL.
+
+    Google Drive: https://drive.google.com/drive/search?q=query
+    Google Search: https://www.google.com/search?q=query
+    Google Sites: https://sites.google.com/site/.*/system/app/pages/
+                  search?q=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    if u'search' not in url or u'q=' not in url:
       return
 
     line = self._GetBetweenQEqualsAndAmbersand(url)
@@ -148,6 +171,8 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   def _ExtractYandexSearchQuery(self, url):
     """Extracts a search query from a Yandex search URL.
+
+    Yandex: https://www.yandex.com/search/?text=query
 
     Args:
       url (str): URL.
@@ -168,6 +193,8 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   def _ExtractYouTubeSearchQuery(self, url):
     """Extracts a search query from a YouTube search URL.
 
+    YouTube: https://www.youtube.com/results?search_query=query
+
     Args:
       url (str): URL.
 
@@ -179,48 +206,48 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   def _ExtractSearchQueryFromURL(self, url):
     """Extracts a search query from the URL.
 
+    Bing: https://www.bing.com/search?q=query
+    GitHub: https://github.com/search?q=query
+
     Args:
       url (str): URL.
 
     Returns:
       str: search query, the value between 'q=' and '&'.
     """
-    if not self._SearchAndQInLine(url):
+    if u'search' not in url or u'q=' not in url:
       return
 
     return self._GetBetweenQEqualsAndAmbersand(url).replace(u'+', u' ')
 
-  def _GetBetweenQEqualsAndAmbersand(self, string):
+  def _GetBetweenQEqualsAndAmbersand(self, url):
     """Retrieves the substring between the substrings 'q=' and '&'.
+
+    Args:
+      url (str): URL.
 
     Returns:
       str: search query, the value between 'q=' and '&'.
     """
-    if u'q=' not in string:
-      return string
-    _, _, line = string.partition(u'q=')
-    before_and, _, _ = line.partition(u'&')
-    if not before_and:
-      return line
-    return before_and.split()[0]
+    # Make sure we're analyzing the query part of the URL.
+    _, _, url = url.partition(u'?')
+    # Look for a key value pair named 'q'.
+    _, _, url = url.partition(u'q=')
+    if not url:
+      return u''
 
-  def _SearchAndQInLine(self, string):
-    """Determines if the susbstring 'q=' and 'search' appear in string.
-
-    Returns:
-      A boolean value indicating a match.
-    """
-    return u'search' in string and u'q=' in string
+    # Strip addional key value pairs.
+    url, _, _ = url.partition(u'&')
+    return url
 
   def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      analysis_mediator (AnalysisMediator): analysis mediator.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: analysis report.
     """
     results = {}
     for key, count in iter(self._counter.items()):
